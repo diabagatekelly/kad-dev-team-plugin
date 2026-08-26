@@ -1,0 +1,36 @@
+{
+  "name": "kad-dev-team-marketplace",
+  "owner": {
+    "name": "Kelly Diabagate"
+  },
+  "metadata": {
+    "description": "Personal marketplace hosting the kad-dev-team plugin.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "kad-dev-team",
+      "source": "./",
+      "description": "Personal roster of narrow-focus developer personas (agents) and their backing skills, encoding the principles I rely on for clean, robust, option-enabling, maintainable, well-tested software.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Kelly Diabagate"
+      },
+      "keywords": [
+        "personas",
+        "agents",
+        "architecture",
+        "tdd",
+        "code-review",
+        "security",
+        "reliability"
+      ],
+      "category": "engineering-practices",
+      "tags": [
+        "personas",
+        "dev-team",
+        "quality"
+      ]
+    }
+  ]
+}
