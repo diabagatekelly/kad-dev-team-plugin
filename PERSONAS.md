@@ -53,7 +53,7 @@ installed plugin into this one.
 | 2 | `tdd-coach` | Red-Green-Refactor discipline — test quality over coverage-as-theater, catching over-mocked tests and false positives | Core strength | Planned |
 | 3 | `code-reviewer` | Readability/DRY/simplicity triage — self-documenting code over comments, a severity taxonomy for findings | Core strength | Planned |
 | 4 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit, acceptance-criteria quality, feature-shape YAGNI | Core strength | Planned |
-| 5 | `docs-writer` | Purposeful documentation — ADRs, WHY-not-WHAT comments, avoiding stale/ceremonial docs | Core strength | Planned |
+| 5 | `docs-writer` | Purposeful documentation — problem framing docs, ADRs, WHY-not-WHAT comments, PR/issue write-ups, avoiding stale/ceremonial docs | Core strength | Done |
 | 6 | `security-engineer` | Threat-aware review — OWASP-style checks, secrets/PII hygiene, dependency & supply-chain risk, least privilege | Borrowed/synthesized (weak area) | Planned |
 | 7 | `reliability-engineer` | Deployability & operability — IaC review, observability (logs/metrics/traces), safe rollout/rollback, incident-readiness | Borrowed/synthesized (weak area) | Planned |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work |
@@ -69,16 +69,34 @@ installed plugin into this one.
   once built, whether that split earns its complexity here, or whether one
   agent that can do both is enough for personal use.
 
-## Suggested build order
+## Build order — revised
 
-1. **`code-reviewer`** first — you know this domain cold, and it's the best
-   persona to nail the AGENT.md/SKILL.md pattern on before repeating it seven
-   more times.
-2. **`security-engineer`** and **`reliability-engineer`** next — highest
-   leverage, since these are the gaps you're relying on me (and existing
-   concepts from other installed plugins) to fill. Doing them early means the pattern is fresh
-   and you can sanity-check the borrowed content while it's easy to compare
-   against source material.
-3. Round out `software-architect`, `tdd-coach`, `product-slicer`, `docs-writer`.
+Superseded the original pattern-first order below. Instead, building in the
+order a real problem actually moves through the SDLC, dogfooding each
+persona against one running example (`examples/budgeting-app/`, a personal
+finance web app to replace manual Excel accounting) as it's built:
+
+1. **`docs-writer`** — Done. Problem exists, no issue/slice/code yet →
+   produced `examples/budgeting-app/problem.md`.
+2. **`product-slicer`** — next. Turn the problem doc into a first vertical
+   slice.
+3. **`software-architect`**, **`tdd-coach`**, **`code-reviewer`** — as the
+   first slice gets designed and implemented.
+4. **`security-engineer`**, **`reliability-engineer`** — as soon as the
+   example touches account credentials/data and any deployment/sync
+   infrastructure, which it will almost immediately.
+5. **`accessibility-engineer`** — once the example has a UI to review.
+
+<details>
+<summary>Original pattern-first order (superseded)</summary>
+
+1. `code-reviewer` first — best-known domain, good persona to nail the
+   AGENT.md/SKILL.md pattern on before repeating it seven more times.
+2. `security-engineer` and `reliability-engineer` next — highest-leverage
+   gaps, done early while the pattern is fresh.
+3. Round out `software-architect`, `tdd-coach`, `product-slicer`,
+   `docs-writer`.
 4. Decide on `accessibility-engineer` and the phase-2 ideas once the core
    seven feel solid.
+
+</details>

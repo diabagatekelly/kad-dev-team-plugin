@@ -20,6 +20,8 @@ agents/
   <persona>/AGENT.md  # persona definition: frontmatter + system prompt
 skills/
   <skill>/SKILL.md    # backing knowledge a persona (or you, directly) can invoke
+examples/
+  <name>/              # one running example, dogfooded persona-by-persona
 ```
 
 ## Local development
