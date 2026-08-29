@@ -1,8 +1,7 @@
 # kad-dev-team
 
 A personal Claude Code plugin. It bundles a roster of narrow-focus developer
-personas (agents), each backed by one or more skills, encoding the principles
-I believe are essential for clean, robust, option-enabling, maintainable,
+personas (agents), each backed by one or more skills, encoding the essential principles for clean, robust, option-enabling, maintainable,
 well-tested, expandable software.
 
 The personas span the roles a well-rounded engineering team needs to cover —
@@ -20,9 +19,14 @@ agents/
   <persona>/AGENT.md  # persona definition: frontmatter + system prompt
 skills/
   <skill>/SKILL.md    # backing knowledge a persona (or you, directly) can invoke
-examples/
-  <name>/              # one running example, dogfooded persona-by-persona
+evals/
+  <case>/prompt.md     # one scenario per skill trigger; graders/*.md score the output
+.synthesis/
+  <persona>.md          # internal only — source synthesis notes, deleted once roster is complete
 ```
+
+Evals are authored against `claude plugin eval`'s documented format but
+gated behind early access in this environment — see `evals/README.md`.
 
 ## Local development
 
@@ -48,8 +52,11 @@ user scope.
 ## Adding a new persona
 
 1. Pick the next row from the roster table in [PERSONAS.md](./PERSONAS.md).
-2. Write its backing skill(s) first: `skills/<slug>/SKILL.md`.
-3. Write the persona: `agents/<slug>/AGENT.md`, referencing the skill(s) it
-   uses in its frontmatter `skills:` list.
-4. Test with `--plugin-dir` (above).
-5. Flip its Status to Done in PERSONAS.md.
+2. Synthesize from all three reference sources (see PERSONAS.md's
+   Attribution philosophy) into `.synthesis/<slug>.md`.
+3. Write its backing skill(s), one per distinct trigger the persona handles:
+   `skills/<trigger-slug>/SKILL.md`.
+4. Write the persona: `agents/<persona-slug>/AGENT.md`, referencing each
+   skill it uses in its frontmatter `skills:` list.
+5. Test with `--plugin-dir` (above).
+6. Flip its Status to Done in PERSONAS.md.
