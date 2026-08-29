@@ -1,5 +1,6 @@
 ---
 type: llm
+target: phase1
 criteria: |
   No ticket system was specified in the task. The agent must ask whether
   this should be filed as a tracked issue at all, and if so, which system

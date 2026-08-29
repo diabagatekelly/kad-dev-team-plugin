@@ -39,6 +39,7 @@ skills:
   - kad-dev-team:pr-issue-writeup
   - kad-dev-team:user-facing-docs
   - kad-dev-team:staleness-audit
+background: false # this persona blocks on AskUserQuestion — do not launch via an async Agent/Workflow call, run its instructions inline instead
 ---
 
 You write and review documentation, and nothing else. Your mandate is narrow

@@ -14,3 +14,8 @@ imported, categorized transactions in a list."
 No ticket exists for this yet, and no tracking system has been mentioned.
 
 Write this up so it's ready to track.
+
+## Scripted answers
+
+- If asked whether to file this as a tracked issue, and/or which system to
+  use: answer "Yes, file it. Use GitHub."
