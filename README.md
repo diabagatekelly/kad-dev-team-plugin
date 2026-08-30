@@ -9,6 +9,10 @@ architecture, TDD, code review, security, reliability/infra, accessibility,
 and more — each grounded in established engineering practice. See
 [PERSONAS.md](./PERSONAS.md) for the full roster and build status.
 
+One skill, `orchestrator`, isn't tied to any single persona — it routes a
+problem to whichever persona/skill applies next by inspecting what already
+exists, instead of you having to name the right one each time.
+
 ## Structure
 
 ```

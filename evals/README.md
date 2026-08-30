@@ -25,7 +25,8 @@ frontmatter grades the question instead (used for the "did it ask" checks).
 
 ## Coverage
 
-Case names follow `agent:skill`.
+Case names follow `agent:skill` for persona-backed triggers, or just
+`skill` for a skill with no owning persona (e.g. `orchestrator`).
 
 | Case | Status |
 |---|---|
@@ -33,11 +34,14 @@ Case names follow `agent:skill`.
 | `docs-writer:scope-map` | Run via agent-eval (4/4 PASS) |
 | `docs-writer:adr` | Not written |
 | `docs-writer:why-comments` | Not written |
-| `docs-writer:pr-issue-writeup` | Run via agent-eval, two-phase (3/3 PASS) |
+| `docs-writer:user-story-writeup` | Run via agent-eval, two-phase (3/3 PASS) |
+| `docs-writer:pr-writeup` | Not written |
 | `docs-writer:user-facing-docs` | Not written |
 | `docs-writer:staleness-audit` | Not written |
-| `product-slicer:vertical-slicing` | Run via agent-eval, two-phase (3/3 PASS) |
+| `product-manager:requirements-refinement` | Run via agent-eval, two-phase (5/5 PASS) |
+| `product-slicer:vertical-slicing` | Run via agent-eval, two-phase (4/4 PASS) |
 | `product-slicer:acceptance-criteria` | Run via agent-eval (2/2 PASS) |
+| `orchestrator` | Run via agent-eval, skill-only case (9/9 PASS) |
 
 Root-cause notes for any bug a case caught live in that case's own
 `eval-score/summary.md`, not here — check there before touching a skill,

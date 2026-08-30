@@ -1,24 +1,15 @@
-PASS (llm judge, after fixing a grader-wording bug — see below)
+PASS (llm judge, after fixing a second grader/skill wording gap)
 
-First run FAILed on the original grader wording, which flagged two things
-as violations that turn out to be correct persona behavior, not bugs:
-
-1. The output's "Sequencing notes" section explained why the four steps are
-   ordered as they are. The original criteria said "no sequencing
-   dependencies" without distinguishing per-step dependency annotations
-   (disallowed) from the template's own dedicated "Sequencing notes"
-   section (explicitly sanctioned for exactly this content). `skills/scope-map/SKILL.md`
-   itself had the same ambiguity — fixed there too, not just in the grader.
-2. Step one-liners restated constraints already stated in the source
-   problem doc ("a read-only connection," "seeded from the historical
-   sample") rather than inventing new design. The original criteria didn't
-   distinguish "restates an existing constraint" from "invents a new
-   design/technology choice" — only the latter is a real violation.
-
-Both the grader (`graders/no-slicing-or-design.md`) and the skill
-(`skills/scope-map/SKILL.md`) were tightened to make this distinction
-explicit. Re-judged against the same captured output (no persona re-run
-needed — the output was never actually wrong): judge confirmed every step
-stays at name-plus-one-line, restated constraints don't count as new
-design, and ordering rationale lives only in the separate Sequencing notes
-section.
+First run on this re-run FAILed a correct output: step 4's line ("based on
+the budget-vs-actual picture") was flagged as a "per-step dependency
+annotation." On inspection this was a false positive — that phrase
+describes what data the step's own decision uses (the same way step 2
+says "categorize *retrieved* transactions"), not a build-order/timing
+meta-note like "(depends on step 3)." Both `skills/scope-map/SKILL.md` and
+this grader had the same latent ambiguity (this is the second time this
+exact category of false positive has hit this case — see the first,
+different root cause, in this file's git history / the grader's own
+comments) — tightened both to distinguish "a step naturally describing
+the data/output it works from" from "explicit sequencing/timing
+meta-notation bolted onto a step's line." Re-judged the same captured
+output against the corrected criteria: passed.

@@ -1,55 +1,69 @@
-Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/vertical-slicing/SKILL.md, /Users/kellydiabagate/Documents/kad-developer-suite/skills/acceptance-criteria/SKILL.md
+## Scenario A: Slice 1
 
-# Slice 1: Import a CSV and see transactions auto-categorized against your existing categories
+# Slice 1 (scope-map-001 step 1): Connect a chosen checking account and view its transactions
 
 ## Thin path
-A single user uploads a CSV export of transactions from one account. Each transaction's description is matched against the provided sample of prior manual accounting; a match assigns that sample's category, and anything without a match is shown as "Uncategorized" rather than dropped or guessed. No login, no bank credentials, no AI vendor, no budget comparison, no money movement — just today's manual entry-and-categorization step, done for you.
+The user picks which of their checking accounts to connect (they have
+more than one and care which), connects it via a live bank connection,
+and sees that account's transactions listed. No categorization, budget
+view, or money movement yet — just the connect-and-view step.
 
 ## Acceptance criteria
 
-**Categorization — match found**
-Given an imported transaction whose description matches (case-insensitive, exact string) a description in the provided sample data,
-When the import completes,
-Then the transaction is shown with that sample entry's category, with no manual selection required.
+Given the user has not yet connected an account,
+When they start the connection flow,
+Then they're shown their checking accounts to choose from and pick one to
+connect — not an automatic connection to whichever account the flow
+happens to see first.
 
-**Categorization — no match found**
-Given an imported transaction whose description matches nothing in the provided sample data,
-When the import completes,
-Then the transaction is shown as "Uncategorized" and is visually distinguishable from categorized transactions, rather than dropped or guessed into a category.
+Given the user has selected and connected one checking account,
+When the system fetches transactions for it,
+Then it displays that account's transactions in a list.
 
-**Invalid file**
-Given a file that isn't a parseable CSV, or is missing a required column (date, amount, description),
-When the user attempts to import it,
-Then the import is rejected with a message identifying the file as unreadable, and no transactions are added.
+Given the user is connecting an account,
+When they decline or cancel before the connection completes,
+Then no account is connected and nothing is shown as connected.
 
-**Duplicate import**
-Given a transaction with a given date, amount, and description has already been imported,
-When a CSV containing a transaction with that same date, amount, and description is imported again,
-Then it is not added a second time to the list.
+Given the user's selected account has no transactions yet,
+When the system fetches transactions for it,
+Then it shows an explicit "no transactions yet" state, not an error and
+not something indistinguishable from "not connected."
 
-**Security placeholder**
-Given this slice stores real transaction data (dates, amounts, descriptions) locally,
-When `security-engineer` reviews this slice,
-Then they define concrete, testable criteria for how that data is stored and handled at rest — not assumed satisfied by "it's local-only."
-*(Placeholder — not authored by this persona; security expertise required.)*
+Given the connection enters an error state (e.g. needs re-authentication),
+When the system fetches transactions for that account,
+Then it surfaces a clear notice that the connection needs attention,
+rather than silently showing no transactions or stale data.
 
-**Accessibility placeholder**
-Given this slice ships a CSV upload control and a categorized transaction list as real UI,
-When `accessibility-engineer` reviews this slice,
-Then they define concrete, testable accessibility criteria for those two elements — not assumed satisfied by default.
-*(Placeholder — not authored by this persona; accessibility expertise required.)*
+Given this slice's flow touches bank-credential-based account linking and
+real transaction data,
+When security-engineer defines the security criteria for it,
+Then those criteria are met. [Placeholder — not authored here.]
+
+Given this slice's flow includes user-facing UI (account picker, connect
+flow, no-transactions state, error notice, transaction list),
+When accessibility-engineer defines the accessibility criteria for it,
+Then those criteria are met. [Placeholder — not authored here.]
 
 ## Explicitly deferred
-- **Bank-aggregation API import** — CSV proves the categorization value end-to-end without touching bank credentials, the single biggest security surface in the whole feature. Becomes its own later slice (input-variation), not a dropped requirement.
-- **AI/ML-driven categorization** — rule-based matching against your sample satisfies "must stay free" with zero AI vendor involved, and uses the constraint you already gave. AI/ML becomes an enhancement slice once there's a rule-based baseline to compare it against.
-- **Budget-vs-category spend check** — a real part of the monthly workflow in the problem doc, but it depends on transactions already being categorized, which this slice produces but doesn't consume. Slice 2 (workflow-steps slicing).
-- **Move-money recommendation (fixed rule vs. threshold vs. other)** — same reasoning; depends on both categorization and budget-check existing first. Deferring the whole capability, not just the trigger detail.
-- **"Must stay free" — AI-only vs. entire infra stack** — doesn't affect slice one either way, since it needs no AI vendor and no hosted infra to run. Flagging for `software-architect` to confirm against whatever hosting choice eventually gets made.
-- **Multi-account import in one pass** — one CSV, one account, at a time. A second account is "import again," not a new capability.
-- **Unauthorized-access criteria** — not included. Single-user is confirmed, so there's no access-control surface in this slice to write a criterion against yet.
+- **Connecting a second account** — the requirements doc confirms one
+  account is enough to feel like progress for this piece; picking which
+  one is in scope, connecting more than one is not.
+- **Categorization, budget view, money movement** — later scope-map
+  steps, out of scope per requirements-001.
+- **CSV import as a fallback mechanism** — not needed; the live connection
+  is already confirmed free at the user's usage level per requirements-001.
 
 ## Still open
-- **Exact CSV column layout and the real content of the sample categorization data** — needed by `software-architect`/`tdd-coach` to build the actual parsing and matching logic; doesn't block this write-up (deliberately format-agnostic), but blocks implementation.
-- **Matching key (exact description string match)** — named as a decision, not a settled fact: if real descriptions vary in formatting, this may under-match and should be revisited before implementation.
-- **Security and accessibility review itself** — tracked via the two placeholders above; needs `security-engineer` and `accessibility-engineer` once those personas exist.
-- **"Very secure" anticipating shared access later** — single-user is answered for slice one, but if shared/multi-device access matters down the line, that reintroduces an identity concept this slice deliberately skips. Flag for whoever scopes that slice.
+- Exact account-picker UI shape (list, search, etc.) — a design/architecture
+  call, not this persona's.
+- Concrete security and accessibility criteria — owned by
+  security-engineer and accessibility-engineer respectively.
+
+---
+
+## Scenario B: unchanged
+
+I still can't decide what to build first here without a `product-manager`
+requirements doc — that hasn't changed. I'm not producing a slice for this
+scenario; the correct next step is a hand-off to `product-manager`, not a
+slice write-up.

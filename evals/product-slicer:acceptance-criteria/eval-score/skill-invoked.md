@@ -1,3 +1,5 @@
 PASS
 
-Direct check: final output's "Skills consulted:" first line names `acceptance-criteria/SKILL.md`. Resolved by direct string check, not a judge agent. Confirms the skill is invoked standalone, without needing a slice-cutting trigger first.
+Direct check: self-reported "Skills consulted:" line names
+`/Users/kellydiabagate/Documents/kad-developer-suite/skills/acceptance-criteria/SKILL.md`
+— matches the expected `acceptance-criteria` skill.

@@ -1,3 +1,5 @@
-PASS
+PASS (llm judge)
 
-Judge agent reasoning: The document consistently defers technology/approach choices (retrieval method, AI usage) to non-goals/open questions and states only bounding constraints, never committing to a specific solution.
+Judge's reasoning: the output stays entirely in problem/why-now/constraints/
+open-questions territory and names no specific API, vendor, tech stack, or
+implementation approach.

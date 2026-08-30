@@ -17,16 +17,21 @@ A slice is not a task list. "Build the database schema" is a horizontal
 layer, not a slice — it has no observable behavior on its own. "Upload a CSV
 and see it categorized" is a slice — thin, but complete top to bottom.
 
-## Picking the first slice from a problem doc
+## Picking the first slice from a confirmed requirement
 
-Start from the problem doc's constraints and open questions, not from the
-eventual full feature set. The first slice should:
+Start from `product-manager`'s requirements doc for the unit being worked
+— its "confirmed in scope," not the problem doc's eventual full feature
+set and not a capability choice you're inferring yourself. The first slice
+should:
 
-- **Resolve, ask, or explicitly defer** each open question. Ask directly
-  when the answer would change the slice's shape (its actor, its scope,
-  whether a whole capability is even in play); defer everything else
-  rather than requiring every question answered up front. Deferring is a
-  decision — write it down as a non-goal, don't just drop it silently.
+- **Resolve, ask, or explicitly defer** each remaining *technical* open
+  question — which capability or approach the user wants is already
+  decided by the time you're slicing; what's left is slicing shape (an
+  input variation, an edge case, an implementation detail the requirements
+  doc didn't anticipate). Ask directly when the answer would change the
+  slice's shape; defer everything else rather than requiring every
+  question answered up front. Deferring is a decision — write it down as a
+  non-goal, don't just drop it silently.
 - **Defer risky capabilities, never defer the *need* for security/
   accessibility review on what you do ship.** Prefer a slice that doesn't
   yet need the highest-risk integration (bank credentials, an AI vendor,

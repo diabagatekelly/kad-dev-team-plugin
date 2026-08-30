@@ -4,7 +4,10 @@ The living plan `kad-dev-team` is built against, one persona at a time: a
 personal Claude Code plugin assembling the narrow-focus personas you'd find
 on a strong delivery team, each a thin agent (`agents/<name>/AGENT.md`)
 backed by one or more skills (`skills/<name>/SKILL.md`). The "Status" column
-tracks progress as each persona gets its AGENT.md/SKILL.md written.
+tracks progress as each persona gets its AGENT.md/SKILL.md written. Not
+every skill belongs to a persona, though — see "Orchestrator" below for the
+one exception so far, a skill the main agent loads directly with no owning
+agent.
 
 ## Design conventions
 
@@ -22,14 +25,29 @@ tracks progress as each persona gets its AGENT.md/SKILL.md written.
   every trigger (e.g. a persona's core stance) belongs in the agent's own
   system prompt, not duplicated across skills.
 - **Planning personas ask, they don't just guess.** A persona that shapes
-  work before it exists (`product-slicer`, `software-architect`, and any
-  future persona like them) asks a clarifying question when an ambiguity
-  would change the shape of its output. Deferring-as-an-open-question is
-  only for ambiguity that wouldn't. Silently picking an assumption on
-  something load-bearing is worse than asking once.
+  work before it exists (`product-manager`, `product-slicer`,
+  `software-architect`, and any future persona like them) asks a
+  clarifying question when an ambiguity would change the shape of its
+  output. Deferring-as-an-open-question is only for ambiguity that
+  wouldn't. Silently picking an assumption on something load-bearing is
+  worse than asking once.
 - Personas stay **narrow**: one clear mandate, not a generalist. Overlap
   between personas is a smell — if two personas would flag the same thing,
   merge them or sharpen the boundary.
+- **Where artifacts get saved is a parameter, not a hardcoded path.** No
+  fixed directory-naming convention is baked into any skill — this plugin
+  is portable, and a fixed path would either collide with how a given
+  project already organizes docs or force one convention on every project
+  it's installed into. `orchestrator` is invoked with the artifacts
+  directory as a parameter, or not: given one, that's the target, no
+  second-guessing; not given one, it asks once — "where do this problem's
+  artifacts already exist, or where should they be created?" — and passes
+  the answer to whichever persona it invokes for that problem, this
+  session and any future one. A persona invoked directly (bypassing
+  orchestrator) follows the same rule: use whatever location is given or
+  obviously implied, ask if not. **Never search the project for a
+  location instead of asking** — a location that wasn't given or implied
+  gets asked for, not discovered.
 - This plugin is **portable**, not tied to any one employer or project.
   Skills here should read as general engineering principles, applicable on
   any project — project-specific plugins remain the place for
@@ -69,21 +87,49 @@ the full roster is built, delete it and scrub any remaining source mentions.
 
 | # | Persona (slug) | Narrow focus | Expertise | Status |
 |---|---|---|---|---|
-| 1 | `docs-writer` | Purposeful documentation — problem framing docs, light scope maps for problems too big to slice blind, ADRs, WHY-not-WHAT comments, PR/issue write-ups, user-facing feature docs, avoiding stale/ceremonial docs | Core strength | Done |
-| 2 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
-| 3 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction | Core strength | Planned |
-| 4 | `tdd-coach` | Red-Green-Refactor discipline — test quality over coverage-as-theater, catching over-mocked tests and false positives | Core strength | Planned |
-| 5 | `code-reviewer` | Readability/DRY/simplicity triage — self-documenting code over comments, a severity taxonomy for findings | Core strength | Planned |
-| 6 | `security-engineer` | Threat-aware review — OWASP-style checks, secrets/PII hygiene, dependency & supply-chain risk, least privilege | Borrowed/synthesized (weak area) | Planned |
-| 7 | `reliability-engineer` | Deployability & operability — IaC review, observability (logs/metrics/traces), safe rollout/rollback, incident-readiness | Borrowed/synthesized (weak area) | Planned |
-| 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work |
+| 1 | `docs-writer` | Purposeful documentation — problem framing docs, light scope maps for problems too big to slice blind, ADRs, WHY-not-WHAT comments, user-story/PR write-ups, user-facing feature docs, avoiding stale/ceremonial docs | Core strength | Done |
+| 2 | `product-manager` | Pinning down WHAT before HOW — asking the user directly who benefits, what they want, and why for one unit of work, before any slice gets cut | Core strength | Done |
+| 3 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit for a confirmed requirement, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
+| 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction | Core strength | Planned |
+| 5 | `tdd-coach` | Red-Green-Refactor discipline — test quality over coverage-as-theater, catching over-mocked tests and false positives | Core strength | Planned |
+| 6 | `code-reviewer` | Readability/DRY/simplicity triage — self-documenting code over comments, a severity taxonomy for findings | Core strength | Planned |
+| 7 | `security-engineer` | Threat-aware review — OWASP-style checks, secrets/PII hygiene, dependency & supply-chain risk, least privilege | Borrowed/synthesized (weak area) | Planned |
+| 8 | `reliability-engineer` | Deployability & operability — IaC review, observability (logs/metrics/traces), safe rollout/rollback, incident-readiness | Borrowed/synthesized (weak area) | Planned |
+| 9 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work |
+
+## Orchestrator
+
+`skills/orchestrator/SKILL.md` — routes a problem to whichever persona/skill
+applies next, by inspecting existing artifacts (problem doc, scope map,
+requirements, slices) instead of requiring the user to name the right
+persona each time. Built as a **skill the main agent loads**, not a
+persona/agent — `docs-writer`, `product-manager`, and `product-slicer` are
+all `background: false` and must run inline, so there's nothing to spawn
+or parallelize; routing means adopting each persona's own instructions in
+turn, in the same conversation.
+
+**v1 scope**: sequential stage routing across today's three planning
+personas (problem-framing-doc → scope-map → requirements-refinement →
+slicing → user-story-writeup), one step at a time, human checkpoint after
+each — and a hard stop once a slice is written up, since the next stage
+(`software-architect` designing that slice) doesn't exist yet. Never
+cascades to the next scope-map step automatically — each unit of work
+needs design/implementation before the next one's shape gets decided, the
+same reason CAMS's own per-slice workflow iterates rather than deciding
+every slice up front. Parallel review-synthesis orchestration —
+reconciling several specialist reviewers examining the same artifact — is
+a different, larger problem, deferred below until it has real personas to
+synthesize across.
 
 ## Deferred / phase-2 ideas
 
-- **Orchestrator persona/skill**: a lead-engineer agent that routes work to
-  the right personas and synthesizes their findings, mirroring the
-  orchestrator pattern seen in other installed plugins. Worth adding once 3+
-  personas exist and the coordination pain is real — not before.
+- **Orchestrator v2 — parallel review synthesis**: launching several
+  execution-phase specialists (`code-reviewer`, `security-engineer`,
+  `tdd-coach`, `reliability-engineer`) against the same artifact and
+  reconciling their findings, mirroring the parallel-review pattern seen in
+  other installed plugins. Needs at least two of those personas to actually
+  exist first — designing it earlier means designing against a shape
+  nothing has confirmed yet.
 - **impl vs review split per persona**: several existing agent sets come in
   pairs (`*-impl` doing the work, `*-review` critiquing it). Decide per-persona,
   once built, whether that split earns its complexity here, or whether one
@@ -94,9 +140,16 @@ the full roster is built, delete it and scrub any remaining source mentions.
 Decided at the end of each work session — only the persona(s) coming next,
 never a full future ordering. Building in the order a real problem actually
 moves through the SDLC, dogfooding each persona against one running example
-(`examples/budgeting-app/`) as it's built. Update this section before
-ending a session; it should never describe more than what's actually next.
+(`evals/example/`) as it's built. Update this section before ending a
+session; it should never describe more than what's actually next.
+
+(`examples/budgeting-app/` was the original dogfood location but is listed
+in `.gitignore` — anything placed there never gets tracked. Real dogfooding
+now lives in `evals/example/` instead, which is tracked.)
 
 **Next:** `software-architect` — strategic design for slice-01, confirmed by
 cross-checking CAMS's `cams-new-feature` Phase 2 and Flexion's orchestrator
-ordering ("foundation first: software-architect → specialists").
+ordering ("foundation first: software-architect → specialists"). This is
+also the stage `orchestrator` currently stops at (slice written up, no
+architect to hand off to) — building it is what lets the pipeline continue
+past that point instead of just stopping there.

@@ -17,14 +17,24 @@ go straight to slicing.
 
 **Not a backlog and not a design.** A step's own line is a name and a
 one-line description of what it covers — no acceptance criteria, no thin
-path, no per-step dependency or estimate annotation. Those get added later,
-one step at a time, by `vertical-slicing`/`acceptance-criteria` when that
-step is actually being worked, and by `software-architect` when a step
-needs real design. If you catch yourself slicing or designing a step here,
-stop — that content belongs to those tools once the step comes up, not to
-this map now. (Explaining the *overall* order across steps is different —
+path, no *meta-commentary* about build order or timing tacked onto the
+line (e.g. "(depends on step 2)," "(3 days)"). Those get added later, one
+step at a time, by `vertical-slicing`/`acceptance-criteria` when that step
+is actually being worked, and by `software-architect` when a step needs
+real design. If you catch yourself slicing or designing a step here, stop
+— that content belongs to those tools once the step comes up, not to this
+map now. (Explaining the *overall* order across steps is different —
 that's what the template's own "Sequencing notes" section is for; it just
 doesn't belong inline on an individual step's line.)
+
+A step's one-liner naturally describing what data or output it works from
+— "categorize *retrieved* transactions," "surface a transfer amount
+*based on the budget-vs-actual picture*" — is not a dependency
+annotation, even though it implies an earlier step produced that input.
+That's ordinary content describing what the step covers, the same as any
+other part of its one-liner. The thing to avoid is explicit sequencing
+meta-notes bolted onto a step, not a step's description naturally
+referencing the data it operates on.
 
 A one-liner may restate a constraint the problem doc already stated (e.g.
 "a read-only connection," echoing a Constraint already on record) — that's
@@ -50,10 +60,11 @@ Why this order, only if it isn't self-evident from the steps themselves.
 Omit this section entirely if the order is obvious.
 
 ## Out of scope
-What this problem does not include at all, if a step boundary needs that
-repeated from the problem doc's Non-goals for clarity. Don't duplicate the
-whole Non-goals section — only what a reader would otherwise wrongly assume
-is a missing step.
+What this problem does not include at all, only if a step boundary needs
+that stated for clarity — a reader who'd otherwise wrongly assume a missing
+step is actually a gap. Most of the time this section isn't needed: what's
+excluded is usually already implied by the steps that exist, the same
+reason the problem doc itself doesn't carry a dedicated Non-goals section.
 ```
 
 **Revise by superseding, never by editing.** Number scope maps sequentially,

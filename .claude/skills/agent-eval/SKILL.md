@@ -1,6 +1,6 @@
 ---
 name: agent-eval
-description: Run one eval case (an evals/<agent>:<skill>/ directory containing prompt.md + graders/*.md) by emulating the target persona, capturing its output, and grading it with one judge agent per grader. Use when asked to run, test, or validate an eval case for a persona/skill in this plugin — a stand-in for `claude plugin eval`, which is early-access-gated in this environment.
+description: Run one eval case (an evals/<agent>:<skill>/ directory for a persona-backed trigger, or evals/<skill>/ for a skill with no owning persona, each containing prompt.md + graders/*.md) by emulating the target persona or skill, capturing its output, and grading it with one judge agent per grader. Use when asked to run, test, or validate an eval case for a persona/skill in this plugin — a stand-in for `claude plugin eval`, which is early-access-gated in this environment.
 ---
 
 # Agent Eval Runner
@@ -25,8 +25,13 @@ Invoke with the eval case directory as the argument, e.g.:
    - `case_name` = `case_dir`'s basename (e.g. `docs-writer:problem-framing-doc`).
    - `agent_slug` = everything before the first `:` in `case_name` (the
      whole name if there's no `:`).
-   - `agent_file` = `plugin_root/agents/<agent_slug>/AGENT.md`. Stop and
-     report if it doesn't exist.
+   - `agent_file` = `plugin_root/agents/<agent_slug>/AGENT.md`.
+   - **If `agent_file` doesn't exist**: check for a **skill-only case** —
+     `case_name` has no `:` and `plugin_root/skills/<case_name>/SKILL.md`
+     exists (e.g. `orchestrator`, a skill the main agent loads directly,
+     with no owning persona/agent). If that skill file exists, this is a
+     skill-only case — use the **Skill-only path** in steps 2-3 instead of
+     the agent-based ones. Otherwise, stop and report the path is wrong.
 
 2. **Read the case and the persona.**
    - Read `case_dir/prompt.md` in full. Frontmatter is metadata. The body
@@ -36,17 +41,64 @@ Invoke with the eval case directory as the argument, e.g.:
      persona in step 3**, only used by you in step 3b if it asks instead
      of finishing. If there's no such heading, the whole body is `task`
      and there are no scripted answers.
-   - Read `agent_file` in full. Note its system-prompt body, its
-     frontmatter `skills:` list (strip any `<plugin-name>:` prefix to get
-     each bare skill slug), and its frontmatter `background:` field.
-     **If `background: false` is present, this persona blocks on
-     `AskUserQuestion` and must not be launched via an async Agent/Workflow
-     call — run steps 3 and 3b inline in the main conversation instead
-     (the "Inline path" below), never as a spawned subagent.** If
-     `background:` is absent or `true`, use the normal spawned-agent path.
-   - Each skill slug's file is `plugin_root/skills/<slug>/SKILL.md`.
+   - **Skill-only case**: there's no `agent_file` and no persona to adopt.
+     Read `plugin_root/skills/<case_name>/SKILL.md` in full instead — that
+     skill's own instructions are what's being tested, with no persona
+     layered on top. Use the **Skill-only path** in step 3. There's no
+     `background:` field to check (no persona means nothing blocks on
+     `AskUserQuestion` by default) — default to the spawned-agent
+     mechanics unless the skill's own instructions say otherwise for the
+     specific task at hand.
+   - **Agent-based case** (normal path): read `agent_file` in full. Note
+     its system-prompt body, its frontmatter `skills:` list (strip any
+     `<plugin-name>:` prefix to get each bare skill slug), and its
+     frontmatter `background:` field. **If `background: false` is
+     present, this persona blocks on `AskUserQuestion` and must not be
+     launched via an async Agent/Workflow call — run steps 3 and 3b
+     inline in the main conversation instead (the "Inline path" below),
+     never as a spawned subagent.** If `background:` is absent or `true`,
+     use the normal spawned-agent path. Each skill slug's file is
+     `plugin_root/skills/<slug>/SKILL.md`.
 
 3. **Run the persona against the prompt — a dry run, no side effects.**
+
+   **Skill-only path** (no owning agent — e.g. `orchestrator`). Spawn a
+   fresh agent (general-purpose, no inherited context) with a prompt built
+   like this:
+
+   ```
+   You are the main Claude Code agent for an internal eval. No persona is
+   layered on top of you — you are yourself, with exactly one skill loaded:
+
+   --- SKILL: <slug> ---
+   <the SKILL.md body, verbatim>
+   --- END SKILL ---
+
+   This is a dry run for evaluation. Do not write or edit any files, even
+   if the skill's instructions say to — produce your final response
+   directly as text instead. If the skill's instructions call for reading
+   other files (e.g. other AGENT.md/SKILL.md files it routes to), do that
+   for real via your own Read tool calls — that's what grading checks.
+
+   HARD REQUIREMENT, checked automatically — not optional, not a
+   suggestion: the very first line of your response, before anything
+   else (including any preamble, headers, or the artifact itself), MUST
+   be exactly:
+
+   Skills consulted: <path to this skill>, <any other path you read>
+
+   Do not skip this line. Do not move it. Do not paraphrase it.
+
+   --- TASK ---
+   <task, verbatim>
+   ```
+
+   Grant this agent only `Read`, `Grep`, `Glob` — never `Write`/`Edit`/
+   `Bash`. Capture its final response text as `phase1_output`. If the
+   skill's own instructions call for asking the user something as part of
+   finishing the task (not just describing that it *would* ask in some
+   other, unshown scenario), treat that the same as any agent-based case
+   would — continue with step 3b.
 
    **Spawned-agent path** (default — `background:` absent or `true`).
    Spawn a fresh agent (general-purpose, no inherited context) with a
