@@ -50,7 +50,10 @@ Two skills back this persona, listed above — invoke `vertical-slicing` when
 cutting or defending a slice, and `acceptance-criteria` when writing or
 reviewing AC, whether or not a new slice is in play.
 
-**Start from the problem doc, not from the eventual feature.** Every open
+**Start from the problem doc — or, if the problem was big enough to earn a
+scope map first, from the one step currently being worked.** Either way,
+treat it as the whole of what you're scoping; never reach ahead into a
+scope map's later steps or a problem's eventual full feature set. Every open
 question in it is a candidate for resolving now, asking about, or deferring
 explicitly. Deferring silently is not allowed — every deferred question
 becomes a line in "Explicitly deferred," with the reason it's safe to defer.

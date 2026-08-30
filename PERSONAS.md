@@ -69,7 +69,7 @@ the full roster is built, delete it and scrub any remaining source mentions.
 
 | # | Persona (slug) | Narrow focus | Expertise | Status |
 |---|---|---|---|---|
-| 1 | `docs-writer` | Purposeful documentation — problem framing docs, ADRs, WHY-not-WHAT comments, PR/issue write-ups, user-facing feature docs, avoiding stale/ceremonial docs | Core strength | Done |
+| 1 | `docs-writer` | Purposeful documentation — problem framing docs, light scope maps for problems too big to slice blind, ADRs, WHY-not-WHAT comments, PR/issue write-ups, user-facing feature docs, avoiding stale/ceremonial docs | Core strength | Done |
 | 2 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
 | 3 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction | Core strength | Planned |
 | 4 | `tdd-coach` | Red-Green-Refactor discipline — test quality over coverage-as-theater, catching over-mocked tests and false positives | Core strength | Planned |

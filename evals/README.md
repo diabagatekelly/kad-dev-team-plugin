@@ -30,36 +30,15 @@ Case names follow `agent:skill`.
 | Case | Status |
 |---|---|
 | `docs-writer:problem-framing-doc` | Run via agent-eval (3/3 PASS) |
+| `docs-writer:scope-map` | Run via agent-eval (4/4 PASS) |
 | `docs-writer:adr` | Not written |
 | `docs-writer:why-comments` | Not written |
-| `docs-writer:pr-issue-writeup` | Run via agent-eval, two-phase (3/3 PASS, after fixes — see below) |
+| `docs-writer:pr-issue-writeup` | Run via agent-eval, two-phase (3/3 PASS) |
 | `docs-writer:user-facing-docs` | Not written |
 | `docs-writer:staleness-audit` | Not written |
-| `product-slicer:vertical-slicing` | Run via agent-eval, two-phase (3/3 PASS, after a fix — see below) |
-| `product-slicer:acceptance-criteria` | Run via agent-eval (2/2 PASS, after a fix — see below) |
+| `product-slicer:vertical-slicing` | Run via agent-eval, two-phase (3/3 PASS) |
+| `product-slicer:acceptance-criteria` | Run via agent-eval (2/2 PASS) |
 
-`docs-writer:pr-issue-writeup` caught a real bug on its first run: the
-persona acknowledged the filing-mechanism ambiguity inline but produced a
-finished write-up anyway instead of stopping to ask. Root cause was soft
-instruction wording ("ask... otherwise stay generic") read as permission to
-skip the ask — same failure shape as the earlier `problem-framing-doc`
-self-report flakiness. Fixed by turning it into an explicit blocking STOP
-in both `agents/docs-writer/AGENT.md` and `skills/pr-issue-writeup/SKILL.md`.
-Worth remembering for any future "ask when it matters" instruction in this
-roster: soft language reliably gets treated as optional.
-
-Both `pr-issue-writeup` and `product-slicer:vertical-slicing` also caught a
-harness gap: the original single-phase runner stopped the moment the
-persona asked its clarifying question and graded that as final — never
-checking whether the persona could actually finish the job once answered.
-Fixed by adding the two-phase ask-then-continue mechanism described above
-to `.claude/skills/agent-eval/SKILL.md`; both cases now pass on both phases.
-
-`product-slicer:acceptance-criteria` passed on its first run but still
-exposed two rough edges on inspection: it borrowed `vertical-slicing`'s
-"Explicitly deferred"/"Still open" headers for a task that wasn't a slice
-write-up (producing a filler "nothing deferred here" line), and its
-gap-flagging discipline (don't silently resolve an adjacent gap) worked but
-wasn't backed by an explicit rule — just luck. Fixed by giving
-`acceptance-criteria` its own lightweight review shape and an explicit
-flag-don't-resolve rule; both held on re-run.
+Root-cause notes for any bug a case caught live in that case's own
+`eval-score/summary.md`, not here — check there before touching a skill,
+grader, or the `agent-eval` harness that a case already covers.
