@@ -1,38 +1,36 @@
-# Requirements: scope-map-001 step 1 — Transaction ingestion (requirements-001)
+# Requirements: scope-map-001 step 1 (requirements-001)
 
 ## Status
 Active
 
 ## User
-The user themselves — the person currently logging into each account by
-hand to record transactions in Excel.
+The user themself — a solo individual managing their own personal finances,
+not a multi-user product.
 
 ## What they need
-Automatic ingestion of transactions from all of their accounts, so they
-stop manually logging into each one to record activity. A live automatic
-connection (e.g. Plaid) is the preferred mechanism if it's free at their
-usage level. If it isn't free, an acceptable fallback is automatically
-grabbing and parsing bank statements sent to their email — the point is
-eliminating manual entry, not the specific mechanism.
+Automatic retrieval of transactions from a single financial account via a
+live bank connection, so transactions appear without any manual login and
+copy step.
 
 ## Why this, why now
-The whole value of this step is removing the manual "log into each account
-and record" work. The user is indifferent between the two ingestion
-mechanisms as long as one is free and automatic — cost rules out Plaid
-before mechanism preference does.
+The user picked a live bank connection over a simpler manual CSV import,
+even though the problem doc's security constraint makes a live connection
+the riskier piece to build correctly — because their bar for real progress
+on this step is transactions appearing on their own, and a CSV import would
+still require manually downloading and uploading a file each time, which
+doesn't clear that bar. They chose to scope this step to one account rather
+than all accounts at once, so the live-sync mechanism gets proven out before
+expanding.
 
 ## Confirmed in scope
-- All 4 accounts: 3 checking accounts and 1 Amex card.
-- Banks and Amex may be treated as separate ingestion paths, since they're
-  different institution types (user's own framing, not yet a technical
-  decision).
-- Seeing all raw transactions from these accounts in one place,
-  automatically, even before categorization or budgeting exist — this is
-  what "progress" means for this piece.
+- A live connection to one financial account (not all accounts yet)
+- Automatic retrieval of that account's transactions, with no manual entry
+- Done bar: transactions show up on their own, even as a raw, unsorted list
 
 ## Confirmed out, for now
-- Categorization and budget/spending view — later scope-map steps, not
-  this one.
-- Final choice between Plaid and email-statement parsing — contingent on
-  verifying whether Plaid is free at the user's usage level, which isn't
-  confirmed yet and will be settled once this step is designed/sliced.
+- Connecting additional accounts (savings, credit cards, etc.) — deferred
+  until the single-account live sync is proven out
+- Manual CSV/file import as a fallback or alternative — explicitly not
+  wanted; it wouldn't clear the user's bar for real progress
+- Categorizing, organizing, or sorting the retrieved transactions — that's
+  scope-map-001 step 2, not this piece

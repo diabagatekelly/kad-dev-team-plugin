@@ -90,36 +90,37 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 1 | `docs-writer` | Purposeful documentation — problem framing docs, light scope maps for problems too big to slice blind, ADRs, WHY-not-WHAT comments, user-story/PR write-ups, user-facing feature docs, avoiding stale/ceremonial docs | Core strength | Done |
 | 2 | `product-manager` | Pinning down WHAT before HOW — asking the user directly who benefits, what they want, and why for one unit of work, before any slice gets cut | Core strength | Done |
 | 3 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit for a confirmed requirement, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
-| 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction | Core strength | Planned |
+| 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction | Core strength | Done |
 | 5 | `tdd-coach` | Red-Green-Refactor discipline — test quality over coverage-as-theater, catching over-mocked tests and false positives | Core strength | Planned |
 | 6 | `code-reviewer` | Readability/DRY/simplicity triage — self-documenting code over comments, a severity taxonomy for findings | Core strength | Planned |
 | 7 | `security-engineer` | Threat-aware review — OWASP-style checks, secrets/PII hygiene, dependency & supply-chain risk, least privilege | Borrowed/synthesized (weak area) | Planned |
 | 8 | `reliability-engineer` | Deployability & operability — IaC review, observability (logs/metrics/traces), safe rollout/rollback, incident-readiness | Borrowed/synthesized (weak area) | Planned |
 | 9 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work |
+| 10 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself |
 
 ## Orchestrator
 
 `skills/orchestrator/SKILL.md` — routes a problem to whichever persona/skill
 applies next, by inspecting existing artifacts (problem doc, scope map,
-requirements, slices) instead of requiring the user to name the right
-persona each time. Built as a **skill the main agent loads**, not a
-persona/agent — `docs-writer`, `product-manager`, and `product-slicer` are
-all `background: false` and must run inline, so there's nothing to spawn
-or parallelize; routing means adopting each persona's own instructions in
-turn, in the same conversation.
+requirements, slices, design docs) instead of requiring the user to name
+the right persona each time. Built as a **skill the main agent loads**,
+not a persona/agent — `docs-writer`, `product-manager`, `product-slicer`,
+and `software-architect` are all `background: false` and must run inline,
+so there's nothing to spawn or parallelize; routing means adopting each
+persona's own instructions in turn, in the same conversation.
 
-**v1 scope**: sequential stage routing across today's three planning
+**v1 scope**: sequential stage routing across today's four planning
 personas (problem-framing-doc → scope-map → requirements-refinement →
-slicing → user-story-writeup), one step at a time, human checkpoint after
-each — and a hard stop once a slice is written up, since the next stage
-(`software-architect` designing that slice) doesn't exist yet. Never
-cascades to the next scope-map step automatically — each unit of work
-needs design/implementation before the next one's shape gets decided, the
-same reason CAMS's own per-slice workflow iterates rather than deciding
-every slice up front. Parallel review-synthesis orchestration —
-reconciling several specialist reviewers examining the same artifact — is
-a different, larger problem, deferred below until it has real personas to
-synthesize across.
+slicing → user-story-writeup → architecture-design), one step at a time,
+human checkpoint after each — and a hard stop once a slice has been
+designed, since the next stage (`tdd-coach` implementing that design)
+doesn't exist yet. Never cascades to the next scope-map step
+automatically — each unit of work needs design/implementation before the
+next one's shape gets decided, the same reason CAMS's own per-slice
+workflow iterates rather than deciding every slice up front. Parallel
+review-synthesis orchestration — reconciling several specialist reviewers
+examining the same artifact — is a different, larger problem, deferred
+below until it has real personas to synthesize across.
 
 ## Deferred / phase-2 ideas
 
@@ -147,9 +148,48 @@ session; it should never describe more than what's actually next.
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
 now lives in `evals/example/` instead, which is tracked.)
 
-**Next:** `software-architect` — strategic design for slice-01, confirmed by
-cross-checking CAMS's `cams-new-feature` Phase 2 and Flexion's orchestrator
-ordering ("foundation first: software-architect → specialists"). This is
-also the stage `orchestrator` currently stops at (slice written up, no
-architect to hand off to) — building it is what lets the pipeline continue
-past that point instead of just stopping there.
+**Next: a batch of four — `security-engineer`, `reliability-engineer`,
+`accessibility-engineer`, and the new `ux-designer` row — ahead of
+`tdd-coach`, not instead of it.** Table order alone would say `tdd-coach`
+is next (row 5), but "building in the order a real problem actually moves
+through the SDLC" means following what dogfooding actually surfaced, not
+the row numbers. A live end-to-end orchestrator run
+(`evals/example/summary.md`) produced real, non-hypothetical evidence that
+all four are already blocking, not just eventually useful:
+
+- `evals/example/slice-001.md` carries live placeholder acceptance
+  criteria owned by `security-engineer` (credential/token handling) and
+  `accessibility-engineer` (connection flow + transaction list), both
+  still concretely undefined.
+- `evals/example/design-001.md`'s own Open Questions defer the
+  storage/hosting decision to "whoever sets up the composition root" —
+  no persona in this roster currently owns that; it's `reliability-engineer`
+  territory (deployability/hosting), not `software-architect`'s (structure,
+  not where it runs).
+- Nothing in the roster decides what a UI-touching slice's screen actually
+  looks like or how it's interacted with before code exists —
+  `architecture-design` deliberately stops at "renders whatever the
+  strategic side hands it," and `accessibility-engineer` only reviews for
+  WCAG correctness, not generates the design. `ux-designer` (new row 10)
+  fills that gap.
+
+Once these four exist, every placeholder and open question already
+sitting in `evals/example/`'s real artifacts should be fillable for real —
+that's this batch's own dogfood target, the same way `evals/example/slice-001.md`
+was `software-architect`'s. `tdd-coach` (and the design-doc-to-implementation
+gap noted below) comes after, once a slice's security, hosting, and UI
+decisions are all actually made, not just flagged.
+
+Both `software-architect` skills were reshaped by real dogfooding, same as
+prior sessions — see `.synthesis/software-architect.md`'s "Contradictions
+— flagged and resolved" for the design calls made resolving disagreements
+between the Flexion and CAMS reference sources (naming: "Option-Enabling
+Architecture (OEA)"; no impl/review agent split, one agent with two
+skills instead; YAGNI treated as two-directional; no numeric/scored
+health-check mechanism adopted). `orchestrator`'s routing table
+(`skills/orchestrator/SKILL.md`) has already been updated to route to
+`software-architect:architecture-design` once a slice is written up, and
+to hard-stop one row later, once a design doc exists — re-run and passing
+(`evals/orchestrator/eval-score/summary.md`, 10/10). `tdd-coach` will need
+the same treatment once it exists: a new terminal-row shift, from "design
+doc exists" to "implemented," plus a fresh no-cascade check.

@@ -1,5 +1,7 @@
-PASS (llm judge)
+PASS
 
-Judge's reasoning: the output stops at the terminal row, names
-software-architect as the (currently unavailable) next stage, and
-explicitly declines to advance to scope-map-001 step 2 or any other step.
+Judge agent: the output explicitly stops, names the terminal row, states
+tdd-coach would implement next but doesn't exist in the roster, and
+explicitly disclaims both re-routing to architecture-design and advancing
+to step 2 (framing that possibility only as the user's own initiative,
+not something the routing offers).

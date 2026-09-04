@@ -4,7 +4,7 @@ tags: [orchestrator]
 runs: 3
 ---
 
-You're working across seven independent, unrelated invocations of the
+You're working across eight independent, unrelated invocations of the
 orchestrator skill. For each, apply step 1 (identify the target), step 2
 (inspect), and the routing table in step 3, then state: (1) what state you
 detected, (2) what you'd do next — which persona/skill you'd route to, or
@@ -72,8 +72,10 @@ mentioned filing it.
 ## Directory F
 
 Same as Directory E, except: the user tells you slice 1 has already been
-written up as a user story and filed. Nothing else has changed — no
-architect design exists, no slice 2 exists.
+written up as a user story and filed, **and** `software-architect` has
+already produced a design doc for it (`design-1.md` exists, titled
+"Design: Record a manual stock count for one item"). Nothing else has
+changed — no code exists yet, no slice 2 exists.
 
 ## Directory G
 
@@ -81,3 +83,9 @@ The user says: "I want to figure out how to split shared household bills
 fairly — can we start scoping this out?" You were invoked with **no
 artifacts directory parameter** — nothing was given to you, and nothing
 was mentioned about where this should live.
+
+## Directory H
+
+Same as Directory E, except: the user tells you slice 1 has already been
+written up as a user story and filed. Nothing else has changed — no
+architect design exists yet, no slice 2 exists.

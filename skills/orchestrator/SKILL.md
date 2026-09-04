@@ -7,8 +7,8 @@ description: Route a problem to whichever kad-dev-team persona/skill applies nex
 
 **This is a skill the main agent loads, not a persona to spawn.** Every
 persona in this roster that plans work (`docs-writer`, `product-manager`,
-`product-slicer`) blocks on `AskUserQuestion` and must run inline — never
-as an async `Agent` spawn. Orchestrating them means *you* adopt each one's
+`product-slicer`, `software-architect`) blocks on `AskUserQuestion` and
+must run inline — never as an async `Agent` spawn. Orchestrating them means *you* adopt each one's
 instructions in turn, in this same conversation, the same way you would if
 the user had asked for that persona directly. There is no launching or
 parallelism here.
@@ -57,6 +57,9 @@ mechanical checks only, never a semantic read of full artifact prose:
   directly from the problem doc. Has it been written up as a user story
   yet (a matching user-story artifact, if this project tracks those
   locally — otherwise take the user's word for whether filing happened)?
+  Has it been designed yet (a matching design-doc artifact from
+  `architecture-design`, if this project tracks those locally — otherwise
+  take the user's word)?
 
 **3. Route by what's missing**, in this order. Each row assumes everything
 above it in the table is already satisfied for the current unit of work
@@ -69,7 +72,8 @@ above it in the table is already satisfied for the current unit of work
 | A unit is identified (the lowest-numbered Active scope-map step with no requirements doc yet, or — if no scope map exists — the problem itself) and has no requirements-refinement doc | `product-manager:requirements-refinement` for that unit |
 | The current unit has a requirements-refinement doc but no slice yet | `product-slicer` (`vertical-slicing` + `acceptance-criteria`), using the requirements doc as the primary input for WHAT to slice — not re-deciding it |
 | A slice exists for the current unit but hasn't been written up as a user story yet | `docs-writer:user-story-writeup` |
-| The current unit's slice has been written up | **Stop — see step 5.** Don't advance to the next scope-map step. |
+| The current unit's slice has been written up as a user story but has no design doc yet | `software-architect:architecture-design` for that slice |
+| The current unit's slice has a design doc | **Stop — see step 5.** Don't advance to the next scope-map step. |
 
 Never invent a stage this table doesn't cover. ADRs and `staleness-audit`
 are event-triggered, not part of this forward spine — hand off to them
@@ -92,12 +96,12 @@ Then:
   it now, in this same conversation. If yes, loop back to step 2 for the
   now-current state — don't re-run step 1. If no, stop and wait.
 - **If the current unit just reached the terminal row** (its slice was
-  just written up as a user story): don't propose anything further. Say
-  plainly that this is as far as the roster currently reaches —
-  `software-architect` would design this slice next, and doesn't exist
-  yet. Moving on to the next scope-map step's requirements or slicing
-  before this one is designed and implemented would repeat the mistake
-  this rule exists to prevent: deciding too much before anything's been
-  built and learned from. If the user explicitly wants to start a
-  different unit anyway, that's their call to make by asking directly —
-  not something this skill offers.
+  just designed by `software-architect`): don't propose anything further.
+  Say plainly that this is as far as the roster currently reaches —
+  `tdd-coach` would implement this design next, and doesn't exist yet.
+  Moving on to the next scope-map step's requirements or slicing before
+  this one is implemented and learned from would repeat the mistake this
+  rule exists to prevent: deciding too much before anything's been built.
+  If the user explicitly wants to start a different unit anyway, that's
+  their call to make by asking directly — not something this skill
+  offers.

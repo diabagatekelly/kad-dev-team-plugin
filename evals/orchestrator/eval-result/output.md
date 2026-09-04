@@ -50,13 +50,13 @@ Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/orc
 
 ---
 
-## Directory F — `examples/inventory-app/` (same as E, but user states slice 1 is already written up and filed)
+## Directory F — `examples/inventory-app/` (same as E, plus slice 1 filed as a user story AND a design doc already exists)
 
-**Detected:** Same artifacts as Directory E, plus the user's statement that slice 1 has been written up and filed. No architect design exists yet; no slice 2 exists.
+**Detected:** Same artifacts as Directory E, plus the user's statement that slice 1 has been written up and filed, plus `design-1.md` ("Design: Record a manual stock count for one item") already exists for it. No code exists yet; no slice 2 exists.
 
 **Next step:** Stop. No further routing for this unit.
 
-**Why:** Step 2 explicitly says to take the user's word for whether filing happened when no local artifact tracks it — so the current unit's slice counts as written up, which is the terminal row of the table. Per step 5 of the skill, this is as far as the roster currently reaches: `software-architect` would design this slice next but doesn't exist in the roster yet. I would say so plainly and explicitly not advance to scope-map-001 step 2's requirements refinement — doing that now would be deciding the next step's scope before this step's slice has been designed or built, which is exactly what the "don't chain past the terminal row" rule is guarding against. If the user wants to start step 2 anyway, that has to be their explicit call, not something this routing offers on its own.
+**Why:** The current unit's slice now has both a user-story write-up and a design doc — that's the routing table's terminal row (moved one row further now that `software-architect` is wired in; a user story alone is no longer terminal, a design doc is). Per step 5, this is as far as the roster currently reaches: `tdd-coach` would implement this design next, but doesn't exist in the roster yet. I would say so plainly, explicitly not re-route back to `software-architect:architecture-design` (the design already exists — there's nothing left for that row to produce), and explicitly not advance to scope-map-001 step 2's requirements refinement — doing either would repeat the exact mistake this rule guards against: deciding or re-deciding scope before the current unit has actually been built and learned from. If the user wants to start step 2 anyway, that's their explicit call to make, not something this routing offers on its own.
 
 ---
 
@@ -69,3 +69,13 @@ Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/orc
 > "Where do this problem's artifacts already exist, or where should they be created if we're starting from scratch?"
 
 **Why:** Step 1 is unambiguous: when no target directory is given, that question must be asked first, before step 2's inspection or any routing decision. Whatever the user answers becomes the target for this problem going forward. I would not infer a folder name (e.g., from "household bills") or default to any existing example directory — the skill explicitly rules that out ("never guess a location yourself and never search the project for one instead of asking").
+
+---
+
+## Directory H — `examples/inventory-app/` (same as E, plus slice 1 filed as a user story, no design doc yet)
+
+**Detected:** Same artifacts as Directory E, plus the user's statement that slice 1 has already been written up as a user story and filed. No `software-architect` design doc exists for it yet; no slice 2 exists.
+
+**Next step:** Route to `software-architect:architecture-design` for slice 1.
+
+**Why:** The current unit's slice has a user-story write-up (satisfying row 5), but no design doc yet — that's the new row added between "written up" and the terminal row now that `software-architect` is wired into the routing table. This is a genuinely intermediate state, not terminal: a design doc doesn't exist yet, so the table doesn't stop here the way it now would once one does (see Directory F). I would not report a stop here, and would not advance to scope-map-001 step 2.

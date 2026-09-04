@@ -1,35 +1,36 @@
 # Problem: Manual Excel-Based Personal Accounting
 
 ## The problem
-Every accounting cycle, the user manually logs into each financial account,
-records every transaction, categorizes it by hand, and checks it against a
-budget for that category — all in Excel. At the end of the period, they also
-manually work out how much money (if any) to move from checking to savings.
-None of this is automated: no transactions are pulled automatically, no
-categorization is assisted, and no budget-vs-actual view exists outside the
-spreadsheet the user maintains themselves. This is extremely time-consuming.
+Each month, the user logs into every financial account individually,
+transcribes each transaction into Excel by hand, assigns it a spending
+category, and checks the running total against that category's budget. At
+month end, they manually calculate whatever surplus exists and decide how
+much to move from checking into savings. Every step — pulling transactions,
+categorizing them, checking budget fit, and deciding on the checking-to-
+savings transfer — is done by hand, with no automation anywhere in the
+process. This consumes a large amount of time every month.
 
 ## Why now
-The time cost recurs every accounting cycle rather than being a one-time
-expense, so it keeps compounding the longer it goes unaddressed.
+The cost isn't a one-time fix — it's a recurring monthly tax on the user's
+time that continues indefinitely as long as the process stays manual.
 
 ## Constraints
-- Any AI-assisted categorization must remain free to run — no ongoing paid
-  API/service cost for that capability.
-- The solution handles direct access to financial accounts and money-movement
-  decisions, so it must be very secure.
-
-## Non-goals
-Not yet defined — see open questions below.
+- If an AI capability is used for categorization, it must remain free to
+  operate — no ongoing paid usage cost.
+- The system connects to and moves money between real financial accounts, so
+  it must be built and operated securely.
 
 ## Open questions
-- Which accounts/institutions are in scope (checking, savings, credit cards,
-  investments, etc.), and are all of them included from the start?
-- What does "very secure" mean concretely here — specific requirements for
-  auth, data storage, third-party data sharing, or compliance expectations?
-- What does "free" mean for AI-assisted categorization — zero paid API calls
-  ever, or a free tier that comfortably covers expected usage?
-- Does moving money between checking and savings need to happen automatically,
-  or is a recommendation ("move $X to savings") sufficient?
-- What's explicitly out of scope for a first version — e.g. investment
-  tracking, bill pay, tax prep, multi-user/shared accounts?
+- Which accounts and institutions need to be connected, and are all of them
+  in scope from day one?
+- What counts as "very secure" here in concrete terms — credential handling,
+  data storage/encryption, third-party access, audit logging?
+- The user can supply a sample of their own historically-categorized
+  transactions — how should that sample be used to categorize new
+  transactions (train a model, derive rules, something else)?
+- What does "free" bound to, exactly — no AI cost ever, or a free tier
+  that's expected to cover ongoing usage comfortably?
+- Should checking-to-savings transfers execute automatically, or should the
+  system only surface a recommendation for the user to act on?
+- What's out of scope for a first version — e.g. investment accounts, bill
+  pay, tax prep, multi-user access?
