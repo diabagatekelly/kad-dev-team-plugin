@@ -215,9 +215,39 @@ hand-back* rather than presenting the user a menu of options. The receiving
 side is covered (`vertical-slicing` Scenario C, `orchestrator` Directory L);
 the producing side — the actual observed failure — is not.
 
+Its fixture shape, so this doesn't get re-derived:
+
+- **A slice already cut and designed**, whose thin path deliberately omits
+  some capability. (The observed case: connect, select, list — no login.)
+- **An established fact in the prompt that forces that capability**, stated
+  as settled background rather than as a question. (The observed case: the
+  app is hosted and reachable over the internet, and the slice displays
+  financial data — so the list is publicly reachable without a login.)
+- **Scripted answers** for the skill's own ask-first step: what data is in
+  play, what obligations apply, who the users are.
+
+Correct behaviour is four things at once, and the graders should test them
+separately: it writes real criteria for what *is* in scope; it detects the
+forced-but-unscoped capability; it reports that to `product-slicer` by name;
+and — the primary, **negative** grader — it does *not* enumerate resolution
+options for the user to choose between, because laying out the menu is
+itself the scope decision. A fifth failure worth catching: silently writing
+criteria that assume the missing capability exists.
+
+Write the two requirements cases against `evals/example/`'s real output
+(`security-requirements-001.md`, `reliability-requirements-001.md`) as
+reference — that's genuine output from two of the six skills, and it's what
+a case author would otherwise have to imagine.
+
 Also outstanding: `software-architect:architecture-design`'s graders are
 bound to a CSV-export fixture and won't port to any other design, which is
-why the last dogfood run's design doc couldn't be graded at all.
+why the last dogfood run's design doc couldn't be graded at all. The rework
+is specified in that case's own `NOTES.md`.
+
+**Before or alongside any of this, eight existing cases need running** —
+none of the plugin's scores currently describe the code. `evals/README.md`
+carries the ordered backlog; `orchestrator` is first, since it's the only
+case currently failing and holds the untested backward-routing fixtures.
 
 ### Then `accessibility-engineer`, then `ux-designer`, then `tdd-coach`
 

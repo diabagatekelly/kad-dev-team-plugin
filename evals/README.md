@@ -71,6 +71,29 @@ harness output), and some graders are bound to their fixture's specifics and
 have to be adapted or skipped. **Passing there is not the same as the case
 passing** — it's real artifacts against adapted criteria.
 
+### Run backlog
+
+Eight cases currently need a run. Nothing here is green — every score in
+the table above either predates a change to the code it covers, or predates
+an edit to the case itself. Ordered by what's worth doing first, not by
+what's cheapest.
+
+| # | Case | Why it's first |
+|---|---|---|
+| 1 | `orchestrator` | The only case currently FAILING, and the one with the most new coverage: 5 new fixtures including both backward-routing ones. Directory L (a "handed back" section → route to the scope *owner*) is the single most important untested behaviour in the plugin. |
+| 2 | `software-architect:technology-bootstrap` | Written, never run. Its negative grader has only ever been applied to a real artifact, never to the fixture it was written for. |
+| 3 | `docs-writer:scope-map` | New cross-cutting-constraint grader, unproven against this fixture. |
+| 4 | `product-manager:requirements-refinement` | Prompt now supplies the problem doc's Constraints; the constraints-in-force grader has never run against a fixture that can actually satisfy it. |
+| 5 | `product-slicer:vertical-slicing` | New Scenario C and slice-set grader, neither run. |
+| 6 | `product-slicer:acceptance-criteria` | Stale only via `product-slicer/AGENT.md`. Cheap, likely passes — run it to confirm, don't expect news. |
+| 7 | `software-architect:architecture-review` | Stale only via `software-architect/AGENT.md`. Same expectation. |
+| 8 | `software-architect:architecture-design` | Last, because it needs work before it's worth running — see that case's `NOTES.md`. Its graders are fixture-bound and should be made portable first. |
+
+Rows 1–5 are the ones that can actually surface something. Rows 6–7 are
+regression confirmation. Row 8 is blocked on its own rework.
+
+Run with the `agent-eval` skill, one case per invocation.
+
 ### Known coverage gaps
 
 - **No case exercises `devsecops-engineer` at all** — six skills, zero
