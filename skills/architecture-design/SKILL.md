@@ -94,6 +94,39 @@ you need a more creative name. The one exception is framework
 bootstrap/wiring code, which is allowed to keep a conventional technical
 name since it holds no business logic itself.
 
+## Technology at a boundary
+
+Naming a boundary is not the same as choosing what sits behind it, and the
+two get conflated constantly. Once the boundaries above exist, work through
+them once: which of them does *this slice* force a concrete technology
+choice for?
+
+**The deferral test, per boundary: would a real in-memory implementation
+satisfy this slice's tests?** If yes, name the boundary, say the technology
+is deliberately not chosen yet, and move on — the interface is what makes
+that free, and choosing now would mean guessing at access patterns the
+slice hasn't demonstrated. A persistence boundary in a slice whose data
+doesn't need to outlive a restart forces nothing. A boundary to a specific
+external vendor the slice exists to integrate with forces everything.
+
+When a boundary does force the choice, it's a real decision in the sense
+below — recommendation, alternatives rejected with concrete reasons,
+approval before it's final. Don't quietly adopt whatever the ecosystem
+default is.
+
+Two things this section is not:
+
+- **Not the starting stack.** Language, runtime, test runner, and package
+  manager aren't boundary decisions and don't belong here — that's
+  `technology-bootstrap`, which runs once against what a slice's first test
+  forces.
+- **Not a runtime-safety judgment.** When a boundary's technology choice
+  turns on secrets handling, authentication, or dependency posture, consult
+  `devsecops-engineer` for that narrow question and record the answer in
+  the decision. Load its relevant `SKILL.md` and ask inline, in this same
+  conversation — it's `background: false`, so there's nothing to launch,
+  and this stays your design either way.
+
 ## Apply YAGNI in both directions
 
 Check for over-engineering: don't design an interface, a config knob, or an
@@ -193,6 +226,10 @@ interface the Dependency Rule requires.
 
 ## Third-party isolation
 Any Invasive Species calls this slice makes, and why.
+
+## Technology at each boundary
+Per boundary: the technology chosen and what forced it now, or an explicit
+"not chosen yet — an in-memory implementation satisfies this slice."
 
 ## Decisions
 Each decision presented for approval during this session, what was
