@@ -1,5 +1,2 @@
-PASS (llm judge)
-
-Judge's reasoning: the four steps map to retrieving/connecting
-transactions, categorization, budget-vs-actual, and the savings-transfer
-decision, giving loose visibility into the full problem scope.
+PASS
+Judge agent: six distinct steps covering all four required areas — retrieval (step 1), categorization plus correction (steps 3-4), budget-vs-actual (step 5), savings-transfer decision (step 6).

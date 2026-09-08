@@ -1,7 +1,2 @@
 PASS
-
-Direct check: the self-reported "Skills consulted:" line is the literal
-first line of the response and names
-`/Users/kellydiabagate/Documents/kad-developer-suite/skills/orchestrator/SKILL.md`
-— matches the expected `orchestrator` skill, no formatting deviation this
-run.
+Direct check (tool_used, adapted to self-report). First line of `eval-result/output.md` is exactly the required `Skills consulted:` line naming `skills/orchestrator/SKILL.md`.

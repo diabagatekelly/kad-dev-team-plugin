@@ -1,3 +1,2 @@
 PASS
-
-Direct check: `re.search(r'## Status[\s\S]*## User[\s\S]*## What they need[\s\S]*## Why this, why now[\s\S]*## Confirmed in scope[\s\S]*## Confirmed out, for now', output)` matched.
+Direct check (regex). All six template sections matched in order against `eval-result/output.md`. The newly added `## Constraints in force` section sits after `## Confirmed out, for now`, so the unanchored pattern is unaffected.

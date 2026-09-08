@@ -1,5 +1,2 @@
 PASS
-
-Direct check: phase1's self-reported "Skills consulted:" line names
-`/Users/kellydiabagate/Documents/kad-developer-suite/skills/requirements-refinement/SKILL.md`
-— matches the expected `requirements-refinement` skill.
+Direct check (tool_used, adapted to self-report). First line names `skills/requirements-refinement/SKILL.md`.

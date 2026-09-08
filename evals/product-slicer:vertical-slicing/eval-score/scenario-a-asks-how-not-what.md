@@ -1,6 +1,2 @@
-PASS (llm judge, phase1)
-
-Judge's reasoning: the output asks a genuine HOW-level slicing question
-(account picker vs. auto-select, given "checking account" is singular)
-without re-litigating the already-resolved WHAT decisions (single-user,
-live-connection preference).
+PASS
+Judge agent, graded against `eval-result/phase1-question.md`: Scenario A explicitly refrains from re-asking the settled WHAT (single-user, live-connection preference, one checking account) and asks only the genuine HOW ambiguity — which of the two checking accounts — framing it as changing what the acceptance criteria can assert.

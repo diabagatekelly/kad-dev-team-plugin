@@ -1,5 +1,2 @@
 PASS
-
-Direct check: self-reported "Skills consulted:" line names
-`/Users/kellydiabagate/Documents/kad-developer-suite/skills/scope-map/SKILL.md`
-— matches the expected `scope-map` skill.
+Direct check (tool_used, adapted to self-report). First line of `eval-result/output.md` is the required `Skills consulted:` line and names `skills/scope-map/SKILL.md` (alongside `agents/docs-writer/AGENT.md`).

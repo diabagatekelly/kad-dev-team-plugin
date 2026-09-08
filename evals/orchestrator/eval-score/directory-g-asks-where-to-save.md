@@ -1,5 +1,2 @@
-PASS (llm judge)
-
-Judge's reasoning: the output correctly identifies the no-directory case
-as step 1's "not given one" branch and asks the location question before
-any inspection or routing, without inventing or searching for a location.
+PASS
+Judge agent: identifies step 1's "not given one" branch, asks the location question before any routing, and explicitly disclaims guessing or searching for a location. Also correctly notes that "start scoping this out" is not itself an instruction to run scope-map.

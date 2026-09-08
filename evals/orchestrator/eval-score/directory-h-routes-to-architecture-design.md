@@ -1,6 +1,2 @@
 PASS
-
-Judge agent: the output correctly identifies the intermediate state (user
-story exists, no design doc yet) and routes to
-software-architect:architecture-design without reporting a terminal stop
-or advancing to the next scope-map step.
+Judge agent: routes to `software-architect:architecture-design` for slice 1, with design-before-runtime-safety reasoning, and does not report terminal/stop.

@@ -1,6 +1,2 @@
-PASS (llm judge, phase1)
-
-Judge's reasoning: the output asks direct clarifying questions (who
-benefits, retrieval approach trade-offs, simplest viable version, and
-prior considerations) instead of inferring and presenting a finished
-requirements write-up.
+PASS
+Judge agent, graded against `eval-result/phase1-question.md`: five genuine clarifying questions covering WHO benefits, WHAT in the user's own terms, WHY/trade-off (live connection vs. manual export), and the simplest version that would feel like progress. Explicitly declines to infer from the scope map. Not a finished write-up.

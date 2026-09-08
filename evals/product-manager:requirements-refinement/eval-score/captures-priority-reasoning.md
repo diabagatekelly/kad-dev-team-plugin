@@ -1,6 +1,2 @@
-PASS (llm judge)
-
-Judge's reasoning: the "Why this, why now" section explicitly states the
-user wants a live connection because avoiding manual export/upload is the
-whole point, while acknowledging it's the riskier/more expensive option,
-and does not substitute a generic risk-avoidance rationale.
+PASS
+Judge agent: "Why this, why now" states the user chose the riskier, costlier live connection *because* avoiding manual export is the whole point, quoting their own framing, and explicitly names that a risk-avoidance heuristic would have picked CSV and been wrong. Reasoning attributed to the user, not substituted.

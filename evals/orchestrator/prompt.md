@@ -4,7 +4,7 @@ tags: [orchestrator]
 runs: 3
 ---
 
-You're working across eight independent, unrelated invocations of the
+You're working across thirteen independent, unrelated invocations of the
 orchestrator skill. For each, apply step 1 (identify the target), step 2
 (inspect), and the routing table in step 3, then state: (1) what state you
 detected, (2) what you'd do next — which persona/skill you'd route to, or
@@ -74,8 +74,10 @@ mentioned filing it.
 Same as Directory E, except: the user tells you slice 1 has already been
 written up as a user story and filed, **and** `software-architect` has
 already produced a design doc for it (`design-1.md` exists, titled
-"Design: Record a manual stock count for one item"). Nothing else has
-changed — no code exists yet, no slice 2 exists.
+"Design: Record a manual stock count for one item"). `slice-1.md` still
+carries an unfilled placeholder acceptance criterion reading
+`[SECURITY — placeholder, to be authored by devsecops-engineer]`. Nothing
+else has changed — no code exists yet, no slice 2 exists.
 
 ## Directory G
 
@@ -89,3 +91,57 @@ was mentioned about where this should live.
 Same as Directory E, except: the user tells you slice 1 has already been
 written up as a user story and filed. Nothing else has changed — no
 architect design exists yet, no slice 2 exists.
+
+## Directory I
+
+Same as Directory F, except: `security-001.md` now exists for slice 1 with
+concrete Given/When/Then security criteria, and `slice-1.md`'s security
+placeholder has been replaced with a pointer to it. Nothing states anything
+about how slice 1 should behave when things go wrong, and no reliability
+artifact exists. Still no code, and the user confirms the repo has no
+language, test runner, or package manager set up yet.
+
+## Directory J
+
+Same as Directory I, plus `reliability-001.md` exists for slice 1, with
+concrete criteria for its failure behavior and what must be observable. The
+user confirms again that the repo is still empty — nothing is set up, and
+no test has ever been run.
+
+## Directory K
+
+Same as Directory J, except: the user tells you this slice is being added to
+an existing codebase they've been working in for months. It has a language,
+a test runner, a package manager and a lockfile, and its test suite runs
+today. There is no technology-bootstrap artifact in the directory and the
+user says they don't want one written retroactively.
+
+## Directory L
+
+You were invoked with the artifacts directory parameter set to
+`examples/budget-tracker/`. Its contents:
+- `problem-framing.md`, `scope-map-001.md` (Active), `requirements-001.md`
+  (Active, step 1), `slice-1.md`, `design-1.md` — a complete spine through
+  design for step 1.
+- `security-001.md`, which contains concrete criteria **and** a section
+  headed `## Handed back — not mine to absorb`, reading: "Slice 1 doesn't
+  currently include a login. Its thin path is connect, select, list.
+  Hosting it behind authentication adds a sign-in flow, a session, and an
+  identity model to a slice scoped without them. This is a scope change,
+  and scope is `product-slicer`'s to make, not mine to fold in quietly."
+
+The user hasn't said anything about it; they just asked what's next.
+
+## Directory M
+
+You were invoked with the artifacts directory parameter set to
+`examples/expense-app/`. Its contents:
+- `problem-framing.md`, `scope-map-002.md` (Active), and two slices.
+- `slice-000.md`, whose `## Still open` section reads: "A
+  requirements-refinement pass never ran for this step. It was created by a
+  scope decision mid-flight rather than by `product-manager`, and the WHAT
+  came pre-decided by an ADR. Flagged rather than skipped silently."
+- `requirements-001.md` exists, but its heading scopes it to
+  `scope-map-002 step 2` — not to the step `slice-000.md` belongs to.
+
+`slice-000.md` has not been written up as a user story and has no design doc.

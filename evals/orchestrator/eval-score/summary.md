@@ -1,23 +1,55 @@
-10/10 graders passed — overall PASS
+> **STALE — do not cite this score.** This case now has 13 fixtures and 15 graders; the run below covered 8 fixtures and 10 graders, 2 of which have since been retargeted. The result below predates that change and is kept only as history. Re-run required.
 
-- skill-invoked: PASS (self-reported "Skills consulted:" line, direct check)
-- directory-a-no-problem-doc: PASS (llm judge, unchanged scenario — carried forward from prior run)
-- directory-b-scope-map-decided-not-asked: PASS (llm judge, unchanged scenario — carried forward from prior run)
-- directory-c-routes-to-requirements-refinement: PASS (llm judge, unchanged scenario — carried forward from prior run)
-- directory-d-routes-to-product-slicer: PASS (llm judge, unchanged scenario — carried forward from prior run)
-- directory-e-routes-to-user-story-writeup: PASS (llm judge, unchanged scenario — carried forward from prior run)
-- directory-f-terminal-stop-no-cascade: PASS (llm judge, re-run — scenario and criteria both changed)
-- directory-g-asks-where-to-save: PASS (llm judge, unchanged scenario — carried forward from prior run)
-- single-step-not-chained: PASS (llm judge, re-run — now covers 8 directories)
-- directory-h-routes-to-architecture-design: PASS (llm judge, new)
+# orchestrator — 8/10 PASS
 
-Re-run after wiring `software-architect:architecture-design` into the
-routing table (`skills/orchestrator/SKILL.md` step 3). The terminal row
-moved one step further downstream: a user story alone is no longer
-terminal — a design doc from `software-architect` is. Directory F was
-updated to require both (now genuinely terminal, naming `tdd-coach` as
-the next unavailable stage instead of `software-architect`); Directory H
-was added to cover the row that used to be terminal (user story done, no
-design doc yet → routes to `software-architect:architecture-design`).
-Directories A–E and G are unchanged in content and criteria, so their
-prior judged verdicts still hold rather than being re-spawned redundantly.
+Overall: **FAIL** (every grader must pass)
+
+| Grader | Type | Result |
+|---|---|---|
+| skill-invoked | tool_used | PASS |
+| directory-a-no-problem-doc | llm | PASS |
+| directory-b-scope-map-decided-not-asked | llm | PASS |
+| directory-c-routes-to-requirements-refinement | llm | PASS |
+| directory-d-routes-to-product-slicer | llm | PASS |
+| directory-e-routes-to-user-story-writeup | llm | PASS |
+| directory-f-terminal-stop-no-cascade | llm | **FAIL** |
+| directory-g-asks-where-to-save | llm | PASS |
+| directory-h-routes-to-architecture-design | llm | PASS |
+| single-step-not-chained | llm | **FAIL** |
+| **Total** | | **8/10** |
+
+## Root cause: one stale fixture, two failing graders
+
+Both failures trace to Directory F's fixture, not to the skill. Its state —
+user story filed, design doc exists, nothing else — was the terminal row when
+this case was written. The terminal row has since moved twice, and F now
+correctly matches the `security-requirements` row. `single-step-not-chained`
+fails only because of its "Directory F's next action must be 'stop'" clause;
+the no-chaining property itself held in all eight directories.
+
+Read the two FAIL scores together — they are one problem reported twice.
+
+## What this run *did* verify
+
+The three rows added since the last passing run are exercised only
+indirectly. Directory F's output declines `technology-bootstrap` despite the
+empty repo (correct — that row sits below the runtime-safety rows) and
+declines the four event-triggered review skills (correct — no code exists).
+That reasoning is right, but no grader asserts it.
+
+**Backward routing is completely untested.** The output notes it checked all
+eight directories for hand-back signals and found none, which is correct for
+these fixtures — but no fixture contains one. Given that backward routing was
+added specifically because a real dogfooding run exposed a scope change being
+resolved by the wrong persona, a fixture carrying a "handed back" section
+(and expecting a route to the artifact's *owner*, not its finder) is the
+highest-value addition to this case.
+
+## Coverage gaps to close, in priority order
+
+1. A fixture with a backward-routing signal.
+2. A fixture at the current terminal row (design + runtime-safety criteria +
+   stack), restoring what F used to cover.
+3. Fixtures for the `reliability-requirements` and `technology-bootstrap`
+   rows.
+4. Retarget or rewrite Directory F for the security-requirements row.

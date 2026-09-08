@@ -1,81 +1,57 @@
 Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/orchestrator/SKILL.md
 
+Eight independent routing decisions. In each case with a target parameter, I took it as given (step 1), ran only the cheap mechanical checks of step 2, and checked for backward-routing signals before matching a row. No backward-routing signals (handed-back sections, supersession claims, self-declared skipped stages) were present in any of the eight.
+
 ## Directory A — `examples/newsletter-app/`
 
-**Detected:** Directory is empty. No problem framing doc, no scope map, no requirements doc, no slice.
-
-**Next step:** Route to `docs-writer:problem-framing-doc`.
-
-**Why:** Step 2's first check — a problem framing doc (top heading `# Problem: ...`) — comes back negative, and that's the first row of the step 3 routing table, checked before anything else. Nothing else in the directory needs inspecting once this row matches.
-
----
+1. **Detected:** Target given, so no asking needed. Directory empty — no file with a `# Problem: ...` top heading, no scope maps, no requirements, no slices.
+2. **Next:** `docs-writer:problem-framing-doc`, writing into `examples/newsletter-app/`.
+3. **Why:** First row of the table. Nothing downstream can be inspected or routed against until a stable problem statement exists to refer back to.
 
 ## Directory B — `examples/recipe-app/`
 
-**Detected:** `problem-framing.md` exists (`# Problem: Recipe Bookmark Sprawl`). No scope-map, requirements, or slice files anywhere.
-
-**Next step:** Route to `docs-writer`, to make the judgment call (per `scope-map`'s own trigger criteria, reading the problem doc) of whether this problem needs a scope map or is small enough to treat as one unit.
-
-**Why:** This matches row 2 exactly — problem doc present, and none of scope-map/requirements/slice exist yet. Per the routing table, this decision belongs to `docs-writer` reading the problem doc's actual content, not to the orchestrator guessing or defaulting to asking the user. (It may still ask the user if genuinely torn, but that's `docs-writer`'s call to make, not mine to make on its behalf.)
-
----
+1. **Detected:** Problem doc present (`# Problem: Recipe Bookmark Sprawl`). No `scope-map-*.md`, no `requirements-*.md`, no slices — so the "no scope map, no requirements, no slice anywhere yet" row matches exactly.
+2. **Next:** `docs-writer`, to make the scope-map judgment call — reading `problem-framing.md` and applying `scope-map`'s own trigger criteria to decide whether this problem needs a scope map or is small enough to treat as a single unit.
+3. **Why:** That decision belongs to the persona, from the problem doc's content — not to me, and not to a default question at the user. I'd hand it the target directory and let it ask the user only if genuinely torn.
 
 ## Directory C — `examples/budgeting-app/`
 
-**Detected:** Problem doc exists. `scope-map-001.md` exists with `## Status: Active` and four steps (1. Transaction retrieval, 2. Transaction categorization, 3. Budget & spending view, 4. Checking/savings rebalancing). No `requirements-*.md` file exists anywhere, so none of the four steps has requirements yet.
-
-**Next step:** Route to `product-manager:requirements-refinement` for **scope-map-001 step 1 — Transaction retrieval**.
-
-**Why:** Row 3 applies once a problem doc and (optionally) a scope map exist. The current unit is defined as "the lowest-numbered Active scope-map step with no requirements doc yet." Since no requirements doc exists for any step, step 1 is the lowest-numbered one lacking requirements, so it's the current unit, and it has no requirements-refinement doc — matching row 3.
-
----
+1. **Detected:** Problem doc present. One scope map, `scope-map-001.md`, `Status: Active` — so it's the current one by default. Four steps. No `requirements-*.md` anywhere, so the current unit is the lowest-numbered Active step with no requirements doc: **step 1, "Transaction retrieval."**
+2. **Next:** `product-manager:requirements-refinement` for scope-map-001 step 1 only, saved to `examples/budgeting-app/`.
+3. **Why:** The unit of work is a single scope-map step, not the whole problem. Steps 2–4 are deliberately out of frame — refining requirements for categorization or rebalancing now would decide things before anything's been built and learned from.
 
 ## Directory D — `examples/travel-planner/`
 
-**Detected:** Problem doc exists. No scope-map file (problem judged small enough to skip one). `requirements-001.md` exists, titled against "problem: Ad Hoc Group Trip Planning" (not a scope-map step), `## Status: Active`. No slice files yet.
-
-**Next step:** Route to `product-slicer` (`vertical-slicing` + `acceptance-criteria`), using `requirements-001.md` as the primary input for what to slice.
-
-**Why:** With no scope map, the current unit is "the problem" itself per the row-3 definition, and that unit already has an Active requirements-refinement doc — so row 3 is satisfied and we move down to row 4: requirements doc present, no slice yet.
-
----
+1. **Detected:** Problem doc present. No scope map, which per the table is a legitimate state — the unit is then the problem itself. `requirements-001.md` is Active and its heading scopes it to the problem (`problem: Ad Hoc Group Trip Planning`), which matches that unit. No slice files.
+2. **Next:** `product-slicer` (`vertical-slicing` + `acceptance-criteria`) for the problem as a whole, saved to `examples/travel-planner/`.
+3. **Why:** Requirements row is satisfied for the current unit; the next unsatisfied row is the missing slice. I'd tell the slicer that `requirements-001.md` is the primary input for WHAT to slice — its job is choosing the thinnest end-to-end path through those requirements, not re-deciding them.
 
 ## Directory E — `examples/inventory-app/`
 
-**Detected:** Problem doc exists. `scope-map-001.md` Active, includes step 1 "Stock count entry." `requirements-001.md` exists for scope-map-001 step 1, Active. `slice-1.md` exists, titled "Slice 1 (scope-map-001 step 1): Record a manual stock count for one item" — its title names the source scope-map step, so it belongs to the current unit. No user-story/write-up artifact exists, and the user hasn't said it was filed.
+1. **Detected:** Problem doc, Active `scope-map-001`, Active `requirements-001` scoped to step 1, and `slice-1.md` whose title names its source step (`scope-map-001 step 1`) — so it was cut from the scope map, not directly from the problem doc, and it belongs to the current unit. No user-story artifact locally and no user statement that filing happened, so that row is unsatisfied.
+2. **Next:** `docs-writer:user-story-writeup` for slice 1, saved to `examples/inventory-app/`.
+3. **Why:** Everything above that row is satisfied for step 1. Note the filing check is one I take the user's word on when the project doesn't track user stories locally — here there's neither an artifact nor a claim, so I treat it as not done.
 
-**Next step:** Route to `docs-writer:user-story-writeup` for slice 1.
+## Directory F — `examples/inventory-app/` (story filed, design doc exists)
 
-**Why:** Current unit (scope-map-001 step 1) has requirements and now has a slice, satisfying rows 3 and 4. Row 5 checks whether that slice has been written up as a user story yet — no matching artifact exists and filing wasn't asserted by the user, so it hasn't. Row 5 is the match.
+1. **Detected:** Same spine as E, plus a filed user story (user's word, which the skill accepts) and `design-1.md` for slice 1. The remaining step-2 check that matters is whether the slice's acceptance criteria still carry unfilled placeholders naming `devsecops-engineer` (or the older `security-engineer`/`reliability-engineer` names). Since nothing has run since the architect and no devsecops pass has touched this slice, those placeholders are unfilled — I'd confirm by grepping `slice-1.md`/`design-1.md` for the placeholder rather than reading the prose.
+2. **Next:** `devsecops-engineer:security-requirements` for slice 1, saved to `examples/inventory-app/`.
+3. **Why:** This is the first unsatisfied row. Two things I'm deliberately *not* doing: (a) not routing to `technology-bootstrap` even though no code exists — that row sits below the runtime-safety rows, because a structural design needs no stack and security/reliability criteria are technology-agnostic, so the stack choices should be made against a fully specified slice; (b) not touching `security-review`/`supply-chain-review`/`operational-readiness` — those are event-triggered against code that already exists here, and this spine hasn't reached code.
 
----
+## Directory G — household bills, no target parameter
 
-## Directory F — `examples/inventory-app/` (same as E, plus slice 1 filed as a user story AND a design doc already exists)
+1. **Detected:** Nothing, and deliberately so. Step 1 was not satisfied: no artifacts directory was given. I did not inspect anything and did not search the project for a plausible location.
+2. **Next:** Ask, once, before doing anything else, via `AskUserQuestion`: **"Where do this problem's artifacts already exist, or where should they be created if we're starting from scratch?"** Whatever the user answers becomes the target for every persona on this problem, in this session and future ones.
+3. **Why:** Guessing a location or scanning for one is explicitly out of bounds. Also worth flagging: the user saying "start scoping this out" is *not* an instruction to run `scope-map` — the scope-map-versus-single-unit decision is `docs-writer`'s call from the problem doc, and there's no problem doc yet. Once the directory is known I'd re-enter at step 2; if it's empty, that's the `problem-framing-doc` row.
 
-**Detected:** Same artifacts as Directory E, plus the user's statement that slice 1 has been written up and filed, plus `design-1.md` ("Design: Record a manual stock count for one item") already exists for it. No code exists yet; no slice 2 exists.
+## Directory H — `examples/inventory-app/` (story filed, no design)
 
-**Next step:** Stop. No further routing for this unit.
+1. **Detected:** Same as E, but the user-story row is now satisfied by the user's word. No design artifact for slice 1.
+2. **Next:** `software-architect:architecture-design` for slice 1, saved to `examples/inventory-app/`.
+3. **Why:** Design is the next unsatisfied row, and it must precede the devsecops requirements passes — what data slice 1 actually handles depends on how it's built, so security and reliability criteria written before the structural decision would describe a system nobody is building.
 
-**Why:** The current unit's slice now has both a user-story write-up and a design doc — that's the routing table's terminal row (moved one row further now that `software-architect` is wired in; a user story alone is no longer terminal, a design doc is). Per step 5, this is as far as the roster currently reaches: `tdd-coach` would implement this design next, but doesn't exist in the roster yet. I would say so plainly, explicitly not re-route back to `software-architect:architecture-design` (the design already exists — there's nothing left for that row to produce), and explicitly not advance to scope-map-001 step 2's requirements refinement — doing either would repeat the exact mistake this rule guards against: deciding or re-deciding scope before the current unit has actually been built and learned from. If the user wants to start step 2 anyway, that's their explicit call to make, not something this routing offers on its own.
+## Cross-cutting notes
 
----
-
-## Directory G — no artifacts directory given
-
-**Detected:** No directory parameter was passed, and the user didn't mention where this problem's artifacts should live. The request itself ("split shared household bills fairly... start scoping this out") sounds like a fresh problem, but per the skill I'm not permitted to guess a location or search the project for one.
-
-**Next step:** Before doing anything else — including any inspection — ask the user exactly:
-
-> "Where do this problem's artifacts already exist, or where should they be created if we're starting from scratch?"
-
-**Why:** Step 1 is unambiguous: when no target directory is given, that question must be asked first, before step 2's inspection or any routing decision. Whatever the user answers becomes the target for this problem going forward. I would not infer a folder name (e.g., from "household bills") or default to any existing example directory — the skill explicitly rules that out ("never guess a location yourself and never search the project for one instead of asking").
-
----
-
-## Directory H — `examples/inventory-app/` (same as E, plus slice 1 filed as a user story, no design doc yet)
-
-**Detected:** Same artifacts as Directory E, plus the user's statement that slice 1 has already been written up as a user story and filed. No `software-architect` design doc exists for it yet; no slice 2 exists.
-
-**Next step:** Route to `software-architect:architecture-design` for slice 1.
-
-**Why:** The current unit's slice has a user-story write-up (satisfying row 5), but no design doc yet — that's the new row added between "written up" and the terminal row now that `software-architect` is wired into the routing table. This is a genuinely intermediate state, not terminal: a design doc doesn't exist yet, so the table doesn't stop here the way it now would once one does (see Directory F). I would not report a stop here, and would not advance to scope-map-001 step 2.
+- **A, C, F, H are the ones where getting it wrong is easy.** C tempts you to run requirements for the whole scope map; F tempts you to bootstrap the stack because the repo is empty; H tempts you to jump straight to security criteria.
+- **Every one of these stops after a single routed step.** Per step 5 I'd report what was detected and what was produced, then name the *next* row and ask whether to continue — except at a terminal state, where I'd say plainly that the roster stops there and `tdd-coach` doesn't exist yet. None of the eight is at that terminal row: F is two rows away (reliability-requirements, then technology-bootstrap, since this project has no stack).
+- **No files were written or edited** — this was the routing decision only, as instructed.

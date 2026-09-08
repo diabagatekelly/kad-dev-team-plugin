@@ -28,22 +28,66 @@ frontmatter grades the question instead (used for the "did it ask" checks).
 Case names follow `agent:skill` for persona-backed triggers, or just
 `skill` for a skill with no owning persona (e.g. `orchestrator`).
 
-| Case | Status |
-|---|---|
-| `docs-writer:problem-framing-doc` | Run via agent-eval (3/3 PASS) |
-| `docs-writer:scope-map` | Run via agent-eval (4/4 PASS) |
-| `docs-writer:adr` | Not written |
-| `docs-writer:why-comments` | Not written |
-| `docs-writer:user-story-writeup` | Run via agent-eval, two-phase (3/3 PASS) |
-| `docs-writer:pr-writeup` | Not written |
-| `docs-writer:user-facing-docs` | Not written |
-| `docs-writer:staleness-audit` | Not written |
-| `product-manager:requirements-refinement` | Run via agent-eval, two-phase (5/5 PASS) |
-| `product-slicer:vertical-slicing` | Run via agent-eval, two-phase (4/4 PASS) |
-| `product-slicer:acceptance-criteria` | Run via agent-eval (2/2 PASS) |
-| `orchestrator` | Run via agent-eval, skill-only case (10/10 PASS) |
-| `software-architect:architecture-design` | Run via agent-eval, three-phase — extends the documented format, see the case's own `prompt.md` (5/5 PASS) |
-| `software-architect:architecture-review` | Run via agent-eval (4/4 PASS) |
+**Last result** is the most recent score. **Current** says whether that score
+still describes the code: a case goes stale the moment its `AGENT.md` or
+`SKILL.md` changes, or its own fixtures/graders are edited. A stale case's
+score is history, not a claim about today.
+
+| Case | Last result | Current? |
+|---|---|---|
+| `docs-writer:problem-framing-doc` | 3/3 PASS | yes |
+| `docs-writer:scope-map` | 4/4 PASS | **no — grader added** (cross-cutting constraints routed, not deferred) |
+| `docs-writer:adr` | — | not written |
+| `docs-writer:why-comments` | — | not written |
+| `docs-writer:user-story-writeup` | 3/3 PASS, two-phase | yes |
+| `docs-writer:pr-writeup` | — | not written |
+| `docs-writer:user-facing-docs` | — | not written |
+| `docs-writer:staleness-audit` | — | not written |
+| `product-manager:requirements-refinement` | 5/5 PASS, two-phase | **no — fixture + grader added** (problem doc's Constraints now supplied; constraints-in-force grader) |
+| `product-slicer:vertical-slicing` | 4/4 PASS, two-phase | **no — scenario + 2 graders added** (Scenario C scope hand-back; slice-set grader) |
+| `product-slicer:acceptance-criteria` | 2/2 PASS | **no — `product-slicer/AGENT.md` changed** |
+| `orchestrator` | 8/10 FAIL, skill-only | **no — 5 fixtures + 5 graders added, 2 retargeted** |
+| `software-architect:architecture-design` | 5/5 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | **no — `architecture-design/SKILL.md` and `software-architect/AGENT.md` both changed** |
+| `software-architect:architecture-review` | 4/4 PASS | **no — `software-architect/AGENT.md` changed** |
+| `software-architect:technology-bootstrap` | — | written, never run (6 graders) |
+| `devsecops-engineer:security-requirements` | — | not written |
+| `devsecops-engineer:security-review` | — | not written |
+| `devsecops-engineer:supply-chain-review` | — | not written |
+| `devsecops-engineer:reliability-requirements` | — | not written |
+| `devsecops-engineer:reliability-review` | — | not written |
+| `devsecops-engineer:operational-readiness` | — | not written |
+
+### The `example/` directory
+
+`example/` is not a case and has no graders of its own. It's the dogfooding
+record: one real problem worked end to end by the actual personas, which is
+where most of this plugin's rules came from — usually by watching the run
+break.
+
+It gets graded by borrowing the graders from each artifact's owning case.
+Two limits on that, both recorded in its `summary.md`: `skill-invoked` and
+phase-1 graders don't apply (these are finished documents, not captured
+harness output), and some graders are bound to their fixture's specifics and
+have to be adapted or skipped. **Passing there is not the same as the case
+passing** — it's real artifacts against adapted criteria.
+
+### Known coverage gaps
+
+- **No case exercises `devsecops-engineer` at all** — six skills, zero
+  cases. Two of the six (`security-requirements`' threat pass and
+  `operational-readiness`) were written from a gap rather than synthesized
+  from sources, so running them is the only way they can be checked.
+- **The hand-back rule is tested from one side only.** `product-slicer`
+  receiving a scope change is covered (`vertical-slicing` Scenario C) and
+  `orchestrator` routing one to the owner is covered (Directory L), but
+  nothing tests `devsecops-engineer` *producing* a proper hand-back rather
+  than presenting the user a menu of options — the actual observed failure.
+  That needs a `devsecops-engineer:security-requirements` case.
+- **`technology-bootstrap`'s advisor-consult path is only softly graded.**
+  Consulting `devsecops-engineer` inline is treated as expected-but-not-
+  required, because the emulation harness can't distinguish an inline
+  consult from a spawn — the distinction the rule actually exists to
+  enforce.
 
 Root-cause notes for any bug a case caught live in that case's own
 `eval-score/summary.md`, not here — check there before touching a skill,
