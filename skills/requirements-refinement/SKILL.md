@@ -31,6 +31,42 @@ reshapes the slice that gets built on top of it.
 - Were there alternative approaches they considered or rejected, and why?
   Capture the reason, not just the choice.
 
+**Then reconcile the problem doc's constraints — a separate pass from
+asking what they want.** The questions above decide the WHAT. This decides
+what is already binding on it, and it is the step most likely to be
+skipped, because a constraint written at problem-framing time rarely looks
+like it belongs to the step in front of you.
+
+Walk the problem doc's Constraints one at a time. For each: does it apply
+to this unit? If yes, **say what it forces here.** If no, say why not.
+Both answers get written down; a constraint that silently doesn't appear is
+indistinguishable from one nobody read.
+
+**Draw the consequence — restating the constraint is not the job.** This is
+the whole point of the pass. "The system may be hosted off your own
+hardware" is not a note about hosting; it means something reachable over a
+network will display this unit's data, which forces a question about who is
+allowed to see it. "Single user today, not single-user forever" is not a
+note about the future; it means nothing here may assume one hardcoded
+identity. A constraint carried forward as a quotation has not been
+reconciled.
+
+**A constraint that looks like a later step's problem is the one that gets
+dropped.** "Applies to every step" includes this step. If the scope map
+sets a constraint aside as cross-cutting, that makes it *yours to apply
+here*, not someone else's to handle later — deferring it to whoever designs
+or builds this is how it surfaces after slicing, when the cost of acting on
+it is highest.
+
+**When a consequence would change the shape of the work, ask.** Same
+convention as everything else here. Noticing that a constraint forces a
+capability nobody has scoped is a real finding and belongs in this
+conversation, not three stages downstream.
+
+This is not deriving the WHAT from the problem doc — that rule above still
+holds. Checking a stated constraint against a decided scope is a different
+activity from inferring what someone wants.
+
 **Template:**
 
 ```markdown
@@ -61,6 +97,12 @@ What was raised but the user confirmed isn't part of this piece yet, and
 why. Narrower than the scope map's whole-problem "Out of scope"; distinct
 from `product-slicer`'s own "Explicitly deferred," which covers
 slicing-technique deferrals decided later, once a thin path exists.
+
+## Constraints in force
+Every constraint from the problem doc, one line each: what it forces for
+*this* unit, or why it doesn't apply here. Consequences, not quotations.
+Note any that turned out to force a capability nothing has scoped yet —
+that's a finding for `product-slicer`, not a note.
 ```
 
 **Never write a thin path, Given/When/Then acceptance criteria, or apply a

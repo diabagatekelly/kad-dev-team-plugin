@@ -7,8 +7,8 @@ description: Route a problem to whichever kad-dev-team persona/skill applies nex
 
 **This is a skill the main agent loads, not a persona to spawn.** Every
 persona in this roster that plans work (`docs-writer`, `product-manager`,
-`product-slicer`, `software-architect`) blocks on `AskUserQuestion` and
-must run inline — never as an async `Agent` spawn. Orchestrating them means *you* adopt each one's
+`product-slicer`, `software-architect`, `devsecops-engineer`) blocks on
+`AskUserQuestion` and must run inline — never as an async `Agent` spawn. Orchestrating them means *you* adopt each one's
 instructions in turn, in this same conversation, the same way you would if
 the user had asked for that persona directly. There is no launching or
 parallelism here.
@@ -59,11 +59,41 @@ mechanical checks only, never a semantic read of full artifact prose:
   locally — otherwise take the user's word for whether filing happened)?
   Has it been designed yet (a matching design-doc artifact from
   `architecture-design`, if this project tracks those locally — otherwise
-  take the user's word)?
+  take the user's word)? Does it still carry unfilled placeholder
+  acceptance criteria naming `devsecops-engineer` (or, in artifacts written
+  before this persona existed, `security-engineer` / `reliability-engineer`)?
+- **Project-level, not per-unit:** is there a technology-bootstrap artifact
+  in the target directory? If not, take the user's word for whether this
+  project already has a working stack — a repo someone has been building in
+  for months has obviously settled this without an artifact, and asking it
+  to produce one retroactively is busywork. Only a repo with no stack yet
+  routes to this row.
 
 **3. Route by what's missing**, in this order. Each row assumes everything
 above it in the table is already satisfied for the current unit of work
-(a scope-map step, or the whole problem if no scope map applies):
+(a scope-map step, or the whole problem if no scope map applies).
+
+**Backward routing takes precedence over the whole table.** Before matching
+any row, check whether a later artifact has invalidated an earlier one.
+Signals, all cheap to spot: a section headed "handed back," "blocking," or
+similar naming another persona; an artifact stating it contradicts or
+supersedes something upstream; an artifact whose own text says a stage was
+skipped for it.
+
+When you find one, **route to the persona that owns the invalidated
+artifact — not the one that found the problem.** A security pass that
+discovers a slice needs a capability nobody scoped has found a
+`product-slicer` problem; a slice created without a requirements pass is a
+`product-manager` problem. The finder reports; the owner decides. Letting
+the finder resolve it in place is how a scope decision gets made by a
+persona that doesn't own scope, and how a stage gets skipped without anyone
+choosing to skip it.
+
+Two rules for the backward step: upstream artifacts are revised by
+superseding, never by editing in place (`scope-map`, `requirements-refinement`,
+and `adr` all number sequentially for this reason), and once it completes,
+return to step 2 and re-inspect from scratch — a superseded scope map can
+move the forward position by more than one row.
 
 | Detected state | Route to |
 |---|---|
@@ -73,11 +103,36 @@ above it in the table is already satisfied for the current unit of work
 | The current unit has a requirements-refinement doc but no slice yet | `product-slicer` (`vertical-slicing` + `acceptance-criteria`), using the requirements doc as the primary input for WHAT to slice — not re-deciding it |
 | A slice exists for the current unit but hasn't been written up as a user story yet | `docs-writer:user-story-writeup` |
 | The current unit's slice has been written up as a user story but has no design doc yet | `software-architect:architecture-design` for that slice |
-| The current unit's slice has a design doc | **Stop — see step 5.** Don't advance to the next scope-map step. |
+| The slice has a design doc but its security criteria are still an unfilled placeholder | `devsecops-engineer:security-requirements` for that slice |
+| The slice's security criteria are filled but its reliability behavior has never been made concrete | `devsecops-engineer:reliability-requirements` for that slice |
+| The slice is designed with its runtime-safety criteria filled, and the project has no stack yet | `software-architect:technology-bootstrap` for that slice |
+| The slice has a design doc, its runtime-safety criteria are filled, and the project has a stack | **Stop — see step 5.** Don't advance to the next scope-map step. |
 
-Never invent a stage this table doesn't cover. ADRs and `staleness-audit`
-are event-triggered, not part of this forward spine — hand off to them
-only if the user asks.
+**Why the requirements rows come *after* design, not before.** These are
+the only non-functional criteria in the spine that depend on structural
+decisions: what data a slice actually handles is determined by how it's
+built. A design that puts a third-party vendor between the system and a
+credential means the credential never enters at all — which is a completely
+different set of security criteria than the same slice built to hold that
+credential itself. Running these before the design decision would produce
+criteria for a system nobody is building.
+
+**Why the bootstrap row comes last, not first.** An empty repo makes
+"choose the stack" feel like step one, but a structural design needs no
+technology to exist — it names boundaries and what crosses them — and
+runtime-safety criteria are deliberately technology-agnostic ("bank
+credentials never enter the system" holds regardless of what's storing
+anything). The one thing that genuinely can't proceed without a stack is
+writing the first failing test, which is the next stage after this row.
+Putting it here means the choices get made against a slice that's fully
+specified, and only the ones that slice actually forces get made at all.
+
+Never invent a stage this table doesn't cover. ADRs, `staleness-audit`, and
+all four of `devsecops-engineer`'s review/posture skills
+(`security-review`, `reliability-review`, `supply-chain-review`,
+`operational-readiness`) are event-triggered, not part of this forward
+spine — they run against code or a repo that already exists, which this
+spine hasn't reached. Hand off to them only if the user asks.
 
 **4. Execute exactly one routed step, inline.** Read the target persona's
 `AGENT.md` and the specific `SKILL.md` the trigger matched — nothing else.
@@ -95,8 +150,9 @@ Then:
   unit): name what that next step would be and ask whether to continue to
   it now, in this same conversation. If yes, loop back to step 2 for the
   now-current state — don't re-run step 1. If no, stop and wait.
-- **If the current unit just reached the terminal row** (its slice was
-  just designed by `software-architect`): don't propose anything further.
+- **If the current unit just reached the terminal row** (its slice is
+  designed, its runtime-safety criteria are filled, and the project has a
+  stack to build on): don't propose anything further.
   Say plainly that this is as far as the roster currently reaches —
   `tdd-coach` would implement this design next, and doesn't exist yet.
   Moving on to the next scope-map step's requirements or slicing before

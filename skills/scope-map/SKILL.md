@@ -42,6 +42,20 @@ not a new design decision, just carrying forward context the reader already
 has. Naming an actual technology, vendor, or implementation approach not
 already in the problem doc is a design decision and doesn't belong here.
 
+**A cross-cutting constraint isn't a step — and setting it aside is not the
+same as deferring it.** Some constraints from the problem doc (protecting
+sensitive data, staying free, not assuming one identity) apply to every
+step rather than being one. Saying so here is right; they'd make a
+misleading step. But say where they get applied, and the answer is **each
+step's own `requirements-refinement` pass**, which reconciles them against
+that step's confirmed scope before anything is sliced.
+
+Never route them to "made concrete per slice as each is designed." That
+sounds responsible and defers a whole-problem constraint past the point
+where scope is decided — so it resurfaces during design or review, when the
+only remaining fixes are re-slicing or growing a slice. A constraint set
+aside here is *every* step's requirements problem, not a later persona's.
+
 **Template:**
 
 ```markdown

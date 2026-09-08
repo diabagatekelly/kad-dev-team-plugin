@@ -43,11 +43,11 @@ should:
   relevant (a CSV upload control and a transaction list are both real UI
   *and* both touch real data — that's two placeholders, not one). You
   don't have either expertise — don't author either criterion yourself.
-  Delegate the security one to `security-engineer` and the accessibility
-  one to `accessibility-engineer` once those personas exist to fill them
-  in for real; until then, the placeholders keep both gaps visible instead
-  of either going missing silently. Shipping without both placeholders is
-  a gap, not a deferral.
+  Delegate the security one to
+  `devsecops-engineer:security-requirements`, and the accessibility one to
+  `accessibility-engineer` once that persona exists; until then, the
+  placeholders keep both gaps visible instead of either going missing
+  silently. Shipping without both placeholders is a gap, not a deferral.
 - **Still be genuinely end-to-end**, even if narrow. A slice that skips the
   "view the result" step to save time isn't a slice — it's half of one.
 - **Has a real user as its actor.** If the actor is "the system" or "a
@@ -58,6 +58,38 @@ should:
 don't split a slice into uselessly small pieces just to say it's small if a
 slightly larger cohesive capability is still comfortably deliverable and
 still end-to-end.
+
+## Name the whole set, specify only the first
+
+For the unit you're slicing, **list every slice you currently think it
+needs** — one line each, a verb phrase and nothing more — then write up
+only the first one properly.
+
+The set is what makes the first slice checkable. "Is this the thinnest
+first step" has no answer in isolation; it only means something against
+what the second and third steps would be. A slice cut with nothing after it
+in view is the one that quietly becomes the whole unit, because there's
+nowhere else for anything to go.
+
+Keep the split sharp:
+
+- **The set** is cheap, provisional, and one line per entry. No thin paths,
+  no acceptance criteria, no ordering rationale beyond what's obvious.
+- **The first slice** gets the full write-up below — thin path, acceptance
+  criteria, both placeholders, deferrals.
+- **Everything after it stays a line** until it's actually next. Writing
+  acceptance criteria for slice 3 today prices in assumptions that building
+  slice 1 is about to invalidate.
+
+**Expect the set to change, and say so where you write it.** Building the
+first slice is the single best source of information about whether the rest
+of the list is right. A set that survives untouched to the end was probably
+not being checked against reality. Revising it is the process working —
+it's the same relationship `scope-map` has with its own steps.
+
+Never advance to fully specifying the second slice before the first is
+built and learned from. The set exists to give the first slice context, not
+to authorize working ahead.
 
 ## Slicing techniques
 
@@ -118,6 +150,39 @@ Speculative generality is a smell at slice-scoping time too: don't design a
 slice to anticipate an account type, category, or integration nobody has
 asked for yet. Add it when a second real instance shows up.
 
+## When a later stage forces a scope change
+
+A downstream persona — security, reliability, architecture — will sometimes
+find that a slice needs a capability nobody scoped. **That finding is
+theirs; the resolution is yours.** They report what they found and what it
+forces. Deciding what happens to the slice is this skill's job, and it
+doesn't get made by whoever happened to notice.
+
+Work the options in this order, and say which you picked and why:
+
+1. **Cut a new slice ahead of this one** delivering the missing capability
+   on its own. Usually right, and usually available — it keeps both slices
+   thin and puts the new capability where it can be demonstrated
+   independently.
+2. **Narrow the current slice so the constraint stops applying.** Legitimate
+   when the requirement comes from context this slice doesn't need yet —
+   running locally rather than exposed, for instance. Genuinely thinner, not
+   a dodge.
+3. **Grow the current slice.** Last resort, and only when the missing piece
+   can neither stand alone nor be avoided.
+
+**Growth is ranked last because it has no natural stopping point.** Every
+addition arrives with a good reason attached, and a slice that has grown
+once is easier to grow again. If you land on option 3, say plainly that the
+slice is now larger than what was cut and what that bought.
+
+**Whatever you pick, repair what it invalidated.** A new slice created
+mid-flight has no confirmed WHAT behind it — it needs its own
+`requirements-refinement` pass, not an assumption that the finding
+constitutes one. A changed step boundary supersedes the scope map rather
+than editing it. Leaving a stage skipped because the slice arrived from an
+unusual direction is exactly the gap this ordering exists to close.
+
 ## Matching and detection criteria need a named key
 
 Any criterion built on comparing two things — matching a transaction to
@@ -143,6 +208,12 @@ ways in the same document.
 
 ```markdown
 # Slice N: <name — a verb phrase describing user-observable behavior>
+
+## Slice set for this unit
+Every slice this unit currently looks like it needs, one line each, this
+one marked. Provisional — expected to change once this slice is built.
+Include this section in the unit's first slice write-up; later slices in
+the same unit reference it rather than restating it.
 
 ## Thin path
 The single end-to-end path this slice delivers, one or two sentences.
