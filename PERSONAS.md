@@ -26,7 +26,8 @@ agent.
   system prompt, not duplicated across skills.
 - **Planning personas ask, they don't just guess.** A persona that shapes
   work before it exists (`product-manager`, `product-slicer`,
-  `software-architect`, and any future persona like them) asks a
+  `software-architect`, `devsecops-engineer`, and any future persona like
+  them) asks a
   clarifying question when an ambiguity would change the shape of its
   output. Deferring-as-an-open-question is only for ambiguity that
   wouldn't. Silently picking an assumption on something load-bearing is
@@ -90,13 +91,24 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 1 | `docs-writer` | Purposeful documentation — problem framing docs, light scope maps for problems too big to slice blind, ADRs, WHY-not-WHAT comments, user-story/PR write-ups, user-facing feature docs, avoiding stale/ceremonial docs | Core strength | Done |
 | 2 | `product-manager` | Pinning down WHAT before HOW — asking the user directly who benefits, what they want, and why for one unit of work, before any slice gets cut | Core strength | Done |
 | 3 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit for a confirmed requirement, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
-| 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction | Core strength | Done |
+| 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction; also owns technology selection, recommending rather than deciding — the starting set a first test forces, and what sits behind each boundary once one forces it | Core strength | Done |
 | 5 | `tdd-coach` | Red-Green-Refactor discipline — test quality over coverage-as-theater, catching over-mocked tests and false positives | Core strength | Planned |
 | 6 | `code-reviewer` | Readability/DRY/simplicity triage — self-documenting code over comments, a severity taxonomy for findings | Core strength | Planned |
-| 7 | `security-engineer` | Threat-aware review — OWASP-style checks, secrets/PII hygiene, dependency & supply-chain risk, least privilege | Borrowed/synthesized (weak area) | Planned |
-| 8 | `reliability-engineer` | Deployability & operability — IaC review, observability (logs/metrics/traces), safe rollout/rollback, incident-readiness | Borrowed/synthesized (weak area) | Planned |
-| 9 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work |
-| 10 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself |
+| 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done |
+| 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work |
+| 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself |
+
+**Rows 7 and 8 were merged.** The roster originally planned
+`security-engineer` (threat-aware review) and `reliability-engineer`
+(deployability & operability) as separate personas. Building them revealed
+the split didn't survive contact: both sources ship them bundled, and the
+overlap is structural rather than accidental — an over-permissive
+deployment role and a missing timeout live in the same file, are found by
+the same read, and are fixed in the same change. Per this roster's own
+convention ("if two personas would flag the same thing, merge them or
+sharpen the boundary"), they merged. The narrowness moved into the skills:
+six of them, three per half, one per trigger. See
+`.synthesis/devsecops-engineer.md` Contradiction 1.
 
 ## Orchestrator
 
@@ -105,16 +117,21 @@ applies next, by inspecting existing artifacts (problem doc, scope map,
 requirements, slices, design docs) instead of requiring the user to name
 the right persona each time. Built as a **skill the main agent loads**,
 not a persona/agent — `docs-writer`, `product-manager`, `product-slicer`,
-and `software-architect` are all `background: false` and must run inline,
+`software-architect`, and `devsecops-engineer` are all `background: false`
+and must run inline,
 so there's nothing to spawn or parallelize; routing means adopting each
 persona's own instructions in turn, in the same conversation.
 
-**v1 scope**: sequential stage routing across today's four planning
+**v1 scope**: sequential stage routing across today's five planning
 personas (problem-framing-doc → scope-map → requirements-refinement →
-slicing → user-story-writeup → architecture-design), one step at a time,
-human checkpoint after each — and a hard stop once a slice has been
-designed, since the next stage (`tdd-coach` implementing that design)
-doesn't exist yet. Never cascades to the next scope-map step
+slicing → user-story-writeup → architecture-design → security-requirements
+→ reliability-requirements → technology-bootstrap), one step at a time,
+human checkpoint after each — and a hard stop once a slice is designed, its
+runtime-safety criteria are filled, and the project has a stack to build
+on, since the next stage (`tdd-coach` implementing that design) doesn't
+exist yet. `devsecops-engineer`'s four review/posture
+skills sit outside this spine entirely: they run against code or a repo
+that already exists, which the spine never reaches. Never cascades to the next scope-map step
 automatically — each unit of work needs design/implementation before the
 next one's shape gets decided, the same reason CAMS's own per-slice
 workflow iterates rather than deciding every slice up front. Parallel
@@ -125,12 +142,17 @@ below until it has real personas to synthesize across.
 ## Deferred / phase-2 ideas
 
 - **Orchestrator v2 — parallel review synthesis**: launching several
-  execution-phase specialists (`code-reviewer`, `security-engineer`,
-  `tdd-coach`, `reliability-engineer`) against the same artifact and
-  reconciling their findings, mirroring the parallel-review pattern seen in
-  other installed plugins. Needs at least two of those personas to actually
-  exist first — designing it earlier means designing against a shape
-  nothing has confirmed yet.
+  execution-phase specialists (`code-reviewer`, `devsecops-engineer`,
+  `tdd-coach`) against the same artifact and reconciling their findings,
+  mirroring the parallel-review pattern seen in other installed plugins.
+  One of the three now exists. Still blocked on a second, and on a real
+  constraint the merge just surfaced: `devsecops-engineer` is
+  `background: false` because its requirements skills block on
+  `AskUserQuestion`, so it can't currently be launched in parallel with
+  anything. Its four review/posture skills never ask, though — whether a
+  persona's parallelizability should be a per-skill property rather than a
+  per-agent one is the actual design question here, and it isn't answerable
+  until a second reviewer exists to parallelize against.
 - **impl vs review split per persona**: several existing agent sets come in
   pairs (`*-impl` doing the work, `*-review` critiquing it). Decide per-persona,
   once built, whether that split earns its complexity here, or whether one
@@ -138,58 +160,151 @@ below until it has real personas to synthesize across.
 
 ## Next to build
 
-Decided at the end of each work session — only the persona(s) coming next,
-never a full future ordering. Building in the order a real problem actually
-moves through the SDLC, dogfooding each persona against one running example
+Decided at the end of each work session — only what's coming next, never a
+full future ordering. Building in the order a real problem actually moves
+through the SDLC, dogfooding each persona against one running example
 (`evals/example/`) as it's built. Update this section before ending a
-session; it should never describe more than what's actually next.
+session; it should never describe more than what's actually next, and
+session-by-session narrative gets condensed into "Durable findings" below
+rather than accumulating here.
 
 (`examples/budgeting-app/` was the original dogfood location but is listed
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
-now lives in `evals/example/` instead, which is tracked.)
+lives in `evals/example/`, which is tracked.)
 
-**Next: a batch of four — `security-engineer`, `reliability-engineer`,
-`accessibility-engineer`, and the new `ux-designer` row — ahead of
-`tdd-coach`, not instead of it.** Table order alone would say `tdd-coach`
-is next (row 5), but "building in the order a real problem actually moves
-through the SDLC" means following what dogfooding actually surfaced, not
-the row numbers. A live end-to-end orchestrator run
-(`evals/example/summary.md`) produced real, non-hypothetical evidence that
-all four are already blocking, not just eventually useful:
+### Where things stand
 
-- `evals/example/slice-001.md` carries live placeholder acceptance
-  criteria owned by `security-engineer` (credential/token handling) and
-  `accessibility-engineer` (connection flow + transaction list), both
-  still concretely undefined.
-- `evals/example/design-001.md`'s own Open Questions defer the
-  storage/hosting decision to "whoever sets up the composition root" —
-  no persona in this roster currently owns that; it's `reliability-engineer`
-  territory (deployability/hosting), not `software-architect`'s (structure,
-  not where it runs).
-- Nothing in the roster decides what a UI-touching slice's screen actually
-  looks like or how it's interacted with before code exists —
-  `architecture-design` deliberately stops at "renders whatever the
-  strategic side hands it," and `accessibility-engineer` only reviews for
-  WCAG correctness, not generates the design. `ux-designer` (new row 10)
-  fills that gap.
+Five personas done. `software-architect` also gained an unplanned third
+skill, `technology-bootstrap`, and the roster gained its first **advisor
+consult** — `software-architect` loading a `devsecops-engineer` skill
+inline for a narrow runtime-safety question and handing control straight
+back. It is not a spawn and can't be; every persona here is
+`background: false`, so it reuses `orchestrator`'s adopt-inline pattern.
 
-Once these four exist, every placeholder and open question already
-sitting in `evals/example/`'s real artifacts should be fillable for real —
-that's this batch's own dogfood target, the same way `evals/example/slice-001.md`
-was `software-architect`'s. `tdd-coach` (and the design-doc-to-implementation
-gap noted below) comes after, once a slice's security, hosting, and UI
-decisions are all actually made, not just flagged.
+**Benchmarking is the live problem, not the roster.** The last dogfood run
+was graded 16/16 against the eval cases' own graders
+(`evals/example/summary.md`), and the ordering failure that drove this
+session's fixes did not recur. But that is real artifacts graded against
+adapted graders — *not* the eval cases passing. Every case covering changed
+code is currently stale; `evals/README.md` tracks last-result and staleness
+as separate columns.
 
-Both `software-architect` skills were reshaped by real dogfooding, same as
-prior sessions — see `.synthesis/software-architect.md`'s "Contradictions
-— flagged and resolved" for the design calls made resolving disagreements
-between the Flexion and CAMS reference sources (naming: "Option-Enabling
-Architecture (OEA)"; no impl/review agent split, one agent with two
-skills instead; YAGNI treated as two-directional; no numeric/scored
-health-check mechanism adopted). `orchestrator`'s routing table
-(`skills/orchestrator/SKILL.md`) has already been updated to route to
-`software-architect:architecture-design` once a slice is written up, and
-to hard-stop one row later, once a design doc exists — re-run and passing
-(`evals/orchestrator/eval-score/summary.md`, 10/10). `tdd-coach` will need
-the same treatment once it exists: a new terminal-row shift, from "design
-doc exists" to "implemented," plus a fresh no-cascade check.
+### Next: eval cases for `devsecops-engineer`'s six skills
+
+A deliberate break from the persona-per-session rhythm. That persona was the
+largest single addition to the plugin — one agent, six skills, on a weak
+area — and two of the six (`security-requirements`' threat pass and
+`operational-readiness`) had **no source material at all** and were written
+from a gap rather than synthesized. Those two can only be checked by running
+them. Building `accessibility-engineer` next would stack a second weak-area
+persona on top of six untested skills.
+
+Two of the six have now been exercised in a real run
+(`security-requirements` and `reliability-requirements`), and both produced
+findings that reshaped the run — which is evidence the remaining four will
+move things too, not evidence they're fine.
+
+Priority: the two requirements skills first (they block on
+`AskUserQuestion`, so they need the two-phase runner), then the four
+review/posture skills, which are simpler to grade because they take an
+artifact and return a report.
+
+**The single highest-value case anywhere in the plugin right now** is a
+`security-requirements` case testing that the persona *produces a clean
+hand-back* rather than presenting the user a menu of options. The receiving
+side is covered (`vertical-slicing` Scenario C, `orchestrator` Directory L);
+the producing side — the actual observed failure — is not.
+
+Also outstanding: `software-architect:architecture-design`'s graders are
+bound to a CSV-export fixture and won't port to any other design, which is
+why the last dogfood run's design doc couldn't be graded at all.
+
+### Then `accessibility-engineer`, then `ux-designer`, then `tdd-coach`
+
+Evidence for the first two is still live: `evals/example/slice-001.md` still
+carries an unfilled accessibility placeholder, and nothing in the roster
+decides what a UI-touching slice's screen looks like before code exists —
+`architecture-design` deliberately stops at "renders whatever the strategic
+side hands it," and `accessibility-engineer` reviews for WCAG correctness
+rather than generating a design.
+
+`tdd-coach` will move the orchestrator's terminal row again, to
+"implemented," and needs a fresh no-cascade check when it does.
+
+## Durable findings
+
+Kept because re-deriving them is expensive; not a session log.
+
+**Rows 7 and 8 merged into `devsecops-engineer`.** Scoped as
+`security-engineer` alone, merged with `reliability-engineer` mid-build once
+the boundary question was worked: both sources ship them bundled, and the
+overlap is structural — an over-permissive deployment role and a missing
+timeout live in the same file, are found by the same read, and are fixed in
+the same change. The narrowness moved into the skills instead: six of them,
+three per half, one per trigger. See `.synthesis/devsecops-engineer.md`
+Contradiction 1.
+
+**Two corpus-wide silences drove design rather than any source
+disagreement.** Threat modeling and safe rollout/rollback are named as
+responsibilities by every source and taught by none, so both methods were
+supplied rather than synthesized (Contradictions 6 and 11). The single
+substantive rollback statement in the entire corpus appears in proposal
+collateral, not engineering guidance.
+
+**Two-for-two on declining quantitative apparatus bolted onto qualitative
+judgment.** Rejected for `software-architect`: a numeric architecture-health
+score. Rejected for `devsecops-engineer`: a `security-reviewer` source that
+progressively *skips* checks which have never found anything, reaching a
+"fast mode" scanning only for vulnerability classes already seen — a
+security control that gets quieter the longer it finds nothing is one that
+fails silently (Contradiction 3).
+
+**Source-independence caveat.** CAMS's devsecops and SRE agents are
+near-verbatim copies of Flexion's (`diff` shows only an added `skills:`
+list). For anything from those six files, "both sources agree" is one source
+stated twice.
+
+**Technology ownership: the sources disagreed and the split matters.**
+Flexion treats the tech stack as a human-owned spec with a hard halt if
+missing ("technology choices are yours, not the AI's"); CAMS folds the same
+decisions into the per-slice design doc. Resolved toward Flexion on
+*ownership* (recommend with trade-offs, wait for approval, never pick) and
+toward CAMS on *timing* ("infrastructure emerges from feature slices" —
+Anti-Pattern 3, Technical Plumbing Slice). Their synthesis is the demand
+test: ask only what the slice's first failing test can't be written without,
+and leave everything else explicitly open with a named owner.
+
+**A review skill has no notion of choosing.** `supply-chain-review` covers
+the pinning *standard* well but scopes itself to auditing an existing
+repository, so the selection criterion — prefer the package manager where
+strict pinning is the default rather than an opt-in flag — went into
+`technology-bootstrap` instead. Both end states audit identically, which is
+exactly why review can't catch the difference and selection must.
+
+**The propagation lesson, and the five fixes it produced.** A real run
+failed because `problem.md`'s Constraints already contained the facts that
+forced a login, and nothing carried them forward: `requirements-001`
+propagated only the constraint that obviously concerned its own step, and
+`scope-map` had blessed the drop in advance by routing cross-cutting
+constraints to "made concrete per slice as each is designed." The constraint
+resurfaced at security time, when the only fixes left were re-slicing or
+growing a slice — and the persona that found it laid out a menu of options,
+which *is* the scope decision, made by a persona that doesn't own scope.
+
+The fix was propagation, not a new artifact — an earlier proposal for a
+"system facts" document was dropped once it became clear `problem.md`'s
+Constraints section already is that artifact. The five changes:
+
+1. `requirements-refinement` reconciles every problem-doc constraint against
+   the current unit, stating what each *forces* — consequences, not
+   quotations.
+2. `scope-map` may set a cross-cutting constraint aside as not-a-step, but
+   must route it to each step's requirements pass.
+3. `orchestrator` gained **backward routing, taking precedence over the
+   whole table**: route to the persona that *owns* an invalidated artifact,
+   not the one that found the problem. The spine had been forward-only.
+4. Downstream personas hand scope changes to `product-slicer`; "the slice
+   grows" is never offered as a neutral option among equals.
+5. `vertical-slicing` names the whole slice set for a unit and specifies
+   only the first — which both other sources already did, making the
+   one-slice-at-a-time behavior this plugin's own divergence.

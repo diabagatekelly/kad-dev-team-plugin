@@ -1,70 +1,102 @@
-# Grader run against real dogfood artifacts (live orchestrator run, 2026-09-04)
+# Dogfood run — graded against the eval cases' own graders
 
-The user ran `orchestrator` end to end for real against this directory,
-starting from scratch (`problem.md` → `scope-map-001.md` →
-`requirements-001.md` → `slice-001.md` → `design-001.md` → `adr-001.md`),
-under the current behavior — including `architecture-design`'s revised
-one-decision-at-a-time approval loop and batched end-of-design ADR
-hand-off. Graded against the same grader definitions used in the
-synthetic evals. **12/12 applicable graders passed.**
+A live end-to-end run of the roster against one real problem, producing the
+eleven artifacts in this directory. Unlike an eval case, there is no fixture
+here — this is the personas working a problem the user actually has.
 
-`skill-invoked` graders are not gradable here — no tool-call/conversation
-transcript, only final artifacts.
+**This run is the first one taken after the five ordering fixes** (see
+`PERSONAS.md`). The previous run is what exposed them: a security pass
+discovered slice 1 needed a login nobody had scoped, offered the user three
+ways out including "grow the slice," and the slice that resulted never got a
+requirements pass. Everything below is the same roster after those fixes.
 
-## problem.md
-- `has-required-sections`: PASS (regex, direct check) — all four sections present, in order.
-- `no-solution-designed`: PASS (llm judge) — stays to problem/why-now/constraints/open-questions, no technology or vendor named.
+## How this was graded
 
-## scope-map-001.md
-- `has-required-sections`: PASS (regex, direct check) — Status, Steps present.
-- `no-slicing-or-design`: PASS (llm judge, corrected — see below) — every step stays name-plus-one-line, no AC/thin-path/new-technology beyond what the problem doc already states.
-- `steps-cover-full-problem`: PASS (llm judge) — four steps map cleanly onto sync, categorization, budget view, savings-transfer guidance.
+Each artifact was graded against the graders belonging to its owning skill's
+eval case. Two caveats on method:
 
-**Grading correction:** the first judging pass on `no-slicing-or-design`
-came back FAIL, citing step 3's "replacing the manual Excel check" as an
-un-stated technology/vendor reference. That was a grading error, not a
-real defect — the judge prompt only excerpted the problem doc's
-Constraints section and asserted "no technology/vendor is named in the
-problem doc," which is wrong: the problem doc's own title
-("Manual Excel-Based Personal Accounting") and body both already name
-Excel as the *current* manual tool. Re-run with the full problem doc
-attached came back PASS. Root cause was an incomplete judge prompt on
-this end, not the scope-map.
+- **`skill-invoked` and phase-1 graders don't apply.** These are finished
+  documents, not captured harness output — there's no "Skills consulted"
+  line and no recorded clarifying question to grade.
+- **Some graders are fixture-bound and were adapted or skipped**, noted per
+  row below. Adapted means the *property* was graded against different
+  content; skipped means the grader asserts specifics of a fixture that
+  doesn't exist here.
 
-## requirements-001.md
-- `has-required-sections`: PASS (regex, direct check) — all six sections present, in order.
-- `no-thin-path-or-ac`: PASS (llm judge) — stays at who/what/why/confirmed-in/out.
-- `captures-priority-reasoning`: PASS (llm judge) — captures the actual trade-off (live connection is riskier, but CSV import fails the user's own bar for "real progress" since it still needs manual download/upload).
+## Results — 16 graders, 16 PASS
 
-## slice-001.md
-- `final-slice-is-complete` (generalized): PASS (llm judge) — thin path, substantive Given/When/Then AC, both Explicitly Deferred and Still Open present; separate security *and* accessibility placeholders (never combined, never authored directly); correctly preserves the requirements doc's single-account/live-sync decisions without reopening them.
-- AC quality (generalized from `rewrites-to-given-when-then` + `acceptance-criteria`'s own pitfall list): PASS (llm judge) — concrete/verifiable, covers error/edge cases beyond happy path, no UI prescriptiveness, and the duplicate-detection scenario names its concrete matching key ("the bank's own transaction ID").
+| Artifact | Grader | Result |
+|---|---|---|
+| `problem.md` | no-solution-designed | PASS |
+| `scope-map-001.md` | has-required-sections (regex) | PASS |
+| `scope-map-001.md` | **cross-cutting-constraints-routed-not-deferred** | PASS |
+| `scope-map-001.md` | no-slicing-or-design | PASS |
+| `scope-map-001.md` | steps-cover-full-problem | PASS |
+| `requirements-001.md` | has-required-sections (regex) | PASS |
+| `requirements-001.md` | **reconciles-constraints-with-consequences** | PASS |
+| `requirements-001.md` | captures-priority-reasoning *(adapted)* | PASS |
+| `requirements-001.md` | no-thin-path-or-ac | PASS |
+| `slice-001.md` | **scenario-a-names-slice-set** | PASS |
+| `slice-001.md` | **scenario-c-owns-scope-change-without-growing** *(adapted)* | PASS |
+| `slice-001.md` | scenario-a-final-slice-is-complete *(adapted)* | PASS |
+| `user-story-001.md` | final-writeup-is-complete *(adapted)* | PASS |
+| `technology-bootstrap-001.md` | **asks-only-what-the-first-test-forces** | PASS |
+| `technology-bootstrap-001.md` | **defers-persistence-with-the-in-memory-reason** | PASS |
+| `technology-bootstrap-001.md` | **recommends-rather-than-decides** | PASS |
+| `technology-bootstrap-001.md` | **records-non-choices-and-open-categories** | PASS |
+| `technology-bootstrap-001.md` | **pinning-posture-treated-as-a-choice** | PASS |
 
-## design-001.md
-- `reflects-approved-decisions` (generalized): PASS (llm judge) — all four decisions explicitly marked "Approved by user" (not narrated as autonomous), Structure/Boundaries/Third-party-isolation concretely reflect each one, and the one ADR-worthy decision (Plaid vendor choice) is flagged and handed off rather than drafted inline — confirmed by `adr-001.md` existing as a separate artifact with the real ADR content.
-- `stays-conceptual-and-states-importance`: PASS (llm judge) — explicit importance ordering stated; fully conceptual, no code/file paths/signatures.
+Bold rows are graders written this session, most of them for rules added
+because the *previous* run failed. Every one of them passes here.
 
-This is the first *real* (not synthetic) exercise of the new
-decision-by-decision approval behavior end to end, and it worked as
-designed: every decision in `design-001.md` shows real user approval, and
-the ADR hand-off happened exactly the way the skill specifies — deferred
-until the whole design was finished, then handed off immediately in the
-same session, landing as a separate, well-formed `adr-001.md` (Status,
-Context, Decision, Alternatives considered with concrete rejection
-reasons, honest Consequences) rather than being drafted inline.
+Plus a mechanical check not covered by any grader: all 15 cross-references
+between artifacts resolve — no artifact points at a document that doesn't
+exist.
 
-## adr-001.md — ungraded, no eval case exists yet
-`docs-writer:adr` has no eval case in this plugin yet (`evals/README.md`
-lists it "Not written"). Informally, it matches the `adr` skill's own
-template exactly (Status/Context/Decision/Alternatives
-considered/Consequences) and its rules (concrete rejection reasons, not
-"we didn't like it"; honest downsides in Consequences, not upsides-only).
-Worth an eval case in a follow-up, same gap already flagged for
-`architecture-design`'s ADR-recognition hand-off.
+## The result that matters
 
-## Note, not something to grade — found by reading, since resolved
-**`user-story-001.md` does not exist in this run** (it existed after the
-previous dogfood run). **Resolved:** confirmed directly with the user —
-`docs-writer:user-story-writeup` ran for real this time, but its output
-wasn't kept as a local file. Not a routing bug; `architecture-design`
-correctly ran only after the user story was actually filed.
+The failure this session's fixes were written for **did not recur, and the
+mechanism visibly worked.**
+
+`requirements-001.md`'s Constraints-in-force table carries the hosting
+constraint through to its consequence — *"Something on a network will
+display this account's transactions, so 'who is allowed to see this' must be
+answered inside this step, not after it"* — and then routes it onward under
+a heading reading **"Finding for product-slicer."** That is the constraint
+surfacing at requirements time, handed to the persona that owns scope,
+rather than being discovered by a security pass three stages downstream.
+
+`slice-001.md` then absorbed it correctly. Its narrowing — run locally, so
+there is nobody to exclude — is ranked option 2, chosen with reasoning, and
+the slice states plainly that *"if this slice ever becomes network-reachable,
+the narrowing is void and the access-control work comes back into it."*
+
+A **second** scope change arrived later in the same run, from
+`reliability-requirements`: the provider prepares transaction history
+asynchronously and returns an empty result until it's done, so the original
+criteria would have told the user "no transactions found" when the truth was
+"not yet." `product-slicer` worked the ranked order explicitly, rejected
+growth with a concrete reason (webhooks would need a public endpoint, which
+would void the local-only narrowing), and recorded what the choice did and
+did not invalidate.
+
+Growth was rejected on the merits both times, by the persona that owns
+scope, with the reasoning written down.
+
+## What this run does *not* tell us
+
+- **Four artifacts are ungraded** because no eval case exists for their
+  skill: `adr-001.md`, `adr-002.md`, `security-requirements-001.md`, and
+  `reliability-requirements-001.md`. The last two are the most significant
+  gap — `devsecops-engineer` produced two findings that drove this entire
+  run, and nothing checks the quality of either.
+- **`design-001.md` is ungraded.** Its case's graders are bound to a
+  CSV-export fixture (a synchronous-vs-async decision, a premature generic
+  formatter interface) with no counterpart here. Grading it would need
+  portable graders, which is a real gap in that case.
+- **Passing here is not passing the eval cases.** These graders were run
+  against real artifacts, not against the fixtures the cases define. The
+  cases themselves still need running — see `evals/README.md`.
+- **One run, one problem.** A personal-finance problem with a hosted-app
+  constraint is exactly the shape that exercises these rules. It is not
+  evidence they generalize.

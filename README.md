@@ -25,12 +25,19 @@ skills/
   <skill>/SKILL.md    # backing knowledge a persona (or you, directly) can invoke
 evals/
   <case>/prompt.md     # one scenario per skill trigger; graders/*.md score the output
+  example/             # one running problem, worked end to end by the real roster
 .synthesis/
   <persona>.md          # internal only — source synthesis notes, deleted once roster is complete
 ```
 
 Evals are authored against `claude plugin eval`'s documented format but
 gated behind early access in this environment — see `evals/README.md`.
+
+`evals/example/` is the dogfooding record, not a test case: one real problem
+carried from framing through requirements, slicing, design, runtime-safety
+criteria and stack selection by the actual personas. Most changes to this
+plugin came from watching that run break, so its `summary.md` is usually the
+best explanation of why a rule exists.
 
 ## Local development
 
