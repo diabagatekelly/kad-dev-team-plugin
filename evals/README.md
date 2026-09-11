@@ -50,7 +50,7 @@ score is history, not a claim about today.
 | `software-architect:architecture-design` | 8/8 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | yes |
 | `software-architect:architecture-review` | 4/4 PASS, inline | yes |
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
-| `devsecops-engineer:security-requirements` | — | not written |
+| `devsecops-engineer:security-requirements` | 7/7 PASS, inline | yes |
 | `devsecops-engineer:security-review` | — | not written |
 | `devsecops-engineer:supply-chain-review` | — | not written |
 | `devsecops-engineer:reliability-requirements` | — | not written |
@@ -95,16 +95,25 @@ Run with the `agent-eval` skill, one case per invocation.
 
 ### Known coverage gaps
 
-- **No case exercises `devsecops-engineer` at all** — six skills, zero
-  cases. Two of the six (`security-requirements`' threat pass and
-  `operational-readiness`) were written from a gap rather than synthesized
-  from sources, so running them is the only way they can be checked.
-- **The hand-back rule is tested from one side only.** `product-slicer`
-  receiving a scope change is covered (`vertical-slicing` Scenario C) and
-  `orchestrator` routing one to the owner is covered (Directory L), but
-  nothing tests `devsecops-engineer` *producing* a proper hand-back rather
-  than presenting the user a menu of options — the actual observed failure.
-  That needs a `devsecops-engineer:security-requirements` case.
+- **`devsecops-engineer` has one case out of six skills.**
+  `security-requirements` is now covered (7/7, see below); `security-review`,
+  `supply-chain-review`, `reliability-requirements`, `reliability-review`,
+  and `operational-readiness` still have none. `security-requirements`'
+  threat pass and `operational-readiness` were written from a gap rather
+  than synthesized from sources, so running them is the only way they can
+  be checked.
+- ~~**The hand-back rule is tested from one side only.**~~ **Closed.**
+  `devsecops-engineer:security-requirements` now tests the producing side —
+  reports a login gap forced by the slice being hosted-and-reachable, names
+  `product-slicer` by name, and doesn't enumerate a resolution menu — all
+  passed clean. Independently auditing `evals/example/security-requirements-001.md`
+  against `SKILL.md` directly (not assuming it was correct) also surfaced a
+  real, narrower gap: it never addresses monitoring/telemetry/analytics as
+  an exit for its sensitive data, though four of the five named exits are
+  covered. A new `addresses-all-five-exits` grader now checks this, and it
+  caught the same gap in this case's own first draft too (missing
+  exception/stack-trace, distinct from error-response) — fixed and
+  re-verified. Details in `devsecops-engineer:security-requirements/eval-score/summary.md`.
 - **`technology-bootstrap`'s advisor-consult path is only softly graded.**
   Consulting `devsecops-engineer` inline is treated as expected-but-not-
   required, because the emulation harness can't distinguish an inline
