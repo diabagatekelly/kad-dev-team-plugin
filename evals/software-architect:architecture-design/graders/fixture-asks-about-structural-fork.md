@@ -1,6 +1,9 @@
 ---
 type: llm
 criteria: |
+  FIXTURE-SPECIFIC — asserts this case's own decision content, not a
+  general property.
+
   Grading phase 1 — the first response. Under the current behavior, every
   real decision (not just genuine ambiguities) must be presented one at a
   time with a recommendation, the alternative(s) considered and rejected,

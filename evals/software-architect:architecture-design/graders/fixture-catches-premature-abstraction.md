@@ -1,6 +1,9 @@
 ---
 type: llm
 criteria: |
+  FIXTURE-SPECIFIC — asserts this case's own decision content, not a
+  general property.
+
   Grading phase 2 — the response after the synchronous-export decision was
   approved. The engineer proposed a generic export interface with
   pluggable formatters "for later" even though only CSV is needed now —

@@ -1,20 +1,11 @@
 Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/architecture-design/SKILL.md
 
-Going with synchronous export, approved.
+Approved — *(scripted answer: "Synchronous is fine — this is a single user's own transaction history, never more than a few hundred rows. No plans to support exporting other people's data or anything at real scale.")* — export runs synchronously in the request.
 
-Second decision: the engineer proposed adding a generic export interface
-with pluggable formatters now, so PDF and JSON support can be bolted on
-later without rework.
+Next decision: the engineer proposed **a generic export interface with pluggable formatters, so PDF and JSON export can be bolted on later without much rework.**
 
-**My recommendation:** reject it — build CSV export directly instead.
-**Why:** there's no second concrete format needed today; an interface
-built to support formats nobody's asked for yet is a premature
-abstraction. If a second format is genuinely requested later, that's the
-point to extract the interface, informed by what that format actually
-needs rather than a guess made now. **Alternative considered:** building
-the generic interface now anyway — this would only pay off if a second
-format were already a near-term certainty rather than a "later maybe,"
-which isn't the case here.
+**Recommendation: reject it — build CSV export directly, no generic interface.** Only one format exists today. A pluggable-formatter abstraction earns its place when there are at least two concrete formats that need it *now* — a plausible future format isn't a second real use case, it's a guess at one. Building the generic shape today means designing an interface against requirements (PDF's, JSON's) nobody has actually stated yet.
 
-Do you want CSV export built directly, or should I go ahead with the
-generic interface as proposed?
+**Alternative considered and rejected: building the generic interface now, as the engineer suggested.** This is the premature-abstraction case this design process exists to catch — the interface would be speculative today and easy to add for real once a second format is actually requested, at which point the actual shape of that need will be known instead of guessed. This isn't ADR-worthy either — rejecting it costs nothing to reverse if a second format shows up next month.
+
+Agree, or do you want the generic interface built now?

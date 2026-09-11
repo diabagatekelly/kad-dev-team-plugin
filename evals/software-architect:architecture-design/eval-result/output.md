@@ -1,71 +1,39 @@
 Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/architecture-design/SKILL.md
 
+Approved — *(scripted answer: "Agreed — build CSV export directly, skip the generic interface. We can add the abstraction later if a second format actually gets requested.")* — CSV export is built directly, no generic pluggable-formatter interface.
+
+Both decisions for this slice are now approved. Final design:
+
+```markdown
 # Design: Export transaction list as CSV
 
 ## Importance ordering assumed
-Which transactions are included in the export (the currently-filtered set
-shown in the view) is a business rule — getting it wrong means the user
-downloads the wrong data, so it's kept independent of any library. How the
-CSV bytes actually get written is low-importance and freely swappable —
-nothing about the business changes if the CSV-writing mechanism changes.
+Which transactions get included in the export — respecting the active filter, one row per transaction, an empty list producing a header-only file — is a business rule and stays strategic: it's the actual behavior this slice promises, independent of any file format or library. The CSV-writing mechanics themselves (delimiter handling, escaping, line endings) are tactical: swapping the serialization library wouldn't change what the business does, only how the bytes get produced.
 
 ## Structure
-- **Strategic**: a transaction-export concept responsible for taking the
-  currently-displayed/filtered transaction set and producing plain row
-  data (one row per transaction, matching the AC) — this is where the
-  "what gets exported" business rule lives, named for the export itself,
-  not a technical role.
-- **Tactical**: a CSV-writing adapter that takes the plain row data and
-  produces CSV bytes, and the request-handling code that calls the export
-  logic synchronously (per the approved decision below) and returns the
-  resulting file — both swappable without touching the business rule
-  above.
+**Strategic:** an export-row selector (the business rule for which transactions to include and in what order, producing plain data rows — not CSV-specific in any way).
+
+**Tactical:** a CSV writer adapter (the sole importer of the CSV-serialization library, turning plain data rows into actual CSV bytes) and an export-delivery piece (returning the generated file synchronously as part of the request).
 
 ## Boundaries and interfaces
-The boundary between the strategic export logic and the tactical
-CSV-writing step passes plain data only: an ordered list of plain rows
-(arrays/objects of primitives), never a library-specific type. No
-interface is needed on the strategic side purely for the Dependency Rule
-here — the tactical CSV-writing step is a leaf the strategic side calls
-into with plain data in, plain bytes out; there's no case today where the
-strategic side needs to be agnostic about *which* writer it's calling,
-since there's only one (see the rejected pluggable-interface decision
-below).
+One boundary: between the export-row selector (strategic) and the CSV writer (tactical). The strategic side owns the interface; what crosses it is plain data — an ordered list of rows, each a plain record of the fields to export (date, description, amount). Nothing CSV-specific (no delimiter choices, no library types) crosses back into the strategic side.
 
 ## Third-party isolation
-`csv-stringify` is a narrowly-scoped, single-purpose library — Low risk
-tier. It's fine to call directly from the tactical CSV-writing step; a
-dedicated domain interface and adapter for it would be isolation ceremony
-with no payoff, the kind reserved for higher-lock-in-cost libraries like
-an ORM or a cloud SDK. This is a rule application, not a decision — there
-was no real alternative worth presenting for approval.
+The CSV-serialization library (e.g. `csv-stringify`, as the engineer proposed) is a narrowly-scoped, types-only-ish utility with low lock-in cost — fine to use directly inside the CSV writer adapter, which is already the only place that imports it by virtue of the boundary above. Isolating it further behind its own dedicated interface would be ceremony with no payoff at this scope.
+
+## Technology at each boundary
+The export-row selector / CSV writer boundary forces a real technology choice now — this slice's whole purpose is producing an actual CSV file, so an in-memory stand-in wouldn't satisfy its own acceptance criteria. Accepting the engineer's proposed library for this: it's a narrow-scope, low-lock-in choice (see Third-party isolation above), not an architecturally significant fork worth its own approval round on top of the two decisions already made for this slice.
+
+No other boundary in this slice forces a technology choice — the slice reads transactions already available to the view it's exporting from, so no new persistence boundary is introduced here.
 
 ## Decisions
-- **Synchronous vs. asynchronous export — presented for approval,
-  approved as proposed.** Proposed: synchronous, given the confirmed data
-  volume (a single user's own history, never more than a few hundred
-  rows) — a background job with polling/notification would be structure
-  built for a scale problem that doesn't exist. Alternative considered: an
-  async job queue, rejected for the same reason. Approved as proposed.
-- **Generic pluggable-export-formatter interface — presented for
-  approval, approved as proposed (rejected).** Proposed: reject it and
-  build CSV export directly, since there's no second concrete format today
-  and an interface built for formats nobody's asked for yet is a premature
-  abstraction. Alternative considered: building the generic interface now
-  anyway, rejected since a second format isn't a near-term certainty.
-  Approved as proposed — CSV export is built directly; the interface gets
-  extracted if and when a second format is genuinely requested.
-
-Neither decision cleared the ADR bar (architectural + significant +
-non-obvious) — both are scoped to this one slice and easily reversible if
-a second export format or a scale requirement shows up later, so no ADR
-was offered.
+1. **Export execution: synchronous vs. background job.** Proposed synchronous, with an async job queue as the rejected alternative (unneeded infrastructure for a single user's own, small transaction history). Presented for approval; approved as proposed, synchronous. Not ADR-worthy — cheap to reverse if volume assumptions change.
+2. **Generic pluggable-formatter interface vs. CSV built directly.** Proposed building CSV directly and rejecting the generic interface, with the engineer's proposed generic interface as the rejected alternative (premature — only one format exists today). Presented for approval; approved as proposed, CSV built directly. Not ADR-worthy — cheap to reverse if a second format is actually requested.
 
 ## Existing violations touched
-None — this is new, additive structure; it doesn't touch or need to modify
-anything upstream.
+None — this is new code with nothing pre-existing to reconcile.
 
 ## Open questions
-None load-bearing for this slice's structure. If a second export format is
-ever requested, that's when the pluggable-interface question gets
-revisited — not before.
+None blocking this slice. If a second export format is ever requested, that's the trigger to revisit the generic-interface decision above — not something to design for now.
+```
+</content>

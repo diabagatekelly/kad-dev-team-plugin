@@ -1,24 +1,39 @@
-# Eval score: software-architect:architecture-design
+# software-architect:architecture-design — eval summary
 
-**5/5 graders passed. Overall: PASS.**
+**Result: PASS — 8/8 graders passed**
 
-- `skill-invoked`: PASS (direct check — self-reported "Skills consulted:" line)
-- `asks-about-structural-fork` (phase1): PASS (judge agent)
-- `catches-premature-abstraction` (phase2): PASS (judge agent)
-- `reflects-approved-decisions` (final output): PASS (judge agent)
-- `stays-conceptual-and-states-importance` (final output): PASS (judge agent)
+| Grader | Result |
+|---|---|
+| skill-invoked | PASS |
+| fixture-asks-about-structural-fork (phase1) | PASS |
+| fixture-catches-premature-abstraction (phase2) | PASS |
+| fixture-reflects-approved-decisions | PASS |
+| portable-states-importance-ordering | PASS |
+| portable-stays-conceptual | PASS |
+| portable-decisions-shown-as-approved | PASS |
+| portable-boundaries-name-what-crosses | PASS |
 
-Rewritten after a real-time design-philosophy change: the persona no
-longer decides architecture unilaterally and surfaces the result only in
-the finished doc — every real decision (not just genuine ambiguities) now
-gets presented one at a time, with a recommendation and the alternative(s)
-rejected, and waits for explicit approval before the next decision or the
-final doc. This stretched the eval harness's documented single-round
-shape into two rounds (`phase1-question.md` → `phase2-question.md` →
-`output.md`) — see this case's `prompt.md` "Format note" for the
-extension. ADR hand-off is intentionally sequenced to happen only after
-every decision in the design is approved, not interleaved between
-decisions — this scenario has no ADR-worthy decision, so that behavior
-isn't exercised here (still only exercised for real in
-`evals/example/design-001.md`, which now needs to be re-run under the new
-behavior — not yet done).
+## Rework, then first-ever run
+
+This case's graders were entirely fixture-bound before this run — a real
+dogfooding design doc (`evals/example/design-001.md`) had nothing here it
+could be graded against. Split per `NOTES.md`'s plan: four `portable-*`
+graders that hold for any design doc (importance ordering stated, stays
+conceptual, decisions shown as approved not autonomous, at least one
+boundary names what crosses it — the last one new, since nothing
+previously checked Good Fences at all), and three `fixture-*` graders kept
+for this case's own sync/async and premature-abstraction content
+(`fixture-reflects-approved-decisions` trimmed to drop the now-duplicated
+general approval-narrative check).
+
+This is also the first time this case has ever produced a gradable result
+— it was "written, never run" before, stale on two skill/agent changes on
+top of that (the "Technology at a boundary" section). All three format
+extensions this case exercises worked as documented: the 3-phase
+ask-then-continue loop, the fixture/portable split, and — new since the
+last time this skill's content was read — the "Technology at a boundary"
+section, which correctly identified the CSV-writer boundary as forcing a
+real technology choice now (the slice's whole purpose is producing actual
+CSV bytes) while treating the specific library choice as a narrow,
+low-lock-in pick rather than manufacturing a third approval round the
+case's own scripted answers don't provide for.

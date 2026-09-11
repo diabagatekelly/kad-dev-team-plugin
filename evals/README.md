@@ -47,7 +47,7 @@ score is history, not a claim about today.
 | `product-slicer:vertical-slicing` | 6/6 PASS, two-phase | yes |
 | `product-slicer:acceptance-criteria` | 2/2 PASS, inline | yes |
 | `orchestrator` | 15/15 PASS, skill-only | yes |
-| `software-architect:architecture-design` | 5/5 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | **no — `architecture-design/SKILL.md` and `software-architect/AGENT.md` both changed** |
+| `software-architect:architecture-design` | 8/8 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | yes |
 | `software-architect:architecture-review` | 4/4 PASS, inline | yes |
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:security-requirements` | — | not written |
@@ -87,10 +87,9 @@ what's cheapest.
 | 5 | ~~`product-slicer:vertical-slicing`~~ | **Run: 6/6 PASS.** Scenario C's grader — encoding the real failure where a menu of options got handed to the user, who picked "grow the slice" — passed clean: ranked order worked through explicitly, narrowing rejected with a concrete reason, new slice ahead chosen, both invalidations named. |
 | 6 | ~~`product-slicer:acceptance-criteria`~~ | **Run: 2/2 PASS.** Regression confirmation, no news, as expected. |
 | 7 | ~~`software-architect:architecture-review`~~ | **Run: 4/4 PASS.** Regression confirmation, no news, as expected. |
-| 8 | `software-architect:architecture-design` | Last, because it needs work before it's worth running — see that case's `NOTES.md`. Its graders are fixture-bound and should be made portable first. |
+| 8 | ~~`software-architect:architecture-design`~~ | **Reworked, then run: 8/8 PASS.** Graders split into four `portable-*` (hold for any design doc) and three `fixture-*` (this case's own sync/async and premature-abstraction content) per `NOTES.md`'s plan. First-ever gradable result for this case, and the first real test of the "Technology at a boundary" section added since it was last run. |
 
-Rows 1–5 are the ones that can actually surface something. Rows 6–7 are
-regression confirmation. Row 8 is blocked on its own rework.
+All eight cases in this backlog have now been run at least once.
 
 Run with the `agent-eval` skill, one case per invocation.
 

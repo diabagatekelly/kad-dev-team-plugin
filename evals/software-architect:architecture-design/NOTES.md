@@ -1,49 +1,37 @@
 # Notes on this case
 
-## Its graders are fixture-bound and don't port
+## Rework done: graders split into portable and fixture-specific
 
-Every LLM grader here asserts specifics of one fixture — a CSV-export
-slice with a synchronous-vs-asynchronous decision and an engineer proposing
-a generic pluggable-formatter interface:
-
-- `asks-about-structural-fork` requires "exactly one decision (the
-  synchronous-vs-asynchronous export question)" with a named recommendation.
-- `catches-premature-abstraction` requires rejecting a specific generic
-  export interface.
-- `reflects-approved-decisions` requires "no job-status/notification
-  component" and "no generic pluggable-formatter interface" in the output.
-- `stays-conceptual-and-states-importance` is the only broadly portable one.
-
-**Consequence, observed rather than theorised:** the dogfood run in
-`evals/example/` produced a real design doc (`design-001.md`) that could
-not be graded at all. Every other artifact in that run was gradable by
-borrowing its owning case's graders; this one had nothing that applied. See
+Every LLM grader here used to assert specifics of one fixture — a
+CSV-export slice with a synchronous-vs-asynchronous decision and an
+engineer proposing a generic pluggable-formatter interface. That meant a
+real dogfooding run's design doc (`evals/example/design-001.md`) had
+nothing in this case that applied to it — every other artifact in that run
+was gradable by borrowing its owning case's graders; this one wasn't. See
 `evals/example/summary.md`.
 
-## What the rework looks like
+Split per the plan this section used to describe:
 
-Split the graders into two kinds, rather than loosening the existing ones:
+- **`portable-*` graders** hold for any design doc: an explicit importance
+  ordering is stated rather than left implicit
+  (`portable-states-importance-ordering`); the doc stays conceptual, no
+  code/file paths/signatures (`portable-stays-conceptual`); every real
+  decision shows as presented-and-approved rather than autonomously
+  settled (`portable-decisions-shown-as-approved`); at least one boundary
+  names what crosses it (`portable-boundaries-name-what-crosses`, new —
+  nothing previously checked Good Fences at all).
+- **`fixture-*` graders** keep asserting this case's own content —
+  the sync/async decision (`fixture-asks-about-structural-fork`), the
+  premature-abstraction rejection (`fixture-catches-premature-abstraction`),
+  and that both approved choices survived into the final structure
+  (`fixture-reflects-approved-decisions`, trimmed to drop the general
+  approval-narrative check once `portable-decisions-shown-as-approved`
+  covered it).
 
-1. **Portable property graders** that hold for any design doc — an explicit
-   importance ordering is stated rather than left implicit; the doc stays
-   conceptual (no code, no file paths, no signatures); every real decision
-   shows as presented-and-approved rather than autonomously settled;
-   boundaries name what crosses them.
-2. **Fixture-specific graders** that keep asserting this case's particular
-   sync/async and premature-abstraction content, clearly labelled as such.
-
-Only the first kind gets borrowed when grading real artifacts. Keeping both
-is better than replacing one with the other: the fixture-specific graders
-test the two behaviours this case was built for, and losing them to gain
-portability would be a bad trade.
-
-## Also unrun
-
-This case is stale on two counts as of the last commit: `AGENT.md` and
-`SKILL.md` both changed (the "Technology at a boundary" section was added
-to the skill), and it was missed on the first re-run pass. It sits last in
-`evals/README.md`'s run backlog because running it before the grader rework
-just re-confirms a fixture-bound result.
+Only the `portable-*` graders get borrowed when grading real artifacts
+going forward (`skill-invoked` and phase-targeted graders still don't
+apply to a dogfooded artifact regardless of this split — see
+`evals/README.md`'s note on the `example/` directory).
 
 ## Format note
 

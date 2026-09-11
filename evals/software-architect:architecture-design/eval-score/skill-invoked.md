@@ -1,5 +1,3 @@
 PASS
 
-Direct check (tool_used, resolved without a judge agent): the self-reported
-"Skills consulted:" line in both phase1-question.md and output.md names
-`skills/architecture-design/SKILL.md`, matching `architecture-design`.
+Resolved directly (tool_used, self-reported): the response's opening "Skills consulted:" line lists /Users/kellydiabagate/Documents/kad-developer-suite/skills/architecture-design/SKILL.md, matching the expected skill name "architecture-design".

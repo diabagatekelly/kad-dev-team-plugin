@@ -1,17 +1,9 @@
 Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/architecture-design/SKILL.md
 
-Before I lay out this slice's structure, here's the first real decision:
-should CSV export run synchronously within the request, or asynchronously
-via a background job with a download-ready notification?
+Before working out structure, one real decision needs your call: **should export run synchronously in the request, or be handed off to a background job with a status/notification flow?**
 
-**My recommendation:** synchronous. **Why:** nothing in this slice's
-acceptance criteria suggests large exports or concurrent load, and a
-background job adds a job-status concept plus a notification mechanism
-this slice doesn't need yet. **Alternative considered:** an asynchronous
-job queue — the right call if export volume or size turns out to be large
-enough that generating it in-request would be slow or unreliable, but
-there's no evidence of that here.
+**Recommendation: synchronous.** The acceptance criteria describe a single user downloading their own transaction history — there's no actor or scale mentioned that would make a request-time export slow enough to need offloading.
 
-This isn't a detail — it changes the actual structure (a job-status/
-notification component vs. a single request-handling component), so I
-want your call before I go further: which one do you want?
+**Alternative considered and rejected: an asynchronous background job.** This would add a job queue, a status-tracking mechanism, and a way to notify the user when the file is ready — real infrastructure this slice doesn't need yet, for a volume of data (one person's own transactions) that a synchronous response handles without issue. This isn't ADR-worthy either way — it's cheap to swap for a background job later if volume changes, not a precedent the rest of the system would follow.
+
+Which do you want — synchronous, or should I design for the background-job version instead?
