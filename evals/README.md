@@ -52,7 +52,7 @@ score is history, not a claim about today.
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:security-requirements` | 7/7 PASS, inline | yes |
 | `devsecops-engineer:security-review` | 7/7 PASS, inline | yes |
-| `devsecops-engineer:supply-chain-review` | — | not written |
+| `devsecops-engineer:supply-chain-review` | 7/7 PASS, inline | yes |
 | `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | yes |
 | `devsecops-engineer:reliability-review` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:operational-readiness` | — | not written |
@@ -95,12 +95,12 @@ Run with the `agent-eval` skill, one case per invocation.
 
 ### Known coverage gaps
 
-- **`devsecops-engineer` has four cases out of six skills.**
+- **`devsecops-engineer` has five cases out of six skills.**
   `security-requirements` (7/7), `reliability-requirements` (5/5),
-  `security-review` (7/7), and `reliability-review` (6/6) are now covered;
-  `supply-chain-review` and `operational-readiness` still have none.
-  `operational-readiness` was written from a gap rather than synthesized
-  from sources, so running it is the only way it can be checked.
+  `security-review` (7/7), `reliability-review` (6/6), and
+  `supply-chain-review` (7/7) are now covered; only `operational-readiness`
+  has none. It was written from a gap rather than synthesized from
+  sources, so running it is the only way it can be checked.
 - ~~**The hand-back rule is tested from one side only.**~~ **Closed.**
   `devsecops-engineer:security-requirements` now tests the producing side —
   reports a login gap forced by the slice being hosted-and-reachable, names
