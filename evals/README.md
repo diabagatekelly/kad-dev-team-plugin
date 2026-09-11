@@ -45,7 +45,7 @@ score is history, not a claim about today.
 | `docs-writer:staleness-audit` | — | not written |
 | `product-manager:requirements-refinement` | 6/6 PASS, two-phase | yes |
 | `product-slicer:vertical-slicing` | 6/6 PASS, two-phase | yes |
-| `product-slicer:acceptance-criteria` | 2/2 PASS | **no — `product-slicer/AGENT.md` changed** |
+| `product-slicer:acceptance-criteria` | 2/2 PASS, inline | yes |
 | `orchestrator` | 15/15 PASS, skill-only | yes |
 | `software-architect:architecture-design` | 5/5 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | **no — `architecture-design/SKILL.md` and `software-architect/AGENT.md` both changed** |
 | `software-architect:architecture-review` | 4/4 PASS | **no — `software-architect/AGENT.md` changed** |
@@ -85,7 +85,7 @@ what's cheapest.
 | 3 | ~~`docs-writer:scope-map`~~ | **Run, fixed, re-run: 5/5 PASS.** First pass was 4/5 — the "AI categorization must be free" constraint got absorbed into its step's one-liner instead of being flagged cross-cutting like security. Fixed in `skills/scope-map/SKILL.md`: identify a cross-cutting constraint by its underlying concern, not by which step's sentence names it. Confirmed clean on re-run. Details in `docs-writer:scope-map/eval-score/summary.md`. |
 | 4 | ~~`product-manager:requirements-refinement`~~ | **Run: 6/6 PASS.** The constraints-in-force grader — added after a real run dropped the hosting and single-user constraints for a step that didn't look like it owned them — passed clean: both non-obvious consequences (network access-control gate, present-tense single-user modeling) were drawn correctly. |
 | 5 | ~~`product-slicer:vertical-slicing`~~ | **Run: 6/6 PASS.** Scenario C's grader — encoding the real failure where a menu of options got handed to the user, who picked "grow the slice" — passed clean: ranked order worked through explicitly, narrowing rejected with a concrete reason, new slice ahead chosen, both invalidations named. |
-| 6 | `product-slicer:acceptance-criteria` | Stale only via `product-slicer/AGENT.md`. Cheap, likely passes — run it to confirm, don't expect news. |
+| 6 | ~~`product-slicer:acceptance-criteria`~~ | **Run: 2/2 PASS.** Regression confirmation, no news, as expected. |
 | 7 | `software-architect:architecture-review` | Stale only via `software-architect/AGENT.md`. Same expectation. |
 | 8 | `software-architect:architecture-design` | Last, because it needs work before it's worth running — see that case's `NOTES.md`. Its graders are fixture-bound and should be made portable first. |
 

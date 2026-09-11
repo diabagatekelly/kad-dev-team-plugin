@@ -1,9 +1,17 @@
-2/2 graders passed — overall PASS
+# product-slicer:acceptance-criteria — eval summary
 
-- rewrites-to-given-when-then: PASS (llm judge)
-- skill-invoked: PASS (self-reported "Skills consulted:" line, direct check)
+**Result: PASS — 2/2 graders passed**
 
-Re-run after agents/product-slicer/AGENT.md changed substantially (WHAT vs
-HOW boundary, requirements-doc-driven flow) — acceptance-criteria/SKILL.md
-itself was unchanged, but the wrapping persona changed enough to warrant
-re-confirming this standalone trigger still holds. No regression.
+| Grader | Result |
+|---|---|
+| skill-invoked | PASS |
+| rewrites-to-given-when-then | PASS |
+
+## Notes
+
+Stale only via `product-slicer/AGENT.md` having changed since the last run
+— regression confirmation, no news. Ran inline (`product-slicer` is
+`background: false`), single-phase (no slice being cut, no scripted
+answers needed). Correctly used the skill's own "no slice write-up needed"
+review shape (verdict, why, rewrite) rather than borrowing a full slice
+template for a single-criterion review.

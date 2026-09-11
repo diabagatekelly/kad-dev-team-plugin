@@ -1,8 +1,9 @@
 Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/acceptance-criteria/SKILL.md
 
-**Verdict: not done.** "The app categorizes transactions correctly" is untestable — "correctly" names no concrete precondition or verifiable outcome. Two people could disagree about whether a given categorization counts as "correct" with no way to settle it by looking at the system.
+**Verdict: Not done.**
+
+**Why:** "Correctly" is doing all the work in this sentence and it isn't defined — there's no concrete starting state and no way to look at the result and say pass/fail without someone's personal judgment call. It also doesn't name what a transaction is being matched against, which is the same vagueness one level removed: "categorizes correctly" is exactly as untestable as "matches correctly" without saying what makes the match.
 
 **Rewrite:**
-Given a transaction with the same merchant name as one in the provided sample data,
-When it's imported,
-Then it is assigned that sample's category automatically.
+
+Given a transaction whose merchant name matches an entry in the user's historical categorization sample, when that transaction is imported, then it is assigned the category recorded for that merchant in the sample — not a generic or inferred category.
