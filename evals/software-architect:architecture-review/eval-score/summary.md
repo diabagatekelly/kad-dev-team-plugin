@@ -1,12 +1,22 @@
-# Eval score: software-architect:architecture-review
+# software-architect:architecture-review — eval summary
 
-**4/4 graders passed. Overall: PASS.**
+**Result: PASS — 4/4 graders passed**
 
-- `skill-invoked`: PASS (direct check — self-reported "Skills consulted:" line)
-- `locates-hidden-dependency-violation`: PASS (judge agent)
-- `no-false-positive-on-factory`: PASS (judge agent)
-- `catches-missing-abstraction-and-naming`: PASS (judge agent)
+| Grader | Result |
+|---|---|
+| skill-invoked | PASS |
+| catches-missing-abstraction-and-naming | PASS |
+| locates-hidden-dependency-violation | PASS |
+| no-false-positive-on-factory | PASS |
 
-All three `llm` graders were run through genuinely independent judge
-agents (not self-graded) — see each grader's own `eval-score/*.md` for
-the judge's reasoning.
+## Notes
+
+Stale only via `software-architect/AGENT.md` having changed since the last
+run — regression confirmation, no news. Ran inline (`software-architect`
+is `background: false`), single-phase (a review produces a findings report
+with no approval loop, unlike `architecture-design`).
+
+The two-direction dependency check and the composition-root exception —
+the two things a naive scan would get wrong on this fixture (missing the
+types-file contamination, or false-flagging the factory call) — both
+applied correctly.
