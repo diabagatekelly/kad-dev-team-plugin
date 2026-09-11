@@ -50,6 +50,17 @@ misleading step. But say where they get applied, and the answer is **each
 step's own `requirements-refinement` pass**, which reconciles them against
 that step's confirmed scope before anything is sliced.
 
+**Identify a cross-cutting constraint by its underlying concern, not by
+which step its sentence happens to name.** A constraint can read as though
+it only touches the step where it first bites — "AI-assisted categorization
+must run at no ongoing cost" names categorization, but the concern
+underneath it (this project must not accrue a recurring bill) isn't
+actually about categorization; that's just the one place the problem doc
+happened to spend words on it. Absorbing it into that one step's one-liner
+and calling it handled is the same silent narrowing this section already
+warns against for security — ask what the constraint is protecting against,
+not which step's activity its sentence names.
+
 Never route them to "made concrete per slice as each is designed." That
 sounds responsible and defers a whole-problem constraint past the point
 where scope is decided — so it resurfaces during design or review, when the

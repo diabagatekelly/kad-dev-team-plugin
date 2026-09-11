@@ -1,21 +1,36 @@
-> **STALE — do not cite this score.** This case now has 5 graders; the run below covered 4 (the cross-cutting-constraint grader was added afterward). The result below predates that change and is kept only as history. Re-run required.
+# docs-writer:scope-map — eval summary
 
-# docs-writer:scope-map — 4/4 PASS
+**Result: PASS — 5/5 graders passed**
 
-Overall: **PASS**
+| Grader | Result |
+|---|---|
+| skill-invoked | PASS |
+| has-required-sections | PASS |
+| steps-cover-full-problem | PASS |
+| no-slicing-or-design | PASS |
+| cross-cutting-constraints-routed-not-deferred | PASS |
 
-| Grader | Type | Result |
-|---|---|---|
-| has-required-sections | regex | PASS |
-| skill-invoked | tool_used | PASS |
-| no-slicing-or-design | llm | PASS |
-| steps-cover-full-problem | llm | PASS |
+## History
 
-Re-run after this session added the cross-cutting-constraint rule to
-`skills/scope-map/SKILL.md` (a constraint that applies to every step is not
-a step, and routes to each step's `requirements-refinement` pass rather than
-to "made concrete per slice as each is designed"). No regression: the new
-material lands in the Out of scope section and did not leak into any step
-line, which is what `no-slicing-or-design` guards.
+First run scored 4/5. The security constraint (real account/money data
+spans every step) was correctly flagged as cross-cutting and routed to each
+step's own requirements-refinement pass. The other constraint the grader
+checks — "AI-assisted categorization must run at no ongoing cost" — was
+instead absorbed into Step 2's one-liner, which is a defensible literal
+reading (the problem doc's sentence names categorization specifically, and
+no other step does anything AI-assisted) but conflicts with the skill's own
+"staying free" example, listed alongside "protecting sensitive data" as a
+canonical cross-cutting constraint.
 
-Previous result was also 4/4 against the pre-change skill.
+**Fix applied** to `skills/scope-map/SKILL.md`: added guidance to identify a
+cross-cutting constraint by its underlying concern rather than by which
+step's sentence happens to name it — a constraint can read as though it
+only touches the step where it first bites (categorization, in this case)
+without the concern underneath it (no recurring bill for the project) being
+specific to that step.
+
+**Re-run after the fix**: only the affected grader was re-run — the fixed
+output moved the cost constraint into the same cross-cutting callout as
+security and dropped it from Step 2's line, leaving the other three steps
+and the other three graders' targets unchanged in substance from the first
+run, so those verdicts were kept rather than re-spawning redundant judges.

@@ -1,2 +1,3 @@
 PASS
-Judge agent: six distinct steps covering all four required areas — retrieval (step 1), categorization plus correction (steps 3-4), budget-vs-actual (step 5), savings-transfer decision (step 6).
+
+The Steps section lists four distinct steps covering retrieval/connection (1), categorization (2), budget-vs-actual comparison (3), and the savings-transfer decision (4), giving loose visibility into the full problem scope.

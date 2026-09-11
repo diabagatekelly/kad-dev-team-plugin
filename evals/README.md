@@ -36,7 +36,7 @@ score is history, not a claim about today.
 | Case | Last result | Current? |
 |---|---|---|
 | `docs-writer:problem-framing-doc` | 3/3 PASS | yes |
-| `docs-writer:scope-map` | 4/4 PASS | **no — grader added** (cross-cutting constraints routed, not deferred) |
+| `docs-writer:scope-map` | 5/5 PASS, inline | yes |
 | `docs-writer:adr` | — | not written |
 | `docs-writer:why-comments` | — | not written |
 | `docs-writer:user-story-writeup` | 3/3 PASS, two-phase | yes |
@@ -82,7 +82,7 @@ what's cheapest.
 |---|---|---|
 | 1 | ~~`orchestrator`~~ | **Run, fixed, re-run: 15/15 PASS.** First pass was 14/15 — `single-step-not-chained` caught backward routes L and M narrating the post-resolution forward resumption. Fixed in `skills/orchestrator/SKILL.md`'s backward-routing section and confirmed clean on re-run. Details in `orchestrator/eval-score/summary.md`. |
 | 2 | ~~`software-architect:technology-bootstrap`~~ | **Run: 6/6 PASS.** The negative grader (never solicit CI/CD, hosting, a database, observability, or auth) passed clean against its own fixture for the first time. One interpretive call worth watching in future runs: UI framework was judged not-forced by the first test — defensible, but not mechanical. Details in `software-architect:technology-bootstrap/eval-score/summary.md`. |
-| 3 | `docs-writer:scope-map` | New cross-cutting-constraint grader, unproven against this fixture. |
+| 3 | ~~`docs-writer:scope-map`~~ | **Run, fixed, re-run: 5/5 PASS.** First pass was 4/5 — the "AI categorization must be free" constraint got absorbed into its step's one-liner instead of being flagged cross-cutting like security. Fixed in `skills/scope-map/SKILL.md`: identify a cross-cutting constraint by its underlying concern, not by which step's sentence names it. Confirmed clean on re-run. Details in `docs-writer:scope-map/eval-score/summary.md`. |
 | 4 | `product-manager:requirements-refinement` | Prompt now supplies the problem doc's Constraints; the constraints-in-force grader has never run against a fixture that can actually satisfy it. |
 | 5 | `product-slicer:vertical-slicing` | New Scenario C and slice-set grader, neither run. |
 | 6 | `product-slicer:acceptance-criteria` | Stale only via `product-slicer/AGENT.md`. Cheap, likely passes — run it to confirm, don't expect news. |

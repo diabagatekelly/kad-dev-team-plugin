@@ -1,2 +1,3 @@
 PASS
-Judge agent: every Steps line is name + one short description restating only already-stated problem-doc constraints ("directly from the user's financial accounts, read-only" in step 1, "sample of past hand-categorized accounting" in step 2). No AC, no Given/When/Then, no thin path, no new technology/vendor, no build-order or timing notation bolted onto a step line. All ordering rationale confined to the separate Sequencing notes section, as the template allows.
+
+Each step line (retrieval, categorization, budget view, rebalancing) restates only already-stated source constraints or describes inputs from prior steps, with no AC/Given-When-Then, no thin path, no named tech/vendor, and no bolted-on sequencing/timing notation.
