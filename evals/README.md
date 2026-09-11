@@ -55,7 +55,7 @@ score is history, not a claim about today.
 | `devsecops-engineer:supply-chain-review` | 7/7 PASS, inline | yes |
 | `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | yes |
 | `devsecops-engineer:reliability-review` | 6/6 PASS, inline | yes |
-| `devsecops-engineer:operational-readiness` | — | not written |
+| `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | yes |
 
 ### The `example/` directory
 
@@ -95,12 +95,16 @@ Run with the `agent-eval` skill, one case per invocation.
 
 ### Known coverage gaps
 
-- **`devsecops-engineer` has five cases out of six skills.**
-  `security-requirements` (7/7), `reliability-requirements` (5/5),
-  `security-review` (7/7), `reliability-review` (6/6), and
-  `supply-chain-review` (7/7) are now covered; only `operational-readiness`
-  has none. It was written from a gap rather than synthesized from
-  sources, so running it is the only way it can be checked.
+~~- **`devsecops-engineer` has one case out of six skills.**~~ **Closed —
+  all six skills now have a case, all passing.** `security-requirements`
+  (7/7), `reliability-requirements` (5/5), `security-review` (7/7),
+  `reliability-review` (6/6), `supply-chain-review` (7/7), and
+  `operational-readiness` (6/6) are all covered. `operational-readiness`
+  was written from a gap with no source material at all — its case tested
+  both halves of the skill's central judgment call at once (correctly
+  scaling down formal incident process and monitoring for a solo project,
+  while correctly *not* scaling down an untested rollback or a schema
+  change coupled to code) and passed clean.
 - ~~**The hand-back rule is tested from one side only.**~~ **Closed.**
   `devsecops-engineer:security-requirements` now tests the producing side —
   reports a login gap forced by the slice being hosted-and-reachable, names
