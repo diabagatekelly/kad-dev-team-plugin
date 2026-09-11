@@ -1,2 +1,3 @@
 PASS
-Judge agent: "Why this, why now" states the user chose the riskier, costlier live connection *because* avoiding manual export is the whole point, quoting their own framing, and explicitly names that a risk-avoidance heuristic would have picked CSV and been wrong. Reasoning attributed to the user, not substituted.
+
+The section states the live bank connection was chosen over CSV import specifically because avoiding manual export/upload each month is "the actual problem being solved," explicitly acknowledges it's "the riskier, more expensive option," and correctly frames risk-avoidance as the rationale for the rejected CSV alternative rather than substituting it as the reason for the actual choice.

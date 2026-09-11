@@ -1,2 +1,3 @@
 PASS
-Direct check (tool_used, adapted to self-report). First line names `skills/requirements-refinement/SKILL.md`.
+
+Resolved directly (tool_used, self-reported): the response's opening "Skills consulted:" line lists /Users/kellydiabagate/Documents/kad-developer-suite/skills/requirements-refinement/SKILL.md, matching the expected skill name "requirements-refinement".

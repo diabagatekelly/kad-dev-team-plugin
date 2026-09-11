@@ -43,7 +43,7 @@ score is history, not a claim about today.
 | `docs-writer:pr-writeup` | — | not written |
 | `docs-writer:user-facing-docs` | — | not written |
 | `docs-writer:staleness-audit` | — | not written |
-| `product-manager:requirements-refinement` | 5/5 PASS, two-phase | **no — fixture + grader added** (problem doc's Constraints now supplied; constraints-in-force grader) |
+| `product-manager:requirements-refinement` | 6/6 PASS, two-phase | yes |
 | `product-slicer:vertical-slicing` | 4/4 PASS, two-phase | **no — scenario + 2 graders added** (Scenario C scope hand-back; slice-set grader) |
 | `product-slicer:acceptance-criteria` | 2/2 PASS | **no — `product-slicer/AGENT.md` changed** |
 | `orchestrator` | 15/15 PASS, skill-only | yes |
@@ -83,7 +83,7 @@ what's cheapest.
 | 1 | ~~`orchestrator`~~ | **Run, fixed, re-run: 15/15 PASS.** First pass was 14/15 — `single-step-not-chained` caught backward routes L and M narrating the post-resolution forward resumption. Fixed in `skills/orchestrator/SKILL.md`'s backward-routing section and confirmed clean on re-run. Details in `orchestrator/eval-score/summary.md`. |
 | 2 | ~~`software-architect:technology-bootstrap`~~ | **Run: 6/6 PASS.** The negative grader (never solicit CI/CD, hosting, a database, observability, or auth) passed clean against its own fixture for the first time. One interpretive call worth watching in future runs: UI framework was judged not-forced by the first test — defensible, but not mechanical. Details in `software-architect:technology-bootstrap/eval-score/summary.md`. |
 | 3 | ~~`docs-writer:scope-map`~~ | **Run, fixed, re-run: 5/5 PASS.** First pass was 4/5 — the "AI categorization must be free" constraint got absorbed into its step's one-liner instead of being flagged cross-cutting like security. Fixed in `skills/scope-map/SKILL.md`: identify a cross-cutting constraint by its underlying concern, not by which step's sentence names it. Confirmed clean on re-run. Details in `docs-writer:scope-map/eval-score/summary.md`. |
-| 4 | `product-manager:requirements-refinement` | Prompt now supplies the problem doc's Constraints; the constraints-in-force grader has never run against a fixture that can actually satisfy it. |
+| 4 | ~~`product-manager:requirements-refinement`~~ | **Run: 6/6 PASS.** The constraints-in-force grader — added after a real run dropped the hosting and single-user constraints for a step that didn't look like it owned them — passed clean: both non-obvious consequences (network access-control gate, present-tense single-user modeling) were drawn correctly. |
 | 5 | `product-slicer:vertical-slicing` | New Scenario C and slice-set grader, neither run. |
 | 6 | `product-slicer:acceptance-criteria` | Stale only via `product-slicer/AGENT.md`. Cheap, likely passes — run it to confirm, don't expect news. |
 | 7 | `software-architect:architecture-review` | Stale only via `software-architect/AGENT.md`. Same expectation. |

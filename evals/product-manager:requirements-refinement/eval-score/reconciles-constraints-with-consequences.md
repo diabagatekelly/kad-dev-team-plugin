@@ -1,0 +1,3 @@
+PASS
+
+All four constraints are named (zero cost, financial-data/hosting/encryption, categorization, single-user), each applying constraint states a concrete forcing consequence (e.g., "rules out any live-connection vendor whose pricing is per-account or per-call," "something has to establish who is asking before this account's transactions are shown"), categorization is explicitly dismissed with a stated reason (step 2's job), the non-obvious network-exposure/access-control consequence is explicitly drawn out ("who is asking" phrasing), and the single-user constraint is correctly cast as a present-tense modeling requirement ("nothing... may hardcode a single fixed identity... not a note deferred to when the partner actually joins").
