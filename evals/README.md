@@ -49,7 +49,7 @@ score is history, not a claim about today.
 | `orchestrator` | 15/15 PASS, skill-only | yes |
 | `software-architect:architecture-design` | 5/5 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | **no — `architecture-design/SKILL.md` and `software-architect/AGENT.md` both changed** |
 | `software-architect:architecture-review` | 4/4 PASS | **no — `software-architect/AGENT.md` changed** |
-| `software-architect:technology-bootstrap` | — | written, never run (6 graders) |
+| `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:security-requirements` | — | not written |
 | `devsecops-engineer:security-review` | — | not written |
 | `devsecops-engineer:supply-chain-review` | — | not written |
@@ -81,7 +81,7 @@ what's cheapest.
 | # | Case | Why it's first |
 |---|---|---|
 | 1 | ~~`orchestrator`~~ | **Run, fixed, re-run: 15/15 PASS.** First pass was 14/15 — `single-step-not-chained` caught backward routes L and M narrating the post-resolution forward resumption. Fixed in `skills/orchestrator/SKILL.md`'s backward-routing section and confirmed clean on re-run. Details in `orchestrator/eval-score/summary.md`. |
-| 2 | `software-architect:technology-bootstrap` | Written, never run. Its negative grader has only ever been applied to a real artifact, never to the fixture it was written for. |
+| 2 | ~~`software-architect:technology-bootstrap`~~ | **Run: 6/6 PASS.** The negative grader (never solicit CI/CD, hosting, a database, observability, or auth) passed clean against its own fixture for the first time. One interpretive call worth watching in future runs: UI framework was judged not-forced by the first test — defensible, but not mechanical. Details in `software-architect:technology-bootstrap/eval-score/summary.md`. |
 | 3 | `docs-writer:scope-map` | New cross-cutting-constraint grader, unproven against this fixture. |
 | 4 | `product-manager:requirements-refinement` | Prompt now supplies the problem doc's Constraints; the constraints-in-force grader has never run against a fixture that can actually satisfy it. |
 | 5 | `product-slicer:vertical-slicing` | New Scenario C and slice-set grader, neither run. |
