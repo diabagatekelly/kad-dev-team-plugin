@@ -1,2 +1,3 @@
 PASS
-Judge agent: identifies step 1's "not given one" branch, asks the location question before any routing, and explicitly disclaims guessing or searching for a location. Also correctly notes that "start scoping this out" is not itself an instruction to run scope-map.
+
+The output correctly identifies Directory G as step 1's "not given one" case and states it will ask the location question ("Where do this problem's artifacts already exist...") before any inspection or routing, without inventing or searching for a location.

@@ -95,6 +95,14 @@ and `adr` all number sequentially for this reason), and once it completes,
 return to step 2 and re-inspect from scratch — a superseded scope map can
 move the forward position by more than one row.
 
+That "return to step 2" instruction governs your own next invocation once
+the backward step actually completes — it is not something to narrate now.
+When reporting a backward route (step 5), state only the single routed
+destination and why; don't add what re-inspection will find or where the
+forward position might land once it resolves. Describing that round trip is
+the same chaining step 5 already forbids, just spelled backward instead of
+forward.
+
 | Detected state | Route to |
 |---|---|
 | No problem framing doc | `docs-writer:problem-framing-doc` |

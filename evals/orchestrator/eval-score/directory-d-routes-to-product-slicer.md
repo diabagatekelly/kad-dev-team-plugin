@@ -1,2 +1,3 @@
 PASS
-Judge agent: routes to `product-slicer` (vertical-slicing + acceptance-criteria) with requirements-001 as the input for WHAT, without routing back to product-manager or re-litigating the skipped scope map.
+
+The output correctly routes Directory D to product-slicer (vertical-slicing + acceptance-criteria) using requirements-001.md's confirmed scope as the slicing input, without re-routing to product-manager or re-litigating the already-correct scope-map skip.

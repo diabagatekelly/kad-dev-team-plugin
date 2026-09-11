@@ -1,2 +1,3 @@
 PASS
-Judge agent: identifies step 1 ("Transaction retrieval") as the lowest-numbered step with no requirements doc and routes to `product-manager:requirements-refinement` for that step only.
+
+The target output routes to product-manager:requirements-refinement for scope-map-001 step 1 ("Transaction retrieval"), matching the required unit and destination exactly, with no routing to product-slicer.

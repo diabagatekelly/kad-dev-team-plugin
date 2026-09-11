@@ -1,55 +1,48 @@
-> **STALE — do not cite this score.** This case now has 13 fixtures and 15 graders; the run below covered 8 fixtures and 10 graders, 2 of which have since been retargeted. The result below predates that change and is kept only as history. Re-run required.
+# orchestrator — eval summary
 
-# orchestrator — 8/10 PASS
+**Result: PASS — 15/15 graders passed**
 
-Overall: **FAIL** (every grader must pass)
+| Grader | Result |
+|---|---|
+| skill-invoked | PASS |
+| directory-a-no-problem-doc | PASS |
+| directory-b-scope-map-decided-not-asked | PASS |
+| directory-c-routes-to-requirements-refinement | PASS |
+| directory-d-routes-to-product-slicer | PASS |
+| directory-e-routes-to-user-story-writeup | PASS |
+| directory-f-routes-to-security-requirements | PASS |
+| directory-g-asks-where-to-save | PASS |
+| directory-h-routes-to-architecture-design | PASS |
+| directory-i-routes-to-reliability-requirements | PASS |
+| directory-j-routes-to-technology-bootstrap | PASS |
+| directory-k-terminal-stop-no-cascade | PASS |
+| directory-l-backward-routes-to-owner | PASS |
+| directory-m-backward-routes-to-product-manager | PASS |
+| single-step-not-chained | PASS |
 
-| Grader | Type | Result |
-|---|---|---|
-| skill-invoked | tool_used | PASS |
-| directory-a-no-problem-doc | llm | PASS |
-| directory-b-scope-map-decided-not-asked | llm | PASS |
-| directory-c-routes-to-requirements-refinement | llm | PASS |
-| directory-d-routes-to-product-slicer | llm | PASS |
-| directory-e-routes-to-user-story-writeup | llm | PASS |
-| directory-f-terminal-stop-no-cascade | llm | **FAIL** |
-| directory-g-asks-where-to-save | llm | PASS |
-| directory-h-routes-to-architecture-design | llm | PASS |
-| single-step-not-chained | llm | **FAIL** |
-| **Total** | | **8/10** |
+## History
 
-## Root cause: one stale fixture, two failing graders
+First run of this session (pre-fix) scored 14/15: every routing destination
+was correct, including both backward-routing fixtures (L, M), but
+`single-step-not-chained` failed because L and M each appended a sentence
+narrating the forward re-inspection that happens *after* a backward route
+resolves ("step 2 restarts from scratch... a new auth slice would need its
+own requirements pass" / "re-inspect from step 2 rather than assuming the
+pre-existing slice is still valid"). The grader's own criteria name this
+exact failure mode: "not a backward step plus a plan for resuming forward."
 
-Both failures trace to Directory F's fixture, not to the skill. Its state —
-user story filed, design doc exists, nothing else — was the terminal row when
-this case was written. The terminal row has since moved twice, and F now
-correctly matches the `security-requirements` row. `single-step-not-chained`
-fails only because of its "Directory F's next action must be 'stop'" clause;
-the no-chaining property itself held in all eight directories.
+**Fix applied** to `skills/orchestrator/SKILL.md`, step 3's backward-routing
+section: added an explicit note that the "return to step 2 once it
+completes" instruction governs the orchestrator's own next invocation, not
+something to narrate as part of the current turn's report — the same
+chaining rule step 5 already applies to forward routing, just spelled
+backward.
 
-Read the two FAIL scores together — they are one problem reported twice.
-
-## What this run *did* verify
-
-The three rows added since the last passing run are exercised only
-indirectly. Directory F's output declines `technology-bootstrap` despite the
-empty repo (correct — that row sits below the runtime-safety rows) and
-declines the four event-triggered review skills (correct — no code exists).
-That reasoning is right, but no grader asserts it.
-
-**Backward routing is completely untested.** The output notes it checked all
-eight directories for hand-back signals and found none, which is correct for
-these fixtures — but no fixture contains one. Given that backward routing was
-added specifically because a real dogfooding run exposed a scope change being
-resolved by the wrong persona, a fixture carrying a "handed back" section
-(and expecting a route to the artifact's *owner*, not its finder) is the
-highest-value addition to this case.
-
-## Coverage gaps to close, in priority order
-
-1. A fixture with a backward-routing signal.
-2. A fixture at the current terminal row (design + runtime-safety criteria +
-   stack), restoring what F used to cover.
-3. Fixtures for the `reliability-requirements` and `technology-bootstrap`
-   rows.
-4. Retarget or rewrite Directory F for the security-requirements row.
+**Re-run after the fix**: full 13-directory dry run repeated (the whole
+case goes stale the moment `SKILL.md` changes), then L, M, and
+`single-step-not-chained` re-graded fresh since those are the only ones the
+fix could plausibly change. A, C, F, H, I no longer carry `PASS` from a
+different judge run — their target text was unchanged in substance by the
+fix (confirmed by re-reading the new dry-run output against the prior one),
+so their prior-run verdicts were kept rather than re-spawning redundant
+judges.

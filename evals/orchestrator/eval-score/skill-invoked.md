@@ -1,2 +1,3 @@
 PASS
-Direct check (tool_used, adapted to self-report). First line of `eval-result/output.md` is exactly the required `Skills consulted:` line naming `skills/orchestrator/SKILL.md`.
+
+Resolved directly (tool_used, self-reported): the response's opening "Skills consulted:" line lists /Users/kellydiabagate/Documents/kad-developer-suite/skills/orchestrator/SKILL.md first, matching the expected skill name "orchestrator".

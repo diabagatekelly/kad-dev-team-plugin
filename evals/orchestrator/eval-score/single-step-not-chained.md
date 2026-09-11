@@ -1,16 +1,3 @@
-FAIL — stale in one element only, same root cause as directory-f
+PASS
 
-Judge agent: directories A–E, G and H all correctly name a single routed
-action or a single question. The sole failing element is Directory F, whose
-stated next action is `devsecops-engineer:security-requirements` rather than
-"stop," plus the cross-cutting note "None of the eight is at that terminal
-row: F is two rows away."
-
-That is the same superseded-terminal-row assumption as
-`directory-f-terminal-stop-no-cascade`, not an independent defect. **The
-no-chaining property this grader exists to test held everywhere**, including
-in F, which named exactly one next step rather than a multi-stage plan.
-
-Fixing Directory F's fixture (see the directory-f score) clears this grader
-too. The clause "and Directory F's next action must be 'stop'" should move to
-whichever directory ends up carrying terminal coverage.
+Every directory (A–M) states exactly one next action (one persona/skill route or one question), K stops without proposing to advance (naming tdd-coach only as the reason it can't continue), and L/M each give a single backward route without any accompanying forward-resumption plan. Fixed from the prior run, where L and M each appended a sentence narrating post-resolution forward re-inspection — see skills/orchestrator/SKILL.md's added clarification under step 3's backward-routing section.

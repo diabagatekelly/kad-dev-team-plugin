@@ -46,7 +46,7 @@ score is history, not a claim about today.
 | `product-manager:requirements-refinement` | 5/5 PASS, two-phase | **no — fixture + grader added** (problem doc's Constraints now supplied; constraints-in-force grader) |
 | `product-slicer:vertical-slicing` | 4/4 PASS, two-phase | **no — scenario + 2 graders added** (Scenario C scope hand-back; slice-set grader) |
 | `product-slicer:acceptance-criteria` | 2/2 PASS | **no — `product-slicer/AGENT.md` changed** |
-| `orchestrator` | 8/10 FAIL, skill-only | **no — 5 fixtures + 5 graders added, 2 retargeted** |
+| `orchestrator` | 15/15 PASS, skill-only | yes |
 | `software-architect:architecture-design` | 5/5 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | **no — `architecture-design/SKILL.md` and `software-architect/AGENT.md` both changed** |
 | `software-architect:architecture-review` | 4/4 PASS | **no — `software-architect/AGENT.md` changed** |
 | `software-architect:technology-bootstrap` | — | written, never run (6 graders) |
@@ -80,7 +80,7 @@ what's cheapest.
 
 | # | Case | Why it's first |
 |---|---|---|
-| 1 | `orchestrator` | The only case currently FAILING, and the one with the most new coverage: 5 new fixtures including both backward-routing ones. Directory L (a "handed back" section → route to the scope *owner*) is the single most important untested behaviour in the plugin. |
+| 1 | ~~`orchestrator`~~ | **Run, fixed, re-run: 15/15 PASS.** First pass was 14/15 — `single-step-not-chained` caught backward routes L and M narrating the post-resolution forward resumption. Fixed in `skills/orchestrator/SKILL.md`'s backward-routing section and confirmed clean on re-run. Details in `orchestrator/eval-score/summary.md`. |
 | 2 | `software-architect:technology-bootstrap` | Written, never run. Its negative grader has only ever been applied to a real artifact, never to the fixture it was written for. |
 | 3 | `docs-writer:scope-map` | New cross-cutting-constraint grader, unproven against this fixture. |
 | 4 | `product-manager:requirements-refinement` | Prompt now supplies the problem doc's Constraints; the constraints-in-force grader has never run against a fixture that can actually satisfy it. |

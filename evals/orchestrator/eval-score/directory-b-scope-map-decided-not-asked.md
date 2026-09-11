@@ -1,2 +1,3 @@
 PASS
-Judge agent: routes to `docs-writer` to make the scope-map-vs-single-unit judgment from the problem doc's own content, and explicitly declines to pose that question to the user itself ("not to me, and not to a default question at the user").
+
+The output routes Directory B to docs-writer to apply scope-map's trigger criteria against the doc's content, and does not itself ask the user the "small enough vs. needs a scope map" question.
