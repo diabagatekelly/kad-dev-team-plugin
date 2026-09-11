@@ -231,26 +231,26 @@ category of gap in this session's own emulated `security-requirements`
 run before it shipped (missing exception/stack-traces, conflated into the
 error-response criterion) — fixed and re-verified.
 
-### Next: eval cases for `devsecops-engineer`'s four remaining review/posture skills
+**All six `devsecops-engineer` skills now have a passing eval case.**
+`security-requirements` (7/7), `reliability-requirements` (5/5),
+`security-review` (7/7), `reliability-review` (6/6), `supply-chain-review`
+(7/7), and `operational-readiness` (6/6). `security-requirements`' case is
+the one this file previously called the single highest-value gap in the
+plugin — it tests a clean scope hand-back (a login gap forced by a slice
+hosted-and-reachable over the internet) rather than a menu of options, and
+passed clean. `operational-readiness` had no source material at all; its
+case tested both halves of its central judgment call at once — correctly
+scaling down formal incident process and monitoring for a solo project,
+while correctly *not* scaling down an untested rollback or a schema change
+coupled to code, both of which the skill says hold regardless of scale —
+and also passed clean. Two case-authoring gaps were caught and fixed
+*before* running (missing scripted approvals for decisions the skill's own
+text names as requiring the approval loop), not after — worth naming as a
+now-repeated pattern: read the skill's "what counts as a decision" section
+before finalizing a fixture's scripted answers, not just its main
+narrative.
 
-Both requirements skills (`security-requirements`, `reliability-requirements`)
-are now written and run — 7/7 and 5/5. `security-requirements`' case is the
-one PERSONAS.md previously called the single highest-value gap in the
-plugin: it tests that the persona *produces a clean hand-back* (a login gap
-forced by a slice hosted-and-reachable over the internet) rather than
-presenting the user a menu of options, and does so without silently
-assuming the missing capability exists. All of that passed clean.
-
-Remaining: `security-review`, `supply-chain-review`, `reliability-review`,
-`operational-readiness` — simpler to grade than the requirements pair,
-since each takes an artifact or repo state and returns a findings report,
-with no approval loop or two-phase ask to model. `operational-readiness`
-still has **no source material at all** and was written from a gap; running
-it is the only way it can be checked. Building `accessibility-engineer`
-next would stack a second weak-area persona on top of untested skills, so
-this stays the priority.
-
-### Then `accessibility-engineer`, then `ux-designer`, then `tdd-coach`
+### Next: `accessibility-engineer`, then `ux-designer`, then `tdd-coach`
 
 Evidence for the first two is still live: `evals/example/slice-001.md` still
 carries an unfilled accessibility placeholder, and nothing in the roster
