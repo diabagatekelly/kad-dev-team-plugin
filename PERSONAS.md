@@ -157,6 +157,28 @@ below until it has real personas to synthesize across.
   pairs (`*-impl` doing the work, `*-review` critiquing it). Decide per-persona,
   once built, whether that split earns its complexity here, or whether one
   agent that can do both is enough for personal use.
+- **Dev-agent quarantine/grade/combine cycle**: once execution-phase personas
+  exist, have `orchestrator` spin off 2-3 implementer instances per slice,
+  each in its own isolated worktree with no visibility into siblings' work,
+  each carrying the full dev skillset (TDD, dependency-rule, etc.). Grade
+  each implementation against those same skills in a scoring/critique mode —
+  one grader per skill the persona is expert in, not one generic reviewer.
+  For the combine step: dev-agents should surface their grading feedback to
+  each other, but the actual merge into one submission needs to stay a
+  single accountable step (the orchestrator, or one fresh combiner agent
+  given every implementation plus every grade) rather than joint/collective
+  authorship by the dev-agents themselves — several agents editing one
+  shared artifact reintroduces the same anchoring/coordination failure mode
+  quarantine exists to prevent. Re-grade the combined version pass/fail; on
+  fail, loop scoped only to the named failures, not a full re-open —
+  mirrors a ratification-vote pattern seen in other installed multi-agent
+  tooling. Blocked on execution-phase personas existing at all (today, only
+  `devsecops-engineer`'s review skills take an artifact and return a report
+  without asking), and on every current persona being `background: false` —
+  none of today's personas can run as parallel/independent instances, so
+  this needs either dev-agent definitions that don't block on
+  `AskUserQuestion`, or the same per-skill-not-per-agent parallelizability
+  model already flagged as open under Orchestrator v2.
 
 ## Next to build
 
@@ -181,73 +203,52 @@ inline for a narrow runtime-safety question and handing control straight
 back. It is not a spawn and can't be; every persona here is
 `background: false`, so it reuses `orchestrator`'s adopt-inline pattern.
 
-**Benchmarking is the live problem, not the roster.** The last dogfood run
-was graded 16/16 against the eval cases' own graders
-(`evals/example/summary.md`), and the ordering failure that drove this
-session's fixes did not recur. But that is real artifacts graded against
-adapted graders — *not* the eval cases passing. Every case covering changed
-code is currently stale; `evals/README.md` tracks last-result and staleness
-as separate columns.
+**The eight-case stale-eval backlog is fully cleared** (`evals/README.md`'s
+own backlog table, now all struck through). Two real skill bugs were found
+and fixed along the way: `orchestrator` was narrating a post-resolution
+forward-resumption plan after a backward route, which
+`single-step-not-chained` treats as the same chaining the forward case
+already forbids; `scope-map` was reading a cross-cutting constraint's
+literal wording ("AI categorization must be free") too narrowly instead of
+by its underlying concern. Both fixed and re-verified.
+`software-architect:architecture-design` was reworked per its own
+`NOTES.md` — split into `portable-*` graders that hold for any design doc
+and `fixture-*` graders for its own sync/async and premature-abstraction
+content — then run for the first time ever, 8/8.
 
-### Next: eval cases for `devsecops-engineer`'s six skills
+**A methodology correction mid-session, worth keeping.** Eval cases should
+be derived from `AGENT.md`/`SKILL.md` directly; a real historical artifact
+(`evals/example/`) is something to independently *audit* against that
+spec, not a blueprint to copy content or scenario shape from. Auditing
+`evals/example/security-requirements-001.md` this way (rather than
+assuming real output was correct because it was real) found a genuine gap:
+the skill names five exits a sensitive-data class can leak through, and
+that document never addresses monitoring/telemetry as one of them within
+its own text — the reasoning only exists in the sibling
+`reliability-requirements-001.md`. A new grader
+(`addresses-all-five-exits`) checks this now, and it caught the same
+category of gap in this session's own emulated `security-requirements`
+run before it shipped (missing exception/stack-traces, conflated into the
+error-response criterion) — fixed and re-verified.
 
-A deliberate break from the persona-per-session rhythm. That persona was the
-largest single addition to the plugin — one agent, six skills, on a weak
-area — and two of the six (`security-requirements`' threat pass and
-`operational-readiness`) had **no source material at all** and were written
-from a gap rather than synthesized. Those two can only be checked by running
-them. Building `accessibility-engineer` next would stack a second weak-area
-persona on top of six untested skills.
+### Next: eval cases for `devsecops-engineer`'s four remaining review/posture skills
 
-Two of the six have now been exercised in a real run
-(`security-requirements` and `reliability-requirements`), and both produced
-findings that reshaped the run — which is evidence the remaining four will
-move things too, not evidence they're fine.
+Both requirements skills (`security-requirements`, `reliability-requirements`)
+are now written and run — 7/7 and 5/5. `security-requirements`' case is the
+one PERSONAS.md previously called the single highest-value gap in the
+plugin: it tests that the persona *produces a clean hand-back* (a login gap
+forced by a slice hosted-and-reachable over the internet) rather than
+presenting the user a menu of options, and does so without silently
+assuming the missing capability exists. All of that passed clean.
 
-Priority: the two requirements skills first (they block on
-`AskUserQuestion`, so they need the two-phase runner), then the four
-review/posture skills, which are simpler to grade because they take an
-artifact and return a report.
-
-**The single highest-value case anywhere in the plugin right now** is a
-`security-requirements` case testing that the persona *produces a clean
-hand-back* rather than presenting the user a menu of options. The receiving
-side is covered (`vertical-slicing` Scenario C, `orchestrator` Directory L);
-the producing side — the actual observed failure — is not.
-
-Its fixture shape, so this doesn't get re-derived:
-
-- **A slice already cut and designed**, whose thin path deliberately omits
-  some capability. (The observed case: connect, select, list — no login.)
-- **An established fact in the prompt that forces that capability**, stated
-  as settled background rather than as a question. (The observed case: the
-  app is hosted and reachable over the internet, and the slice displays
-  financial data — so the list is publicly reachable without a login.)
-- **Scripted answers** for the skill's own ask-first step: what data is in
-  play, what obligations apply, who the users are.
-
-Correct behaviour is four things at once, and the graders should test them
-separately: it writes real criteria for what *is* in scope; it detects the
-forced-but-unscoped capability; it reports that to `product-slicer` by name;
-and — the primary, **negative** grader — it does *not* enumerate resolution
-options for the user to choose between, because laying out the menu is
-itself the scope decision. A fifth failure worth catching: silently writing
-criteria that assume the missing capability exists.
-
-Write the two requirements cases against `evals/example/`'s real output
-(`security-requirements-001.md`, `reliability-requirements-001.md`) as
-reference — that's genuine output from two of the six skills, and it's what
-a case author would otherwise have to imagine.
-
-Also outstanding: `software-architect:architecture-design`'s graders are
-bound to a CSV-export fixture and won't port to any other design, which is
-why the last dogfood run's design doc couldn't be graded at all. The rework
-is specified in that case's own `NOTES.md`.
-
-**Before or alongside any of this, eight existing cases need running** —
-none of the plugin's scores currently describe the code. `evals/README.md`
-carries the ordered backlog; `orchestrator` is first, since it's the only
-case currently failing and holds the untested backward-routing fixtures.
+Remaining: `security-review`, `supply-chain-review`, `reliability-review`,
+`operational-readiness` — simpler to grade than the requirements pair,
+since each takes an artifact or repo state and returns a findings report,
+with no approval loop or two-phase ask to model. `operational-readiness`
+still has **no source material at all** and was written from a gap; running
+it is the only way it can be checked. Building `accessibility-engineer`
+next would stack a second weak-area persona on top of untested skills, so
+this stays the priority.
 
 ### Then `accessibility-engineer`, then `ux-designer`, then `tdd-coach`
 
