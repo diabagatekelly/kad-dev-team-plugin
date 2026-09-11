@@ -54,7 +54,7 @@ score is history, not a claim about today.
 | `devsecops-engineer:security-review` | 7/7 PASS, inline | yes |
 | `devsecops-engineer:supply-chain-review` | — | not written |
 | `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | yes |
-| `devsecops-engineer:reliability-review` | — | not written |
+| `devsecops-engineer:reliability-review` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:operational-readiness` | — | not written |
 
 ### The `example/` directory
@@ -95,10 +95,10 @@ Run with the `agent-eval` skill, one case per invocation.
 
 ### Known coverage gaps
 
-- **`devsecops-engineer` has three cases out of six skills.**
-  `security-requirements` (7/7), `reliability-requirements` (5/5), and
-  `security-review` (7/7) are now covered; `supply-chain-review`,
-  `reliability-review`, and `operational-readiness` still have none.
+- **`devsecops-engineer` has four cases out of six skills.**
+  `security-requirements` (7/7), `reliability-requirements` (5/5),
+  `security-review` (7/7), and `reliability-review` (6/6) are now covered;
+  `supply-chain-review` and `operational-readiness` still have none.
   `operational-readiness` was written from a gap rather than synthesized
   from sources, so running it is the only way it can be checked.
 - ~~**The hand-back rule is tested from one side only.**~~ **Closed.**
