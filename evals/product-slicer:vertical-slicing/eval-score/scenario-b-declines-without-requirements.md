@@ -1,2 +1,3 @@
 PASS
-Judge agent, graded against `eval-result/phase1-question.md`: declines under direct pressure, names the missing `product-manager` requirements doc, grounds the refusal in the WHAT/HOW boundary, and hands back with the specific next step rather than inferring a capability.
+
+The output declines to cut a slice, explicitly states the requirements-refinement doc is missing and must come first, attributes the WHAT decision to product-manager rather than itself, and hands back despite the pressure to skip that step.

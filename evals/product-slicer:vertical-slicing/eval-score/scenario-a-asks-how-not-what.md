@@ -1,2 +1,3 @@
 PASS
-Judge agent, graded against `eval-result/phase1-question.md`: Scenario A explicitly refrains from re-asking the settled WHAT (single-user, live-connection preference, one checking account) and asks only the genuine HOW ambiguity — which of the two checking accounts — framing it as changing what the acceptance criteria can assert.
+
+The response explicitly declines to re-ask the WHAT items (single-user, live-over-CSV, one account, rationale) and instead surfaces a genuine HOW ambiguity (which of the user's multiple checking accounts counts as "their checking account" — first-connected vs. explicitly chosen), which is exactly the kind of technical-slicing question the criteria calls for.

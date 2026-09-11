@@ -1,102 +1,57 @@
-Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/agents/product-slicer/AGENT.md, /Users/kellydiabagate/Documents/kad-developer-suite/skills/vertical-slicing/SKILL.md
+Skills consulted: /Users/kellydiabagate/Documents/kad-developer-suite/skills/vertical-slicing/SKILL.md, /Users/kellydiabagate/Documents/kad-developer-suite/skills/acceptance-criteria/SKILL.md
 
 ## Scenario A
 
-You pick the account — you have two checking accounts and care which one
-this is. That makes selection part of the thin path.
+Answer received — *(scripted: "Let them pick — they have two checking accounts and care which one this is.")*
 
-# Slice 1 (scope-map-001 step 1): Connect one checking account you choose, and see its transactions
+```markdown
+# Slice 1 (scope-map-001 step 1): Connect a chosen checking account and see its transactions
 
 ## Slice set for this unit
-
-Every slice step 1 currently looks like it needs. Provisional — building
-this one is the best information about whether the rest is right.
-
-1. **Connect one checking account you choose, and see its transactions** ←
-   this slice.
-2. Pull that account again later and see new transactions without old ones
-   repeating.
-3. See the connection's state, and recover when it fails or expires.
-4. Connect a second account and see each account's transactions separately.
+Provisional — expected to change once slice 1 is built:
+1. Connect a chosen checking account and see its transactions (this slice).
+2. Connect an additional account beyond the first.
+3. Reconnect or refresh an account whose connection has broken.
 
 ## Thin path
-
-You choose which of your two checking accounts to connect, complete the live
-connection to it, and see that account's transactions listed in the app —
-without logging in to the bank and recording anything by hand.
+The user picks which of their checking accounts to connect, connects it via a live bank connection, and sees that account's transactions listed automatically.
 
 ## Acceptance criteria
-
-> Given I have no account connected
-> When I start the connection flow
-> Then I can see my checking accounts and choose which one to connect
-
-> Given I have chosen one of my checking accounts
-> When the connection completes successfully
-> Then that account is shown as connected, identified clearly enough that I
-> can tell which of my two accounts it is
-
-> Given a checking account is connected
-> When I open the transaction list
-> Then I see transactions from that account, each showing its date,
-> description, and amount
-
-> Given I chose one checking account and connected it
-> When I look at the transaction list
-> Then no transactions from my other checking account appear
-
-> Given I start the connection flow
-> When the connection does not complete — I cancel it, or the bank refuses
-> Then no account is shown as connected, and I am told it didn't connect
-
-- SECURITY — placeholder, to be authored by
-  `devsecops-engineer:security-requirements`. This slice connects to a real
-  financial institution and displays real transaction data; concrete
-  criteria are not mine to write.
-- ACCESSIBILITY — placeholder, owned by `accessibility-engineer` once that
-  persona exists. Both the account-selection control and the transaction
-  list are real UI a person has to operate.
+- Given the user has more than one checking account eligible for connection, when they start connecting an account, then they choose which specific account to connect rather than one being picked automatically.
+- Given the user selects an account and the connection succeeds, when the connection completes, then that account shows as connected and the user can tell which account it is.
+- Given the connection attempt fails, when that happens, then no account shows as connected and the user is told the connection failed.
+- Given a connected account, when the user opens the transaction list, then they see that account's transactions listed automatically — date, description, and amount — without manually logging into the bank or recording anything by hand.
+- Given the user already has this account connected, when they attempt to connect the same account again, then they're told it's already connected rather than a duplicate connection being created.
+- [SECURITY — placeholder, to be authored by `devsecops-engineer:security-requirements`]
+- [ACCESSIBILITY — placeholder, to be authored by `accessibility-engineer` once that persona exists]
 
 ## Explicitly deferred
-
-- **The second checking account, and every other account.** The
-  requirements doc confirms one is enough to feel like progress. Slice 4.
-- **Repeat pulls and duplicate handling.** This slice connects once and
-  lists what comes back. What happens on the second pull — and what makes
-  two transactions "the same" — is slice 2, and asserting anything about
-  duplicates here would mean asserting an outcome whose matching key nobody
-  has named yet.
-- **Backfilled history.** Not raised in the requirements doc; how far back
-  the first pull reaches is left to slice 2's conversation rather than
-  decided silently here.
-- **Categorization, budget view, money movement.** Scope-map steps 2
-  through 4, confirmed out in the requirements doc.
-- **Connection expiry and re-authentication.** Slice 3. Safe to defer only
-  because nothing in this slice depends on the connection outliving its
-  first use.
+- Connecting more than one account — the requirements doc confirms one account is enough to feel like progress for this piece; multiple accounts is slice 2 in the set above, not this one.
+- Categorization, budget view, and money movement — later scope-map steps, out of scope for this unit entirely.
 
 ## Still open
-
-- **Which institution and connection mechanism.** The requirements doc
-  confirms a live connection that's free at this usage level; *how* that
-  connection is made is a technology decision for
-  `software-architect`, not mine to pick here.
-- **What "free at their usage level" is actually bounded by.** Confirmed
-  free in the requirements doc, but not what happens if that changes. Worth
-  a decision before this ships, and it belongs to `product-manager` rather
-  than to slicing.
-- **How the two checking accounts are told apart in the UI.** The criteria
-  above require you can tell which one is connected; what identifies it —
-  nickname, last four digits, institution name — isn't decided here.
+- Nothing blocking slice 1 itself. Reconnecting a broken connection (slice 3 in the set above) needs its own pass once slice 1 is built and the connection's actual failure modes are known.
+```
 
 ## Scenario B
 
-Unchanged from my first response, and not a position I'd soften after the
-push: there's no requirements doc for any step of this scope map, so there's
-no confirmed WHAT for me to cut.
+*(unchanged from phase 1 — declining is the complete answer here, not a question awaiting a scripted reply)*
 
-Deciding what to build first is `product-manager`'s call, made with you.
-Cutting a slice now would mean inferring it myself and presenting an
-engineering heuristic as your decision. Run
-`product-manager:requirements-refinement` on whichever step is next, hand me
-the result, and the slice takes minutes.
+No requirements-refinement doc exists yet for any step of this problem. Deciding what capability or approach to build first isn't mine to make — that's `product-manager`'s call, made by asking the user directly, not something I infer from a scope map's step names. I can't cut a slice here yet, even with the request to skip straight to it: a `product-manager:requirements-refinement` pass needs to happen first, for whichever step is next in line. Handing this back rather than guessing at WHAT.
+
+## Scenario C
+
+This finding is mine to resolve, not the user's to pick from — `devsecops-engineer` reported it and handed it back precisely so I decide, not so I relay it as a menu.
+
+Working the ranked order:
+
+1. **Narrow the current slice so the constraint stops applying?** Not available here. Narrowing would mean something like running locally instead of exposed — but the app being hosted and reachable over the internet is already an established fact, not something this slice gets to undo. Nothing about *this* slice's own scope (connect one account, select, list) is what's forcing the login; the hosting decision is what's forcing it, and that's already settled outside this slice's boundary. Rejecting this option.
+2. **Cut a new slice ahead of slice 1 delivering sign-in on its own.** This is the right call. Sign-in stands alone as a real, demoable capability, it's needed before slice 1's data is safe to expose either way, and it doesn't require touching what slice 1 already does.
+3. **Grow slice 1 to include sign-in.** Not choosing this — it's ranked last for a reason, and option 2 above is genuinely available, so there's no case for reaching for growth instead.
+
+**Decision: insert a new slice ahead of slice 1 delivering sign-in, and re-number the existing slice 1 to slice 2.**
+
+What this invalidates:
+- The new sign-in slice has no confirmed WHAT behind it — nobody has asked the user what "sign-in" should actually mean for them (a password, a magic link, an existing account, something else). This finding doesn't stand in for that conversation. It needs its own `product-manager:requirements-refinement` pass before it gets written up as a real slice — I'm naming it as a one-line placeholder in the set, not specifying it.
+- This also changes the scope map's shape: "Transaction retrieval" as scoped didn't account for a sign-in step at all, and the problem doc's own constraints (financial data as core asset, no hardcoded single identity) mean this was always going to surface somewhere. That's a step boundary change, which supersedes the scope map with a new numbered version rather than editing scope-map-001 in place — `docs-writer`'s job, not mine to do silently here.
+</content>
