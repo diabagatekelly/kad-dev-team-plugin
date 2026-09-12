@@ -58,6 +58,7 @@ score is history, not a claim about today.
 | `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | yes |
 | `ux-designer:design-system` | 9/9 PASS (after one re-run), three-phase | yes |
 | `ux-designer:screen-design` | 9/9 PASS, single-phase | yes |
+| `accessibility-engineer:accessibility-review` | 8/9 PASS, single-phase — the one failure is `skill-invoked`, a mechanical self-report miss, not a substantive gap; see the case's `eval-score/summary.md` | yes |
 
 ### The `example/` directory
 
@@ -119,6 +120,22 @@ Run with the `agent-eval` skill, one case per invocation.
   caught the same gap in this case's own first draft too (missing
   exception/stack-trace, distinct from error-response) — fixed and
   re-verified. Details in `devsecops-engineer:security-requirements/eval-score/summary.md`.
+- **`agent-eval`'s "Read/Grep/Glob only" dry-run grant isn't actually
+  enforceable on a `general-purpose` subagent in this environment.**
+  Surfaced running `accessibility-engineer:accessibility-review`: the
+  spawned emulation agent had full tool access regardless of the
+  procedure's instructions, and used it — opening a real Chrome tab and
+  driving the fixture mockup live (keyboard events, computed-style
+  contrast math, real `getBoundingClientRect` measurements) rather than
+  reasoning over the HTML text alone. No repo file was written or edited,
+  so the side-effect-free half of the dry run held, but this is not the
+  purely-textual emulation the procedure describes, and it's likely the
+  reason that same run also forgot the mandated "Skills consulted:"
+  self-report line (see `eval-score/summary.md`) — busy actually
+  executing checks instead of following a literal formatting
+  instruction. Any future case for a persona whose skill instructs real
+  tool use (browser automation, code execution) should expect the same
+  gap until this harness gains a real tool-restriction mechanism.
 - **`technology-bootstrap`'s advisor-consult path is only softly graded.**
   Consulting `devsecops-engineer` inline is treated as expected-but-not-
   required, because the emulation harness can't distinguish an inline

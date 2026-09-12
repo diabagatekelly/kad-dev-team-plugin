@@ -119,15 +119,36 @@ deliberately, until a screen actually needs one.
   dot and a written label ("Connection not established," not just a red
   tint); credit amounts stay bold and consistently positioned, not
   color-only.
-- Touch targets: nav icons 44×40px, chips and secondary buttons ≥34px tall,
-  primary buttons 40px tall.
+- Touch targets: every interactive control — nav icons, the quick-action
+  circle, primary/secondary/outline buttons, and chips — is 44×44px minimum.
+  Revised from an initial 34–40px range after `accessibility-review-001`
+  measured the shipped screens against this system's own declared values
+  and found they matched exactly, just below the checked baseline; see
+  "Findings" below.
 - Heading scale (26/18px vs. 14/13px body) keeps hierarchy visually and
   structurally distinguishable.
 
 ## Findings (review/evolve only)
 
-Not applicable — this is the system's first establishment, not a review of
-an existing one.
+**Problem — touch targets below the accessibility baseline.** Flagged by
+`accessibility-review-001` (finding 8) rather than found here: nav icons
+(44×40), the quick-action circle (36×36), primary buttons (40px tall),
+secondary/outline buttons (38px tall), and chips (34px tall) all matched
+this system's own declared values exactly — the values themselves were the
+defect, not a per-screen implementation slip, which is why it routed back
+here instead of getting patched screen-by-screen. Below 44×44, a control is
+unreliable to tap accurately, especially for anyone with a motor
+impairment or using the app one-handed.
+
+**Fix applied:** every one of those control patterns grows to a 44×44px
+(or 44px-tall) minimum — chosen over adding invisible hit-area padding
+around the existing smaller visuals, since a directly-sized control is
+simpler and more robust than a padding-based hit area. This is a visible
+density change from the Wave-matched original (buttons, nav icons, and
+chips all read slightly larger now), accepted as the tradeoff for meeting
+the baseline directly. Applied to `design-system-mock.html` and all seven
+of slice 1's rendered screens in `visual-ux/`, each re-screenshotted
+against the new sizes.
 
 ---
 

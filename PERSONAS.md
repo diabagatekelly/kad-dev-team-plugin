@@ -95,7 +95,7 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 5 | `tdd-coach` | Red-Green-Refactor discipline — test quality over coverage-as-theater, catching over-mocked tests and false positives | Core strength | Planned |
 | 6 | `code-reviewer` | Readability/DRY/simplicity triage — self-documenting code over comments, a severity taxonomy for findings | Core strength | Planned |
 | 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done |
-| 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work |
+| 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness. One skill, `accessibility-review`, verifying what `ux-designer` already rendered rather than designing anything itself | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; the roster's first `background: true` persona, since its one skill never blocks on `AskUserQuestion` |
 | 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself (that persona doesn't exist yet) |
 
 **Rows 7 and 8 were merged.** The roster originally planned
@@ -118,18 +118,24 @@ requirements, slices, design docs) instead of requiring the user to name
 the right persona each time. Built as a **skill the main agent loads**,
 not a persona/agent — `docs-writer`, `product-manager`, `product-slicer`,
 `software-architect`, and `devsecops-engineer` are all `background: false`
-and must run inline,
-so there's nothing to spawn or parallelize; routing means adopting each
-persona's own instructions in turn, in the same conversation.
+and must run inline, so there's nothing to spawn or parallelize for them;
+routing means adopting each persona's own instructions in turn, in the
+same conversation. `ux-designer` is also `background: false` for the same
+reason (both its skills block on `AskUserQuestion`); `accessibility-engineer`
+is the first exception — see "Next to build" below — but `orchestrator`
+still executes it inline like every other row today, since v1's routing is
+sequential by construction, not because every persona it invokes requires it.
 
-**v1 scope**: sequential stage routing across today's five planning
-personas (problem-framing-doc → scope-map → requirements-refinement →
-slicing → user-story-writeup → architecture-design → security-requirements
-→ reliability-requirements → technology-bootstrap), one step at a time,
-human checkpoint after each — and a hard stop once a slice is designed, its
-runtime-safety criteria are filled, and the project has a stack to build
-on, since the next stage (`tdd-coach` implementing that design) doesn't
-exist yet. `devsecops-engineer`'s four review/posture
+**v1 scope**: sequential stage routing across the full spine as it stands
+today (problem-framing-doc → scope-map → requirements-refinement → slicing
+→ user-story-writeup → architecture-design → security-requirements →
+reliability-requirements → design-system → screen-design →
+accessibility-review → technology-bootstrap), one step at a time, human
+checkpoint after each — and a hard stop once a slice is designed, its
+runtime-safety criteria are filled, its screen designed and accessibility
+criteria filled if UI-touching, and the project has a stack to build on,
+since the next stage (`tdd-coach` implementing that design) doesn't exist
+yet. `devsecops-engineer`'s four review/posture
 skills sit outside this spine entirely: they run against code or a repo
 that already exists, which the spine never reaches. Never cascades to the next scope-map step
 automatically — each unit of work needs design/implementation before the
@@ -145,14 +151,20 @@ below until it has real personas to synthesize across.
   execution-phase specialists (`code-reviewer`, `devsecops-engineer`,
   `tdd-coach`) against the same artifact and reconciling their findings,
   mirroring the parallel-review pattern seen in other installed plugins.
-  One of the three now exists. Still blocked on a second, and on a real
-  constraint the merge just surfaced: `devsecops-engineer` is
-  `background: false` because its requirements skills block on
-  `AskUserQuestion`, so it can't currently be launched in parallel with
-  anything. Its four review/posture skills never ask, though — whether a
-  persona's parallelizability should be a per-skill property rather than a
-  per-agent one is the actual design question here, and it isn't answerable
-  until a second reviewer exists to parallelize against.
+  One of the three now exists, and `accessibility-engineer` — not one of
+  the original three, but a real reviewer with the same shape — is the
+  first persona in this roster with nothing blocking async launch at the
+  *agent* level, not just some skills within it. `devsecops-engineer` is
+  still `background: false` because its requirements skills block on
+  `AskUserQuestion`, so the per-skill-vs-per-agent parallelizability
+  question this note originally raised still isn't answerable against a
+  real mixed-behavior persona — that needs a persona with both an asking
+  half and a non-asking half to actually test whether the two halves
+  should carry different flags, and none exists yet. What a second
+  reviewer does resolve: there are now two independent reviewers that
+  *could* run against the same artifact concurrently, which is the actual
+  prerequisite this note named as blocking — reconciling their findings
+  into one synthesis is still unbuilt.
 - **impl vs review split per persona**: several existing agent sets come in
   pairs (`*-impl` doing the work, `*-review` critiquing it). Decide per-persona,
   once built, whether that split earns its complexity here, or whether one
@@ -302,16 +314,136 @@ wearing different colors") — a single-run quality miss, confirmed by a
 clean re-run with structurally distinct candidates rather than a fix to
 the skill.
 
-### Next: `accessibility-engineer`, then `tdd-coach`
+**`accessibility-engineer` built, out of the planned order relative to
+`code-reviewer`/`tdd-coach` but exactly where the roster's own "Next"
+note already pointed.** One skill, `accessibility-review` — no
+establish-once/apply-per-slice split like `ux-designer`'s, since the
+mandate is a single trigger: verify what `ux-designer` already rendered,
+don't design anything. Synthesized from `built-in-wcag-subset.md` (the
+file `ux-designer`'s own synthesis explicitly deferred here), a SCORM-domain
+Flexion agent (`accessibility-inclusive-reviewer`) that turned out to be
+the corpus's only source reviewing *driven, built* content rather than
+static markup, and CAMS's `cams-testing-a11y` (read past its
+Playwright/axe-core procedure for the principles underneath — the
+automated/manual layering, a severity taxonomy, and a
+disable-with-accountability pattern). Personal skills had nothing on this
+topic, same finding shape as every weak-area synthesis before it.
 
-`evals/example/slice-001.md`'s accessibility-criteria placeholder is
-still unfilled, and both `design-system-001.md` and `screen-design-001.md`
-now exist for it — the natural first real target for `accessibility-engineer`
-once built, reviewing what `ux-designer` already produced for WCAG
-correctness rather than generating a design itself.
+Two contradictions resolved, both toward decisions this roster already
+holds elsewhere: three incompatible severity vocabularies (axe's
+critical/serious/moderate/minor, a binary clear-problem/preference split,
+a blocking/non-blocking-plus-evidence-type scheme) resolved toward this
+plugin's own existing Critical/High/Medium/Low scale, the same one
+`devsecops-engineer`/`architecture-review` share, mapped here by
+completeness of exclusion rather than by category. Whether suppressing a
+failing check is ever legitimate — CAMS alone allows it, the other two
+don't — resolved toward adopting CAMS's underlying accountability
+discipline (visible, dated, justified, owned) without its
+Playwright-specific file mechanism: a finding that can't be fixed now
+stays visible as accepted-for-now, the same "carry forward, never drop"
+convention this roster already applies to every other unresolved item.
+Full reasoning in `.synthesis/accessibility-engineer.md`.
 
+**Dogfooded for real against `evals/example/`'s actual rendered
+mockups — not described, actually driven in a browser** (keyboard focus
+via programmatic `.focus()` plus computed-style inspection, since
+synthetic `Tab` keydown events weren't reliably reaching page focus in
+that session; contrast computed from real rendered color values). Found
+eight real findings the mockups' own text hadn't surfaced, written up in
+the roster's first `accessibility-review-001.md`: the nav rail and
+quick-action control are non-semantic `<div>`s with no keyboard path at
+all; the design system's declared focus treatment was never actually
+implemented in any of the seven screens' CSS (the one real interactive
+element falls back to the browser's bare default outline); five of the
+seven screens' status-block titles are `<strong>` text rather than a
+heading, invisible to heading navigation, unlike the one screen that
+established the pattern with a real `<h2>`; a retry button's text fails
+contrast at 4.38:1; none of the status containers declare a live-region
+role; decorative icons carry no `aria-hidden`; and every interactive
+control's touch target — confirmed via the real rendered
+`getBoundingClientRect()`, not just the declared CSS — falls below 44×44,
+which turned out to be `design-system-001.md`'s own declared values
+working exactly as declared, routed back to `ux-designer:design-system`
+as a token fix rather than patched per screen. Slice-001's
+accessibility-criteria placeholder is now genuinely filled, five
+criteria confirmed against the real mockups and two deferred until real
+code exists to check them against.
+
+**Two of those findings weren't covered by the skill as first written,
+so the skill got fixed before the dogfood output was called
+final** — the same order this plugin's methodology already
+requires (fix the skill, not just the one output). `accessibility-review`
+gained two more checks past its original six-from-the-source baseline:
+anything that looks interactive must actually be a real interactive
+element (worse than a missing focus style, since there's no focusable
+element to put one on), and dynamic status content must declare its
+live-region role in markup now, checkable today independent of whether
+real transitions exist yet to fire it.
+
+**A stale claim in the existing corpus surfaced along the way, and got
+corrected.** `screen-design-001.md`'s own "Open questions" section said
+"None left open," while `slice-001.md` itself still listed the
+accessibility placeholder as genuinely open at the time — the exact
+silent-drop failure mode PERSONAS.md's own durable finding below already
+names, caught here by the very persona that finding predicted would need
+to watch for it. Corrected in place with a note explaining the claim was
+wrong when written, not that the gap is still open today.
+
+**The eval case ran: 8/9 PASS**, written from `AGENT.md`/`SKILL.md` text
+before checking the real dogfood output, per this plugin's established
+order (9 graders, single-phase, against a synthetic reorder-accounts
+fixture built to test each of the persona's named rules directly,
+including a deliberate escalation trap — a claimed "fully accessible
+version available elsewhere" — meant to tempt an under-flag). All eight
+substantive `llm` graders passed clean. The one failure, `skill-invoked`,
+is a genuine emulation-fidelity gap worth its own line: this environment
+can't actually restrict a spawned `general-purpose` agent to
+`Read`/`Grep`/`Glob` the way `agent-eval`'s own procedure assumes, so the
+emulated persona used real browser automation instead of reasoning over
+the HTML as text — driving the fixture live (real `Tab` keypresses,
+computed-style contrast math, real `getBoundingClientRect` calls), and,
+plausibly a symptom of the same distraction, never wrote the harness's
+mandated "Skills consulted:" self-report line. Scored FAIL on the letter
+of that mechanical check regardless, not smoothed over — full reasoning,
+including why the substantive output is still strong independent evidence
+the skill was genuinely read and applied, in
+`evals/accessibility-engineer:accessibility-review/eval-score/summary.md`.
+Recorded as a general harness limitation in `evals/README.md`'s "Known
+coverage gaps," since any future case for a persona whose skill instructs
+real tool use should expect the same.
+
+**The real dogfood artifact was then graded separately, against the same
+case's graders, borrowed the way `evals/example/`'s own method section
+already prescribes.** `accessibility-review-001.md` — the actual review
+of all seven of this directory's real rendered mockups, not the eval
+case's synthetic fixture — scored **6/6 graded PASS**, with two graders
+honestly skipped rather than force-fit (neither an "accessible version
+elsewhere" claim nor a requirement-vs-accessibility tension exists
+anywhere in this real slice's eight findings) and two adapted to test the
+same underlying property against what's actually there instead of the
+fixture's specifics. Full table and reasoning in
+`evals/example/summary.md`'s new section. The adaptation worth keeping:
+`catches-no-keyboard-path-on-required-interaction-critical`'s literal
+premise didn't hold (the nav-rail controls have zero accessible path but
+aren't *required* by this slice yet, so High rather than Critical is
+correct) — but the finding still demonstrated the rule was a live test
+against this artifact's facts, not a memorized label, by naming both why
+Critical doesn't apply yet and exactly what would flip it. Independent of
+any grader, the touch-target finding traced its own root cause to
+`design-system-001.md`'s declared token values and routed the fix back to
+`ux-designer:design-system` rather than proposing a per-screen patch —
+this persona's own artifact-ownership boundary, held correctly on the
+first real case that actually presented the choice.
+
+### Next: `tdd-coach`
+
+`accessibility-engineer` was the roster's last planned "weak area" build
+before returning to the two originally-planned "core strength" personas.
 `tdd-coach` will move the orchestrator's terminal row again, to
-"implemented," and needs a fresh no-cascade check when it does.
+"implemented," and needs a fresh no-cascade check when it does — the
+terminal row now also carries the UI-touching accessibility-criteria
+condition this session added, worth confirming that check still holds
+once there's an implementation stage after it.
 
 ## Durable findings
 
@@ -427,3 +559,45 @@ Constraints section already is that artifact. The five changes:
 5. `vertical-slicing` names the whole slice set for a unit and specifies
    only the first — which both other sources already did, making the
    one-slice-at-a-time behavior this plugin's own divergence.
+
+**The predicted silent-drop risk materialized, in the exact artifact that
+predicted it.** The finding above ends "worth checking any future persona
+that consumes an artifact with a known, unowned gap for the same
+silent-drop risk" — and `accessibility-engineer`'s own first real run
+found exactly that: `screen-design-001.md`'s "Open questions" section
+claimed "None left open" while the accessibility placeholder was still
+genuinely open at the time it was written. Corrected in place rather than
+left stale, with a note that the claim was wrong when written rather than
+that the gap is still open now. Worth keeping as a second data point that
+this failure mode isn't hypothetical — it has now actually happened once,
+been named as a risk, and then actually happened again in a different
+artifact before the risk note was even fully written.
+
+**A markup-only accessibility check misses defects a driven one catches —
+confirmed, not assumed.** `accessibility-review`'s synthesis named
+"drive the artifact, don't just read it" as a principle before any real
+run tested it. The dogfood run against `evals/example/` confirmed it
+concretely: reading the mockups' CSS alone would have missed that the
+design system's declared focus treatment was never actually implemented
+(the one real interactive element silently falls back to the browser's
+bare default outline) — a gap only a real `.focus()` call plus computed-
+style inspection surfaces, since the *absence* of a rule doesn't look
+different from its presence failing to render until something actually
+asks the browser what it computed. The general shape: for any review
+persona whose subject is "does this actually work," a check that only
+reads source is a weaker claim than one that runs it, whenever running it
+is genuinely possible.
+
+**First `background: true` persona in the roster, and a partial answer to
+the parallelizability question "Orchestrator v2" left open.**
+`accessibility-engineer` has exactly one skill, and that skill never
+blocks on `AskUserQuestion` (an ambiguous or AAA-level finding gets logged
+as a preference, not escalated into a question) — the first persona here
+where the *agent* itself, not just some of its skills, can be launched
+async. This doesn't fully resolve the open question from "Orchestrator
+v2" below (whether parallelizability should be a per-skill or per-agent
+property still isn't testable against a real mixed-behavior persona,
+since `devsecops-engineer` remains the only one of those and stays
+`background: false` for its requirements half) — but it does mean a
+second real reviewer now exists to eventually parallelize against, which
+that note named as the actual blocker.

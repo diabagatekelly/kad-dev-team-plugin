@@ -122,3 +122,77 @@ dogfood runs and graded separately (9/9 and 9/9; see
 Not re-deriving a new combined table here — see `PERSONAS.md` and each
 case's own `eval-score/summary.md` for current status instead of treating
 this file's table as live.
+
+## `accessibility-review-001.md` — graded against its case's own graders
+
+Unlike `design-system-001.md`/`screen-design-001.md` above, this one gets
+the full table treatment (not just a narrative pointer), since grading it
+is exactly what was asked for. `accessibility-review-001.md` is a real
+dogfood run — `accessibility-engineer` actually driving all seven of this
+directory's real rendered mockups in a browser (not the synthetic
+reorder-accounts fixture `accessibility-engineer:accessibility-review`'s
+own case uses) — graded against that case's `graders/*.md`.
+
+`skill-invoked` doesn't apply, same rule as everywhere else in this file:
+this is a finished document, not captured harness output. Two graders
+assume fixture specifics this real slice's findings don't contain and are
+skipped rather than force-fit; two more are adapted to test the same
+underlying property against different real content.
+
+| Grader | Result |
+|---|---|
+| `skill-invoked` | N/A — finished document |
+| `catches-no-keyboard-path-on-required-interaction-critical` *(adapted)* | PASS |
+| `rejects-accessible-version-elsewhere-as-resolution` | **skipped** |
+| `preserves-requirement-instead-of-removing-it` | **skipped** |
+| `catches-non-semantic-interactive-div` | PASS |
+| `catches-missing-heading-on-status-title` | PASS |
+| `catches-missing-live-region-on-status-block` | PASS |
+| `no-false-positive-on-correct-focus-style` *(adapted)* | PASS |
+| `produces-given-when-then-acceptance-criteria-not-just-findings` | PASS |
+
+**Result: 6/6 graded PASS, 2 skipped, 1 not applicable.**
+
+**Why the two skips are real skips, not force-fits.**
+`rejects-accessible-version-elsewhere-as-resolution` and
+`preserves-requirement-instead-of-removing-it` both test what the review
+does when a defect it finds is tempting to wave off or a fix is tempting
+to solve by weakening a requirement — neither situation exists anywhere
+in this artifact's eight findings. Nothing in slice 1's connect flow
+claims an accessible alternative exists elsewhere, and none of the
+findings involve a functional requirement in tension with accessibility.
+Grading these against content that doesn't contain the scenario they test
+would produce a vacuous PASS, which is worse than an honest skip — the
+same reasoning `evals/example/summary.md`'s own method section already
+states for fixture-bound graders generally.
+
+**What the two adaptations tested instead.**
+`catches-no-keyboard-path-on-required-interaction-critical`'s literal
+premise (a required action with zero accessible path, rated Critical)
+doesn't hold here either — the nav-rail/quick-action controls have zero
+accessible path but aren't *required* by slice 1's own acceptance
+criteria, so the review correctly rates them High, not Critical. Adapted
+to test the more general property the Critical-bar rule actually depends
+on: does the finding reason explicitly about *why* Critical doesn't apply
+yet (nothing currently requires using these controls) and *what would
+change that* (a later slice making one of them load-bearing)? It does,
+naming both halves — which is a stronger signal than a bare severity
+label would have been, since it shows the rule was applied as a live
+test against this artifact's facts rather than pattern-matched from a
+label. `no-false-positive-on-correct-focus-style`'s literal premise (an
+already-correct focus style that shouldn't be falsely flagged) also
+doesn't hold — no screen in this real artifact has a correct focus style
+anywhere, unlike the synthetic fixture's `.btn-primary`. Adapted to test
+the same underlying discipline (don't collapse two different defects into
+one over-broad finding) against what's actually here: the review keeps
+"a control with no focusable target at all" (finding 1, the nav icons)
+and "a focusable control with no focus style" (finding 2, the one real
+button) as two separate findings with two different fixes, rather than
+reporting one generic "focus is broken" finding across both.
+
+**Independent of any grader:** finding 8 (every interactive control below
+the 44×44 baseline) traced its root cause to `design-system-001.md`'s own
+declared token values and routed the fix back to `ux-designer:design-system`
+rather than proposing a per-screen patch — the seam this roster's own
+`AGENT.md` boundary rule exists to hold, applied correctly on the first
+real artifact that actually presented the choice.

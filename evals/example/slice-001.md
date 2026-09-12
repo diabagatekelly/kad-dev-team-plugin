@@ -86,11 +86,15 @@ overlooked.
 placeholder with eleven criteria, including the testable statement of the
 local-only boundary this slice's narrowing depends on.
 
-**Accessibility — PLACEHOLDER, not authored here**
-> Owned by `accessibility-engineer`, which does not exist in this roster
-> yet. This slice ships a connect flow and a transaction list — both real
-> UI a person operates. The placeholder stays visible until that persona
-> can write it rather than being dropped because no one owns it today.
+**Accessibility — FILLED.** See accessibility-review-001, which replaced
+this placeholder with five confirmed criteria checked against the actual
+rendered screens, plus two that stay deferred until real code exists to
+verify them, and eight findings against the current mockups. One of those
+— touch-target sizing — was a `design-system` token issue routed back to
+`ux-designer` rather than patched per screen, and has since been resolved
+there: every control pattern now meets 44×44px, applied to the mock and
+all seven of this slice's rendered screens (see `design-system-001.md`'s
+own "Findings" section).
 
 ## Explicitly deferred
 
@@ -147,5 +151,10 @@ reliability-requirements-001's empty-result criterion.
   signal to use instead of guessing from empty arrays. No webhook, so no
   publicly reachable endpoint, so the local-only condition stands. See
   Decision 6 in design-001.
-- **Accessibility criteria** — still an unfilled placeholder, still unowned
-  by any persona in this roster. Unchanged by this scope change.
+- ~~**Accessibility criteria** — still an unfilled placeholder, still
+  unowned by any persona in this roster.~~ **Filled by
+  `accessibility-review-001`.** Its own deferred items stay open — see that
+  document's "Open questions." The routed-back touch-target finding is now
+  resolved: `design-system-001` brought every control pattern to 44×44px
+  minimum and this slice's seven rendered screens were updated and
+  re-screenshotted against the new sizes.

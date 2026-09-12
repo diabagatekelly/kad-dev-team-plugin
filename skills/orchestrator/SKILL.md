@@ -11,7 +11,10 @@ persona in this roster that plans work (`docs-writer`, `product-manager`,
 `AskUserQuestion` and must run inline — never as an async `Agent` spawn. Orchestrating them means *you* adopt each one's
 instructions in turn, in this same conversation, the same way you would if
 the user had asked for that persona directly. There is no launching or
-parallelism here.
+parallelism here — `accessibility-engineer` is `background: true` and
+*could* be launched async outside this skill, but this skill still adopts
+its instructions inline like every other row, since routing here is
+sequential by design, not because every persona it invokes requires it.
 
 **Skip this skill** when the user already named what they want directly
 ("write an ADR for X," "audit the docs for staleness") — routing only
@@ -70,7 +73,10 @@ mechanical checks only, never a semantic read of full artifact prose:
   otherwise take the user's word)? Check both the target directory itself
   and a `visual-ux/` subfolder inside it — `ux-designer` saves its written
   artifacts in either place depending on the run, and both are valid; don't
-  conclude one doesn't exist just because the root came up empty.
+  conclude one doesn't exist just because the root came up empty. If it has
+  one, does it still carry an unfilled accessibility-criteria placeholder
+  (naming `accessibility-engineer`, or, in artifacts written before this
+  persona existed, an explicit not-authored-here placeholder)?
 - **Project-level, not per-unit:** is there a technology-bootstrap artifact
   in the target directory? If not, take the user's word for whether this
   project already has a working stack — a repo someone has been building in
@@ -130,8 +136,9 @@ forward.
 | The slice's security criteria are filled but its reliability behavior has never been made concrete | `devsecops-engineer:reliability-requirements` for that slice |
 | The slice is UI-touching, its runtime-safety criteria are filled, and the project has no design-system artifact yet | `ux-designer:design-system` |
 | The slice is UI-touching, its runtime-safety criteria are filled, a design-system exists, but this slice has no screen-design artifact yet | `ux-designer:screen-design` for that slice |
-| The slice is designed with its runtime-safety criteria filled (and, if UI-touching, its screen designed), and the project has no stack yet | `software-architect:technology-bootstrap` for that slice |
-| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed), and the project has a stack | **Stop — see step 5.** Don't advance to the next scope-map step. |
+| The slice is UI-touching, has a screen-design artifact, but its accessibility criteria are still an unfilled placeholder | `accessibility-engineer:accessibility-review` for that slice |
+| The slice is designed with its runtime-safety criteria filled (and, if UI-touching, its screen designed and its accessibility criteria filled), and the project has no stack yet | `software-architect:technology-bootstrap` for that slice |
+| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed and its accessibility criteria filled), and the project has a stack | **Stop — see step 5.** Don't advance to the next scope-map step. |
 
 **Why the requirements rows come *after* design, not before.** These are
 the only non-functional criteria in the spine that depend on structural
@@ -150,6 +157,16 @@ scope might still move is wasted work at best and a screen built for the
 wrong slice at worst. Placing screen design after both runtime-safety rows
 means it only ever runs against a slice that's already survived its most
 likely sources of change.
+
+**Why accessibility review comes right after screen design, not before.**
+There's nothing to check before a screen has actually been rendered —
+`accessibility-review` verifies an artifact `screen-design` produced, the
+same dependency `screen-design` itself has on `design-system`. Running it
+before the stack is chosen also keeps its findings technology-agnostic: a
+missing label or a failing contrast pair is a property of the rendered
+markup and tokens the mockup already committed to, not of whatever
+framework eventually renders it for real — the same reason runtime-safety
+criteria get written before a stack exists rather than after.
 
 **Why the bootstrap row comes last, not first.** An empty repo makes
 "choose the stack" feel like step one, but a structural design needs no
@@ -191,8 +208,8 @@ Then:
   now-current state — don't re-run step 1. If no, stop and wait.
 - **If the current unit just reached the terminal row** (its slice is
   designed, its runtime-safety criteria are filled, its screen is designed
-  if it's UI-touching, and the project has a stack to build on): don't
-  propose anything further.
+  and its accessibility criteria filled if it's UI-touching, and the
+  project has a stack to build on): don't propose anything further.
   Say plainly that this is as far as the roster currently reaches —
   `tdd-coach` would implement this design next, and doesn't exist yet.
   Moving on to the next scope-map step's requirements or slicing before

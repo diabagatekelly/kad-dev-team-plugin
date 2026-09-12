@@ -135,9 +135,17 @@ screen actually uses it would save re-deriving it here.
 
 ## Open questions
 
-None left open by this screen design. The one thing that looked like a
-choice — whether the user names an institution through our own UI before
-handing off, versus doing it entirely inside the provider's widget — is
-already resolved by design-001: the provider's embedded flow includes its
-own institution search, so this app never needs a picker of its own for
-slice 1's single-institution scope.
+The one thing that looked like a choice — whether the user names an
+institution through our own UI before handing off, versus doing it
+entirely inside the provider's widget — is already resolved by design-001:
+the provider's embedded flow includes its own institution search, so this
+app never needs a picker of its own for slice 1's single-institution
+scope.
+
+**Correction, added after the fact:** this section originally read "none
+left open," which silently dropped the accessibility-criteria placeholder
+this slice was still carrying at the time — exactly the failure mode
+named in PERSONAS.md's durable finding on unresolved items staying
+visible. `accessibility-engineer` has since filled that placeholder (see
+`accessibility-review-001`); this note stays as a record that the claim
+was wrong when written, not because the gap is still open today.
