@@ -36,8 +36,12 @@ whatever actually fits the product — and execute it deliberately.
 "Reasonable defaults with no particular character" is not a direction, it's
 the absence of one, and it's the fastest way to produce an interface
 indistinguishable from every other one. If a genuinely brand-defining
-choice like this has more than one real candidate, that's a decision for
-the user, not something to settle by picking the safer-looking option.
+choice like this has more than one real candidate, render a sample of
+each — a small swatch of tokens and a representative component or two is
+enough — and let the user pick from what they can actually see. That's a
+decision for the user, not something to settle by picking the
+safer-looking option or describing the candidates in prose instead of
+showing them.
 
 ### Declare the tokens
 

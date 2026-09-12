@@ -113,9 +113,15 @@ Check the composed screen against five angles before handing it over:
 ## Ask when more than one legitimate direction exists
 
 A navigation flow, an information architecture, a sequencing choice can
-each have more than one reasonable shape. Present the real options and let
-the user pick — don't resolve a genuine fork on their behalf because one
-path seemed obviously better to you.
+each have more than one reasonable shape. When that's genuinely true,
+**render each real candidate**, not just the one you'd pick — the whole
+reason this skill renders instead of describing is that a visual question
+needs a visual answer, and that applies exactly as much to comparing
+options as it does to presenting a single recommendation. Describing an
+alternative in prose while only rendering your favorite isn't presenting a
+choice, it's presenting a recommendation with a disclaimer. Let the user
+pick from what they can actually see — don't resolve a genuine fork on
+their behalf because one path seemed obviously better to you.
 
 ## Produce a rendered artifact, not production code
 
