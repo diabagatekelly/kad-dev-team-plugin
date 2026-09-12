@@ -92,8 +92,8 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 2 | `product-manager` | Pinning down WHAT before HOW — asking the user directly who benefits, what they want, and why for one unit of work, before any slice gets cut | Core strength | Done |
 | 3 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit for a confirmed requirement, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
 | 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction; also owns technology selection, recommending rather than deciding — the starting set a first test forces, and what sits behind each boundary once one forces it | Core strength | Done |
-| 5 | `tdd-coach` | Red-Green-Refactor discipline — test quality over coverage-as-theater, catching over-mocked tests and false positives | Core strength | Planned |
-| 6 | `code-reviewer` | Readability/DRY/simplicity triage — self-documenting code over comments, a severity taxonomy for findings | Core strength | Planned |
+| 5 | `tdd-coach` | Turns a designed slice into working code via genuine Red-Green-Refactor, and applies specifically-named fixes handed back from review — both through the same disciplined loop. Two skills: `tdd-implementation` (write/fix) and `test-quality-review` (critique existing tests — over-mocking, false positives, coverage-as-theater). Follows Clean Architecture/OeA principles as a writing constraint (informed by `software-architect`'s already-decided boundaries plus its own lightweight synthesis of the same sources); doesn't decide or verify architecture itself — `architecture-design`/`architecture-review` still own that | Core strength | Planned — shape decided, not yet built; first persona needing real execution tools (`Bash`, to actually run tests) |
+| 6 | `code-reviewer` | Local code-level readability/DRY/naming/comments triage — not scope-YAGNI (`product-slicer`'s territory) and not structural abstraction (`architecture-review`'s), a severity taxonomy for findings | Core strength | Planned |
 | 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness. One skill, `accessibility-review`, verifying what `ux-designer` already rendered rather than designing anything itself | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; the roster's first `background: true` persona, since its one skill never blocks on `AskUserQuestion` |
 | 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself (that persona doesn't exist yet) |
@@ -147,50 +147,59 @@ below until it has real personas to synthesize across.
 
 ## Deferred / phase-2 ideas
 
-- **Orchestrator v2 — parallel review synthesis**: launching several
-  execution-phase specialists (`code-reviewer`, `devsecops-engineer`,
-  `tdd-coach`) against the same artifact and reconciling their findings,
-  mirroring the parallel-review pattern seen in other installed plugins.
-  One of the three now exists, and `accessibility-engineer` — not one of
-  the original three, but a real reviewer with the same shape — is the
-  first persona in this roster with nothing blocking async launch at the
-  *agent* level, not just some skills within it. `devsecops-engineer` is
-  still `background: false` because its requirements skills block on
-  `AskUserQuestion`, so the per-skill-vs-per-agent parallelizability
-  question this note originally raised still isn't answerable against a
-  real mixed-behavior persona — that needs a persona with both an asking
-  half and a non-asking half to actually test whether the two halves
-  should carry different flags, and none exists yet. What a second
-  reviewer does resolve: there are now two independent reviewers that
-  *could* run against the same artifact concurrently, which is the actual
-  prerequisite this note named as blocking — reconciling their findings
-  into one synthesis is still unbuilt.
-- **impl vs review split per persona**: several existing agent sets come in
-  pairs (`*-impl` doing the work, `*-review` critiquing it). Decide per-persona,
-  once built, whether that split earns its complexity here, or whether one
-  agent that can do both is enough for personal use.
-- **Dev-agent quarantine/grade/combine cycle**: once execution-phase personas
-  exist, have `orchestrator` spin off 2-3 implementer instances per slice,
-  each in its own isolated worktree with no visibility into siblings' work,
-  each carrying the full dev skillset (TDD, dependency-rule, etc.). Grade
-  each implementation against those same skills in a scoring/critique mode —
-  one grader per skill the persona is expert in, not one generic reviewer.
-  For the combine step: dev-agents should surface their grading feedback to
-  each other, but the actual merge into one submission needs to stay a
-  single accountable step (the orchestrator, or one fresh combiner agent
-  given every implementation plus every grade) rather than joint/collective
-  authorship by the dev-agents themselves — several agents editing one
-  shared artifact reintroduces the same anchoring/coordination failure mode
-  quarantine exists to prevent. Re-grade the combined version pass/fail; on
-  fail, loop scoped only to the named failures, not a full re-open —
-  mirrors a ratification-vote pattern seen in other installed multi-agent
-  tooling. Blocked on execution-phase personas existing at all (today, only
-  `devsecops-engineer`'s review skills take an artifact and return a report
-  without asking), and on every current persona being `background: false` —
-  none of today's personas can run as parallel/independent instances, so
-  this needs either dev-agent definitions that don't block on
-  `AskUserQuestion`, or the same per-skill-not-per-agent parallelizability
-  model already flagged as open under Orchestrator v2.
+- **Orchestrator v2 — quarantine, grade, combine.** Restored to a real,
+  concrete flow after a first pass at reconciling it with `tdd-coach`'s
+  research wrongly folded it away as unsupported by any source — no
+  source models racing implementations (see the durable finding on this),
+  but that's a gap in the sources, not a reason to drop a design the user
+  explicitly still wants. The flow, as actually decided:
+  1. **Quarantine.** `orchestrator` spins off two `tdd-coach:tdd-implementation`
+     instances against the same slice, each a real async `Agent` launch
+     (not the inline adoption every other row in `orchestrator`'s table
+     uses — this is the one place it genuinely spawns), each in its own
+     isolated git worktree, each blind to the other's existence or output.
+  2. **Grade.** Once both finish, each candidate implementation gets the
+     already-validated single-implementation review pattern run against
+     it *independently* — every applicable existing reviewer in parallel
+     (`tdd-coach:test-quality-review`, `architecture-review`,
+     `security-review`, `reliability-review`, `accessibility-review`, and
+     `code-reviewer` once it exists) — producing two full sets of graded
+     findings, one per candidate. No persona weighted above another within
+     a candidate's grading pass.
+  3. **Combine.** `orchestrator` itself makes the single accountable call
+     — not joint authorship by the two candidates, not an average of
+     them: which candidate to build from (or which pieces of each), and
+     exactly what needs fixing, informed by both sets of grades.
+  4. **Finalize.** That decision — a concrete, specific task, the same
+     shape any other review finding already takes when handed to
+     `tdd-implementation` — goes to a **third, fresh** `tdd-coach`
+     instance (not either original candidate) to actually execute.
+  5. **Re-grade**, pass/fail, on just the findings that were addressed —
+     not a full re-open. This closing step is unchanged from the original
+     idea's own text.
+
+  Still genuinely blocked on `tdd-coach` existing at all, and on
+  confirming `tdd-implementation` is actually safe to launch async in
+  practice (the design reasoning says yes — see durable finding — but
+  nothing's built yet to test it against). Open detail, not yet decided:
+  whether step 4's fresh instance starts from one candidate's worktree
+  (the stronger one, or whichever the combine step chose as the base)
+  with named fixes layered on, or regenerates independently from
+  `orchestrator`'s decision — worth settling once there's something real
+  to run this against rather than guessing now.
+
+  The per-skill-vs-per-agent parallelizability question this note
+  originally raised is still not fully answerable either:
+  `devsecops-engineer` remains the only mixed-behavior persona (an asking
+  half and a non-asking half), and it's still `background: false` at the
+  agent level for that reason.
+- **impl vs review split per persona — decided, for `tdd-coach` at least.**
+  `tdd-coach` gets exactly this split: `tdd-implementation` (write) and
+  `test-quality-review` (critique), the same shape `software-architect`
+  already uses for `architecture-design`/`architecture-review` and
+  `devsecops-engineer` uses for its requirements/review pairs. Whether
+  `code-reviewer` needs the same split, once built, is still open — its
+  roster row reads as review-only already, so it may not need one.
 
 ## Next to build
 
@@ -445,6 +454,31 @@ terminal row now also carries the UI-touching accessibility-criteria
 condition this session added, worth confirming that check still holds
 once there's an implementation stage after it.
 
+**`tdd-coach`'s shape was worked out in a planning session before any
+sources were read for it** — this roster's first time doing that, since
+`tdd-coach` is also this roster's first persona whose scope collided with
+an already-recorded deferred idea (the "Dev-agent quarantine/grade/combine
+cycle") rather than starting from a clean roster row. Decided: `tdd-coach`
+stays named for the discipline it enforces, not the mechanical act of
+writing code — same naming logic as every other persona here — and gets
+two skills, `tdd-implementation` (write a designed slice via genuine
+Red-Green-Refactor; also applies specifically-named fixes handed back
+from any reviewer, through the same loop) and `test-quality-review`
+(critique existing tests, standalone-capable and reused unmodified as one
+of several parallel checkers grading each candidate implementation in
+the restored quarantine/grade/combine flow — see the Orchestrator v2
+entry above). `tdd-implementation` follows Clean Architecture/OeA principles as a
+writing constraint — informed by `architecture-design`'s already-decided
+boundaries for the slice, plus its own lightweight, independently-
+synthesized version of the same three sources for "what must hold true
+while writing," the same not-deciding, not-verifying seam `ux-designer`
+already holds relative to `accessibility-engineer`. `architecture-review`
+already covers the review side and needs no changes. Full reasoning,
+including why this needed research before a decision rather than a guess,
+is in the durable findings below. Not yet built — this session settled
+the shape; the three-source synthesis and actual `AGENT.md`/`SKILL.md`
+writing are still ahead.
+
 ## Durable findings
 
 Kept because re-deriving them is expensive; not a session log.
@@ -601,3 +635,93 @@ since `devsecops-engineer` remains the only one of those and stays
 `background: false` for its requirements half) — but it does mean a
 second real reviewer now exists to eventually parallelize against, which
 that note named as the actual blocker.
+
+**No source has any precedent for racing parallel implementations —
+every source converges on one implementation, many independent checks.**
+The "Dev-agent quarantine/grade/combine cycle" imagined 2-3 isolated
+implementer instances per slice, graded, then combined. A targeted survey
+of all three sources specifically for this — CAMS's `*-impl`/`*-review`
+agent pairs and its `cams-development-workflow` orchestration, Flexion's
+`orchestrator`/`code-review-orchestrator` and `flexion-oea-coder`'s
+`program`/`fleet-worker`, and personal skills' `deep-pr-review` — found
+the pattern nowhere. CAMS's impl agents chain *sequentially*, each
+building on the prior's output; parallelism there exists only among
+*reviewers* running concurrently against one finished diff. Flexion's
+`fleet-worker` runs a single implementer per unit, with independent
+fresh-context sub-agents auditing that one output at fixed checkpoints
+(sometimes by 3-agent vote, escalating to 5 on a true split), and states
+the reasoning plainly: *"the agent that wrote the adapters cannot
+objectively evaluate its own work."* Personal skills' `deep-pr-review` —
+the closest thing to a real precedent for isolated parallel agents in
+this whole corpus — parallelizes *review* subagents (some
+`isolation:"worktree"`) against one PR, never competing implementations.
+**First pass at resolving this folded the quarantine idea away entirely
+— wrong call, corrected.** Absence of a source precedent isn't the same
+as absence of value, and the user explicitly wants the racing-
+implementations mechanic kept: this is the user's own judgment
+overriding what the sources modeled, the same kind of move this roster
+already made once before when no source addressed threat modeling or
+rollback and both got supplied rather than left out. What the research
+*does* change is the grading mechanism inside the flow: each candidate
+gets graded by the already-validated single-implementation-many-
+independent-reviewers pattern, run once per candidate, rather than a new
+apparatus invented for racing implementations specifically. See
+"Orchestrator v2 — quarantine, grade, combine" above for the corrected,
+concrete flow — two candidates, graded independently, one accountable
+combine decision, one fresh instance to finalize.
+
+**A rare three-way convergence, strong enough to treat as settled rather
+than synthesized.** CAMS's `cams-unit-test-reviewer`, Flexion's
+`unit-test-reviewer`, and personal skills' `tests-audit` — three
+completely independent sources — all separately name the identical
+top-severity failure: mocking the code under test invalidates the test
+and is rated Critical (or the equivalent highest tier) in all three. This
+is the strongest cross-source agreement found for any persona in this
+roster so far, and it's what settled `test-quality-review` as a real,
+validated skill rather than a guess. CAMS's own false-positive guard for
+this rule is worth keeping too: spying on a named test-double class
+(`Mock*`/`Fake*`/`Stub*`) is not "mocking the subject" and must not be
+flagged as though it were.
+
+**Two more contradictions resolved toward this roster's own precedent,
+not the sources — the pattern is becoming the default, not the
+exception.** (1) Both CAMS's `pragmatic-reviewer` and Flexion's
+conflict-resolution hierarchy hardcode a highest-precedence reviewer
+whose preference wins by default. Directly opposite this roster's own
+`devsecops-engineer` stance, already decided before `tdd-coach` existed:
+"a persona that always outranks the others isn't reviewing, it's
+vetoing." Kept the existing stance; no automatic winner, ever. (2)
+Flexion's quantitative Likelihood×Impact×Effort→Score rubric and personal
+skills' 5-level BLOCKER/HIGH/MEDIUM/LOW/INFO scale are both real,
+working severity systems — and both rejected, for the same reason
+`software-architect`'s numeric health score and a `security-reviewer`
+source's self-quieting fast mode were already rejected: this roster
+declines quantitative apparatus bolted onto what's actually a qualitative
+judgment call, every time it comes up. `test-quality-review` and the
+future `code-reviewer` both use the existing Critical/High/Medium/Low
+scale.
+
+**Reviewers still never edit code directly, even now that a real code-
+writing persona exists to hand back to.** Personal skills' `code-review`
+and `tests-audit` both apply their own fixes after user approval — a
+materially different boundary than anything built in this roster so far.
+Every existing review skill (`security-review`, `accessibility-review`,
+`architecture-review`) only reports and recommends. Kept that boundary
+for `test-quality-review` and the future `code-reviewer` rather than
+adopting the personal-skill pattern: those skills were built for a
+context with no separate implementer to hand back to (an ordinary Claude
+Code session fixing whatever it finds); this roster now has one
+(`tdd-implementation`), so hand-back stays the convention instead.
+
+**Asking moves up a level, which is what makes an implementer safe to
+background.** Flexion's `orchestrator` resolves any decision an impl
+agent would otherwise need to ask about *before* dispatching that agent —
+the impl agent receives a fully-specified task and never blocks on
+`AskUserQuestion` itself. This generalizes cleanly to `tdd-implementation`
+precisely because everything it needs (what to build, how it's
+structured, what must hold true, what it looks like) should already be
+decided by the time it runs — if something's genuinely missing, that's a
+gap in an upstream artifact to hand back to that artifact's owner, not a
+question for `tdd-implementation` to ask directly. Same shape as
+`accessibility-engineer`'s own `background: true` reasoning, now
+confirmed by an independent source rather than derived once in isolation.
