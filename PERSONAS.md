@@ -96,7 +96,7 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 6 | `code-reviewer` | Readability/DRY/simplicity triage — self-documenting code over comments, a severity taxonomy for findings | Core strength | Planned |
 | 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work |
-| 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written | Borrowed/synthesized (weak area) | Planned — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself |
+| 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself (that persona doesn't exist yet) |
 
 **Rows 7 and 8 were merged.** The roster originally planned
 `security-engineer` (threat-aware review) and `reliability-engineer`
@@ -250,14 +250,46 @@ now-repeated pattern: read the skill's "what counts as a decision" section
 before finalizing a fixture's scripted answers, not just its main
 narrative.
 
-### Next: `accessibility-engineer`, then `ux-designer`, then `tdd-coach`
+**`ux-designer` built, out of the planned order** — the user asked about it
+directly rather than waiting for `accessibility-engineer` to go first. Two
+skills, `design-system` (once per project, also the review/evolve trigger)
+and `screen-design` (per slice), synthesized from all three sources for the
+first time on a topic where the sources actually converged more than they
+conflicted: Flexion's `flexion-frontend-design` skill (Foundation/
+Constrained/Advisory modes, token/pattern structure, preferences-vs-problems,
+a five-dimension critique framework, a copy checklist) and CAMS's
+`cams-ux-heuristics` (Nielsen+Shneiderman's 11 consolidated heuristics,
+trade-off documentation, component-catalog reuse) landed on compatible
+principles from different angles. Personal skills had nothing on this
+topic — noted, not fabricated, same shape as prior syntheses' silences.
 
-Evidence for the first two is still live: `evals/example/slice-001.md` still
-carries an unfilled accessibility placeholder, and nothing in the roster
-decides what a UI-touching slice's screen looks like before code exists —
-`architecture-design` deliberately stops at "renders whatever the strategic
-side hands it," and `accessibility-engineer` reviews for WCAG correctness
-rather than generating a design.
+Three contradictions resolved, all toward decisions the roster already
+holds elsewhere: Flexion's source treats design and implementation as the
+same act (writes production component code); resolved toward keeping this
+persona pre-code — it renders a mockup, not the final component, mirroring
+how this roster already separates deciding from implementing. All three
+sources blend accessibility into the same design pass; resolved toward the
+roster's pre-existing split with `accessibility-engineer` — this persona
+designs *accessible by construction*, verification is a different
+persona's job. CAMS's numeric severity scale doesn't apply at all, since
+pre-code design has no findings to rate, the same reason
+`architecture-design` carries none either.
+
+**Not yet dogfooded against `evals/example/`.** The files are written
+(`agents/ux-designer/AGENT.md`, `skills/design-system/SKILL.md`,
+`skills/screen-design/SKILL.md`) but unlike every other persona built so
+far, this one hasn't been run against a real slice yet — worth doing before
+calling it settled, the same way every other persona's first real run
+surfaced something the synthesis alone didn't catch.
+
+### Next: dogfood `ux-designer`, then `accessibility-engineer`, then `tdd-coach`
+
+`evals/example/slice-001.md` still carries an unfilled accessibility
+placeholder and has no screen design yet — the natural first real target
+for both `screen-design` (design its screen) and, after that, an eval case
+for the persona. `accessibility-engineer` reviews for WCAG correctness
+against whatever `ux-designer` produces, rather than generating a design
+itself.
 
 `tdd-coach` will move the orchestrator's terminal row again, to
 "implemented," and needs a fresh no-cascade check when it does.
