@@ -62,12 +62,27 @@ mechanical checks only, never a semantic read of full artifact prose:
   take the user's word)? Does it still carry unfilled placeholder
   acceptance criteria naming `devsecops-engineer` (or, in artifacts written
   before this persona existed, `security-engineer` / `reliability-engineer`)?
+  Is it UI-touching — does its thin path describe a screen or view a
+  person looks at and acts on? Take this as stated by the slice's own
+  text; a genuinely ambiguous case is worth asking about, not guessing.
+  If UI-touching, does it have a screen-design artifact yet (a matching
+  artifact from `screen-design`, if this project tracks those locally —
+  otherwise take the user's word)? Check both the target directory itself
+  and a `visual-ux/` subfolder inside it — `ux-designer` saves its written
+  artifacts in either place depending on the run, and both are valid; don't
+  conclude one doesn't exist just because the root came up empty.
 - **Project-level, not per-unit:** is there a technology-bootstrap artifact
   in the target directory? If not, take the user's word for whether this
   project already has a working stack — a repo someone has been building in
   for months has obviously settled this without an artifact, and asking it
   to produce one retroactively is busywork. Only a repo with no stack yet
   routes to this row.
+- **Project-level, not per-unit:** is there a design-system artifact in the
+  target directory, or inside a `visual-ux/` subfolder of it — check both,
+  same as the screen-design check above? Only relevant once some unit is
+  actually UI-touching — a problem where nothing has needed a screen yet
+  never routes to this row, the same way a problem with no stack decision
+  forced yet never routes to the technology-bootstrap row below.
 
 **3. Route by what's missing**, in this order. Each row assumes everything
 above it in the table is already satisfied for the current unit of work
@@ -113,8 +128,10 @@ forward.
 | The current unit's slice has been written up as a user story but has no design doc yet | `software-architect:architecture-design` for that slice |
 | The slice has a design doc but its security criteria are still an unfilled placeholder | `devsecops-engineer:security-requirements` for that slice |
 | The slice's security criteria are filled but its reliability behavior has never been made concrete | `devsecops-engineer:reliability-requirements` for that slice |
-| The slice is designed with its runtime-safety criteria filled, and the project has no stack yet | `software-architect:technology-bootstrap` for that slice |
-| The slice has a design doc, its runtime-safety criteria are filled, and the project has a stack | **Stop — see step 5.** Don't advance to the next scope-map step. |
+| The slice is UI-touching, its runtime-safety criteria are filled, and the project has no design-system artifact yet | `ux-designer:design-system` |
+| The slice is UI-touching, its runtime-safety criteria are filled, a design-system exists, but this slice has no screen-design artifact yet | `ux-designer:screen-design` for that slice |
+| The slice is designed with its runtime-safety criteria filled (and, if UI-touching, its screen designed), and the project has no stack yet | `software-architect:technology-bootstrap` for that slice |
+| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed), and the project has a stack | **Stop — see step 5.** Don't advance to the next scope-map step. |
 
 **Why the requirements rows come *after* design, not before.** These are
 the only non-functional criteria in the spine that depend on structural
@@ -125,6 +142,15 @@ different set of security criteria than the same slice built to hold that
 credential itself. Running these before the design decision would produce
 criteria for a system nobody is building.
 
+**Why screen design comes after security and reliability, not before.**
+Those two rows are exactly the ones most likely to surface a backward
+route — a slice discovers it needs a capability nobody scoped, and the fix
+can change the slice's shape entirely. Designing a screen for a slice whose
+scope might still move is wasted work at best and a screen built for the
+wrong slice at worst. Placing screen design after both runtime-safety rows
+means it only ever runs against a slice that's already survived its most
+likely sources of change.
+
 **Why the bootstrap row comes last, not first.** An empty repo makes
 "choose the stack" feel like step one, but a structural design needs no
 technology to exist — it names boundaries and what crosses them — and
@@ -134,6 +160,11 @@ anything). The one thing that genuinely can't proceed without a stack is
 writing the first failing test, which is the next stage after this row.
 Putting it here means the choices get made against a slice that's fully
 specified, and only the ones that slice actually forces get made at all.
+This is also why screen design, when it applies, runs before bootstrap
+rather than after: `technology-bootstrap`'s own "sometimes forced"
+UI-framework decision depends on whether the first failing test actually
+drives a screen, which is only knowable once that screen has been
+designed.
 
 Never invent a stage this table doesn't cover. ADRs, `staleness-audit`, and
 all four of `devsecops-engineer`'s review/posture skills
@@ -159,8 +190,9 @@ Then:
   it now, in this same conversation. If yes, loop back to step 2 for the
   now-current state — don't re-run step 1. If no, stop and wait.
 - **If the current unit just reached the terminal row** (its slice is
-  designed, its runtime-safety criteria are filled, and the project has a
-  stack to build on): don't propose anything further.
+  designed, its runtime-safety criteria are filled, its screen is designed
+  if it's UI-touching, and the project has a stack to build on): don't
+  propose anything further.
   Say plainly that this is as far as the roster currently reaches —
   `tdd-coach` would implement this design next, and doesn't exist yet.
   Moving on to the next scope-map step's requirements or slicing before

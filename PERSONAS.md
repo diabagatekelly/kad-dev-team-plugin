@@ -275,21 +275,40 @@ persona's job. CAMS's numeric severity scale doesn't apply at all, since
 pre-code design has no findings to rate, the same reason
 `architecture-design` carries none either.
 
-**Not yet dogfooded against `evals/example/`.** The files are written
-(`agents/ux-designer/AGENT.md`, `skills/design-system/SKILL.md`,
-`skills/screen-design/SKILL.md`) but unlike every other persona built so
-far, this one hasn't been run against a real slice yet — worth doing before
-calling it settled, the same way every other persona's first real run
-surfaced something the synthesis alone didn't catch.
+**`ux-designer` dogfooded against `evals/example/` and eval-covered.**
+Several real runs against slice 1 surfaced concrete gaps the synthesis
+alone hadn't caught — see Durable findings below for the three that
+generalize beyond this persona. One addition landed alongside the fixes,
+not in response to a bug: `design-system` can now work from a concrete
+reference (a screenshot, or a named comparison like "make it feel like
+Stripe") instead of always generating candidates from scratch, asking
+which mode applies before doing either. `orchestrator` is wired in (two
+new routing rows between `reliability-requirements` and
+`technology-bootstrap`, plus a rationale paragraph on why screen design
+runs after both runtime-safety rows and before `technology-bootstrap`)
+and checks both the artifacts root and a `visual-ux/` subfolder for
+existing `design-system`/`screen-design` artifacts, since where this
+persona saves its own write-ups has genuinely varied run to run.
 
-### Next: dogfood `ux-designer`, then `accessibility-engineer`, then `tdd-coach`
+Both skills now have a passing eval case, written from `AGENT.md`/
+`SKILL.md` text before either was checked against real dogfood output,
+per this plugin's established methodology: `design-system` (9 graders,
+three-phase — reference-vs-generate, then the candidate choice — 9/9
+after one re-run) and `screen-design` (9 graders, single-phase, 9/9). The
+re-run wasn't a skill-text gap: the first pass's three generated
+candidates varied by color and type but shared one layout, exactly what
+the skill already warns against ("not three variations on the same idea
+wearing different colors") — a single-run quality miss, confirmed by a
+clean re-run with structurally distinct candidates rather than a fix to
+the skill.
 
-`evals/example/slice-001.md` still carries an unfilled accessibility
-placeholder and has no screen design yet — the natural first real target
-for both `screen-design` (design its screen) and, after that, an eval case
-for the persona. `accessibility-engineer` reviews for WCAG correctness
-against whatever `ux-designer` produces, rather than generating a design
-itself.
+### Next: `accessibility-engineer`, then `tdd-coach`
+
+`evals/example/slice-001.md`'s accessibility-criteria placeholder is
+still unfilled, and both `design-system-001.md` and `screen-design-001.md`
+now exist for it — the natural first real target for `accessibility-engineer`
+once built, reviewing what `ux-designer` already produced for WCAG
+correctness rather than generating a design itself.
 
 `tdd-coach` will move the orchestrator's terminal row again, to
 "implemented," and needs a fresh no-cascade check when it does.
@@ -343,6 +362,43 @@ repository, so the selection criterion — prefer the package manager where
 strict pinning is the default rather than an opt-in flag — went into
 `technology-bootstrap` instead. Both end states audit identically, which is
 exactly why review can't catch the difference and selection must.
+
+**A rendered choice needs a real pause, not a past-tense narration.**
+`design-system` said to render candidates and "let the user pick," but a
+live run generated three, screenshotted all three, and wrote one up as
+"chosen" without ever actually stopping for an answer — the same
+silent-decision failure this whole roster exists to prevent, just worded
+in the past tense so it reads as though it wasn't one. Fixed by requiring
+an explicit blocking question at the exact moment of choice, in both
+`design-system` and `screen-design`. The lesson generalizes past this
+persona: "present options" and "the user chose" are not the same
+sentence, and a skill that only ever states the second can silently drop
+the first.
+
+**Draft renders are scratch until chosen; only the winner gets a
+permanent record.** Fixing the finding above created a second problem:
+every candidate's HTML and screenshot got persisted to the project's
+artifacts *before* any question was even asked, cluttering the record
+with options nobody picked. Now candidates render to a location outside
+the project's own artifacts, open as live tabs for comparison, and only
+after a real choice is made does the winner's HTML+screenshot get written
+into `visual-ux/` — rejected candidates get a prose description and a
+reason, never a saved file. The general shape: a comparison step and a
+persistence step are different moments, and collapsing them means every
+option gets treated as if it were the answer.
+
+**An unresolved item that isn't this skill's job to fix is still this
+skill's job to keep visible.** `screen-design` correctly never claims to
+close the accessibility-criteria placeholder its slices carry (that's
+`accessibility-engineer`'s job, once it exists) — but one run reported "no
+open questions" anyway, making a real, still-unowned gap disappear from
+view. Not owning something doesn't license hiding it: any unresolved item
+named in an upstream artifact has to be carried forward into a
+downstream one's own "Open questions" every time, or a project's own
+stated policy (a placeholder stays visible until someone can actually
+close it) gets violated by omission rather than by decision. Worth
+checking any future persona that consumes an artifact with a known,
+unowned gap for the same silent-drop risk.
 
 **The propagation lesson, and the five fixes it produced.** A real run
 failed because `problem.md`'s Constraints already contained the facts that

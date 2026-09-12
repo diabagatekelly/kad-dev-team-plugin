@@ -16,6 +16,17 @@ proposal back to `design-system`, not something to quietly work around
 here. It also does not verify accessibility compliance — design so it
 holds up, but confirming it belongs to `accessibility-engineer`.
 
+If the slice's own acceptance criteria still carry an unfilled
+accessibility-criteria placeholder because `accessibility-engineer`
+doesn't exist in this roster yet, that placeholder stays open — this
+skill doesn't close it by designing well, and doesn't get to make it
+disappear either. Carry it forward into this design's own "Open
+questions" every time, the same way the slice itself keeps it visible
+rather than letting it quietly vanish once nobody's looking. The same
+applies to any other still-open item named in an upstream artifact that
+this skill doesn't happen to resolve: silently dropping it because this
+document didn't need to touch it is a regression, not tidiness.
+
 ## Start from what's already decided
 
 The slice's confirmed scope — what it does, for whom, and why — comes from
@@ -23,6 +34,36 @@ The slice's confirmed scope — what it does, for whom, and why — comes from
 design system's tokens and patterns come from `design-system`; don't
 re-decide them here even when a different choice seems appealing for this
 one screen.
+
+## Resolve from what's already decided before asking
+
+Work out what the existing artifacts already answer before treating
+anything as an open question:
+
+- **Which states does this screen need to show?** The slice's acceptance
+  criteria already name them — success, empty, error, whatever applies.
+  Render one mockup per state that's meaningfully visually distinct rather
+  than compressing several into one image; a user encounters these one at
+  a time, and the mockups should match that.
+- **How much should this screen show, and how dense should it be?** If the
+  design system's established patterns already answer this — a list
+  pattern, a card pattern with a stated hierarchy — apply it. Don't turn
+  something the system already settled by precedent back into a live
+  question.
+- **What interactions does this screen need?** The slice's acceptance
+  criteria are the source of truth. If they don't mention search,
+  filtering, or a refresh affordance, don't add one because it seemed like
+  a nice touch — that's the same YAGNI mistake as adding a component
+  nobody asked for, just aimed at behavior instead of structure.
+
+**Ask the user only what's left after that** — a genuinely open choice
+the slice, the design system, and this skill's own judgment can't resolve
+between them. A platform that was never established anywhere is exactly
+this kind of question (though it should usually have been settled once by
+`design-system`, not here); so is a layout fork with no established
+precedent to follow. Don't manufacture a question about something the
+artifacts already answered just to look thorough — that's asking for its
+own sake, not asking because it matters.
 
 ## Reuse before you invent
 
@@ -119,18 +160,47 @@ reason this skill renders instead of describing is that a visual question
 needs a visual answer, and that applies exactly as much to comparing
 options as it does to presenting a single recommendation. Describing an
 alternative in prose while only rendering your favorite isn't presenting a
-choice, it's presenting a recommendation with a disclaimer. Let the user
-pick from what they can actually see — don't resolve a genuine fork on
-their behalf because one path seemed obviously better to you.
+choice, it's presenting a recommendation with a disclaimer.
+
+Treat these renders as scratch until one is chosen: write each candidate's
+HTML to a temporary location outside `visual-ux/`, open them as separate
+tabs to compare, and don't screenshot or save anything yet. Then stop and
+ask with a real, blocking question — don't resolve a genuine fork on the
+user's behalf because one path seemed obviously better to you, and don't
+write up a candidate as "chosen" without having actually paused for their
+answer first. Only once they've chosen, create the mockup and screenshot
+in `visual-ux/` for the winner alone; describe the rejected ones in prose
+in the output rather than leaving their rendered files behind.
 
 ## Produce a rendered artifact, not production code
 
 Render an actual mockup of the screen rather than describing it in prose —
-this is a visual question, and a paragraph is a weak medium for it. Make
-it concrete enough that someone could build from it directly, but keep it
-a design artifact, not the final styled component wired into the real
-codebase. Implementing it is a later step, for whichever persona owns
-writing code once one exists to hand it to.
+this is a visual question, and a paragraph is a weak medium for it. Do
+this for real, not aspirationally:
+
+1. Write the mockup as a real HTML file, styled with the design system's
+   actual token values (real hex codes, real spacing numbers) — not a
+   placeholder that only makes sense if someone imagines the CSS applied.
+   Save it in `visual-ux/`, alongside `design-system`'s own output — one
+   place for everything this persona has produced.
+2. Open it in a browser and look at it before presenting it. If browser
+   automation is available in this session, use it — that is exactly what
+   it's for. Screenshot what you actually built and save the screenshot in
+   `visual-ux/` too; don't assume the markup looks like what you intended
+   without having looked, and don't let the only record of having looked
+   be your own claim that you did.
+3. If no way to actually view it exists in this session, say so
+   explicitly and hand over the HTML file directly so the user can open it
+   themselves — don't silently fall back to describing it in prose as if
+   that were an equivalent substitute. A description is not a rendering,
+   even when nothing else is available.
+
+Reference both the HTML file's and the screenshot's paths from the written
+artifact, so either is findable later without regenerating anything. Make
+the mockup concrete enough that someone could build from it directly, but
+keep it a design artifact, not the final styled component wired into the
+real codebase — implementing it is a later step, for whichever persona
+owns writing code once one exists to hand it to.
 
 ## Output format
 
@@ -141,8 +211,9 @@ writing code once one exists to hand it to.
 What this screen delivers, tied back to the slice it's designed for.
 
 ## Layout and composition
-The rendered mockup, plus which established patterns it uses and how
-they're arranged for this screen specifically.
+The rendered mockup and its screenshot, both in `visual-ux/` — one pair
+per meaningfully distinct state — plus which established patterns each
+uses and how they're arranged for this screen specifically.
 
 ## Interaction flow
 What happens at each step, including error and empty states, walked

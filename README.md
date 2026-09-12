@@ -5,8 +5,9 @@ personas (agents), each backed by one or more skills, encoding the essential pri
 well-tested, expandable software.
 
 The personas span the roles a well-rounded engineering team needs to cover —
-architecture, TDD, code review, security, reliability/infra, accessibility,
-and more — each grounded in established engineering practice. See
+architecture, TDD, code review, security, reliability/infra, visual and
+interaction design, accessibility, and more — each grounded in established
+engineering practice. See
 [PERSONAS.md](./PERSONAS.md) for the full roster and build status.
 
 One skill, `orchestrator`, isn't tied to any single persona — it routes a
@@ -35,9 +36,9 @@ gated behind early access in this environment — see `evals/README.md`.
 
 `evals/example/` is the dogfooding record, not a test case: one real problem
 carried from framing through requirements, slicing, design, runtime-safety
-criteria and stack selection by the actual personas. Most changes to this
-plugin came from watching that run break, so its `summary.md` is usually the
-best explanation of why a rule exists.
+criteria, stack selection, and screen design by the actual personas. Most
+changes to this plugin came from watching that run break, so its
+`summary.md` is usually the best explanation of why a rule exists.
 
 ## Local development
 

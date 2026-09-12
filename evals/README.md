@@ -56,6 +56,8 @@ score is history, not a claim about today.
 | `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | yes |
 | `devsecops-engineer:reliability-review` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | yes |
+| `ux-designer:design-system` | 9/9 PASS (after one re-run), three-phase | yes |
+| `ux-designer:screen-design` | 9/9 PASS, single-phase | yes |
 
 ### The `example/` directory
 
@@ -122,6 +124,36 @@ Run with the `agent-eval` skill, one case per invocation.
   required, because the emulation harness can't distinguish an inline
   consult from a spawn — the distinction the rule actually exists to
   enforce.
+- ~~**`ux-designer` has no case run yet.**~~ **Closed — both run.**
+  `design-system` (9 graders, three-phase — reference-vs-generate, then the
+  candidate choice: 9/9 PASS after one re-run) and `screen-design` (9
+  graders, single-phase: 9/9 PASS) were both written straight from
+  `agents/ux-designer/AGENT.md` and the two skills' `SKILL.md` text, before
+  either was checked against a real dogfooded artifact — the same
+  order-of-operations correction this plugin's methodology settled on
+  after `security-requirements`. All graders in both cases are
+  `portable-*`, since most of what these two skills get right or wrong is
+  process (ask vs. generate, resolve-before-asking, reuse-before-invent,
+  render-for-real), not one fixture's particular facts. `design-system`'s
+  first run failed `candidate-choice-is-real-question` — not a skill-text
+  gap (the skill already explicitly names and warns against "three
+  variations on the same idea wearing different colors"), but that run's
+  own three generated candidates did exactly that: varied by
+  color/type/shadow, shared one layout and density. Re-ran with
+  structurally distinct candidates (single-column ruled feed vs.
+  two-column card grid vs. dense icon-led list) and it passed clean —
+  confirmed single-run variance, not systemic; no skill-text change made.
+  Separately, a judge grading `portable-rendered-artifact-referenced`
+  checked the real filesystem for referenced HTML/screenshot paths and
+  failed the case because an emulated dry run never writes real files —
+  overridden to PASS with reasoning recorded in that grader's own
+  `eval-score` file; the fix (explicitly telling the judge not to check the
+  filesystem) was applied on `screen-design`'s equivalent grader and held.
+  `screen-design`'s fixture also had a case-authoring gap caught before
+  running: its acceptance criteria didn't originally include an unfilled
+  accessibility placeholder for `portable-carries-forward-unresolved-
+  upstream-placeholders` to actually check — added to `prompt.md` before
+  running, matching the `reliability-requirements` precedent.
 
 Root-cause notes for any bug a case caught live in that case's own
 `eval-score/summary.md`, not here — check there before touching a skill,

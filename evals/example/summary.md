@@ -100,3 +100,25 @@ scope, with the reasoning written down.
 - **One run, one problem.** A personal-finance problem with a hosted-app
   constraint is exactly the shape that exercises these rules. It is not
   evidence they generalize.
+
+## Update — two of the gaps above have since closed, and this run has grown
+
+This table and its "ungraded" list describe this directory's state as of
+the run it documents, not today. Since then: `security-requirements-001.md`
+and `reliability-requirements-001.md` were independently audited against
+their skills' text (not against this table) once those skills got eval
+cases — the audit found a real gap (monitoring/telemetry never addressed
+as a data-exit route) and produced the `addresses-all-five-exits` grader,
+recorded in `devsecops-engineer:security-requirements/eval-score/`, not
+here. `design-001.md`'s "no portable graders" gap closed when
+`architecture-design`'s case was reworked into `portable-*`/`fixture-*`
+graders (see that case's `NOTES.md`). And this directory has since grown
+two more artifacts this table predates entirely — `design-system-001.md`
+and `screen-design-001.md`/`visual-ux/`, produced by later `ux-designer`
+dogfood runs and graded separately (9/9 and 9/9; see
+`ux-designer:design-system/eval-score/` and
+`ux-designer:screen-design/eval-score/`).
+
+Not re-deriving a new combined table here — see `PERSONAS.md` and each
+case's own `eval-score/summary.md` for current status instead of treating
+this file's table as live.
