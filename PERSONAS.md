@@ -92,7 +92,7 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 2 | `product-manager` | Pinning down WHAT before HOW — asking the user directly who benefits, what they want, and why for one unit of work, before any slice gets cut | Core strength | Done |
 | 3 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit for a confirmed requirement, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
 | 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction; also owns technology selection, recommending rather than deciding — the starting set a first test forces, and what sits behind each boundary once one forces it | Core strength | Done |
-| 5 | `tdd-coach` | Turns a designed slice into working code via genuine Red-Green-Refactor, and applies specifically-named fixes handed back from review — both through the same disciplined loop. Two skills: `tdd-implementation` (write/fix) and `test-quality-review` (critique existing tests — over-mocking, false positives, coverage-as-theater). Follows Clean Architecture/OeA principles as a writing constraint (informed by `software-architect`'s already-decided boundaries plus its own lightweight synthesis of the same sources); doesn't decide or verify architecture itself — `architecture-design`/`architecture-review` still own that | Core strength | Planned — shape decided, not yet built; first persona needing real execution tools (`Bash`, to actually run tests) |
+| 5 | `tdd-coach` | Turns a designed slice into working code via genuine Red-Green-Refactor, and applies specifically-named fixes handed back from review — both through the same disciplined loop. Two skills: `tdd-implementation` (write/fix) and `test-quality-review` (critique existing tests — over-mocking, false positives, coverage-as-theater). Follows Clean Architecture/OeA principles as a writing constraint (informed by `software-architect`'s already-decided boundaries plus its own lightweight synthesis of the same sources); doesn't decide or verify architecture itself — `architecture-design`/`architecture-review` still own that | Core strength | Done — first persona that actually writes/edits application code, needing real execution tools (`Bash`) for it; the roster's second `background: true` persona, wired into `orchestrator` as the new terminal row. `tdd-implementation` 10/10 (three real fixes across the fill-vs-escalate rule for missing collaborators), `test-quality-review` 10/10 (a coverage-sweep fix); not yet dogfooded against `evals/example/` |
 | 6 | `code-reviewer` | Local code-level readability/DRY/naming/comments triage — not scope-YAGNI (`product-slicer`'s territory) and not structural abstraction (`architecture-review`'s), a severity taxonomy for findings | Core strength | Planned |
 | 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness. One skill, `accessibility-review`, verifying what `ux-designer` already rendered rather than designing anything itself | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; the roster's first `background: true` persona, since its one skill never blocks on `AskUserQuestion` |
@@ -122,22 +122,26 @@ and must run inline, so there's nothing to spawn or parallelize for them;
 routing means adopting each persona's own instructions in turn, in the
 same conversation. `ux-designer` is also `background: false` for the same
 reason (both its skills block on `AskUserQuestion`); `accessibility-engineer`
-is the first exception — see "Next to build" below — but `orchestrator`
-still executes it inline like every other row today, since v1's routing is
-sequential by construction, not because every persona it invokes requires it.
+and `tdd-coach` are the two exceptions — but `orchestrator` still executes
+each inline like every other row today, since v1's routing is sequential
+by construction, not because every persona it invokes requires it.
 
 **v1 scope**: sequential stage routing across the full spine as it stands
 today (problem-framing-doc → scope-map → requirements-refinement → slicing
 → user-story-writeup → architecture-design → security-requirements →
 reliability-requirements → design-system → screen-design →
-accessibility-review → technology-bootstrap), one step at a time, human
-checkpoint after each — and a hard stop once a slice is designed, its
-runtime-safety criteria are filled, its screen designed and accessibility
-criteria filled if UI-touching, and the project has a stack to build on,
-since the next stage (`tdd-coach` implementing that design) doesn't exist
-yet. `devsecops-engineer`'s four review/posture
-skills sit outside this spine entirely: they run against code or a repo
-that already exists, which the spine never reaches. Never cascades to the next scope-map step
+accessibility-review → technology-bootstrap → tdd-coach:tdd-implementation),
+one step at a time, human checkpoint after each — and a hard stop once a
+slice is designed, its runtime-safety criteria are filled, its screen
+designed and accessibility criteria filled if UI-touching, the project has
+a stack to build on, and the slice has been implemented, since the next
+stage (`code-reviewer` reviewing that implementation) doesn't exist yet.
+`devsecops-engineer`'s four review/posture skills and
+`tdd-coach:test-quality-review` sit outside this spine entirely: they run
+against code, a test file, or a repo that already exists, which most of
+the spine never reaches (`test-quality-review` also runs inline inside
+`tdd-implementation`'s own loop, which isn't a spine stage either). Never
+cascades to the next scope-map step
 automatically — each unit of work needs design/implementation before the
 next one's shape gets decided, the same reason CAMS's own per-slice
 workflow iterates rather than deciding every slice up front. Parallel
@@ -178,10 +182,11 @@ below until it has real personas to synthesize across.
      not a full re-open. This closing step is unchanged from the original
      idea's own text.
 
-  Still genuinely blocked on `tdd-coach` existing at all, and on
-  confirming `tdd-implementation` is actually safe to launch async in
-  practice (the design reasoning says yes — see durable finding — but
-  nothing's built yet to test it against). Open detail, not yet decided:
+  `tdd-coach` now exists and is `background: true`, satisfying the
+  precondition this flow needs — but confirming `tdd-implementation` is
+  actually safe to launch async in practice is still open (the design
+  reasoning says yes — see durable finding — but nothing's been run this
+  way yet). Open detail, not yet decided:
   whether step 4's fresh instance starts from one candidate's worktree
   (the stronger one, or whichever the combine step chose as the base)
   with named fixes layered on, or regenerates independently from
@@ -444,40 +449,130 @@ any grader, the touch-target finding traced its own root cause to
 this persona's own artifact-ownership boundary, held correctly on the
 first real case that actually presented the choice.
 
-### Next: `tdd-coach`
-
-`accessibility-engineer` was the roster's last planned "weak area" build
-before returning to the two originally-planned "core strength" personas.
-`tdd-coach` will move the orchestrator's terminal row again, to
-"implemented," and needs a fresh no-cascade check when it does — the
-terminal row now also carries the UI-touching accessibility-criteria
-condition this session added, worth confirming that check still holds
-once there's an implementation stage after it.
+### `tdd-coach` built, the first of the two originally-planned "core
+strength" personas after the weak-area detour
 
 **`tdd-coach`'s shape was worked out in a planning session before any
 sources were read for it** — this roster's first time doing that, since
 `tdd-coach` is also this roster's first persona whose scope collided with
 an already-recorded deferred idea (the "Dev-agent quarantine/grade/combine
-cycle") rather than starting from a clean roster row. Decided: `tdd-coach`
-stays named for the discipline it enforces, not the mechanical act of
-writing code — same naming logic as every other persona here — and gets
-two skills, `tdd-implementation` (write a designed slice via genuine
-Red-Green-Refactor; also applies specifically-named fixes handed back
-from any reviewer, through the same loop) and `test-quality-review`
-(critique existing tests, standalone-capable and reused unmodified as one
-of several parallel checkers grading each candidate implementation in
-the restored quarantine/grade/combine flow — see the Orchestrator v2
-entry above). `tdd-implementation` follows Clean Architecture/OeA principles as a
-writing constraint — informed by `architecture-design`'s already-decided
-boundaries for the slice, plus its own lightweight, independently-
-synthesized version of the same three sources for "what must hold true
-while writing," the same not-deciding, not-verifying seam `ux-designer`
-already holds relative to `accessibility-engineer`. `architecture-review`
-already covers the review side and needs no changes. Full reasoning,
-including why this needed research before a decision rather than a guess,
-is in the durable findings below. Not yet built — this session settled
-the shape; the three-source synthesis and actual `AGENT.md`/`SKILL.md`
-writing are still ahead.
+cycle") rather than starting from a clean roster row. Decided there:
+`tdd-coach` stays named for the discipline it enforces, not the mechanical
+act of writing code — same naming logic as every other persona here — and
+gets two skills, `tdd-implementation` (write a designed slice via genuine
+Red-Green-Refactor; also applies specifically-named fixes handed back from
+any reviewer, through the same loop) and `test-quality-review` (critique
+existing tests, standalone-capable and reused unmodified as one of several
+parallel checkers grading each candidate implementation in the restored
+quarantine/grade/combine flow — see the Orchestrator v2 entry above).
+
+**The three-source synthesis ran next, and personal skills contributed
+real content for the first time** — every prior synthesis in this roster
+(`ux-designer`, `accessibility-engineer`, `software-architect`) reported
+"nothing found" for its own topic in `~/.claude/skills` and every
+project-level `.claude/skills` under `~/Documents/*`; this one found
+`tests-audit` supplying mutation testing / false-positive detection and a
+TDD-adherence-via-git-log method, neither present in CAMS or Flexion. Two
+contradictions resolved: review cadence (CAMS runs the test-quality check
+every single RGR cycle; Flexion runs it once per finished Test List —
+resolved toward CAMS's tighter cadence, since a cheap static check costs
+little run often and catches a bad pattern before more cycles build on
+it) and coverage target (100%, the position two of three sources hold
+independently, over Flexion's 95%/90%). One genuine scope boundary, not a
+contradiction: Flexion's `oea-refactorings` runs no tests during its
+whole-module split/merge refactorings, which only looks opposed to every
+TDD source's "test after every refactor" — it's a different activity at a
+different grain, governed by a different process. `tdd-implementation`'s
+Refactor step stays at small, in-module Fowler-refactoring grain only;
+anything crossing a module boundary escalates to `architecture-design`
+rather than getting redrawn unilaterally. Full reasoning in
+`.synthesis/tdd-coach.md`.
+
+**Built and wired.** `AGENT.md` plus both `SKILL.md`s written from the
+synthesis; `orchestrator` updated with a new terminal row
+(`tdd-coach:tdd-implementation`, after `technology-bootstrap`) and a
+fresh no-cascade check confirming the UI-touching accessibility-criteria
+condition this roster's prior session added still holds now that there's
+an implementation stage after it — it does, since the terminal condition
+now requires implementation on top of every earlier condition rather than
+replacing any of them. `tdd-coach` is `background: true`, like
+`accessibility-engineer` — neither skill blocks on `AskUserQuestion`,
+since a design gap escalates to whichever persona owns that decision
+instead of a live question — which is the actual precondition the
+Orchestrator v2 quarantine flow needs: two isolated `tdd-implementation`
+instances, launched as real async `Agent` calls, blind to each other.
+**Eval cases run for both skills, written from `AGENT.md`/`SKILL.md` text
+before any real dogfood output existed**, per this plugin's established
+order. `test-quality-review`: **10/10 PASS, reached across three runs.**
+A case-authoring bug first (a bare `vi.spyOn` with no `.mockReturnValue`
+chained on doesn't replace behavior, so the intended Critical-tier "mocks
+the code under test" trap wasn't actually one), fixed. Then a genuine,
+diagnosed skill-text gap, not smoothed over as variance: `formatReceiptLine`'s
+missing coverage was caught on the first-ever run of this fixture, then
+missed on the next one. The reason wasn't random — `SKILL.md`'s "Missing
+coverage" category sat as one item in a prose list of things to notice
+while judging individual tests, but missing coverage is structurally
+different (it's about what's *absent*, not what's present in any one
+test), so nothing forced a systematic sweep and it lost out to a more
+novel finding that run (the model independently worked through a
+validator's actual logic and found it backwards from what its own test
+expected). Fixed by adding an explicit, separate "sweep for missing
+coverage first, mechanically" step to `SKILL.md`, ahead of the per-test
+categories — re-run, and the sweep also caught a second gap
+(`calculateTotal`'s multi-item summing, never asserted) no prior run had
+found at all. Full sequence in
+`evals/tdd-coach:test-quality-review/eval-score/summary.md`.
+
+`tdd-implementation`: **10/10 PASS, reached across six runs**, three of
+them real skill-text fixes rather than case-authoring corrections — the
+sequence is worth keeping in full in
+`evals/tdd-coach:tdd-implementation/eval-score/summary.md` since it's a
+durable lesson, not just a pass/fail log. In order: (1) a case-authoring
+bug (a grader wrongly read a legitimate injected-collaborator assertion
+as an implementation-detail leak), fixed. (2) A genuine gap —
+`test-quality-review` ran inline every cycle but was only literally
+*named* as such from partway through; `SKILL.md` already asked for this
+by name, nothing enforced it — fixed with an explicit "name it every
+time" instruction. (3) A second genuine, more debatable gap, surfaced to
+the user before fixing since it hinged on real judgment: the persona
+correctly recognized an already-approved rule covered a new-looking
+scenario for free, but didn't separately flag that *reusing that rule's
+messaging* for the new case was its own judgment call — fixed in
+`AGENT.md`. (4) That fix over-generalized: the next run applied the same
+"recognize reuse" reasoning to *structure*, silently deciding a new
+interface should exist rather than escalating it — a real regression on
+`stays-within-already-decided-boundaries`. (5) The first attempted
+correction ("any new interface is always load-bearing, never fill it")
+over-corrected the other direction — surfaced to the user before further
+changes, since the evidence was concrete: the model refused to implement
+`AssignCase` at all rather than fill an obviously-necessary, mechanically
+implied collaborator. (6) Rewritten to split the question in two — does a
+collaborator need to exist at all (often mechanically forced by an
+already-approved decision, safe to fill with a minimal placeholder using
+an established analog's shape) vs. is there a real structural fork about
+it (reuse vs. build new, one port vs. two — escalate that, by name, while
+still building the placeholder) — and the final run built `AssignCase` in
+full *and* correctly escalated the one genuine structural question this
+slice actually raised. This is the version shipped in `AGENT.md`. Full
+detail, run by run, in the case's own `eval-score/summary.md`.
+
+The Bash-restriction structural gap `tdd-implementation` has and
+`test-quality-review` doesn't (a static read of a given test file needs
+no real tool use) — a dry run can't verify "run things for real,"
+only the narrated reasoning around it — is recorded in
+`evals/README.md`'s "Known coverage gaps." Not yet dogfooded against
+`evals/example/` — still ahead, and the only way to close that gap for
+real.
+
+### Next: `code-reviewer`
+
+`tdd-coach` needs dogfooding against `evals/example/` before it's fully
+exercised against real, executed code rather than a narrated dry run —
+both skills already have eval coverage. Once that's done,
+`code-reviewer` is the second and last of the two originally-planned
+"core strength" personas — local code-level readability/DRY/naming/
+comments triage, deliberately narrower than `product-slicer`'s
+scope-YAGNI and `architecture-review`'s structural-abstraction territory.
 
 ## Durable findings
 

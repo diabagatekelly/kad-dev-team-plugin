@@ -59,6 +59,8 @@ score is history, not a claim about today.
 | `ux-designer:design-system` | 9/9 PASS (after one re-run), three-phase | yes |
 | `ux-designer:screen-design` | 9/9 PASS, single-phase | yes |
 | `accessibility-engineer:accessibility-review` | 8/9 PASS, single-phase — the one failure is `skill-invoked`, a mechanical self-report miss, not a substantive gap; see the case's `eval-score/summary.md` | yes |
+| `tdd-coach:tdd-implementation` | 10/10 PASS, single-phase, six runs — one case-authoring bug fixed, then three real skill-text findings each fixed and re-verified (naming discipline, a reuse-messaging distinction, and a fill-vs-escalate rule for missing collaborators that was over-corrected once before landing); see the case's `eval-score/summary.md` for the full sequence | yes |
+| `tdd-coach:test-quality-review` | 10/10 PASS, single-phase, three runs — a case-authoring bug (a passthrough spy that didn't replace behavior) fixed, then a real skill-text gap (missing coverage had no systematic sweep step, so it lost out to a more novel finding one run) fixed and re-verified, see the case's `eval-score/summary.md` | yes |
 
 ### The `example/` directory
 
@@ -136,6 +138,21 @@ Run with the `agent-eval` skill, one case per invocation.
   instruction. Any future case for a persona whose skill instructs real
   tool use (browser automation, code execution) should expect the same
   gap until this harness gains a real tool-restriction mechanism.
+- **Confirmed for a second persona: `tdd-coach:tdd-implementation`'s
+  entire discipline is "run things for real, every time," and the dry run
+  can't do that.** The Read/Grep/Glob-only grant (never `Bash`/`Write`/
+  `Edit`, even though the real persona's own tools include all three)
+  means every RED/GREEN/REFACTOR "run the test suite" moment in the
+  captured output is narrated — what invoking the runner would show — not
+  literally executed. The case still tested everything gradable from the
+  narrated text (Test List discipline, minimal-GREEN, refactor hygiene,
+  escalation vs. silent-decide, mock wiring, boundary adherence) and
+  scored 9/10; what it structurally cannot verify is whether the persona
+  would actually run a real test runner and read real output when let
+  loose, as opposed to producing a plausible-looking transcript of doing
+  so. Real dogfooding against `evals/example/` (not yet done — see
+  `PERSONAS.md` "Next to build") is the only way to close this gap for
+  this persona.
 - **`technology-bootstrap`'s advisor-consult path is only softly graded.**
   Consulting `devsecops-engineer` inline is treated as expected-but-not-
   required, because the emulation harness can't distinguish an inline

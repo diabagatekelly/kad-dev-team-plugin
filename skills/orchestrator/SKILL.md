@@ -11,10 +11,11 @@ persona in this roster that plans work (`docs-writer`, `product-manager`,
 `AskUserQuestion` and must run inline — never as an async `Agent` spawn. Orchestrating them means *you* adopt each one's
 instructions in turn, in this same conversation, the same way you would if
 the user had asked for that persona directly. There is no launching or
-parallelism here — `accessibility-engineer` is `background: true` and
-*could* be launched async outside this skill, but this skill still adopts
-its instructions inline like every other row, since routing here is
-sequential by design, not because every persona it invokes requires it.
+parallelism here — `accessibility-engineer` and `tdd-coach` are both
+`background: true` and *could* be launched async outside this skill, but
+this skill still adopts their instructions inline like every other row,
+since routing here is sequential by design, not because every persona it
+invokes requires it.
 
 **Skip this skill** when the user already named what they want directly
 ("write an ADR for X," "audit the docs for staleness") — routing only
@@ -89,6 +90,11 @@ mechanical checks only, never a semantic read of full artifact prose:
   actually UI-touching — a problem where nothing has needed a screen yet
   never routes to this row, the same way a problem with no stack decision
   forced yet never routes to the technology-bootstrap row below.
+- Has the current unit's slice actually been implemented — real,
+  working code, not just design/criteria artifacts? There's no fixed
+  convention for detecting this mechanically (it's application source, not
+  a markdown artifact this plugin names) — take the user's word for it,
+  the same way you already do for an established project's stack.
 
 **3. Route by what's missing**, in this order. Each row assumes everything
 above it in the table is already satisfied for the current unit of work
@@ -138,7 +144,8 @@ forward.
 | The slice is UI-touching, its runtime-safety criteria are filled, a design-system exists, but this slice has no screen-design artifact yet | `ux-designer:screen-design` for that slice |
 | The slice is UI-touching, has a screen-design artifact, but its accessibility criteria are still an unfilled placeholder | `accessibility-engineer:accessibility-review` for that slice |
 | The slice is designed with its runtime-safety criteria filled (and, if UI-touching, its screen designed and its accessibility criteria filled), and the project has no stack yet | `software-architect:technology-bootstrap` for that slice |
-| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed and its accessibility criteria filled), and the project has a stack | **Stop — see step 5.** Don't advance to the next scope-map step. |
+| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed and its accessibility criteria filled), the project has a stack, but the slice hasn't been implemented yet | `tdd-coach:tdd-implementation` for that slice |
+| The slice has been implemented — `tdd-coach:tdd-implementation` has produced working, tested code for it | **Stop — see step 5.** Don't advance to the next scope-map step. |
 
 **Why the requirements rows come *after* design, not before.** These are
 the only non-functional criteria in the spine that depend on structural
@@ -174,8 +181,9 @@ technology to exist — it names boundaries and what crosses them — and
 runtime-safety criteria are deliberately technology-agnostic ("bank
 credentials never enter the system" holds regardless of what's storing
 anything). The one thing that genuinely can't proceed without a stack is
-writing the first failing test, which is the next stage after this row.
-Putting it here means the choices get made against a slice that's fully
+writing the first failing test, which is `tdd-coach:tdd-implementation`'s
+job, the next stage after this row. Putting it here means the choices get
+made against a slice that's fully
 specified, and only the ones that slice actually forces get made at all.
 This is also why screen design, when it applies, runs before bootstrap
 rather than after: `technology-bootstrap`'s own "sometimes forced"
@@ -183,12 +191,15 @@ UI-framework decision depends on whether the first failing test actually
 drives a screen, which is only knowable once that screen has been
 designed.
 
-Never invent a stage this table doesn't cover. ADRs, `staleness-audit`, and
-all four of `devsecops-engineer`'s review/posture skills
-(`security-review`, `reliability-review`, `supply-chain-review`,
-`operational-readiness`) are event-triggered, not part of this forward
-spine — they run against code or a repo that already exists, which this
-spine hasn't reached. Hand off to them only if the user asks.
+Never invent a stage this table doesn't cover. ADRs, `staleness-audit`,
+`tdd-coach:test-quality-review`, and all four of `devsecops-engineer`'s
+review/posture skills (`security-review`, `reliability-review`,
+`supply-chain-review`, `operational-readiness`) are event-triggered, not
+part of this forward spine — they run against code, a test file, or a repo
+that already exists, which most of this spine hasn't reached. Hand off to
+them only if the user asks. `test-quality-review` also runs inline, on its
+own, inside `tdd-implementation`'s own loop — that's not a spine stage
+either, it's part of how that one row does its job.
 
 **4. Execute exactly one routed step, inline.** Read the target persona's
 `AGENT.md` and the specific `SKILL.md` the trigger matched — nothing else.
@@ -208,13 +219,14 @@ Then:
   now-current state — don't re-run step 1. If no, stop and wait.
 - **If the current unit just reached the terminal row** (its slice is
   designed, its runtime-safety criteria are filled, its screen is designed
-  and its accessibility criteria filled if it's UI-touching, and the
-  project has a stack to build on): don't propose anything further.
-  Say plainly that this is as far as the roster currently reaches —
-  `tdd-coach` would implement this design next, and doesn't exist yet.
-  Moving on to the next scope-map step's requirements or slicing before
-  this one is implemented and learned from would repeat the mistake this
-  rule exists to prevent: deciding too much before anything's been built.
-  If the user explicitly wants to start a different unit anyway, that's
+  and its accessibility criteria filled if it's UI-touching, the project
+  has a stack to build on, and `tdd-coach:tdd-implementation` has produced
+  working, tested code for it): don't propose anything further. Say
+  plainly that this is as far as the roster currently reaches —
+  `code-reviewer` would review this implementation next, and doesn't exist
+  yet. Moving on to the next scope-map step's requirements or slicing
+  before this one is implemented and learned from would repeat the mistake
+  this rule exists to prevent: deciding too much before anything's been
+  built. If the user explicitly wants to start a different unit anyway, that's
   their call to make by asking directly — not something this skill
   offers.
