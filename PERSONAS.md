@@ -92,11 +92,12 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 2 | `product-manager` | Pinning down WHAT before HOW — asking the user directly who benefits, what they want, and why for one unit of work, before any slice gets cut | Core strength | Done |
 | 3 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit for a confirmed requirement, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
 | 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction; also owns technology selection, recommending rather than deciding — the starting set a first test forces, and what sits behind each boundary once one forces it | Core strength | Done |
-| 5 | `tdd-coach` | Turns a designed slice into working code via genuine Red-Green-Refactor, and applies specifically-named fixes handed back from review — both through the same disciplined loop. Two skills: `tdd-implementation` (write/fix) and `test-quality-review` (critique existing tests — over-mocking, false positives, coverage-as-theater). Follows Clean Architecture/OeA principles as a writing constraint (informed by `software-architect`'s already-decided boundaries plus its own lightweight synthesis of the same sources); doesn't decide or verify architecture itself — `architecture-design`/`architecture-review` still own that | Core strength | Done — first persona that actually writes/edits application code, needing real execution tools (`Bash`) for it; the roster's second `background: true` persona, wired into `orchestrator` as the new terminal row. `tdd-implementation` 10/10 (three real fixes across the fill-vs-escalate rule for missing collaborators), `test-quality-review` 10/10 (a coverage-sweep fix); not yet dogfooded against `evals/example/` |
+| 5 | `tdd-coach` | Turns a designed slice into working code via genuine Red-Green-Refactor, and applies specifically-named fixes handed back from review — both through the same disciplined loop. Two skills: `tdd-implementation` (write/fix) and `test-quality-review` (critique existing tests — over-mocking, false positives, coverage-as-theater). Follows Clean Architecture/OeA principles as a writing constraint (informed by `software-architect`'s already-decided boundaries plus its own lightweight synthesis of the same sources); doesn't decide or verify architecture itself — `architecture-design`/`architecture-review` still own that | Core strength | Done — first persona that actually writes/edits application code, needing real execution tools (`Bash`) for it; the roster's second `background: true` persona, wired into `orchestrator` as the new terminal row. `tdd-implementation` 10/10 (three real fixes across the fill-vs-escalate rule for missing collaborators), `test-quality-review` 10/10 (a coverage-sweep fix); orchestrator's terminal row now runs the quarantine/grade/combine flow by default rather than a single inline build; not yet dogfooded against `evals/example/` |
 | 6 | `code-reviewer` | Local code-level readability/DRY/naming/comments triage — not scope-YAGNI (`product-slicer`'s territory) and not structural abstraction (`architecture-review`'s), a severity taxonomy for findings | Core strength | Planned |
 | 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness. One skill, `accessibility-review`, verifying what `ux-designer` already rendered rather than designing anything itself | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; the roster's first `background: true` persona, since its one skill never blocks on `AskUserQuestion` |
 | 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself (that persona doesn't exist yet) |
+| 10 | `architecture-cartographer` | Maintains a mechanically-derived map of the codebase's actual structure — real dependency graph, public exports, external packages, each module's importance tier as already decided by `architecture-design` — and answers "does something like this already exist" queries against it. Doesn't decide architecture, doesn't judge whether a flagged similarity is a real duplicate or coincidental, doesn't grade anything itself; supplies facts and mechanical flags, not verdicts. Two skills: `map-query` (read-only, consulted pre-write) and `map-update` (regenerate + diff against the prior map, post-write) | Infrastructure for the rest of the roster | Planned — shape decided, not yet synthesized or built |
 
 **Rows 7 and 8 were merged.** The roster originally planned
 `security-engineer` (threat-aware review) and `reliability-engineer`
@@ -122,9 +123,29 @@ and must run inline, so there's nothing to spawn or parallelize for them;
 routing means adopting each persona's own instructions in turn, in the
 same conversation. `ux-designer` is also `background: false` for the same
 reason (both its skills block on `AskUserQuestion`); `accessibility-engineer`
-and `tdd-coach` are the two exceptions — but `orchestrator` still executes
-each inline like every other row today, since v1's routing is sequential
-by construction, not because every persona it invokes requires it.
+is `background: true` but `orchestrator` still executes it inline like
+every other row, since v1's routing is sequential by construction, not
+because every persona it invokes requires it.
+
+**`tdd-coach:tdd-implementation` is the one row that genuinely doesn't
+execute inline — the quarantine/grade/combine/finalize flow, wired in and
+running by default, not deferred.** Two isolated `tdd-coach:tdd-implementation`
+instances (real async `Agent` calls, `isolation: "worktree"`) build the
+same slice blind to each other; every applicable reviewer grades each
+candidate independently in parallel (`tdd-coach:test-quality-review`,
+`architecture-review`, `devsecops-engineer:security-review`,
+`devsecops-engineer:reliability-review`, and `accessibility-engineer:accessibility-review`
+if UI-touching); `orchestrator` itself makes the one accountable combine
+call, inline; a third, fresh instance regenerates the implementation
+independently from that call rather than patching either candidate; a
+targeted re-grade checks only what the combine brief asked to be fixed.
+Full procedure in `skills/orchestrator/SKILL.md`'s own "Quarantine, grade,
+combine" section. **Runs on every slice, no opt-in/opt-out judgment
+call** — no signal in this roster's pipeline reliably predicts
+implementation risk, and `product-slicer` already bounds the cost by
+keeping each unit at the smallest shippable slice; a user who wants a
+specific slice built without it says so directly, that's not a call this
+skill makes on its own.
 
 **v1 scope**: sequential stage routing across the full spine as it stands
 today (problem-framing-doc → scope-map → requirements-refinement → slicing
@@ -134,70 +155,107 @@ accessibility-review → technology-bootstrap → tdd-coach:tdd-implementation),
 one step at a time, human checkpoint after each — and a hard stop once a
 slice is designed, its runtime-safety criteria are filled, its screen
 designed and accessibility criteria filled if UI-touching, the project has
-a stack to build on, and the slice has been implemented, since the next
-stage (`code-reviewer` reviewing that implementation) doesn't exist yet.
+a stack to build on, and the slice has been implemented (via the
+quarantine flow above), since the next stage (`code-reviewer` reviewing
+that implementation) doesn't exist yet.
 `devsecops-engineer`'s four review/posture skills and
 `tdd-coach:test-quality-review` sit outside this spine entirely: they run
 against code, a test file, or a repo that already exists, which most of
 the spine never reaches (`test-quality-review` also runs inline inside
-`tdd-implementation`'s own loop, which isn't a spine stage either). Never
-cascades to the next scope-map step
+`tdd-implementation`'s own loop, and again inside the quarantine flow's
+Grade step, neither of which is a spine stage). Never cascades to the
+next scope-map step
 automatically — each unit of work needs design/implementation before the
 next one's shape gets decided, the same reason CAMS's own per-slice
 workflow iterates rather than deciding every slice up front. Parallel
-review-synthesis orchestration — reconciling several specialist reviewers
-examining the same artifact — is a different, larger problem, deferred
-below until it has real personas to synthesize across.
+review-synthesis orchestration for artifacts *outside* the quarantine
+flow — reconciling several specialist reviewers examining some other
+single artifact — is still a different, larger problem, deferred below
+until it has real personas to synthesize across.
+
+**`orchestrator-log.md`, appended once per step 4 execution, is the
+retrospective answer to "did it actually skip anything."** Raised by the
+user while planning real dogfooding in a fresh project directory: a
+graded final artifact proves the *output* is good, not that every stage
+between problem doc and implementation actually ran rather than getting
+silently skipped. One append-only entry per routed step (never edited —
+a wrong entry gets a correcting entry, not a rewrite), richer sub-entries
+for the quarantine row specifically (all five steps: both candidates'
+worktrees/branches, per-candidate grading summary, the combine basis and
+brief, the finalize artifact, re-grade pass/fail) since that's the one
+row a single "routed to" line would most successfully hide a skipped
+step inside. Full format in `skills/orchestrator/SKILL.md`.
+
+**Post-implementation gaps, surfaced in the same conversation, not yet
+decided — four distinct things, not one, each with its own current
+coverage (none) and its own reason nothing already covers it.** Distinct
+from the CI/CD/hosting exclusion `technology-bootstrap` already
+deliberately made ("infrastructure ahead of need") — that one is a YAGNI
+call about a slice that doesn't need it *yet*; these are about a slice
+that's now actually been implemented and needs to go somewhere real.
+
+1. **Committing the code.** `tdd-implementation`'s own skill text already
+   assumes an answer exists — "if the project already commits as part of
+   how this work happens, keep the failing test and its implementation as
+   separate, ordered commits... don't invent a commit discipline the
+   project hasn't asked for." That's a real, deliberate boundary (don't
+   assume a convention the project hasn't established) but it also means
+   nobody decides *whether* or *how* a fresh project starts committing at
+   all — the assumption only works once something already exists to
+   follow.
+2. **Opening a new repository.** No persona anywhere in this roster
+   creates one. The whole roster assumes an "artifacts directory" already
+   exists to work inside (`orchestrator` step 1 asks where one is or
+   should be created, but "created" there means a directory, not a git
+   remote or a hosting account) — repo creation as its own bootstrapping
+   act sits entirely outside what anything here does.
+3. **Writing CI/CD pipeline config.** `devsecops-engineer:operational-readiness`
+   is the closest existing coverage, but it's explicitly a *review* skill
+   — "Check whether something can be shipped safely," triggered "once
+   there's a delivery path to review." It evaluates an existing pipeline's
+   rollout/rollback/observability posture; it does not write one.
+   `devsecops-engineer`'s own `AGENT.md` states outright it "never writes
+   application code, infrastructure, or pipeline config" — so this isn't
+   a small scope extension of an existing persona, building it would mean
+   crossing a boundary that persona currently holds on purpose.
+4. **Assessing infrastructure security.** `security-review` and
+   `supply-chain-review` cover *code-level* security and dependency risk
+   against a repo that already exists — neither reaches actual cloud
+   config, IAM/least-privilege posture, or provisioned infrastructure.
+   Nothing in the roster has ever looked at infrastructure-as-code or a
+   live cloud account as its subject.
+
+All four of `devsecops-engineer`'s review skills also sit outside the
+orchestrator spine regardless of the above (event-triggered, hand off
+only if the user asks) — so even the partial coverage that does exist
+(operational-readiness's review of an *existing* path, once one's been
+set up some other way) doesn't run automatically today. Whether these
+become new roster surface, an extension of an existing persona's
+now-explicit boundary, or a deliberately-left-out gap is not decided.
+Holding until after `code-reviewer` and a real end-to-end dogfood run —
+the actual shape of what's missing will be clearer once a real slice
+has gone all the way through the spine and someone has to answer "now
+what" for real, instead of reasoning about it in the abstract.
 
 ## Deferred / phase-2 ideas
 
-- **Orchestrator v2 — quarantine, grade, combine.** Restored to a real,
-  concrete flow after a first pass at reconciling it with `tdd-coach`'s
-  research wrongly folded it away as unsupported by any source — no
-  source models racing implementations (see the durable finding on this),
-  but that's a gap in the sources, not a reason to drop a design the user
-  explicitly still wants. The flow, as actually decided:
-  1. **Quarantine.** `orchestrator` spins off two `tdd-coach:tdd-implementation`
-     instances against the same slice, each a real async `Agent` launch
-     (not the inline adoption every other row in `orchestrator`'s table
-     uses — this is the one place it genuinely spawns), each in its own
-     isolated git worktree, each blind to the other's existence or output.
-  2. **Grade.** Once both finish, each candidate implementation gets the
-     already-validated single-implementation review pattern run against
-     it *independently* — every applicable existing reviewer in parallel
-     (`tdd-coach:test-quality-review`, `architecture-review`,
-     `security-review`, `reliability-review`, `accessibility-review`, and
-     `code-reviewer` once it exists) — producing two full sets of graded
-     findings, one per candidate. No persona weighted above another within
-     a candidate's grading pass.
-  3. **Combine.** `orchestrator` itself makes the single accountable call
-     — not joint authorship by the two candidates, not an average of
-     them: which candidate to build from (or which pieces of each), and
-     exactly what needs fixing, informed by both sets of grades.
-  4. **Finalize.** That decision — a concrete, specific task, the same
-     shape any other review finding already takes when handed to
-     `tdd-implementation` — goes to a **third, fresh** `tdd-coach`
-     instance (not either original candidate) to actually execute.
-  5. **Re-grade**, pass/fail, on just the findings that were addressed —
-     not a full re-open. This closing step is unchanged from the original
-     idea's own text.
-
-  `tdd-coach` now exists and is `background: true`, satisfying the
-  precondition this flow needs — but confirming `tdd-implementation` is
-  actually safe to launch async in practice is still open (the design
-  reasoning says yes — see durable finding — but nothing's been run this
-  way yet). Open detail, not yet decided:
-  whether step 4's fresh instance starts from one candidate's worktree
-  (the stronger one, or whichever the combine step chose as the base)
-  with named fixes layered on, or regenerates independently from
-  `orchestrator`'s decision — worth settling once there's something real
-  to run this against rather than guessing now.
-
-  The per-skill-vs-per-agent parallelizability question this note
-  originally raised is still not fully answerable either:
-  `devsecops-engineer` remains the only mixed-behavior persona (an asking
-  half and a non-asking half), and it's still `background: false` at the
-  agent level for that reason.
+- **Orchestrator v2 — quarantine, grade, combine. Built, not deferred
+  anymore.** See "Orchestrator" above for the shipped shape and
+  `skills/orchestrator/SKILL.md`'s own "Quarantine, grade, combine"
+  section for the real procedure. Two things from the original design
+  note, settled on the way in: the Finalize step (originally an open
+  question — layer fixes on the stronger candidate's worktree, or
+  regenerate independently) went with **regenerate independently**, the
+  user's own call when asked directly, over the cheaper layer-on-worktree
+  option. Whether `tdd-implementation` is actually safe to launch async in
+  practice is still confirmed only by design reasoning, not a real run —
+  worth watching the first time this flow executes for real. The
+  per-skill-vs-per-agent parallelizability question this note originally
+  raised is still not fully answerable: `devsecops-engineer` remains the
+  only mixed-behavior persona (an asking half and a non-asking half), and
+  it's still `background: false` at the agent level for that reason —
+  `tdd-coach` being uniformly `background: true` sidesteps the question
+  for this flow rather than resolving it.
 - **impl vs review split per persona — decided, for `tdd-coach` at least.**
   `tdd-coach` gets exactly this split: `tdd-implementation` (write) and
   `test-quality-review` (critique), the same shape `software-architect`
@@ -564,15 +622,137 @@ only the narrated reasoning around it — is recorded in
 `evals/example/` — still ahead, and the only way to close that gap for
 real.
 
-### Next: `code-reviewer`
+### Next: `code-reviewer`, then `architecture-cartographer`, then dogfood for real
 
-`tdd-coach` needs dogfooding against `evals/example/` before it's fully
-exercised against real, executed code rather than a narrated dry run —
-both skills already have eval coverage. Once that's done,
-`code-reviewer` is the second and last of the two originally-planned
-"core strength" personas — local code-level readability/DRY/naming/
-comments triage, deliberately narrower than `product-slicer`'s
-scope-YAGNI and `architecture-review`'s structural-abstraction territory.
+Confirmed order, not three parallel todos:
+
+1. **`code-reviewer`** — the second and last of the two originally-planned
+   "core strength" personas, local code-level readability/DRY/naming/
+   comments triage, deliberately narrower than `product-slicer`'s
+   scope-YAGNI and `architecture-review`'s structural-abstraction
+   territory. Its own placeholder is already sitting in the quarantine
+   flow's Grade step, waiting ("`code-reviewer` isn't built yet — add it
+   here once it exists").
+2. **`architecture-cartographer`** — shape already planned above, not yet
+   synthesized or built. Doesn't block anything else on this list, but
+   comes next rather than being left open-ended.
+3. **A real end-to-end dogfood run, in a fresh project directory the user
+   is setting up for this — not `evals/example/`.** `evals/example/` is
+   markdown artifacts up through `screen-design`, never real running code
+   or a real git history, so it can't exercise the part that actually
+   needs testing now: real async `Agent` worktree launches, real parallel
+   grading, a real `orchestrator-log.md`, and `code-reviewer` actually
+   sitting in the Grade step instead of a placeholder note. This is the
+   first time the quarantine flow, the audit log, and every reviewer run
+   together instead of being reasoned about.
+4. **Post-implementation gaps (commit / new repo / CI-CD / infra
+   security)** — decided after step 3, with real evidence of what a
+   finished slice actually needs next, not before. Already recorded this
+   way above; restated here so this list reads as the actual plan, not
+   three disconnected notes.
+
+### `architecture-cartographer`'s shape, planned ahead of its own turn
+
+**The gap it closes, diagnosed by the user, not assumed.** Every reviewer
+this roster has built so far was deliberately scoped away from
+whole-codebase awareness, for good reasons that each still leave a real
+hole: `architecture-review` reviews only the current diff ("On legacy
+code you didn't just touch, review only what changed" — the Boy Scout
+Rule, on purpose, to avoid demanding total compliance on every touch).
+`code-reviewer`, once built, is scoped local — file-level DRY/naming, not
+structural. `tdd-implementation` only knows what's in its own task; a
+helper that already exists three modules over is invisible to it unless
+something tells it. None of that was a mistake — each boundary was the
+right call for what that persona owns — but stacked together they leave
+nothing that knows "does this fit the shape of what's already here,"
+either at write time (would this duplicate an existing module or helper)
+or at review time (does this new dependency edge violate the direction
+the rest of the codebase already established).
+
+**Mandate: maintain the facts, not the verdicts.** A mechanically-derived
+map of the codebase's real structure — the actual import/dependency
+graph, each module's public exports, external packages in use, and each
+module's importance tier as `architecture-design` already decided for it
+per slice (its own "Importance ordering assumed" section, already
+produced today, just never persisted anywhere past one design doc). The
+map answers two kinds of question: "does something like this already
+exist" (a structural query — a comparable module/interface/boundary — or
+an implementation query — a comparable function/helper), and "did this
+change move in the wrong direction" (a new edge pointing from a
+higher-tier module toward a lower-tier one, mechanically checkable once
+tiers are already recorded, not a fresh judgment call).
+
+**Explicitly does not decide, judge, or grade — that would swallow
+`architecture-design`'s and `architecture-review`'s jobs, not complement
+them.** Two failure modes it's built to avoid: deciding architecture
+itself (not its call, ever — it reports what's already been decided and
+what's already been built, nothing more), and declaring a flagged
+similarity a real violation on its own authority. Two modules that look
+alike can be a real duplicate or coincidental — driven by different axes
+of change, destined to diverge — and telling those apart is a judgment
+call for whichever persona already owns that call downstream
+(`architecture-review` for a structural flag, `architecture-design` for
+a query at design time). The cartographer surfaces the candidate; it
+never declares the verdict. This is also the answer to the "deterministic"
+requirement from the conversation that produced this plan: the graph
+itself is mechanically extracted (real imports, real exports), not an
+LLM narrative summarizing the codebase from memory — a narrated
+architecture summary would just be one more thing that drifts from
+reality and gets trusted anyway, worse than not having one.
+
+**Two skills, matching the two distinct triggers.** `map-query` —
+read-only, consulted before code exists for a query, at whatever
+granularity the asking persona already operates at. `map-update` —
+regenerates the graph from the real codebase and diffs it against the
+prior map, run after code changes; its own output (the diff, plus
+mechanically-flagged candidate duplicates and direction changes) is what
+downstream reviewers read, not a third skill built just for them.
+
+**Three consumers, the requirement this plan was explicitly asked to
+satisfy — one skill each, no overlap:**
+- `architecture-design` consults `map-query` before writing a design doc,
+  at the structural level it already operates at — does a comparable
+  module or interface already exist, should this slice's need reuse it
+  or introduce something new. This is the consult that would have
+  prevented the exact mid-implementation escalation `tdd-implementation`'s
+  own eval run hit (discovering only during implementation that a new
+  `CaseRepository` might duplicate an existing `CaseDirectory`) by
+  answering it before the design doc was ever written.
+- `tdd-implementation` consults `map-query` before writing code, at the
+  implementation level it already operates at — does a comparable
+  function or helper already exist, below `architecture-design`'s own
+  conceptual altitude ("no function signatures, no code," per its own
+  scope) but squarely inside what `tdd-implementation` writes.
+- Reviewers (`architecture-review` now, `code-reviewer` once built) read
+  `map-update`'s diff output after code exists — a cheap, pre-computed
+  starting point instead of re-deriving the whole graph on every pass,
+  the "grade a slice's fit without walking an ever-growing codebase"
+  half of the original idea.
+
+**Wiring, reusing patterns this roster already has rather than inventing
+new ones.** `map-query` consults the same way `architecture-design`
+already consults `devsecops-engineer` inline today — no new orchestrator
+spine row, a persona loading another's narrow skill in the same
+conversation and handing control back. `map-update` slots into the
+quarantine flow's own existing structure: once per candidate inside Grade
+(a throwaway, worktree-scoped diff informing that candidate's reviewers),
+and once for real after Finalize (the persistent map, the one
+`architecture-design`/`tdd-implementation` consult on the next slice).
+Neither needs a new top-level spine row in `orchestrator/SKILL.md`.
+
+**Genuinely open, deferred to synthesis and build, not guessed at now:**
+the exact mechanical extraction method per language (a portable,
+grep/import-statement-based approach that needs no per-project tooling
+installed is the current lean, over depending on a language-specific
+static-analysis tool that may not exist in every target project); the
+map's exact file format (structured data plus a short derived narrative
+is the current lean, not a third possibility); whether `map-update` ever
+hits a case ambiguous enough to need `AskUserQuestion` (current read: no,
+it reports facts and mechanical flags, the same reasoning that makes
+`accessibility-engineer` `background: true` — but worth confirming once
+real cases exist, not assumed). Full three-source synthesis — this
+plan's reasoning is not that synthesis — is still ahead, the same order
+`tdd-coach`'s own shape-then-synthesis followed.
 
 ## Durable findings
 

@@ -10,12 +10,13 @@ persona in this roster that plans work (`docs-writer`, `product-manager`,
 `product-slicer`, `software-architect`, `devsecops-engineer`) blocks on
 `AskUserQuestion` and must run inline — never as an async `Agent` spawn. Orchestrating them means *you* adopt each one's
 instructions in turn, in this same conversation, the same way you would if
-the user had asked for that persona directly. There is no launching or
-parallelism here — `accessibility-engineer` and `tdd-coach` are both
+the user had asked for that persona directly. `accessibility-engineer` is
 `background: true` and *could* be launched async outside this skill, but
-this skill still adopts their instructions inline like every other row,
+this skill still adopts its instructions inline like every other row,
 since routing here is sequential by design, not because every persona it
-invokes requires it.
+invokes requires it. **The one exception is the `tdd-coach:tdd-implementation`
+row** — see "Quarantine, grade, combine" below — which genuinely launches
+real async `Agent` calls, the only place in this skill that does.
 
 **Skip this skill** when the user already named what they want directly
 ("write an ADR for X," "audit the docs for staleness") — routing only
@@ -201,14 +202,132 @@ them only if the user asks. `test-quality-review` also runs inline, on its
 own, inside `tdd-implementation`'s own loop — that's not a spine stage
 either, it's part of how that one row does its job.
 
-**4. Execute exactly one routed step, inline.** Read the target persona's
-`AGENT.md` and the specific `SKILL.md` the trigger matched — nothing else.
-Adopt those instructions directly — this is live use, not a dry run: if
-that persona would ask the user something, actually ask via
+**4. Execute exactly one routed step.** For every row except
+`tdd-coach:tdd-implementation`, execute inline: read the target persona's
+`AGENT.md` and the specific `SKILL.md` the trigger matched — nothing
+else. Adopt those instructions directly — this is live use, not a dry
+run: if that persona would ask the user something, actually ask via
 `AskUserQuestion`. Tell it explicitly where to save its output — the
 location resolved in step 1. It should not ask where to save or invent a
 different location; you already resolved that. Produce the real artifact
 and save it there, using that persona's own filename/heading convention.
+
+**The `tdd-coach:tdd-implementation` row doesn't execute inline — it runs
+the quarantine/grade/combine/finalize procedure below, every time, by
+default.** There is no separate "is this slice worth it" judgment call
+here: no signal anywhere in this roster's pipeline reliably predicts
+implementation risk, and inventing one would be worse than having none.
+The cost this multiplies is bounded by `product-slicer` already keeping
+each unit at the smallest shippable slice — this is real cost applied to
+something small, not a large unit of work. If the user explicitly wants a
+specific slice built without it, that's their call to make by saying so
+directly; this skill doesn't offer a way to opt out on its own judgment.
+
+**Append one entry to `orchestrator-log.md`, in the target directory,
+every time this step runs — before moving to step 5.** This is the only
+retrospective record that every stage actually ran rather than getting
+silently skipped; a graded final artifact says nothing about the path
+that produced it. Create the file if it doesn't exist yet. One entry per
+invocation, appended, never edited or reordered — a prior entry being
+wrong gets a new entry noting the correction, the same append-only
+discipline `scope-map`/`requirements-refinement`/`adr` already use for
+their own artifacts, applied here to a process record instead of a
+decision record. Each entry:
+
+```markdown
+## <sequence number>. <date> — <the detected-state row that matched>
+
+**Routed to:** `<persona:skill, or "quarantine flow" for that row>`
+**Artifact:** <path to what was produced, or "see sub-entries below">
+```
+
+For a backward route (the step 3 rule that supersedes the table), log it
+the same way, naming which artifact got superseded and why, not just the
+forward destination.
+
+### Quarantine, grade, combine — the `tdd-coach:tdd-implementation` row's own procedure
+
+Five steps, replacing the normal single inline execution for this one
+row only. Every other row in the table is unaffected.
+
+**A. Quarantine.** Launch two `tdd-coach:tdd-implementation` instances
+against the same slice — real async `Agent` calls, each with
+`isolation: "worktree"` so each works in its own isolated copy of the
+repo. Give both the identical task: the slice's design doc, its
+runtime-safety criteria, its screen-design/accessibility criteria if
+UI-touching, and where to save output — the same inputs a single
+non-quarantined execution would get, nothing added about quarantine,
+grading, or a second candidate existing. Blindness here is structural,
+not something to enforce by instruction: two fresh spawns with no shared
+context already can't see each other. Wait for both to finish before
+continuing. Each worktree-isolated run returns its own path and branch —
+note both; you'll need them in the next two steps.
+
+**B. Grade.** For each candidate independently, run every applicable
+reviewer in parallel against that candidate's own worktree, as real async
+`Agent` calls: `tdd-coach:test-quality-review`, `architecture-review`,
+`devsecops-engineer:security-review`, and
+`devsecops-engineer:reliability-review` always apply;
+`accessibility-engineer:accessibility-review` applies only if the slice
+is UI-touching. `code-reviewer` isn't built yet — add it here once it
+exists, don't invent its check now. No persona is weighted above another
+within a candidate's grading pass; read every finding on its own merits.
+That's up to 10 parallel review agents (5 reviewers × 2 candidates, fewer
+if the slice isn't UI-touching). Wait for all of them before continuing.
+
+**C. Combine — inline, yours alone, not spawned.** Read both candidates'
+actual code from their worktree paths (not just their own self-reports)
+and both full sets of graded findings from Grade. This read is explicitly
+in-scope even though it reaches outside the target directory — the "stay
+inside your lane" constraint from earlier is about inspection in step 2,
+not about executing the routed step itself. Decide, and state your
+reasoning: which candidate to build from, or which pieces of each, and
+exactly what needs fixing or reconsidering. Not joint authorship of the
+two, not an average of them — one accountable call. Write the decision as
+a concrete brief describing the target implementation — informed by both
+candidates' approaches and every finding raised against either one — not
+a shorthand like "use candidate A's version."
+
+**D. Finalize — a fresh instance, regenerated independently, not layered
+on either candidate.** Launch a third `tdd-coach:tdd-implementation`
+instance — not either original candidate — with no worktree isolation
+this time, targeting the project's real working tree. Its task is your
+combine brief from step C, plus the same original slice inputs from step
+A. It builds a genuinely new implementation informed by both candidates
+and every finding against either, not a patch on top of whichever
+candidate combine preferred. This is the real, final artifact — the one
+that answers "has this slice been implemented" for step 2's future
+inspection.
+
+**E. Re-grade — targeted, not a full re-open.** Once the fresh instance
+finishes, re-run only the reviewers whose findings the combine brief
+asked it to address, checking only those specific findings against the
+finalized implementation. Pass/fail per finding, not a fresh grading pass
+across every category from step B.
+
+**Reporting this procedure.** Step 5's report names what happened at each
+of the five steps above, not just the final outcome. The two candidate
+worktrees and branches from Quarantine still exist once this completes —
+name both so the user can inspect either directly if they want to, but
+don't merge or delete them yourself; discarding a candidate's branch is
+exactly the kind of action this roster's own safety rules reserve for the
+user to decide, not something to clean up silently on your own judgment.
+
+**This row's `orchestrator-log.md` entry needs sub-entries for all five
+steps, not the one-line form every other row gets** — this is the one
+place a single "Routed to" line would hide exactly the thing the log
+exists to catch:
+
+```markdown
+## <n>. <date> — slice ready for implementation
+
+**Routed to:** quarantine flow
+- **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`; candidate 2 — `<worktree path>` / `<branch>`
+- **B. Grade:** reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
+- **C. Combine:** chosen basis — `<candidate 1 | candidate 2 | pieces of both>`; brief — `<one line>`
+- **D. Finalize:** `<path to final artifact>`
+- **E. Re-grade:** findings addressed — `<count>` pass, `<count>` fail
+```
 
 **5. Report, then ask whether to continue — never chain silently.** State
 what was detected, why it routed where it did, and what got produced.
