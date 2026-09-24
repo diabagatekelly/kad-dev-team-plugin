@@ -193,13 +193,14 @@ drives a screen, which is only knowable once that screen has been
 designed.
 
 Never invent a stage this table doesn't cover. ADRs, `staleness-audit`,
-`tdd-coach:test-quality-review`, and all four of `devsecops-engineer`'s
-review/posture skills (`security-review`, `reliability-review`,
-`supply-chain-review`, `operational-readiness`) are event-triggered, not
-part of this forward spine — they run against code, a test file, or a repo
-that already exists, which most of this spine hasn't reached. Hand off to
-them only if the user asks. `test-quality-review` also runs inline, on its
-own, inside `tdd-implementation`'s own loop — that's not a spine stage
+`tdd-coach:test-quality-review`, `code-reviewer`, and all four of
+`devsecops-engineer`'s review/posture skills (`security-review`,
+`reliability-review`, `supply-chain-review`, `operational-readiness`) are
+event-triggered, not part of this forward spine — they run against code, a
+test file, or a repo that already exists, which most of this spine hasn't
+reached. Hand off to them only if the user asks. `test-quality-review` and
+`code-reviewer` also run inline, as part of the quarantine flow's Grade
+step, inside `tdd-implementation`'s own row — that's not a spine stage
 either, it's part of how that one row does its job.
 
 **4. Execute exactly one routed step.** For every row except
@@ -266,13 +267,12 @@ note both; you'll need them in the next two steps.
 **B. Grade.** For each candidate independently, run every applicable
 reviewer in parallel against that candidate's own worktree, as real async
 `Agent` calls: `tdd-coach:test-quality-review`, `architecture-review`,
-`devsecops-engineer:security-review`, and
+`code-reviewer`, `devsecops-engineer:security-review`, and
 `devsecops-engineer:reliability-review` always apply;
 `accessibility-engineer:accessibility-review` applies only if the slice
-is UI-touching. `code-reviewer` isn't built yet — add it here once it
-exists, don't invent its check now. No persona is weighted above another
+is UI-touching. No persona is weighted above another
 within a candidate's grading pass; read every finding on its own merits.
-That's up to 10 parallel review agents (5 reviewers × 2 candidates, fewer
+That's up to 12 parallel review agents (6 reviewers × 2 candidates, fewer
 if the slice isn't UI-touching). Wait for all of them before continuing.
 
 **C. Combine — inline, yours alone, not spawned.** Read both candidates'
@@ -340,12 +340,11 @@ Then:
   designed, its runtime-safety criteria are filled, its screen is designed
   and its accessibility criteria filled if it's UI-touching, the project
   has a stack to build on, and `tdd-coach:tdd-implementation` has produced
-  working, tested code for it): don't propose anything further. Say
-  plainly that this is as far as the roster currently reaches —
-  `code-reviewer` would review this implementation next, and doesn't exist
-  yet. Moving on to the next scope-map step's requirements or slicing
-  before this one is implemented and learned from would repeat the mistake
-  this rule exists to prevent: deciding too much before anything's been
-  built. If the user explicitly wants to start a different unit anyway, that's
-  their call to make by asking directly — not something this skill
-  offers.
+  working, tested code for it, already graded by `code-reviewer` and every
+  other applicable reviewer inside the quarantine flow's Grade step): don't
+  propose anything further. Moving on to the next scope-map step's
+  requirements or slicing before this one is implemented and reviewed would
+  repeat the mistake this rule exists to prevent: deciding too much before
+  anything's been built. If the user explicitly wants to start a different
+  unit anyway, that's their call to make by asking directly — not something
+  this skill offers.

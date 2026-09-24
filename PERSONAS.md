@@ -93,7 +93,7 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 3 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit for a confirmed requirement, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done |
 | 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction; also owns technology selection, recommending rather than deciding — the starting set a first test forces, and what sits behind each boundary once one forces it | Core strength | Done |
 | 5 | `tdd-coach` | Turns a designed slice into working code via genuine Red-Green-Refactor, and applies specifically-named fixes handed back from review — both through the same disciplined loop. Two skills: `tdd-implementation` (write/fix) and `test-quality-review` (critique existing tests — over-mocking, false positives, coverage-as-theater). Follows Clean Architecture/OeA principles as a writing constraint (informed by `software-architect`'s already-decided boundaries plus its own lightweight synthesis of the same sources); doesn't decide or verify architecture itself — `architecture-design`/`architecture-review` still own that | Core strength | Done — first persona that actually writes/edits application code, needing real execution tools (`Bash`) for it; the roster's second `background: true` persona, wired into `orchestrator` as the new terminal row. `tdd-implementation` 10/10 (three real fixes across the fill-vs-escalate rule for missing collaborators), `test-quality-review` 10/10 (a coverage-sweep fix); orchestrator's terminal row now runs the quarantine/grade/combine flow by default rather than a single inline build; not yet dogfooded against `evals/example/` |
-| 6 | `code-reviewer` | Local code-level readability/DRY/naming/comments triage — not scope-YAGNI (`product-slicer`'s territory) and not structural abstraction (`architecture-review`'s), a severity taxonomy for findings | Core strength | Planned |
+| 6 | `code-reviewer` | Local code-level readability/DRY/naming/comments triage — not scope-YAGNI (`product-slicer`'s territory) and not structural abstraction (`architecture-review`'s), a severity taxonomy for findings | Core strength | Done — one skill, `code-review`, review-only like `accessibility-review`; the roster's third `background: true` persona; also uses the existing `why-comments` skill directly for its comment check rather than re-deriving it. Eval 17/17 (fixture expanded twice to cover the full checklist; one real fix, a duplication finding folding an exempt guard clause into "what's identical," caught, fixed, recurred on a larger fixture, then fixed for real with a concrete phrasing template) |
 | 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness. One skill, `accessibility-review`, verifying what `ux-designer` already rendered rather than designing anything itself | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; the roster's first `background: true` persona, since its one skill never blocks on `AskUserQuestion` |
 | 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself (that persona doesn't exist yet) |
@@ -155,16 +155,16 @@ accessibility-review → technology-bootstrap → tdd-coach:tdd-implementation),
 one step at a time, human checkpoint after each — and a hard stop once a
 slice is designed, its runtime-safety criteria are filled, its screen
 designed and accessibility criteria filled if UI-touching, the project has
-a stack to build on, and the slice has been implemented (via the
-quarantine flow above), since the next stage (`code-reviewer` reviewing
-that implementation) doesn't exist yet.
-`devsecops-engineer`'s four review/posture skills and
+a stack to build on, and the slice has been implemented and graded (via the
+quarantine flow above, `code-reviewer` now included in its Grade step
+alongside every other applicable reviewer).
+`devsecops-engineer`'s four review/posture skills, `code-reviewer`, and
 `tdd-coach:test-quality-review` sit outside this spine entirely: they run
 against code, a test file, or a repo that already exists, which most of
 the spine never reaches (`test-quality-review` also runs inline inside
-`tdd-implementation`'s own loop, and again inside the quarantine flow's
-Grade step, neither of which is a spine stage). Never cascades to the
-next scope-map step
+`tdd-implementation`'s own loop, and again — alongside `code-reviewer` —
+inside the quarantine flow's Grade step, none of which is a spine stage).
+Never cascades to the next scope-map step
 automatically — each unit of work needs design/implementation before the
 next one's shape gets decided, the same reason CAMS's own per-slice
 workflow iterates rather than deciding every slice up front. Parallel
@@ -232,10 +232,10 @@ only if the user asks) — so even the partial coverage that does exist
 set up some other way) doesn't run automatically today. Whether these
 become new roster surface, an extension of an existing persona's
 now-explicit boundary, or a deliberately-left-out gap is not decided.
-Holding until after `code-reviewer` and a real end-to-end dogfood run —
-the actual shape of what's missing will be clearer once a real slice
-has gone all the way through the spine and someone has to answer "now
-what" for real, instead of reasoning about it in the abstract.
+Holding until after a real end-to-end dogfood run, now that `code-reviewer`
+is built — the actual shape of what's missing will be clearer once a real
+slice has gone all the way through the spine and someone has to answer
+"now what" for real, instead of reasoning about it in the abstract.
 
 ## Deferred / phase-2 ideas
 
@@ -256,13 +256,18 @@ what" for real, instead of reasoning about it in the abstract.
   it's still `background: false` at the agent level for that reason —
   `tdd-coach` being uniformly `background: true` sidesteps the question
   for this flow rather than resolving it.
-- **impl vs review split per persona — decided, for `tdd-coach` at least.**
+- **impl vs review split per persona — decided, for `tdd-coach` at least,
+  and now settled for `code-reviewer` too: it doesn't get one.**
   `tdd-coach` gets exactly this split: `tdd-implementation` (write) and
   `test-quality-review` (critique), the same shape `software-architect`
   already uses for `architecture-design`/`architecture-review` and
-  `devsecops-engineer` uses for its requirements/review pairs. Whether
-  `code-reviewer` needs the same split, once built, is still open — its
-  roster row reads as review-only already, so it may not need one.
+  `devsecops-engineer` uses for its requirements/review pairs.
+  `code-reviewer` was built review-only, one skill (`code-review`), the
+  same single-trigger shape `accessibility-engineer` already uses — there's
+  no corresponding write half for it to pair against inside this roster;
+  the write half of the code it reviews is `tdd-implementation`'s job, a
+  different persona entirely, not a sibling skill under `code-reviewer`
+  itself.
 
 ## Next to build
 
@@ -622,34 +627,108 @@ only the narrated reasoning around it — is recorded in
 `evals/example/` — still ahead, and the only way to close that gap for
 real.
 
-### Next: `code-reviewer`, then `architecture-cartographer`, then dogfood for real
+### `code-reviewer` built — the second and last of the two originally-planned "core strength" personas
 
-Confirmed order, not three parallel todos:
+One skill, `code-review` — no impl/review split, review-only like
+`accessibility-review`, the roster's third `background: true` persona.
+Synthesized from Flexion's `code-review-protocol` and `pragmatic-reviewer`
+(plus a second, differently-scoped `code-reviewer` agent template in
+Flexion's `flexpowers` plugin), personal skills' own `code-review` skill,
+and CAMS's `cams-refactoring` (by far the richest source — the only one
+with a developed mechanical checklist at this exact granularity: function/
+class size anchors, parameter-count thresholds, primitive obsession,
+feature envy, data clumps) and `cams-code-review` (workflow-adjacent, read
+for signal rather than as a review procedure). Full synthesis in
+`.synthesis/code-reviewer.md`.
 
-1. **`code-reviewer`** — the second and last of the two originally-planned
-   "core strength" personas, local code-level readability/DRY/naming/
-   comments triage, deliberately narrower than `product-slicer`'s
-   scope-YAGNI and `architecture-review`'s structural-abstraction
-   territory. Its own placeholder is already sitting in the quarantine
-   flow's Grade step, waiting ("`code-reviewer` isn't built yet — add it
-   here once it exists").
-2. **`architecture-cartographer`** — shape already planned above, not yet
+Two contradictions, both resolved toward precedent this roster had already
+set before `code-reviewer` existed — confirming those calls a second time
+independently rather than opening them back up. No source's severity
+vocabulary or anchor survived unmodified (Flexion's L×I×E quantitative
+rubric is the exact apparatus this roster had already rejected twice;
+personal-skills layered three simultaneous scoring systems where one
+qualitative call would do; CAMS anchored severity to whether a smell
+blocks the *current* task, an implementer's-eye view rather than a
+reviewer's) — resolved to this roster's existing Critical/High/Medium/Low,
+re-anchored to cost to a future reader/editor, the same anchoring move
+`architecture-review` and `accessibility-review` already made for their
+own domains. Personal-skills' `code-review` applies its own fixes after
+approval — resolved the same direction as `test-quality-review`'s
+identical contradiction: report and hand back, never edit, since this
+roster has a real implementer to hand back to
+(`tdd-coach:tdd-implementation`) that those personal skills were never
+built assuming existed. A third decision, not sourced from any
+contradiction: comment review stops at the existing `why-comments` skill's
+altitude rather than adopting CAMS's deeper `writing-for-agents`-gate
+layer for surviving comments — a real idea, but CAMS's own ecosystem tool,
+not something this portable roster already owns or has a concrete case
+demanding yet.
+
+Eval: 17/17 PASS, four runs — expanded twice past the first pass to
+actually validate the whole skill rather than a sample of it. The
+original fixture (`orders.ts` alone, 7 graders: duplication with an
+exempt guard clause, a misleading retry-count comment, a legitimate
+WHY-comment that must survive, a dead cryptically-named function,
+pre-existing untouched code, a Stripe SDK instantiation that's
+`architecture-review`'s call not this skill's, and `skill-invoked`) passed
+6/7 on its first run, catching a real skill-text gap via an independent
+judge agent, not self-grading: the duplication finding folded the exempt
+guard clause into "what's identical." Fixed once, re-verified 6/6 on a
+second run.
+
+Asked directly whether that coverage actually validated the skill "in its
+entirety," the honest answer was no: three checklist items (primitive
+obsession, feature envy, data clumps) had no grader at all, and several
+stated rules were never exercised in both directions (the 2-instance
+threshold, size-as-a-prompt-not-a-gate, wrong-name-vs-vague-name severity,
+test-file scope, local-vs-handed-off duplication). Expanded the fixture
+with two more files (`pricing.ts`, `pricing.test.ts`) and 10 more graders
+to close every one of those gaps — deliberately excluding a
+`product-slicer`-handoff fixture, since no realistic code-only trigger for
+"should this capability exist" was found that wasn't just relabeled
+dead-code or premature-abstraction, both already covered.
+
+Running the expanded fixture surfaced the same duplication gap again —
+15/16 substantive graders passed, but the guard-clause-folded-into-
+identical failure mode recurred verbatim on the larger, busier task
+("same shape — null guard, weight-based cost..."), proving the first fix's
+abstract wording wasn't actually robust, just untested against enough
+variation. Strengthened with a concrete before/after phrasing template
+(what not to write, what to write instead) rather than another abstract
+rule. Final run, fully re-emulated, all 16 `llm` graders independently
+re-judged (four judges, four criteria each, to avoid both self-grading and
+repeating the full fixture text 16 times): 16/16 PASS, including the
+twice-failed one, now correctly excluding the guard clause by name. This
+run also self-reported the "Skills consulted" line correctly — an earlier
+intermediate run had dropped it, the same one-off mechanical-miss category
+already recorded for `accessibility-engineer:accessibility-review`, not
+reproduced on the run that became canonical. Full four-run sequence in the
+case's `eval-score/summary.md`.
+
+Wired into `skills/orchestrator/SKILL.md`'s quarantine-flow Grade step,
+replacing the placeholder note that had been waiting there since
+Orchestrator v2 shipped, and into the event-triggered-skills list
+alongside `test-quality-review`.
+
+### Next: `architecture-cartographer`, then dogfood for real
+
+1. **`architecture-cartographer`** — shape already planned above, not yet
    synthesized or built. Doesn't block anything else on this list, but
    comes next rather than being left open-ended.
-3. **A real end-to-end dogfood run, in a fresh project directory the user
+2. **A real end-to-end dogfood run, in a fresh project directory the user
    is setting up for this — not `evals/example/`.** `evals/example/` is
    markdown artifacts up through `screen-design`, never real running code
    or a real git history, so it can't exercise the part that actually
    needs testing now: real async `Agent` worktree launches, real parallel
    grading, a real `orchestrator-log.md`, and `code-reviewer` actually
-   sitting in the Grade step instead of a placeholder note. This is the
-   first time the quarantine flow, the audit log, and every reviewer run
-   together instead of being reasoned about.
-4. **Post-implementation gaps (commit / new repo / CI-CD / infra
-   security)** — decided after step 3, with real evidence of what a
+   sitting in the Grade step rather than reasoned about in the abstract.
+   This is the first time the quarantine flow, the audit log, and every
+   reviewer — six of them now, not five — run together for real.
+3. **Post-implementation gaps (commit / new repo / CI-CD / infra
+   security)** — decided after step 2, with real evidence of what a
    finished slice actually needs next, not before. Already recorded this
    way above; restated here so this list reads as the actual plan, not
-   three disconnected notes.
+   disconnected notes.
 
 ### `architecture-cartographer`'s shape, planned ahead of its own turn
 
@@ -659,7 +738,7 @@ whole-codebase awareness, for good reasons that each still leave a real
 hole: `architecture-review` reviews only the current diff ("On legacy
 code you didn't just touch, review only what changed" — the Boy Scout
 Rule, on purpose, to avoid demanding total compliance on every touch).
-`code-reviewer`, once built, is scoped local — file-level DRY/naming, not
+`code-reviewer` is scoped local — file-level DRY/naming, not
 structural. `tdd-implementation` only knows what's in its own task; a
 helper that already exists three modules over is invisible to it unless
 something tells it. None of that was a mistake — each boundary was the
@@ -723,7 +802,7 @@ satisfy — one skill each, no overlap:**
   function or helper already exist, below `architecture-design`'s own
   conceptual altitude ("no function signatures, no code," per its own
   scope) but squarely inside what `tdd-implementation` writes.
-- Reviewers (`architecture-review` now, `code-reviewer` once built) read
+- Reviewers (`architecture-review`, `code-reviewer`) read
   `map-update`'s diff output after code exists — a cheap, pre-computed
   starting point instead of re-deriving the whole graph on every pass,
   the "grade a slice's fit without walking an ever-growing codebase"
@@ -972,9 +1051,11 @@ working severity systems — and both rejected, for the same reason
 `software-architect`'s numeric health score and a `security-reviewer`
 source's self-quieting fast mode were already rejected: this roster
 declines quantitative apparatus bolted onto what's actually a qualitative
-judgment call, every time it comes up. `test-quality-review` and the
-future `code-reviewer` both use the existing Critical/High/Medium/Low
-scale.
+judgment call, every time it comes up. `test-quality-review` and
+`code-reviewer` both use the existing Critical/High/Medium/Low scale —
+confirmed again, independently, when `code-reviewer`'s own synthesis hit
+the identical rubric a second time and rejected it the same way (see
+`.synthesis/code-reviewer.md` Contradiction 1).
 
 **Reviewers still never edit code directly, even now that a real code-
 writing persona exists to hand back to.** Personal skills' `code-review`
@@ -982,11 +1063,14 @@ and `tests-audit` both apply their own fixes after user approval — a
 materially different boundary than anything built in this roster so far.
 Every existing review skill (`security-review`, `accessibility-review`,
 `architecture-review`) only reports and recommends. Kept that boundary
-for `test-quality-review` and the future `code-reviewer` rather than
-adopting the personal-skill pattern: those skills were built for a
-context with no separate implementer to hand back to (an ordinary Claude
-Code session fixing whatever it finds); this roster now has one
-(`tdd-implementation`), so hand-back stays the convention instead.
+for `test-quality-review` and `code-reviewer` rather than adopting the
+personal-skill pattern: those skills were built for a context with no
+separate implementer to hand back to (an ordinary Claude Code session
+fixing whatever it finds); this roster now has one (`tdd-implementation`),
+so hand-back stays the convention instead. `code-reviewer`'s own synthesis
+hit this exact contradiction again independently — personal-skills'
+`code-review` applies its own fixes — and resolved it the same direction
+(`.synthesis/code-reviewer.md` Contradiction 2).
 
 **Asking moves up a level, which is what makes an implementer safe to
 background.** Flexion's `orchestrator` resolves any decision an impl
