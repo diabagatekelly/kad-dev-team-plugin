@@ -22,6 +22,24 @@ already applies to decision records, and for the same reason: implementation
 detail here goes stale the moment code diverges from the plan, while a
 structural decision stays true regardless of exact syntax.
 
+## Check what already exists first
+
+Before working out this slice's structure, consult
+`architecture-cartographer:map-query` at the structural level — does a
+comparable module, interface, or boundary already exist. Load its
+`SKILL.md` and ask inline, in this same conversation, the same
+in-conversation consult this skill already uses below for a
+runtime-safety question; it's `background: true` but carries no
+`AskUserQuestion` of its own, so there's nothing to launch and nothing to
+wait on.
+
+A candidate it returns is a fact, not a verdict — whether it's close
+enough to reuse instead of introducing something new is this skill's own
+call, through the same one-at-a-time approval loop every other real
+decision below goes through. Don't skip the consult because the answer
+seems obvious; a module that looks unrelated by name can still be the same
+boundary under a different one.
+
 ## The importance test
 
 Before applying any rule below, work out which parts of the slice are more

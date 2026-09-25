@@ -31,6 +31,24 @@ tests before making any of them pass defeats the reason the list exists —
 each test's outcome informs the next one's shape. Mark an entry done only
 after its full cycle (through REVIEW, below) is complete.
 
+## Check what already exists first
+
+Before writing a Test List entry's implementation, consult
+`architecture-cartographer:map-query` at the implementation level — does a
+comparable function, class, or helper already exist. Load its `SKILL.md`
+and ask inline, in this same conversation; it's `background: true` but
+carries no `AskUserQuestion` of its own, so there's nothing to launch and
+nothing to wait on.
+
+A candidate it returns is a fact, not a verdict. Whether reusing it is the
+right call for this entry, or a genuine structural fork exists (reuse this
+vs. build new, one interface vs. two), is the same kind of question a
+missing collaborator's own fork already gets escalated for — decide it
+yourself if there's no real alternative to weigh, escalate to
+`architecture-design` if there is. Don't skip the consult because the need
+seems novel — a differently-named helper doing the same job is exactly
+what this catches.
+
 ## RED — one failing test
 
 Write one test for the entry you picked. It should be concrete, runnable,

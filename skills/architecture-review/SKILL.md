@@ -16,6 +16,21 @@ priority rather than blocking on full-codebase compliance. That's the Boy
 Scout Rule: leave the area you touched better, don't demand the whole
 forest be clean first.
 
+## Start from a precomputed diff, when one exists
+
+If whoever invoked you (the quarantine flow's Grade step, or a direct
+request) hands you an `architecture-cartographer:map-update` diff for the
+code in front of you, read it before your own pass — it's a cheap,
+mechanically-derived starting point (new/removed dependency edges,
+wrong-direction candidates, duplication candidates), not a substitute for
+your own judgment. Everything in it is a candidate or a fact, never a
+verdict: a flagged wrong-direction edge still needs your own two-direction
+check below to confirm it's real and to size its severity; a flagged
+duplication candidate still needs your own read to tell a real duplicate
+from two things that only look alike today. No diff provided is the
+normal case for most reviews — derive what you need yourself, the way
+this skill already does below.
+
 ## The two-direction dependency check
 
 For every place code depends on something else — an import, a shared type,

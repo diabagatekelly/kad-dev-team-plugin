@@ -203,6 +203,21 @@ reached. Hand off to them only if the user asks. `test-quality-review` and
 step, inside `tdd-implementation`'s own row — that's not a spine stage
 either, it's part of how that one row does its job.
 
+**`architecture-cartographer:map-query` is another inline advisor consult,
+not a spine stage — it doesn't get its own row here either.**
+`software-architect:architecture-design` consults it before writing a
+design doc, at the structural level ("does a comparable module or
+interface already exist"), the same inline, hand-control-straight-back
+pattern that row already uses for its `devsecops-engineer` consult.
+`tdd-coach:tdd-implementation` consults it again before writing each Test
+List entry's code, at the implementation level ("does a comparable
+function or helper already exist") — below `architecture-design`'s own
+conceptual altitude, squarely inside what that row actually writes. Both
+consults are instructed in the asking skill's own `SKILL.md`, not
+something this file dispatches; nothing about routing changes because of
+them. `architecture-cartographer:map-update` has its own wiring inside the
+quarantine flow below — see "Quarantine, grade, combine."
+
 **4. Execute exactly one routed step.** For every row except
 `tdd-coach:tdd-implementation`, execute inline: read the target persona's
 `AGENT.md` and the specific `SKILL.md` the trigger matched — nothing
@@ -264,16 +279,26 @@ context already can't see each other. Wait for both to finish before
 continuing. Each worktree-isolated run returns its own path and branch —
 note both; you'll need them in the next two steps.
 
-**B. Grade.** For each candidate independently, run every applicable
-reviewer in parallel against that candidate's own worktree, as real async
-`Agent` calls: `tdd-coach:test-quality-review`, `architecture-review`,
-`code-reviewer`, `devsecops-engineer:security-review`, and
+**B. Grade.** For each candidate, before launching its reviewers, run
+`architecture-cartographer:map-update` inline (not an async `Agent` call —
+it's mechanical, not a graded judgment, so it needs none of the isolation
+the reviewers need from each other) against that candidate's own
+worktree, diffed against the real project's last persisted map. This run
+is throwaway: it never overwrites the persisted map, and it exists only to
+hand that candidate's reviewers a precomputed diff — new/removed edges,
+duplication candidates, wrong-direction candidates — instead of each of
+them re-deriving the graph independently. Then, for each candidate
+independently, run every applicable reviewer in parallel against that
+candidate's own worktree, as real async `Agent` calls:
+`tdd-coach:test-quality-review`, `architecture-review`, `code-reviewer`,
+`devsecops-engineer:security-review`, and
 `devsecops-engineer:reliability-review` always apply;
 `accessibility-engineer:accessibility-review` applies only if the slice
 is UI-touching. No persona is weighted above another
 within a candidate's grading pass; read every finding on its own merits.
 That's up to 12 parallel review agents (6 reviewers × 2 candidates, fewer
-if the slice isn't UI-touching). Wait for all of them before continuing.
+if the slice isn't UI-touching) — `map-update`'s two inline runs aren't
+part of that count. Wait for all of them before continuing.
 
 **C. Combine — inline, yours alone, not spawned.** Read both candidates'
 actual code from their worktree paths (not just their own self-reports)
@@ -299,6 +324,13 @@ candidate combine preferred. This is the real, final artifact — the one
 that answers "has this slice been implemented" for step 2's future
 inspection.
 
+Once the fresh instance finishes, run `architecture-cartographer:map-update`
+for real — inline, not an async `Agent` call, for the same reason as
+Grade's throwaway runs — against the actual working tree this time. This
+run's output replaces the project's persisted map: it becomes what the
+next slice's `architecture-design` and `tdd-implementation` read via
+`map-query`, and what the next slice's own `map-update` runs diff against.
+
 **E. Re-grade — targeted, not a full re-open.** Once the fresh instance
 finishes, re-run only the reviewers whose findings the combine brief
 asked it to address, checking only those specific findings against the
@@ -323,9 +355,9 @@ exists to catch:
 
 **Routed to:** quarantine flow
 - **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`; candidate 2 — `<worktree path>` / `<branch>`
-- **B. Grade:** reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
+- **B. Grade:** map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
 - **C. Combine:** chosen basis — `<candidate 1 | candidate 2 | pieces of both>`; brief — `<one line>`
-- **D. Finalize:** `<path to final artifact>`
+- **D. Finalize:** `<path to final artifact>`; persistent map updated — `<path>`
 - **E. Re-grade:** findings addressed — `<count>` pass, `<count>` fail
 ```
 

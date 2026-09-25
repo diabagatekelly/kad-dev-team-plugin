@@ -97,7 +97,7 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness. One skill, `accessibility-review`, verifying what `ux-designer` already rendered rather than designing anything itself | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; the roster's first `background: true` persona, since its one skill never blocks on `AskUserQuestion` |
 | 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself (that persona doesn't exist yet) |
-| 10 | `architecture-cartographer` | Maintains a mechanically-derived map of the codebase's actual structure — real dependency graph, public exports, external packages, each module's importance tier as already decided by `architecture-design` — and answers "does something like this already exist" queries against it. Doesn't decide architecture, doesn't judge whether a flagged similarity is a real duplicate or coincidental, doesn't grade anything itself; supplies facts and mechanical flags, not verdicts. Two skills: `map-query` (read-only, consulted pre-write) and `map-update` (regenerate + diff against the prior map, post-write) | Infrastructure for the rest of the roster | Planned — shape decided, not yet synthesized or built |
+| 10 | `architecture-cartographer` | Maintains a mechanically-derived map of the codebase's actual structure — real dependency graph, public exports, external packages, each module's importance tier as already decided by `architecture-design` — and answers "does something like this already exist" queries against it. Doesn't decide architecture, doesn't judge whether a flagged similarity is a real duplicate or coincidental, doesn't grade anything itself; supplies facts and mechanical flags, not verdicts. Two skills: `map-query` (read-only, consulted pre-write) and `map-update` (regenerate + diff against the prior map, post-write) | Infrastructure for the rest of the roster | Done — the roster's tenth and last planned persona, and its third `background: true` one; consulted inline by `architecture-design` and `tdd-implementation` the same way `software-architect` already consults `devsecops-engineer`, and wired into the quarantine flow's Grade/Finalize steps |
 
 **Rows 7 and 8 were merged.** The roster originally planned
 `security-engineer` (threat-aware review) and `reliability-engineer`
@@ -710,22 +710,25 @@ replacing the placeholder note that had been waiting there since
 Orchestrator v2 shipped, and into the event-triggered-skills list
 alongside `test-quality-review`.
 
-### Next: `architecture-cartographer`, then dogfood for real
+### Next: the real end-to-end dogfood run
 
-1. **`architecture-cartographer`** — shape already planned above, not yet
-   synthesized or built. Doesn't block anything else on this list, but
-   comes next rather than being left open-ended.
-2. **A real end-to-end dogfood run, in a fresh project directory the user
+Both of the roster's two remaining builds are done: `code-reviewer` above,
+and `architecture-cartographer` below — built concurrently in separate
+sessions against this same plan. With the full ten-persona roster built,
+one real next step is left, already decided rather than invented fresh:
+
+1. **A real end-to-end dogfood run, in a fresh project directory the user
    is setting up for this — not `evals/example/`.** `evals/example/` is
    markdown artifacts up through `screen-design`, never real running code
    or a real git history, so it can't exercise the part that actually
    needs testing now: real async `Agent` worktree launches, real parallel
    grading, a real `orchestrator-log.md`, and `code-reviewer` actually
-   sitting in the Grade step rather than reasoned about in the abstract.
-   This is the first time the quarantine flow, the audit log, and every
-   reviewer — six of them now, not five — run together for real.
-3. **Post-implementation gaps (commit / new repo / CI-CD / infra
-   security)** — decided after step 2, with real evidence of what a
+   sitting in the Grade step instead of a placeholder note. This is the
+   first time the quarantine flow, the audit log, and every reviewer —
+   including `architecture-cartographer:map-update`'s own two invocation
+   modes inside it — run together instead of being reasoned about.
+2. **Post-implementation gaps (commit / new repo / CI-CD / infra
+   security)** — decided after step 1, with real evidence of what a
    finished slice actually needs next, not before. Already recorded this
    way above; restated here so this list reads as the actual plan, not
    disconnected notes.
@@ -832,6 +835,102 @@ it reports facts and mechanical flags, the same reasoning that makes
 real cases exist, not assumed). Full three-source synthesis — this
 plan's reasoning is not that synthesis — is still ahead, the same order
 `tdd-coach`'s own shape-then-synthesis followed.
+
+### `architecture-cartographer` built, the roster's tenth and last planned persona
+
+The three-source synthesis ran against the shape already decided above.
+**Flexion** contributed the corpus's only real, working implementations of
+mechanical codebase-structure extraction — `duplication-candidates.py` and
+`dependency-graph-gen.py`, read in full alongside their governing
+`references/dependency-rule.md` and the `DUPLICATION` section of
+`references/condition-types.md`, plus the orchestrating
+`fleet-worker/agents/condition-checker.md` that consumes both tools'
+output, and a contrasting standalone skill
+(`oea-dependency-evaluator/SKILL.md`) with no upstream tier input of its
+own. A promising-looking early grep hit
+(`flexion-adapt/skills/discover/references/discovery-catalog.md`) turned
+out to be a different domain entirely — an organizational digital-twin
+catalog, not code — read, then discarded rather than stretched to sound
+relevant. **Personal skills** contributed nothing on point, the same
+finding shape as `ux-designer`'s, `accessibility-engineer`'s, and
+`software-architect`'s own syntheses (`tdd-coach`'s synthesis remains the
+one exception in this roster) — `code-review`'s and `deep-pr-review`'s
+local, single-pass DRY checks were the only hits, and that territory
+already belongs to `code-reviewer`, not this persona. **CAMS** contributed
+`ui-component-catalog/SKILL.md` in full — the single strongest, most
+directly-on-point precedent found anywhere in the corpus for this
+persona's "does something like this already exist" half — plus
+`cams-architecture/SKILL.md` (read for its grep-based extraction technique
+underneath the procedure) and `cams-refactoring/SKILL.md`'s duplication
+procedure; `cams-dataflow` and `cams-query-builder` were opened and
+confirmed not relevant.
+
+Four things resolved. First, whether this persona should ask the user
+about relative importance or take tiers as given — two Flexion sources
+disagreed sharply, but the disagreement dissolved once what each tool has
+*available* was accounted for: the standalone skill with no upstream tier
+source has to ask, while `dependency-graph-gen.py` runs inside a pipeline
+where a human already adjudicated tiers once, elsewhere, and just applies
+that decision. This roster's own pipeline already matches the second
+shape — `architecture-design` assigns strategic-vs-tactical importance
+per slice today — so tiers are persisted, never re-derived or re-asked;
+an unclassified module renders explicitly **untiered**. This also settled
+the `background: true` call PERSONAS.md's own planning section had left
+as "current read: no, but worth confirming": nothing this persona does
+ever turns on information only a human can supply in the moment, now
+backed by an independent source's own explicit design choice rather than
+derived in isolation a third time (see Durable findings below). Second and
+third, the extraction method and map file format PERSONAS.md's planning
+section had left genuinely open both turned out to be confirmations
+rather than open contradictions — both usable sources independently land
+on grep/import-statement regex by file suffix with no installed tooling,
+and on a structured per-module table plus a short derived narrative.
+Fourth, severity — sharper than this roster's usual "no quantitative
+apparatus" stance, not just a repeat of it: neither usable source attaches
+any severity, numeric or qualitative, to a structural fact itself, so this
+persona carries none at all, not even this roster's own usual
+Critical/High/Medium/Low scale — that scale describes a judgment about a
+finding's consequence, and this persona never reaches that judgment for
+anything. Full reasoning, including the scope decision on where the map
+itself lives (resolved once per project like `technology-bootstrap`'s
+stack decision, asked for by whichever consulting persona retains
+`AskUserQuestion`, never by this persona's own two skills), in
+`.synthesis/architecture-cartographer.md`.
+
+**Built and wired.** `AGENT.md` plus both skills' `SKILL.md` written from
+the synthesis. `architecture-design` and `tdd-implementation` each gained
+a "Check what already exists first" section consulting `map-query` inline
+— the same advisor-consult pattern `architecture-design` already uses for
+its `devsecops-engineer` question, at the structural level for the former
+and the implementation level for the latter. `architecture-review` gained
+a section reading a precomputed `map-update` diff when one's handed to
+it, without treating any flag in it as a substitute for its own judgment.
+`orchestrator`'s quarantine flow gained `map-update` at both points
+PERSONAS.md's plan named: a throwaway, worktree-scoped run per candidate
+inside Grade, and a real run against the actual working tree after
+Finalize that becomes the persistent map the next slice reads — plus the
+`orchestrator-log.md` sub-entry format extended for both. None of this
+added a new top-level spine row, exactly as planned.
+
+**Eval cases run for both skills, written from `AGENT.md`/`SKILL.md` text
+before any real dogfood output existed**, per this plugin's established
+order. `map-query`: **6/6 PASS on the first run**, no skill-text fix
+needed — its fixture's deliberate traps (matching an `OrderRepository`
+query against a differently-named `CaseDirectory` purely by shape rather
+than literal name; a teammate mentioning an unincorporated branch to test
+whether a given map gets silently trusted as complete) both worked exactly
+as intended. `map-update`: **6/6 PASS on the first run**, also no
+skill-text fix — its fixture's three traps (tier carry-forward vs. fresh
+assignment vs. an honest `untiered` for a module named in neither source;
+a duplication candidate pair flagged without a merge/keep verdict; a
+wrong-direction edge flagged by tier comparison alone, never turned into a
+question or a severity label) all worked as intended too. Neither skill
+needed a fix — the strongest first-pass result of any two-skill persona
+built in this roster so far, plausibly because the mandate is mechanical
+fact-reporting rather than a judgment call, leaving less room for the kind
+of interpretive drift that produced real, multi-run fixes for
+`tdd-implementation` and `test-quality-review`. Full sequence in each
+case's own `eval-score/summary.md`.
 
 ## Durable findings
 
@@ -1084,3 +1183,18 @@ gap in an upstream artifact to hand back to that artifact's owner, not a
 question for `tdd-implementation` to ask directly. Same shape as
 `accessibility-engineer`'s own `background: true` reasoning, now
 confirmed by an independent source rather than derived once in isolation.
+
+**A third, independent confirmation of the same principle, for a persona
+with no judgment call to escalate at all.** `architecture-cartographer`'s
+synthesis found two Flexion sources giving opposite instructions about
+asking the user for relative-importance tiers — one emphatic that asking
+is mandatory, the other (`dependency-graph-gen.py`) treating tiers as a
+GIVEN, parsed from an already-authored table, never asked about. The
+difference traced to what each tool has *available*: a standalone skill
+with no upstream tier source has to ask; a tool running inside a pipeline
+where a human already decided tiers once, elsewhere, just applies that
+decision. This is the same shape as `tdd-implementation`'s own
+`background: true` reasoning above, confirmed a third separate time by a
+third independent source's own explicit design choice — and sharper here
+than either prior case, since this persona has no downstream judgment to
+make at all, only facts to persist or report as honestly unresolved.

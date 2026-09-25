@@ -62,6 +62,8 @@ score is history, not a claim about today.
 | `tdd-coach:tdd-implementation` | 10/10 PASS, single-phase, six runs — one case-authoring bug fixed, then three real skill-text findings each fixed and re-verified (naming discipline, a reuse-messaging distinction, and a fill-vs-escalate rule for missing collaborators that was over-corrected once before landing); see the case's `eval-score/summary.md` for the full sequence | yes |
 | `tdd-coach:test-quality-review` | 10/10 PASS, single-phase, three runs — a case-authoring bug (a passthrough spy that didn't replace behavior) fixed, then a real skill-text gap (missing coverage had no systematic sweep step, so it lost out to a more novel finding one run) fixed and re-verified, see the case's `eval-score/summary.md` | yes |
 | `code-reviewer:code-review` | 17/17 PASS, single-phase, four runs — fixture expanded from 7 to 17 graders to cover every checklist item in the skill (primitive obsession, feature envy, data clumps, size-anchor restraint in both directions, wrong-vs-vague naming severity, test-file scope in both directions); one real skill-text gap (a duplication finding folding an exempt guard clause into "what's identical") recurred on the larger fixture after an initial fix, then held after a stronger, example-based fix; see the case's `eval-score/summary.md` | yes |
+| `architecture-cartographer:map-query` | 6/6 PASS, single-phase — first-ever run, clean, no skill-text fixes; a deliberate shape-not-name matching trap (`OrderRepository` vs. a differently-named `CaseDirectory`) and a staleness trap (an unincorporated branch a teammate mentions) both worked as intended, see the case's `eval-score/summary.md` | yes |
+| `architecture-cartographer:map-update` | 6/6 PASS, single-phase — first-ever run, clean, no skill-text fixes; tier carry-forward/fresh-assignment/honest-`untiered` handling, a duplication-candidate trap, and a wrong-direction-candidate trap all worked as intended with no severity or live question anywhere, see the case's `eval-score/summary.md` | yes |
 
 ### The `example/` directory
 
@@ -189,6 +191,29 @@ Run with the `agent-eval` skill, one case per invocation.
   accessibility placeholder for `portable-carries-forward-unresolved-
   upstream-placeholders` to actually check — added to `prompt.md` before
   running, matching the `reliability-requirements` precedent.
+- **`architecture-cartographer` has no case run yet.** **Closed — both run,
+  both clean.** `map-query` (6/6 PASS) and `map-update` (6/6 PASS) were
+  both written straight from `agents/architecture-cartographer/AGENT.md`
+  and each skill's own `SKILL.md` text, before any real dogfood output
+  existed, same order as every prior case. Neither needed a skill-text
+  fix on its first run — the strongest first-pass result of any two-skill
+  persona built in this roster, plausibly because the mandate is
+  mechanical fact-reporting rather than a judgment call, leaving less room
+  for the kind of interpretive drift `tdd-implementation` and
+  `test-quality-review` each needed real fixes for. Worth noting as a
+  positive counter-example to the two gaps above about this harness's
+  Read/Grep/Glob-only dry-run grant: `map-update`'s real work is itself
+  grep/import-statement text search with no build step or installed
+  tooling, so the dry run's tool restriction doesn't understate what a
+  real invocation would do here the way it does for `tdd-implementation`'s
+  "run the test suite" moments or `accessibility-review`'s browser
+  driving — this is one of the only cases in the plugin where the
+  emulation's tool grant and the real persona's actual working method are
+  the same shape. Full run detail, including the three deliberate traps
+  each fixture's fixture data was built to test (shape-not-name matching
+  and map staleness for `map-query`; tier carry-forward vs. honest
+  `untiered`, a duplication candidate, and a wrong-direction candidate for
+  `map-update`), in each case's own `eval-score/summary.md`.
 
 Root-cause notes for any bug a case caught live in that case's own
 `eval-score/summary.md`, not here — check there before touching a skill,
