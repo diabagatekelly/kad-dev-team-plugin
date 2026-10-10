@@ -16,6 +16,40 @@ priority rather than blocking on full-codebase compliance. That's the Boy
 Scout Rule: leave the area you touched better, don't demand the whole
 forest be clean first.
 
+## The importance test
+
+Before applying any rule, decide which parts of the code in front of you
+are more important and which are less — importance means *how much
+business harm a defect there would cause*, not a fixed list of layers.
+Business rules and domain correctness are usually high; a specific
+database, HTTP library or SDK is usually low, because swapping it wouldn't
+change what the business does. State the ordering you're assuming at the
+top of the report rather than leaving it implicit — a payment module and a
+UI module can invert the usual defaults, and a wrong assumption is worse
+silent than corrected.
+
+The **strategic vs. tactical test**: if you swapped the database, the
+framework, or an external service, would this code need to change? No →
+strategic (business logic, kept independent). Yes → tactical
+(infrastructure, kept swappable).
+
+## The four rules, briefly
+
+- **Dependency Rule** — dependencies point from less important toward more
+  important; strategic code never imports tactical code, and an interface
+  lives with the side that calls it, not the side that implements it.
+- **Good Fences** — only plain data crosses a module boundary; framework
+  types and ORM models get translated at the edge.
+- **Invasive Species** — a high-lock-in library (ORM, HTTP client, cloud
+  SDK, auth) is isolated behind a domain-shaped interface with one adapter
+  as its sole importer.
+- **Screaming Architecture** — modules are named after the business concept
+  they serve; a purely technical role name with no business concept left
+  after stripping the suffix is a violation.
+
+The per-rule checks further down are what you actually apply; this list is
+so the vocabulary is defined even when this skill is loaded on its own.
+
 ## Start from a precomputed diff, when one exists
 
 If whoever invoked you (the quarantine flow's Grade step, or a direct
@@ -47,18 +81,23 @@ violation without ever importing the tactical thing directly. When you find
 this, the violation is located in the types file, not in each of its
 callers — fix it once at the source rather than flagging every caller.
 
-## Before flagging a factory call as a violation, check this first
+## Before flagging a factory call as a violation, check where the caller sits
 
-Code that calls something like a factory or a wiring function to get a
-concrete implementation is not automatically a Dependency Rule violation.
-A composition root — the place that knows how to construct concrete
-tactical objects and hand them back as their interface type — sits outside
-the strategic/tactical comparison entirely; it's allowed to know both
-sides. Before flagging: confirm the call site never references the
-concrete class directly (only the interface type), and confirm what's
-returned is typed as the interface. If both hold, this is composition-root
-wiring, not a violation, even though a factory call can look identical to
-a strategic-depends-on-tactical import at a glance.
+A composition root — the place that constructs concrete tactical objects
+and hands them back as their interface type (a `main/`, wiring or
+bootstrap module) — is allowed to know both sides. Don't flag it for
+importing domain and infrastructure together; that's its job.
+
+The exemption covers the composition root itself, not code that reaches
+into it. Strategic code that imports the wiring module to fetch its own
+dependency is a Dependency Rule violation even when the function it calls
+returns the interface type and the caller never names a concrete class:
+the module-level dependency now points at everything the wiring imports
+(every adapter, the ORM, environment config), the dependency is hidden
+from the constructor instead of declared there, and the caller can't be
+handed a fake. The test is the import, not the return type. When you find
+it, recommend injection through the constructor or parameters, with the
+composition root doing the calling.
 
 ## What to check per rule
 
@@ -150,7 +189,13 @@ the goal; catching what actually costs someone later is.
 
 ## Finding report format
 
+Open with the importance ordering you assumed, then the findings:
+
 ```markdown
+## Importance ordering assumed
+Which parts you treated as strategic and which as tactical, in a sentence
+or two — stated, not implied.
+
 ## Finding: <short title>
 
 **Location:** where in the code

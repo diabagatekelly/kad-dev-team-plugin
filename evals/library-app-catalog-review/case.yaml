@@ -1,0 +1,31 @@
+schema_version: "1.0"
+name: library-app-catalog-review
+description: "Review of the clean catalog/ module: expects no finding above Low."
+tags: [architecture-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+
+    Review the `catalog/` module for architecture issues, including its port and the Postgres adapter in `infra/postgres/postgres-catalog-reader.ts`.
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: reports-nothing-above-low
+    focus: last_message
+    weight: 1
+    criteria: |
+      `catalog/` is intentionally clean: the `CatalogReader` port is owned by `catalog/`, the Postgres adapter maps rows to the plain `Book` type and never leaks ORM/driver types, and `search-catalog.ts` is pure logic against the port.
+
+      PASS if the review concludes there is nothing significant to fix: no finding presented as Medium, High or Critical, and no must-fix demand. Minor/Low notes (naming, style, optional suggestions) are fine, as is an explicit statement that nothing rises above Low.
+
+      FAIL if any finding is presented as Medium or higher, or as required before merge.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?architecture-review"'
+    min: 1

@@ -1,0 +1,57 @@
+schema_version: "1.0"
+name: library-app-reporting-review
+description: "Review of reporting/ with no PR framing: an SQL-level port, an SDK constructed in a report, orchestration mixed with byte-level CSV assembly."
+tags: [architecture-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+
+    Review the `reporting/` module for architecture issues. Read its ports, the adapters under `infra/` that implement them, and anything else you need.
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-sql-level-port
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `reporting/report-queries.port.ts` is `runSql<T>(sql, params)`, so `monthly-circulation-report.ts` and `overdue-report.ts` write SQL themselves. A boundary exists, but it is drawn at the wrong level: callers still reach past it for what they need.
+
+      PASS if the review flags the port's level (SQL leaking into report logic) and proposes report-shaped query methods on the port with SQL confined to the adapter.
+
+      FAIL if missed.
+  - type: llm
+    name: finds-sdk-constructed-in-revenue-report
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `reporting/revenue-report.ts` constructs `StripeClient` from `stripe-sdk` directly, reading `process.env.STRIPE_SECRET_KEY` itself, instead of going through a port.
+
+      PASS if the review flags a high-lock-in SDK used directly in report logic and proposes a port/adapter for payment data.
+
+      FAIL if missed.
+  - type: llm
+    name: finds-orchestration-mixed-with-csv-bytes
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `reporting/export-report.ts` decides which report to run and where to write it, and in the same method assembles the CSV character by character (BOM, quoting, CRLF).
+
+      PASS if the review notices the method mixes high-level orchestration with low-level formatting detail and proposes extracting the CSV formatting.
+
+      FAIL if not noticed.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?architecture-review"'
+    min: 1

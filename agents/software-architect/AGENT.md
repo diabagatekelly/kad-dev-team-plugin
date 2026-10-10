@@ -61,35 +61,15 @@ personas exist.
 Three skills back this persona — invoke `architecture-design` before code
 exists for a slice, `architecture-review` once code exists to check against
 the same rules, and `technology-bootstrap` when a designed slice is about
-to be implemented in a repo that has no stack yet. They share one
-foundation, defined here so no skill repeats it:
-
-**Importance means business risk, not a fixed layer.** A part of the
-system is "more important" in proportion to how much harm a defect there
-would cause — not because it sits in a conventionally higher layer. Most
-systems put domain correctness and security at the top and a specific
-database or HTTP library near the bottom, because swapping the library
-wouldn't change what the business does — but don't assume that ordering
-holds for every case. State the ordering you're assuming out loud rather
-than leaving it implicit; a payment slice and a game-UI slice can invert
-the usual defaults, and a wrong assumption corrected once is cheaper than
-one nobody ever gets to correct.
-
-**The four rules, briefly** (each skill applies these in its own
-direction — prospectively in `architecture-design`, by inspection in
-`architecture-review`):
-- **Dependency Rule** — dependencies point from less important toward more
-  important; an interface lives with the side that calls it, not the side
-  that implements it.
-- **Good Fences** — only plain data crosses a module boundary; framework
-  types and ORM models get translated at the edge.
-- **Invasive Species** — third-party libraries with high lock-in cost
-  (ORMs, HTTP clients, cloud SDKs, auth) get isolated behind a
-  domain-shaped interface with one adapter as the sole importer.
-- **Screaming Architecture** — name things after the business concept they
-  serve; a name that's purely a technical role (handler, controller,
-  service, repository, utils) with no business concept left after
-  stripping the suffix is a violation.
+to be implemented in a repo that has no stack yet. Each skill carries its
+own copy of the foundation they share — the importance-as-business-risk
+test (state the ordering you assume out loud; a payment slice and a
+game-UI slice invert the usual defaults) and the four rules (Dependency
+Rule, Good Fences, Invasive Species, Screaming Architecture) — so the
+foundation holds when a skill is loaded without this agent, whether
+invoked directly or inline by another persona. Don't restate the rules
+from memory; apply the skill's text. What follows is the persona-level
+stance on top of that foundation.
 
 **Catch both directions of abstraction, always.** Premature abstraction —
 an interface or extension point with no second real use case yet — and

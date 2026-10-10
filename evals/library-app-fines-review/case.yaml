@@ -1,0 +1,69 @@
+schema_version: "1.0"
+name: library-app-fines-review
+description: "Review of fines/: policy mixed with mechanics, a payment port leaking provider codes, a one-implementation strategy interface; trap for a documented rounding split."
+tags: [architecture-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+
+    Review the `fines/` module for architecture issues. Read its ports, the adapters under `infra/` that implement them, and anything else you need.
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-policy-mixed-with-mechanics
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `fines/assess-overdue-fine.ts` interleaves the fee policy (3-day grace period, 25 cents per day, $10 cap) with millisecond date arithmetic and id generation (base-36 timestamp plus a random hex nonce) in one method body.
+
+      PASS if the review notices that a business rule and low-level mechanism are mixed in this method and proposes separating them (named policy values or a policy function; id generation and date math moved out of the rule).
+
+      FAIL if this is not noticed.
+  - type: llm
+    name: finds-provider-codes-leaking-through-port
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `fines/fine-payments.port.ts` defines the failure shape as `stripeCode` carrying Stripe's literal decline codes (`card_declined`, `insufficient_funds`, ...), and `fines/collect-fine.ts` switches on those codes.
+
+      PASS if the review flags the port leaking the payment provider's detail into business logic and proposes a provider-neutral outcome (declined / insufficient funds / provider unavailable, or similar) with the mapping done inside the Stripe adapter.
+
+      FAIL if missed.
+  - type: llm
+    name: finds-premature-waiver-strategy
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `fines/waiver-strategy.ts` declares a `WaiverStrategy` interface with exactly one implementation (`standard-waiver.ts`), all pure in-memory logic with no I/O or external system to isolate; `waive-small-fine.ts` hardcodes `new StandardWaiver()`.
+
+      PASS if the review flags the interface as premature abstraction / indirection not yet paying for itself and proposes folding it into the use case (or a plain function) until a second waiver policy exists. Also flagging the hardcoded instantiation is fine.
+
+      FAIL if not flagged, or excused as necessary isolation.
+  - type: llm
+    name: respects-documented-rounding-split
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `fines/money.ts` has its own half-up rounding helper separate from `reporting/rounding.ts` (half-even). The comment in `money.ts` explains why: fines follow the board's published fee schedule, reports follow accounting conventions, and unifying them caused incident LIB-2291.
+
+      PASS if the review does not demand the two rounding helpers be unified or call the duplication a defect while ignoring the documented reason. Not mentioning it, noting it as deliberate, or a Low-severity remark all pass.
+
+      FAIL if the review requires merging the helpers or lists the duplication as a must-fix / missing abstraction without acknowledging the comment's reasoning.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?architecture-review"'
+    min: 1

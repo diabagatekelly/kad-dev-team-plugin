@@ -1,0 +1,22 @@
+{
+  "name": "library-lending",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Lending service for a community library: catalog, members, loans, fines, reminders, reporting.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/main/server.js"
+  },
+  "dependencies": {
+    "date-fns-lite": "^2.1.0",
+    "express-lite": "^4.3.0",
+    "mail-sdk": "^7.0.2",
+    "pg-orm": "^3.8.1",
+    "sms-sdk": "^5.2.0",
+    "stripe-sdk": "^12.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.6.0"
+  }
+}

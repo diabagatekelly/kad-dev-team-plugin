@@ -1,0 +1,89 @@
+schema_version: "1.0"
+name: library-app-lending-review
+description: "Review of lending/: ORM in a use case, a real runtime import cycle, a framework request type crossing into a use case, a use case reaching into the composition root; trap for a type-only cycle."
+tags: [architecture-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+
+    Review the `lending/` module for architecture issues. Read its ports, the adapters under `infra/` that implement them, and `main/` as needed to judge it.
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-orm-inside-checkout-use-case
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `lending/checkout-book.ts` imports `OrmRepository`, `OrmRow` and `PgClient` from `pg-orm`, declares its own ORM row class, runs its queries through the ORM, and `run()` returns the ORM row. A `LoanStore` port (`lending/loan-store.port.ts`) already exists with a Postgres adapter and is not used here.
+
+      PASS if the review flags business logic depending directly on the ORM in this file, treats it as a must-fix / top-tier finding (reasoning that the class is built around the ORM end to end: constructor, field, query, return type), and proposes moving persistence behind the existing `LoanStore` port or an equivalent interface.
+
+      FAIL if it is missed, or presented as minor/optional.
+  - type: llm
+    name: finds-runtime-import-cycle
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `lending/loan.ts` and `lending/loan-policy.ts` import each other as values, and both construct the other class in a static field initializer (`Loan.policy = new LoanPolicy()`, `LoanPolicy.sample = new Loan(...)`). Loading either module throws at startup.
+
+      PASS if the review identifies this mutual import as a real module-load problem caused by the static initializers (not merely a stylistic or type-level cycle), treats it as must-fix at the highest severity it uses, and proposes a fix that breaks the cycle (drop `LoanPolicy.sample`, inject the policy, or similar).
+
+      FAIL if missed, dismissed as harmless or type-only, or treated as optional cleanup.
+  - type: llm
+    name: finds-http-request-in-place-hold
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `lending/place-hold.ts` declares `run(req: HttpRequest)` with the request type from `express-lite`, and reads `req.params` / `req.body` inside the use case.
+
+      PASS if the review flags a framework request object crossing into business logic as-is and proposes that the use case take plain inputs (isbn, card number) with parsing done in the HTTP route.
+
+      FAIL if missed.
+  - type: llm
+    name: no-false-alarm-type-only-cycle
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `lending/hold.ts` and `lending/hold-queue.ts` reference each other, but both use `import type`, so nothing exists at runtime and there is no load-order problem.
+
+      PASS if the review does not present this pair as a real/runtime/build-breaking circular dependency or as a must-fix. Not mentioning it, or noting it is type-only and harmless, or a Low-severity style note, all pass.
+
+      FAIL if it is reported as a genuine circular dependency problem or asked to be fixed before merge.
+  - type: llm
+    name: finds-use-case-reaching-into-wiring
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `lending/return-book.ts` imports `loanStore` from `main/wiring.ts` and calls it in a field initializer to obtain its store. `main/wiring.ts` is the composition root: it imports every concrete adapter, `pg-orm` and `process.env`. The sibling use cases (`RenewLoan`, `CheckoutBook`, `PlaceHold`) receive their dependencies through their constructors from `main/server.ts`.
+
+      PASS if the review flags business code depending on the composition root (any wording: wrong-direction dependency, service locator, hidden dependency on all of infra, untestable with a fake store) and proposes passing `LoanStore` in through the constructor so that only `main/` imports `main/wiring.ts`.
+
+      FAIL if it is missed, or excused as acceptable composition-root wiring because the function returns an interface type.
+  - type: llm
+    name: states-assumed-importance-ordering
+    focus: last_message
+    weight: 0.5
+    criteria: |
+      The reviewer is expected to say, explicitly, which parts of this module it treats as more important (the lending rules and policy) versus less important (Postgres persistence, HTTP, third-party libraries) and that findings are judged against that ordering, rather than leaving the ordering implicit.
+
+      PASS if the review states the ordering it assumes, in at least a sentence, anywhere in the response. FAIL if no such statement appears.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?architecture-review"'
+    min: 1

@@ -1,13 +1,74 @@
 # Evals
 
-Hand-authored against `claude plugin eval`'s documented format (`prompt.md`
-+ `graders/*.md` per case, confirmed via `claude plugin eval --help`) — the
-CLI itself is early-access-gated in this environment (`init` fails with
-"currently in early access"). None of these have run against the real CLI;
-some have been run via the homegrown `.claude/skills/agent-eval` stand-in
-(see each case's `eval-score/summary.md` if present). Treat the format as
-best-effort until real access lands; re-check each case against
-`claude plugin eval init --bare <name>`'s real output once it does.
+`claude plugin eval` is out of early access and confirmed working. This
+directory holds two kinds of case, and it matters which kind you're looking
+at:
+
+- **Emulated cases** — the original set, one `prompt.md` bundling several
+  `graders/*.md` per skill trigger, run via the homegrown
+  `.claude/skills/agent-eval` stand-in (a fresh general-purpose agent
+  role-plays the persona; see each case's `eval-score/summary.md`). Built
+  before the real CLI was available; never run against it. Case names
+  follow `agent:skill` for persona-backed triggers, or just `skill` for a
+  skill with no owning persona (e.g. `orchestrator`).
+- **Real cases** — `case.yaml` per case, executed by `claude plugin eval`
+  as a genuine child `claude` process per run, with a no-plugin baseline
+  arm (`--ablation with-without`). Today that is the `library-app-*` suite
+  for `software-architect:architecture-review` plus two
+  `architecture-review-neg-*` trigger cases. Results land in
+  `evals/results/<timestamp>/` (gitignored) each time the suite runs;
+  nothing is hand-copied into case directories.
+
+## The library-app suite
+
+`fixtures/library-app/app/` is a 60-file TypeScript lending service for a
+community library (catalog, members, loans, fines, reminders, legacy
+reporting, Postgres/email/SMS/payment adapters, a composition root). It is
+one realistic app, not clean-vs-dirty snippets: most of it is sound, and
+`fixtures/library-app/answer-key.md` lists every deliberate exception —
+15 planted violations and 9 traps (code that looks wrong and isn't), each
+tied to a principle in `agents/software-architect/AGENT.md`,
+`skills/architecture-review/SKILL.md` or `.synthesis/software-architect.md`.
+`fixtures/library-app/verify.sh` proves the app type-checks, that the
+planted runtime import cycle really crashes at module load, and that the
+type-only cycle really doesn't. Other personas can plant their own
+defects in the same app later.
+
+Each `library-app-*` case scopes the reviewer to one module or one PR and
+carries one substance-only grader per planted violation in scope ("did it
+find this and propose a fix that would work"), one per trap ("did it
+refrain from flagging this"), and a display-only trigger check. Rule
+names, category labels and exact severity words are never graded; two
+earlier generations of cases (inline snippets with answer-key graders)
+failed mostly on their own graders being narrower than a good review, and
+that is what this design avoids. `tools/pairwise_judge.py` adds what the
+CLI lacks: a blind side-by-side judge that sees the with-plugin and
+no-plugin reviews unlabelled in both orders and records its reasoning in
+`pairwise.json` (the CLI's judges answer PASS/FAIL in one word and keep no
+reasons).
+
+Run it:
+
+```
+bash evals/fixtures/library-app/verify.sh
+claude plugin eval . --case 'library-app-*' --ablation with-without --scaffold \
+  --judge-model sonnet --max-cost-usd 14 --no-publish --trust-plugin
+python3 -I evals/tools/pairwise_judge.py evals/results/<timestamp>
+```
+
+Things the CLI does not tell you, learned the expensive way: `--scaffold`
+is mandatory (each case's `scaffold.sh` copies the fixture into the run's
+working directory; `context.add_dirs` is passed to the child at its
+original absolute path but nothing tells the agent that path, so the first
+smoke test "passed" on an empty review); `--case` cannot be repeated, the
+last one wins; `add_dirs`, `scaffold_script` and `baseline_file` must all
+resolve inside the case directory, and symlinks out are refused; the
+`baseline` grader compares against a checked-in reference transcript, not
+the live no-plugin arm; a `tool_used` grader on a subagent call needs
+`tool: Agent`; a `tool_used` grader that isn't `tool: Skill` is scored in
+both arms unless marked `arm: with-only`. A full pass costs about $7.50 at
+`--runs 1` plus about $2 for the pairwise judge; the suite's `runs: 3`
+default triples the first number.
 
 Each case tests one skill trigger: does the right skill get invoked
 (`tool_used` grader), and is the output actually correct (`llm` grader).
@@ -48,7 +109,17 @@ score is history, not a claim about today.
 | `product-slicer:acceptance-criteria` | 2/2 PASS, inline | yes |
 | `orchestrator` | 15/15 PASS, skill-only | yes |
 | `software-architect:architecture-design` | 8/8 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | yes |
-| `software-architect:architecture-review` | 4/4 PASS, inline | yes |
+| `library-app-lending-review` | real, 6/6 with plugin vs 5/6 without (ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
+| `library-app-lending-review-via-agent` | real, 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
+| `library-app-members-review` | real, 3/3 both arms, 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
+| `library-app-fines-review` | real, 4/4 with plugin vs 2/4 without (missed policy-mixed-with-mechanics; demanded the documented rounding split be unified), 1 run | yes |
+| `library-app-notifications-review` | real, 3/3 both arms, 1 run — missing channel abstraction, port on the implementer's side, one-impl-port-over-I/O trap | yes |
+| `library-app-reporting-review` | real, 3/3 both arms, 1 run — SQL-level port, SDK in a report, orchestration mixed with CSV bytes | yes |
+| `library-app-reporting-pr` | real, 3/3 with plugin vs 2/3 without (legacy issues not scoped as non-blocking), 1 run — Boy Scout scoping of the same module | yes |
+| `library-app-structure-review` | real, 4/4 both arms, 1 run — technical-role directories, SDK outside its adapter, bootstrap/near-miss/date-library traps | yes |
+| `library-app-catalog-review` | real, 1/1 both arms, 1 run — the clean module; both arms report nothing above Low (an earlier run flagged a cross-module read the fixture itself had introduced; fixed) | yes |
+| `architecture-review-neg-security-review` | real, 3/3 both arms — correctly does not invoke `architecture-review` | yes |
+| `architecture-review-neg-test-quality-review` | real, 3/3 both arms — correctly does not invoke `architecture-review` | yes |
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:security-requirements` | 7/7 PASS, inline | yes |
 | `devsecops-engineer:security-review` | 7/7 PASS, inline | yes |
@@ -94,7 +165,7 @@ what's cheapest.
 | 4 | ~~`product-manager:requirements-refinement`~~ | **Run: 6/6 PASS.** The constraints-in-force grader — added after a real run dropped the hosting and single-user constraints for a step that didn't look like it owned them — passed clean: both non-obvious consequences (network access-control gate, present-tense single-user modeling) were drawn correctly. |
 | 5 | ~~`product-slicer:vertical-slicing`~~ | **Run: 6/6 PASS.** Scenario C's grader — encoding the real failure where a menu of options got handed to the user, who picked "grow the slice" — passed clean: ranked order worked through explicitly, narrowing rejected with a concrete reason, new slice ahead chosen, both invalidations named. |
 | 6 | ~~`product-slicer:acceptance-criteria`~~ | **Run: 2/2 PASS.** Regression confirmation, no news, as expected. |
-| 7 | ~~`software-architect:architecture-review`~~ | **Run: 4/4 PASS.** Regression confirmation, no news, as expected. |
+| 7 | ~~`software-architect:architecture-review`~~ | **Run: 4/4 PASS.** Regression confirmation, no news. Case since retired in favour of the `library-app-*` suite. |
 | 8 | ~~`software-architect:architecture-design`~~ | **Reworked, then run: 8/8 PASS.** Graders split into four `portable-*` (hold for any design doc) and three `fixture-*` (this case's own sync/async and premature-abstraction content) per `NOTES.md`'s plan. First-ever gradable result for this case, and the first real test of the "Technology at a boundary" section added since it was last run. |
 
 All eight cases in this backlog have now been run at least once.
@@ -214,6 +285,67 @@ Run with the `agent-eval` skill, one case per invocation.
   and map staleness for `map-query`; tier carry-forward vs. honest
   `untiered`, a duplication candidate, and a wrong-direction candidate for
   `map-update`), in each case's own `eval-score/summary.md`.
+- **`software-architect:architecture-review` went through three generations
+  of real-CLI cases before the suite above; what each one found is the
+  reason the current design looks the way it does.** The emulated case
+  covered 4 of the skill's checks; 7 inline-snippet cases with answer-key
+  graders followed, then the same 7 with substance-only graders, then the
+  library-app suite. Across all of them, every apparent failure but two
+  traced to the fixture or grader, not the skill: fixtures that gave the
+  answer away in comments, fixtures with accidental bugs the no-plugin
+  review got credit for finding (an inert `Number.EPSILON`, an S3 key with
+  no year, a reminder that re-sent every run), graders that required the
+  skill's own vocabulary, graders that assumed one correct framing. The
+  two real skill findings, both fixed and re-verified in the library-app
+  suite:
+  - **The composition-root exemption was too lenient.** The skill said a
+    factory call returning the interface type was fine wherever it sat;
+    both arms, including the plugin's, correctly argued that a use case
+    importing `main/wiring` depends on everything wiring imports.
+    `skills/architecture-review/SKILL.md` and `architecture-design/SKILL.md`
+    now say the exemption covers the composition root knowing both sides,
+    not business code knowing the composition root; the fixture's
+    `return-book.ts` moved from trap to planted violation.
+  - **The foundation lived only in `AGENT.md`, which `claude plugin eval`
+    never loads.** The importance-as-risk test, the four rule definitions
+    and "state the ordering you assume" sat in the agent prompt;
+    `architecture-design` already carried its own copy, `architecture-review`
+    didn't, so it ran without them whenever invoked as a skill (eval,
+    direct `/architecture-review`, inline consult). The review skill now
+    carries them and opens its report with the assumed ordering;
+    `AGENT.md` points at the skills instead of restating the rules.
+
+  **Uplift evidence, honestly stated.** On every planted architecture
+  defect the no-plugin Sonnet baseline is as good as the skill at one run
+  each. Where the skill measurably differs is behaviour the skill text
+  spells out and the baseline does inconsistently: stating the importance
+  ordering (lending), respecting a documented tradeoff instead of demanding
+  unification (fines), noticing policy mixed with mechanics (fines),
+  scoping pre-existing problems as non-blocking in a PR review
+  (reporting-pr). Restraint on the clean module (catalog) is not uplift:
+  both arms report nothing above Low there. The blind pairwise judge
+  preferred the no-plugin review 5 of 9 times, the plugin's once, and
+  split 3 (`results/20261009-204439-calib2/pairwise.json`, reasoning
+  included). Its reasons are consistent: the baseline reviews more
+  broadly and gets credit for product gaps and reliability notes the
+  skill scopes out (holds never enforced, a fine that never grows, a
+  nightly job with no error handling), while the skill stays on
+  architecture, hedges less, and writes no code sketches. Read that as a
+  measurement of the judge's preference for breadth against a skill that
+  is deliberately narrow, not as the skill losing on its own ground; on
+  its own ground the grader table above is the evidence. Single-run numbers;
+  `runs: 3` has not been paid for yet.
+
+  **Agent path.** `library-app-lending-review-via-agent` routes the same
+  review through the `software-architect` agent (`allowed_tools` includes
+  `Agent`). It confirms delegation and that the agent-wrapped review
+  matches the skill-only one on every grader. The interactive design loop
+  (`architecture-design` asking for approval via `AskUserQuestion`) cannot
+  run under the eval's `dontAsk` mode, so the agent path is only testable
+  for review and for trigger routing.
+
+  Cost of the whole architecture-review eval effort, all generations: about
+  $40.
 
 Root-cause notes for any bug a case caught live in that case's own
 `eval-score/summary.md`, not here — check there before touching a skill,

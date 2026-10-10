@@ -64,9 +64,12 @@ needs strategic code to call out to something tactical (a database, an
 external API), define an interface owned by the strategic side and let the
 tactical side implement it — "the interface lives with its caller," not
 with the thing it wraps. A factory or wiring function that constructs the
-concrete tactical implementation and hands back the interface type is fine;
-it's a composition root, not a rule violation, as long as strategic code
-itself never references the concrete class.
+concrete tactical implementation and hands back the interface type is fine
+where it lives — the composition root, which may know both sides — but
+strategic code must never import that wiring module to fetch its own
+dependencies, even though the function returns an interface type.
+Dependencies reach strategic code through constructors or parameters, with
+the composition root doing the calling.
 
 Check dependency direction in both directions, not just the obvious one:
 what does this part of the slice depend on (forward), and — if it depends

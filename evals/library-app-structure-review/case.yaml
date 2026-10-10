@@ -1,0 +1,69 @@
+schema_version: "1.0"
+name: library-app-structure-review
+description: "Review of the whole app's layout and third-party usage: technical-role directories, an SDK used outside its adapter; traps for bootstrap files, a near-miss name, a low-risk date library."
+tags: [architecture-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+
+    Review the overall structure of the library-lending app: its directory layout and how third-party libraries are used across it. You don't need to review every module's internals in depth; focus on structure and boundaries.
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-technical-role-directories
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `services/payment-service.ts` and `utils/date-utils.ts` sit in directories named purely by technical role, with no business concept left once the suffix is stripped.
+
+      PASS if the review flags at least `services/` as a naming/structure problem of this kind (ideally `utils/` too) and suggests where the code belongs instead (refunds with fines; the date helpers with their callers or a business-named module).
+
+      FAIL if neither directory is raised.
+  - type: llm
+    name: finds-payment-sdk-outside-its-adapter
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `stripe-sdk` is imported in three places: `infra/payments/stripe-fine-payments.ts` (an adapter behind a port), `services/payment-service.ts`, and `reporting/revenue-report.ts`. The last two construct the client directly and read `process.env` themselves.
+
+      PASS if the review flags the payment SDK being used outside a single adapter, naming at least one of the two non-adapter sites, and proposes routing all payment access through one port/adapter.
+
+      FAIL if the spread of the SDK beyond its adapter is not raised.
+  - type: llm
+    name: no-false-alarm-bootstrap-and-near-miss-names
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `main/server.ts` and `main/wiring.ts` are the app's entry point and composition root; they hold framework imports and construction but no business logic. `reporting/report-processor.ts` carries a `processor` name, which this persona's rules treat as a near-miss worth a second look, not an automatic violation.
+
+      PASS if `main/` is not reported as a naming/structure violation, and `report-processor.ts` is at most noted as worth reconsidering rather than listed as a definite violation.
+
+      FAIL if `main/server.ts` or `main/wiring.ts` is reported as a violation, or `report-processor.ts` is reported as a definite naming violation.
+  - type: llm
+    name: no-false-alarm-date-library-tier
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `date-fns-lite` is used directly in `utils/date-utils.ts`, `members/register-member.ts` and `lending/loan-policy.ts`. A date library is lower lock-in than an ORM or SDK.
+
+      PASS if this is not reported as a blocking / High-severity Invasive Species finding. Not mentioning it, or a Low note, both pass.
+
+      FAIL if it is treated as a violation requiring an adapter before merge.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?architecture-review"'
+    min: 1
