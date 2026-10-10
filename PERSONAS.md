@@ -932,7 +932,49 @@ of interpretive drift that produced real, multi-run fixes for
 `tdd-implementation` and `test-quality-review`. Full sequence in each
 case's own `eval-score/summary.md`.
 
+### Evals moved to the real CLI; next is migrating the rest
+
+`claude plugin eval` is out of early access and works here. The first real
+suite, `evals/library-app-*`, reviews a shared 60-file fixture app
+(`evals/fixtures/library-app/`, with an answer key of 15 planted
+violations and 9 traps) and replaced the emulated
+`software-architect:architecture-review` case plus six inline-snippet
+cases. Building it took three generations; the procedure that works is
+now the playbook in `evals/README.md`, the fixture rules are in the
+fixture's own README, and `evals/tools/new-case.sh` scaffolds a case.
+
+Next: migrate one more persona's evals onto the same fixture per that
+playbook — `devsecops-engineer:security-review` is the natural second,
+since the app already carries unplanted security material the fixture
+README lists — and keep the `agent-eval` stand-in only for skills that
+block on `AskUserQuestion` or need a scripted answer. A `runs: 3` pass of
+the architecture suite (about $25) is also still unpaid; every number in
+`evals/README.md` is one run per arm.
+
 ## Durable findings
+
+- **An eval that exercises only `SKILL.md` finds what `AGENT.md`-only
+  text never reaches.** `architecture-review` ran without the four-rule
+  definitions and the state-the-ordering instruction under `claude plugin
+  eval`, because those lived only in the agent prompt, and so it also ran
+  without them on every direct `/skill` invocation and inline consult.
+  Rule since: anything a skill needs to behave correctly lives in the
+  skill; `AGENT.md` carries persona stance and routing, and points at the
+  skills for the rules. The same suite showed the composition-root
+  exemption was too lenient (both arms argued, correctly, that a use case
+  importing `main/wiring` depends on everything wiring imports); fixed in
+  both architecture skills.
+- **Hand-written answer-key graders mostly measure the grader.** Two
+  generations of snippet cases failed on vocabulary checks, one-framing
+  assumptions, fixtures that leaked the answer in comments, and accidental
+  bugs the no-plugin baseline got credit for finding. What gave signal:
+  a realistic fixture with no hints, substance-only graders (found it /
+  didn't flag it) derived from an answer key, traps for every principle
+  with a wrong-looking side, and a blind pairwise judge whose reasoning is
+  kept. Baseline Sonnet matches the skill on planted defects at one run;
+  the uplift to look for is scoping, documented tradeoffs and stated
+  ordering, and the pairwise judge's preference for breadth is a property
+  of the judge, not a verdict on a deliberately narrow skill.
 
 Kept because re-deriving them is expensive; not a session log.
 

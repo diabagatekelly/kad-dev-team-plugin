@@ -1,14 +1,22 @@
 ---
 name: agent-eval
-description: Run one eval case (an evals/<agent>:<skill>/ directory for a persona-backed trigger, or evals/<skill>/ for a skill with no owning persona, each containing prompt.md + graders/*.md) by emulating the target persona or skill, capturing its output, and grading it with one judge agent per grader. Use when asked to run, test, or validate an eval case for a persona/skill in this plugin — a stand-in for `claude plugin eval`, which is early-access-gated in this environment.
+description: Run one eval case (an evals/<agent>:<skill>/ directory for a persona-backed trigger, or evals/<skill>/ for a skill with no owning persona, each containing prompt.md + graders/*.md) by emulating the target persona or skill, capturing its output, and grading it with one judge agent per grader. Use for the emulated prompt.md cases only: a skill that blocks on AskUserQuestion mid-run, or a two-phase case that needs a scripted answer to finish. For everything else `claude plugin eval` is available and preferred; see evals/README.md's playbook.
 ---
 
 # Agent Eval Runner
 
-Runs a single eval case end to end without the real `claude plugin eval`
-CLI. Emulates the target persona rather than genuinely invoking it as an
-installed plugin agent — see "Known limitations" below before trusting a
-result too far.
+Runs a single emulated eval case end to end without the real
+`claude plugin eval` CLI. Emulates the target persona rather than genuinely
+invoking it as an installed plugin agent — see "Known limitations" below
+before trusting a result too far.
+
+**Prefer the real CLI.** `claude plugin eval` works in this environment and
+runs a genuine child `claude` per case with a no-plugin baseline arm; the
+`library-app-*` cases in `evals/` are the pattern, and `evals/README.md`'s
+playbook says how to build one for another skill. This stand-in remains for
+the cases the real CLI cannot run: a skill that blocks on `AskUserQuestion`
+mid-run (the eval's `dontAsk` mode denies it), or a two-phase case that
+needs a scripted answer to produce its final artifact.
 
 ## Usage
 

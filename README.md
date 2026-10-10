@@ -25,14 +25,21 @@ agents/
 skills/
   <skill>/SKILL.md    # backing knowledge a persona (or you, directly) can invoke
 evals/
-  <case>/prompt.md     # one scenario per skill trigger; graders/*.md score the output
+  <case>/case.yaml     # real `claude plugin eval` case (library-app-*, architecture-review-neg-*)
+  <case>/prompt.md     # emulated case for the agent-eval stand-in; graders/*.md score the output
+  fixtures/library-app # shared fixture app with an answer key; other personas plant defects in it
+  tools/               # new-case.sh scaffolder, pairwise_judge.py blind side-by-side judge
   example/             # one running problem, worked end to end by the real roster
 .synthesis/
   <persona>.md          # internal only — source synthesis notes, deleted once roster is complete
 ```
 
-Evals are authored against `claude plugin eval`'s documented format but
-gated behind early access in this environment — see `evals/README.md`.
+Evals run two ways. `claude plugin eval` runs the real cases
+(`case.yaml`) as genuine child processes with a no-plugin baseline arm;
+the older emulated cases (`prompt.md`) run through the homegrown
+`agent-eval` skill. `evals/README.md` has the playbook for building a real
+suite for another skill, and `evals/fixtures/library-app/README.md`
+explains the shared fixture app those suites review.
 
 `evals/example/` is the dogfooding record, not a test case: one real problem
 carried from framing through requirements, slicing, design, runtime-safety
@@ -71,4 +78,8 @@ user scope.
 4. Write the persona: `agents/<persona-slug>/AGENT.md`, referencing each
    skill it uses in its frontmatter `skills:` list.
 5. Test with `--plugin-dir` (above).
-6. Flip its Status to Done in PERSONAS.md.
+6. Build its eval suite per the playbook in `evals/README.md`: plant its
+   violations and traps in `evals/fixtures/library-app/app/`, scaffold
+   cases with `evals/tools/new-case.sh`, calibrate with
+   `--ablation with-without --scaffold`.
+7. Flip its Status to Done in PERSONAS.md.

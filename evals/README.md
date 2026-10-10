@@ -84,6 +84,55 @@ question, `eval-result/output.md` holds the final artifact. Graders default
 to grading the final artifact; a grader with `target: phase1` in its
 frontmatter grades the question instead (used for the "did it ask" checks).
 
+## Playbook: a real suite for another skill
+
+This is the procedure that produced the library-app suite, written so the
+next skill doesn't repeat the three generations it took to get here. Budget
+two to three calibration passes at `--runs 1` (about $8 each for a
+nine-case suite with the pairwise judge) before trusting anything.
+
+1. **Derive coverage from the spec, not from a fixture.** Read the persona's
+   `AGENT.md`, each `SKILL.md`, and `.synthesis/<persona>.md`. Make one row
+   per principle: what a violation looks like, and what its "looks wrong
+   but isn't" trap looks like. The synthesis usually names principles the
+   skill text only implies (for `software-architect` it added design
+   influence, interface ownership, YAGNI-vs-Dependency-Rule and
+   state-the-ordering). Check which of those live only in `AGENT.md`:
+   the eval never loads it, and neither does a direct or inline skill
+   invocation, so anything the skill needs must be in the skill.
+2. **Plant in `fixtures/library-app/app/`** (see its README for the rules:
+   no hints, no accidental problems, traps for every principle that has a
+   wrong-looking side, `verify.sh` green). Add every plant to
+   `answer-key.md` with a prefix for the persona.
+3. **Scaffold cases with `tools/new-case.sh <name> <skill>`.** One case per
+   module or PR, scoped so no run faces more than about five findings; one
+   case on a clean module expecting nothing above Low; keep or add
+   negative trigger cases (a request the skill must *not* fire on). Prompts
+   name files only to set scope. Graders: one "finds it" per plant in
+   scope, one "doesn't flag it" per trap, all substance-only; never grade
+   vocabulary, labels or exact severity words, and never put revision
+   history in a grader (the judge reads it as instructions).
+4. **Calibrate.** Run `--ablation with-without --runs 1 --scaffold` and the
+   pairwise judge. Read every failure in the with-arm and every pass in
+   the without-arm. Decide in this order: is the answer key wrong, is the
+   grader narrower than a good review, is the fixture leaking the answer
+   or carrying an accidental problem, and only then is the skill wrong.
+   A case both arms pass is a regression guard, not evidence of uplift;
+   say so in the coverage table.
+5. **Fix the skill only for a failure that survives step 4**, re-run the
+   affected cases, and record the finding in this README's findings list
+   and the persona's `PERSONAS.md` row.
+6. **Keep run output out of git.** `results/` is ignored; the coverage
+   table carries the numbers and the results directory name, nothing else.
+
+When the real CLI can't exercise a skill — it blocks on `AskUserQuestion`
+mid-run (every `architecture-design`-style approval loop), or it needs a
+scripted answer to finish (the two-phase cases below) — the
+`.claude/skills/agent-eval` stand-in is still the only option. Everything
+else should move to the real CLI over time; the emulated cases in the
+table below are the backlog, and each one's `prompt.md` already names the
+plants a `library-app` case would need.
+
 ## Coverage
 
 Case names follow `agent:skill` for persona-backed triggers, or just

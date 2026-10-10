@@ -9,7 +9,10 @@ product-slicer slice into module/dependency-direction decisions before code
 exists) and `architecture-review` (post-hoc — check existing/changed code
 against the same rules). Distinct triggers, same underlying rule set; the
 rule definitions themselves live in the agent's system prompt so neither
-skill duplicates them.
+skill duplicates them. *(Superseded: each skill now carries its own copy,
+because `claude plugin eval`, a direct `/skill` invocation and an inline
+consult all load the skill without the agent; `AGENT.md` points at the
+skills instead.)*
 
 ## Sources consulted
 
