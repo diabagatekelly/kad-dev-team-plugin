@@ -1,0 +1,82 @@
+schema_version: "1.0"
+name: reliability-review-http
+description: "Request handling (infra/http/respond.ts, lending/portal/catalog routes and the stores behind them): expected and unexpected failures conflated, unbounded loan history, holds kept in memory; traps for the catalog route and the capped search."
+tags: [reliability-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+
+    Review the HTTP layer for reliability: `infra/http/respond.ts`, the lending, portal and catalog routes in `infra/http/`, and the stores they read from and write to. How does it behave when a dependency fails, and is anything going to fall over as data grows?
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-respond-conflates-expected-and-unexpected
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `infra/http/respond.ts` answers every thrown error with HTTP 400 and sends every one of them to monitoring. Routine refusals thrown by the use cases (no copy available, loan limit reached, loan cannot be renewed, member not found) and genuine faults (the database being down, an adapter bug) therefore get the same status and the same monitoring treatment: callers cannot tell a fault from their own mistake, and monitoring is full of expected refusals.
+
+      PASS if the review identifies that expected and unexpected failures are handled identically here (in status code and/or in what is reported to monitoring), and proposes distinguishing them (expected errors as 4xx not reported, unexpected as 5xx and reported, or equivalent).
+
+      FAIL if it is missed, or only the security angle (error messages reaching callers, headers sent to monitoring) is raised without the expected-versus-unexpected point.
+  - type: llm
+    name: finds-unbounded-loan-history
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `PostgresLoanHistory.forCard` (`infra/postgres/postgres-loan-history.ts`) has no limit or pagination, and `GET /portal/history` returns the whole result; a member's loan history only ever grows.
+
+      PASS if the review flags the unbounded history query/response and proposes a limit and pagination.
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-in-memory-holds
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      Holds are stored by `InMemoryHoldQueue` (`infra/memory/in-memory-hold-queue.ts`), a process-wide singleton in `main/wiring.ts`. Every deploy, restart or crash silently discards every hold members have placed, and nothing ever removes a hold, so the map only grows.
+
+      PASS if the review flags that holds live only in process memory and are lost on restart/deploy (data loss), and proposes persisting them behind the existing `HoldQueue` port. Mentioning unbounded growth is a plus, not required.
+
+      FAIL if it is missed.
+  - type: llm
+    name: no-false-alarm-catalog-route
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `infra/http/catalog-routes.ts` catches any failure of the search, reports it to monitoring with the request path and failure code, and answers 503 with a generic message.
+
+      PASS if the review does not claim that this route hides, swallows or mishandles a dependency failure. Not mentioning it, citing it as the pattern the other routes should follow, or a consistency/maintainability note (for example that it does not share `respond.ts`) all pass, whatever severity the note carries.
+
+      FAIL if it reports that this handler swallows errors, hides failures from monitoring, or answers a dependency failure wrongly.
+  - type: llm
+    name: no-false-alarm-catalog-search-bounded
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `SearchCatalog` (`catalog/search-catalog.ts`) caps results at 50 rows (`MAX_RESULTS`), passed to `PostgresCatalogReader.search` as the query's `limit`. This check is only about the catalog search behind `GET /books/search/:terms`; it is not about the member loan-history query behind `GET /portal/history`, which is a separate, genuinely unbounded query.
+
+      PASS if the review does not claim that the catalog search returns an unbounded or unpaginated result set. Citing the catalog search's cap as the good example, or not mentioning it, passes. Criticism of the loan-history query does not affect this check.
+
+      FAIL only if the review states that the catalog search itself has no limit or can return unbounded results.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-review"'
+    min: 1

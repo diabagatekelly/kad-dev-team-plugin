@@ -1,6 +1,6 @@
 ---
 name: reliability-review
-description: Review existing or changed code for how it behaves when things go wrong — unhandled failure paths, resilience patterns applied to the wrong failure, resource lifecycle, undiagnosable failure modes, alert quality, and performance problems that are actually correctness problems. Produces a severity-ranked findings report. Use when reviewing a change for production-readiness, or when something works in development but is worrying under real conditions.
+description: Review existing or changed code and configuration for how it behaves when things go wrong — unhandled failure paths, resilience patterns applied to the wrong failure, resource lifecycle, undiagnosable failure modes, alert quality, and performance problems that are actually correctness problems. Produces a severity-ranked findings report. Invoke first, before reading any code, for any request to review a module, job, PR, route, adapter or alert configuration for production-readiness, reliability, resilience, failure handling, timeouts, retries, observability or alerting — including a plain "is this ready for production?" or "what happens when the database/provider is slow or down?" — and when something works in development but is worrying under real conditions. Never review reliability without it.
 ---
 
 # Reliability Review
@@ -31,6 +31,10 @@ happy one:
   worse — the system now proceeds on bad state and nobody knows.
 - **Partial completion leaves defined state.** If the operation dies
   midway, what's left behind, and can it be resumed or retried safely?
+- **State that has to outlive the process doesn't live only in it.** Check
+  each store the code writes to: one backed by process memory loses
+  everything on every deploy, restart and crash, and each instance has its
+  own copy. That's data loss, not a cache miss, when users created it.
 - **Expected and unexpected failures are handled differently.** Routine
   validation failures shouldn't be alerting anyone; genuine faults
   shouldn't be hidden behind the same friendly message.
@@ -45,7 +49,11 @@ handled.
 - **Timeout** — for never waiting indefinitely.
 - **Circuit breaker** — for stopping a failing dependency from taking you
   down with it.
-- **Bulkhead** — for containing a failure to one area.
+- **Bulkhead** — for containing a failure to one area. A missing one is a
+  finding only when you can name the shared resource, the load at which
+  one consumer exhausts it, and why that load is plausible here (from what
+  the repo states about traffic and scale). Without those three, it's a
+  Low note.
 - **Graceful degradation** — for partial service beating none.
 
 **The finding to look for hardest: retrying something that isn't
@@ -71,6 +79,15 @@ a cache with no eviction, a queue with no limit.
 
 These deserve attention out of proportion to how they look, because they
 fail slowly, only under sustained real use, and never in tests.
+
+How to check: follow every constructor and factory call on the path you're
+reviewing (`new X(...)`, a wiring or `create*` function) into what it
+builds, and ask whether it acquires something — a connection or pool, a
+socket, a file handle, a timer, a listener. Then ask how often that call
+runs (once at startup, per run, per request) and what releases it. A
+resource acquired per run or per request and never released is a leak even
+when each instance looks fine; a sibling that reuses a shared instance is
+the usual tell.
 
 ## Observability, framed as diagnosability
 
@@ -118,13 +135,25 @@ because it fails by construction, eventually:
 
 - Resource leaks and unbounded growth
 - Result sets with no limit or pagination
-- Work that grows without bound with input size on a path that takes
-  arbitrary input
+- Work that grows without bound with what a caller sends, on a path that
+  takes arbitrary input
 - A query per item in a loop, where one query would do
 
-**Performance-as-speed** — algorithm choice, caching, sync versus async.
+How to check for unbounded results: for each query a route or job
+reaches, find its limit. A query with none, over rows that only
+accumulate (history, events, logs, anything never deleted), is a finding
+even when today's numbers are small, and it's easy to miss when the same
+query has a louder problem: report both.
+
+**Performance-as-speed** — algorithm choice, caching, sync versus async,
+and cost that grows with how much data is stored or how much traffic
+arrives (a scan over a table, a pool shared with no bulkhead).
 **Only a finding when it comes with a concrete scale story**: at what
-volume, on which path, with what user-visible consequence. Without that,
+volume, on which path, with what user-visible consequence. Use whatever
+the repo states about its scale (a runbook, a README, a capacity note)
+and check the story against it. Growth with stored data is never "fails by
+construction": work out from the stated numbers when it would matter. If
+they put it years away, it's a Low note. Without that,
 it stays an observation. Flagging theoretical slowness manufactures exactly
 the premature-optimization noise that makes reviews ignorable.
 
@@ -136,6 +165,15 @@ failure really is unhandled rather than caught a layer up, that the retry
 really does fire on the failure you named. A first pass that
 pattern-matched its way to a finding is a hypothesis. Medium and Low
 findings don't need this step.
+
+For a capacity finding (a missing bulkhead or circuit breaker, a shared
+pool, a slow path), verifying means doing the arithmetic with the numbers
+the repo gives: what the shared resource holds (pool size, workers), how
+long each use holds it (query time, timeout), so what load exhausts it,
+and whether anything stated about traffic makes that load plausible. On an
+async server, a request that waits out a bounded timeout holds no thread;
+say what it does hold. If the arithmetic doesn't support the severity,
+lower it.
 
 ## Severity
 
@@ -157,9 +195,23 @@ cost or scope, state the trade-off and let the user decide.
 
 ## Finding report format
 
-Use the same format as `security-review`, replacing **Reachability** with
-**When this bites**: the conditions under which the problem actually
+```markdown
+## Finding: <short title>
+
+**Location:** where in the code or config
+**Category:** what kind of issue
+**Severity:** Critical | High | Medium | Low
+
+**When this bites:** the conditions under which the problem actually
 manifests — the load, the failure, the sequence. A reliability finding
 without those conditions stated is speculation.
 
-List findings most severe first. If nothing rises above Low, say so.
+**What's happening:** the current state, concretely.
+
+**Why it matters:** what breaks, for whom, and whether anyone would know.
+
+**Suggested fix:** the specific change. Name the approach, not a diff.
+```
+
+Every finding carries all of these, Suggested fix included. List findings
+most severe first. If nothing rises above Low, say so.

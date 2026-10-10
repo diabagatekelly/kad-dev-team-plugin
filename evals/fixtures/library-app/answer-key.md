@@ -97,7 +97,7 @@ external sign-in service and looked up by SHA-256 digest
 |---|---|---|---|
 | ST1 | handlers in `lending-routes.ts`, `/fines/...` in `fines-routes.ts`, `portal-routes.ts` | No auth check in any handler. | `main/server.ts` mounts `requireRole` on `/loans`, `/holds`, `/fines` (staff) and `/portal` (member). The control is one layer up. |
 | ST2 | `main/wiring.ts` `stripePublishableKey = 'pk_live_...'` | A live Stripe key in source. | Publishable keys are public by design (browser payment forms) and cannot charge, refund or read. |
-| ST3 | `infra/http/catalog-routes.ts` | Unauthenticated route. | Public catalog search over book data only, capped at 50 rows; failures return a generic 503 and report only the path to monitoring (the safe counterpart to S5). |
+| ST3 | `infra/http/catalog-routes.ts` | Unauthenticated route. | Public catalog search over book data only, capped at 50 rows; failures return a generic 503 and report the path and a failure reason, and report only the path to monitoring (the safe counterpart to S5). |
 | ST4 | `infra/postgres/postgres-catalog-reader.ts` `search` | `%${escapeLike(terms)}%` looks like interpolation into SQL. | The string is the bound `$1` value; `escapeLike` only neutralises wildcards. |
 | ST5 | `deploy.yml` `deploy` job `id-token: write` | Looks like a write permission. | Required for OIDC, scoped to one job, grants no repository write. |
 | ST6 | `/portal/loans`, `/portal/history` | Portal routes returning per-member data. | Both take the card number from the session, not the request. |
@@ -110,8 +110,63 @@ Ungraded but not false alarms: env-var secrets in `main/wiring.ts`
 generally (the skill prefers a managed store); the AWS account id in the
 deploy role ARN; card numbers interpolated into exception messages that
 reach the `reminder failed` log; `PlaceHold` and checkout taking the card
-number from the body (staff-only routes); no rate limiting on public or
-portal routes; no lockfile (a `supply-chain-review` concern).
+number from the body (staff-only routes); no rate limiting on portal
+routes (public search has one); no lockfile (a `supply-chain-review` concern).
+
+## Reliability plants (`R`, `RT`) — `devsecops-engineer:reliability-review`
+
+Principles come from `skills/reliability-review/SKILL.md`. Most rows were
+already in the app as "known observations" for the architecture and
+security suites; for reliability they are graded. Vendor SDKs document
+their timeout knobs in `types/vendor.d.ts` (`timeoutMs`, no default, waits
+indefinitely; `queryTimeoutMs` on `PgClientOptions`; `PgClient.end()`
+closes a pool). `ops/runbooks/catalog-search.md` states the catalog's
+scale (about 60,000 titles, 40 ms p95), the fact a speed concern about
+search has to be judged against. The service targets Node 24, where an unhandled promise
+rejection terminates the process.
+
+### Planted violations
+
+| # | Where | Principle | What is wrong | Expected verdict |
+|---|---|---|---|---|
+| R1 | `main/server.ts` `setInterval(() => { void runNightly(); }, ...)` | Every call that can fail has a defined outcome | `runNightly` has no top-level catch, and `void` discards its promise, so any throw outside the reminder loop (a `findOpen` or fine-insert failure, a report write) is an unhandled rejection: Node 24 terminates the process, taking the HTTP server with it, and nothing reaches the app logger or monitoring. | Critical/High. Fix: catch at the job boundary, log and report the failure, keep the server alive (ideally run the job outside the web process). |
+| R2 | `main/jobs.ts` fine-assessment loop | Partial completion / failure isolation | `await assess.run(loan)` per overdue loan with no per-item handling: one failure abandons the remaining assessments, every reminder and the monthly reports for that night. | High. Fix: per-loan try/catch that logs the loan id and continues; summarise failures at the end. |
+| R3 | `infra/postgres/postgres-member-directory.ts` via `main/wiring.ts` `memberDirectory()` | Resource lifecycle | Each `PostgresMemberDirectory` opens its own `PgClient` pool and nothing calls `end()`; `runNightly` calls `wiring.memberDirectory()` on every run, so one more pool leaks per night until Postgres runs out of connections. | High/Critical (a leak that will exhaust something). Fix: share `wiring.pgClient()` as every other adapter does, or end the pool. |
+| R4 | `infra/email/sendgrid-mailer.ts` | Slow is a failure mode; timeouts | `new MailClient(apiKey)` with no `timeoutMs` (the SDK waits indefinitely), called serially from the nightly reminder loop: one hung request stalls every reminder after it and the monthly reports, with nothing logged. The SMS adapter sets 5 s. | High. Fix: set `timeoutMs`. |
+| R5 | `infra/postal/file-postal-queue.ts` | Errors aren't swallowed | A failed `appendFile` is logged at `info` and the method resolves, so `SendDueReminder` succeeds and `main/jobs.ts` logs `reminder sent` for a letter that was never queued. | High/Medium. Fix: let the error propagate to the job's per-reminder catch. |
+| R6 | `fines/collect-fine.ts` | Partial completion leaves defined state | Charges, then settles in a separate step with no idempotency key: if `ledger.settle` fails (or the process dies) after a successful charge, the member has paid and the fine stays outstanding; paying again charges the card again. | Critical/High. Fix: idempotency key derived from the fine id on the charge, record the attempt before charging, reconcile. |
+| R7 | `fines/collect-fine.ts` retry loop | Retry only what is transient; resilience in the adapter | Re-charges up to three times on any `!ok` outcome, which are the provider's deterministic answers (declined, expired, insufficient funds); the transient failures (network errors, timeouts) are thrown by the adapter and not retried. The loop also lives in the use case. | High. Fix: no retry on declines; any transient retry belongs in `StripeFinePayments`, with backoff and an idempotency key. |
+| R8 | `infra/http/fines-routes.ts` `POST /fines/:id/pay` | Expected vs unexpected; diagnosability | Every error becomes 402 and nothing is logged or reported: a database or payment-provider outage reads as a declined card at the desk and is invisible to whoever maintains the service. | High/Medium. Fix: map expected payment outcomes to 402; report unexpected errors and answer 5xx. |
+| R9 | `infra/http/respond.ts` | Expected vs unexpected failures | Every thrown error answers 400 and is sent to monitoring: routine refusals (no copy available, loan limit, cannot renew, member not found) and genuine faults (database down) are indistinguishable to callers and to monitoring. | Medium/High. Fix: typed expected errors answer 4xx unreported; anything else answers 5xx and is reported. |
+| R10 | `infra/postgres/postgres-loan-history.ts` `forCard` | Performance as correctness (unbounded result) | No limit or pagination; a member's history only grows and `GET /portal/history` returns all of it. | Medium/High. Fix: limit and paginate. |
+| R11 | `infra/memory/in-memory-hold-queue.ts` (wired as a singleton in `main/wiring.ts`) | Resource lifecycle; state that must survive | Holds exist only in process memory: every deploy, restart or crash (R1) silently drops every hold, and nothing ever removes one, so the map only grows. | High. Fix: persist holds behind the existing `HoldQueue` port. |
+| R12 | `ops/alerts.yml` `request-errors` | Alert fatigue | Pages on any error event in five minutes; since `respond.ts` reports every refusal (R9), routine validation failures page on-call. | High/Medium. Fix: alert on the rate of unexpected errors against a target; ticket rather than page below it. |
+| R13 | `ops/alerts.yml` `high-cpu` | Actionable alerts | Pages on CPU above 70% with no objective, no user-facing symptom and no runbook: nobody can say what to do when it fires. | Medium. Fix: drop it, or tie it to a symptom and make it a ticket. |
+
+### Traps
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| RT1 | `main/jobs.ts` reminder loop `catch` | Catches and continues. | Logs at `error` with the reason and isolates one member's failure from the rest: the right pattern (its PII problem is S4, a security finding). |
+| RT2 | `fines/assess-overdue-fine.ts` on a re-run | The nightly job may run twice. | `alreadyAssessed` skips a loan that already has an outstanding fine, so a sequential re-run does not double-fine. Two *overlapping* runs could both pass the check before either inserts (no unique constraint); that race is a valid finding, not a false alarm. |
+| RT3 | `infra/sms/twilio-sms-gateway.ts` | A retry loop. | Retries only 408/429/5xx, backs off exponentially, stops at three attempts, sets a 5 s timeout, and lives in the adapter. A duplicate text after a timed-out-but-delivered send is a Low note at most. |
+| RT4 | `fines/collect-fine.ts` early `return` | Returns silently for a settled or waived fine. | Idempotent guard: paying a settled fine is a no-op, not a failure. |
+| RT5 | `infra/http/catalog-routes.ts` | Catches everything. | Answers 503 with a generic message and reports the path: a dependency failure is visible and distinguishable. |
+| RT6 | `catalog/search-catalog.ts` | Search over the whole catalog. | Capped at 50 rows. |
+| RT7 | `ops/alerts.yml` catalog-search burn alerts | Two alerts for one route. | Multi-window error-budget burn against the stated 99.5% objective, page for the fast burn and ticket for the slow one, both with a runbook. |
+| RT9 | `main/wiring.ts` `publicSearchClient()`, `rateLimit` on `/books` in `main/server.ts` | A second connection pool, and an unauthenticated route. | The bulkhead done right: public search gets its own memoized 4-connection pool with a 2 s timeout, connecting as a separate `catalog_reader` role, so a slow database or a search burst exhausts only search, never the 20-connection pool that session checks, checkout and fines share; search is also rate-limited per client. Contrast R3, where a pool is created per call and never closed. |
+| RT8 | Every `PgClient` | Database calls with no visible timeout. | `pgOptions()` sets `queryTimeoutMs: 10_000` (client-side, covering the wait for a connection), and every client, including the member directory's, is built from it. |
+
+`catalog/` remains the clean module for reliability (RT5, RT6, RT8): a
+review of it should report nothing above Low.
+
+Ungraded but not false alarms: the nightly loops issue a query per loan
+(`outstandingFor`, `findByCard`); `findOpen()` loads every open loan;
+`setInterval` schedules from process start, so a restart moves or skips
+the nightly run and the day-1 report; `CheckoutBook` and `RegisterMember`
+check-then-write without a transaction, and so does `AssessOverdueFine` across overlapping runs; loan updates are read-modify-write with no version check; the catalog's leading-wildcard `ILIKE` cannot use a plain index, (a speed note; at the stated scale, Low at most); no correlation id ties a request's
+log, monitoring and database records together; no alert covers the nightly
+job or fine payments; report files are written non-atomically.
 
 ## Boy Scout scoping (same code, different framing)
 

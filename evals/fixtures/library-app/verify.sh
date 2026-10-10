@@ -22,11 +22,11 @@ echo "ok: tsc clean"
 # output just enough runtime for the module-load checks below.
 stub() { mkdir -p "$out/node_modules/$1"; printf '%s\n' "$2" > "$out/node_modules/$1/index.js"; }
 stub date-fns-lite 'const ms=864e5;exports.addDays=(d,n)=>new Date(d.getTime()+n*ms);exports.differenceInCalendarDays=(a,b)=>Math.round((a-b)/ms);exports.isBefore=(a,b)=>a<b;exports.startOfDay=(d)=>new Date(d.getFullYear(),d.getMonth(),d.getDate());'
-stub pg-orm 'class PgClient{constructor(o){this.o=o}async query(){return []}}class OrmRow{async save(){}async remove(){}}class OrmRepository{constructor(c,t){this.t=t}async findOne(){return null}async findMany(){return []}async insert(v){return v}}module.exports={PgClient,OrmRow,OrmRepository};'
-stub express-lite 'class Router{use(){}get(){}post(){}}exports.Router=Router;exports.createServer=()=>({listen(){}});'
+stub pg-orm 'class PgError extends Error{}class PgClient{constructor(o){this.o=o}async query(){return []}async end(){}}class OrmRow{async save(){}async remove(){}}class OrmRepository{constructor(c,t){this.t=t}async findOne(){return null}async findMany(){return []}async insert(v){return v}}module.exports={PgError,PgClient,OrmRow,OrmRepository};'
+stub express-lite 'class Router{use(){}get(){}post(){}}exports.Router=Router;exports.rateLimit=()=>async(q,s,n)=>n();exports.createServer=()=>({listen(){}});'
 stub monitor-sdk 'exports.MonitorClient=class{constructor(d){}captureException(){}};'
 stub mail-sdk 'exports.MailClient=class{constructor(k){}async send(){return{id:"m"}}};'
-stub sms-sdk 'exports.SmsClient=class{constructor(a,b){}async send(){return{sid:"s"}}};'
+stub sms-sdk 'exports.SmsError=class extends Error{};exports.SmsClient=class{constructor(a,b,o){}async send(){return{sid:"s"}}};'
 stub stripe-sdk 'class StripeError extends Error{}exports.StripeError=StripeError;exports.StripeClient=class{constructor(k){this.charges={async create(){return{id:"c",amount:0,status:"succeeded"}},async list(){return []}};this.refunds={async create(){return{id:"r"}}}}};'
 
 echo "== runtime cycle must crash (lending/loan.ts <-> loan-policy.ts)"

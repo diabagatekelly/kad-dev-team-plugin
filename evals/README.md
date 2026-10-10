@@ -217,7 +217,14 @@ score is history, not a claim about today.
 | `security-review-neg-reliability` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
 | `devsecops-engineer:supply-chain-review` | 7/7 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
 | `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
-| `devsecops-engineer:reliability-review` | 6/6 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
+| `reliability-review-nightly` | real, Sonnet: 8/8 with plugin vs 5/8 without, 1 run (`results/20261010-final-reliability-review`) — unhandled rejection from the timer-driven job, no per-loan isolation, a database pool leaked per run, a mailer with no timeout, a postal adapter that swallows failures; traps: the reminder loop's catch, re-run idempotency, a correct transient-only SMS retry. The pool leak was missed in two of six calibration runs | yes |
+| `reliability-review-nightly-via-agent` | real, Sonnet: 8/8 with plugin, delegation to `devsecops-engineer` confirmed via `Agent`; the no-plugin arm (3/8) is not a comparison, the agent doesn't exist without the plugin | yes |
+| `reliability-review-http` | real, Sonnet: 5/5 with plugin vs 3/5 without, 1 run — expected and unexpected failures conflated in `respond.ts`, unbounded loan history, holds kept only in memory; traps: the catalog route's 503 handling, the capped search. Unbounded history and in-memory holds each missed once across calibration | yes |
+| `reliability-review-alerts` | real, Sonnet: 3/3 with plugin vs 2/3 without, 1 run — page on any error event, non-actionable CPU page; trap: multi-window burn-rate alerts with a runbook | yes |
+| `reliability-review-fine-payment` | real, Sonnet: 4/4 both arms, 1 run — a regression guard, not evidence of uplift: charge-then-settle with no idempotency, retrying declines in the use case, a pay route that hides unexpected failures; trap: the settled-fine guard | yes |
+| `reliability-review-catalog` | real, Sonnet: 1/2 with plugin vs 1/2 without (`results/20261010-recheck3-catalog`) — the clean module, a borderline restraint case with no uplift. Its original prompt asked how catalog behaves "when the database is slow or down and as the catalog grows"; that leading question produced a Medium/High capacity concern in every run of both arms (four calibration passes plus two rechecks). With the neutral prompt the capacity speculation stopped; the remaining failing runs rate a missing read retry Medium. Known gap: the skill does not reliably hold a clean module to Low | yes |
+| `reliability-review-neg-security` | real, Sonnet: never invokes `reliability-review` in either arm | yes |
+| `reliability-review-neg-architecture` | real, Sonnet: never invokes `reliability-review` in either arm | yes |
 | `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
 | `ux-designer:design-system` | 9/9 PASS (after one re-run), three-phase | yes |
 | `ux-designer:screen-design` | 9/9 PASS, single-phase | yes |
@@ -578,3 +585,35 @@ grader, or the `agent-eval` harness that a case already covers.
   change (`results/20261010-secrev-regress`) stayed 7/7 with the plugin.
   Output location is still `AGENT.md`-only across the roster, queued as its
   own pass.
+- **`devsecops-engineer:reliability-review` moved to the library-app
+  fixture in six calibration passes.** Most of its 13 plants were already
+  in the app as ungraded "known observations" for the other two suites;
+  new plants were a postal adapter that swallows failures, a retry on
+  declines in `CollectFine`, and `ops/alerts.yml`. Skill fixes that
+  survived the answer-key/grader/fixture order: (1) the description now
+  says *invoke first, before reading any code* — it did not fire on two of
+  five scoped cases; (2) its finding format, with a required fix line, is
+  written into the skill instead of pointing at `security-review`'s,
+  which a lone invocation never loads (`supply-chain-review` and
+  `operational-readiness` had the same dependency and got the same fix);
+  (3) concrete checks for resource lifecycle (follow every constructor and
+  factory, ask what it acquires and who releases it), unbounded results
+  (find each query's limit, and report it even when the same query has a
+  louder problem), and state that must outlive the process; (4) scale
+  discipline: growth with stored data is never "by construction", a
+  missing bulkhead needs a named resource, a load and a reason the load is
+  plausible, and verifying a High capacity finding means doing the
+  arithmetic with the repo's numbers. Fixture lessons: every concrete
+  number a fixture states becomes material for a capacity finding, and a
+  fix to one persona's plant can plant another's (moving a vendor error
+  into a route was an Invasive Species violation for the architecture
+  suite; a separate public pool invited a least-privilege finding for the
+  security suite). A restraint case's prompt must be as neutral as the
+  other suites' ("review X for production-readiness"): asking how a clean
+  module behaves "when the database is slow or down and as it grows"
+  produced a Medium/High capacity finding in every run of both arms, and
+  the neutral prompt stopped it. Regressions after the final fixture: security 7/7,
+  architecture catalog fixed; `library-app-lending-review` missed the
+  runtime cycle twice in a row in unchanged code (the review called
+  `LoanPolicy.sample` dead code) — a watch item for `architecture-review`,
+  not caused by this work.

@@ -94,7 +94,7 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction; also owns technology selection, recommending rather than deciding — the starting set a first test forces, and what sits behind each boundary once one forces it | Core strength | Done — `architecture-review` is the first skill with a real `claude plugin eval` suite (`evals/library-app-*`, a shared 60-file fixture app other personas can plant defects in). Two skill-text fixes came out of it: the composition-root exemption now covers `main/` knowing both sides, not business code importing `main/` (both skills); and the shared foundation (importance test, four rules, state-the-ordering) now lives in each skill rather than only in `AGENT.md`, which the eval never loads and which a direct or inline skill invocation never loads either |
 | 5 | `tdd-coach` | Turns a designed slice into working code via genuine Red-Green-Refactor, and applies specifically-named fixes handed back from review — both through the same disciplined loop. Two skills: `tdd-implementation` (write/fix) and `test-quality-review` (critique existing tests — over-mocking, false positives, coverage-as-theater). Follows Clean Architecture/OeA principles as a writing constraint (informed by `software-architect`'s already-decided boundaries plus its own lightweight synthesis of the same sources); doesn't decide or verify architecture itself — `architecture-design`/`architecture-review` still own that | Core strength | Done — first persona that actually writes/edits application code, needing real execution tools (`Bash`) for it; the roster's second `background: true` persona, wired into `orchestrator` as the new terminal row. `tdd-implementation` 10/10 (three real fixes across the fill-vs-escalate rule for missing collaborators), `test-quality-review` 10/10 (a coverage-sweep fix); orchestrator's terminal row now runs the quarantine/grade/combine flow by default rather than a single inline build; not yet dogfooded against `evals/example/` |
 | 6 | `code-reviewer` | Local code-level readability/DRY/naming/comments triage — not scope-YAGNI (`product-slicer`'s territory) and not structural abstraction (`architecture-review`'s), a severity taxonomy for findings | Core strength | Done — one skill, `code-review`, review-only like `accessibility-review`; the roster's third `background: true` persona; also uses the existing `why-comments` skill directly for its comment check rather than re-deriving it. Eval 17/17 (fixture expanded twice to cover the full checklist; one real fix, a duplication finding folding an exempt guard clause into "what's identical," caught, fixed, recurred on a larger fixture, then fixed for real with a concrete phrasing template) |
-| 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done — `security-review` is the second skill on the real `claude plugin eval` suite (`evals/security-review-*`, planted into the shared library-app fixture). Three skill-text fixes came out of it: pre-existing problems a change newly routes through still go in a separate non-blocking section; availability is a security finding only when one request costs out of proportion to its size (volume/capacity is `reliability-review`'s); an "opaque" log identifier is a surrogate id, never a card/account number or email |
+| 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done — `security-review` and `reliability-review` are on the real `claude plugin eval` suite (`evals/security-review-*`, `evals/reliability-review-*`, planted into the shared library-app fixture); its other four skills are still on the emulated harness and marked stale. Three skill-text fixes came out of it: pre-existing problems a change newly routes through still go in a separate non-blocking section; availability is a security finding only when one request costs out of proportion to its size (volume/capacity is `reliability-review`'s); an "opaque" log identifier is a surrogate id, never a card/account number or email |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness. One skill, `accessibility-review`, verifying what `ux-designer` already rendered rather than designing anything itself | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; the roster's first `background: true` persona, since its one skill never blocks on `AskUserQuestion` |
 | 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself |
 | 10 | `architecture-cartographer` | Maintains a mechanically-derived map of the codebase's actual structure — real dependency graph, public exports, external packages, each module's importance tier as already decided by `architecture-design` — and answers "does something like this already exist" queries against it. Doesn't decide architecture, doesn't judge whether a flagged similarity is a real duplicate or coincidental, doesn't grade anything itself; supplies facts and mechanical flags, not verdicts. Two skills: `map-query` (read-only, consulted pre-write) and `map-update` (regenerate + diff against the prior map, post-write) | Infrastructure for the rest of the roster | Done — the roster's tenth and last planned persona, and its third `background: true` one; consulted inline by `architecture-design` and `tdd-implementation` the same way `software-architect` already consults `devsecops-engineer`, and wired into the quarantine flow's Grade/Finalize steps |
@@ -932,7 +932,7 @@ of interpretive drift that produced real, multi-run fixes for
 `tdd-implementation` and `test-quality-review`. Full sequence in each
 case's own `eval-score/summary.md`.
 
-### Evals moved to the real CLI; two skills migrated, next is `reliability-review`
+### Evals moved to the real CLI; three skills migrated, next is `supply-chain-review`
 
 `claude plugin eval` is out of early access and works here. The first real
 suite, `evals/library-app-*`, reviews a shared 60-file fixture app
@@ -949,14 +949,44 @@ after three calibration passes and three skill-text fixes; details in
 `evals/README.md`). The suites stay pinned to Sonnet: one Opus pass of
 the architecture suite cost more and showed a smaller with/without delta.
 
-Next: migrate `devsecops-engineer:reliability-review` onto the same
-fixture per the playbook — the fixture README already lists its material
-(`main/jobs.ts` on a timer with no idempotency, `fines/collect-fine.ts`
-charging before it settles), and `security-review` now hands volume and
-capacity questions to it, so its scale-story rule deserves a case. Keep
-the `agent-eval` stand-in only for skills that block on `AskUserQuestion`
-or need a scripted answer. A `runs: 3` pass of either real suite is still
-unpaid; every number in `evals/README.md` is one run per arm.
+`devsecops-engineer:reliability-review` was the third
+(`evals/reliability-review-*`, eight cases including an agent-path case
+and two negative triggers; every scoped case passes with the plugin except
+the clean-module restraint case, which passes half the time in both arms
+and is recorded as a known gap). Before it, a cleanliness pass moved the review standards,
+stop rules and consult-mode rule out of `devsecops-engineer`'s `AGENT.md`
+into its skills, keeping hand-off routing in the agent. Interactive skills
+are no longer stuck on the `agent-eval` stand-in: `context.history_file`
+chains one case per answer (`evals/README.md`, "Interactive skills").
+
+Next, in order: `supply-chain-review` (repo-posture plants in the same
+fixture; its accepted-finding step is phase-chained), `operational-readiness`
+(phase-chained from its first turn), then `security-requirements` and
+`reliability-requirements` (a slice-document fixture, fully phase-chained),
+then the `devsecops-engineer` routing suite (named, unnamed, and
+ambiguous-between-its-own-skills requests). A `runs: 3` pass of any real
+suite is still unpaid; every number in `evals/README.md` is one run per
+arm.
+
+**Noted, not scheduled: `orchestrator` verifies a raised finding before
+anything acts on it.** The reliability suite's clean-module case showed a
+reviewer inventing problems about half the time, with or without the
+plugin: on a module with no real defect it rated a speculative concern
+(a missing bulkhead, a retry on a read) Medium or High. The skills already
+tell reviewers to verify their own Critical/High findings, and on Sonnet
+that self-check doesn't hold. The idea: between a reviewer's report and
+anything acting on it (`tdd-implementation` applying fixes, the quarantine
+flow's Grade/Combine steps in `skills/orchestrator/SKILL.md`), `orchestrator`
+runs a separate verification pass over each Medium-or-above finding. That
+pass gets the finding and the code, not the reviewer's reasoning. It checks
+that the stated mechanism exists, checks any scale or capacity claim against
+what the repo states, reproduces it with a test or a run where that's cheap,
+and returns confirmed / downgraded / not substantiated. Only confirmed
+findings get acted on; the rest are reported as hypotheses. Open questions:
+who verifies (the same persona reloaded with a verify-only prompt, or a
+neutral checker), what it costs per review, and whether findings below
+Medium skip it. The three `*-catalog` restraint cases are its ready-made
+eval: review plus verification should end with nothing above Low.
 
 ## Durable findings
 

@@ -39,14 +39,28 @@ export function pgOptions(): PgClientOptions {
     user: env.PGUSER ?? 'library',
     password: env.PGPASSWORD,
     ssl: env.PGSSL === 'true',
+    queryTimeoutMs: 10_000,
+    maxConnections: 20,
   };
 }
 
 let client: PgClient | undefined;
+let searchClient: PgClient | undefined;
 
 export function pgClient(): PgClient {
   client ??= new PgClient(pgOptions());
   return client;
+}
+
+function publicSearchClient(): PgClient {
+  searchClient ??= new PgClient({
+    ...pgOptions(),
+    user: env.PGSEARCHUSER ?? 'catalog_reader',
+    password: env.PGSEARCHPASSWORD,
+    maxConnections: 4,
+    queryTimeoutMs: 2_000,
+  });
+  return searchClient;
 }
 
 export function clock(): () => Date {
@@ -55,6 +69,10 @@ export function clock(): () => Date {
 
 export function catalogReader(): CatalogReader {
   return new PostgresCatalogReader(pgClient());
+}
+
+export function publicCatalogReader(): CatalogReader {
+  return new PostgresCatalogReader(publicSearchClient());
 }
 
 export function memberDirectory(): MemberDirectory {

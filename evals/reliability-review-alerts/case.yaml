@@ -1,0 +1,58 @@
+schema_version: "1.0"
+name: reliability-review-alerts
+description: "Alerting (ops/alerts.yml with infra/monitoring and what respond.ts reports): page on any error event, non-actionable CPU page; trap for the error-budget burn alerts."
+tags: [reliability-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+
+    Review our alerting in `ops/alerts.yml` (and the runbook under `ops/runbooks/`). Read `infra/monitoring/` and whatever reports to it to see what the alerts actually fire on. Would these alerts serve whoever is on call?
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-page-on-any-error
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `ops/alerts.yml` `request-errors` pages on-call whenever any error event arrives in five minutes. `infra/http/respond.ts` reports every thrown error to monitoring, including routine refusals (no copy available, loan limit, cannot renew), so this alert pages people for normal operation.
+
+      PASS if the review flags `request-errors` as noisy / alert fatigue (paging on any single error, or on routine expected failures) and proposes alerting on a rate of unexpected errors against a target, or downgrading it from a page. Connecting it to what `respond.ts` reports strengthens it but is not required.
+
+      FAIL if it is missed or treated as a reasonable page.
+  - type: llm
+    name: finds-non-actionable-cpu-page
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `ops/alerts.yml` `high-cpu` pages on-call when CPU averages above 70% for ten minutes. It has no objective behind it, no user-facing symptom and no runbook: nobody can say what to do when it fires.
+
+      PASS if the review flags the CPU page as not actionable (no target / no symptom / no runbook / arbitrary threshold) and proposes a fix that addresses that: removing it, tying it to a user-facing symptom or objective, demoting it from a page, or anchoring the threshold to a stated target and adding a runbook.
+
+      FAIL if it is missed.
+  - type: llm
+    name: no-false-alarm-burn-rate-alerts
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `ops/alerts.yml` has two catalog-search alerts: a fast error-budget burn (14.4x over 1h, page) and a slow burn (3x over 24h, ticket), both computed against the stated 99.5% objective and both linking `ops/runbooks/catalog-search.md`.
+
+      PASS if the review does not report these two alerts as noisy, duplicated, arbitrary or non-actionable. Not mentioning them, or citing them as the model for the others, passes.
+
+      FAIL if either is reported as a defect at Medium or above.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-review"'
+    min: 1

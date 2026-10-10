@@ -144,9 +144,10 @@ what can't be reversed.
 The short list, and where it lives.
 
 ## Findings
-Severity-ranked (Critical / High / Medium / Low by what it costs if left),
-in the standard finding format, with **When this bites** stating the
-conditions. Verify a Critical or High before reporting it: that there
+Severity-ranked (Critical / High / Medium / Low by what it costs if left).
+Each finding gives its location, category, severity, **When this bites**
+(the conditions under which it manifests), what's happening, and a
+suggested fix. Verify a Critical or High before reporting it: that there
 really is no rollback path, rather than one written down somewhere you
 haven't read. Don't inflate severity to force a fix; state the trade-off
 and let the user decide.

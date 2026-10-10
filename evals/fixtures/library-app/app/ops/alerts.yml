@@ -1,0 +1,36 @@
+# Alert rules for the lending service. Evaluated by the monitoring provider
+# against the events infra/monitoring/error-reporter.ts sends and the load
+# balancer's request metrics.
+service: library-lending
+
+objectives:
+  catalog-search:
+    description: Public catalog search answers successfully.
+    target: 99.5% of /books/search requests return 2xx, over 30 days
+
+alerts:
+  - name: request-errors
+    condition: count(error_events) > 0 over 5m
+    severity: page
+    notify: desk-systems-oncall
+
+  - name: high-cpu
+    condition: avg(host.cpu_percent) > 70 over 10m
+    severity: page
+    notify: desk-systems-oncall
+
+  - name: catalog-search-error-budget-burn
+    condition: >
+      ratio(lb.requests{path="/books/search", status=~"5.."}, lb.requests{path="/books/search"})
+      > 14.4 * (1 - 0.995) over 1h
+    severity: page
+    notify: desk-systems-oncall
+    runbook: ops/runbooks/catalog-search.md
+
+  - name: catalog-search-slow-burn
+    condition: >
+      ratio(lb.requests{path="/books/search", status=~"5.."}, lb.requests{path="/books/search"})
+      > 3 * (1 - 0.995) over 24h
+    severity: ticket
+    notify: desk-systems-queue
+    runbook: ops/runbooks/catalog-search.md

@@ -8,11 +8,22 @@ declare module 'pg-orm' {
     user: string;
     password?: string;
     ssl?: boolean;
+    /** Rejects a query that has not completed after this many milliseconds, including time spent waiting for a pooled connection or connecting. No default: queries wait indefinitely. */
+    queryTimeoutMs?: number;
+    /** Upper bound on pooled connections; further queries wait for a free one (within `queryTimeoutMs`). Default 10. */
+    maxConnections?: number;
   }
 
+  /** Every failed query rejects with a `PgError`; `code` says which kind of failure it was. */
+  export class PgError extends Error {
+    readonly code: 'query_timeout' | 'connection_failed' | 'query_failed';
+  }
+
+  /** Opens a connection pool on first query; `end()` closes the pool. */
   export class PgClient {
     constructor(options: PgClientOptions);
     query<T = unknown>(sql: string, params?: unknown[]): Promise<T[]>;
+    end(): Promise<void>;
   }
 
   export abstract class OrmRow {
@@ -36,15 +47,30 @@ declare module 'mail-sdk' {
     body: string;
   }
 
+  export interface ClientOptions {
+    /** Aborts a request that has not completed after this many milliseconds. No default: requests wait indefinitely. */
+    timeoutMs?: number;
+  }
+
   export class MailClient {
-    constructor(apiKey: string);
+    constructor(apiKey: string, options?: ClientOptions);
     send(message: MailMessage): Promise<{ id: string }>;
   }
 }
 
 declare module 'sms-sdk' {
+  export interface ClientOptions {
+    /** Aborts a request that has not completed after this many milliseconds. No default: requests wait indefinitely. */
+    timeoutMs?: number;
+  }
+
+  /** Thrown for any failed request; `status` is the provider's HTTP status (408 for a client-side timeout). */
+  export class SmsError extends Error {
+    readonly status: number;
+  }
+
   export class SmsClient {
-    constructor(accountSid: string, authToken: string);
+    constructor(accountSid: string, authToken: string, options?: ClientOptions);
     send(to: string, body: string): Promise<{ sid: string }>;
   }
 }
@@ -103,6 +129,9 @@ declare module 'express-lite' {
     get(path: string, handler: Handler): void;
     post(path: string, handler: Handler): void;
   }
+
+  /** Answers 429 once one client address exceeds `perClientPerMinute` requests in a rolling minute. */
+  export function rateLimit(options: { perClientPerMinute: number }): Middleware;
 
   export function createServer(router: Router): { listen(port: number): void };
 }

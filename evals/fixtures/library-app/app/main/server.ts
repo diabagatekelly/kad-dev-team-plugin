@@ -1,4 +1,4 @@
-import { Router, createServer } from 'express-lite';
+import { Router, createServer, rateLimit } from 'express-lite';
 import { SearchCatalog } from '../catalog/search-catalog';
 import { registerCatalogRoutes } from '../infra/http/catalog-routes';
 import { CollectFine } from '../fines/collect-fine';
@@ -21,12 +21,13 @@ const errors = wiring.errorReporter();
 const respond = createResponder(errors);
 const sessions = wiring.sessionStore();
 
+router.use('/books', rateLimit({ perClientPerMinute: 120 }));
 router.use('/loans', requireRole('staff', sessions));
 router.use('/holds', requireRole('staff', sessions));
 router.use('/fines', requireRole('staff', sessions));
 router.use('/portal', requireRole('member', sessions));
 
-registerCatalogRoutes(router, new SearchCatalog(wiring.catalogReader()), errors);
+registerCatalogRoutes(router, new SearchCatalog(wiring.publicCatalogReader()), errors);
 
 registerLendingRoutes(
   router,

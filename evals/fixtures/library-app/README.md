@@ -14,13 +14,14 @@ app/
   catalog/        books and search                 clean module (T10)
   members/        registration, suspension         V4 (port imports a driver type), V5 (table-shaped domain type)
   lending/        loans, renewals, holds           V1 (ORM in a use case), V2 (runtime import cycle), V3 (HTTP request crosses in), V15 (use case imports main/), T1 (type-only cycle)
-  fines/          overdue fines, payment, waivers  V6 (policy mixed with mechanics), V7 (leaky payment port), V8 (premature strategy), T5 (documented rounding split)
+  fines/          overdue fines, payment, waivers  V6 (policy mixed with mechanics), V7 (leaky payment port), V8 (premature strategy), T5 (documented rounding split); R6, R7, RT2, RT4
   notifications/  due-date reminders               V9 (missing channel abstraction), V10 (port on the implementer's side), T3 (one-impl port over I/O)
   reporting/      legacy reports and CSV export    V13 (SQL-level port), V14 (orchestration mixed with CSV bytes), V12 (SDK in a report), T4, T8
   services/       refunds                          V11 (technical-role directory), V12 (SDK outside its adapter)
   utils/          date helpers                     V11, T6 (low-risk date library)
-  infra/          postgres, email, sms, postal, payments, files, http, logging, monitoring adapters   T9; S1, S2, S3, S5, S7, ST1, ST3, ST4, ST6
-  main/           server.ts, wiring.ts, jobs.ts    T7 (bootstrap and composition root, exempt); S4, S8, ST2, ST7
+  infra/          postgres, email, sms, postal, payments, files, http, logging, monitoring adapters   T9; S1, S2, S3, S5, S7, ST1, ST3, ST4, ST6; R3, R4, R5, R8, R9, R10, R11, RT3, RT5
+  main/           server.ts, wiring.ts, jobs.ts    T7 (bootstrap and composition root, exempt); S4, S8, ST2, ST7; R1, R2, RT1, RT8
+  ops/            alert rules and a runbook        R12, R13, RT7
   test/           node:test tests and fixtures     S11
   .github/        deploy workflow                  S9, S10, ST5
   types/          ambient declarations for the fictional third-party packages
@@ -67,9 +68,8 @@ invites:
 
 - `devsecops-engineer` / `security-review`: done, see the `S`/`ST` rows in
   `answer-key.md` and `evals/security-review-*`.
-- `devsecops-engineer` / `reliability-review`: `main/jobs.ts` runs on a
-  timer with no error handling outside the reminder loop and no idempotency; `fines/collect-fine.ts`
-  charges before it settles.
+- `devsecops-engineer` / `reliability-review`: done, see the `R`/`RT` rows
+  in `answer-key.md` and `evals/reliability-review-*`.
 - `tdd-coach` / `test-quality-review`: there are no tests. Add a `test/`
   directory with planted smells (a spy that replaces the subject, a test
   that asserts a mock was called) and clean tests as traps.

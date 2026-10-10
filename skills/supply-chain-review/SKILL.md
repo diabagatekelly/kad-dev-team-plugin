@@ -154,8 +154,22 @@ Severity tracks what a compromise would reach, not the category. Don't
 inflate it to force a fix: when a recommendation collides with simplicity,
 cost or scope, state the trade-off and let the user decide.
 
-Use the same finding report format as `security-review`, with
-**Reachability** stating what a compromise upstream would actually reach.
+Report each finding in this format, most severe first:
+
+```markdown
+## Finding: <short title>
+
+**Location:** the manifest, lockfile, workflow or image reference
+**Category:** what kind of issue
+**Severity:** Critical | High | Medium | Low
+
+**Reachability:** what a compromise upstream would actually reach, and
+through which build or runtime path.
+
+**What's happening:** the current state, concretely.
+
+**Suggested fix:** the specific change. Name the approach, not a diff.
+```
 
 If the repo's posture is already sound, say so plainly and name what's
 holding it up, so the next audit knows what it's protecting rather than

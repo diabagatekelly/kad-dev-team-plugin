@@ -1,0 +1,118 @@
+schema_version: "1.0"
+name: reliability-review-nightly
+description: "Nightly job (main/jobs.ts, main/server.ts and the adapters it calls): unhandled rejection, no per-loan isolation, a leaked pool per run, a mailer with no timeout, a postal adapter that swallows failures; traps for the reminder catch, re-run idempotency and a correct SMS retry."
+tags: [reliability-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+
+    Review the nightly job for how it behaves when things go wrong: `main/jobs.ts`, how `main/server.ts` schedules it, and the adapters it drives through `main/wiring.ts` (email, SMS, postal, Postgres). Is it ready for production?
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-unhandled-nightly-rejection
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `main/server.ts` schedules the nightly job with `setInterval(() => { void runNightly(); }, 24 * 60 * 60 * 1000)`. `runNightly` in `main/jobs.ts` has no top-level try/catch, and `void` discards its promise, so any error thrown outside the per-reminder `try` (for example `loans.findOpen()`, a fine assessment, `members.findByCard`, or the monthly report export) becomes an unhandled promise rejection. The service targets Node 24, where an unhandled rejection terminates the process: the HTTP server goes down with the job, and nothing is written through the app logger or sent to monitoring.
+
+      PASS if the review identifies that a failure in the nightly job is unhandled at its entry point, and states a concrete consequence (the process crashing / the web server going down, or the failure being invisible), treats it at the highest or second-highest severity it uses, and proposes catching and reporting failures at the job boundary (or running the job outside the web process).
+
+      FAIL if it is missed, or only mentioned as a style point, or rated Low.
+  - type: llm
+    name: finds-no-isolation-in-fine-loop
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      In `main/jobs.ts`, the fine-assessment loop calls `await assess.run(loan)` for each overdue loan with no per-loan error handling. One failing loan abandons the remaining assessments and also everything after the loop that night: every due-date reminder and the monthly report export.
+
+      PASS if the review points out that one failure in the fine-assessment step stops the rest of the nightly work (remaining fines and/or the reminders and reports that follow), and proposes per-loan isolation anywhere in the review: catch, log the loan and continue; handle each loop body separately; or apply the reminder loop's per-item catch to the fine loop. A recommendation whose only fix is one try/catch around the whole job does not pass, since that still abandons the remaining work.
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-member-directory-pool-leak
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `PostgresMemberDirectory` (`infra/postgres/postgres-member-directory.ts`) creates its own `PgClient` in its constructor; per `types/vendor.d.ts` a `PgClient` opens a connection pool and only `end()` closes it. Nothing ever calls `end()`. `runNightly` calls `wiring.memberDirectory()` on every run, so each night opens one more pool that is never closed, until the database runs out of connections. Every other adapter shares the single `wiring.pgClient()`.
+
+      PASS if the review identifies that a new database client/pool is created per nightly run (or per directory instance) and never closed, describes it as a leak that will eventually exhaust connections, and proposes sharing the existing client (or closing it).
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-mailer-without-timeout
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `infra/email/sendgrid-mailer.ts` constructs `new MailClient(apiKey)` without `timeoutMs`; `types/vendor.d.ts` documents that without it a request waits indefinitely. The nightly job sends reminders one at a time, so a single hung email request stalls every reminder after it and the monthly report, with nothing logged. The SMS adapter sets a 5-second timeout.
+
+      PASS if the review flags the missing timeout on the email client (or on outbound reminder calls including email) and connects it to the serial nightly loop stalling, and proposes setting a timeout.
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-postal-queue-swallows-errors
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `infra/postal/file-postal-queue.ts` catches any `appendFile` failure, logs it at `info` as `postal queue write skipped`, and resolves normally. `SendDueReminder` therefore succeeds and `main/jobs.ts` logs `reminder sent` for a letter that was never queued.
+
+      PASS if the review flags that the postal adapter swallows the write failure (converting it into apparent success), notes the consequence that the reminder is recorded as sent or that nobody learns of the failure, and proposes letting the error propagate (or otherwise surfacing it as a failure).
+
+      FAIL if it is missed or treated as acceptable logging.
+  - type: llm
+    name: no-false-alarm-reminder-loop-catch
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      In `main/jobs.ts`, each reminder is sent inside its own `try`, and the `catch` logs `reminder failed` at `error` level with the reason and continues with the next member. This isolates one member's failure from the rest of the batch.
+
+      PASS if the review does not present this per-reminder catch-and-continue as swallowing errors or as a reliability defect. Criticising what the log line contains (the whole member object, a security/PII concern) is fine and does not fail this check; so is suggesting a failure count or summary.
+
+      FAIL if it says the reminder loop's catch hides or swallows failures and asks for it to stop continuing or to rethrow.
+  - type: llm
+    name: no-false-alarm-duplicate-fines-on-rerun
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `AssessOverdueFine` (`fines/assess-overdue-fine.ts`) checks `alreadyAssessed` (an outstanding fine for the same loan id) before recording a new fine, so running the nightly job twice does not fine a loan twice.
+
+      PASS if the review does not claim that running the nightly job again, after a previous run finished or crashed, creates duplicate fines. Not mentioning it, noting the guard, or reporting that two *overlapping* runs could both pass the check before either inserts (a check-then-insert race) all pass, at any severity: that race is real.
+
+      FAIL if it reports that a sequential re-run or retry of the nightly job double-fines members, ignoring the `alreadyAssessed` check.
+  - type: llm
+    name: no-false-alarm-sms-retry
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `infra/sms/twilio-sms-gateway.ts` retries a failed send only for 408/429/5xx statuses, with exponential backoff (500 ms, 1 s), at most three attempts, a 5-second client timeout, and the retry lives in the adapter.
+
+      PASS if the review does not flag this retry as retrying non-transient failures, as hammering the provider, as misplaced, or as over-engineered. Not mentioning it, citing it as the model the other adapters should follow, or a Low note about a possible duplicate text all pass.
+
+      FAIL if it reports this retry logic as a defect at Medium or above.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-review"'
+    min: 1

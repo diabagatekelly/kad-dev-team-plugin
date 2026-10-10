@@ -16,7 +16,10 @@ export class CollectFine {
     if (fine.settledOn !== null || fine.waived) {
       return;
     }
-    const outcome = await this.payments.charge(cardToken, fine.amountCents, `Library fine ${fine.id}`);
+    let outcome = await this.payments.charge(cardToken, fine.amountCents, `Library fine ${fine.id}`);
+    for (let attempt = 2; !outcome.ok && attempt <= 3; attempt++) {
+      outcome = await this.payments.charge(cardToken, fine.amountCents, `Library fine ${fine.id}`);
+    }
     if (!outcome.ok) {
       switch (outcome.stripeCode) {
         case 'card_declined':
