@@ -1,0 +1,55 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '30 7 * * *'
+
+env:
+  STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+  SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+  TWILIO_SID: ${{ secrets.TWILIO_SID }}
+  TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
+  PGPASSWORD: ${{ secrets.PGPASSWORD }}
+  MONITOR_DSN: ${{ secrets.MONITOR_DSN }}
+
+jobs:
+  test:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx tsc -p tsconfig.json && npm test
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::614208837152:role/library-lending-deploy
+          aws-region: us-west-2
+      - run: aws ecs update-service --cluster library --service lending --force-new-deployment
+
+  snapshot:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+        with:
+          aws-access-key-id: ${{ secrets.SNAPSHOT_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SNAPSHOT_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+      - run: aws rds create-db-snapshot --db-instance-identifier library-lending --db-snapshot-identifier nightly-$(date +%F)

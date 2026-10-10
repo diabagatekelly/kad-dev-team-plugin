@@ -19,11 +19,13 @@ app/
   reporting/      legacy reports and CSV export    V13 (SQL-level port), V14 (orchestration mixed with CSV bytes), V12 (SDK in a report), T4, T8
   services/       refunds                          V11 (technical-role directory), V12 (SDK outside its adapter)
   utils/          date helpers                     V11, T6 (low-risk date library)
-  infra/          postgres, email, sms, postal, payments, files, http adapters   T9 (adapter that maps rows correctly)
-  main/           server.ts, wiring.ts, jobs.ts    T7 (bootstrap and composition root, exempt)
+  infra/          postgres, email, sms, postal, payments, files, http, logging, monitoring adapters   T9; S1, S2, S3, S5, S7, ST1, ST3, ST4, ST6
+  main/           server.ts, wiring.ts, jobs.ts    T7 (bootstrap and composition root, exempt); S4, S8, ST2, ST7
+  test/           node:test tests and fixtures     S11
+  .github/        deploy workflow                  S9, S10, ST5
   types/          ambient declarations for the fictional third-party packages
 answer-key.md     every V (planted violation) and T (trap), with the principle each exercises
-verify.sh         type-checks, proves the runtime cycle crashes and the type-only one doesn't
+verify.sh         type-checks, proves the runtime cycle crashes and the type-only one doesn't, runs test/
 scaffold.sh       copies app/ into an eval run's working directory; each case has a stub that execs it
 ```
 
@@ -63,13 +65,10 @@ carry plants for several personas as long as each case's prompt scopes
 the reviewer to what that persona grades. Candidates the app already
 invites:
 
-- `devsecops-engineer` / `security-review`: `main/wiring.ts` reads secrets
-  from `process.env` with empty-string defaults; `infra/http/fines-routes.ts`
-  has a refund route with no authorization; `infra/files/local-report-files.ts`
-  joins a caller-supplied path. Add a trap (a correctly scoped secret) and
-  decide which of these the architecture cases must keep ignoring.
+- `devsecops-engineer` / `security-review`: done, see the `S`/`ST` rows in
+  `answer-key.md` and `evals/security-review-*`.
 - `devsecops-engineer` / `reliability-review`: `main/jobs.ts` runs on a
-  timer with no error handling or idempotency; `fines/collect-fine.ts`
+  timer with no error handling outside the reminder loop and no idempotency; `fines/collect-fine.ts`
   charges before it settles.
 - `tdd-coach` / `test-quality-review`: there are no tests. Add a `test/`
   directory with planted smells (a spy that replaces the subject, a test

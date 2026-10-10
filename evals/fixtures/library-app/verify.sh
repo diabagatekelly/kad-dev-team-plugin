@@ -4,7 +4,8 @@
 #   2. the planted runtime import cycle (lending/loan.ts <-> loan-policy.ts)
 #      really crashes at module load,
 #   3. the type-only cycle (lending/hold.ts <-> hold-queue.ts) really doesn't,
-#   4. the clean catalog module loads.
+#   4. the clean catalog module loads,
+#   5. the test suite under test/ passes.
 # Run from anywhere: bash evals/fixtures/library-app/verify.sh
 set -euo pipefail
 
@@ -22,7 +23,8 @@ echo "ok: tsc clean"
 stub() { mkdir -p "$out/node_modules/$1"; printf '%s\n' "$2" > "$out/node_modules/$1/index.js"; }
 stub date-fns-lite 'const ms=864e5;exports.addDays=(d,n)=>new Date(d.getTime()+n*ms);exports.differenceInCalendarDays=(a,b)=>Math.round((a-b)/ms);exports.isBefore=(a,b)=>a<b;exports.startOfDay=(d)=>new Date(d.getFullYear(),d.getMonth(),d.getDate());'
 stub pg-orm 'class PgClient{constructor(o){this.o=o}async query(){return []}}class OrmRow{async save(){}async remove(){}}class OrmRepository{constructor(c,t){this.t=t}async findOne(){return null}async findMany(){return []}async insert(v){return v}}module.exports={PgClient,OrmRow,OrmRepository};'
-stub express-lite 'class Router{get(){}post(){}}exports.Router=Router;exports.createServer=()=>({listen(){}});'
+stub express-lite 'class Router{use(){}get(){}post(){}}exports.Router=Router;exports.createServer=()=>({listen(){}});'
+stub monitor-sdk 'exports.MonitorClient=class{constructor(d){}captureException(){}};'
 stub mail-sdk 'exports.MailClient=class{constructor(k){}async send(){return{id:"m"}}};'
 stub sms-sdk 'exports.SmsClient=class{constructor(a,b){}async send(){return{sid:"s"}}};'
 stub stripe-sdk 'class StripeError extends Error{}exports.StripeError=StripeError;exports.StripeClient=class{constructor(k){this.charges={async create(){return{id:"c",amount:0,status:"succeeded"}},async list(){return []}};this.refunds={async create(){return{id:"r"}}}}};'
@@ -43,5 +45,9 @@ echo "ok: hold.js loads"
 echo "== clean module loads (catalog)"
 node -e "const { SearchCatalog } = require('$out/catalog/search-catalog.js'); if (typeof SearchCatalog !== 'function') throw new Error('SearchCatalog missing')"
 echo "ok: catalog loads"
+
+echo "== test suite passes (test/)"
+(cd "$out" && node --test test/*.test.js >"$out/test.log" 2>&1) || { echo "FAIL: tests"; cat "$out/test.log"; exit 1; }
+echo "ok: $(grep -m1 '^ℹ pass' "$out/test.log")"
 
 echo "all checks passed"

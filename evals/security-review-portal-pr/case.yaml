@@ -1,0 +1,82 @@
+schema_version: "1.0"
+name: security-review-portal-pr
+description: "PR adding the member portal: IDOR on the member profile route, SQL injection in loan-history search; traps for session-scoped routes and prefix-mounted member auth."
+tags: [security-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+
+    Security-review this pull request, which adds a self-service portal for library members. The PR adds `infra/http/portal-routes.ts`, `lending/loan-history.port.ts` and `infra/postgres/postgres-loan-history.ts`, and adds the `registerPortalRoutes(...)` call, the `/portal` line in the `router.use` block, and the `loanHistory()` factory in `main/`. Everything else already existed before this PR.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-member-profile-idor
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `GET /portal/members/:cardNumber` in `infra/http/portal-routes.ts` is behind member authentication, but it looks up whichever card number is in the URL and returns that member's name, email, phone and postal address. Nothing compares the path's card number with the signed-in member's own (`sessionOf(req).cardNumber`), so any member can read any other member's personal details by changing the number.
+
+      PASS if the review flags this as an authorization gap (authentication is present, per-record authorization is missing), treats it as High or Critical (or the equivalent top tier), and proposes using the session's card number or rejecting a mismatch.
+
+      FAIL if it is missed, rated Medium or below, or described as missing authentication rather than missing authorization.
+  - type: llm
+    name: finds-sql-injection-in-history-search
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `PostgresLoanHistory.forCard` in `infra/postgres/postgres-loan-history.ts` binds the card number as `$1` but interpolates `titleContains` straight into the SQL text (`ilike '%${titleContains}%'`). `titleContains` is the `title` query-string parameter of `GET /portal/history`, controlled by any signed-in member.
+
+      PASS if the review flags this as SQL injection reachable from the member-controlled query parameter, at High or Critical (or the equivalent top tier), and proposes passing the search text as a bound query parameter (for example `ilike $2`). Also escaping LIKE wildcards (`%`, `_`, `\\`) in the value before binding it is fine and does not count against the review.
+
+      FAIL if it is missed, rated Medium or below, or the only fix proposed keeps the value interpolated into the SQL text and sanitises or quote-escapes it there.
+  - type: llm
+    name: no-false-alarm-session-scoped-routes
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `GET /portal/loans` and `GET /portal/history` take the card number from `sessionOf(req).cardNumber`, the signed-in member's own session, not from the request. A member cannot use them to read another member's loans. (The SQL injection inside the history query is a separate issue and is not part of this check.)
+
+      PASS if the review does not claim that `/portal/loans` or `/portal/history` let one member read another member's loans (an IDOR on those routes).
+
+      FAIL if it reports either route as exposing other members' loans through a caller-supplied identifier.
+  - type: llm
+    name: no-false-alarm-prefix-mounted-member-auth
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      The handlers in `infra/http/portal-routes.ts` contain no authentication check of their own. `main/server.ts` mounts `requireRole('member', sessions)` on the `/portal` prefix, which rejects requests without a valid member session before any portal handler runs.
+
+      PASS if the review does not claim that the portal routes are unauthenticated or reachable without a session. Recommending defense in depth as a Low/optional note passes.
+
+      FAIL if it reports the portal routes as missing authentication or asks for an authentication check in each handler as a required fix.
+  - type: llm
+    name: pre-existing-issues-not-blocking
+    focus: last_message
+    weight: 1
+    criteria: |
+      The PR is the portal files and the few wiring lines named in the request. Code outside it already existed: for example the unauthenticated `/charges/:id/refund` route, the catch-all in `infra/http/respond.ts` that returns error messages and sends headers to monitoring (the portal routes use it, but the PR did not write it), and the secrets in `main/wiring.ts`.
+
+      PASS if any such pre-existing problem the review mentions is identified as pre-existing / outside this PR and not presented as something this PR must fix before merging, OR the review does not mention pre-existing problems at all. Noting that the new portal routes are newly exposed to an existing problem (for example that they now route errors through `respond`) is fine as long as fixing `respond` itself is not made a merge blocker for this PR.
+
+      FAIL if the review makes fixing pre-existing code outside the PR a requirement for merging it, or presents pre-existing issues as if this PR introduced them.
+
+
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:security-review"'
+    min: 1

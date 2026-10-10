@@ -80,9 +80,12 @@ declare module 'stripe-sdk' {
 
 declare module 'express-lite' {
   export interface HttpRequest {
+    path: string;
     params: Record<string, string>;
+    query: Record<string, string>;
     body: Record<string, unknown>;
     headers: Record<string, string>;
+    locals: Record<string, unknown>;
   }
 
   export interface HttpResponse {
@@ -92,12 +95,23 @@ declare module 'express-lite' {
 
   export type Handler = (req: HttpRequest, res: HttpResponse) => Promise<void> | void;
 
+  export type Middleware = (req: HttpRequest, res: HttpResponse, next: () => Promise<void>) => Promise<void>;
+
   export class Router {
+    /** Runs `middleware` before every route whose path starts with `prefix`. */
+    use(prefix: string, middleware: Middleware): void;
     get(path: string, handler: Handler): void;
     post(path: string, handler: Handler): void;
   }
 
   export function createServer(router: Router): { listen(port: number): void };
+}
+
+declare module 'monitor-sdk' {
+  export class MonitorClient {
+    constructor(dsn: string);
+    captureException(error: unknown, context?: Record<string, unknown>): void;
+  }
 }
 
 declare module 'date-fns-lite' {

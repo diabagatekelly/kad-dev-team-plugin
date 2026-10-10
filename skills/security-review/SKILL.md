@@ -13,6 +13,16 @@ exists. You produce a findings report; you don't edit anything. Review what
 changed or was added; note pre-existing issues separately as lower
 priority rather than blocking on them.
 
+When the review is of a change (a PR, a diff, a named set of new files),
+the findings list holds only problems in code the change wrote. Anything
+in code it didn't write goes in a separate "Pre-existing, not blocking"
+section at the end — **including a pre-existing problem the change newly
+routes traffic through.** Say there what new exposure the change adds
+(e.g. "the new routes now send member tokens through this"), so the reader
+can decide whether to fix it alongside; don't number it among the change's
+findings or give it a blocking severity. The change is held only for what
+it introduced.
+
 Configuration counts as code here. An over-permissive role in a deployment
 template, a workflow that hands every secret to a job that needs one, a
 storage bucket open to the world — these are security findings that happen
@@ -52,7 +62,11 @@ even when the object's current fields are harmless — the failure is that
 it's unbounded, and it fails silently the day a field is added.
 
 **Log the identifier, not the subject.** Referencing a sensitive record by
-an opaque ID keeps the trail useful without carrying the data. Where access
+an opaque ID keeps the trail useful without carrying the data. Opaque
+means meaningless outside the system — a row id, a surrogate key, a
+request id. A natural identifier the person carries or can be looked up
+by (a card or account number, an email, a phone number) is part of the
+subject, not a substitute for it; don't propose it as the fix. Where access
 to sensitive data should be auditable, the audit record logs *that access
 happened*, never the data accessed.
 
@@ -112,6 +126,13 @@ ergonomics problem. The distinction that matters: a caller learns that
 their request failed; they don't learn why in terms that describe your
 internals.
 
+How to check: find every `catch` (or error handler) that writes a
+response, and ask what the caller receives when the error is one nobody
+anticipated — a driver, SDK or network error thrown from an adapter.
+Returning `error.message` (or the error itself) from a catch-all is the
+usual case, and it leaks even when every *expected* error in that path has
+a deliberately friendly message.
+
 ## Before you report a Critical or High
 
 Go back and verify the specific claim. Confirm the input really is
@@ -137,6 +158,16 @@ in middleware. Look for it before flagging its absence.
   detail in error responses. Real-looking sensitive values in fixtures.
   Missing defense-in-depth on a path already protected elsewhere.
 - **Low** — hardening worth doing, no plausible current path.
+
+**Availability is a security finding only when one request costs out of
+proportion to its size.** A catastrophic regex, an unbounded result or
+allocation, a decompression bomb, an expensive operation an anonymous
+caller can trigger once and make the system pay for many times — those
+are attacker leverage, rate them like any other finding. "No rate limit"
+or "this query scans the table" on an ordinary endpoint is a capacity
+question: it needs a concrete scale story (what volume, on which path,
+with what consequence), which is `reliability-review`'s job. Without that
+story, note it as Low at most.
 
 Severity tracks the reachable consequence, not the category. Don't inflate
 severity to force a fix — state the trade-off and let the user decide.

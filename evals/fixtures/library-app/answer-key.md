@@ -54,7 +54,7 @@ A thorough reviewer may also raise these; none is a false alarm and none is
 graded: `CollectFine` charges before it settles with no idempotency key;
 `RegisterMember` and `CheckoutBook` check-then-write without a transaction;
 `LoanStore.add` takes an id the domain never assigns; `main/jobs.ts` is
-wired on a timer with no error handling; a fine is assessed once and never
+wired on a timer with no error handling outside the reminder loop; a fine is assessed once and never
 grows; holds are placed but never consulted at checkout; checkout never
 checks the member's status; "overdue" is computed in `lending/loan.ts`,
 `fines/assess-overdue-fine.ts` and `reporting/overdue-report.ts`
@@ -65,6 +65,53 @@ found in the first calibration run (nothing decremented `copiesAvailable`,
 `OverdueReport` used two clocks, an unvalidated `month` reached a file path,
 waiving marked a fine settled, fines/reminders/reports were never wired)
 were fixed rather than left as noise.
+
+## Security plants (`S`, `ST`) — `devsecops-engineer:security-review`
+
+Principles come from `skills/security-review/SKILL.md` and
+`agents/devsecops-engineer/AGENT.md`. The app is a staff-facing desk
+service (`/loans`, `/holds`, `/fines`, staff sessions) plus a member
+self-service portal (`/portal`, member sessions). Sessions are issued by an
+external sign-in service and looked up by SHA-256 digest
+(`infra/postgres/postgres-session-store.ts`); `requireRole` in
+`infra/http/sessions.ts` is mounted per prefix in `main/server.ts`.
+
+### Planted violations
+
+| # | Where | Principle | What is wrong | Expected verdict |
+|---|---|---|---|---|
+| S1 | `infra/http/fines-routes.ts` `POST /charges/:id/refund` | Authentication on new entry points | Matches none of the protected prefixes, so anyone can refund any Stripe charge id. | Critical/High. Fix: staff-only (protected prefix or middleware). |
+| S2 | `infra/http/portal-routes.ts` `GET /portal/members/:cardNumber` | Authorization distinct from authentication (IDOR) | Member-authenticated, but returns whichever member the path names: name, email, phone, address. | High/Critical. Fix: use `sessionOf(req).cardNumber` or reject a mismatch. |
+| S3 | `infra/http/respond.ts`, fine pay handler in `fines-routes.ts` | Error handling as information disclosure | Catch-alls return `error.message` for every error, so adapter/driver/SDK errors reach callers, including portal members. | Medium. Fix: generic message for unexpected errors, detail server-side. |
+| S4 | `main/jobs.ts` `log.error('reminder failed', { member, loan, ... })` | Logging a whole object | Entire `Member` record (PII) written to logs on every failed reminder. | High. Fix: log loan id / member id. |
+| S5 | `infra/http/respond.ts` → `infra/monitoring/error-reporter.ts` | Telemetry exit | Every failed request sends `req.headers` (bearer session token) and `req.body` to a third-party monitoring service. | High. Fix: allow-list path, error id, opaque ids. |
+| S7 | `infra/postgres/postgres-loan-history.ts` | Injection | `titleContains` (portal `?title=`) interpolated into SQL text next to a bound `$1`. | High/Critical. Fix: bind it as a parameter. |
+| S8 | `main/wiring.ts` `mailer()` | Secret in source | Hardcoded SendGrid-style key as `??` fallback. (Deliberately one character off the real key format so secret scanners don't block pushes.) | Critical/High. Fix: secret store, fail fast; rotate the key. |
+| S9 | `.github/workflows/deploy.yml` `snapshot` job | Long-lived credential where federation exists | Static AWS access keys, while `deploy` in the same file already uses OIDC. | High. Fix: OIDC with a narrow role; retire the keys. |
+| S10 | `.github/workflows/deploy.yml` | Broad-by-default grants | Every runtime secret in workflow-level `env:` (the `test` job needs none and runs `npm ci`); no top-level `permissions:`. | Medium. Fix: per-job secrets, `permissions: contents: read` at top. |
+| S11 | `test/fixtures/members.ts` | Real-looking sensitive values in fixtures | Plausible names, gmail/comcast addresses, real-format phone, real-looking Portland addresses. | Medium. Fix: reserved/obviously fake values. |
+
+### Traps
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| ST1 | handlers in `lending-routes.ts`, `/fines/...` in `fines-routes.ts`, `portal-routes.ts` | No auth check in any handler. | `main/server.ts` mounts `requireRole` on `/loans`, `/holds`, `/fines` (staff) and `/portal` (member). The control is one layer up. |
+| ST2 | `main/wiring.ts` `stripePublishableKey = 'pk_live_...'` | A live Stripe key in source. | Publishable keys are public by design (browser payment forms) and cannot charge, refund or read. |
+| ST3 | `infra/http/catalog-routes.ts` | Unauthenticated route. | Public catalog search over book data only, capped at 50 rows; failures return a generic 503 and report only the path to monitoring (the safe counterpart to S5). |
+| ST4 | `infra/postgres/postgres-catalog-reader.ts` `search` | `%${escapeLike(terms)}%` looks like interpolation into SQL. | The string is the bound `$1` value; `escapeLike` only neutralises wildcards. |
+| ST5 | `deploy.yml` `deploy` job `id-token: write` | Looks like a write permission. | Required for OIDC, scoped to one job, grants no repository write. |
+| ST6 | `/portal/loans`, `/portal/history` | Portal routes returning per-member data. | Both take the card number from the session, not the request. |
+| ST7 | `main/jobs.ts` `log.info('reminder sent', { loanId, channel })` | A log line in a PII-heavy loop. | Opaque id and channel code only: the "log the identifier" pattern. |
+
+`catalog/` remains the clean module for security too (ST3, ST4): a review
+of it should report nothing above Low.
+
+Ungraded but not false alarms: env-var secrets in `main/wiring.ts`
+generally (the skill prefers a managed store); the AWS account id in the
+deploy role ARN; card numbers interpolated into exception messages that
+reach the `reminder failed` log; `PlaceHold` and checkout taking the card
+number from the body (staff-only routes); no rate limiting on public or
+portal routes; no lockfile (a `supply-chain-review` concern).
 
 ## Boy Scout scoping (same code, different framing)
 

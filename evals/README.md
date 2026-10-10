@@ -15,7 +15,9 @@ at:
   as a genuine child `claude` process per run, with a no-plugin baseline
   arm (`--ablation with-without`). Today that is the `library-app-*` suite
   for `software-architect:architecture-review` plus two
-  `architecture-review-neg-*` trigger cases. Results land in
+  `architecture-review-neg-*` trigger cases, and the `security-review-*`
+  suite for `devsecops-engineer:security-review` (five cases on the same
+  fixture plus two negative trigger cases). Results land in
   `evals/results/<timestamp>/` (gitignored) each time the suite runs;
   nothing is hand-copied into case directories.
 
@@ -53,8 +55,15 @@ Run it:
 bash evals/fixtures/library-app/verify.sh
 claude plugin eval . --case 'library-app-*' --ablation with-without --scaffold \
   --judge-model sonnet --max-cost-usd 14 --no-publish --trust-plugin
+claude plugin eval . --case 'security-review-*' --ablation with-without --scaffold \
+  --judge-model sonnet --max-cost-usd 10 --no-publish --trust-plugin
 python3 -I evals/tools/pairwise_judge.py evals/results/<timestamp>
 ```
+
+`library-app-*` does not match the security cases and `security-review-*`
+does not match the architecture ones, so each suite runs on its own.
+Every real case pins `execution.model: sonnet`; see "Which model" below
+for why, and for the one Opus comparison run.
 
 Things the CLI does not tell you, learned the expensive way: `--scaffold`
 is mandatory (each case's `scaffold.sh` copies the fixture into the run's
@@ -171,7 +180,13 @@ score is history, not a claim about today.
 | `architecture-review-neg-test-quality-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:security-requirements` | 7/7 PASS, inline | yes |
-| `devsecops-engineer:security-review` | 7/7 PASS, inline | yes |
+| `security-review-http` | real, Sonnet: 3/3 plants + 2/2 traps with plugin, 1 run — refund route outside every auth prefix, internal error text to callers, request headers/bodies to monitoring; traps: prefix-mounted staff auth, public catalog search. Baseline missed the error-text finding | yes |
+| `security-review-portal-pr` | real, Sonnet: 5/5 with plugin, 1 run — member-profile IDOR, SQL injection in history search, PR scoping of pre-existing problems; traps: session-scoped routes, prefix-mounted member auth | yes |
+| `security-review-config` | real, Sonnet: 5/5 with plugin, 1 run — hardcoded SendGrid fallback key (rotation required), long-lived AWS keys beside an OIDC job, workflow-wide secrets; traps: Stripe publishable key, `id-token: write`. Baseline called the publishable key a leaked secret | yes |
+| `security-review-reminders` | real, Sonnet: 3/3 with plugin vs 1/3 without, 1 run — whole member object logged, real-looking PII in test fixtures; trap: identifier-only log line | yes |
+| `security-review-catalog` | real, Sonnet: 1/1 with plugin vs 0/1 without, 1 run — the clean module; baseline rated a rate-limit/scan note Medium | yes |
+| `security-review-neg-architecture` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
+| `security-review-neg-reliability` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
 | `devsecops-engineer:supply-chain-review` | 7/7 PASS, inline | yes |
 | `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | yes |
 | `devsecops-engineer:reliability-review` | 6/6 PASS, inline | yes |
@@ -426,6 +441,34 @@ Run with the `agent-eval` skill, one case per invocation.
   verify on the model the plugin's sessions actually run, and write the
   skill so a mid-tier model can apply it, not only recognise it.
 
+  **One Opus comparison run.** On 2026-10-10 the suite was re-pinned to
+  Opus for one pass on the pre-security fixture
+  (`results/20261010-082244-opus-final`, $7.58 + $2.18 judge, negative
+  cases in `-opus-neg`): with-plugin 100% in all nine cases, baseline
+  lower on lending, notifications, reporting-pr and the agent path (mean
+  delta 0.18, against 0.43 on Sonnet). The blind pairwise judge went
+  plugin 2 / baseline 6 / split 1 — the same breadth preference it showed
+  on Fable, where the stronger baseline also writes the broader review.
+  Opus costs more per pass than Sonnet and showed a smaller delta, so the
+  suite stays pinned to Sonnet; fixes are made in an Opus session and
+  verified on Sonnet.
+
+  **Re-verified on the security-extended fixture (2026-10-10).** Planting
+  the security material changed `main/`, `infra/http/` and the catalog
+  port, and one Sonnet run on the new fixture then raised a Medium on the
+  clean catalog module about a *neighbouring* module (loans' adapter using
+  the ORM where catalog's uses raw SQL).
+  `skills/architecture-review/SKILL.md` now says a module-scoped review
+  puts what it notices in other modules under "Pre-existing, not
+  blocking", and that adapters using different idioms behind their ports
+  is not a finding. Confirmation on that text, Sonnet, one run per arm:
+  `results/20261010-093922-arch-final` (catalog, fines, lending, members,
+  both negative cases; the rest of that pass hit the account's spend
+  limit) and `results/20261010-101700-arch-rest` (the other five).
+  With-plugin 100% of scored graders in all nine cases; baseline catalog
+  0/1, fines 2/4, lending 73%, members 2/3, agent path 18%, notifications
+  3/3, reporting-pr 1/3, reporting-review 1/3, structure 3/4.
+
   **Agent path.** `library-app-lending-review-via-agent` routes the same
   review through the `software-architect` agent (`allowed_tools` includes
   `Agent`). It confirms delegation and that the agent-wrapped review
@@ -436,6 +479,58 @@ Run with the `agent-eval` skill, one case per invocation.
 
   Cost of the whole architecture-review eval effort, all generations: about
   $40.
+
+- **`devsecops-engineer:security-review` moved to the library-app fixture
+  in one generation, following the playbook above.** The fixture had no
+  authentication at all, which every security reviewer would have
+  reported first, so a session layer went in before any plant: staff
+  routes behind `requireRole('staff')` per path prefix, a member portal
+  behind `requireRole('member')`, tokens looked up by SHA-256 digest. Ten
+  plants and seven traps followed (`S`/`ST` rows in the fixture's
+  `answer-key.md`), each tied to a section of `skills/security-review/SKILL.md`.
+  The emulated `devsecops-engineer:security-review` case it replaces is
+  deleted. Three calibration passes found three skill gaps, each fixed in
+  the skill and re-verified:
+  - **Pre-existing problems leaked into a PR's findings.** On the portal
+    PR the reviewer numbered the old `respond.ts` problems among the PR's
+    own findings (one at High) because the new routes call it. The skill
+    now requires a separate "Pre-existing, not blocking" section for any
+    problem in code the change didn't write, *including* one the change
+    newly routes traffic through, with the new exposure stated there.
+  - **Ordinary request volume was promoted to a security finding.** On
+    the clean catalog module the reviewer rated "public search, no rate
+    limit, table scan" Medium every time; the baseline said Low. The
+    skill now says availability is a security finding only when one
+    request costs out of proportion to its size; volume and capacity need
+    a scale story and belong to `reliability-review`.
+  - **"Log an opaque ID" didn't say what opaque means.** The reviewer
+    proposed logging the library card number in place of the whole member
+    object, then flagged card numbers in logs two findings later. The
+    skill now defines opaque (row id, surrogate key, request id) and says
+    a natural identifier the person carries is part of the subject.
+  - **The error-disclosure check was a principle, not a procedure.** One
+    Sonnet run never looked at what the catch-alls return and called the
+    pay route's catch "handled correctly". The skill now says how to check:
+    for every catch that writes a response, ask what the caller gets when
+    the error is one nobody anticipated (a driver or SDK error).
+
+  Two fixture accidents were fixed rather than graded around: the catalog
+  route was the only one left without error handling after the
+  responder refactor, and the public search had no result cap (moving
+  the cap into the `CatalogReader` port, not the adapter's SQL, was needed
+  to keep the architecture catalog case clean). Two graders were narrower
+  than a good review (the SQL-injection fix wording, the error-text
+  grader expecting `/portal` to be named) and were loosened.
+
+  **Uplift.** Confirmatory pass on the final skill text
+  `results/20261010-093922-sec-final` ($3.39 + judge): skill fired 5/5,
+  with-plugin 100% of scored graders in all seven cases. The baseline
+  missed the error-text disclosure and both reminders plants; across the
+  earlier Sonnet passes it also called the Stripe publishable key a
+  leaked secret and rated a catalog rate-limit note Medium. Blind
+  pairwise judge: plugin 4, baseline 0, split 1. Single run per arm; the Opus calibration
+  passes before the switch back to Sonnet showed the same shape. Cost of
+  the migration, all passes including the Opus ones: about $30.
 
 Root-cause notes for any bug a case caught live in that case's own
 `eval-score/summary.md`, not here — check there before touching a skill,
