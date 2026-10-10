@@ -5,12 +5,14 @@
   "description": "Lending service for a community library: catalog, members, loans, fines, reminders, reporting.",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "start": "node dist/main/server.js"
+    "start": "node dist/main/server.js",
+    "test": "node --test dist/test/*.test.js"
   },
   "dependencies": {
     "date-fns-lite": "^2.1.0",
     "express-lite": "^4.3.0",
     "mail-sdk": "^7.0.2",
+    "monitor-sdk": "^3.1.0",
     "pg-orm": "^3.8.1",
     "sms-sdk": "^5.2.0",
     "stripe-sdk": "^12.4.0"

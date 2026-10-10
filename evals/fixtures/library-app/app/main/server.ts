@@ -5,6 +5,9 @@ import { CollectFine } from '../fines/collect-fine';
 import { WaiveSmallFine } from '../fines/waive-small-fine';
 import { registerFineRoutes } from '../infra/http/fines-routes';
 import { registerLendingRoutes } from '../infra/http/lending-routes';
+import { registerPortalRoutes } from '../infra/http/portal-routes';
+import { createResponder } from '../infra/http/respond';
+import { requireRole } from '../infra/http/sessions';
 import { CheckoutBook } from '../lending/checkout-book';
 import { PlaceHold } from '../lending/place-hold';
 import { RenewLoan } from '../lending/renew-loan';
@@ -14,21 +17,48 @@ import { runNightly } from './jobs';
 import * as wiring from './wiring';
 
 const router = new Router();
+const errors = wiring.errorReporter();
+const respond = createResponder(errors);
+const sessions = wiring.sessionStore();
 
-registerCatalogRoutes(router, new SearchCatalog(wiring.catalogReader()));
+router.use('/loans', requireRole('staff', sessions));
+router.use('/holds', requireRole('staff', sessions));
+router.use('/fines', requireRole('staff', sessions));
+router.use('/portal', requireRole('member', sessions));
 
-registerLendingRoutes(router, {
-  checkout: new CheckoutBook(wiring.pgClient(), wiring.catalogReader(), wiring.clock()),
-  returnBook: new ReturnBook(wiring.clock()),
-  renew: new RenewLoan(wiring.loanStore(), wiring.clock()),
-  placeHold: new PlaceHold(wiring.holdQueue(), wiring.clock()),
-});
+registerCatalogRoutes(router, new SearchCatalog(wiring.catalogReader()), errors);
 
-registerFineRoutes(router, {
-  collect: new CollectFine(wiring.fineLedger(), wiring.finePayments(), wiring.clock()),
-  waive: new WaiveSmallFine(wiring.fineLedger(), wiring.clock()),
-  payments: new PaymentService(),
-});
+registerLendingRoutes(
+  router,
+  {
+    checkout: new CheckoutBook(wiring.pgClient(), wiring.catalogReader(), wiring.clock()),
+    returnBook: new ReturnBook(wiring.clock()),
+    renew: new RenewLoan(wiring.loanStore(), wiring.clock()),
+    placeHold: new PlaceHold(wiring.holdQueue(), wiring.clock()),
+  },
+  respond,
+);
+
+registerFineRoutes(
+  router,
+  {
+    collect: new CollectFine(wiring.fineLedger(), wiring.finePayments(), wiring.clock()),
+    waive: new WaiveSmallFine(wiring.fineLedger(), wiring.clock()),
+    payments: new PaymentService(),
+  },
+  respond,
+  wiring.stripePublishableKey,
+);
+
+registerPortalRoutes(
+  router,
+  {
+    members: wiring.memberDirectory(),
+    loans: wiring.loanStore(),
+    history: wiring.loanHistory(),
+  },
+  respond,
+);
 
 createServer(router).listen(Number(process.env.PORT ?? 3000));
 

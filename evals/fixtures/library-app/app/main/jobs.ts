@@ -1,4 +1,5 @@
 import { AssessOverdueFine } from '../fines/assess-overdue-fine';
+import { log } from '../infra/logging/logger';
 import { EmailReminder } from '../notifications/email-reminder';
 import { PostalReminder } from '../notifications/postal-reminder';
 import { dueSoon } from '../notifications/reminder-schedule';
@@ -31,8 +32,14 @@ export async function runNightly(): Promise<void> {
   );
   for (const loan of dueSoon(openLoans, today)) {
     const member = await members.findByCard(loan.cardNumber);
-    if (member) {
+    if (!member) {
+      continue;
+    }
+    try {
       await remind.run(member, loan);
+      log.info('reminder sent', { loanId: loan.id, channel: member.contact_pref_code });
+    } catch (error) {
+      log.error('reminder failed', { member, loan, reason: error instanceof Error ? error.message : String(error) });
     }
   }
 

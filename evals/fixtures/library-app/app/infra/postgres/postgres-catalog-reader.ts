@@ -24,10 +24,10 @@ export class PostgresCatalogReader implements CatalogReader {
     return rows.length > 0 ? toBook(rows[0]) : null;
   }
 
-  async search(terms: string): Promise<Book[]> {
+  async search(terms: string, limit: number): Promise<Book[]> {
     const rows = await this.client.query<BookRow>(
-      'select isbn, title, author, copies_owned from books where title ilike $1 or author ilike $1 order by title',
-      [`%${escapeLike(terms)}%`],
+      'select isbn, title, author, copies_owned from books where title ilike $1 or author ilike $1 order by title limit $2',
+      [`%${escapeLike(terms)}%`, limit],
     );
     return rows.map(toBook);
   }

@@ -20,6 +20,14 @@ needs to know they exist and that this change isn't being held for them. That's
 the Boy Scout Rule: leave the area you touched better, don't demand the
 whole forest be clean first.
 
+The same holds when the request scopes the review to a module rather
+than a change: the findings list is for that module. Something you notice
+in a neighbouring module while tracing goes in the "Pre-existing, not
+blocking" section, whatever severity it would earn on its own. And two
+adapters reaching their stores through different libraries or idioms
+(raw SQL in one, an ORM in another) is not a finding when each stays
+behind its port — hiding exactly that choice is what the port is for.
+
 ## The importance test
 
 Before applying any rule, decide which parts of the code in front of you

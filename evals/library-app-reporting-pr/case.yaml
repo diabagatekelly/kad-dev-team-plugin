@@ -32,7 +32,7 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      Judge substance only. This checks that the review does NOT raise a false alarm.
+      Judge substance only. This checks how the review treats problems that predate the PR: they should be named, but kept out of the PR's own findings and not made a condition of merging.
 
       Pre-existing and untouched by this PR: `reporting/report-queries.port.ts` is an SQL-level port the legacy reports write SQL against, and `reporting/revenue-report.ts` constructs the Stripe SDK directly.
 

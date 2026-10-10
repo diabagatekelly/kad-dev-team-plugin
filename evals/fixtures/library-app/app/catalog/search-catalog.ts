@@ -1,6 +1,8 @@
 import type { Book } from './book';
 import type { CatalogReader } from './catalog-reader.port';
 
+const MAX_RESULTS = 50;
+
 export class SearchCatalog {
   constructor(private readonly catalog: CatalogReader) {}
 
@@ -9,7 +11,6 @@ export class SearchCatalog {
     if (trimmed.length < 2) {
       return [];
     }
-    const matches = await this.catalog.search(trimmed);
-    return [...matches].sort((a, b) => a.title.localeCompare(b.title));
+    return this.catalog.search(trimmed, MAX_RESULTS);
   }
 }

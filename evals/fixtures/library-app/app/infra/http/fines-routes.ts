@@ -2,6 +2,7 @@ import type { Router } from 'express-lite';
 import type { CollectFine } from '../../fines/collect-fine';
 import type { WaiveSmallFine } from '../../fines/waive-small-fine';
 import type { PaymentService } from '../../services/payment-service';
+import type { Respond } from './respond';
 
 export interface FineUseCases {
   collect: CollectFine;
@@ -9,7 +10,16 @@ export interface FineUseCases {
   payments: PaymentService;
 }
 
-export function registerFineRoutes(router: Router, useCases: FineUseCases): void {
+export function registerFineRoutes(
+  router: Router,
+  useCases: FineUseCases,
+  respond: Respond,
+  stripePublishableKey: string,
+): void {
+  router.get('/payments/config', async (req, res) => {
+    res.status(200).json({ publishableKey: stripePublishableKey });
+  });
+
   router.post('/fines/:id/pay', async (req, res) => {
     try {
       await useCases.collect.run(req.params.id, String(req.body.cardToken ?? ''));
@@ -20,12 +30,10 @@ export function registerFineRoutes(router: Router, useCases: FineUseCases): void
   });
 
   router.post('/fines/:id/waive', async (req, res) => {
-    const waived = await useCases.waive.run(req.params.id);
-    res.status(200).json({ waived });
+    await respond(req, res, 200, async () => ({ waived: await useCases.waive.run(req.params.id) }));
   });
 
   router.post('/charges/:id/refund', async (req, res) => {
-    const refundId = await useCases.payments.refund(req.params.id);
-    res.status(200).json({ refundId });
+    await respond(req, res, 200, async () => ({ refundId: await useCases.payments.refund(req.params.id) }));
   });
 }
