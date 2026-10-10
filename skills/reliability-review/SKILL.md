@@ -128,6 +128,15 @@ volume, on which path, with what user-visible consequence. Without that,
 it stays an observation. Flagging theoretical slowness manufactures exactly
 the premature-optimization noise that makes reviews ignorable.
 
+## Before you report a Critical or High
+
+Go back and verify the specific claim: that the call really has no timeout
+anywhere on its path (a client default, a wrapper, the adapter), that the
+failure really is unhandled rather than caught a layer up, that the retry
+really does fire on the failure you named. A first pass that
+pattern-matched its way to a finding is a hypothesis. Medium and Low
+findings don't need this step.
+
 ## Severity
 
 - **Critical** — data loss or corruption possible; an unhandled failure on
@@ -142,7 +151,9 @@ the premature-optimization noise that makes reviews ignorable.
   improvements with a real but modest story.
 
 Severity tracks production consequence. Dev-environment relaxations are
-legitimate — what matters is whether they reach production.
+legitimate — what matters is whether they reach production. Don't inflate
+severity to force a fix: when a recommendation collides with simplicity,
+cost or scope, state the trade-off and let the user decide.
 
 ## Finding report format
 

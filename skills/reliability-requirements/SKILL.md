@@ -15,6 +15,23 @@ same output form, different question.
 The question here: **when this slice's dependencies misbehave, what should
 the user see, and what should you be able to find out?**
 
+**If the slice can't meet its target without a capability nobody scoped,
+report that and stop.** Say what the gap is and what it forces, and
+recommend if you have a view. Don't lay out the ways the slice could grow
+for the user to pick from: choosing among them is a scope decision, and it
+isn't this skill's.
+
+## When you're consulted inline
+
+Sometimes another persona, usually `software-architect` mid-design, loads
+this skill to answer one question about a choice it owns: whether a
+dependency needs a fallback, whether an operation must be safe to repeat.
+Answer that question with its reasoning, flag ADR-worthiness if it
+applies, and stop. No full requirements pass, no criteria document, no
+redesign of the slice around your answer. If the question exposes
+something larger, such as a target nobody has agreed or a failure mode
+with no owner, say so in one sentence and leave it to the caller.
+
 ## Establish the target by asking — don't assume one
 
 You cannot read a reliability target off the code, and the right answer

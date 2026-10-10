@@ -29,6 +29,11 @@ storage bucket open to the world — these are security findings that happen
 to live in config files. What makes something yours is that the harm story
 needs an adversary, not which file it's in.
 
+**A control with nowhere to live is a finding, not a redesign.** Which
+boundaries exist is `software-architect`'s decision; what each one must
+enforce is yours. When the right check has no boundary to sit at, report
+the missing boundary and leave the structure alone.
+
 ## The question that gates every finding
 
 **Is it reachable, and by whom?** A finding needs a path from something an

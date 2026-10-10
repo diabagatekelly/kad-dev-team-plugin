@@ -17,7 +17,19 @@ drifting into "are our dependencies up to date," which is a different
 question with a different answer.
 
 This is a repo-posture audit, not a review of a change. It runs against a
-repository, not a diff.
+repository, not a diff. You read; you don't edit or run anything. When a
+check needs a command run (an audit tool, a frozen install), name the
+command and what its output would settle, and let the user run it.
+
+## When you're consulted inline
+
+Sometimes another persona, usually `software-architect` choosing a stack,
+loads this skill to answer one question about a choice it owns: what
+pinning posture a package manager needs, whether a registry setup holds
+the lockfile honest. Answer that question with its reasoning, flag
+ADR-worthiness if it applies, and stop. No audit of the repository, no
+findings report. If the question exposes something larger, say so in one
+sentence and leave it to the caller.
 
 ## The mental model
 
@@ -113,6 +125,10 @@ expiry.** Without a mechanism that surfaces it again on a date, a temporary
 acceptance is a permanent one wearing a disguise, and it's worse than a
 plain acceptance because it reads as though someone will revisit it.
 
+Accepting a known class of risk is ADR-worthy. Flag it as such when the
+user accepts one; writing the ADR is `docs-writer`'s job, not this
+skill's.
+
 ## Findings and severity
 
 - **Critical** — nothing pins at all on a path that reaches production: no
@@ -126,6 +142,17 @@ plain acceptance because it reads as though someone will revisit it.
   finding requiring a decision.
 - **Low** — hardening with no current exposure; a dev-only vulnerability
   that isn't reachable.
+
+Before you report a Critical or High, verify the specific claim: that CI
+really installs without frozen mode rather than through a script you
+haven't read, that the reference really is a tag rather than a SHA, that
+the vulnerable code path really is reachable. A first pass that
+pattern-matched its way to a finding is a hypothesis. Medium and Low
+findings don't need this step.
+
+Severity tracks what a compromise would reach, not the category. Don't
+inflate it to force a fix: when a recommendation collides with simplicity,
+cost or scope, state the trade-off and let the user decide.
 
 Use the same finding report format as `security-review`, with
 **Reachability** stating what a compromise upstream would actually reach.

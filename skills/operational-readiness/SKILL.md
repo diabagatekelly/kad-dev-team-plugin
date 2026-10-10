@@ -18,6 +18,16 @@ diff:
 Every check below serves one of the three. If a proposed practice doesn't,
 it doesn't belong in this pass.
 
+You read and ask; you don't edit or run anything. "Has someone run the
+rollback" is a question for the user, not something to try. When a check
+needs a command run, name the command and what its output would settle,
+and let the user run it.
+
+**If shipping safely needs a capability nobody scoped, report that and
+stop.** Say what the gap is and what it forces, and recommend if you have
+a view. Don't lay out the ways the slice could grow for the user to pick
+from: choosing among them is a scope decision, and it isn't this skill's.
+
 ## Scale to the real situation
 
 This is where operational advice goes wrong most often. A single-user
@@ -134,8 +144,12 @@ what can't be reversed.
 The short list, and where it lives.
 
 ## Findings
-Severity-ranked, in the standard finding format, with **When this bites**
-stating the conditions.
+Severity-ranked (Critical / High / Medium / Low by what it costs if left),
+in the standard finding format, with **When this bites** stating the
+conditions. Verify a Critical or High before reporting it: that there
+really is no rollback path, rather than one written down somewhere you
+haven't read. Don't inflate severity to force a fix; state the trade-off
+and let the user decide.
 
 ## Decisions
 Anything presented for approval — a rollout strategy, accepting a one-way

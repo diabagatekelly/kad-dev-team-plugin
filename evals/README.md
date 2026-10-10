@@ -75,7 +75,9 @@ resolve inside the case directory, and symlinks out are refused; the
 `baseline` grader compares against a checked-in reference transcript, not
 the live no-plugin arm; a `tool_used` grader on a subagent call needs
 `tool: Agent`; a `tool_used` grader that isn't `tool: Skill` is scored in
-both arms unless marked `arm: with-only`. A full pass costs about $7.50 at
+both arms unless marked `arm: with-only`; `AskUserQuestion` is never
+available and the scaffolded project's `.claude/settings.json` (hooks
+included) is ignored, see "Interactive skills" below. A full pass costs about $7.50 at
 `--runs 1` plus about $2 for the pairwise judge; the suite's `runs: 3`
 default triples the first number.
 
@@ -134,13 +136,39 @@ nine-case suite with the pairwise judge) before trusting anything.
 6. **Keep run output out of git.** `results/` is ignored; the coverage
    table carries the numbers and the results directory name, nothing else.
 
-When the real CLI can't exercise a skill — it blocks on `AskUserQuestion`
-mid-run (every `architecture-design`-style approval loop), or it needs a
-scripted answer to finish (the two-phase cases below) — the
-`.claude/skills/agent-eval` stand-in is still the only option. Everything
-else should move to the real CLI over time; the emulated cases in the
-table below are the backlog, and each one's `prompt.md` already names the
-plants a `library-app` case would need.
+### Interactive skills: one case per phase, chained by `history_file`
+
+`claude plugin eval` never offers `AskUserQuestion`: every run gets the
+same fixed tool set (`Task`, `Glob`, `Grep`, `Read`, `Skill`, `TaskStop`,
+`ToolSearch`) whatever `allowed_tools` says, and `ToolSearch` cannot find
+it. Project hooks don't load either (the sandbox writes its own settings),
+so a hook cannot script the answer. What works is the undocumented
+`context.history_file` field: the run resumes that session transcript and
+`execution.prompt` becomes the next user turn. An interactive skill
+therefore runs as a chain of cases:
+
+1. **Phase 1** is an ordinary case. Without the tool, the skill has to ask
+   in plain text and end its turn. Grade the question: it asks about the
+   real decision, gives its recommendation and the rejected alternatives,
+   and has not decided anything unilaterally.
+2. **Freeze it.** Run phase 1 with `--keep-temp --json <file>`, take the
+   kept directory (the parent of `out/` in the run's `tracePath`) from a run
+   whose question is a good one, and run
+   `tools/freeze-history.sh <kept-dir> evals/<phase-2-case>/history.jsonl`.
+   It keeps only the user and assistant turns, so review the message text,
+   nothing else, before committing.
+3. **Phase N** sets `context.history_file: history.jsonl` and puts the
+   scripted answer in `execution.prompt`. Grade the reaction. At least one
+   answer in each chain should reject the recommendation, to check the
+   skill changes course instead of finalizing what it had already decided.
+   Re-freeze downstream phases whenever the skill text changes what an
+   earlier phase asks.
+
+Answers arrive as a user message rather than an `AskUserQuestion` result,
+which is the one fidelity gap. This replaces the `.claude/skills/agent-eval`
+stand-in for the two-phase and approval-loop cases below; the emulated
+cases in the table are the backlog, and each one's `prompt.md` already names
+the plants a `library-app` case would need.
 
 ## Coverage
 
@@ -179,7 +207,7 @@ score is history, not a claim about today.
 | `architecture-review-neg-security-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `architecture-review-neg-test-quality-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
-| `devsecops-engineer:security-requirements` | 7/7 PASS, inline | yes |
+| `devsecops-engineer:security-requirements` | 7/7 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
 | `security-review-http` | real, Sonnet: 3/3 plants + 2/2 traps with plugin, 1 run — refund route outside every auth prefix, internal error text to callers, request headers/bodies to monitoring; traps: prefix-mounted staff auth, public catalog search. Baseline missed the error-text finding | yes |
 | `security-review-portal-pr` | real, Sonnet: 5/5 with plugin, 1 run — member-profile IDOR, SQL injection in history search, PR scoping of pre-existing problems; traps: session-scoped routes, prefix-mounted member auth | yes |
 | `security-review-config` | real, Sonnet: 5/5 with plugin, 1 run — hardcoded SendGrid fallback key (rotation required), long-lived AWS keys beside an OIDC job, workflow-wide secrets; traps: Stripe publishable key, `id-token: write`. Baseline called the publishable key a leaked secret | yes |
@@ -187,10 +215,10 @@ score is history, not a claim about today.
 | `security-review-catalog` | real, Sonnet: 1/1 with plugin vs 0/1 without, 1 run — the clean module; baseline rated a rate-limit/scan note Medium | yes |
 | `security-review-neg-architecture` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
 | `security-review-neg-reliability` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
-| `devsecops-engineer:supply-chain-review` | 7/7 PASS, inline | yes |
-| `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | yes |
-| `devsecops-engineer:reliability-review` | 6/6 PASS, inline | yes |
-| `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | yes |
+| `devsecops-engineer:supply-chain-review` | 7/7 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
+| `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
+| `devsecops-engineer:reliability-review` | 6/6 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
+| `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
 | `ux-designer:design-system` | 9/9 PASS (after one re-run), three-phase | yes |
 | `ux-designer:screen-design` | 9/9 PASS, single-phase | yes |
 | `accessibility-engineer:accessibility-review` | 8/9 PASS, single-phase — the one failure is `skill-invoked`, a mechanical self-report miss, not a substantive gap; see the case's `eval-score/summary.md` | yes |
@@ -473,9 +501,8 @@ Run with the `agent-eval` skill, one case per invocation.
   review through the `software-architect` agent (`allowed_tools` includes
   `Agent`). It confirms delegation and that the agent-wrapped review
   matches the skill-only one on every grader. The interactive design loop
-  (`architecture-design` asking for approval via `AskUserQuestion`) cannot
-  run under the eval's `dontAsk` mode, so the agent path is only testable
-  for review and for trigger routing.
+  (`architecture-design` asking for approval) needs the phase-chained
+  cases described under "Interactive skills" above.
 
   Cost of the whole architecture-review eval effort, all generations: about
   $40.
@@ -535,3 +562,19 @@ Run with the `agent-eval` skill, one case per invocation.
 Root-cause notes for any bug a case caught live in that case's own
 `eval-score/summary.md`, not here — check there before touching a skill,
 grader, or the `agent-eval` harness that a case already covers.
+
+- **Clean an agent before migrating its skills: the rules a skill needs
+  move out of `AGENT.md`, the routing stays.** `devsecops-engineer`'s
+  `AGENT.md` held review standards (verify a Critical/High first, don't
+  inflate severity, read and never run), stop rules (a slice that has to
+  grow, a control with no boundary) and the consult-mode rule, none of
+  which a direct, inline or eval invocation of its skills ever saw. Each
+  moved into the skills that need it; who a hand-off goes to
+  (`product-slicer`, `docs-writer`, back to the architect) stayed in
+  `AGENT.md`, as did choosing among the persona's own skills. The pass also
+  found `AGENT.md` calling real-looking values in fixtures "noise", against
+  `security-review`'s own five-exits rule. Done before calibration so each
+  suite is calibrated once; the `security-review-*` regression after the
+  change (`results/20261010-secrev-regress`) stayed 7/7 with the plugin.
+  Output location is still `AGENT.md`-only across the roster, queued as its
+  own pass.
