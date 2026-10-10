@@ -161,8 +161,10 @@ therefore runs as a chain of cases:
    scripted answer in `execution.prompt`. Grade the reaction. At least one
    answer in each chain should reject the recommendation, to check the
    skill changes course instead of finalizing what it had already decided.
-   Re-freeze downstream phases whenever the skill text changes what an
-   earlier phase asks.
+   Re-freeze downstream phases whenever the skill text changes at all:
+   a frozen history carries the `SKILL.md` text as it was loaded in the
+   earlier phase, so a later phase keeps running the old instructions
+   until the earlier phase is re-run and re-frozen.
 
 Answers arrive as a user message rather than an `AskUserQuestion` result,
 which is the one fidelity gap. This replaces the `.claude/skills/agent-eval`
@@ -215,7 +217,14 @@ score is history, not a claim about today.
 | `security-review-catalog` | real, Sonnet: 1/1 with plugin vs 0/1 without, 1 run — the clean module; baseline rated a rate-limit/scan note Medium | yes |
 | `security-review-neg-architecture` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
 | `security-review-neg-reliability` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
-| `devsecops-engineer:supply-chain-review` | 7/7 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
+| `supply-chain-review-build` | real, Sonnet: 4/5 with plugin vs 4/5 without in the final pass (`results/20261010-sc-final`); 5/5 vs 3/5 the pass before — tag-pinned base image, an image build that installs without the lockfile, install scripts enabled with a transitive install script; traps: manifest caret ranges under a committed lockfile and `npm ci`, Dependabot. The base-image tag is the flaky one: missed in 2 of 4 direct runs even after the skill gained an enumerate-every-reference check, while the agent path caught it every time | yes |
+| `supply-chain-review-build-via-agent` | real, Sonnet: 5/5 with plugin, delegation to `devsecops-engineer` confirmed via `Agent`; the no-plugin arm (2/5) is not a comparison | yes |
+| `supply-chain-review-workflows` | real, Sonnet: 3/3 both arms, 1 run — a regression guard: a tag-pinned third-party action in the deploy job, an `@main` reference in a write-scoped workflow; trap: SHA-pinned actions | yes |
+| `supply-chain-review-accepted` | real, Sonnet: 5/5 with plugin vs 4/5 without, 1 run — a bare allowlist entry, a "temporary" acceptance nothing enforces (the baseline missed this), an AGPL transitive dependency; traps: a properly recorded acceptance, a dev-only advisory | yes |
+| `supply-chain-review-accept-phase1` | real, Sonnet: 3/3 with plugin across passes vs 1/3 without — asked to record an allowlisted advisory, the skill asks which classification applies and for the reason instead of choosing; the baseline picks or offers a dated "temporary" acceptance. The skill did not fire at all until its description named accepting/recording a finding | yes |
+| `supply-chain-review-accept-phase2` | real, Sonnet: 3/3 on 2 runs plus the final pass (`results/20261010-sc-p2b`) — the first case built on `context.history_file`: resumes a frozen phase-1 question, answers "accepted risk" with a reason, and checks the write-up keeps the user's classification and reason, adds no unenforced expiry, and flags the acceptance as ADR-worthy without drafting it. No baseline arm: the history is a with-plugin transcript. The ADR flag failed until it became an explicit recording step, and that fix only reached phase 2 after phase 1 was re-run and re-frozen | yes |
+| `supply-chain-review-neg-security` | real, Sonnet: never invokes `supply-chain-review` in either arm | yes |
+| `supply-chain-review-neg-reliability` | real, Sonnet: never invokes `supply-chain-review` in either arm | yes |
 | `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
 | `reliability-review-nightly` | real, Sonnet: 8/8 with plugin vs 5/8 without, 1 run (`results/20261010-final-reliability-review`) — unhandled rejection from the timer-driven job, no per-loan isolation, a database pool leaked per run, a mailer with no timeout, a postal adapter that swallows failures; traps: the reminder loop's catch, re-run idempotency, a correct transient-only SMS retry. The pool leak was missed in two of six calibration runs | yes |
 | `reliability-review-nightly-via-agent` | real, Sonnet: 8/8 with plugin, delegation to `devsecops-engineer` confirmed via `Agent`; the no-plugin arm (3/8) is not a comparison, the agent doesn't exist without the plugin | yes |
@@ -617,3 +626,20 @@ grader, or the `agent-eval` harness that a case already covers.
   runtime cycle twice in a row in unchanged code (the review called
   `LoanPolicy.sample` dead code) — a watch item for `architecture-review`,
   not caused by this work.
+- **`devsecops-engineer:supply-chain-review` moved in three calibration
+  passes, including the first phase-chained case.** The fixture gained a
+  real v3 lockfile (CI's `npm ci` had nothing to read), a `Dockerfile` the
+  deploy job actually builds and ships, `dependabot.yml`, a release-notes
+  workflow, a tag-pinned Slack step and `audit-ci.jsonc`. Skill fixes: the
+  description now covers accepting, suppressing or recording a finding
+  (the accept flow never fired before); a check that lists every
+  reference in all three places (lockfile installs, `uses:` lines, `FROM`
+  lines) before writing findings; and recording an acceptance as three
+  explicit parts (the entry, no unenforced expiry, an ADR-worthy flag for
+  `docs-writer`). Methodology: a frozen history embeds the skill text
+  loaded when it was frozen, so a skill edit reaches a later phase only
+  after the earlier phase is re-run and re-frozen; and a frozen history
+  must be checked for account identifiers before it is committed (these
+  carry sandbox paths, session and request ids, nothing personal).
+  Regressions on the new fixture: `security-review-config` 1/1,
+  `library-app-structure-review` 1/1.

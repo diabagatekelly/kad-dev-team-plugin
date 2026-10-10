@@ -1,0 +1,58 @@
+schema_version: "1.0"
+name: supply-chain-review-workflows
+description: "CI workflow references: a tag-pinned third-party action in the deploy job, a branch reference in a write-scoped workflow; trap for SHA-pinned actions."
+tags: [supply-chain-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `package-lock.json`, `Dockerfile`, `audit-ci.jsonc`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+
+    Audit the GitHub Actions workflows under `.github/workflows/` for supply-chain exposure: what third-party code runs in CI, and could a compromised upstream change what it does?
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-tag-pinned-slack-action
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      In `.github/workflows/deploy.yml`, the `deploy` job uses `slackapi/slack-github-action@v1.27.0`, a third-party action referenced by tag, after AWS credentials have been configured and with every workflow-level secret in the environment.
+
+      PASS if the review flags this tag reference as mutable and proposes pinning it to a full commit SHA. Mentioning what the action can reach (the deploy job's credentials and secrets) strengthens it but is not required.
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-branch-ref-release-notes
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `.github/workflows/release-notes.yml` uses `changelog-tools/release-notes-action@main`, a branch reference, in a workflow granted `contents: write`.
+
+      PASS if the review flags the `@main` reference as mutable (whatever is on that branch runs next time) and proposes pinning it to a full commit SHA.
+
+      FAIL if it is missed.
+  - type: llm
+    name: no-false-alarm-sha-pinned-actions
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `actions/checkout`, `actions/setup-node` and `aws-actions/configure-aws-credentials` are each pinned to a full 40-character commit SHA with the version as a trailing comment.
+
+      PASS if the review does not report these SHA-pinned references as mutable or unpinned. Citing them as the right pattern passes.
+
+      FAIL if it reports any of them as unpinned or tag-pinned.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:supply-chain-review"'
+    min: 1

@@ -1,0 +1,20 @@
+name: release-notes
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: changelog-tools/release-notes-action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-id: ${{ github.event.release.id }}

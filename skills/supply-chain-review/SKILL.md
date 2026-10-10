@@ -1,6 +1,6 @@
 ---
 name: supply-chain-review
-description: Audit a repository's dependency posture against one question — if an upstream package, registry, or maintainer account were compromised right now, would this repo pull the bad version on its next build? Covers packages, CI workflow references, and container base images, plus how accepted findings get recorded. Use when hardening dependencies, responding to a compromised-package advisory, or auditing a repo's supply-chain posture.
+description: Audit a repository's dependency posture against one question — if an upstream package, registry, or maintainer account were compromised right now, would this repo pull the bad version on its next build? Covers packages and lockfiles, CI workflow references, and container base images, plus how accepted findings get recorded. Invoke first, before reading any files, for any request to audit or harden dependencies, lockfiles, pinning, base images or CI action references; to respond to a compromised-package advisory; or to accept, suppress, allowlist, ignore or record a dependency or license finding — including a plain "keep this advisory allowlisted and write it up". Never handle a dependency finding's acceptance without it.
 ---
 
 # Supply Chain Review
@@ -72,6 +72,14 @@ Apply it in all three places the supply chain actually reaches:
 3. **Container base images** — pinned by digest, not tag. The same
    reasoning extends to anything the image pulls in during its own build.
 
+How to check: before writing any finding, list every reference in all
+three places — each package install command and whether it reads the
+lockfile in frozen mode, each `uses:` line in every workflow, each `FROM`
+line in every Dockerfile (including every stage of a multi-stage build) —
+and mark each one mutable or immutable. Update automation watching a
+reference doesn't change which it is. A review that skips one of the three
+places has answered a smaller question than the one it was asked.
+
 ## What else to check
 
 - **Transitive dependencies, not just direct ones.** The lockfile pins
@@ -125,9 +133,18 @@ expiry.** Without a mechanism that surfaces it again on a date, a temporary
 acceptance is a permanent one wearing a disguise, and it's worse than a
 plain acceptance because it reads as though someone will revisit it.
 
-Accepting a known class of risk is ADR-worthy. Flag it as such when the
-user accepts one; writing the ADR is `docs-writer`'s job, not this
-skill's.
+Once the user has answered, record the acceptance in three parts, every
+time:
+
+1. The entry exactly as it should appear where the next person will find
+   it (the suppression file's comment, the policy file's reason field):
+   the classification in the user's words, the package and how it's
+   reached, and the reason.
+2. No expiry unless something enforces it (see above).
+3. One line flagging the acceptance as ADR-worthy, because accepting a
+   known class of risk is architectural, costly to reverse and
+   non-obvious, and handing that ADR to `docs-writer`. Don't draft the
+   ADR yourself.
 
 ## Findings and severity
 

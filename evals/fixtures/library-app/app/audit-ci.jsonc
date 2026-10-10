@@ -1,0 +1,18 @@
+// Advisories `npx audit-ci --config audit-ci.jsonc` (run in CI's test job)
+// must not fail the build on. Every entry needs a reason someone else can
+// judge later.
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  "moderate": true,
+  "allowlist": [
+    // Not vulnerable, mitigated by design: GHSA-4w2q-8m3v-c9rf is a ReDoS in
+    // date-fns-lite's parse(). The service never calls parse(); utils/,
+    // members/ and lending/ only use addDays, differenceInCalendarDays and
+    // startOfDay, and dates reach them as Date objects, never strings.
+    "GHSA-4w2q-8m3v-c9rf",
+    "GHSA-9xj7-p3hc-r5mw",
+    // typescript prototype-pollution advisory in the language service, dev
+    // only. Accepted until 2026-12-01, revisit then.
+    "GHSA-hq6c-2f8v-7wxp"
+  ]
+}

@@ -1,0 +1,46 @@
+schema_version: "1.0"
+name: supply-chain-review-accept-phase2
+description: "Interactive accept flow, phase 2: resumes the frozen phase-1 question and answers it; the skill must record the user's classification and reason, add no unenforced expiry, and flag the acceptance as ADR-worthy."
+tags: [supply-chain-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Accepted risk. It's a request-smuggling advisory in `path-match-lite`, which `express-lite` pulls in. There's no patched `express-lite` release yet, and we're tolerating it until there is because every route sits behind the load balancer, which rejects ambiguous Content-Length/Transfer-Encoding requests. Write up the entry.
+  model: sonnet
+  max_turns: 20
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: records-users-classification-and-reason
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user answered the earlier question: the classification is "accepted risk", the advisory is request smuggling in `path-match-lite` (pulled in by `express-lite`), no patched `express-lite` exists yet, and it is tolerated because the load balancer rejects ambiguous Content-Length/Transfer-Encoding requests.
+
+      PASS if the response produces the allowlist entry's write-up (a comment for `audit-ci.jsonc`, or the exact text to add) that names the classification as accepted risk and carries the user's reason in substance (the package, that no fix is available, and the load-balancer mitigation as the reason it is tolerated).
+
+      FAIL if it reclassifies the entry (for example as a false positive or as "not vulnerable, mitigated by design") instead of recording the user's choice, drops the reason, or produces no write-up.
+  - type: llm
+    name: no-unenforced-expiry
+    focus: last_message
+    weight: 1
+    criteria: |
+      audit-ci's allowlist has no expiry mechanism. The user said the risk is tolerated "until there is" a patched release, without giving a date.
+
+      PASS if the write-up does not add a revisit or expiry date that nothing enforces. Saying the entry should be removed once a patched `express-lite` ships, suggesting a mechanism that would surface it (an issue, a scheduled check, Dependabot noticing the release), or warning that a bare date would not be enforced all pass.
+
+      FAIL if the recorded entry includes an "until <date>" / "revisit on <date>" with no enforcing mechanism and no warning.
+  - type: llm
+    name: flags-adr-worthy
+    focus: last_message
+    weight: 1
+    criteria: |
+      Accepting a known class of risk is, per the skill, ADR-worthy: it should be flagged as such, with writing the ADR left to `docs-writer`.
+
+      PASS if the response notes that this acceptance is worth recording as an architecture/decision record (or flags it for `docs-writer`). Offering to get one written passes; the check is only that the flag is raised and the ADR's content is not produced in this response.
+
+      FAIL if there is no such flag, or if the response itself contains a drafted ADR (context/decision/consequences sections or equivalent).

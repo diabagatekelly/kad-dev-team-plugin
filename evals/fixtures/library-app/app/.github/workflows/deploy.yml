@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      - run: npx audit-ci --config audit-ci.jsonc
       - run: npm run typecheck
       - run: npx tsc -p tsconfig.json && npm test
 
@@ -38,11 +39,26 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 22
+      - run: npm ci && npx tsc -p tsconfig.json
       - uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
         with:
           role-to-assume: arn:aws:iam::614208837152:role/library-lending-deploy
           aws-region: us-west-2
-      - run: aws ecs update-service --cluster library --service lending --force-new-deployment
+      - run: aws ecr get-login-password | docker login --username AWS --password-stdin 614208837152.dkr.ecr.us-west-2.amazonaws.com
+      - run: |
+          image=614208837152.dkr.ecr.us-west-2.amazonaws.com/library-lending:${{ github.sha }}
+          docker build -t "$image" .
+          docker push "$image"
+          ops/release.sh "$image"
+      - uses: slackapi/slack-github-action@v1.27.0
+        with:
+          channel-id: desk-systems
+          slack-message: "library-lending ${{ github.sha }} deployed"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
   snapshot:
     if: github.event_name == 'schedule'

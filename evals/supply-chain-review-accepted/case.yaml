@@ -1,0 +1,82 @@
+schema_version: "1.0"
+name: supply-chain-review-accepted
+description: "Accepted advisories and licenses (audit-ci.jsonc, package-lock.json): a bare allowlist entry, an unenforced temporary acceptance, an AGPL transitive dependency; traps for a properly recorded acceptance and a dev-only advisory."
+tags: [supply-chain-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `package-lock.json`, `Dockerfile`, `audit-ci.jsonc`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+
+    Review how this repo handles dependency findings it has decided not to fix: the advisories allowlisted in `audit-ci.jsonc` (CI runs `audit-ci` with it), and the licenses of what `package-lock.json` pulls in. Is anything accepted badly, or missing a decision?
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-bare-allowlist-entry
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `audit-ci.jsonc` allowlists `GHSA-9xj7-p3hc-r5mw` with no comment: no classification (false positive, mitigated by design, or accepted risk) and no reason, unlike the entries around it.
+
+      PASS if the review flags this bare suppression as a finding (nobody can judge it later) and proposes recording a named classification and a reason, or removing it and triaging the advisory. It must not choose the classification on the user's behalf.
+
+      FAIL if it is missed, or if the review itself declares which classification applies without asking or deferring to the user.
+  - type: llm
+    name: finds-unenforced-temporary-acceptance
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `audit-ci.jsonc` allowlists `GHSA-hq6c-2f8v-7wxp` with "Accepted until 2026-12-01, revisit then." audit-ci's allowlist has no expiry: nothing will surface the entry on that date.
+
+      PASS if the review points out that the "until" date is not enforced by anything (so the temporary acceptance is effectively permanent) and proposes either recording it as a plain accepted risk with its reason or using a mechanism that actually expires.
+
+      FAIL if it is missed, or if the date is accepted as a working expiry.
+  - type: llm
+    name: finds-agpl-transitive
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `package-lock.json` lists `stack-symbolicate` (transitive via `monitor-sdk`) with license `AGPL-3.0-only`, in a service that runs over a network.
+
+      PASS if the review flags the AGPL-licensed transitive dependency as a license risk that needs a decision by whoever owns licensing (or replacement of the dependency). It should not declare a legal verdict as settled.
+
+      FAIL if it is missed.
+  - type: llm
+    name: no-false-alarm-documented-acceptance
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `audit-ci.jsonc` allowlists `GHSA-4w2q-8m3v-c9rf` with a comment naming the classification ("Not vulnerable, mitigated by design") and a checkable reason: a ReDoS in `date-fns-lite`'s `parse()`, which the service never calls (it uses only `addDays`, `differenceInCalendarDays` and `startOfDay`).
+
+      PASS if the review does not report this entry as a bare or badly recorded suppression. Saying it is the model the others should follow, or suggesting the reason be re-verified periodically, passes.
+
+      FAIL if it reports this entry as lacking a classification or reason, at Medium or above.
+  - type: llm
+    name: no-false-alarm-dev-only-advisory
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `GHSA-hq6c-2f8v-7wxp` concerns TypeScript's language service, a dev dependency that never reaches the production image.
+
+      PASS if the review does not rate the TypeScript advisory itself as Medium or above. Its finding about how the advisory was accepted (the unenforced date) is separate and does not affect this check.
+
+      FAIL if it rates the TypeScript vulnerability itself Medium or higher as a production exposure.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:supply-chain-review"'
+    min: 1

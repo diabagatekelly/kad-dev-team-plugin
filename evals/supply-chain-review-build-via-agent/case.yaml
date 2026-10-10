@@ -1,0 +1,83 @@
+schema_version: "1.0"
+name: supply-chain-review-build-via-agent
+description: "Agent path: the build audit routed through the devsecops-engineer agent."
+tags: [supply-chain-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `package-lock.json`, `Dockerfile`, `audit-ci.jsonc`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+
+    Use the `kad-dev-team:devsecops-engineer` agent to audit this repo's dependency posture for how packages reach production: `package.json`, `package-lock.json`, the `Dockerfile`, `.github/dependabot.yml`, and how the CI workflow and the image build install them. Return its findings report verbatim as your final answer, adding nothing and removing nothing.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Task, Agent, Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-base-image-tag
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      The `Dockerfile` starts `FROM node:22-slim`: a mutable tag on the image that runs in production. `.github/dependabot.yml` has a docker entry, which bumps tags but does not make the reference immutable.
+
+      PASS if the review flags the tag-pinned base image and proposes pinning it by digest (`@sha256:...`). It must not present Dependabot's docker updates as already solving this.
+
+      FAIL if it is missed, or accepted because Dependabot watches docker.
+  - type: llm
+    name: finds-image-build-ignores-lockfile
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      The `Dockerfile` copies only `package.json` and runs `npm install --omit=dev`, so every image build resolves the manifest's caret ranges fresh: the committed `package-lock.json` that CI installs with `npm ci` never reaches the production image.
+
+      PASS if the review identifies that the image build installs without the lockfile (or not in frozen mode), states that production can therefore get different versions from what CI tested, treats it at the highest or second-highest severity it uses, and proposes copying the lockfile and using `npm ci` (or equivalent frozen install).
+
+      FAIL if it is missed or rated Low.
+  - type: llm
+    name: finds-install-scripts-enabled
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `package-lock.json` marks `native-phone-codec` (a transitive dependency via `sms-sdk`) with `hasInstallScript: true`, and there is no `.npmrc` setting `ignore-scripts`, so npm runs that install script in CI's `npm ci` and in the image build.
+
+      PASS if the review flags that install/lifecycle scripts run by default (naming the package with an install script, or the absence of `ignore-scripts`) and proposes disabling them with a narrow allowlist or equivalent.
+
+      FAIL if it is missed.
+  - type: llm
+    name: no-false-alarm-manifest-ranges
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `package.json` uses caret ranges, but `package-lock.json` is committed with an `integrity` hash per package and the CI jobs install with `npm ci`.
+
+      PASS if the review does not report the caret ranges in `package.json` as a problem in their own right while the lockfile and `npm ci` hold. Pointing out that the ranges *do* matter where something installs without the lockfile (the Dockerfile) passes; so does a Low note suggesting exact versions.
+
+      FAIL if it reports the manifest's caret ranges as a Medium-or-above finding on their own, independent of the image build.
+  - type: llm
+    name: no-false-alarm-dependabot
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `.github/dependabot.yml` configures weekly updates for npm, docker and GitHub Actions.
+
+      PASS if the review does not report having Dependabot configured as a problem. Noting that it does not pin anything, or that its updates need review, passes.
+
+      FAIL if the Dependabot configuration itself is reported as a defect at Medium or above.
+  - type: tool_used
+    name: agent-delegated-display
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?devsecops-engineer'
+    min: 1
+    arm: with-only

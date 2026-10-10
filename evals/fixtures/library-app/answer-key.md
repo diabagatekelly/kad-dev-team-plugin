@@ -111,7 +111,7 @@ generally (the skill prefers a managed store); the AWS account id in the
 deploy role ARN; card numbers interpolated into exception messages that
 reach the `reminder failed` log; `PlaceHold` and checkout taking the card
 number from the body (staff-only routes); no rate limiting on portal
-routes (public search has one); no lockfile (a `supply-chain-review` concern).
+routes (public search has one); the image build ignoring the lockfile (`SC2`, a `supply-chain-review` concern).
 
 ## Reliability plants (`R`, `RT`) — `devsecops-engineer:reliability-review`
 
@@ -167,6 +167,40 @@ the nightly run and the day-1 report; `CheckoutBook` and `RegisterMember`
 check-then-write without a transaction, and so does `AssessOverdueFine` across overlapping runs; loan updates are read-modify-write with no version check; the catalog's leading-wildcard `ILIKE` cannot use a plain index, (a speed note; at the stated scale, Low at most); no correlation id ties a request's
 log, monitoring and database records together; no alert covers the nightly
 job or fine payments; report files are written non-atomically.
+
+## Supply-chain plants (`SC`, `SCT`) — `devsecops-engineer:supply-chain-review`
+
+Principles come from `skills/supply-chain-review/SKILL.md`. The question it
+answers: if an upstream package, registry or maintainer account were
+compromised right now, would the next build pull the bad version? The
+production path is: CI `deploy` job runs `npm ci` and `tsc`, builds the
+`Dockerfile`, pushes the image tagged with the commit SHA, and
+`ops/release.sh` rolls the ECS service onto it. Packages are fictional;
+`package-lock.json` is lockfileVersion 3 with an `integrity` hash per
+package.
+
+### Planted violations
+
+| # | Where | Principle | What is wrong | Expected verdict |
+|---|---|---|---|---|
+| SC1 | `Dockerfile` `FROM node:22-slim` | Base images pinned by digest | A mutable tag on the image that runs in production; `dependabot.yml`'s docker entry updates tags, it does not pin. | High. Fix: pin `node:22-slim@sha256:...`; let Dependabot bump the digest. |
+| SC2 | `Dockerfile` `COPY package.json` + `RUN npm install --omit=dev` | Frozen installs on the production path | The image build copies only the manifest and runs `npm install`, so it resolves every caret range fresh at build time: the lockfile CI tested against never reaches production. | Critical/High (nothing pins on the path that reaches production). Fix: copy `package-lock.json` and run `npm ci --omit=dev`. |
+| SC3 | `native-phone-codec` (`hasInstallScript: true` in `package-lock.json`, transitive via `sms-sdk`); no `.npmrc` | Install-time code execution | npm runs lifecycle scripts by default; one transitive dependency has an install script, and it runs in CI's `npm ci` (with every workflow secret in `env`) and in the image build. | Medium. Fix: `ignore-scripts=true` with a narrow allowlist (or rebuild only the packages that need it). |
+| SC4 | `.github/workflows/deploy.yml` `slackapi/slack-github-action@v1.27.0` | CI workflow references pinned to a full SHA | A third-party action referenced by tag, running in the `deploy` job after AWS credentials are configured and with every workflow secret in `env`. | High. Fix: pin to the commit SHA with the version as a comment, as the other actions are. |
+| SC5 | `.github/workflows/release-notes.yml` `changelog-tools/release-notes-action@main` | Same | A branch reference, the most mutable kind, in a workflow with `contents: write`. | High. Fix: pin to a SHA. |
+| SC6 | `audit-ci.jsonc` `GHSA-9xj7-p3hc-r5mw` | Accepted findings need a classification and a reason | A bare allowlist entry: nobody can tell later whether it was a false positive, mitigated, or an accepted risk. | Medium. Fix: name the classification and the reason, or remove it and triage; the user picks the classification. |
+| SC7 | `audit-ci.jsonc` `GHSA-hq6c-2f8v-7wxp` "Accepted until 2026-12-01, revisit then" | Temporary acceptance needs an enforced expiry | audit-ci's allowlist has no expiry; nothing will surface the entry on that date, so it is a permanent acceptance that reads as a temporary one. | Medium (the advisory itself is dev-only, Low). Fix: record it as a plain accepted risk with its reason, or use a mechanism that actually expires. |
+| SC8 | `stack-symbolicate` (AGPL-3.0-only in `package-lock.json`, transitive via `monitor-sdk`) | License risk | A strong-copyleft license arriving through a dependency nobody chose, in a network service. | Medium: a decision for whoever owns licensing, not a verdict the reviewer makes. Fix: decide, and record it; or replace the dependency. |
+
+### Traps
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| SCT1 | `package.json` caret ranges | Version ranges in the manifest. | `package-lock.json` is committed with integrity hashes and CI installs with `npm ci`: the lockfile is the anchor there. The manifest's ranges only matter where something installs without it (SC2). |
+| SCT2 | `.github/dependabot.yml` | An update bot that changes dependencies. | Update automation is fine and covers npm, docker and actions; it simply is not pinning (see SC1). |
+| SCT3 | `actions/checkout`, `actions/setup-node`, `aws-actions/configure-aws-credentials` | Third-party code in CI. | Each is pinned to a full commit SHA with the version as a comment. |
+| SCT4 | `audit-ci.jsonc` `GHSA-4w2q-8m3v-c9rf` | An allowlisted advisory. | Classified ("Not vulnerable, mitigated by design") with a reason someone can check: the service never calls `parse()`. |
+| SCT5 | `GHSA-hq6c-2f8v-7wxp` itself | An advisory in TypeScript. | Dev-only (the language service, never in the image): Low on reachability. The finding is how it was accepted (SC7), not the advisory. |
 
 ## Boy Scout scoping (same code, different framing)
 

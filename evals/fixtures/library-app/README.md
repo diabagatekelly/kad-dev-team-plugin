@@ -21,9 +21,10 @@ app/
   utils/          date helpers                     V11, T6 (low-risk date library)
   infra/          postgres, email, sms, postal, payments, files, http, logging, monitoring adapters   T9; S1, S2, S3, S5, S7, ST1, ST3, ST4, ST6; R3, R4, R5, R8, R9, R10, R11, RT3, RT5
   main/           server.ts, wiring.ts, jobs.ts    T7 (bootstrap and composition root, exempt); S4, S8, ST2, ST7; R1, R2, RT1, RT8
-  ops/            alert rules and a runbook        R12, R13, RT7
+  ops/            alert rules, a runbook, release.sh   R12, R13, RT7
   test/           node:test tests and fixtures     S11
-  .github/        deploy workflow                  S9, S10, ST5
+  .github/        deploy and release-notes workflows, dependabot   S9, S10, ST5; SC4, SC5, SCT2, SCT3
+  Dockerfile, package-lock.json, audit-ci.jsonc   image, lockfile, accepted advisories   SC1, SC2, SC3, SC6, SC7, SC8, SCT1, SCT4, SCT5
   types/          ambient declarations for the fictional third-party packages
 answer-key.md     every V (planted violation) and T (trap), with the principle each exercises
 verify.sh         type-checks, proves the runtime cycle crashes and the type-only one doesn't, runs test/
