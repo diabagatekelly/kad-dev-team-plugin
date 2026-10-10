@@ -158,17 +158,17 @@ score is history, not a claim about today.
 | `product-slicer:acceptance-criteria` | 2/2 PASS, inline | yes |
 | `orchestrator` | 15/15 PASS, skill-only | yes |
 | `software-architect:architecture-design` | 8/8 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | yes |
-| `library-app-lending-review` | real, 6/6 with plugin vs 5/6 without (ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
-| `library-app-lending-review-via-agent` | real, 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
-| `library-app-members-review` | real, 3/3 both arms, 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
-| `library-app-fines-review` | real, 4/4 with plugin vs 2/4 without (missed policy-mixed-with-mechanics; demanded the documented rounding split be unified), 1 run | yes |
-| `library-app-notifications-review` | real, 3/3 both arms, 1 run — missing channel abstraction, port on the implementer's side, one-impl-port-over-I/O trap | yes |
-| `library-app-reporting-review` | real, 3/3 both arms, 1 run — SQL-level port, SDK in a report, orchestration mixed with CSV bytes | yes |
-| `library-app-reporting-pr` | real, 3/3 with plugin vs 2/3 without (legacy issues not scoped as non-blocking), 1 run — Boy Scout scoping of the same module | yes |
-| `library-app-structure-review` | real, 4/4 both arms, 1 run — technical-role directories, SDK outside its adapter, bootstrap/near-miss/date-library traps | yes |
-| `library-app-catalog-review` | real, 1/1 both arms, 1 run — the clean module; both arms report nothing above Low (an earlier run flagged a cross-module read the fixture itself had introduced; fixed) | yes |
-| `architecture-review-neg-security-review` | real, 3/3 both arms — correctly does not invoke `architecture-review` | yes |
-| `architecture-review-neg-test-quality-review` | real, 3/3 both arms — correctly does not invoke `architecture-review` | yes |
+| `library-app-lending-review` | real, Sonnet: 6/6 with plugin vs 4/6 without (runtime cycle missed, ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
+| `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
+| `library-app-members-review` | real, Sonnet: 3/3 with plugin vs 2/3 without (table-shaped domain type missed), 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
+| `library-app-fines-review` | real, Sonnet: 4/4 with plugin vs 2/4 without (policy-mixed-with-mechanics and the premature strategy interface missed), 1 run | yes |
+| `library-app-notifications-review` | real, Sonnet: 3/3 both arms, 1 run — missing channel abstraction, port on the implementer's side, one-impl-port-over-I/O trap | yes |
+| `library-app-reporting-review` | real, Sonnet: 3/3 with plugin vs 2/3 without after one skill fix, 1 run each — SQL-level port and SDK in a report found by both arms; the orchestration-mixed-with-CSV smell was missed by both arms in every Sonnet run until the skill's "inconsistent abstraction level" smell gained a concrete check (a method that calls collaborators and also handles characters/delimiters/encodings is at two levels); re-run `results/20261009-220715-sonnet3-reporting-review` passes with the plugin, the baseline still misses it | yes |
+| `library-app-reporting-pr` | real, Sonnet: 3/3 with plugin vs 1/3 without after one skill fix, 1 run each — first Sonnet run had the "Pre-existing, not blocking" section listing only items inside the diff; the skill gained "skim the rest of the module before you finish", and the re-run (`results/20261009-215755-sonnet2b`) named the SQL-level port and the Stripe import as pre-existing and non-blocking, with the PR's own smell flagged and the new port not called premature | yes |
+| `library-app-structure-review` | real, Sonnet: 4/4 with plugin vs 3/4 without (`services/` and `utils/` described, not flagged), 1 run — technical-role directories, SDK outside its adapter, bootstrap/near-miss/date-library traps | yes |
+| `library-app-catalog-review` | real, Sonnet: 1/1 with plugin vs 0/1 without, 1 run — the clean module; with the skill the review reports nothing above Low, without it a Medium is raised (earlier runs flagged two things the fixture itself had introduced, a cross-module read and a dead search route; both fixed) | yes |
+| `architecture-review-neg-security-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
+| `architecture-review-neg-test-quality-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
 | `devsecops-engineer:security-requirements` | 7/7 PASS, inline | yes |
 | `devsecops-engineer:security-review` | 7/7 PASS, inline | yes |
@@ -384,6 +384,47 @@ Run with the `agent-eval` skill, one case per invocation.
   is deliberately narrow, not as the skill losing on its own ground; on
   its own ground the grader table above is the evidence. Single-run numbers;
   `runs: 3` has not been paid for yet.
+
+  **Which model, and why it mattered.** The first two calibrations ran
+  with no `execution.model`, so both arms used the session default,
+  `claude-fable-5-1`, and on Fable the skill fired 9/9 and the baseline
+  matched it on every planted defect. Every real case now pins
+  `execution.model: sonnet`, and the first Sonnet run
+  (`results/20261009-212430-sonnet1`) showed what Fable had been
+  covering: the skill fired in only 5 of 9 cases, and where it fired the
+  reviewer still missed the runtime cycle, policy mixed with mechanics,
+  the premature strategy interface, the missing channel abstraction, the
+  technical-role directories and PR scoping — things the skill named but
+  did not say how to detect. Two skill changes followed: a trigger line
+  in the description ("invoke first, before reading any code, for any
+  request to review a module/directory/PR for architecture, structure,
+  boundaries, dependencies, layering or design; never review architecture
+  without it"), and a concrete check for each of those smells
+  (value-position vs type-position imports for cycles; label each line
+  policy or mechanism; count implementations and ask what the interface
+  isolates; an `if/else` over same-job concretes is a visible axis; strip
+  the suffix from each top-level directory; a mandatory "Pre-existing,
+  not blocking" section). Second Sonnet run
+  (`results/20261009-213816-sonnet2`): skill fired 9/9, with-plugin 92%
+  of scored graders vs 65% before, baseline 62%, mean delta 0.38 vs 0.08.
+  Two further single-case fixes (PR scoping: skim the module; inconsistent
+  abstraction level: a concrete check) and one case-prompt fix (verbatim
+  relay in the agent path) followed, each verified on its own case. A
+  confirmatory full pass on the final skill text
+  (`results/20261009-221953-sonnet-final`, $5.17 + $1.68 judge): skill
+  fired 9/9, with-plugin 100% of scored graders in all nine cases,
+  baseline 60%, mean delta 0.43; the baseline missed the runtime cycle,
+  policy mixed with mechanics, the premature strategy interface, the
+  documented rounding split, the missing channel abstraction, the CSV
+  smell, PR scoping and the ordering line, and raised a Medium on the
+  clean module. Blind pairwise judge on that pass: plugin 6, baseline 3,
+  split 0.
+  The blind pairwise judge went plugin 3 / baseline 3 / split 3 on the
+  first Sonnet run, 4 / 3 / 2 on the second and 6 / 3 / 0 on the
+  confirmatory pass; with both arms on the same model the breadth
+  preference it showed on Fable is gone. All single-run numbers. The lesson for the next skill:
+  verify on the model the plugin's sessions actually run, and write the
+  skill so a mid-tier model can apply it, not only recognise it.
 
   **Agent path.** `library-app-lending-review-via-agent` routes the same
   review through the `software-architect` agent (`allowed_tools` includes

@@ -1,6 +1,6 @@
 ---
 name: architecture-review
-description: Review existing or changed code against the Dependency Rule, Good Fences, Invasive Species, and Screaming Architecture — catching both premature and missing abstraction, not just import-direction violations. Use when asked to review code for architecture/dependency issues, when a PR touches module boundaries, or before marking architecture-sensitive work as done.
+description: Review existing or changed code against the Dependency Rule, Good Fences, Invasive Species, and Screaming Architecture — catching both premature and missing abstraction, not just import-direction violations. Invoke first, before reading any code, for any request to review a module, directory, PR or codebase for architecture, structure, boundaries, dependencies, layering or design — including a plain "review X for architecture issues" — when a PR touches module boundaries, or before marking architecture-sensitive work as done. Never review architecture without it.
 ---
 
 # Architecture Review
@@ -11,10 +11,14 @@ You're reading and judging code that already exists — this is the
 counterpart to `architecture-design`, which decides structure before code
 exists. You don't write or edit application code here; you produce a
 findings report. On legacy code you didn't just touch, review only what
-changed or was added — note pre-existing violations separately as a lower
-priority rather than blocking on full-codebase compliance. That's the Boy
-Scout Rule: leave the area you touched better, don't demand the whole
-forest be clean first.
+changed or was added — and keep a separate "Pre-existing, not blocking"
+section at the end of the report for the violations you noticed outside
+the change. Skim the rest of the module the change lives in before you
+finish, so that section reflects what is actually there rather than being
+empty by omission. Don't drop them and don't block on them: the reader
+needs to know they exist and that this change isn't being held for them. That's
+the Boy Scout Rule: leave the area you touched better, don't demand the
+whole forest be clean first.
 
 ## The importance test
 
@@ -129,32 +133,62 @@ finding.
 
 **Screaming Architecture** — flag directory/module names built from a
 technical role (handler, controller, service, repository, utils, manager)
-with nothing else identifying what business concept they serve. Names like
-factory, helper, base, orchestrator, processor, or worker aren't automatic
-violations — they're a near-miss, worth a second look at whether a business
-name would fit better, but not always wrong. Framework bootstrap/entry
-files are exempt if they contain no business logic themselves — that's
-the test, not the filename.
+with nothing else identifying what business concept they serve. Walk the
+top-level directories and strip the technical suffix from each; if nothing
+is left (`services/`, `utils/`, `helpers/`, `common/`), that is a finding
+with a severity and a "where this belongs" fix, not a line in a
+description of the layout. Names like factory, helper, base, orchestrator,
+processor, or worker aren't automatic violations — they're a near-miss,
+worth a second look at whether a business name would fit better, but not
+always wrong. Framework bootstrap/entry files are exempt if they contain
+no business logic themselves — that's the test, not the filename.
+
+**Circular dependencies** — two modules importing each other is Critical
+only when the cycle exists at runtime. Check whether either file uses the
+other's export as a *value* at module-evaluation time: a static field
+initializer, a top-level call, a default argument, a module-level
+constant. That throws on load in CommonJS and ESM alike (`X is not a
+constructor`, or a temporal-dead-zone error) — name the crash, rate it
+Critical, and propose breaking the cycle. A cycle that exists only in
+type positions (`import type`, annotations) is erased by the compiler and
+is not a finding.
 
 ## Design smells beyond the four rules
 
 Some violations don't show up as an import-direction problem at all:
 
 - **Missing abstraction** — a real axis of change with no boundary around
-  it yet.
+  it yet. The tell: an `if`/`else` chain or `switch` choosing between two
+  or more concrete things that do the same job under different method
+  names. Two or more implementations already in the code is a visible
+  axis, not a speculative one — flag it, don't call it YAGNI.
 - **Premature abstraction** — an interface or extension point with no
-  second real use case.
+  second real use case. For every interface, count its concrete
+  implementations and ask what it isolates: one implementation and no I/O
+  or external system behind it is premature; one implementation over real
+  I/O earns its place from the Dependency Rule, not from a second
+  implementation.
 - **Wrong abstraction level** — a boundary drawn around the wrong thing,
   so callers still reach past it for what they actually need.
 - **Leaky abstraction** — callers have to know the implementation detail
   the abstraction was supposed to hide.
 - **Inconsistent abstraction level** — siblings in the same module mix
   high-level orchestration with low-level detail, making the module hard
-  to read at any one level.
+  to read at any one level. Check each method that calls collaborators
+  (fetch a report, send a message, write a file): if the same body also
+  works at the level of characters, delimiters, encodings, byte offsets
+  or wire formats, it is operating at two levels at once. Flag it, and
+  propose extracting the low-level part into its own named piece so the
+  orchestration reads at one level.
 - **Mixing what and how** — a business decision and a technical detail
   interleaved in the same method body, where a reader can't tell which
   parts express intent and which parts are mechanism. This one is
-  invisible to import-scanning entirely — it only shows up on a read.
+  invisible to import-scanning entirely — it only shows up on a read. Do
+  the read: label each line of a business method as policy (a rate, a
+  cap, a grace period, a rule) or mechanism (date arithmetic, id
+  generation, serialization, retries, formatting). If the two interleave
+  in one body, flag it; the fix is named policy values or a policy
+  function with the mechanism moved out.
 
 Treat "premature" and "missing" as equally worth flagging — this review is
 explicitly two-sided. A codebase that's all missing-abstraction findings

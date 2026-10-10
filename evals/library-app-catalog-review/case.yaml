@@ -9,6 +9,7 @@ execution:
     The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
 
     Review the `catalog/` module for architecture issues, including its port and the Postgres adapter in `infra/postgres/postgres-catalog-reader.ts`.
+  model: sonnet
   max_turns: 30
   timeout_seconds: 600
   allowed_tools: [Skill, Read, Grep, Glob]

@@ -9,6 +9,7 @@ execution:
     The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
 
     Review this PR for architecture issues. The PR adds `reporting/export-report.ts`, `reporting/report-files.port.ts` and `infra/files/local-report-files.ts`, and modifies `reporting/report-processor.ts` (the new `exporter` constructor parameter and the `runAndExport` method). Everything else in `reporting/`, and the rest of the app, is pre-existing and untouched by this PR.
+  model: sonnet
   max_turns: 30
   timeout_seconds: 600
   allowed_tools: [Skill, Read, Grep, Glob]

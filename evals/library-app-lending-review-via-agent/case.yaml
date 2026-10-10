@@ -8,7 +8,8 @@ execution:
   prompt: |
     The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
 
-    Use the `kad-dev-team:software-architect` agent to review the `lending/` module for architecture issues, and relay its full findings report in your final answer. Read its ports, the adapters under `infra/` that implement them, and `main/` as needed to judge it.
+    Use the `kad-dev-team:software-architect` agent to review the `lending/` module for architecture issues, and return its findings report verbatim as your final answer, adding nothing and removing nothing (including its opening section on the importance ordering it assumed). Read its ports, the adapters under `infra/` that implement them, and `main/` as needed to judge it.
+  model: sonnet
   max_turns: 30
   timeout_seconds: 600
   allowed_tools: [Task, Agent, Skill, Read, Grep, Glob]

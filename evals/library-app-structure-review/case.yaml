@@ -9,6 +9,7 @@ execution:
     The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
 
     Review the overall structure of the library-lending app: its directory layout and how third-party libraries are used across it. You don't need to review every module's internals in depth; focus on structure and boundaries.
+  model: sonnet
   max_turns: 30
   timeout_seconds: 600
   allowed_tools: [Skill, Read, Grep, Glob]

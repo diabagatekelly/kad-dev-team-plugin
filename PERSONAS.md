@@ -964,6 +964,18 @@ the architecture suite (about $25) is also still unpaid; every number in
   exemption was too lenient (both arms argued, correctly, that a use case
   importing `main/wiring` depends on everything wiring imports); fixed in
   both architecture skills.
+- **Verified on Fable is not verified on Sonnet; pin the eval model and
+  write skills a mid-tier model can apply.** With no `execution.model`,
+  the architecture-review suite ran on the session default (Fable) and the
+  skill fired 9/9 with the baseline matching it everywhere. Pinned to
+  Sonnet, the skill fired 5/9 and missed half the smells it names. Fixes
+  that worked: a description that says *invoke first, before reading
+  code, for any request shaped like X*, and a concrete "how to check" next
+  to every smell the skill lists (cycles: value-position vs type-position
+  imports; mixing: label each line policy or mechanism; premature:
+  count implementations and ask what the interface isolates). Every real
+  case now pins `execution.model: sonnet`; a skill that only recognises a
+  smell on a strong model hasn't encoded the principle yet.
 - **Hand-written answer-key graders mostly measure the grader.** Two
   generations of snippet cases failed on vocabulary checks, one-framing
   assumptions, fixtures that leaked the answer in comments, and accidental

@@ -9,6 +9,7 @@ execution:
     The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
 
     Review the `reporting/` module for architecture issues. Read its ports, the adapters under `infra/` that implement them, and anything else you need.
+  model: sonnet
   max_turns: 30
   timeout_seconds: 600
   allowed_tools: [Skill, Read, Grep, Glob]

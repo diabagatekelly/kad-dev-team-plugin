@@ -40,7 +40,7 @@ Decide which review would serve the developer better. Weigh, in order:
 
 Ignore length, formatting, tone, and whether it uses any particular named rule or vocabulary. A longer review is not better unless the extra content is correct and useful.
 
-Respond with only a JSON object, no code fence:
+You have no tools and nothing to look up; both reviews and the code are above. Respond with only a JSON object, no code fence:
 {{"reasoning": "<3-6 sentences>", "winner": "1" | "2" | "tie"}}"""
 
 
@@ -78,8 +78,12 @@ def judge_pair(job):
               "without_first": (without_review, with_review)}
     result = {"case": case, "run": index, "orders": {}, "cost_usd": 0.0}
     for order, (first, second) in orders.items():
-        verdict, cost = ask_judge(
-            JUDGE_PROMPT.format(request=request, first=first, second=second), model)
+        prompt = JUDGE_PROMPT.format(request=request, first=first, second=second)
+        try:
+            verdict, cost = ask_judge(prompt, model)
+        except ValueError:
+            # One retry: the judge occasionally emits a tool-call-shaped reply.
+            verdict, cost = ask_judge(prompt, model)
         winner_arm = {"1": order.split("_")[0], "2": "without" if order == "with_first" else "with",
                       "tie": "tie"}[verdict["winner"]]
         result["orders"][order] = {"winner": winner_arm, "reasoning": verdict["reasoning"]}
