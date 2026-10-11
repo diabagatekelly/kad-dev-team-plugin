@@ -1,0 +1,40 @@
+schema_version: "1.0"
+name: orchestrator-route-tech-bootstrap
+description: "Routing, one row of the orchestrator's table: a fully specified non-UI slice in a repo with no stack: routes to technology-bootstrap."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    This repository is empty apart from `docs/`. We're planning a new feature, and the planning documents so far are in `docs/cancel-hold/`. What's next?
+  model: sonnet
+  max_turns: 25
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 2
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: routes-to-technology-bootstrap
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:technology-bootstrap"'
+    min: 1
+  - type: tool_used
+    name: not-tdd-implementation
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: not-reliability-requirements
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-requirements"'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written
+    path: docs/cancel-hold/orchestrator-log.md

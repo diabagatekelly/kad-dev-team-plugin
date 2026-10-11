@@ -47,3 +47,17 @@ graders:
       and — if the first test drives a UI or crosses HTTP — a UI or HTTP
       framework. A brief mention that some other category will be needed
       eventually is fine; asking the user to settle it now is not.
+  - type: regex
+    name: consults-supply-chain-for-pinning
+    target: trace
+    pattern: '"skill": ?"kad-dev-team:supply-chain-review"'
+  - type: regex
+    name: consult-is-inline-not-a-spawn
+    target: trace
+    pattern: '"name": ?"(?:Agent|Task)"'
+    match: not_contains
+  - type: regex
+    name: no-reflexive-security-consult
+    target: trace
+    pattern: '"skill": ?"kad-dev-team:security-requirements"'
+    match: not_contains

@@ -45,7 +45,12 @@ Each pattern addresses a different failure, and applying the wrong one is a
 finding in itself — often a worse one than applying none, because it looks
 handled.
 
-- **Retry** — for transient failures only.
+- **Retry** — for transient failures only. A missing one is a finding
+  only when you can name what a transient failure on that path loses that
+  a retry would have saved: a write that's dropped, a job nobody reruns, a
+  partner call with no second chance. A read that fails cleanly to its
+  caller (an error the user can simply repeat, reported to monitoring)
+  loses nothing a retry would save; at most it's a Low note.
 - **Timeout** — for never waiting indefinitely.
 - **Circuit breaker** — for stopping a failing dependency from taking you
   down with it.

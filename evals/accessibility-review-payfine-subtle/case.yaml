@@ -1,0 +1,107 @@
+schema_version: "1.0"
+name: accessibility-review-payfine-subtle
+description: "Pay-a-fine card-error mockup built on the design system, with four defects found only by following the cascade or the state (A5-A8) and three correct look-alikes (AT4-AT6): a component rule that removes the Pay button's focus ring, a link that fails contrast on hover, an error tied to a misspelled id, and a name field whose only label is display:none."
+tags: [accessibility-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for the pay-a-fine feature are in `docs/pay-fine/`. Screen design has produced the mockup for slice 1's card-error state: `docs/pay-fine/visual-ux/pay-fine-card-error.html`. Check it for accessibility and fill in the slice's accessibility placeholder. Save the review as `docs/pay-fine/accessibility-review-001.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
+    min: 1
+  - type: file_exists
+    name: review-written
+    path: docs/pay-fine/accessibility-review-001.md
+  - type: llm
+    name: finds-pay-button-focus-removed
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. The page declares a global `:focus-visible` outline, but a later rule `.btn-primary:focus { outline: none; }` is more specific and removes it from the Pay button, with nothing in its place. A keyboard user can't see when the Pay button has focus.
+
+      PASS if the review flags that the Pay button has no visible focus indicator because of that rule.
+
+      FAIL if it is missed, or the review says every control gets the global focus ring.
+  - type: llm
+    name: finds-hover-contrast
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. "Back to my account" is `--brand` (#1F5F5B) normally, but `.actions a:hover` changes it to `--link-hover` (#4F8F8A), about 3.7:1 on the white panel, below the 4.5:1 its 16px text needs.
+
+      PASS if the review flags the link's hover colour as failing contrast.
+
+      FAIL if it is missed or the hover state is called passing.
+  - type: llm
+    name: finds-broken-error-link
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. The card number input has `aria-describedby="card-eror"`, but the error paragraph's id is `card-error`. The reference points at nothing, so a screen reader announces the field as invalid without the message saying what's wrong.
+
+      PASS if the review flags that the error message isn't associated with the field because the id reference doesn't match.
+
+      FAIL if it is missed, or the error is called correctly associated.
+  - type: llm
+    name: finds-no-visible-name-label
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. The "Name on card" label has class `visually-hidden`, which this page defines as `display: none`, so sighted users see only the placeholder, which disappears once they type. (The page's `.sr-only` class is the correct pattern; `.visually-hidden` is not.)
+
+      PASS if the review flags that the name field has no visible label, or that its label is hidden with `display: none`, and proposes a visible label or the `.sr-only` pattern at least.
+
+      FAIL if it is missed, or the field is called correctly labelled.
+  - type: llm
+    name: no-false-alarm-input-focus-ring
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm. The text inputs replace the focus outline with `outline: 3px solid transparent; box-shadow: 0 0 0 3px #1F5F5B`, a 3px ring at over 7:1 on white that also survives forced-colours mode through the transparent outline.
+
+      PASS if the review does not report the text inputs as lacking a visible focus indicator.
+
+      FAIL if it does.
+  - type: llm
+    name: no-false-alarm-card-number-label
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm. The card number field has a visible `<label for="card">Card number</label>` with an extra hint in a `.sr-only` span (clip pattern, still read by screen readers).
+
+      PASS if the review does not report the card number field as unlabelled or its hint as hidden from assistive technology. Pointing out the broken `aria-describedby` on the same field is a different, correct finding.
+
+      FAIL if it reports the card number label or hint as hidden or missing.
+  - type: llm
+    name: no-false-alarm-fine-choice
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm. Choosing a fine is a native radio group inside a `fieldset` with a `legend`, each card a `<label>`, and the chosen card shows a "Selected" text as well as a thicker border.
+
+      PASS if the review does not report the fine choice as unreachable by keyboard, unlabelled, or shown by colour alone.
+
+      FAIL if it does.

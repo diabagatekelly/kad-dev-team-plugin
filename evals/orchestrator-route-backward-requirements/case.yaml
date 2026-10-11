@@ -1,0 +1,46 @@
+schema_version: "1.0"
+name: orchestrator-route-backward-requirements
+description: "Routing, one row of the orchestrator's table: slice-000 says no requirements pass ran for its step: routes back to requirements-refinement for that step, not on to its user story."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a new feature for it, and the planning documents so far are in `docs/pay-fine/`. What's next?
+  model: sonnet
+  max_turns: 25
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 2
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: routes-to-requirements-refinement
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:requirements-refinement"'
+    min: 1
+  - type: tool_used
+    name: not-user-story-writeup
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:user-story-writeup"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: not-vertical-slicing
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:vertical-slicing"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: not-architecture-design
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written
+    path: docs/pay-fine/orchestrator-log.md

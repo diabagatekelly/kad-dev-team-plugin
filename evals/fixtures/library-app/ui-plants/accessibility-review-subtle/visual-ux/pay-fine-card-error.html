@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your fines - Riverside Library</title>
+<style>
+  :root {
+    --paper: #FAF7F2; --surface: #FFFFFF; --ink: #1F2A33; --muted: #55606A;
+    --border: #8A8178; --brand: #1F5F5B; --brand-hover: #174845; --link-hover: #4F8F8A;
+    --danger: #A3302A; --danger-bg: #FBEAE8; --focus: #B35C00;
+    --radius-sm: 6px; --radius-md: 8px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/24px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .visually-hidden { display: none; }
+  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  header a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--brand); }
+  header .home { font-weight: 700; color: var(--ink); text-decoration: none; }
+  nav a[aria-current="page"] { font-weight: 600; }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 28px; line-height: 36px; margin: 0 0 24px; }
+  h2 { font-size: 20px; line-height: 28px; margin: 32px 0 12px; }
+  fieldset { border: 0; padding: 0; margin: 0; }
+  legend { font-weight: 600; margin-bottom: 8px; }
+  .card { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 16px; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; }
+  .card:has(input:checked) { border: 2px solid var(--brand); padding: 15px; }
+  .card input { width: 20px; height: 20px; accent-color: var(--brand); }
+  .card .what { flex: 1; }
+  .card .meta { display: block; color: var(--muted); font-size: 14px; line-height: 20px; }
+  .card .selected { display: none; font-size: 14px; font-weight: 600; color: var(--brand); }
+  .card:has(input:checked) .selected { display: inline; }
+  .amount { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .panel { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+  .panel p { margin: 0 0 8px; }
+  label.field { display: block; font-weight: 600; margin: 16px 0 4px; }
+  input[type="text"] { width: 100%; min-height: 44px; padding: 0 12px; font: inherit; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); }
+  input[type="text"]:focus-visible { outline: 3px solid transparent; box-shadow: 0 0 0 3px var(--brand); }
+  input[aria-invalid="true"] { border: 2px solid var(--danger); }
+  .field-error { margin: 4px 0 0; color: var(--danger); font-size: 14px; line-height: 20px; }
+  .btn { min-height: 44px; padding: 0 20px; font: 600 16px/24px system-ui, sans-serif; border-radius: var(--radius-sm); cursor: pointer; transition: background-color 120ms ease-out; }
+  .btn-primary { background: var(--brand); color: #fff; border: 0; }
+  .btn-primary:hover { background: var(--brand-hover); }
+  .btn-primary:focus { outline: none; }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 24px; }
+  .actions a { display: inline-flex; align-items: center; min-height: 44px; color: var(--brand); }
+  .actions a:hover { color: var(--link-hover); }
+</style>
+</head>
+<body>
+  <header>
+    <a class="home" href="/portal">Riverside Library</a>
+    <nav aria-label="Your account"><a href="/portal/loans">My loans</a> <a href="/portal/fines" aria-current="page">My fines</a></nav>
+  </header>
+  <main>
+    <h1>Your fines</h1>
+
+    <form class="panel" action="#" onsubmit="return false" novalidate>
+      <fieldset>
+        <legend>Choose the fine to pay</legend>
+        <label class="card"><input type="radio" name="fine" value="F-1042" checked><span class="what">The Overstory<span class="meta">Returned 12 days late, charged 3 September</span></span><span class="selected">Selected</span><span class="amount">$3.00</span></label>
+        <label class="card"><input type="radio" name="fine" value="F-1057"><span class="what">Braiding Sweetgrass<span class="meta">Returned 5 days late, charged 19 September</span></span><span class="selected">Selected</span><span class="amount">$1.25</span></label>
+      </fieldset>
+
+      <h2>Card details</h2>
+      <label class="visually-hidden" for="cardholder">Name on card</label>
+      <input type="text" id="cardholder" name="cardholder" autocomplete="cc-name" placeholder="Name on card">
+      <label class="field" for="card">Card number <span class="sr-only">(16 digits, no spaces)</span></label>
+      <input type="text" id="card" name="card" inputmode="numeric" autocomplete="cc-number" aria-invalid="true" aria-describedby="card-eror" value="4242 4242 4242 424">
+      <p class="field-error" id="card-error">Check the card number: it should be 16 digits.</p>
+
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">Pay $3.00</button>
+        <a href="/portal">Back to my account</a>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

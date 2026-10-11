@@ -1,33 +1,31 @@
 # Evals
 
-`claude plugin eval` is out of early access and confirmed working. This
-directory holds two kinds of case, and it matters which kind you're looking
-at:
+`claude plugin eval` is out of early access and confirmed working.
 
-- **Emulated cases** — the original set, one `prompt.md` bundling several
-  `graders/*.md` per skill trigger, run via the homegrown
-  `.claude/skills/agent-eval` stand-in (a fresh general-purpose agent
-  role-plays the persona; see each case's `eval-score/summary.md`). Built
-  before the real CLI was available; never run against it. Case names
-  follow `agent:skill` for persona-backed triggers, or just `skill` for a
-  skill with no owning persona (e.g. `orchestrator`).
-- **Real cases** — `case.yaml` per case, executed by `claude plugin eval`
-  as a genuine child `claude` process per run, with a no-plugin baseline
-  arm (`--ablation with-without`). Today that is the `library-app-*` suite
-  for `software-architect:architecture-review` plus two
-  `architecture-review-neg-*` trigger cases, and the `security-review-*`
-  suite for `devsecops-engineer:security-review` (five cases on the same
-  fixture plus two negative trigger cases), followed by the
-  `reliability-review-*`, `supply-chain-review-*`,
-  `operational-readiness-*`, `security-requirements-*` and
-  `reliability-requirements-*` suites on the same fixture, and the code
-  personas' `tdd-implementation-*`, `test-quality-review-*`,
-  `code-review-*` and `map-*` cases (their plants are case-only overlays in
-  `fixtures/library-app/code-plants/`), and the UI personas'
-  `design-system-*`, `screen-design-*` and `accessibility-review-*` cases
-  (overlays in `fixtures/library-app/ui-plants/`). Results land in
-  `evals/results/<timestamp>/` (gitignored) each time the suite runs;
-  nothing is hand-copied into case directories.
+Each case is a `case.yaml`, executed by `claude plugin eval` as a
+genuine child `claude` process per run, with a no-plugin baseline arm
+(`--ablation with-without`). Today that is the `library-app-*` suite for
+`software-architect:architecture-review` plus two
+`architecture-review-neg-*` trigger cases, and the `security-review-*`
+suite for `devsecops-engineer:security-review` (five cases on the same
+fixture plus two negative trigger cases), followed by the
+`reliability-review-*`, `supply-chain-review-*`,
+`operational-readiness-*`, `security-requirements-*` and
+`reliability-requirements-*` suites on the same fixture, and the code
+personas' `tdd-implementation-*`, `test-quality-review-*`, `code-review-*`
+and `map-*` cases (their plants are case-only overlays in
+`fixtures/library-app/code-plants/`), and the UI personas'
+`design-system-*`, `screen-design-*` and `accessibility-review-*` cases
+(overlays in `fixtures/library-app/ui-plants/`). Results land in
+`evals/results/<timestamp>/` (gitignored) each time the suite runs;
+nothing is hand-copied into case directories. The orchestrator's routing
+table has one `orchestrator-route-*` case per row (overlays in
+`fixtures/library-app/route-plants/`).
+
+The original emulated cases (a `prompt.md` with `graders/*.md`, run by a
+`.claude/skills/agent-eval` stand-in that role-played the persona) were
+replaced skill by skill and are gone, along with the stand-in; their
+summaries are in git history.
 
 ## The library-app suite
 
@@ -94,19 +92,6 @@ included) is ignored, see "Interactive skills" below. A full pass costs about $7
 `--runs 1` plus about $2 for the pairwise judge; the suite's `runs: 3`
 default triples the first number.
 
-Each case tests one skill trigger: does the right skill get invoked
-(`tool_used` grader), and is the output actually correct (`llm` grader).
-
-**Two-phase cases.** If a persona's correct behavior is to ask a clarifying
-question, `agent-eval` runs a second phase: it supplies a scripted answer
-(from the case's `## Scripted answers` section) and re-invokes the persona
-to get the actual finished artifact — a real invocation would ask via
-`AskUserQuestion` and keep going in the same turn; a single-phase run can't
-model that; grading only the question would validate "did it ask" and never
-"did it finish the job." `eval-result/phase1-question.md` holds the
-question, `eval-result/output.md` holds the final artifact. Graders default
-to grading the final artifact; a grader with `target: phase1` in its
-frontmatter grades the question instead (used for the "did it ask" checks).
 
 ## Playbook: a real suite for another skill
 
@@ -144,17 +129,21 @@ nine-case suite with the pairwise judge) before trusting anything.
    A case both arms pass is a regression guard, not evidence of uplift;
    say so in the coverage table.
 
-   To check a judge verdict, reproduce the eval's own call:
-   `--judge-model sonnet` resolves to `claude-sonnet-5-5`, while
-   `claude -p --model sonnet` may reach a different model, which can
-   disagree. Use `claude -p --model claude-sonnet-5-5 --system-prompt
-   "You are a strict, terse evaluation judge for coding-agent traces."`
-   with the criterion, the output, and "Respond with exactly one word:
-   PASS or FAIL." A reply with any FAIL in it counts as a fail. Asking
-   the same model to explain can pass a document the one-word judge
-   fails. When a grader stacks exceptions ("these may appear in either
-   section", "this is not an addition"), the one-word judge tends to
-   fail it; split it into plain checks.
+   Checking a judge verdict: `tools/rejudge.py <result.json> <grader>`
+   rebuilds the eval's judge prompt from the result file and asks
+   `claude-sonnet-5-5` the same one-word question (`--explain` asks it
+   why; `--criteria-from` tries a reworded grader on an old output). Treat
+   its answer as a hint. It agreed with the eval on a file-focused grader
+   with stacked exceptions, and disagreed on three others: the eval's
+   judge failed them 3/3 and the re-ask passed them 5/5. A throwaway probe
+   case (scaffold the graded text in, grade it in the eval) showed the
+   eval failing a long review as `last_message` and passing the identical
+   text as a file. Only the eval's own judge is authoritative, and on a
+   borderline output it isn't stable. What helps: grade a saved file
+   rather than a long last message, and split a grader that stacks
+   exceptions ("may appear in either section", "this is not an addition")
+   into plain checks. `claude -p --model sonnet` in this shell may reach a
+   different model altogether, so don't re-ask that way.
 5. **Fix the skill only for a failure that survives step 4**, re-run the
    affected cases, and record the finding in this README's findings list
    and the persona's `PERSONAS.md` row.
@@ -199,9 +188,7 @@ therefore runs as a chain of cases:
    until the earlier phase is re-run and re-frozen.
 
 Answers arrive as a user message rather than an `AskUserQuestion` result,
-which is the one fidelity gap. This replaces the `.claude/skills/agent-eval`
-stand-in for two-phase and approval-loop cases; only the emulated
-`orchestrator` case still uses it.
+which is the one fidelity gap.
 
 ## Coverage
 
@@ -215,22 +202,33 @@ score is history, not a claim about today.
 
 | Case | Last result | Current? |
 |---|---|---|
-| `orchestrator` | 15/15 PASS, skill-only | yes — kept as the broad check on the routing table (13 described directories, dry run); the real cases below cover what it can't |
 | `orchestrator-security-stage` | real, Sonnet: 2/2 runs all pass (`results/20261011-orch-cal2`); baseline fails routing and writes no log — "what's next?" on a real planning folder fires the orchestrator, which routes to `security-requirements` by invoking the skill, passes the save location, writes the log at routing time, and the persona asks its questions | yes |
 | `orchestrator-superseded-scope-map` | real, Sonnet: 2/2 runs all pass — real inspection: reads `## Status` and routes to requirements for the Active map's step 1, not to slicing from the superseded map's requirements doc. The baseline also routes correctly here, so this is a regression guard on inspection, with the skill-invocation graders as the plugin-fired check | yes |
 | `orchestrator-backward-route` | real, Sonnet: 2/2 runs all pass, again after `vertical-slicing` gained its stop-first rule (`results/rrf-*`) — a "Handed back to product-slicer — blocking" section routes to `product-slicer`, not forward to reliability criteria; the log records why | yes |
 | `orchestrator-asks-for-target` | real, Sonnet: 2/2 runs all pass; baseline 0/1 — no folder given, it asks where the artifacts are before anything else and doesn't search the project | yes |
+| `orchestrator-route-problem-framing` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — a new, empty planning folder: routes to `problem-framing-doc`. The first version left the folder empty on disk; an empty directory doesn't reach the sandbox, so the orchestrator searched for it and stopped. The prompt now says the folder is new | yes |
+| `orchestrator-route-scope-decision` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — a problem doc and nothing else: routes to `scope-map` to decide whether a map is needed. Known miss 1/2: once `scope-map` decided no map, the orchestrator went straight on to `requirements-refinement` without asking, against step 5's never-chain-silently rule | yes |
+| `orchestrator-route-slicing` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — problem plus an Active requirements doc: routes to `vertical-slicing` | yes |
+| `orchestrator-route-user-story` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — a slice not yet written up: routes to `user-story-writeup` | yes |
+| `orchestrator-route-design` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — a user story and no design: routes to `architecture-design`. The miss was the grader: it forbade any `security-requirements` call, and `architecture-design` legitimately consults it inline; that check is now `not-tdd-implementation`, which both runs pass | yes |
+| `orchestrator-route-reliability` | real, Sonnet: 12/12 over 2 runs (`results/g8-*`) — a non-UI cancel-hold slice with security filled and reliability a placeholder (`route-plants/cancel-hold-reliability-open/`): routes to `reliability-requirements` | yes |
+| `orchestrator-route-design-system` | real, Sonnet: 12/12 over 2 runs (`results/g8-*`) — a UI slice with both runtime-safety criteria filled and no design system: routes to `design-system` | yes |
+| `orchestrator-route-screen-design` | real, Sonnet: 12/12 over 2 runs (`results/g8-*`) — a design system but no screen design: routes to `screen-design` | yes |
+| `orchestrator-route-accessibility` | real, Sonnet: 12/12 over 2 runs (`results/g8-*`) — a screen design with the accessibility criteria a placeholder: routes to `accessibility-review` | yes |
+| `orchestrator-route-tech-bootstrap` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — the fully specified cancel-hold slice in a repo with no stack: routes to `technology-bootstrap` | yes |
+| `orchestrator-route-implementation` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — the same slice in the library app: routes to `tdd-implementation` through the quarantine flow (not exercised). The miss was the grader demanding the log mention the stack, which the skill's own log template doesn't; loosened, both kept logs pass a re-ask (a hint) | yes |
+| `orchestrator-route-backward-requirements` | real, Sonnet: 12/12 over 2 runs (`results/g8-*`) — `slice-000` says no requirements pass ran for its step (`route-plants/backward-pm/`): routes back to `requirements-refinement` for that step, not on to its user story | yes |
 | `architecture-design-payfine-phase1` | real, Sonnet: 1/1 with plugin on both passes (`results/20261011-sa-p1f-architecture-design-payfine-phase1`); the baseline writes the design straight away — the pay-a-fine slice before design, with the engineer's generic `PaymentGateway` registry proposal: presents it as a decision, recommends against it (one provider; `FinePayments` already isolates Stripe), and waits | yes |
 | `architecture-design-payfine-phase2` | real, Sonnet: 27/27 over 3 runs (`results/20261011-sa-final-architecture-design-payfine-phase2`) — the user overrules (a second provider is signed), approves the rest; the saved design states its importance ordering, stays conceptual, records each decision's approval, names what crosses its boundaries, builds the approved gateway on the existing `CollectFine` path, notes the leaky payment port (V7) and doesn't call the one-implementation port premature. Graded on the saved file. No baseline arm | yes |
 | `architecture-design-neg-review` | real, Sonnet: never invokes `architecture-design` in either arm (a review of live code) | yes |
 | `technology-bootstrap-phase1` | real, Sonnet: 1/1 with plugin on three passes; the baseline also asks first, so this phase is a regression guard — an empty repo with slice 1's artifacts in `docs/` (`fixtures/bootstrap-empty/`): asks who maintains it and what kind of app before recommending anything | yes |
-| `technology-bootstrap-phase2` | real, Sonnet: 2/3 runs clean (`results/20261011-sa-p2g-technology-bootstrap-phase2`) — the answer delegates the test runner and package manager but never mentions a UI framework; recommends one with alternatives and waits instead of settling it | yes |
+| `technology-bootstrap-phase2` | real, Sonnet: 2/3 runs clean (`results/20261011-sa-p2g-technology-bootstrap-phase2`) — the answer delegates the test runner and package manager but never mentions a UI framework; recommends one with alternatives and waits instead of settling it. Three trace graders added since: it consults `supply-chain-review` for the pinning question, inline (no `Agent`/`Task` spawn), and doesn't consult `security-requirements` reflexively; all three hold on the 18 kept phase-2 traces (`results/20261011-sa-p2*`), checked with the same regexes | yes |
 | `technology-bootstrap-phase3` | real, Sonnet: 15/15 over 3 runs (`results/20261011-sa-final3-boot3`) — the user approves React with Vite; the saved bootstrap decides only what the first test forces, defers persistence with the in-memory reason, treats pinning as a choice, records rejected alternatives and open categories, and shows each choice as approved or delegated. Graded on the saved file. No baseline arm | yes |
 | `requirements-refinement-payfine-phase1` | real, Sonnet: 12/12 over 3 runs (`results/20261011-np-final-*`); baseline 2/3 in calibration (writes technical design into the answer) — the pay-a-fine problem doc only, asked to "work out exactly what we want built": asks what to build before writing, doesn't ask what the problem doc or code answers | yes |
 | `vertical-slicing-payfine-phase1` | real, Sonnet: 17/18 over 3 runs after the stop-first rule (`results/rrf-*`), the miss a grader that read "paid or waived fines don't show as outstanding" as adding waivers; reworded, and all three kept slices pass it with the eval's judge model; baseline 4/5 in calibration (no separate security and accessibility placeholders) — problem plus Active requirements, saves `slice-001.md`: stays inside "confirmed in scope", both placeholders, slice set named, doesn't re-ask the WHAT | yes |
 | `acceptance-criteria-payfine` | real, Sonnet: 9/9 over 3 runs; the baseline passed in calibration, so this is a regression guard — the engineer's "handles errors gracefully": rejected as untestable, and the undecided non-decline failures are flagged or routed to the reliability placeholder, not settled in the rewrite | yes |
 | `problem-framing-doc-payfine` | real, Sonnet: 14/15 over 3 runs; the baseline passed in calibration, a regression guard — the user's own description with "add a pay button" in it: no solution in the doc, Stripe and one-developer as constraints. Known miss 1/3: an unstated "in-person payment must keep working" listed as a constraint beside a related open question | yes |
-| `scope-map-self-service` | real, Sonnet: 14/15 over 3 runs, the miss a judge error (the map routes privacy to each step's requirements pass; re-asked, the judge passes it); baseline misses the privacy routing on both calibration passes — a new, larger problem (`planning/self-service/`: fines, holds, contact details) whose privacy constraint is worded around one step | yes |
+| `scope-map-self-service` | real, Sonnet: 14/15 over 3 runs; the miss is borderline, not a clear judge error: the map routes privacy to each step's requirements pass, but through one blanket line covering its whole cross-cutting list. The eval's judge failed it 3/3; `tools/rejudge.py` passes it 8/8, which is a hint only. Baseline misses the privacy routing on both calibration passes — a new, larger problem (`planning/self-service/`: fines, holds, contact details) whose privacy constraint is worded around one step | yes |
 | `user-story-writeup-payfine-phase1` | real, Sonnet: 9/9 over 3 runs; baseline fails on both calibration passes (writes the story or fills the security placeholder) — asked to make slice 1 "ready to track", asks whether and where to file before writing. Before the fix the skill never fired: the run filled the slice's security placeholder instead | yes |
 | `user-story-writeup-payfine-phase2` | real, Sonnet: 15/15 over 3 runs (`results/rrf-*`) — resumes phase 1 with "GitHub, save it here, I'll paste it in": writes the story to the given path as a user story, carries the three criteria and both placeholders as they are, invents no issue number or assignee, and doesn't file it | yes |
 | `requirements-refinement-payfine-phase2` | real, Sonnet: 23/24 over 3 runs (`results/rrf2-*`) — resumes phase 1 with the user's answers (pay online now, not see-only; payment link rejected; one fine, no saved cards): template sections, the user's own trade-off, scope as confirmed, both constraints as consequences. Known miss 1/3: "one developer" given only as the reason for scope cuts the user had already made for their own reasons | yes |
@@ -242,9 +240,9 @@ score is history, not a claim about today.
 | `pr-writeup-portal-fines` | real, Sonnet: 12/12; baseline misses the ticket question and the AI role — a finished `/portal/fines` diff written by Claude Code: accurate plain-language description, asks about a ticket instead of assuming, names the tool and its role | yes |
 | `user-facing-docs-renewals` | real, Sonnet: 12/12; the baseline passed in calibration, a regression guard — members' help page for portal renewals: two renewals, 21 days from the renewal day, nothing the code doesn't do. Before the fix it invented a "My Loans → Renew" click path and "no late fines"; one run didn't fire until the description said "help page". The no-click-path grader was dropped after failing plain pages twice | yes |
 | `staleness-audit-docs` | real, Sonnet: 17/18; baseline misses restated code and ceremony — a planted `docs/` (D3–D6, DT2, DT3): stale lending rules, a code-narrating page, a sign-off log, an ADR the code overturned; keeps the waiver doc and the still-true Stripe ADR. Known miss 1/3: proposes a required-reviewers gate after deleting the sign-off log | yes |
-| `tdd-implementation-cancel-hold` | real, Sonnet: 50/54 over 3 runs (`results/20261011-final2-*`); baseline fails every process check in calibration (no Test List, no RED, no review, writes the code first) — the approved cancel-a-hold design built test-first, graded mechanically on the full trace (`regex`/`tool_order`) and on the written files: tests before code, RED runs seen, a `test-quality-review` call every cycle, last run green, design doc ends unchanged, nothing outside the slice touched; the reason wording decided and named, notification left to its owner. Known misses: the main agent edits the design doc before invoking the skill (2/3; the skill then reverts it), one report without its Test List, one multi-scenario test | yes |
-| `tdd-implementation-named-fix` | real, Sonnet: 3/3 runs clean (`results/20261011-final-*`); baseline makes the edit and writes no tests in calibration — V15 handed back as a review finding: `LoanStore` through the constructor, `main/server.ts` updated, behaviour unchanged and pinned by new tests that run green, nothing else touched, honest about tests coming after the structural change. Before the trigger fix the skill fired in 1 of 4 runs | yes |
-| `tdd-implementation-cancel-hold-via-agent` | real, Sonnet: 25/32 over 2 runs, delegation to `tdd-coach` confirmed — the agent's own TDD process passes; the misses come from the parent, which writes answers into the design doc before delegating, where the subagent can't see that the doc changed (no git in the sandbox) | yes |
+| `tdd-implementation-cancel-hold` | real, Sonnet: 53/54 over 3 runs (`results/g4-*`); baseline fails every process check in calibration (no Test List, no RED, no review, writes the code first) — the approved cancel-a-hold design built test-first, graded mechanically on the full trace (`regex`/`tool_order`) and on the written files: tests before code, RED runs seen, a `test-quality-review` call every cycle, last run green, design doc ends unchanged, nothing outside the slice touched; the reason wording decided and named, notification left to its owner. The main agent no longer edits the design doc before invoking the skill (0/3, was 2/3) since the description says to leave its open questions to the skill. Known miss: one report without its Test List | yes |
+| `tdd-implementation-named-fix` | real, Sonnet: 3/3 runs clean (`results/g4-*`); baseline makes the edit and writes no tests in calibration — V15 handed back as a review finding: `LoanStore` through the constructor, `main/server.ts` updated, behaviour unchanged and pinned by new tests that run green, nothing else touched, honest about tests coming after the structural change. Before the trigger fix the skill fired in 1 of 4 runs | yes |
+| `tdd-implementation-cancel-hold-via-agent` | real, Sonnet: 23/30 over 2 runs (`results/g4-*`), delegation to `tdd-coach` confirmed. The parent no longer touches the design doc before delegating (0/2). The misses are now the subagent's own process: three RED runs seen where four are expected, a skipped `test-quality-review` in some cycles, and one run that wrote its open questions into the design doc | yes |
 | `test-quality-review-fines` | real, Sonnet: 3/3 runs clean; baseline misses the call-order test (calls it "correct") and the untested `percentOf` — the planted `test/fines.test.ts` (Q1–Q5): subject's own method mocked, unwired mock, weak cap assertion, call-order assertion, untested export; traps: a designated fake stubbed per test, exact assertions. The skill didn't fire until its description named "are these tests actually testing anything?" | yes |
 | `test-quality-review-reminders` | real, Sonnet: 2/3 runs clean, the third a last-message artifact (the review was complete; the final message is a postscript about a stopped background task); the baseline passed in calibration, a regression guard — the app's own reminder tests: the untested email channel, no false alarm on constructor-injected fakes, "sound but incomplete" | yes |
 | `test-quality-review-neg-code-review` | real, Sonnet: never invokes `test-quality-review` (a readability request) | yes |
@@ -291,14 +289,14 @@ score is history, not a claim about today.
 | `reliability-requirements-payfine-phase2` | real, Sonnet: 8/9 over 3 runs, 2/3 clean (`results/20261011-req-rel-p2e`) — names the duplicate charge a timed-out retry can cause and leaves its handling as a pending decision (the miss settles it), no retry of declines | yes |
 | `reliability-requirements-payfine-phase3` | real, Sonnet: 18/18 over 3 runs (`results/20261011-req-rel-p3c`) — the user keeps "show failed" and refunds duplicates by hand; finished criteria for that, duplicates made findable for the refund, charge-without-settle caught, double submit covered, declines vs faults, no retry of declines | yes |
 | `reliability-requirements-neg-review` | real, Sonnet: never invokes `reliability-requirements` in either arm (a review of live code) | yes |
-| `reliability-review-nightly` | real, Sonnet: 8/8 with plugin vs 5/8 without, 1 run (`results/20261010-final-reliability-review`) — unhandled rejection from the timer-driven job, no per-loan isolation, a database pool leaked per run, a mailer with no timeout, a postal adapter that swallows failures; traps: the reminder loop's catch, re-run idempotency, a correct transient-only SMS retry. The pool leak was missed in two of six calibration runs | yes |
-| `reliability-review-nightly-via-agent` | real, Sonnet: 8/8 with plugin, delegation to `devsecops-engineer` confirmed via `Agent`; the no-plugin arm (3/8) is not a comparison, the agent doesn't exist without the plugin | yes |
-| `reliability-review-http` | real, Sonnet: 5/5 with plugin vs 3/5 without, 1 run — expected and unexpected failures conflated in `respond.ts`, unbounded loan history, holds kept only in memory; traps: the catalog route's 503 handling, the capped search. Unbounded history and in-memory holds each missed once across calibration | yes |
-| `reliability-review-alerts` | real, Sonnet: 3/3 with plugin vs 2/3 without, 1 run — page on any error event, non-actionable CPU page; trap: multi-window burn-rate alerts with a runbook | yes |
-| `reliability-review-fine-payment` | real, Sonnet: 4/4 both arms, 1 run — a regression guard, not evidence of uplift: charge-then-settle with no idempotency, retrying declines in the use case, a pay route that hides unexpected failures; trap: the settled-fine guard | yes |
-| `reliability-review-catalog` | real, Sonnet: 1/2 with plugin vs 1/2 without (`results/20261010-recheck3-catalog`) — the clean module, a borderline restraint case with no uplift. Its original prompt asked how catalog behaves "when the database is slow or down and as the catalog grows"; that leading question produced a Medium/High capacity concern in every run of both arms (four calibration passes plus two rechecks). With the neutral prompt the capacity speculation stopped; the remaining failing runs rate a missing read retry Medium. Known gap: the skill does not reliably hold a clean module to Low | yes |
-| `reliability-review-neg-security` | real, Sonnet: never invokes `reliability-review` in either arm | yes |
-| `reliability-review-neg-architecture` | real, Sonnet: never invokes `reliability-review` in either arm | yes |
+| `reliability-review-nightly` | real, Sonnet: 7/8 with plugin vs 5/8 without, 1 run (`results/g3-*`, after the missing-retry rule) — unhandled rejection from the timer-driven job, no per-loan isolation, a database pool leaked per run, a mailer with no timeout, a postal adapter that swallows failures; traps: the reminder loop's catch, re-run idempotency, a correct transient-only SMS retry. The miss folds per-loan isolation into its crash finding (a re-ask passes it, a hint only). The pool leak was missed in two of six earlier calibration runs | yes |
+| `reliability-review-nightly-via-agent` | real, Sonnet: 7/8 with plugin (`results/g3-*`), delegation to `devsecops-engineer` confirmed via `Agent`; the miss is the re-run trap, failed on a correctly scoped overlapping-runs race (the probe case in the findings showed the eval's judge failing this text as a last message and passing it as a file); the no-plugin arm (0/5 finds) is not a comparison, the agent doesn't exist without the plugin | yes |
+| `reliability-review-http` | real, Sonnet: 5/5 with plugin vs 2/5 without, 1 run (`results/g3-*`) — expected and unexpected failures conflated in `respond.ts`, unbounded loan history, holds kept only in memory; traps: the catalog route's 503 handling, the capped search. Unbounded history and in-memory holds each missed once across calibration | yes |
+| `reliability-review-alerts` | real, Sonnet: 3/3 both arms, 1 run (`results/g3-*`; was 3/3 vs 2/3) — page on any error event, non-actionable CPU page; trap: multi-window burn-rate alerts with a runbook. Now a regression guard | yes |
+| `reliability-review-fine-payment` | real, Sonnet: 4/4 with plugin vs 3/4 without, 1 run (`results/g3-*`; was 4/4 both arms) — charge-then-settle with no idempotency, retrying declines in the use case, a pay route that hides unexpected failures; trap: the settled-fine guard. The baseline missed the declines retry | yes |
+| `reliability-review-catalog` | real, Sonnet: 2/3 with plugin vs 0/3 without (`results/g3-*`) — the clean module. Every failing run used to rate a missing read retry Medium; the skill now treats a missing retry as a finding only when a transient failure loses something a retry would save, and a read that fails cleanly to its caller as Low at most. The remaining failure rates two things Medium that the grader excludes (the service-wide `request-errors` alert and lending's `respond.ts`), so by the grader's own terms it is 3/3; the eval's judge failed it anyway. Earlier history: a leading prompt about slowness and growth produced capacity speculation in every run of both arms until it was made neutral | yes |
+| `reliability-review-neg-security` | real, Sonnet: never invokes `reliability-review` in either arm, again after the retry rule | yes |
+| `reliability-review-neg-architecture` | real, Sonnet: never invokes `reliability-review` in either arm, again after the retry rule | yes |
 | `operational-readiness-release-phase1` | real, Sonnet: 1/1 with plugin on six passes (`results/20261011-or-p1h`), 0/1 without on both passes that ran a baseline — asked "is it ready to ship?", the skill asks who uses the service, what breaks, who finds out and whether a rollback has ever run, and holds its verdict; the baseline reviews straight away. In the first calibration pass the skill fired but reviewed straight away too, until it said its first response is questions | yes |
 | `operational-readiness-release-phase2` | real, Sonnet: 14/15 over 3 runs, 2/3 runs clean (`results/20261011-or-p2h`) — resumes the frozen questions with the one-developer answer; unverified deploy, migration 0012 coupled to the release, never-rehearsed rollback and no team-scale ceremony 3/3; no false "no rollback" claim 2/3 (the miss reads `release.sh` as unable to target a previous image). No baseline arm: the history is a with-plugin transcript | yes |
 | `operational-readiness-ops-phase1` | real, Sonnet: 1/1 with plugin on six passes (`results/20261011-or-p1h`), 0/1 without on both passes that ran a baseline — same as the release phase 1, asked about running the service rather than one release | yes |
@@ -307,10 +305,11 @@ score is history, not a claim about today.
 | `operational-readiness-neg-reliability` | real, Sonnet: never invokes `operational-readiness` in either arm | yes |
 | `design-system-payfine-phase1` | real, Sonnet: 9/9 over 3 runs (`results/ui5-*`); baseline 0/2 in calibration (writes a design system straight away) — first screen in the project, no design system: asks whether there's a reference to match or candidates to generate, and asks or states the platform, writing nothing | yes |
 | `design-system-payfine-phase2` | real, Sonnet: 12/12 over 3 runs (`results/ui5-*`) — told to generate for phones: three candidate HTML files beside `visual-ux/`, not in it, says it couldn't view them, asks which to keep without leaning. Known minor miss 1/3: promises "the winner's mockup and screenshot" when no screenshot is possible. No baseline arm: the history is a with-plugin transcript | yes |
-| `design-system-payfine-phase3` | real, Sonnet: 19/21 over 3 runs (`results/ui5-*`) — the user picks the second candidate; the system goes to `visual-ux/` with every token category, phone-first platform with its source, a ratio for every text colour, only the winner's mockup, no screenshot claimed. Misses: one run declares `--success` without its ratio (it is 4.70:1); one `chosen-direction-committed` FAIL is judge noise (re-asked twice: PASS) | yes |
+| `design-system-payfine-phase3` | real, Sonnet: 22/24 over 3 runs (`results/g8-*`) — the user picks the second candidate; the system goes to `visual-ux/` with every token category, phone-first platform with its source, a ratio for every text colour, only the winner's mockup, no screenshot claimed. The direction grader is now two (the chosen direction; the rejected ones in prose), since the one-word judge failed the combined one. Misses: one run uses its brand colour as link text with no ratio stated for it (the same family as an earlier undeclared `--success`); one is disputed (a re-ask passes it). Known miss on an earlier pass: two of three runs said only "Not chosen" for the rejected candidates, with no reason and no note that the user gave none | yes |
 | `screen-design-payfine` | real, Sonnet: 33/33 over 3 runs (`results/ui3-*`); baseline wrote no mockups in calibration (8/10) — against the planted design system: one HTML mockup per state, the system's patterns reused, no pay-several or saved cards, copy rules, accessibility placeholder carried forward, no screenshot claimed, nothing asked that the docs answer, `design-system` not fired | yes |
-| `accessibility-review-payfine` | real, Sonnet: 36/36 over 3 runs (`results/ui3-*`); baseline 10/11 in calibration, a regression guard, not evidence of uplift: its only miss is not saying the check was a markup read — the declined-state mockup (A1–A4, AT1–AT3): unreachable fine choice ranked top, missing live region, 4.48:1 meta text, placeholder-only name field; no false alarm on the focus rule, the hidden icon or the `aria-labelledby` field; Given/When/Then split now vs needs real code; mockup untouched | yes |
-| `accessibility-review-neg-readability` | real, Sonnet: never invokes `accessibility-review` in either arm (a plain-language pass on a planning doc) | yes |
+| `accessibility-review-payfine` | real, Sonnet: 35/36 over 3 runs (`results/g9-*`, after the state-contrast rule; was 36/36); baseline 10/11 in calibration, a regression guard, not evidence of uplift — the declined-state mockup with the textbook plants (A1–A4, AT1–AT3). The miss: one run's criteria don't separate checkable-now from needs-real-code | yes |
+| `accessibility-review-payfine-subtle` | real, Sonnet: 25/27 over 3 runs (`results/g9-*`); in calibration both arms missed only the hover plant on two passes; once the state rule reached the markup-only fallback the plugin found it and the baseline didn't — the card-error mockup built on the design system (A5–A8, AT4–AT6): a component rule that strips the Pay button's focus ring, a link that fails contrast only on `:hover` (3.73:1), an error tied to a misspelled id, a name label hidden with `display: none`; traps: an input focus ring replaced correctly, an `.sr-only` hint, a native radio group. The hover plant is the uplift: found 2/3 with the plugin, 0/2 without. Misses: one run without the hover finding; one disputed false-alarm vote on a review that says the inputs do show focus | yes |
+| `accessibility-review-neg-readability` | real, Sonnet: never invokes `accessibility-review` in either arm, again after the state-contrast rule (`results/g9-*`) | yes |
 
 ### The `example/` directory
 
@@ -328,26 +327,8 @@ passing** — it's real artifacts against adapted criteria.
 
 ### Run backlog
 
-Eight cases currently need a run. Nothing here is green — every score in
-the table above either predates a change to the code it covers, or predates
-an edit to the case itself. Ordered by what's worth doing first, not by
-what's cheapest.
-
-| # | Case | Why it's first |
-|---|---|---|
-| 1 | ~~`orchestrator`~~ | **Run, fixed, re-run: 15/15 PASS.** First pass was 14/15 — `single-step-not-chained` caught backward routes L and M narrating the post-resolution forward resumption. Fixed in `skills/orchestrator/SKILL.md`'s backward-routing section and confirmed clean on re-run. Details in `orchestrator/eval-score/summary.md`. |
-| 2 | ~~`software-architect:technology-bootstrap`~~ | **Run: 6/6 PASS.** The negative grader (never solicit CI/CD, hosting, a database, observability, or auth) passed clean against its own fixture for the first time. One interpretive call worth watching in future runs: UI framework was judged not-forced by the first test — defensible, but not mechanical. Details in `software-architect:technology-bootstrap/eval-score/summary.md`. |
-| 3 | ~~`docs-writer:scope-map`~~ | **Run, fixed, re-run: 5/5 PASS.** First pass was 4/5 — the "AI categorization must be free" constraint got absorbed into its step's one-liner instead of being flagged cross-cutting like security. Fixed in `skills/scope-map/SKILL.md`: identify a cross-cutting constraint by its underlying concern, not by which step's sentence names it. Confirmed clean on re-run. Details in `docs-writer:scope-map/eval-score/summary.md`. |
-| 4 | ~~`product-manager:requirements-refinement`~~ | **Run: 6/6 PASS.** The constraints-in-force grader — added after a real run dropped the hosting and single-user constraints for a step that didn't look like it owned them — passed clean: both non-obvious consequences (network access-control gate, present-tense single-user modeling) were drawn correctly. |
-| 5 | ~~`product-slicer:vertical-slicing`~~ | **Run: 6/6 PASS.** Scenario C's grader — encoding the real failure where a menu of options got handed to the user, who picked "grow the slice" — passed clean: ranked order worked through explicitly, narrowing rejected with a concrete reason, new slice ahead chosen, both invalidations named. |
-| 6 | ~~`product-slicer:acceptance-criteria`~~ | **Run: 2/2 PASS.** Regression confirmation, no news, as expected. |
-| 7 | ~~`software-architect:architecture-review`~~ | **Run: 4/4 PASS.** Regression confirmation, no news. Case since retired in favour of the `library-app-*` suite. |
-| 8 | ~~`software-architect:architecture-design`~~ | **Reworked, then run: 8/8 PASS.** Graders split into four `portable-*` (hold for any design doc) and three `fixture-*` (this case's own sync/async and premature-abstraction content) per `NOTES.md`'s plan. First-ever gradable result for this case, and the first real test of the "Technology at a boundary" section added since it was last run. |
-
-All eight cases in this backlog have now been run at least once. Every one
-except `orchestrator` has since been replaced by real cases and deleted;
-their summaries are in git history. `orchestrator` is the last emulated
-case. Run it with the `agent-eval` skill.
+Emptied: the eight emulated cases it listed were all run, then replaced by
+real cases and deleted (the table is in git history).
 
 ### Known coverage gaps
 
@@ -364,13 +345,19 @@ case. Run it with the `agent-eval` skill.
   orchestrator's quarantine/grade/combine/finalize flow (two worktree
   candidates, parallel reviewers) has no case. Worktree isolation inside
   the eval sandbox is unproven.
-- **The main agent acts before `tdd-implementation` loads.** Asked to build
-  a design, Sonnet reads around and often writes its own answers to the
-  design's open questions into the design doc before invoking the skill
-  (2/3 runs even after the description says "invoke it first"). The skill
-  now reverts such an edit and treats the question as open; through the
-  agent path the parent's edit is invisible to the subagent, so
-  `tdd-implementation-cancel-hold-via-agent` stays weak for that reason.
+- ~~**The main agent acts before `tdd-implementation` loads.**~~ **Closed
+  for the parent.** It used to write its own answers to a design's open
+  questions into the design doc before invoking the skill or delegating
+  (2/3 runs). The skill's and `tdd-coach`'s descriptions now say to leave
+  those questions to the skill: 0/3 direct, 0/2 through the agent. What
+  remains on the agent path is the subagent's own process (see
+  `tdd-implementation-cancel-hold-via-agent`).
+- **The eval's judge can't be checked from outside.** A re-ask with
+  `tools/rejudge.py` disagreed with the eval on three of five checked
+  verdicts, and a probe showed the eval failing a long review as
+  `last_message` while passing the same text as a file. Borderline
+  verdicts flip. Prefer graders on saved files, keep criteria to plain
+  checks, and read a single failure as possibly noise until it recurs.
 - ~~**software-architect has no `Skill` tool.**~~ **Closed.**
   software-architect and product-slicer now list `Skill` (their skills
   consult `map-query`, the devsecops skills and `acceptance-criteria`).
@@ -402,32 +389,19 @@ case. Run it with the `agent-eval` skill.
   exception/stack-trace, distinct from error-response) — fixed and
   re-verified. That emulated case has since been replaced by the
   `security-requirements-*` real cases; its summary is in git history.
-- **`agent-eval`'s "Read/Grep/Glob only" dry-run grant isn't actually
-  enforceable on a `general-purpose` subagent in this environment.**
-  Surfaced running `accessibility-engineer:accessibility-review`: the
-  spawned emulation agent had full tool access regardless of the
-  procedure's instructions, and used it — opening a real Chrome tab and
-  driving the fixture mockup live (keyboard events, computed-style
-  contrast math, real `getBoundingClientRect` measurements) rather than
-  reasoning over the HTML text alone. No repo file was written or edited,
-  so the side-effect-free half of the dry run held, but this is not the
-  purely-textual emulation the procedure describes, and it's likely the
-  reason that same run also forgot the mandated "Skills consulted:"
-  self-report line (see `eval-score/summary.md`) — busy actually
-  executing checks instead of following a literal formatting
-  instruction. Any future case for a persona whose skill instructs real
-  tool use (browser automation, code execution) should expect the same
-  gap until this harness gains a real tool-restriction mechanism.
+- ~~**`agent-eval`'s "Read/Grep/Glob only" dry-run grant isn't actually
+  enforceable.**~~ **Moot:** the emulated harness is retired, with its last
+  case (`orchestrator`) replaced by real routing cases.
 - ~~**`tdd-coach:tdd-implementation` couldn't be checked running for real.**~~
   **Closed.** The real cases run Node's test runner in the sandbox (the
   `code-plants/tdd/` overlay's `test/ts-resolve.mjs` lets
   `node --experimental-transform-types --test` load the app's TypeScript
   with no install) and grade the trace mechanically.
-- **`technology-bootstrap`'s advisor-consult path is only softly graded.**
-  Consulting `devsecops-engineer` inline is treated as expected-but-not-
-  required, because the emulation harness can't distinguish an inline
-  consult from a spawn — the distinction the rule actually exists to
-  enforce.
+- ~~**`technology-bootstrap`'s advisor-consult path is only softly graded.**~~
+  **Closed.** `technology-bootstrap-phase2` now checks the trace: it
+  consults `supply-chain-review` for the pinning question, inline rather
+  than by spawning an agent, and doesn't consult `security-requirements`
+  reflexively. All 18 kept phase-2 traces pass.
 - ~~**`ux-designer` has no case run yet.**~~ **Closed — both run**, and
   since replaced by real cases (see the UI personas entry below); what
   follows describes the emulated cases, now in git history.
@@ -966,13 +940,12 @@ grader, or the `agent-eval` harness that a case already covers.
     scope was its own judgment. The stop now opens the skill: no Active
     requirements doc means no file and no slice sketched in the reply,
     whatever the user says about skipping it.
-  - The eval's judge is `claude-sonnet-5-5`, while `claude -p --model
-    sonnet` in this shell reaches a different model. A grader that
-    failed 9/9 inside the eval passed 6/6 when re-asked that way, and
-    Sonnet 5.5 passed it too when allowed to explain. Earlier "re-asked,
-    the judge passes it" notes in this README used `claude -p --model
-    sonnet` and may not reflect the eval's judge. The playbook (step 4)
-    now gives the exact reproduction.
+  - Re-asking the judge outside the eval is not a reliable check. A
+    grader that failed 9/9 in the eval passed 6/6 when re-asked with
+    `claude -p --model sonnet` (and failed with `claude-sonnet-5-5`), and
+    later cases went the other way (see playbook step 4). Earlier
+    "re-asked, the judge passes it" notes in this README are hints, not
+    verdicts.
 - **software-architect and product-slicer got the `Skill` tool, and the
   architect's agent path got a real design case.** The eval doesn't
   enforce an agent's `tools:` list, so the case passed before the tool was
@@ -983,3 +956,38 @@ grader, or the `agent-eval` harness that a case already covers.
   work carries on in the same response; 3/3 clean after. One earlier run
   also read the map directly instead of consulting `map-query`; it didn't
   recur in the final three.
+- **Closing the remaining gaps: judge checks, harder plants, restraint,
+  the parent's edits, and the routing table.**
+  - `tools/rejudge.py` replays a grader against a result file. Using it
+    showed that re-asking the judge is a hint only (playbook step 4), and
+    settled the two "judge error" notes: `scope-map-self-service` is
+    borderline, and design-system phase 3's direction grader stacked
+    conditions; it is now two graders.
+  - `accessibility-review-payfine-subtle` (answer key `A5`–`A8`,
+    `AT4`–`AT6`) plants what only the cascade, a state or an id shows.
+    Both arms caught three of four; neither caught the link that fails
+    contrast only on `:hover`. The skill now names state rules (`:hover`,
+    `:focus`, `:active`, `:disabled`) as pairs to check, in the markup-only
+    fallback too, where the first wording didn't reach: the hover plant is now
+    found 2/3 with the plugin and 0/2 without, the suite's first
+    accessibility uplift.
+  - `reliability-review` had a bulkhead rule (a finding only with a named
+    shared resource and plausible load) and nothing like it for retries,
+    so runs rated a missing read retry Medium on the clean catalog module.
+    A missing retry is now a finding only when a transient failure loses
+    something a retry would save. `reliability-review-catalog` went from
+    1/2 vs 1/2 to 2/3 vs 0/3.
+  - The parent's pre-emptive design edits (gap above) stopped once the
+    `tdd-implementation` and `tdd-coach` descriptions said to leave a
+    design's open questions to the skill.
+  - The emulated `orchestrator` case (13 dry-run directories) is replaced
+    by twelve `orchestrator-route-*` cases, one per routing row, on
+    planning folders cut to each stage (`fixtures/library-app/route-plants/`
+    adds a non-UI cancel-hold set, a backward-route set and a screen-design
+    artifact). Two lessons from calibration: an empty directory doesn't
+    reach the sandbox, and an `architecture-design` run legitimately
+    consults `security-requirements`, so "never invokes X" checks have to
+    allow consults. Real miss found: after `scope-map` decided a problem
+    needs no map, the orchestrator chained into `requirements-refinement`
+    without asking (1/2).
+  - `.claude/skills/agent-eval` is retired with its last case.

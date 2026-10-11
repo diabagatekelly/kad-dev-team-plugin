@@ -28,11 +28,23 @@ graders:
       path: docs/pay-fine/visual-ux/design-system-001.md
     weight: 1
     criteria: |
-      Three candidates were presented: Warm Civic (terracotta and amber on cream, serif headings, rounded cards with shadow), Crisp Civic-Tech (deep blue on cool grey-white, all sans-serif, flat, tight radii, dense rows) and Reading Room (forest green and gold, italic serif display, dashed rules). The user chose the second one, Crisp Civic-Tech.
+      Three candidates were presented: Warm Civic (terracotta and amber on cream, serif headings), Crisp Civic-Tech (deep blue on cool grey-white, all sans-serif, flat, dense rows) and Reading Room (forest green and gold, italic serif display). The user chose the second one, Crisp Civic-Tech.
 
-      PASS if the Direction section is Crisp Civic-Tech, states a specific point of view tied to this product (library members paying fines in a portal), and the rejected candidates are described in prose with a reason, with no saved file or screenshot of their own.
+      PASS if the document's chosen direction is Crisp Civic-Tech and says something specific about this product (library members paying fines in a portal), not only "clean and modern".
 
-      FAIL if it documents a different candidate, the direction is generic ("clean and modern") with nothing about this product, or a rejected candidate is linked as a saved file.
+      FAIL if it documents a different candidate or the direction says nothing about this product.
+  - type: llm
+    name: rejected-candidates-in-prose
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-001.md
+    weight: 1
+    criteria: |
+      The rejected candidates were Warm Civic and Reading Room.
+
+      PASS if the document describes the rejected candidates in prose, with why they weren't chosen (the user picked the second one without giving a reason, so saying so is enough), and links no file or screenshot of theirs. A link to the chosen design's own mockup is fine.
+
+      FAIL if a rejected candidate is missing, or is linked as a saved file or screenshot.
   - type: llm
     name: tokens-every-category
     focus:

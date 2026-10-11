@@ -389,6 +389,25 @@ nothing else on the page should be a finding.
 | AT2 | Warning icon in the notice | An `<svg>` with no alt text. | `aria-hidden="true"`, decorative, next to a heading saying the same. |
 | AT3 | Card number input | No `<label for>`. | `aria-labelledby="card-label"` names it "Card number". A Low note about using `<label>` is fine. |
 
+A second mockup, `ui-plants/accessibility-review-subtle/visual-ux/pay-fine-card-error.html`
+(case `accessibility-review-payfine-subtle`), is the card-error state built
+on the design system: the textbook defects above are fixed, and each defect
+left shows only by following the cascade, a state, or an id. The ratios
+were computed, not estimated.
+
+| # | Where | Violation | Expected |
+|---|---|---|---|
+| A5 | `.btn-primary:focus { outline: none; }` | More specific than the global `:focus-visible` rule, so it strips the Pay button's focus ring and puts nothing back. | No visible focus on the one committing action. |
+| A6 | `.actions a:hover` | "Back to my account" turns `--link-hover` `#4F8F8A`: 3.73:1 on the white panel, under 4.5:1 for 16px text. Passing at rest (`#1F5F5B`, 7.38:1). | Hover-state contrast failure. |
+| A7 | Card number input | `aria-describedby="card-eror"`; the error's id is `card-error`. | The error isn't associated: a screen reader hears "invalid" with no reason. |
+| A8 | "Name on card" label | Class `visually-hidden`, which this page defines as `display: none`. | No visible label once the placeholder goes; whether assistive technology still gets the hidden label varies, so don't grade on that. Fix: a visible label, or the page's own `.sr-only` at least. |
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| AT4 | `input[type="text"]:focus-visible` | Replaces the outline. | `outline: 3px solid transparent` plus a 3px `#1F5F5B` box-shadow ring (7.38:1 on white); the transparent outline keeps a ring in forced-colours mode. |
+| AT5 | Card number hint in `.sr-only` | Hidden text. | The clip pattern: still read by screen readers, beside a visible `<label for>`. A7 is the real problem on this field. |
+| AT6 | Fine choice | Cards that select. | Native radios in a `fieldset`/`legend`, each card a `<label>`, "Selected" text as well as the border. |
+
 `ui-plants/design-system/` is the binding design system `screen-design-payfine`
 composes against; it has no plants.
 

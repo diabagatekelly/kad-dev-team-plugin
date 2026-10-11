@@ -64,9 +64,12 @@ Fall back to a markup-only read only when nothing in this session can
 actually load the artifact, and say so explicitly in the report rather
 than letting a weaker check pass as the real one. A markup-only read still
 computes contrast, from the colors the CSS actually resolves to (follow
-custom properties, inline styles and the rule that wins), and still
-confirms each Critical or High against the whole file before reporting
-it.
+custom properties, inline styles and the rule that wins). That includes
+every state rule: search the CSS for `:hover`, `:focus`, `:active` and
+`:disabled` selectors that set a colour or background, and check each as
+its own pair; "all rendered pairs pass" covers only the resting state. It
+still confirms each Critical or High against the whole file before
+reporting it.
 
 ## Six checks, every time
 
@@ -77,7 +80,10 @@ round these out to eight.
 
 1. **Contrast** — every text/background pair reaches 4.5:1 (normal text)
    or 3:1 (large text, and UI components/graphical objects). Compute it
-   from what's actually rendered.
+   from what's actually rendered, in every interaction state the CSS
+   declares: a `:hover`, `:focus`, `:active` or `:disabled` rule that
+   changes a colour is a new pair to check, even though no static mockup
+   shows it.
 2. **Text alternatives** — every image or icon that carries meaning has
    real alt text or an aria-label; a purely decorative one has an explicit
    empty alt rather than a missing attribute.

@@ -1,0 +1,47 @@
+schema_version: "1.0"
+name: orchestrator-route-implementation
+description: "Routing, one row of the orchestrator's table: the same slice in the library app, which has a stack: routes to tdd-implementation (directly or through the quarantine flow, which is not exercised here), not technology-bootstrap."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a new feature for it, and the planning documents so far are in `docs/cancel-hold/`. What's next?
+  model: sonnet
+  max_turns: 25
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 2
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: llm
+    name: routes-to-tdd-implementation
+    focus:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    weight: 1
+    criteria: |
+      The cancel-hold slice is fully specified (design approved, security and reliability criteria filled, not UI-touching) and the library app already has a stack, so the next step is `tdd-coach:tdd-implementation`. The orchestrator reaches it either directly or through its quarantine flow (candidates built in worktrees, then graded and combined).
+
+      PASS if the log routes this slice to tdd-implementation, directly or through the quarantine flow (the orchestrator's template for that route is an entry headed "slice ready for implementation" with "Routed to: quarantine flow").
+
+      FAIL if it routes to technology-bootstrap or anything else, or the log has no routing entry.
+  - type: tool_used
+    name: not-technology-bootstrap
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:technology-bootstrap"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: not-reliability-requirements
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-requirements"'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written
+    path: docs/cancel-hold/orchestrator-log.md

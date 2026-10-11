@@ -1,0 +1,46 @@
+schema_version: "1.0"
+name: orchestrator-route-design-system
+description: "Routing, one row of the orchestrator's table: a UI slice with both runtime-safety criteria filled and no design system: routes to design-system."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a new feature for it, and the planning documents so far are in `docs/pay-fine/`. What's next?
+  model: sonnet
+  max_turns: 25
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 2
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: routes-to-design-system
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:design-system"'
+    min: 1
+  - type: tool_used
+    name: not-screen-design
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:screen-design"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: not-reliability-requirements
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-requirements"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: not-accessibility-review
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written
+    path: docs/pay-fine/orchestrator-log.md

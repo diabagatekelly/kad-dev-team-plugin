@@ -1,0 +1,40 @@
+schema_version: "1.0"
+name: orchestrator-route-problem-framing
+description: "Routing, one row of the orchestrator's table: an empty planning folder: routes to problem-framing-doc."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're starting to plan a new feature for it: members can only pay their fines at the desk. Its planning documents go in `docs/pay-fine/`, which is new and empty so far. What's next?
+  model: sonnet
+  max_turns: 25
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 2
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: routes-to-problem-framing-doc
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:problem-framing-doc"'
+    min: 1
+  - type: tool_used
+    name: not-scope-map
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:scope-map"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: not-requirements-refinement
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:requirements-refinement"'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written
+    path: docs/pay-fine/orchestrator-log.md

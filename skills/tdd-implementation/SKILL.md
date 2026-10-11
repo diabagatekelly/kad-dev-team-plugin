@@ -1,6 +1,6 @@
 ---
 name: tdd-implementation
-description: Use before writing or changing application code — building an approved design or slice ("the design's approved, build it", "implement this") or applying a fix a reviewer handed back ("apply this finding", "architecture-review flagged X, fix it"). Invoke it first, before reading around or deciding anything yourself. Writes the code test-first via genuine Red-Green-Refactor, one test at a time from a Test List.
+description: Use before writing or changing application code — building an approved design or slice ("the design's approved, build it", "implement this") or applying a fix a reviewer handed back ("apply this finding", "architecture-review flagged X, fix it"). Invoke it first, before reading around, deciding anything or editing the design yourself: a design's open questions are this skill's to sort, so leave them unanswered. Writes the code test-first via genuine Red-Green-Refactor, one test at a time from a Test List.
 ---
 
 # TDD Implementation
