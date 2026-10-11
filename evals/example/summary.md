@@ -109,8 +109,8 @@ and `reliability-requirements-001.md` were independently audited against
 their skills' text (not against this table) once those skills got eval
 cases — the audit found a real gap (monitoring/telemetry never addressed
 as a data-exit route) and produced the `addresses-all-five-exits` grader,
-recorded in `devsecops-engineer:security-requirements/eval-score/`, not
-here. `design-001.md`'s "no portable graders" gap closed when
+recorded in that emulated case's `eval-score/` (since replaced by the
+`security-requirements-*` real cases; see git history), not here. `design-001.md`'s "no portable graders" gap closed when
 `architecture-design`'s case was reworked into `portable-*`/`fixture-*`
 graders (see that case's `NOTES.md`). And this directory has since grown
 two more artifacts this table predates entirely — `design-system-001.md`

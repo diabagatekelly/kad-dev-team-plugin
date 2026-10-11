@@ -219,7 +219,6 @@ score is history, not a claim about today.
 | `architecture-review-neg-security-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `architecture-review-neg-test-quality-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
-| `devsecops-engineer:security-requirements` | 7/7 PASS, inline | no — superseded by the `security-requirements-*` real cases below |
 | `security-requirements-payfine-phase1` | real, Sonnet: 3/3 runs with plugin (`results/20261011-req-cal7`), 0/1 without on both passes that ran a baseline — given the pay-a-fine slice and the engineer's "let members onto `/fines`" proposal, asks about obligations and who may see whose data, and does not ask how members sign in or which provider handles payment (the code says) | yes |
 | `security-requirements-payfine-phase2` | real, Sonnet: 9/9 over 3 runs (`results/20261011-req-sec-p2c`) — presents the shared-route proposal as a pending decision (it would expose staff-only waiving and skip the ownership check), decides nothing for the user, no false alarm on the publishable key. No baseline arm: the history is a with-plugin transcript | yes |
 | `security-requirements-payfine-phase3` | real, Sonnet: 18/18 over 3 runs (`results/20261011-req-sec-p3a`) — the user keeps the shared route; finished criteria written for it and made safe (members pay only their own fines, cannot waive), card data never received, error and monitoring exits covered, decision recorded without re-arguing | yes |
@@ -239,7 +238,6 @@ score is history, not a claim about today.
 | `supply-chain-review-accept-phase2` | real, Sonnet: 3/3 on 2 runs plus the final pass (`results/20261010-sc-p2b`) — the first case built on `context.history_file`: resumes a frozen phase-1 question, answers "accepted risk" with a reason, and checks the write-up keeps the user's classification and reason, adds no unenforced expiry, and flags the acceptance as ADR-worthy without drafting it. No baseline arm: the history is a with-plugin transcript. The ADR flag failed until it became an explicit recording step, and that fix only reached phase 2 after phase 1 was re-run and re-frozen | yes |
 | `supply-chain-review-neg-security` | real, Sonnet: never invokes `supply-chain-review` in either arm | yes |
 | `supply-chain-review-neg-reliability` | real, Sonnet: never invokes `supply-chain-review` in either arm | yes |
-| `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | no — superseded by the `reliability-requirements-*` real cases below |
 | `reliability-requirements-payfine-phase1` | real, Sonnet: 2/2 runs with plugin (`results/20261011-req-rel-p1e`), 0/1 without on both passes that ran a baseline — same slice with the engineer's "show 'failed, try again' after 10 s" proposal; asks what an hour down costs, the target and who notices, not what the code says | yes |
 | `reliability-requirements-payfine-phase2` | real, Sonnet: 8/9 over 3 runs, 2/3 clean (`results/20261011-req-rel-p2e`) — names the duplicate charge a timed-out retry can cause and leaves its handling as a pending decision (the miss settles it), no retry of declines | yes |
 | `reliability-requirements-payfine-phase3` | real, Sonnet: 18/18 over 3 runs (`results/20261011-req-rel-p3c`) — the user keeps "show failed" and refunds duplicates by hand; finished criteria for that, duplicates made findable for the refund, charge-without-settle caught, double submit covered, declines vs faults, no retry of declines | yes |
@@ -252,7 +250,6 @@ score is history, not a claim about today.
 | `reliability-review-catalog` | real, Sonnet: 1/2 with plugin vs 1/2 without (`results/20261010-recheck3-catalog`) — the clean module, a borderline restraint case with no uplift. Its original prompt asked how catalog behaves "when the database is slow or down and as the catalog grows"; that leading question produced a Medium/High capacity concern in every run of both arms (four calibration passes plus two rechecks). With the neutral prompt the capacity speculation stopped; the remaining failing runs rate a missing read retry Medium. Known gap: the skill does not reliably hold a clean module to Low | yes |
 | `reliability-review-neg-security` | real, Sonnet: never invokes `reliability-review` in either arm | yes |
 | `reliability-review-neg-architecture` | real, Sonnet: never invokes `reliability-review` in either arm | yes |
-| `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | no — superseded by the `operational-readiness-*` real cases below |
 | `operational-readiness-release-phase1` | real, Sonnet: 1/1 with plugin on six passes (`results/20261011-or-p1h`), 0/1 without on both passes that ran a baseline — asked "is it ready to ship?", the skill asks who uses the service, what breaks, who finds out and whether a rollback has ever run, and holds its verdict; the baseline reviews straight away. In the first calibration pass the skill fired but reviewed straight away too, until it said its first response is questions | yes |
 | `operational-readiness-release-phase2` | real, Sonnet: 14/15 over 3 runs, 2/3 runs clean (`results/20261011-or-p2h`) — resumes the frozen questions with the one-developer answer; unverified deploy, migration 0012 coupled to the release, never-rehearsed rollback and no team-scale ceremony 3/3; no false "no rollback" claim 2/3 (the miss reads `release.sh` as unable to target a previous image). No baseline arm: the history is a with-plugin transcript | yes |
 | `operational-readiness-ops-phase1` | real, Sonnet: 1/1 with plugin on six passes (`results/20261011-or-p1h`), 0/1 without on both passes that ran a baseline — same as the release phase 1, asked about running the service rather than one release | yes |
@@ -327,7 +324,8 @@ Run with the `agent-eval` skill, one case per invocation.
   covered. A new `addresses-all-five-exits` grader now checks this, and it
   caught the same gap in this case's own first draft too (missing
   exception/stack-trace, distinct from error-response) — fixed and
-  re-verified. Details in `devsecops-engineer:security-requirements/eval-score/summary.md`.
+  re-verified. That emulated case has since been replaced by the
+  `security-requirements-*` real cases; its summary is in git history.
 - **`agent-eval`'s "Read/Grep/Glob only" dry-run grant isn't actually
   enforceable on a `general-purpose` subagent in this environment.**
   Surfaced running `accessibility-engineer:accessibility-review`: the
