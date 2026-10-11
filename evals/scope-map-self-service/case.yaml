@@ -1,0 +1,59 @@
+schema_version: "1.0"
+name: scope-map-self-service
+description: "A larger library problem (fines, holds, contact details at the desk): asked to map it before slicing, scope-map fires, writes steps only, and routes the privacy constraint to every step's requirements pass rather than one step or later design."
+tags: [scope-map, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The problem doc for our next piece of work is in `docs/self-service/problem.md`. It's too big to start slicing straight away; lay out the shape of it first and save that as `docs/self-service/scope-map-001.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:scope-map"'
+    min: 1
+  - type: file_exists
+    name: scope-map-written
+    path: docs/self-service/scope-map-001.md
+  - type: llm
+    name: steps-cover-the-problem
+    focus:
+      source: file
+      path: docs/self-service/scope-map-001.md
+    weight: 1
+    criteria: |
+      The problem doc names three desk-only tasks: paying a fine, placing a hold on a checked-out book, and updating contact details.
+
+      PASS if the map's steps between them cover all three. How they are grouped or ordered does not matter.
+
+      FAIL if any of the three is missing.
+  - type: llm
+    name: steps-only
+    focus:
+      source: file
+      path: docs/self-service/scope-map-001.md
+    weight: 1
+    criteria: |
+      A scope map names steps and nothing more. Look only at the numbered step lines.
+
+      FAIL if any step line contains Given/When/Then criteria, a thin path, a route, module, table or library not already named in the problem doc, an estimate, or a "depends on step N" note.
+
+      PASS otherwise. Restating a constraint the problem doc already states (Stripe stays, who may see contact details), and sections outside the step list (sequencing notes, out of scope, cross-cutting constraints), do not count against it.
+  - type: llm
+    name: privacy-routed-to-every-step
+    focus:
+      source: file
+      path: docs/self-service/scope-map-001.md
+    weight: 1
+    criteria: |
+      The problem doc's privacy constraint is worded around contact details, but its concern (a member's personal data, including what they borrow and have on hold, is visible only to them and staff) applies to every step: fines show what was borrowed, holds show what a member wants, contact details are personal data.
+
+      PASS if the map treats it as applying across the steps and says it is applied in each step's own requirements pass (or equivalent: settled per step before that step is sliced).
+
+      FAIL if it is attached only to the contact-details step, left out, made a step of its own, or deferred to "each slice's design" or a later security review.

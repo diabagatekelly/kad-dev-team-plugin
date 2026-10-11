@@ -194,17 +194,17 @@ score is history, not a claim about today.
 
 | Case | Last result | Current? |
 |---|---|---|
-| `docs-writer:problem-framing-doc` | 3/3 PASS | yes |
-| `docs-writer:scope-map` | 5/5 PASS, inline | yes |
+| `docs-writer:problem-framing-doc` | 3/3 PASS | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
+| `docs-writer:scope-map` | 5/5 PASS, inline | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `docs-writer:adr` | — | not written |
 | `docs-writer:why-comments` | — | not written |
-| `docs-writer:user-story-writeup` | 3/3 PASS, two-phase | yes |
+| `docs-writer:user-story-writeup` | 3/3 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `docs-writer:pr-writeup` | — | not written |
 | `docs-writer:user-facing-docs` | — | not written |
 | `docs-writer:staleness-audit` | — | not written |
-| `product-manager:requirements-refinement` | 6/6 PASS, two-phase | yes |
-| `product-slicer:vertical-slicing` | 6/6 PASS, two-phase | yes |
-| `product-slicer:acceptance-criteria` | 2/2 PASS, inline | yes |
+| `product-manager:requirements-refinement` | 6/6 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
+| `product-slicer:vertical-slicing` | 6/6 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
+| `product-slicer:acceptance-criteria` | 2/2 PASS, inline | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `orchestrator` | 15/15 PASS, skill-only | yes — kept as the broad check on the routing table (13 described directories, dry run); the real cases below cover what it can't |
 | `orchestrator-security-stage` | real, Sonnet: 2/2 runs all pass (`results/20261011-orch-cal2`); baseline fails routing and writes no log — "what's next?" on a real planning folder fires the orchestrator, which routes to `security-requirements` by invoking the skill, passes the save location, writes the log at routing time, and the persona asks its questions | yes |
 | `orchestrator-superseded-scope-map` | real, Sonnet: 2/2 runs all pass — real inspection: reads `## Status` and routes to requirements for the Active map's step 1, not to slicing from the superseded map's requirements doc. The baseline also routes correctly here, so this is a regression guard on inspection, with the skill-invocation graders as the plugin-fired check | yes |
@@ -216,6 +216,12 @@ score is history, not a claim about today.
 | `technology-bootstrap-phase1` | real, Sonnet: 1/1 with plugin on three passes; the baseline also asks first, so this phase is a regression guard — an empty repo with slice 1's artifacts in `docs/` (`fixtures/bootstrap-empty/`): asks who maintains it and what kind of app before recommending anything | yes |
 | `technology-bootstrap-phase2` | real, Sonnet: 2/3 runs clean (`results/20261011-sa-p2g-technology-bootstrap-phase2`) — the answer delegates the test runner and package manager but never mentions a UI framework; recommends one with alternatives and waits instead of settling it | yes |
 | `technology-bootstrap-phase3` | real, Sonnet: 15/15 over 3 runs (`results/20261011-sa-final3-boot3`) — the user approves React with Vite; the saved bootstrap decides only what the first test forces, defers persistence with the in-memory reason, treats pinning as a choice, records rejected alternatives and open categories, and shows each choice as approved or delegated. Graded on the saved file. No baseline arm | yes |
+| `requirements-refinement-payfine-phase1` | real, Sonnet: 12/12 over 3 runs (`results/20261011-np-final-*`); baseline 2/3 in calibration (writes technical design into the answer) — the pay-a-fine problem doc only, asked to "work out exactly what we want built": asks what to build before writing, doesn't ask what the problem doc or code answers | yes |
+| `vertical-slicing-payfine-phase1` | real, Sonnet: 18/18 over 3 runs; baseline 4/5 in calibration (no separate security and accessibility placeholders) — problem plus Active requirements, saves `slice-001.md`: stays inside "confirmed in scope", both placeholders, slice set named, doesn't re-ask the WHAT | yes |
+| `acceptance-criteria-payfine` | real, Sonnet: 9/9 over 3 runs; the baseline passed in calibration, so this is a regression guard — the engineer's "handles errors gracefully": rejected as untestable, and the undecided non-decline failures are flagged or routed to the reliability placeholder, not settled in the rewrite | yes |
+| `problem-framing-doc-payfine` | real, Sonnet: 14/15 over 3 runs; the baseline passed in calibration, a regression guard — the user's own description with "add a pay button" in it: no solution in the doc, Stripe and one-developer as constraints. Known miss 1/3: an unstated "in-person payment must keep working" listed as a constraint beside a related open question | yes |
+| `scope-map-self-service` | real, Sonnet: 14/15 over 3 runs, the miss a judge error (the map routes privacy to each step's requirements pass; re-asked, the judge passes it); baseline misses the privacy routing on both calibration passes — a new, larger problem (`planning/self-service/`: fines, holds, contact details) whose privacy constraint is worded around one step | yes |
+| `user-story-writeup-payfine-phase1` | real, Sonnet: 9/9 over 3 runs; baseline fails on both calibration passes (writes the story or fills the security placeholder) — asked to make slice 1 "ready to track", asks whether and where to file before writing. Before the fix the skill never fired: the run filled the slice's security placeholder instead | yes |
 | `library-app-lending-review` | real, Sonnet: 6/6 with plugin vs 4/6 without (runtime cycle missed, ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
 | `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
 | `library-app-members-review` | real, Sonnet: 3/3 with plugin vs 2/3 without (table-shaped domain type missed), 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
@@ -313,10 +319,12 @@ Run with the `agent-eval` skill, one case per invocation.
 
 - **Persona rules the orchestrator can't reach.** The orchestrator now
   invokes a routed skill and never reads the persona's `AGENT.md`, so any
-  rule a routed step needs must be in the skill. `devsecops-engineer` and
-  `software-architect` have had that pass; `docs-writer`,
-  `product-manager`, `product-slicer`, `ux-designer`,
-  `accessibility-engineer` and `tdd-coach` have not. Do it as part of each persona's move to the
+  rule a routed step needs must be in the skill. `devsecops-engineer`,
+  `software-architect`, `product-manager`, `product-slicer` and
+  `docs-writer`'s `problem-framing-doc`, `scope-map` and
+  `user-story-writeup` have had that pass; `docs-writer`'s other five
+  skills, `ux-designer`, `accessibility-engineer` and `tdd-coach` have
+  not. Do it as part of each persona's move to the
   real suite (playbook step 1 already asks for it).
 
 ~~- **`devsecops-engineer` has one case out of six skills.**~~ **Closed —
@@ -788,3 +796,26 @@ grader, or the `agent-eval` harness that a case already covers.
   skipping its questions about one run in four, worse under the
   orchestrator, fixed by an orchestrator step-4 line (routing doesn't
   hurry a skill whose first response is questions): 4/4 on both after.
+- **The non-code personas got a lighter pass: rule cleanup plus one real
+  phase-1 case per skill**, not full chains. `product-manager`,
+  `product-slicer` and `docs-writer`'s three skills with cases moved their
+  persona rules into the skills (where to save; the first response is
+  questions for `requirements-refinement`; `vertical-slicing` hands back
+  when there's no Active requirements doc, never reaches past "confirmed
+  in scope", names the scope-map step in the title and invokes
+  `acceptance-criteria` before writing criteria; write for skimming). Six
+  real cases on the pay-a-fine planning folders, plus a new larger
+  `self-service` problem for `scope-map`. Calibration found three skill
+  gaps: `user-story-writeup` never fired on "ready to track" because the
+  run filled the slice's security placeholder first (the description now
+  says placeholders don't block a story); an `acceptance-criteria`
+  rewrite settled what a member sees on a gateway error (a rewrite can't
+  decide what the vague criterion never decided); a problem doc listed an
+  assumed limit as a constraint and the same thing as an open question
+  (an assumed limit is an open question). Grader lessons, again: a
+  "steps only" grader failed one-liners that restate the problem doc's own
+  constraints, which the skill allows, until it became a concrete list of
+  violations; "FAIL if it does" after a negative PASS sentence was misread
+  and the grader was dropped. The emulated cases are kept for depth and
+  marked stale; they feed `AGENT.md` to the model, so re-running them
+  can't show the skills stand alone.

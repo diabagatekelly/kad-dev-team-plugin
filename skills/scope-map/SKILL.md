@@ -105,3 +105,13 @@ surfaces a step nobody had named. This is expected, not a failure: the first
 scope map is a hypothesis about the problem's shape, not a commitment to it.
 Don't revise pre-emptively on a hunch — wait until a slice actually forces
 the question.
+
+**Write for skimming.** Lead with the point; prefer bullets and headers to
+prose; a paragraph is one or two sentences at most. If a sentence wouldn't
+change what the reader does next, cut it.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it.

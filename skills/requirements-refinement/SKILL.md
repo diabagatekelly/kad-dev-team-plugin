@@ -17,6 +17,13 @@ directly — don't derive the answer from the problem doc or scope map alone,
 even when a plausible answer seems obvious. A wrong assumption here
 reshapes the slice that gets built on top of it.
 
+**Your first response is questions, not a requirements doc.** Read the
+problem doc, scope map and any code first so the questions are sharp, and
+don't ask what they already answer. Then ask in one pass and stop until
+the user answers. Engineering heuristics (risk-avoidance, smallest-first)
+are `product-slicer`'s, not grounds for deciding the WHAT on the user's
+behalf.
+
 **Ask, merged into one pass:**
 - Who specifically benefits from this piece? Reuse what the problem doc or
   scope map already narrowed down; only ask if it's still generic ("the
@@ -105,12 +112,23 @@ Note any that turned out to force a capability nothing has scoped yet —
 that's a finding for `product-slicer`, not a note.
 ```
 
+Keep it skimmable — this document answers "what did the user actually
+confirm," not "here is a full specification."
+
 **Never write a thin path, Given/When/Then acceptance criteria, or apply a
 slicing technique** (happy-path-first, input variations, reduce scope,
 etc.) — those stay `product-slicer`'s and `acceptance-criteria`'s job once
-this hands off a decided WHAT. If you catch yourself describing *how* the
-capability gets built rather than *what* the user confirmed they want,
-stop — that's the next persona's job, not this one's.
+this hands off a decided WHAT. Nor chunk the whole problem into steps;
+that is `scope-map`'s. If asked to do one of those, say so and hand it
+back. If you catch yourself describing *how* the capability gets built
+rather than *what* the user confirmed they want, stop — that's the next
+persona's job, not this one's.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it.
 
 **Revise by superseding, never by editing.** Number sequentially, same as
 `scope-map` and `adr`. If a later slice or a design conversation reveals

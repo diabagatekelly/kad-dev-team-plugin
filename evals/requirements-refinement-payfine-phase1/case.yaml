@@ -1,0 +1,50 @@
+schema_version: "1.0"
+name: requirements-refinement-payfine-phase1
+description: "Pay-a-fine problem doc only, no scope map: a plain 'work out what we want built' fires requirements-refinement, which asks the user what they want before writing, and doesn't ask what the problem doc or code answers."
+tags: [requirements-refinement, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a new feature for it; the problem doc is in `docs/pay-fine/problem.md`. It's small enough that we're skipping a scope map. Before anyone cuts a slice, let's work out exactly what we want built for it.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:requirements-refinement"'
+    min: 1
+  - type: llm
+    name: asks-before-writing
+    focus: last_message
+    weight: 1
+    criteria: |
+      `docs/pay-fine/problem.md` says members can only pay fines in person at the desk, and the user asked to work out what should be built before slicing. What to build is the user's decision: neither the problem doc nor the code says whether members should pay one fine or several at once, whether partial payment matters, what staff need to see, or what the simplest version that would feel like progress is.
+
+      PASS if the response ends by asking the user questions, has not written its finished requirements (a summary of what it read, or a draft scope it asks the user to confirm or correct, is fine), and at least one question is about what the user wants built or prioritised for this feature. One such question is enough.
+
+      FAIL if it delivers finished requirements without asking, decides the scope itself and only asks for a rubber stamp on a complete document, or asks only about things the problem doc or code already answer.
+  - type: llm
+    name: does-not-ask-what-the-sources-answer
+    focus: last_message
+    weight: 1
+    criteria: |
+      The sources already settle several things. The problem doc: about 3,000 members at one branch, fines are assessed by a nightly job, staff take payments at two desks, card payments already go through Stripe and that does not change, one developer maintains the service. The code: members sign in and use a portal (`/portal`, member role) where they can see and renew loans; fine collection exists as a staff-only `/fines` route.
+
+      PASS if the response does not ask the user any of these as if unknown (for example "which payment provider do you use?", "how many members are there?", "do members have accounts or a portal?", "who maintains this?"). Stating what it read, or asking the user to confirm a specific reading, passes.
+
+      FAIL if it asks the user to supply any of those facts as an open question.
+  - type: llm
+    name: stays-on-the-what
+    focus: last_message
+    weight: 1
+    criteria: |
+      This step decides WHAT the user wants built, not how to build or slice it.
+
+      PASS if the response contains no thin path, no Given/When/Then acceptance criteria, and no technical design (routes, modules, data model) presented as decided. Mentioning what exists in the code as context is fine.
+
+      FAIL if it writes any of those as its output.

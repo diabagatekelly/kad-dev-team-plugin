@@ -1,0 +1,44 @@
+schema_version: "1.0"
+name: acceptance-criteria-payfine
+description: "Pay-a-fine slice exists: asked whether an engineer's 'handles errors gracefully' criterion can go in, acceptance-criteria fires, rejects it as untestable, rewrites it as Given/When/Then, and flags the undecided failure behaviour instead of deciding it."
+tags: [acceptance-criteria, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, and the planning docs for the fine-payment feature are in `docs/pay-fine/`. The engineer picking up `docs/pay-fine/slice-001.md` wants to add this acceptance criterion to it:
+
+    "The payment flow handles errors gracefully."
+
+    Is it good to go in?
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:acceptance-criteria"'
+    min: 1
+  - type: llm
+    name: rejects-and-rewrites
+    focus: last_message
+    weight: 1
+    criteria: |
+      The slice already has a concrete criterion for a declined card; what a member sees for other failures is undecided.
+
+      PASS if the response says the criterion is not ready as written because nobody could agree whether it passed ("gracefully" is not observable), and either offers at least one rewrite as Given/When/Then with an outcome someone could check by looking, or explains that the testable part already exists (the decline criterion) and the rest cannot be made testable until someone decides the outcome. A Given/When/Then with the outcome left open for that decision counts.
+
+      FAIL if it accepts the criterion as written, or rewrites it only into other vague wording.
+  - type: llm
+    name: flags-undecided-behaviour
+    focus: last_message
+    weight: 1
+    criteria: |
+      The slice already covers a declined card (the fine stays outstanding and the member is told). What a member sees for other failures (the payment provider unreachable, a timeout, a charge whose result is unknown) is not decided anywhere, and the slice carries a reliability placeholder for criteria of that kind.
+
+      PASS if any rewrite that covers failures other than a decline either is flagged as a decision for the user or the slice's reliability placeholder (options are fine), or the response leaves those failures out and says why. Pointing out that declines are already covered is good but not required.
+
+      FAIL if it writes a criterion for a non-decline failure that settles the behaviour (for example "the member sees 'try again later' and nothing is charged") and presents it as decided, without flagging it.

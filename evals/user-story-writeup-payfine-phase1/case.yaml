@@ -1,0 +1,40 @@
+schema_version: "1.0"
+name: user-story-writeup-payfine-phase1
+description: "Pay-a-fine slice cut, no tracking destination named: asked to make it ready to track, user-story-writeup fires and stops to ask whether to file it and where before writing anything."
+tags: [user-story-writeup, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for a new feature are in `docs/pay-fine/`, and slice 1 is cut (`docs/pay-fine/slice-001.md`). Write it up so it's ready to track.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:user-story-writeup"'
+    min: 1
+  - type: llm
+    name: asks-where-before-writing
+    focus: last_message
+    weight: 1
+    criteria: |
+      No tracking system has been named. Before writing, the skill must ask whether this should be filed as a tracked issue at all and, if so, in which system.
+
+      PASS if the response asks whether to file it and/or which tracking system to use, and has not delivered a finished user story (a one-line summary of what the story will say is fine).
+
+      FAIL if it delivers the finished story first (even with a note asking about the system), or picks a system itself.
+  - type: llm
+    name: does-not-ask-what-the-slice-answers
+    focus: last_message
+    weight: 1
+    criteria: |
+      `docs/pay-fine/slice-001.md` already gives the thin path (a signed-in member sees their outstanding fines in the portal and pays one by card) and its acceptance criteria.
+
+      PASS if the response does not ask the user who the story is for, what it should cover, or what its acceptance criteria are.
+
+      FAIL if it asks any of those as open questions.

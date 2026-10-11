@@ -30,7 +30,9 @@ What makes this worth solving instead of leaving alone.
 ## Constraints
 Hard limits on the solution space, stated as constraints, not designs —
 e.g. "must stay free-tier" is a constraint; "use library X" is a design
-decision and doesn't belong here yet.
+decision and doesn't belong here yet. Only what the user stated or the
+situation makes binding; a limit you're assuming is an open question, never
+both.
 
 ## Open questions
 Things that must be answered before a first slice can be cut. It's fine —
@@ -49,3 +51,13 @@ not actually sure of.
 
 Keep it to one page. If it's growing past that, the problem is probably
 several problems — flag that rather than writing a longer doc.
+
+**Write for skimming.** Lead with the point; prefer bullets and headers to
+prose; a paragraph is one or two sentences at most. If a sentence wouldn't
+change what the reader does next, cut it.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it.

@@ -1,0 +1,67 @@
+schema_version: "1.0"
+name: vertical-slicing-payfine-phase1
+description: "Pay-a-fine problem and Active requirements, no slice: asked what to build first, vertical-slicing fires, cuts slice 1 inside the confirmed scope with separate security and accessibility placeholders and the slice set named, and doesn't re-ask what the requirements settled."
+tags: [vertical-slicing, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for a new feature are in `docs/pay-fine/`, and the requirements are agreed. Work out what we build first and save it as `docs/pay-fine/slice-001.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:vertical-slicing"'
+    min: 1
+  - type: file_exists
+    name: slice-written
+    path: docs/pay-fine/slice-001.md
+  - type: llm
+    name: stays-in-confirmed-scope
+    focus:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    weight: 1
+    criteria: |
+      The Active requirements doc confirms: a member sees their own outstanding fines, pays one by card, it then shows as paid to them and staff, and a declined card leaves it outstanding and tells them. It puts paying several fines in one payment, and saved cards, out of scope.
+
+      PASS if the slice written up in full stays inside that: it does not include paying several fines at once, saved cards, or anything the requirements doc does not mention (reminders, refunds, waivers). A one-line list of later slices may mention anything.
+
+      FAIL if the fully written slice includes any of those.
+  - type: llm
+    name: separate-security-and-accessibility-placeholders
+    focus:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    weight: 1
+    criteria: |
+      Every slice carries two separate placeholder acceptance criteria, one for security and one for accessibility, left for the owning personas to author.
+
+      PASS if the acceptance criteria include a security placeholder and a separate accessibility placeholder, and neither is written out as finished criteria by this document.
+
+      FAIL if either is missing, they are combined into one line, or the document authors the security or accessibility criteria itself.
+  - type: llm
+    name: names-the-slice-set
+    focus:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    weight: 1
+    criteria: |
+      PASS if the document lists the slices this unit currently looks like it needs, one line each, with this one marked, and writes up only the first one in full (later slices have no thin path or acceptance criteria). If the slicer judges one slice covers the whole requirement, a set of one that says so passes.
+
+      FAIL if there is no slice set, or a later slice is written up in full.
+  - type: llm
+    name: does-not-reask-the-what
+    focus: last_message
+    weight: 1
+    criteria: |
+      The requirements doc already settled who the user is and what they want (one fine per payment, by card, no saved cards).
+
+      PASS if the response does not ask the user to decide any of that again. Asking about slicing shape, or asking nothing, passes.
+
+      FAIL if it asks the user what they want built, whether to support several fines or saved cards, or who the user is.

@@ -61,3 +61,10 @@ own yet — flag it explicitly, with concrete options if there's a real
 decision to make. Don't silently pick one and fold it into the rewrite as
 if it were already decided; that's a product call, and this review's job
 is judging the criterion in front of it, not making that call for someone.
+
+**The rewrite can't decide what the vague criterion never decided.**
+"Handles errors gracefully" doesn't say what a member sees when the
+provider is down; making it concrete means choosing that outcome, and the
+choice isn't yours. Mark the undecided outcome in the rewrite as a decision
+for the user, with options, or route it to the placeholder that owns that
+kind of criterion (a reliability or security placeholder) and say so.

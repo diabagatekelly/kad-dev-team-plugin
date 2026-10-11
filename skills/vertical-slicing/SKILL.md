@@ -21,8 +21,19 @@ and see it categorized" is a slice — thin, but complete top to bottom.
 
 Start from `product-manager`'s requirements doc for the unit being worked
 — its "confirmed in scope," not the problem doc's eventual full feature
-set and not a capability choice you're inferring yourself. The first slice
-should:
+set and not a capability choice you're inferring yourself. Its "confirmed
+in scope" is the whole of what you're slicing: never reach past it into a
+scope map's later steps or the requirements doc's own "confirmed out, for
+now" list. **If no Active requirements doc exists for this unit, stop:**
+say so and hand back to `requirements-refinement`. Don't infer the WHAT
+from the problem doc or scope map yourself, and don't re-ask the user
+what the requirements doc already settled.
+
+Slicing decides what gets built first, not how it's built: technology,
+architecture and module structure are `architecture-design`'s, code is
+`tdd-implementation`'s.
+
+The first slice should:
 
 - **Resolve, ask, or explicitly defer** each remaining *technical* open
   question — which capability or approach the user wants is already
@@ -206,6 +217,14 @@ ways in the same document.
 
 ## Slice write-up format
 
+Before writing the acceptance criteria, invoke `acceptance-criteria` with
+the `Skill` tool for its quality checks. The consult returns guidance, not
+the turn: carry on writing the slice in the same response.
+
+If the slice was cut from a scope-map step rather than straight from the
+problem doc, name that step in the title, e.g. "Slice 1 (scope-map-001
+step 2): ..." — it's how later stages tell which steps are already sliced.
+
 ```markdown
 # Slice N: <name — a verb phrase describing user-observable behavior>
 
@@ -233,3 +252,9 @@ name which one) needs to answer before it can be scoped.
 
 Keep the whole write-up skimmable — this document answers "what are we
 building first and why," not "here is everything about the feature."
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it.
