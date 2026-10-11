@@ -1,0 +1,70 @@
+schema_version: "1.0"
+name: operational-readiness-ops-phase2
+description: "Operability scenario, phase 2: resumes the frozen situation questions with the scripted answer; expects no signal for the nightly job, silent startup on missing config, nothing written for 2am, scaled to one developer."
+tags: [operational-readiness, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Two staff desks at one branch use it all day, and members use the portal — about 3,000 of them. If it's down, the desks fall back to paper slips and members can't renew or pay online. I'm the only developer; I'd find out from a phone call from the desk or from a page. Nobody has ever rolled a release back. Go ahead.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-nightly-job-has-no-signal
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the response identifies the problem described and proposes a fix that would address it.
+
+      `main/jobs.ts` runs nightly (fines, reminders, the day-1 reports), and `ops/alerts.yml` has no alert that would fire if a run dies, stalls or never starts; the developer would hear about it from members missing reminders or disputing fines.
+
+      PASS if the response flags that a failed or missing nightly run would not be noticed except by users, and proposes a completion/heartbeat signal that alerts when missing (or equivalent).
+  - type: llm
+    name: finds-missing-config-starts-silently
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the response identifies the problem described and proposes a fix that would address it.
+
+      `main/wiring.ts` defaults required configuration to empty strings: `MONITOR_DSN ?? ''` (per `types/vendor.d.ts`, an empty DSN silently turns error reporting off), `STRIPE_SECRET_KEY ?? ''`, `TWILIO_* ?? ''`. A missing variable starts the service normally and fails later, or, for monitoring, never visibly fails at all. The required variables are not listed anywhere.
+
+      PASS if the response flags that missing required configuration (secrets, keys or the monitoring DSN) does not stop startup and fails later or silently, and proposes validating required configuration at startup and failing fast. Singling out monitoring being silently disabled by a missing `MONITOR_DSN`, or listing the variables, strengthens it but is not required.
+  - type: llm
+    name: finds-nothing-written-for-2am
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the response identifies the problem described and proposes a fix that would address it.
+
+      `ops/` has one runbook (catalog search). Nothing written down says which version is running and where its logs are, what the service depends on (Postgres, Stripe, SendGrid, Twilio, the postal queue file, the monitoring provider) and what happens when each is down, or what is irreversible.
+
+      PASS if the response points out that the essentials someone needs when debugging with no context are not written down (dependencies and their failure behaviour at least), and proposes a short operations note kept next to the code. A proposal sized to the situation (a page, not a runbook library) is expected.
+  - type: llm
+    name: no-enterprise-ceremony
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the response does NOT raise a false alarm or recommend something the situation doesn't warrant.
+
+      The situation is two staff desks, a member portal of about 3,000 members, and one developer who learns of problems by phone or page.
+
+      PASS if the response does not recommend practices that presume a team: an on-call rotation, a severity matrix, an incident-commander role, a formal post-mortem process or template, or a 24/7 paging setup. Lightweight suggestions sized to one developer (a short runbook note, a single alert to their phone) pass.
+
+      FAIL if it recommends any team-scale incident-management ceremony as something to put in place.
+  - type: llm
+    name: no-false-alarm-no-backups
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the response does NOT raise a false alarm or recommend something the situation doesn't warrant.
+
+      `.github/workflows/deploy.yml` has a `snapshot` job that takes a nightly RDS snapshot of the database.
+
+      PASS if the response does not claim the database has no backups or no restore point. Not mentioning backups passes; noting the snapshot's existence passes; noting that a restore has never been tested is fine.
+
+      FAIL if it reports that the database has no backups or snapshots.

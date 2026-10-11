@@ -1,3 +1,6 @@
 examples/*
 # claude plugin eval output
 evals/results/
+# Session transcripts a resumed (history_file) run writes next to history.jsonl
+evals/*-phase*/*-*-*-*-*.jsonl
+evals/*-phase*/*-*-*-*-*/

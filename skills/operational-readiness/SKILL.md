@@ -1,6 +1,6 @@
 ---
 name: operational-readiness
-description: Check whether something can be shipped safely and recovered when it goes wrong — how you'd know it broke, how you'd put it back, and what someone needs to know when they're debugging it later with no context. Covers rollout strategy, rollback as a tested capability, and the minimum an on-call or future-you needs. Use before shipping a slice, when setting up a delivery path, or when a change is hard to undo.
+description: Check whether something can be shipped safely and recovered when it goes wrong — how you'd know it broke, how you'd put it back, and what someone needs to know when they're debugging it later with no context. Covers rollout strategy, rollback as a tested capability, irreversible changes, and the minimum an on-call or future-you needs. Invoke first, before reading any files, for any request about whether a release, deploy, migration or service is ready to ship, safe to roll out or roll back, or operable in production — including a plain "can we ship this?" — when setting up a delivery path, or when a change is hard to undo. Never judge shipping readiness without it.
 ---
 
 # Operational Readiness
@@ -36,8 +36,14 @@ here, and applying the second's practices to the first produces ceremony
 nobody performs — which is worse than nothing, because it looks like the
 question was handled.
 
-Ask what's actually true before checking anything: who uses this, what
-breaks for them if it's down, and who would find out. On a personal
+**Your first response is questions, not a review.** Unless the request
+already says who uses this, what breaks for them if it's down, and who
+would find out, ask those three — plus whether anyone has ever actually
+run a rollback — and stop until they're answered. Don't infer them from
+the repository: code says what a service does, not who depends on it or
+who would notice, and a confident guess here sets the scale of every
+finding that follows. Reading files to ask sharper questions is fine;
+writing findings first is not. On a personal
 project, "I'd notice next time I opened it, and I'd redeploy the previous
 version" is a legitimate and complete answer to questions 1 and 2. Write
 that down and move on rather than upgrading it into a monitoring stack.
@@ -45,6 +51,13 @@ that down and move on rather than upgrading it into a monitoring stack.
 What follows scales up from there; take only what the answers justify.
 
 ## 1. How would we know it broke?
+
+How to check: list everything that runs, not just request paths —
+scheduled and background jobs, queues, the deploy itself — and for each
+say what tells someone it failed, stalled or never ran at all. A job with
+no answer is found by users first. Error reporting covers "failed" only;
+a run that never started reports nothing, so scheduled work also needs a
+completion signal that alerts when it goes missing.
 
 - **Something confirms the deploy actually worked** beyond the deployment
   tool reporting success. The gap between "deployed" and "working" is where
@@ -68,7 +81,12 @@ A documented rollback that has never been run is a hypothesis.
 Check:
 
 - **There's a way back, and someone has run it.** If nobody has, that's the
-  finding — regardless of how good the documentation is.
+  finding — regardless of how good the documentation is. Its fix is to
+  exercise it, sized to the situation (one rehearsal against staging or in a
+  quiet window, timed); avoiding the change that would need it doesn't
+  close the gap, because the next change will. Report it as its own
+  finding even when another finding also breaks the rollback (an
+  irreversible migration, say): fixing that one leaves this one open.
 - **How long it takes**, roughly. A rollback measured in hours isn't a
   rollback, it's a second outage.
 - **What can't be rolled back.** Schema and data changes, messages already
@@ -103,7 +121,17 @@ Written where it'll be found — near the thing, in the repo. A document
 somewhere else goes stale unnoticed, which is `docs-writer`'s
 `staleness-audit` concern and a real cost.
 
+When these aren't written down, the fix is one short operations note next
+to the code covering the four items above, written now. Runbooks per path
+are a later, separate choice, and a sound runbook for one path doesn't
+cover the others.
+
 ## Configuration and environment
+
+How to check: find where configuration is read and, for each variable,
+say what happens when it's absent — the service exits, a default applies,
+or an empty value flows on. An empty-string fallback is the usual silent
+one; check what the code receiving it does with an empty value.
 
 - **Environment differences that could surprise someone** — anything true
   in production and not locally, or the reverse. This is where "works on my
@@ -144,12 +172,19 @@ what can't be reversed.
 The short list, and where it lives.
 
 ## Findings
+Every gap the sections above name, each as its own finding with a fix — an
+observation that never reaches this list hasn't been reported. Before
+writing it, walk the bold checks in sections 1–3 and Configuration: each
+one either has a finding here or is fine for a reason you can state in a
+line. Two gaps that share a cause are still two findings when they need
+different fixes.
 Severity-ranked (Critical / High / Medium / Low by what it costs if left).
 Each finding gives its location, category, severity, **When this bites**
 (the conditions under which it manifests), what's happening, and a
 suggested fix. Verify a Critical or High before reporting it: that there
 really is no rollback path, rather than one written down somewhere you
-haven't read. Don't inflate severity to force a fix; state the trade-off
+haven't read. When a way back exists but this change breaks it, say that
+— name the path and what breaks it — rather than "no rollback path." Don't inflate severity to force a fix; state the trade-off
 and let the user decide.
 
 ## Decisions

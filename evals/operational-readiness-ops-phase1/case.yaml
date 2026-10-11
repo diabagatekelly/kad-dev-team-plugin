@@ -1,0 +1,32 @@
+schema_version: "1.0"
+name: operational-readiness-ops-phase1
+description: "Operability scenario, phase 1: asked whether the service is operable, the skill must establish the situation before judging."
+tags: [operational-readiness, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `package-lock.json`, `Dockerfile`, `audit-ci.jsonc`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+
+    Before we call the lending service production-ready: would we know when it breaks, and could whoever gets the call debug it? Look at `main/`, `ops/`, `infra/monitoring/` and the deploy workflow.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: asks-situation-first
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule is to scale everything to the real situation and to establish it before judging: who uses the service, what breaks for them if it is down, and who would find out. Nothing in the repository states those facts.
+
+      PASS if the response asks the user about the situation (at least two of: who uses it / how many, what breaks for them if it is down or wrong, who would notice or be told), and either holds back its verdict until answered or clearly labels anything it says now as provisional pending those answers. Also asking whether a rollback has ever actually been run is a plus, not required.
+
+      FAIL if it delivers a finished readiness verdict or a severity-ranked findings report that assumes a scale (enterprise or personal) without asking, or asks nothing about the situation.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:operational-readiness"'
+    min: 1

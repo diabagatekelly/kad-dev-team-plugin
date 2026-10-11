@@ -47,6 +47,11 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::614208837152:role/library-lending-deploy
           aws-region: us-west-2
+      - run: ops/migrate.sh
+        env:
+          PGHOST: ${{ vars.PGHOST }}
+          PGDATABASE: library
+          PGUSER: library
       - run: aws ecr get-login-password | docker login --username AWS --password-stdin 614208837152.dkr.ecr.us-west-2.amazonaws.com
       - run: |
           image=614208837152.dkr.ecr.us-west-2.amazonaws.com/library-lending:${{ github.sha }}

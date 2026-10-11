@@ -1,0 +1,74 @@
+schema_version: "1.0"
+name: operational-readiness-release-phase2
+description: "Release scenario, phase 2: resumes the frozen situation questions with the scripted answer; expects the unverified deploy, the irreversible migration coupled to the release, and the never-exercised rollback, scaled to one developer."
+tags: [operational-readiness, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Two staff desks at one branch use it all day, and members use the portal — about 3,000 of them. If it's down, the desks fall back to paper slips and members can't renew or pay online. I'm the only developer; I'd find out from a phone call from the desk or from a page. Nobody has ever rolled a release back. Go ahead.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: finds-deploy-success-unverified
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the response identifies the problem described and proposes a fix that would address it.
+
+      `.github/workflows/deploy.yml` runs `ops/release.sh`, which returns as soon as `aws ecs update-service` accepts the new task definition; the job then posts "deployed" to Slack. Nothing waits for the service to stabilise or checks that it is healthy.
+
+      PASS if the response flags that the deploy reports success without confirming the new tasks are running/healthy, and proposes waiting for stability and/or a health check before announcing.
+  - type: llm
+    name: finds-irreversible-migration-coupled-to-release
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the response identifies the problem described and proposes a fix that would address it.
+
+      `ops/migrations/0012_fines_charge_id.sql` copies `stripe_charge_id` into a new `charge_id` column and drops `stripe_charge_id`. `ops/migrate.sh` runs it in the deploy job right before the new image is released. Rolling back to the previous image afterwards breaks settling fines (the old code's column is gone), and a failed release after the migration leaves the old code running against the new schema.
+
+      PASS if the response identifies that the dropped column makes the release irreversible / breaks rollback to the previous version, treats it as the top or second-highest concern, and proposes splitting it (add and backfill now, drop in a later release; expand/contract) or otherwise decoupling the destructive step from this release.
+
+      FAIL if it is missed, or treated as minor.
+  - type: llm
+    name: finds-rollback-never-exercised
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the response identifies the problem described and proposes a fix that would address it.
+
+      A rollback path exists (images are tagged by commit SHA, and `ops/release.sh <image>` rolls the service onto any of them), but the user said nobody has ever rolled a release back.
+
+      PASS if the response treats the never-exercised rollback as a finding in its own right (a rollback nobody has run is a hypothesis) and proposes rehearsing it, for example against staging or in a quiet window, ideally noting how long it takes.
+  - type: llm
+    name: no-false-alarm-no-rollback-path
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the response does NOT raise a false alarm or recommend something the situation doesn't warrant.
+
+      Every image is tagged with its commit SHA and `ops/release.sh <image>` can roll the service onto any previous image: a rollback mechanism exists.
+
+      This grader is only about whether the response knows that redeploy mechanism exists. Statements scoped to this change are accurate and PASS, however strongly worded: that the path is untested, that migration 0012 breaks it, that "there is no way back once 0012 has run" short of a new forward migration, that redeploying the previous image would now fail, or that schema changes have no down-migrations.
+
+      PASS if the response describes or names a way to redeploy a previous version (re-running a previous deploy, `release.sh` with an older image, the SHA-tagged images), even while saying this change breaks it.
+
+      FAIL only if it says or implies the service has no mechanism to redeploy a previous version in general (for example that previous images are not kept, or that rollback would have to be built from scratch), with no acknowledgement of the existing redeploy path.
+  - type: llm
+    name: no-enterprise-ceremony
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the response does NOT raise a false alarm or recommend something the situation doesn't warrant.
+
+      The situation is two staff desks, a member portal of about 3,000 members, and one developer who learns of problems by phone or page.
+
+      PASS if the response does not recommend practices that presume a team: an on-call rotation, a severity matrix, an incident-commander role, a formal post-mortem process or template, or a 24/7 paging setup. Lightweight suggestions sized to one developer (a short runbook note, a single alert to their phone) pass.
+
+      FAIL if it recommends any team-scale incident-management ceremony as something to put in place.

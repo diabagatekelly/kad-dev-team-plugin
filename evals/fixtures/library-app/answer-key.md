@@ -202,6 +202,35 @@ package.
 | SCT4 | `audit-ci.jsonc` `GHSA-4w2q-8m3v-c9rf` | An allowlisted advisory. | Classified ("Not vulnerable, mitigated by design") with a reason someone can check: the service never calls `parse()`. |
 | SCT5 | `GHSA-hq6c-2f8v-7wxp` itself | An advisory in TypeScript. | Dev-only (the language service, never in the image): Low on reachability. The finding is how it was accepted (SC7), not the advisory. |
 
+## Operational-readiness plants (`OR`, `ORT`) — `devsecops-engineer:operational-readiness`
+
+Principles come from `skills/operational-readiness/SKILL.md`. Every case is
+phase-chained: the skill must establish the situation before judging, so
+phase 1 grades the question and phase 2 resumes it with this answer
+(scripted in each phase-2 case): two staff desks at one branch plus a
+member portal used by about 3,000 members; if it is down, desks fall back
+to paper slips and members cannot renew online; the one developer finds out
+from a staff phone call or a page; nobody has ever rolled a release back.
+
+### Planted violations
+
+| # | Where | Principle | What is wrong | Expected verdict |
+|---|---|---|---|---|
+| OR1 | `.github/workflows/deploy.yml` deploy job, `ops/release.sh` | Something confirms the deploy actually worked | `release.sh` returns as soon as `update-service` accepts the new task definition; the job then posts "deployed" to Slack. Nothing waits for the service to stabilise or checks a health endpoint. | High. Fix: wait for the service to stabilise (`aws ecs wait services-stable`) and check a health signal before announcing. |
+| OR2 | `ops/migrations/0012_fines_charge_id.sql` run by `ops/migrate.sh` in the same deploy job, before the release | What can't be rolled back; data change separable from code change | Copies `stripe_charge_id` into `charge_id` and drops the old column, then ships the code that uses `charge_id`. Rolling the image back to the previous release breaks settling fines (its column is gone), and a failed release after the migration leaves the old code running against the new schema. | Critical/High. Fix: expand/contract — add and backfill now, drop the old column in a later release once rollback past this one is no longer needed; keep the migration separable from the code release. |
+| OR3 | Rollback path (SHA-tagged images, `release.sh <previous image>`) | Rollback is a tested capability | A path exists, but by the user's answer nobody has ever run it. | High. Fix: rehearse a rollback (to a staging service or in a quiet window) and write down how long it took. |
+| OR4 | `main/jobs.ts` nightly run vs `ops/alerts.yml` | First signal doesn't depend on a user | No alert covers the nightly job; a run that dies or skips is noticed when members complain about missing reminders or wrong fines. | Medium/High. Fix: a heartbeat or completion signal for the nightly run, alerted when missing. |
+| OR5 | `main/wiring.ts` `env.MONITOR_DSN ?? ''`, `env.STRIPE_SECRET_KEY ?? ''`, `env.TWILIO_* ?? ''` | Startup fails loudly on missing configuration | A missing `MONITOR_DSN` silently turns error reporting off (`monitor-sdk` treats an empty DSN as "disabled"); a missing Stripe or Twilio key starts the service and fails at the first payment or text. Required variables are listed nowhere. | High (monitoring off with nobody knowing) / Medium. Fix: validate required configuration at startup and exit if absent; list the variables. |
+| OR6 | `ops/` | What someone needs at 2am | One runbook (catalog search). Nothing says which version is running and where its logs are, what the service depends on (Postgres, Stripe, SendGrid, Twilio, the postal queue file, monitoring) and what happens when each is down, or that 0012 is irreversible. | Medium. Fix: a short operations note next to the code covering those. |
+
+### Traps
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| ORT1 | SHA-tagged images + `ops/release.sh` | "No rollback" is the reflex claim. | Every image is tagged with its commit SHA and `release.sh <image>` rolls the service onto any of them: the path exists. The finding is that it has never been exercised (OR3), and that 0012 breaks it (OR2). |
+| ORT2 | The situation itself | Production service, real users. | Two desks, one developer: on-call rotations, severity matrices, incident-commander roles or post-mortem templates are ceremony this situation does not warrant. |
+| ORT3 | `deploy.yml` `snapshot` job | — | A nightly RDS snapshot exists: data can be restored to the previous night (its long-lived keys are a security finding, S9, not a readiness one). |
+
 ## Boy Scout scoping (same code, different framing)
 
 `library-app-reporting-pr` frames V14 plus the new `ReportFiles` port (T4) as

@@ -7,7 +7,10 @@
 # Keeps only the conversation (user and assistant entries), re-chained so each
 # entry's parentUuid points at the previous kept one. Environment, skill
 # listings, prompt snapshots and cost state are dropped: the resuming run
-# injects its own, and they are noise to review before committing.
+# injects its own, and they are noise to review before committing. The
+# plugin's absolute path (in the "Base directory for this skill" line) becomes
+# `<plugin-root>`, and the freeze refuses to write if the home directory still
+# appears anywhere, so a committed history carries no local account name.
 #
 # Usage: evals/tools/freeze-history.sh <kept-run-dir> <output.jsonl>
 #   kept-run-dir  a directory the eval kept with --keep-temp; it is the
@@ -22,9 +25,11 @@ shopt -s nullglob
 sessions=("$kept"/config/projects/*-home-cwd/*.jsonl)
 [ "${#sessions[@]}" -eq 1 ] || { echo "expected one session transcript under $kept/config/projects/*-home-cwd/, found ${#sessions[@]}" >&2; exit 1; }
 
-python3 -I - "${sessions[0]}" "$out" <<'EOF'
+plugin_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+
+python3 -I - "${sessions[0]}" "$out" "$plugin_root" "$HOME" <<'EOF'
 import json, sys
-src, dst = sys.argv[1], sys.argv[2]
+src, dst, plugin_root, home = sys.argv[1:5]
 kept, parent = [], None
 for line in open(src):
     entry = json.loads(line)
@@ -35,9 +40,11 @@ for line in open(src):
     kept.append(entry)
 if not kept or kept[-1]["type"] != "assistant":
     sys.exit("transcript does not end on an assistant turn; the phase did not finish asking")
+lines = [json.dumps(entry).replace(plugin_root, "<plugin-root>") + "\n" for entry in kept]
+if any(home in line for line in lines):
+    sys.exit(f"{home} still appears after replacing the plugin root; remove it by hand before freezing")
 with open(dst, "w") as f:
-    for entry in kept:
-        f.write(json.dumps(entry) + "\n")
+    f.writelines(lines)
 print(f"wrote {len(kept)} entries to {dst}; last assistant turn:")
 last = kept[-1]["message"]["content"]
 print("".join(b.get("text", "") for b in last if isinstance(b, dict))[:600])

@@ -17,7 +17,9 @@ at:
   for `software-architect:architecture-review` plus two
   `architecture-review-neg-*` trigger cases, and the `security-review-*`
   suite for `devsecops-engineer:security-review` (five cases on the same
-  fixture plus two negative trigger cases). Results land in
+  fixture plus two negative trigger cases), followed by the
+  `reliability-review-*`, `supply-chain-review-*` and
+  `operational-readiness-*` suites on the same fixture. Results land in
   `evals/results/<timestamp>/` (gitignored) each time the suite runs;
   nothing is hand-copied into case directories.
 
@@ -234,7 +236,13 @@ score is history, not a claim about today.
 | `reliability-review-catalog` | real, Sonnet: 1/2 with plugin vs 1/2 without (`results/20261010-recheck3-catalog`) — the clean module, a borderline restraint case with no uplift. Its original prompt asked how catalog behaves "when the database is slow or down and as the catalog grows"; that leading question produced a Medium/High capacity concern in every run of both arms (four calibration passes plus two rechecks). With the neutral prompt the capacity speculation stopped; the remaining failing runs rate a missing read retry Medium. Known gap: the skill does not reliably hold a clean module to Low | yes |
 | `reliability-review-neg-security` | real, Sonnet: never invokes `reliability-review` in either arm | yes |
 | `reliability-review-neg-architecture` | real, Sonnet: never invokes `reliability-review` in either arm | yes |
-| `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
+| `devsecops-engineer:operational-readiness` | 6/6 PASS, inline | no — superseded by the `operational-readiness-*` real cases below |
+| `operational-readiness-release-phase1` | real, Sonnet: 1/1 with plugin on five passes (`results/20261010-or-p1f`), 0/1 without on both passes that ran a baseline — asked "is it ready to ship?", the skill asks who uses the service, what breaks, who finds out and whether a rollback has ever run, and holds its verdict; the baseline reviews straight away. In the first calibration pass the skill fired but reviewed straight away too, until it said its first response is questions | yes |
+| `operational-readiness-release-phase2` | real, Sonnet: 13/15 over 3 runs, 1/3 runs clean (`results/20261010-or-p2g`) — resumes the frozen questions with the one-developer answer; unverified deploy 3/3, migration 0012 coupled to the release 3/3, never-rehearsed rollback 2/3 (the miss says the migration split "covers" it), no false "no rollback" claim 2/3 (the miss names the redeploy path and drew a split vote), no team-scale ceremony 3/3. No baseline arm: the history is a with-plugin transcript | yes |
+| `operational-readiness-ops-phase1` | real, Sonnet: 1/1 with plugin on five passes (`results/20261010-or-p1f`), 0/1 without on both passes that ran a baseline — same as the release phase 1, asked about running the service rather than one release | yes |
+| `operational-readiness-ops-phase2` | real, Sonnet: 12/15 over 3 runs, 1/3 runs clean (`results/20261010-or-p2f`) — nightly job with no missing-run signal 3/3, config that starts silently without `MONITOR_DSN`/Stripe/Twilio 2/3, nothing written for 2am 1/3, no ceremony 3/3, no false "no backups" claim 3/3; all three misses were split judge votes | yes |
+| `operational-readiness-neg-security` | real, Sonnet: never invokes `operational-readiness` in either arm | yes |
+| `operational-readiness-neg-reliability` | real, Sonnet: never invokes `operational-readiness` in either arm | yes |
 | `ux-designer:design-system` | 9/9 PASS (after one re-run), three-phase | yes |
 | `ux-designer:screen-design` | 9/9 PASS, single-phase | yes |
 | `accessibility-engineer:accessibility-review` | 8/9 PASS, single-phase — the one failure is `skill-invoked`, a mechanical self-report miss, not a substantive gap; see the case's `eval-score/summary.md` | yes |
@@ -643,3 +651,32 @@ grader, or the `agent-eval` harness that a case already covers.
   carry sandbox paths, session and request ids, nothing personal).
   Regressions on the new fixture: `security-review-config` 1/1,
   `library-app-structure-review` 1/1.
+- **`devsecops-engineer:operational-readiness` moved onto the fixture as
+  two phase-chained scenarios** (a release carrying an irreversible
+  migration, and the running service) plus two negative trigger cases.
+  The fixture gained `ops/migrate.sh`, migrations `0011` and `0012` (the
+  latter copies `stripe_charge_id` into `charge_id` and drops the old
+  column), a deploy step that runs them before the release, and a note in
+  `types/vendor.d.ts` that an empty monitoring DSN turns reporting off;
+  plants `OR1`–`OR6` and traps `ORT1`–`ORT3` are in the answer key. Skill
+  fixes: the description says to invoke it first for any "can we ship
+  this?" question, and the first response is the situation questions,
+  not a review (both phase-1 cases reviewed straight away before); a
+  "how to check" step for section 1 (list everything that runs, and say
+  what tells someone it failed, stalled or never started — error
+  reporting can't see a run that never started) and for configuration
+  (what happens when each variable is absent); a never-rehearsed rollback
+  is its own finding, fixed by rehearsing it, even when a migration also
+  breaks it; a missing 2am note is fixed by one short note now; every
+  bold check is walked before Findings is written; and a broken way back
+  is described as broken, not as "no rollback path". Phase 2 went from
+  0.5 to 0.87 (release) and 0.80 (ops). Case lessons: a run that starts a
+  background subagent can end on a short postscript after its report, and
+  `focus: last_message` then grades the postscript; the
+  `no-false-alarm-no-rollback-path` criterion failed accurate,
+  change-scoped claims until it said what *does* count as a false alarm;
+  and a resumed run writes its session transcript next to
+  `history.jsonl`, now gitignored. A `release-phase1-via-agent` variant
+  never asked the situation questions in two calibration passes and was
+  dropped. Regressions: `security-review-config` 5/5,
+  `supply-chain-review-workflows` 3/3.

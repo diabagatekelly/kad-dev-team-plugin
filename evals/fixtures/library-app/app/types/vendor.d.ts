@@ -138,6 +138,7 @@ declare module 'express-lite' {
 
 declare module 'monitor-sdk' {
   export class MonitorClient {
+    /** An empty `dsn` turns reporting off: `captureException` then does nothing, without error. */
     constructor(dsn: string);
     captureException(error: unknown, context?: Record<string, unknown>): void;
   }
