@@ -1,0 +1,36 @@
+schema_version: "1.0"
+name: orchestrator-asks-for-target
+description: "No folder given: the orchestrator must ask where the problem's artifacts are (or should go) before anything else, without searching the project for them."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We want members to be able to pay their fines online. What's next for that?
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: does-not-search-for-artifacts
+    tool: Glob
+    input_match: '\\.md|docs|plan|problem|scope|slice'
+    min: 0
+    max: 0
+  - type: llm
+    name: asks-where-artifacts-live
+    focus: last_message
+    weight: 1
+    criteria: |
+      No artifacts directory was given. The orchestrator's rule is to ask once, before anything else, where this problem's artifacts exist or should be created, and never to guess a location or search the project for one.
+
+      PASS if the response asks the user where the artifacts are or should go, and does not start producing a planning artifact.
+
+      FAIL if it picks a location itself, searches for one and proceeds, or starts the planning work without asking.

@@ -1,0 +1,54 @@
+schema_version: "1.0"
+name: orchestrator-security-stage
+description: "Real planning folder at the security-criteria stage: fires on 'what's next', routes to devsecops-engineer:security-requirements by invoking the skill, passes the save location, runs one step."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a new feature for it, and the planning documents so far are in `docs/pay-fine/`. What's next?
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: invokes-security-requirements
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:security-requirements"'
+    min: 1
+  - type: tool_used
+    name: does-not-hunt-for-agent-files
+    tool: Glob
+    input_match: 'AGENT|agents/|devsecops-engineer|product-slicer|product-manager'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written
+    path: docs/pay-fine/orchestrator-log.md
+  - type: llm
+    name: routes-to-security-requirements
+    focus: last_message
+    weight: 1
+    criteria: |
+      `docs/pay-fine/` holds a problem doc, an Active requirements doc, a slice, its user story and its design doc; the slice's acceptance criteria still carry `[SECURITY — placeholder, to be authored by devsecops-engineer]`. By the orchestrator's routing table, the next step is `devsecops-engineer:security-requirements` for that slice.
+
+      PASS if the response is doing that step: working as devsecops-engineer's security-requirements for this slice, typically by asking the user about the situation (obligations, who may see whose data) before writing criteria.
+
+      FAIL if it routes anywhere else (reliability criteria, screen design, implementation, a review), or does more than one step.
+  - type: llm
+    name: does-not-ask-where-to-save
+    focus: last_message
+    weight: 1
+    criteria: |
+      The planning folder was given (`docs/pay-fine/`), so the orchestrator has resolved where artifacts go and must tell the routed skill; nobody should ask where to save.
+
+      PASS if the response does not ask the user where to save the output or where the artifacts live.
+
+      FAIL if it asks either.

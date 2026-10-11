@@ -120,8 +120,9 @@ the right persona each time. Built as a **skill the main agent loads**,
 not a persona/agent — `docs-writer`, `product-manager`, `product-slicer`,
 `software-architect`, and `devsecops-engineer` are all `background: false`
 and must run inline, so there's nothing to spawn or parallelize for them;
-routing means adopting each persona's own instructions in turn, in the
-same conversation. `ux-designer` is also `background: false` for the same
+routing means invoking each routed skill in turn, in the same
+conversation, with everything a routed step needs kept in the skill
+itself (a persona's `AGENT.md` sits outside the project and isn't read). `ux-designer` is also `background: false` for the same
 reason (both its skills block on `AskUserQuestion`); `accessibility-engineer`
 is `background: true` but `orchestrator` still executes it inline like
 every other row, since v1's routing is sequential by construction, not

@@ -8,11 +8,11 @@ description: Route a problem to whichever kad-dev-team persona/skill applies nex
 **This is a skill the main agent loads, not a persona to spawn.** Every
 persona in this roster that plans work (`docs-writer`, `product-manager`,
 `product-slicer`, `software-architect`, `devsecops-engineer`) blocks on
-`AskUserQuestion` and must run inline — never as an async `Agent` spawn. Orchestrating them means *you* adopt each one's
-instructions in turn, in this same conversation, the same way you would if
-the user had asked for that persona directly. `accessibility-engineer` is
+`AskUserQuestion` and must run inline — never as an async `Agent` spawn. Orchestrating them means *you* invoke each routed skill in turn, in this
+same conversation, the same way you would if the user had asked for it
+directly. `accessibility-engineer` is
 `background: true` and *could* be launched async outside this skill, but
-this skill still adopts its instructions inline like every other row,
+this skill still runs it inline like every other row,
 since routing here is sequential by design, not because every persona it
 invokes requires it. **The one exception is the `tdd-coach:tdd-implementation`
 row** — see "Quarantine, grade, combine" below — which genuinely launches
@@ -24,9 +24,9 @@ earns its keep when the user hasn't said which persona/skill applies and
 you'd otherwise have to guess or ask them to pick.
 
 **Stay inside your lane while inspecting.** Every read you do — in step 2,
-and when adopting a persona in step 4 — is confined to (a) the `AGENT.md`
-and `SKILL.md` files the routing actually needs, and (b) the resolved
-target directory. Never read anywhere else in the project "for context" —
+and while running the routed skill in step 4 — is confined to (a) what
+that skill itself directs you to read, and (b) the resolved target
+directory. Never read anywhere else in the project "for context" —
 not this plugin's own `evals/`, not other skills' fixtures, not unrelated
 directories. If this is being dogfooded inside the plugin's own repo,
 those directories look like real project content but aren't; outside that
@@ -219,11 +219,13 @@ them. `architecture-cartographer:map-update` has its own wiring inside the
 quarantine flow below — see "Quarantine, grade, combine."
 
 **4. Execute exactly one routed step.** For every row except
-`tdd-coach:tdd-implementation`, execute inline: read the target persona's
-`AGENT.md` and the specific `SKILL.md` the trigger matched — nothing
-else. Adopt those instructions directly — this is live use, not a dry
-run: if that persona would ask the user something, actually ask via
-`AskUserQuestion`. Tell it explicitly where to save its output — the
+`tdd-coach:tdd-implementation`, execute inline: invoke the skill the
+trigger matched with the `Skill` tool (`kad-dev-team:<skill>`), passing the
+target directory. Don't go looking for the persona's `AGENT.md`: it sits
+outside the project, a read of it may be refused, and everything a routed
+step needs from its persona is in that skill. Follow the skill directly —
+this is live use, not a dry run: if it would ask the user something,
+actually ask via `AskUserQuestion`. Tell it explicitly where to save its output — the
 location resolved in step 1. It should not ask where to save or invent a
 different location; you already resolved that. Produce the real artifact
 and save it there, using that persona's own filename/heading convention.
@@ -240,7 +242,10 @@ specific slice built without it, that's their call to make by saying so
 directly; this skill doesn't offer a way to opt out on its own judgment.
 
 **Append one entry to `orchestrator-log.md`, in the target directory,
-every time this step runs — before moving to step 5.** This is the only
+every time this step runs — as soon as you've routed, before invoking the
+routed skill.** A routed skill often stops partway to ask the user
+something, so an entry left until the step finishes may never be written.
+This is the only
 retrospective record that every stage actually ran rather than getting
 silently skipped; a graded final artifact says nothing about the path
 that produced it. Create the file if it doesn't exist yet. One entry per
@@ -254,7 +259,7 @@ decision record. Each entry:
 ## <sequence number>. <date> — <the detected-state row that matched>
 
 **Routed to:** `<persona:skill, or "quarantine flow" for that row>`
-**Artifact:** <path to what was produced, or "see sub-entries below">
+**Artifact:** <path the routed step will save to, or "see sub-entries below">
 ```
 
 For a backward route (the step 3 rule that supersedes the table), log it

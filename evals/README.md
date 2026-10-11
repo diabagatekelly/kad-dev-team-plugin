@@ -205,7 +205,11 @@ score is history, not a claim about today.
 | `product-manager:requirements-refinement` | 6/6 PASS, two-phase | yes |
 | `product-slicer:vertical-slicing` | 6/6 PASS, two-phase | yes |
 | `product-slicer:acceptance-criteria` | 2/2 PASS, inline | yes |
-| `orchestrator` | 15/15 PASS, skill-only | yes |
+| `orchestrator` | 15/15 PASS, skill-only | yes — kept as the broad check on the routing table (13 described directories, dry run); the real cases below cover what it can't |
+| `orchestrator-security-stage` | real, Sonnet: 2/2 runs all pass (`results/20261011-orch-cal2`); baseline fails routing and writes no log — "what's next?" on a real planning folder fires the orchestrator, which routes to `security-requirements` by invoking the skill, passes the save location, writes the log at routing time, and the persona asks its questions | yes |
+| `orchestrator-superseded-scope-map` | real, Sonnet: 2/2 runs all pass — real inspection: reads `## Status` and routes to requirements for the Active map's step 1, not to slicing from the superseded map's requirements doc. The baseline also routes correctly here, so this is a regression guard on inspection, with the skill-invocation graders as the plugin-fired check | yes |
+| `orchestrator-backward-route` | real, Sonnet: 2/2 runs all pass — a "Handed back to product-slicer — blocking" section routes to `product-slicer`, not forward to reliability criteria; the log records why | yes |
+| `orchestrator-asks-for-target` | real, Sonnet: 2/2 runs all pass; baseline 0/1 — no folder given, it asks where the artifacts are before anything else and doesn't search the project | yes |
 | `software-architect:architecture-design` | 8/8 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | yes |
 | `library-app-lending-review` | real, Sonnet: 6/6 with plugin vs 4/6 without (runtime cycle missed, ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
 | `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
@@ -302,6 +306,14 @@ All eight cases in this backlog have now been run at least once.
 Run with the `agent-eval` skill, one case per invocation.
 
 ### Known coverage gaps
+
+- **Persona rules the orchestrator can't reach.** The orchestrator now
+  invokes a routed skill and never reads the persona's `AGENT.md`, so any
+  rule a routed step needs must be in the skill. `devsecops-engineer` has
+  had that pass; `docs-writer`, `product-manager`, `product-slicer`,
+  `software-architect` (partly), `ux-designer`, `accessibility-engineer`
+  and `tdd-coach` have not. Do it as part of each persona's move to the
+  real suite (playbook step 1 already asks for it).
 
 ~~- **`devsecops-engineer` has one case out of six skills.**~~ **Closed —
   all six skills now have a case, all passing.** `security-requirements`
@@ -724,3 +736,21 @@ grader, or the `agent-eval` harness that a case already covers.
   freezes a resumed phase, from the transcript it writes next to
   `history.jsonl` plus text from the chosen run's final message. Only the
   last `--case` flag counts.
+- **`orchestrator` got four real cases alongside its emulated one**, on
+  planning folders for the same pay-a-fine slice
+  (`fixtures/library-app/planning/`, copied into `docs/pay-fine/` by each
+  case's scaffold). The first probe found that step 4's "read the target
+  persona's `AGENT.md`" can't work: the file sits outside the project, the
+  read was refused, and the run fell back to invoking the skill. Step 4
+  now invokes the routed skill with the `Skill` tool and never looks for
+  an `AGENT.md`, which makes "everything a routed step needs lives in the
+  skill" a requirement for every persona; only `devsecops-engineer` has
+  had that pass so far (see Known coverage gaps). The log entry also moved
+  to routing time: a routed skill that stops to ask the user ended the
+  run before the old end-of-step entry was written. One fixture lesson:
+  the hand-back case's requirements doc listed member refunds as out of
+  scope, contradicting the hand-back's "nobody scoped it", and
+  `product-slicer` rightly raised the contradiction instead of slicing.
+  Observed, not graded: once routed, `product-slicer` grew the slice on
+  its own judgment and superseded it without asking — a question for its
+  own suite.
