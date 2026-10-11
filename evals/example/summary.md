@@ -112,7 +112,8 @@ as a data-exit route) and produced the `addresses-all-five-exits` grader,
 recorded in that emulated case's `eval-score/` (since replaced by the
 `security-requirements-*` real cases; see git history), not here. `design-001.md`'s "no portable graders" gap closed when
 `architecture-design`'s case was reworked into `portable-*`/`fixture-*`
-graders (see that case's `NOTES.md`). And this directory has since grown
+graders (that case's `NOTES.md` is in git history; it has since been replaced by the
+`architecture-design-payfine-*` real cases). And this directory has since grown
 two more artifacts this table predates entirely — `design-system-001.md`
 and `screen-design-001.md`/`visual-ux/`, produced by later `ux-designer`
 dogfood runs and graded separately (9/9 and 9/9; see

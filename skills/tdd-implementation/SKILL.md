@@ -35,10 +35,10 @@ after its full cycle (through REVIEW, below) is complete.
 
 Before writing a Test List entry's implementation, consult
 `architecture-cartographer:map-query` at the implementation level — does a
-comparable function, class, or helper already exist. Load its `SKILL.md`
-and ask inline, in this same conversation; it's `background: true` but
+comparable function, class, or helper already exist. Invoke it with the
+`Skill` tool and ask inline, in this same conversation; it's `background: true` but
 carries no `AskUserQuestion` of its own, so there's nothing to launch and
-nothing to wait on.
+nothing to wait on. The consult returns an answer, not the turn: carry on with this skill in the same response.
 
 A candidate it returns is a fact, not a verdict. Whether reusing it is the
 right call for this entry, or a genuine structural fork exists (reuse this

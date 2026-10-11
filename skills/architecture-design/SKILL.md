@@ -26,12 +26,12 @@ structural decision stays true regardless of exact syntax.
 
 Before working out this slice's structure, consult
 `architecture-cartographer:map-query` at the structural level — does a
-comparable module, interface, or boundary already exist. Load its
-`SKILL.md` and ask inline, in this same conversation, the same
+comparable module, interface, or boundary already exist. Invoke it with
+the `Skill` tool and ask inline, in this same conversation, the same
 in-conversation consult this skill already uses below for a
 runtime-safety question; it's `background: true` but carries no
 `AskUserQuestion` of its own, so there's nothing to launch and nothing to
-wait on.
+wait on. The consult returns an answer, not the turn: carry on with this skill in the same response.
 
 A candidate it returns is a fact, not a verdict — whether it's close
 enough to reuse instead of introducing something new is this skill's own
@@ -144,9 +144,9 @@ Two things this section is not:
 - **Not a runtime-safety judgment.** When a boundary's technology choice
   turns on secrets handling, authentication, or dependency posture, consult
   `devsecops-engineer` for that narrow question and record the answer in
-  the decision. Load its relevant `SKILL.md` and ask inline, in this same
-  conversation — it's `background: false`, so there's nothing to launch,
-  and this stays your design either way.
+  the decision. Invoke its relevant skill with the `Skill` tool and ask
+  inline, in this same conversation — it's `background: false`, so there's
+  nothing to launch, and this stays your design either way. The consult returns an answer, not the turn: carry on with this skill in the same response.
 
 ## Apply YAGNI in both directions
 
@@ -253,9 +253,12 @@ Per boundary: the technology chosen and what forced it now, or an explicit
 "not chosen yet — an in-memory implementation satisfies this slice."
 
 ## Decisions
-Each decision presented for approval during this session, what was
-proposed, what the user approved or changed, and the final call. Note any
-that became an ADR (or were explicitly deferred as one).
+Every real decision, each with: the recommendation, the alternative(s)
+rejected, and how it was approved — the user's own answer, or their
+standing "go with your recommendations" (say which). Whether to fix an
+existing violation now or defer it is one of these, never "applied
+directly". Note any that became an ADR (or were explicitly deferred as
+one).
 
 ## Existing violations touched
 Anything found while designing that pre-dates this slice, and whether this
@@ -268,3 +271,14 @@ it next.
 
 Keep it skimmable — this document answers "how is this slice structured
 and why," not a full technical spec.
+
+Name things with the vocabulary this skill defines — the four rules and
+the smells above — and otherwise say it plainly. Outside pattern names
+("hexagonal", "ports and adapters", "clean architecture") add nothing the
+plain statement didn't already say.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it.

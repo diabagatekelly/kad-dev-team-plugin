@@ -123,6 +123,10 @@ Two things to hold on to inside that loop:
   genuinely obvious answer here — the ecosystem's default test runner is
   usually right. Recommend it confidently and still wait. Confidence
   changes the wording, not the loop.
+- **A delegation covers what it names.** "Whatever you'd recommend for the
+  test runner" approves the test runner, not the UI framework you decide
+  is also forced. A category the user hasn't spoken to still gets its own
+  recommendation and its own wait.
 - **Scale the recommendation to the situation.** Ask who's building and
   maintaining this if it isn't already established. A one-person project
   and a team of eight have different right answers about tooling weight,
@@ -136,9 +140,10 @@ one, get the answer from the persona that owns it rather than reasoning
 about it yourself.
 
 **This is an inline consult, not a spawn.** Both personas are
-`background: false`. Load the relevant `SKILL.md`, ask the narrow question
-it covers, record the answer in your decision, and return to this skill —
-the same in-conversation adoption `orchestrator` uses. Don't hand the
+`background: false`. Invoke the relevant skill with the `Skill` tool, ask
+the narrow question it covers, record the answer in your decision, and
+return to this skill — the same in-conversation invocation `orchestrator`
+uses. The consult returns an answer, not the turn: carry on with this skill in the same response. Don't hand the
 design over, and don't launch anything.
 
 When to consult:
@@ -208,6 +213,12 @@ Any `devsecops-engineer` question asked and the answer recorded.
 Keep it short. If the honest output is four choices and a list of things
 left open, that's the correct output — a bootstrap document longer than
 the design it serves is a sign the demand test wasn't applied.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it.
 
 ## Re-entering this skill
 

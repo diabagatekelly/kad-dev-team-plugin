@@ -228,7 +228,11 @@ this is live use, not a dry run: if it would ask the user something,
 actually ask via `AskUserQuestion`. Tell it explicitly where to save its output — the
 location resolved in step 1. It should not ask where to save or invent a
 different location; you already resolved that. Produce the real artifact
-and save it there, using that persona's own filename/heading convention.
+and save it there, using that persona's own filename/heading convention —
+once the skill's own procedure gets there. Routing doesn't hurry it: a
+skill whose first response is questions asks them and stops, even here,
+and the artifact comes in a later turn. Don't fill the skill's questions
+with answers inferred from the repository to reach the artifact sooner.
 
 **The `tdd-coach:tdd-implementation` row doesn't execute inline — it runs
 the quarantine/grade/combine/finalize procedure below, every time, by

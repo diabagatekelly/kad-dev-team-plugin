@@ -120,7 +120,7 @@ is a result, not an evasion.
 **Consult `devsecops-engineer` as an advisor when a technology decision
 turns on runtime safety — inline, never as a spawn.** Secrets storage,
 authentication mechanisms, and dependency-pinning posture are its call, not
-yours. Load the relevant `SKILL.md`, ask the narrow question it covers,
+yours. Invoke the relevant skill with the `Skill` tool, ask the narrow question it covers,
 record the answer inside your own decision, and carry on — it's
 `background: false` like you, so there is nothing to launch and no parallel
 work to wait on. This is the same seam as always, read from your side:

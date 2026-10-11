@@ -1,0 +1,53 @@
+schema_version: "1.0"
+name: technology-bootstrap-phase1
+description: "Empty repo with slice 1's agreed artifacts in docs/: the skill must ask or recommend before settling the starting stack, and only for what the first test forces."
+tags: [technology-bootstrap]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    This repository is empty apart from `docs/`, which holds slice 1's agreed artifacts: the slice, its design, and its security criteria. Work out what has to be set up before the first failing test for slice 1 can be written.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: llm
+    name: asks-before-settling
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: technology choices are the user's; it recommends and records them. The starting set covers only what slice 1's first failing test forces.
+
+      PASS if the response asks the user something before settling the starting stack (who builds and maintains it, a language preference, or approval of a first recommendation) and has not delivered a finished bootstrap with choices made on the user's behalf.
+
+      FAIL if it delivers finished stack choices without asking.
+  - type: llm
+    name: asks-only-what-the-first-test-forces
+    focus: last_message
+    weight: 1
+    criteria: |
+      This is a NEGATIVE grader — what the output declines to decide matters more
+      than what it decides.
+
+      The output must NOT ask the user to choose, or itself choose, any of:
+      a CI/CD pipeline or build automation; a hosting, deployment or cloud
+      target; a container runtime; a database or persistence technology; an
+      observability/monitoring stack; an auth provider. None of these is forced
+      by writing slice 1's first failing test.
+
+      Score 0 if the output solicits a decision on, or settles, ANY of the above
+      as part of the bootstrap set. Merely listing one as deliberately-not-decided
+      (with an owner) is correct and does not count as deciding it.
+
+      Score 1 if the categories it treats as forced stay within: language and
+      runtime, test runner, package manager (with its lockfile/pinning posture),
+      and — if the first test drives a UI or crosses HTTP — a UI or HTTP
+      framework. A brief mention that some other category will be needed
+      eventually is fine; asking the user to settle it now is not.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:technology-bootstrap"'
+    min: 1

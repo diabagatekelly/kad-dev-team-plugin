@@ -24,12 +24,15 @@ command and what its output would settle, and let the user run it.
 ## When you're consulted inline
 
 Sometimes another persona, usually `software-architect` choosing a stack,
-loads this skill to answer one question about a choice it owns: what
+invokes this skill to answer one question about a choice it owns: what
 pinning posture a package manager needs, whether a registry setup holds
 the lockfile honest. Answer that question with its reasoning, flag
-ADR-worthiness if it applies, and stop. No audit of the repository, no
-findings report. If the question exposes something larger, say so in one
-sentence and leave it to the caller.
+ADR-worthiness if it applies, then go straight back to the skill that
+asked: your answer is one of its inputs, not the end of the turn. Don't
+address the user or hand anything back to them; the asking skill carries
+on in the same response. No audit of the repository, no findings report.
+If the question exposes something larger, say so in one sentence and leave
+it to the caller.
 
 ## The mental model
 

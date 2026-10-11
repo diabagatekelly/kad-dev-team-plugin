@@ -33,14 +33,17 @@ the boundary is missing and leave the structure alone.
 
 ## When you're consulted inline
 
-Sometimes another persona, usually `software-architect` mid-design, loads
-this skill to answer one question about a choice it owns: where a secret
-lives, which authentication mechanism to use. Answer that question with
-its reasoning, flag ADR-worthiness if it applies, and stop. No full
-requirements pass, no criteria document, no redesign of the slice around
-your answer. If the question exposes something larger, such as a missing
-boundary or an obligation nobody has established, say so in one sentence
-and leave it to the caller.
+Sometimes another persona, usually `software-architect` mid-design,
+invokes this skill to answer one question about a choice it owns: where a
+secret lives, which authentication mechanism to use. Answer that question
+with its reasoning, flag ADR-worthiness if it applies, then go straight
+back to the skill that asked: your answer is one of its inputs, not the
+end of the turn. Don't address the user or hand anything back to them; the
+asking skill carries on in the same response. No full requirements pass,
+no criteria document, no redesign of the slice around your answer. If the
+question exposes something larger, such as a missing boundary or an
+obligation nobody has established, say so in one sentence and leave it to
+the caller.
 
 ## First, establish what's actually in play — ask, don't assume
 

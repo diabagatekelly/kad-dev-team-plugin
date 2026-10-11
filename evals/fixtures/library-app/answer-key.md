@@ -273,6 +273,26 @@ workable.
 | RRT1 | `CollectFine` retry loop | Retrying a failed payment looks resilient. | Declines are deterministic answers; criteria must not call for retrying them (R7). |
 | RRT2 | Phase 1 questions | Asking whether any error reporting exists looks diligent. | `infra/monitoring/error-reporter.ts` and `ops/alerts.yml` answer it. |
 
+## Design plants (`AD`, `ADT`) — `software-architect:architecture-design`
+
+The same pay-a-fine slice, at the stage before its design exists
+(`planning/pay-fine-design/`, copied into `docs/pay-fine/`). Nothing is
+planted for it; these are what the existing code means for the design.
+The prompt carries the engineer's proposal of a generic `PaymentGateway`
+with a provider registry. Phase 1 must recommend against it and wait;
+phase 2's answer overrules that (a second provider is signed for next
+quarter, so the abstraction has a real second case) and approves the rest.
+
+| # | Where | Principle | What the design must handle | Expected |
+|---|---|---|---|---|
+| AD1 | the engineer's proposal | YAGNI, premature abstraction; approval loop | One provider, and `FinePayments` already isolates Stripe. | Phase 1: presented as a decision, recommended against, left for approval. Phase 2: built as approved, owned by the fines side, Stripe behind it, not re-argued. |
+| AD2 | `CollectFine`, `FineLedger`/`FinePayments`, the portal's session pattern | Check what already exists | The slice's pieces mostly exist. | The design builds on them (a member-facing step that checks ownership and delegates to `CollectFine`), not a parallel payment path. |
+| AD3 | `fines/fine-payments.port.ts` `stripeCode` (V7) | Leaky abstraction; existing violations touched | The port speaks Stripe's decline vocabulary; a second provider makes it untenable. | Listed under existing violations touched, with fix-now-or-defer recorded as an approved decision. |
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| ADT1 | `FinePayments`, one implementation | A one-implementation interface looks premature. | It is the interface the Dependency Rule requires to keep the Stripe SDK out of the fines module (compare T3, V8). Generalising it is fine; calling it premature is not. |
+
 ## Boy Scout scoping (same code, different framing)
 
 `library-app-reporting-pr` frames V14 plus the new `ReportFiles` port (T4) as

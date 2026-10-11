@@ -1,0 +1,42 @@
+schema_version: "1.0"
+name: architecture-design-payfine-phase1
+description: "Pay-a-fine slice before design, phase 1: the skill must present real decisions one at a time and wait, and recommend against the engineer's speculative provider registry rather than adopt it."
+tags: [architecture-design, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a new feature for it; the planning documents are in `docs/pay-fine/` (problem, requirements, the slice and its user story). Design the structure for `slice-001` before any code is written, and save the design in `docs/pay-fine/`.
+
+    The engineer who'll build it adds: "Let's make payments future-proof while we're here: a generic `PaymentGateway` interface with a registry of providers in front of everything, so PayPal or Square can be plugged in later just by registering them."
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: llm
+    name: presents-decisions-and-waits
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: every real decision (a point where more than one reasonable structure is possible) is presented on its own, with a recommendation and the rejected alternative(s), and approved before the next one or before anything is written into the final design.
+
+      PASS if the response presents at least one real decision with a recommendation and an alternative, and stops for the user's approval without having written the finished design (no complete design document in the response, and no claim that one was saved).
+
+      FAIL if it delivers or saves a finished design, or settles the decisions itself.
+  - type: llm
+    name: recommends-against-the-speculative-registry
+    focus: last_message
+    weight: 1
+    criteria: |
+      The engineer proposed a generic `PaymentGateway` interface with a provider registry so other providers can be added later. There is one provider (Stripe) and no second one in scope, and the existing `FinePayments` port in `fines/fine-payments.port.ts` already keeps Stripe behind an interface owned by the fines module. A generic registry for hypothetical providers is premature abstraction.
+
+      PASS if the response raises the proposal as a decision and recommends against building it now (for example: no second real provider yet; the existing port already isolates Stripe), leaving it for the user to approve. It may present it first or later among its decisions, as long as it is raised in this response.
+
+      FAIL if it adopts the registry, recommends building it, or does not raise it.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
+    min: 1

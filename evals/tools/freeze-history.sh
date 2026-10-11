@@ -11,6 +11,8 @@
 # plugin's absolute path (in the "Base directory for this skill" line) becomes
 # `<plugin-root>`, and the freeze refuses to write if the home directory still
 # appears anywhere, so a committed history carries no local account name.
+# Paths into the frozen run's own sandbox become relative, so the resuming
+# run reads and writes inside its own.
 #
 # Usage: evals/tools/freeze-history.sh <kept-run-dir> <output.jsonl>
 #        evals/tools/freeze-history.sh <session.jsonl> <output.jsonl> <ending>
@@ -77,7 +79,15 @@ for entry in entries:
     kept.append(entry)
 if not kept or kept[-1]["type"] != "assistant":
     sys.exit("transcript does not end on an assistant turn; the phase did not finish asking")
-lines = [json.dumps(entry).replace(plugin_root, "<plugin-root>") + "\n" for entry in kept]
+# The frozen run's sandbox working directory is absolute and will not exist
+# for the run that resumes it: a path into it would point outside the new
+# sandbox (a write there is refused). Make those paths relative.
+cwds = {e.get("cwd") for e in kept if e.get("cwd")}
+def relativize(text):
+    for cwd in cwds:
+        text = text.replace(cwd + "/", "").replace(cwd, ".")
+    return text
+lines = [relativize(json.dumps(entry)).replace(plugin_root, "<plugin-root>") + "\n" for entry in kept]
 if any(home in line for line in lines):
     sys.exit(f"{home} still appears after replacing the plugin root; remove it by hand before freezing")
 with open(dst, "w") as f:

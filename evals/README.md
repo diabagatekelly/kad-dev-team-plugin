@@ -210,7 +210,12 @@ score is history, not a claim about today.
 | `orchestrator-superseded-scope-map` | real, Sonnet: 2/2 runs all pass — real inspection: reads `## Status` and routes to requirements for the Active map's step 1, not to slicing from the superseded map's requirements doc. The baseline also routes correctly here, so this is a regression guard on inspection, with the skill-invocation graders as the plugin-fired check | yes |
 | `orchestrator-backward-route` | real, Sonnet: 2/2 runs all pass — a "Handed back to product-slicer — blocking" section routes to `product-slicer`, not forward to reliability criteria; the log records why | yes |
 | `orchestrator-asks-for-target` | real, Sonnet: 2/2 runs all pass; baseline 0/1 — no folder given, it asks where the artifacts are before anything else and doesn't search the project | yes |
-| `software-architect:architecture-design` | 8/8 PASS, three-phase — extends the documented format, see the case's own `prompt.md` | yes |
+| `architecture-design-payfine-phase1` | real, Sonnet: 1/1 with plugin on both passes (`results/20261011-sa-p1f-architecture-design-payfine-phase1`); the baseline writes the design straight away — the pay-a-fine slice before design, with the engineer's generic `PaymentGateway` registry proposal: presents it as a decision, recommends against it (one provider; `FinePayments` already isolates Stripe), and waits | yes |
+| `architecture-design-payfine-phase2` | real, Sonnet: 27/27 over 3 runs (`results/20261011-sa-final-architecture-design-payfine-phase2`) — the user overrules (a second provider is signed), approves the rest; the saved design states its importance ordering, stays conceptual, records each decision's approval, names what crosses its boundaries, builds the approved gateway on the existing `CollectFine` path, notes the leaky payment port (V7) and doesn't call the one-implementation port premature. Graded on the saved file. No baseline arm | yes |
+| `architecture-design-neg-review` | real, Sonnet: never invokes `architecture-design` in either arm (a review of live code) | yes |
+| `technology-bootstrap-phase1` | real, Sonnet: 1/1 with plugin on three passes; the baseline also asks first, so this phase is a regression guard — an empty repo with slice 1's artifacts in `docs/` (`fixtures/bootstrap-empty/`): asks who maintains it and what kind of app before recommending anything | yes |
+| `technology-bootstrap-phase2` | real, Sonnet: 2/3 runs clean (`results/20261011-sa-p2g-technology-bootstrap-phase2`) — the answer delegates the test runner and package manager but never mentions a UI framework; recommends one with alternatives and waits instead of settling it | yes |
+| `technology-bootstrap-phase3` | real, Sonnet: 15/15 over 3 runs (`results/20261011-sa-final3-boot3`) — the user approves React with Vite; the saved bootstrap decides only what the first test forces, defers persistence with the in-memory reason, treats pinning as a choice, records rejected alternatives and open categories, and shows each choice as approved or delegated. Graded on the saved file. No baseline arm | yes |
 | `library-app-lending-review` | real, Sonnet: 6/6 with plugin vs 4/6 without (runtime cycle missed, ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
 | `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
 | `library-app-members-review` | real, Sonnet: 3/3 with plugin vs 2/3 without (table-shaped domain type missed), 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
@@ -222,7 +227,6 @@ score is history, not a claim about today.
 | `library-app-catalog-review` | real, Sonnet: 1/1 with plugin vs 0/1 without, 1 run — the clean module; with the skill the review reports nothing above Low, without it a Medium is raised (earlier runs flagged two things the fixture itself had introduced, a cross-module read and a dead search route; both fixed) | yes |
 | `architecture-review-neg-security-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `architecture-review-neg-test-quality-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
-| `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
 | `security-requirements-payfine-phase1` | real, Sonnet: 3/3 runs with plugin (`results/20261011-req-cal7`), 0/1 without on both passes that ran a baseline — given the pay-a-fine slice and the engineer's "let members onto `/fines`" proposal, asks about obligations and who may see whose data, and does not ask how members sign in or which provider handles payment (the code says) | yes |
 | `security-requirements-payfine-phase2` | real, Sonnet: 9/9 over 3 runs (`results/20261011-req-sec-p2c`) — presents the shared-route proposal as a pending decision (it would expose staff-only waiving and skip the ownership check), decides nothing for the user, no false alarm on the publishable key. No baseline arm: the history is a with-plugin transcript | yes |
 | `security-requirements-payfine-phase3` | real, Sonnet: 18/18 over 3 runs (`results/20261011-req-sec-p3a`) — the user keeps the shared route; finished criteria written for it and made safe (members pay only their own fines, cannot waive), card data never received, error and monitoring exits covered, decision recorded without re-arguing | yes |
@@ -309,10 +313,10 @@ Run with the `agent-eval` skill, one case per invocation.
 
 - **Persona rules the orchestrator can't reach.** The orchestrator now
   invokes a routed skill and never reads the persona's `AGENT.md`, so any
-  rule a routed step needs must be in the skill. `devsecops-engineer` has
-  had that pass; `docs-writer`, `product-manager`, `product-slicer`,
-  `software-architect` (partly), `ux-designer`, `accessibility-engineer`
-  and `tdd-coach` have not. Do it as part of each persona's move to the
+  rule a routed step needs must be in the skill. `devsecops-engineer` and
+  `software-architect` have had that pass; `docs-writer`,
+  `product-manager`, `product-slicer`, `ux-designer`,
+  `accessibility-engineer` and `tdd-coach` have not. Do it as part of each persona's move to the
   real suite (playbook step 1 already asks for it).
 
 ~~- **`devsecops-engineer` has one case out of six skills.**~~ **Closed —
@@ -754,3 +758,33 @@ grader, or the `agent-eval` harness that a case already covers.
   Observed, not graded: once routed, `product-slicer` grew the slice on
   its own judgment and superseded it without asking — a question for its
   own suite.
+- **`software-architect`'s other two skills moved to the real suite.**
+  `architecture-design` runs on the pay-a-fine slice before its design
+  (two phases plus a negative case); `technology-bootstrap` can't use the
+  library-app, which already has a stack, so it moved the emulated case's
+  empty repo into `fixtures/bootstrap-empty/` (three phases). Skill fixes:
+  the persona's where-to-save and vocabulary rules moved into the skills;
+  a consult invokes the consulted skill with the `Skill` tool instead of
+  reading its file, and both sides now say the consult returns an answer,
+  not the turn — a consulted skill that "stops" ended the whole run, and
+  the first wording ("hand control back") was read as handing back to the
+  user; a delegation covers only what it names (the bootstrap settled a
+  UI framework nobody delegated); and the design template records each
+  decision's approval, fix-now-or-defer included. Case and tool lessons:
+  `freeze-history.sh` now makes the frozen run's sandbox paths relative,
+  because a resumed phase that wrote to the old absolute path was refused;
+  a skill that saves its document needs its graders on that file
+  (`focus: {source: file, path}` — `focus: files` gives only the list of
+  file names), and the answer should name the file so the path is fixed;
+  an answer that says "go ahead and write it up" approves everything still
+  open; a later phase must be frozen from a run whose question the next
+  answer actually answers; a grader written for a question needs
+  rewording for the record written after approval; and one design grader
+  ("chooses no new technology") was dropped after judges failed it on
+  three documents that plainly chose nothing new — the CLI's own
+  long-input warning applies. Regression after the consult change:
+  `supply-chain-review` unchanged (7/8, `build` 4/5 as committed); the
+  requirements phase-1 and orchestrator cases showed `security-requirements`
+  skipping its questions about one run in four, worse under the
+  orchestrator, fixed by an orchestrator step-4 line (routing doesn't
+  hurry a skill whose first response is questions): 4/4 on both after.

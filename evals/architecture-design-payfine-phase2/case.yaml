@@ -1,0 +1,116 @@
+schema_version: "1.0"
+name: architecture-design-payfine-phase2
+description: "Pay-a-fine design, phase 2: the user overrules the recommendation (a second provider is now real) and approves the rest; expects a finished design that reflects that choice, builds on the existing payment path, notes the leaky payment port (V7), keeps the one-implementation port, . No baseline arm: the history is a with-plugin transcript."
+tags: [architecture-design, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    On the payment gateway: keep the engineer's generic interface. We're signing with a second payment provider next quarter, so there will be a real second implementation. For everything else, go with your recommendations; no need to check with me again. Write the design and save it as `docs/pay-fine/design-001.md`.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: llm
+    name: states-importance-ordering
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      PORTABLE. The design must state explicitly which parts of the slice matter most (business harm if wrong) and which are infrastructure — an explicit importance or strategic-vs-tactical ordering, not left implicit.
+
+      PASS if such an ordering is stated. FAIL if it is not.
+  - type: llm
+    name: stays-conceptual
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      PORTABLE. The design names components, boundaries and what crosses them; it does not specify implementation: no code, no function signatures, no field-by-field type definitions. Naming existing files or modules it builds on is fine.
+
+      PASS if it stays at that level. FAIL if it includes code or signatures.
+  - type: llm
+    name: decisions-show-approval
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      PORTABLE. The Decisions section (or equivalent) must show, for each real decision, what was recommended, what alternative(s) were considered, and what the user approved or changed — not bare final choices with no trace of how they were reached.
+
+      The user approved the gateway explicitly and said "for everything else, go with your recommendations". A decision recorded as the designer's recommendation, approved under that standing instruction, carries provenance.
+
+      PASS if every decision shown carries that provenance. FAIL if any reads as settled by the designer alone with no recommendation or approval recorded, or there is no decisions record despite real decisions.
+  - type: llm
+    name: boundaries-name-what-crosses
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      PORTABLE. At least one boundary the slice introduces or uses must say what crosses it, in plain-data terms (for example a fine id and a card token in, a payment outcome out), rather than only naming the boundary.
+
+      PASS if so. FAIL if boundaries are named without what crosses them.
+  - type: llm
+    name: reflects-the-users-gateway-choice
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      Judge substance only: section names and wording do not matter. What matters is whether the design does what is described.
+
+      The user overruled the recommendation: keep a generic payment-provider interface, because a second provider is being signed next quarter, so there will be a real second implementation.
+
+      PASS if the design includes that generic provider interface as approved, with the fines side owning it and the Stripe adapter as one implementation behind it, and does not re-argue the choice beyond noting it once.
+
+      FAIL if the design leaves the interface out, keeps arguing against it, or places Stripe-specific types in it.
+  - type: llm
+    name: builds-on-the-existing-payment-path
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      Judge substance only: section names and wording do not matter. What matters is whether the design does what is described.
+
+      The app already has the pieces this slice needs: the `CollectFine` use case, the `FineLedger` and `FinePayments` ports, the Stripe adapter, and portal routes that take the member from the session (`/portal/loans`, `/portal/history`).
+
+      PASS if the design builds the slice on those (reusing `CollectFine` and the existing ports, adding portal-facing routes or equivalent), rather than introducing a parallel payment use case or a second Stripe integration.
+
+      A member-facing step that adds the ownership rule (the fine must be the signed-in member's) and then delegates to `CollectFine` builds on the existing path; renaming or generalising the existing port also counts as building on it.
+
+      FAIL only if it designs a second payment use case or a second Stripe integration that bypasses `CollectFine`.
+  - type: llm
+    name: notes-the-leaky-payment-port
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      Judge substance only: section names and wording do not matter. What matters is whether the design does what is described.
+
+      `fines/fine-payments.port.ts` reports failures as `stripeCode` with Stripe's literal decline codes, and `CollectFine` switches on them: a provider's vocabulary leaks into the fines module's own port. This slice touches that port, and a second provider makes the leak matter.
+
+      PASS if the design flags this (the port or outcome carries Stripe-specific codes) as an existing violation the slice touches, and says whether this slice fixes it (a provider-neutral outcome mapped inside the adapter) or defers it.
+
+      FAIL if it is not mentioned.
+  - type: llm
+    name: keeps-the-one-implementation-port
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the design does NOT raise a false alarm.
+
+      `FinePayments` has one implementation, but it is the interface the Dependency Rule requires: it keeps the Stripe SDK out of the fines module. An interface the Dependency Rule requires is not premature abstraction with one implementation.
+
+      PASS if the design does not call the existing `FinePayments` port (or any port isolating real I/O) premature, speculative, or something to remove. Generalising or renaming it into the approved gateway interface is not calling it premature, and calling the *registry* premature before the user overruled it is about the registry, not the port.
+
+      FAIL if it does.
