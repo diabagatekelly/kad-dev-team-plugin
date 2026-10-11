@@ -13,10 +13,20 @@ rest), and the core component patterns. It does not decide how any one
 screen arranges these — that's `screen-design`, invoked per slice against
 whatever this skill establishes. It does not verify that a built screen
 actually conforms to an accessibility standard — that's
-`accessibility-engineer`'s job, once that persona exists. This skill's
+`accessibility-engineer`'s job. This skill's
 accessibility responsibility stops at designing tokens and patterns that
 make conformance *possible*, not at confirming any particular screen
-achieved it.
+achieved it. Nor does it decide what capability gets built: that's
+`product-manager`'s and `product-slicer`'s call, made before this runs.
+If asked to do any of these, say so and hand it back.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it. Within that location, everything this skill keeps
+(the written system, the winning mockup, its screenshot) goes in one
+`visual-ux/` folder.
 
 ## Establishing it the first time
 
@@ -67,8 +77,8 @@ to choose between when the direction is already given — open it, and
 confirm with the user that it reads as a faithful match before treating it
 as settled. A reference is a target to hit; assuming your first attempt
 landed without checking is a real failure mode. Once confirmed, save that
-mock's HTML and a screenshot straight to `visual-ux/` — there's no losing
-candidate to keep out of it.
+mock's HTML, and a screenshot if anything could view it, straight to
+`visual-ux/` — there's no losing candidate to keep out of it.
 
 **Generating candidates, when there's no reference.** Generate a small
 number of genuinely distinct directions scoped to the actual domain — a
@@ -80,8 +90,10 @@ actually fits) — not a hedge between them, and not three variations on the
 same idea wearing different colors.
 
 Render a sample of each for real, but treat this render as scratch, not
-output: write each candidate's HTML file to a temporary location outside
-the artifacts directory (nothing goes in `visual-ux/` yet), then open all
+output: write each candidate's HTML file to a scratch folder outside
+`visual-ux/` (beside it is fine; inside it is not, whatever the file is
+called), where the user can open it if you end up handing it over.
+Nothing goes in `visual-ux/` until a candidate is chosen. Then open all
 of them as separate browser tabs so they can actually be seen and compared
 side by side. Don't describe the candidates in prose and call that
 rendering; if there's genuinely no way to view anything in this session,
@@ -90,7 +102,9 @@ silently. Don't screenshot or save anything to disk at this stage — the
 live tabs are for looking, not for producing a record yet.
 
 **Then stop and ask — with a real question, not a narrated choice.** With
-the tabs open, ask the user to pick via an actual blocking question. Never
+the tabs open (or the files handed over), ask the user to pick, and stop
+until they answer: if no question tool is available, ask in plain text and
+end your turn there. Never
 write up a candidate as "chosen" without having genuinely paused for their
 answer first, even when one option seems obviously right — deciding on
 their behalf and describing it in the past tense afterward is the same
@@ -99,7 +113,9 @@ wasn't one.
 
 **Only once they've chosen, create `visual-ux/` and populate it with the
 winner alone:** the chosen candidate's HTML file (rewritten there, not
-moved from scratch) and a fresh screenshot of it. Close the losing
+moved from scratch) and a fresh screenshot of it, if anything can view
+it; if nothing can, say so rather than claiming one, and don't promise one
+when asking which candidate to keep. Close the losing
 candidates' tabs and discard their scratch files — they don't get a saved
 HTML file or screenshot. A prose description of each rejected candidate
 and why it lost, in the output's "Candidates considered" section, is
@@ -155,7 +171,11 @@ conformance possible for every screen built after:
 - A single declared focus-state pattern every interactive element
   inherits.
 - Color pairs in the palette that clear standard contrast thresholds for
-  text against its background.
+  text against its background: 4.5:1, or 3:1 for large text. Muted,
+  secondary and meta text is still text and needs the same 4.5:1; "only
+  used for secondary copy" is not an exemption. Compute the ratio for
+  every text color against each background it sits on, and darken any
+  that falls short before declaring it.
 - Control patterns sized to a reasonable touch target by default.
 - A type scale where heading levels are visually distinguishable from each
   other, so hierarchy survives all the way to a screen reader's outline.
@@ -202,12 +222,13 @@ being binding just because you're the one revising it.
 ## Direction
 Purpose, tone, and what should make this interface memorable — stated,
 not left implicit. If more than one candidate was rendered, name which
-one was chosen and link its screenshot in `visual-ux/`.
+one was chosen and link its HTML in `visual-ux/`, and its screenshot if
+one was taken.
 
 ## Candidates considered
 Only when more than one direction was rendered. Each rejected candidate
 described in prose and why it wasn't chosen — no saved file needed for
-these, only the winning direction's screenshot persists in `visual-ux/`.
+these, only the winning direction's files persist in `visual-ux/`.
 Omit this section entirely when the direction came from a reference and
 only one mock was ever rendered.
 
@@ -224,8 +245,10 @@ One entry per pattern this project actually needs, concrete enough to
 compose from without guessing.
 
 ## Accessibility built in
-The focus pattern, contrast approach, touch-target sizing, and heading
-scale chosen — and why they hold up by construction.
+The focus pattern, touch-target sizing, and heading scale chosen, and
+the contrast ratio of every text color against each background it's used
+on (muted and semantic colors included) — and why they hold up by
+construction.
 
 ## Findings (review/evolve only)
 Problems found, separated from preferences left alone, each with why it

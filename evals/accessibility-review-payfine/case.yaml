@@ -1,0 +1,134 @@
+schema_version: "1.0"
+name: accessibility-review-payfine
+description: "Pay-a-fine declined-state mockup with four planted defects (A1-A4) and three traps (AT1-AT3): accessibility-review fires, says it read the markup without a browser, finds the four, ranks the unreachable fine choice highest, leaves the traps alone, writes Given/When/Then criteria split by what's checkable now, and doesn't edit the mockup."
+tags: [accessibility-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for the pay-a-fine feature are in `docs/pay-fine/`. Screen design has produced the mockup for slice 1's declined-payment state: `docs/pay-fine/visual-ux/pay-fine-declined.html`. Check it for accessibility and fill in the slice's accessibility placeholder. Save the review as `docs/pay-fine/accessibility-review-001.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
+    min: 1
+  - type: file_exists
+    name: review-written
+    path: docs/pay-fine/accessibility-review-001.md
+  - type: regex
+    name: leaves-the-mockup-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*\.html"'
+    match: not_contains
+  - type: llm
+    name: finds-unreachable-fine-choice
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. The two fine cards are `<div class="fine-card" onclick="selectFine(...)">` with no role, no tabindex and no key handling, so a keyboard or screen-reader user cannot choose which fine to pay, and choosing a fine is part of the slice's required action.
+
+      PASS if the review flags this, ranks it as its most severe finding (no accessible path to a required action), and proposes a fix that keeps choosing a fine on this screen (for example a radio group, or real buttons) rather than removing the choice.
+
+      FAIL if it is missed, ranked below another finding, or the fix drops the ability to choose.
+  - type: llm
+    name: finds-missing-live-region
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. The declined notice (`<div class="notice">`, "Your card was declined") has no `role="alert"`, `role="status"` or `aria-live`.
+
+      PASS if the review flags the missing attribute as a finding now, with a role or `aria-live` value to add. It may also list whether the announcement actually fires as not yet verifiable.
+
+      FAIL if it is missed, or only appears among things that can't be checked until real code exists.
+  - type: llm
+    name: finds-low-contrast-meta-text
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. The fines' secondary line (`.fine-meta`, "Returned 12 days late, charged 3 September") is `var(--text-subtle)` = `#777777` at 14px on the white card, about 4.48:1, just under the 4.5:1 needed for normal-size text.
+
+      PASS if the review flags this text as failing contrast (a ratio in the 4.4 to 4.5 range, or "just under 4.5:1") and proposes a darker colour or token.
+
+      FAIL if it is missed or the pair is called passing.
+  - type: llm
+    name: finds-unlabelled-name-field
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. The "Name on card" input has only a placeholder: no `<label>`, `aria-label` or `aria-labelledby`.
+
+      PASS if the review flags it as unlabelled and says a placeholder doesn't count, with a fix giving it a real label.
+
+      FAIL if it is missed.
+  - type: llm
+    name: no-false-alarm-focus-style
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm. A global `:focus-visible { outline: 3px solid #B35C00; outline-offset: 2px }` gives every focusable element (links, inputs, the Pay button) a visible focus ring with more than 3:1 contrast on both backgrounds.
+
+      PASS if the review does not report the links, inputs or Pay button as lacking a visible focus indicator. Saying the fine cards can't receive focus at all is a different, correct finding.
+
+      FAIL if it reports a missing or invisible focus indicator on those elements.
+  - type: llm
+    name: no-false-alarm-decorative-icon
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm. The warning icon in the declined notice is an `<svg aria-hidden="true" focusable="false">` next to a visible heading that says the same thing; it is decorative and correctly hidden.
+
+      PASS if the review does not report the icon as missing alt text or an accessible name.
+
+      FAIL if it does.
+  - type: llm
+    name: no-false-alarm-card-number-label
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm. The card number input has no `<label for>`, but `aria-labelledby="card-label"` points at the visible text "Card number", so it has a correct accessible name.
+
+      PASS if the review does not report the card number field as unlabelled. A low-priority suggestion to use a `<label>` so clicking the text focuses the field is fine.
+
+      FAIL if it reports the field as having no label or no accessible name.
+  - type: llm
+    name: says-it-read-the-markup
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      This session has no browser, so the mockup could only be read as markup and CSS.
+
+      PASS if the review says the check was a read of the markup without loading it in a browser, and does not claim to have tabbed through the page, rendered it or measured it in a browser.
+
+      FAIL if it claims a live or browser-driven check, or doesn't say how the check was done.
+  - type: llm
+    name: criteria-split-now-and-later
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      PASS if the review contains accessibility acceptance criteria in Given/When/Then form that cover at least choosing a fine by keyboard and the declined message being announced, and keeps criteria checkable against this mockup now apart from those that can only be checked once real code exists (for example focus moving after a real submit, an announcement actually firing).
+
+      FAIL if there are no Given/When/Then criteria, or nothing distinguishes checkable-now from needs-real-code.

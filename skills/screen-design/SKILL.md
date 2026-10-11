@@ -14,11 +14,22 @@ a token, a component pattern, or the layout shell — those are
 this slice genuinely seems to need one of those to change, that's a
 proposal back to `design-system`, not something to quietly work around
 here. It also does not verify accessibility compliance — design so it
-holds up, but confirming it belongs to `accessibility-engineer`.
+holds up, but confirming it belongs to `accessibility-engineer`. Nor
+does it decide what capability gets built: that's `product-manager`'s and
+`product-slicer`'s call, made before this runs. If asked to do any of
+these, say so and hand it back.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it. Within that location, everything this skill writes
+(the screen design, every mockup, every screenshot) goes in one
+`visual-ux/` folder, next to `design-system`'s output.
 
 If the slice's own acceptance criteria still carry an unfilled
-accessibility-criteria placeholder because `accessibility-engineer`
-doesn't exist in this roster yet, that placeholder stays open — this
+accessibility-criteria placeholder, it stays open: `accessibility-engineer`
+fills it by reviewing what this skill renders, so it can't be filled yet — this
 skill doesn't close it by designing well, and doesn't get to make it
 disappear either. Carry it forward into this design's own "Open
 questions" every time, the same way the slice itself keeps it visible
@@ -164,12 +175,14 @@ choice, it's presenting a recommendation with a disclaimer.
 
 Treat these renders as scratch until one is chosen: write each candidate's
 HTML to a temporary location outside `visual-ux/`, open them as separate
-tabs to compare, and don't screenshot or save anything yet. Then stop and
-ask with a real, blocking question — don't resolve a genuine fork on the
+tabs to compare (or hand the files over if nothing can view them), and
+don't screenshot or save anything yet. Then ask and stop until they
+answer — if no question tool is available, ask in plain text and end your
+turn there. Don't resolve a genuine fork on the
 user's behalf because one path seemed obviously better to you, and don't
 write up a candidate as "chosen" without having actually paused for their
-answer first. Only once they've chosen, create the mockup and screenshot
-in `visual-ux/` for the winner alone; describe the rejected ones in prose
+answer first. Only once they've chosen, create the mockup (and its
+screenshot, if anything can view it) in `visual-ux/` for the winner alone; describe the rejected ones in prose
 in the output rather than leaving their rendered files behind.
 
 ## Produce a rendered artifact, not production code
@@ -193,14 +206,15 @@ this for real, not aspirationally:
    explicitly and hand over the HTML file directly so the user can open it
    themselves — don't silently fall back to describing it in prose as if
    that were an equivalent substitute. A description is not a rendering,
-   even when nothing else is available.
+   even when nothing else is available. Don't claim a screenshot you
+   couldn't take.
 
-Reference both the HTML file's and the screenshot's paths from the written
-artifact, so either is findable later without regenerating anything. Make
+Reference the HTML file's path, and the screenshot's when one exists, from
+the written artifact, so either is findable later without regenerating
+anything. Make
 the mockup concrete enough that someone could build from it directly, but
 keep it a design artifact, not the final styled component wired into the
-real codebase — implementing it is a later step, for whichever persona
-owns writing code once one exists to hand it to.
+real codebase — implementing it is a later step, `tdd-coach`'s.
 
 ## Output format
 
@@ -211,8 +225,8 @@ owns writing code once one exists to hand it to.
 What this screen delivers, tied back to the slice it's designed for.
 
 ## Layout and composition
-The rendered mockup and its screenshot, both in `visual-ux/` — one pair
-per meaningfully distinct state — plus which established patterns each
+The rendered mockup in `visual-ux/`, with its screenshot if one could be
+taken — one per meaningfully distinct state — plus which established patterns each
 uses and how they're arranged for this screen specifically.
 
 ## Interaction flow

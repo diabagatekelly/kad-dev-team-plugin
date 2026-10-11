@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your fines - Riverside Library</title>
+<style>
+  :root {
+    --paper: #FAF7F2; --surface: #FFFFFF; --ink: #1F2A33; --muted: #55606A; --text-subtle: #777777;
+    --border: #8A8178; --brand: #1F5F5B; --brand-hover: #174845;
+    --danger: #A3302A; --danger-bg: #FBEAE8; --focus: #B35C00;
+    --radius-sm: 6px; --radius-md: 8px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/24px system-ui, -apple-system, "Segoe UI", sans-serif; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  header a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--brand); }
+  header .home { font-weight: 700; color: var(--ink); text-decoration: none; }
+  nav a[aria-current="page"] { font-weight: 600; }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 28px; line-height: 36px; margin: 0 0 24px; }
+  h2 { font-size: 20px; line-height: 28px; margin: 32px 0 12px; }
+  .lead { color: var(--muted); margin: 0 0 12px; }
+  .notice { display: flex; gap: 12px; padding: 16px; border-left: 4px solid var(--danger); border-radius: var(--radius-sm); background: var(--danger-bg); }
+  .notice h2 { margin: 0 0 4px; font-size: 16px; line-height: 24px; }
+  .notice p { margin: 0; }
+  .fine-card { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 16px; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; }
+  .fine-card.selected { border: 2px solid var(--brand); padding: 15px; }
+  .fine-card .what { flex: 1; }
+  .fine-title { display: block; font-weight: 600; }
+  .fine-meta { display: block; color: var(--text-subtle); font-size: 14px; line-height: 20px; }
+  .badge { display: none; font-size: 14px; font-weight: 600; color: var(--brand); }
+  .fine-card.selected .badge { display: inline; }
+  .amount { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .panel { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+  .panel p { margin: 0 0 8px; }
+  .field-label { display: block; font-weight: 600; margin: 16px 0 4px; }
+  input[type="text"] { width: 100%; min-height: 44px; padding: 0 12px; font: inherit; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); }
+  .btn { min-height: 44px; padding: 0 20px; font: 600 16px/24px system-ui, sans-serif; border-radius: var(--radius-sm); cursor: pointer; transition: background-color 120ms ease-out; }
+  .btn-primary { background: var(--brand); color: #fff; border: 0; }
+  .btn-primary:hover { background: var(--brand-hover); }
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 24px; }
+  .actions a { display: inline-flex; align-items: center; min-height: 44px; color: var(--brand); }
+</style>
+</head>
+<body>
+  <header>
+    <a class="home" href="/portal">Riverside Library</a>
+    <nav aria-label="Your account"><a href="/portal/loans">My loans</a> <a href="/portal/fines" aria-current="page">My fines</a></nav>
+  </header>
+  <main>
+    <h1>Your fines</h1>
+
+    <div class="notice">
+      <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A3302A" stroke-width="2"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg>
+      <div>
+        <h2>Your card was declined</h2>
+        <p>Nothing was charged and the fine is still outstanding. Check the card details, or try a different card.</p>
+      </div>
+    </div>
+
+    <h2>Outstanding fines</h2>
+    <p class="lead">Choose the fine you want to pay.</p>
+    <div class="fine-list">
+      <div class="fine-card selected" data-fine="F-1042" onclick="selectFine('F-1042')">
+        <span class="what"><span class="fine-title">The Overstory</span><span class="fine-meta">Returned 12 days late, charged 3 September</span></span>
+        <span class="badge">Selected</span>
+        <span class="amount">$3.00</span>
+      </div>
+      <div class="fine-card" data-fine="F-1057" onclick="selectFine('F-1057')">
+        <span class="what"><span class="fine-title">Braiding Sweetgrass</span><span class="fine-meta">Returned 5 days late, charged 19 September</span></span>
+        <span class="badge">Selected</span>
+        <span class="amount">$1.25</span>
+      </div>
+    </div>
+
+    <h2>Pay by card</h2>
+    <form class="panel" action="#" onsubmit="return false">
+      <p>Paying for <strong id="paying-for">The Overstory, $3.00</strong></p>
+      <input type="text" name="cardholder" placeholder="Name on card" autocomplete="cc-name">
+      <span class="field-label" id="card-label">Card number</span>
+      <input type="text" name="card" inputmode="numeric" autocomplete="cc-number" aria-labelledby="card-label">
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">Pay $3.00</button>
+        <a href="/portal">Back to my account</a>
+      </div>
+    </form>
+  </main>
+  <script>
+    const fines = { 'F-1042': 'The Overstory, $3.00', 'F-1057': 'Braiding Sweetgrass, $1.25' };
+    function selectFine(id) {
+      document.querySelectorAll('.fine-card').forEach((card) => card.classList.toggle('selected', card.dataset.fine === id));
+      document.getElementById('paying-for').textContent = fines[id];
+      document.querySelector('.btn-primary').textContent = 'Pay ' + fines[id].split(', ')[1];
+    }
+  </script>
+</body>
+</html>

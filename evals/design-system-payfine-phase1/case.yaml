@@ -1,0 +1,35 @@
+schema_version: "1.0"
+name: design-system-payfine-phase1
+description: "Pay-a-fine slice, first screen in the project and no design system: design-system fires and its first response asks whether there's a reference to match or candidates to generate, writing and rendering nothing yet."
+tags: [design-system, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for the pay-a-fine feature are in `docs/pay-fine/`. Slice 1 (`docs/pay-fine/slice-001.md`) is the first thing in this project with a screen members use, and there's no design system yet. Set one up for the member portal, and save the design system itself as `docs/pay-fine/visual-ux/design-system-001.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:design-system"'
+    min: 1
+  - type: llm
+    name: asks-reference-or-generate
+    focus: last_message
+    weight: 1
+    criteria: |
+      No visual direction has been given. Before rendering anything, the skill must ask whether the user has a concrete reference to match (a screenshot, an existing product, a named comparison) or wants candidate directions generated to choose between.
+
+      PASS if the response asks that question and stops for the answer. Other questions alongside it (for example which devices members use) are fine.
+
+      FAIL if it doesn't ask it, names or picks a direction, or presents candidates as already made.
+  - type: regex
+    name: writes-nothing-yet
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":'
+    match: not_contains

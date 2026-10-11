@@ -367,6 +367,31 @@ Case-only overlays in `code-plants/code-review/`, each a PR of new files.
 | CT4 | `fines-report`: `StripeClient` built from `process.env` inside `FinesReport` | An SDK in a report (V12's pattern). | Structural: named for `architecture-review`, not ranked as readability. |
 | CT5 | `catalog/` | Nothing. | The clean module (T10); nothing above Low. |
 
+## Accessibility plants (`A`, `AT`) — `accessibility-engineer:accessibility-review`
+
+Case-only overlay in `ui-plants/accessibility-review/`: one mockup,
+`visual-ux/pay-fine-declined.html`, the declined-payment state of the
+pay-a-fine slice (`ui-plants/pay-fine/slice-001.md`, which adds the
+accessibility placeholder the original slice lacks). Every other colour
+pair clears its threshold and every target is at least 44px high, so
+nothing else on the page should be a finding.
+
+| # | Where | Violation | Expected |
+|---|---|---|---|
+| A1 | `.fine-card` `<div onclick="selectFine(...)">` | No role, tabindex or key handling: keyboard and screen-reader users can't choose which fine to pay. | The most severe finding (no accessible path to a required action). Fix keeps the choice: a radio group (the design system's choosable Card) or buttons. |
+| A2 | `.notice` (declined) | No `role="alert"`/`role="status"`/`aria-live`. | A finding now; whether it announces is deferred. |
+| A3 | `.fine-meta` | `--text-subtle` `#777777` on `#FFFFFF` at 14px: 4.48:1, under 4.5:1. The value sits behind a custom property. | High. Darker token. |
+| A4 | "Name on card" input | Placeholder only; no label. | High. A real `<label>`. |
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| AT1 | `:focus-visible` rule | One global rule rather than per component. | 3px `#B35C00` outline, 4.72:1 on white and 4.42:1 on the page: visible on every focusable element. The fine cards' lack of focus is A1, not this. |
+| AT2 | Warning icon in the notice | An `<svg>` with no alt text. | `aria-hidden="true"`, decorative, next to a heading saying the same. |
+| AT3 | Card number input | No `<label for>`. | `aria-labelledby="card-label"` names it "Card number". A Low note about using `<label>` is fine. |
+
+`ui-plants/design-system/` is the binding design system `screen-design-payfine`
+composes against; it has no plants.
+
 ## Boy Scout scoping (same code, different framing)
 
 `library-app-reporting-pr` frames V14 plus the new `ReportFiles` port (T4) as

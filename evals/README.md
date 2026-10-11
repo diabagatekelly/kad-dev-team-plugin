@@ -23,7 +23,9 @@ at:
   `reliability-requirements-*` suites on the same fixture, and the code
   personas' `tdd-implementation-*`, `test-quality-review-*`,
   `code-review-*` and `map-*` cases (their plants are case-only overlays in
-  `fixtures/library-app/code-plants/`). Results land in
+  `fixtures/library-app/code-plants/`), and the UI personas'
+  `design-system-*`, `screen-design-*` and `accessibility-review-*` cases
+  (overlays in `fixtures/library-app/ui-plants/`). Results land in
   `evals/results/<timestamp>/` (gitignored) each time the suite runs;
   nothing is hand-copied into case directories.
 
@@ -299,9 +301,12 @@ score is history, not a claim about today.
 | `operational-readiness-ops-phase2` | real, Sonnet: 15/15 over 3 runs (`results/20261011-or-p2h`) — nightly job with no missing-run signal, config that starts silently without `MONITOR_DSN`/Stripe/Twilio, nothing written for 2am, no ceremony, no false "no backups" claim | yes |
 | `operational-readiness-neg-security` | real, Sonnet: never invokes `operational-readiness` in either arm | yes |
 | `operational-readiness-neg-reliability` | real, Sonnet: never invokes `operational-readiness` in either arm | yes |
-| `ux-designer:design-system` | 9/9 PASS (after one re-run), three-phase | yes |
-| `ux-designer:screen-design` | 9/9 PASS, single-phase | yes |
-| `accessibility-engineer:accessibility-review` | 8/9 PASS, single-phase — the one failure is `skill-invoked`, a mechanical self-report miss, not a substantive gap; see the case's `eval-score/summary.md` | yes |
+| `design-system-payfine-phase1` | real, Sonnet: 9/9 over 3 runs (`results/ui5-*`); baseline 0/2 in calibration (writes a design system straight away) — first screen in the project, no design system: asks whether there's a reference to match or candidates to generate, and asks or states the platform, writing nothing | yes |
+| `design-system-payfine-phase2` | real, Sonnet: 12/12 over 3 runs (`results/ui5-*`) — told to generate for phones: three candidate HTML files beside `visual-ux/`, not in it, says it couldn't view them, asks which to keep without leaning. Known minor miss 1/3: promises "the winner's mockup and screenshot" when no screenshot is possible. No baseline arm: the history is a with-plugin transcript | yes |
+| `design-system-payfine-phase3` | real, Sonnet: 19/21 over 3 runs (`results/ui5-*`) — the user picks the second candidate; the system goes to `visual-ux/` with every token category, phone-first platform with its source, a ratio for every text colour, only the winner's mockup, no screenshot claimed. Misses: one run declares `--success` without its ratio (it is 4.70:1); one `chosen-direction-committed` FAIL is judge noise (re-asked twice: PASS) | yes |
+| `screen-design-payfine` | real, Sonnet: 33/33 over 3 runs (`results/ui3-*`); baseline wrote no mockups in calibration (8/10) — against the planted design system: one HTML mockup per state, the system's patterns reused, no pay-several or saved cards, copy rules, accessibility placeholder carried forward, no screenshot claimed, nothing asked that the docs answer, `design-system` not fired | yes |
+| `accessibility-review-payfine` | real, Sonnet: 36/36 over 3 runs (`results/ui3-*`); baseline 10/11 in calibration, a regression guard, not evidence of uplift: its only miss is not saying the check was a markup read — the declined-state mockup (A1–A4, AT1–AT3): unreachable fine choice ranked top, missing live region, 4.48:1 meta text, placeholder-only name field; no false alarm on the focus rule, the hidden icon or the `aria-labelledby` field; Given/When/Then split now vs needs real code; mockup untouched | yes |
+| `accessibility-review-neg-readability` | real, Sonnet: never invokes `accessibility-review` in either arm (a plain-language pass on a planning doc) | yes |
 
 ### The `example/` directory
 
@@ -345,10 +350,10 @@ Run with the `agent-eval` skill, one case per invocation.
   invokes a routed skill and never reads the persona's `AGENT.md`, so any
   rule a routed step needs must be in the skill. `devsecops-engineer`,
   `software-architect`, `product-manager`, `product-slicer` and
-  `docs-writer`, `tdd-coach`, `code-reviewer` and
-  `architecture-cartographer` have had that pass; `ux-designer` and
-  `accessibility-engineer` have not. Do it as part of each persona's move
-  to the real suite (playbook step 1 already asks for it).
+  `docs-writer`, `tdd-coach`, `code-reviewer`,
+  `architecture-cartographer`, `ux-designer` and `accessibility-engineer`
+  have had that pass, so every persona has. Keep it that way: a new
+  persona rule goes in the skill, not only the `AGENT.md`.
 - **The `tdd-implementation` quarantine flow is uncovered.** The real cases
   invoke the skill directly and through the `tdd-coach` agent; the
   orchestrator's quarantine/grade/combine/finalize flow (two worktree
@@ -415,7 +420,9 @@ Run with the `agent-eval` skill, one case per invocation.
   required, because the emulation harness can't distinguish an inline
   consult from a spawn — the distinction the rule actually exists to
   enforce.
-- ~~**`ux-designer` has no case run yet.**~~ **Closed — both run.**
+- ~~**`ux-designer` has no case run yet.**~~ **Closed — both run**, and
+  since replaced by real cases (see the UI personas entry below); what
+  follows describes the emulated cases, now in git history.
   `design-system` (9 graders, three-phase — reference-vs-generate, then the
   candidate choice: 9/9 PASS after one re-run) and `screen-design` (9
   graders, single-phase: 9/9 PASS) were both written straight from
@@ -913,3 +920,29 @@ grader, or the `agent-eval` harness that a case already covers.
   be escalated. Two misses were a last-message artifact: a postscript
   about a stopped background task replaced the review as the final
   message.
+- **The UI personas moved to real cases**: `ux-designer` (`design-system`
+  as a three-phase chain, `screen-design`) and `accessibility-engineer`
+  (`accessibility-review` plus a negative trigger), six cases on the
+  pay-a-fine slice with case-only overlays in `fixtures/library-app/ui-plants/`
+  (a slice copy with an accessibility placeholder, a binding design system,
+  a declined-state mockup; answer key `A`/`AT`). The emulated cases are
+  deleted. Every persona has now had the rules pass. Skill fixes:
+  - All three skills say where output goes (`visual-ux/` for the
+    designer), hand back what isn't theirs, and handle a session with no
+    browser: write the HTML, say it couldn't be viewed, never claim or
+    promise a screenshot. `accessibility-review` still computes contrast
+    from the CSS as it resolves when it can only read the markup.
+  - `design-system` needs a ratio for every text colour, muted and
+    secondary included: a first run declared a 3.77:1 muted grey and called
+    it exempt as "secondary copy only".
+  - `design-system` keeps candidates out of `visual-ux/` by name: one run
+    wrote them to `/tmp`, where the user couldn't open them, then moved them
+    into `visual-ux/` as `.scratch-*` files.
+
+  No rendering exists in the sandbox, so nothing here checks how a mockup
+  looks; the graders read the HTML and the written documents. A
+  `design-system` chain also needs its later graders updated whenever it
+  is re-frozen: the chosen candidate's name changes with each frozen run.
+  `accessibility-review-payfine` gives no uplift, since the baseline finds
+  textbook plants too; harder plants (a focus ring that is declared but
+  invisible, a contrast failure only after `:hover`) would be the next step.

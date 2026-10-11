@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: accessibility-review-neg-readability
+description: "Negative trigger: a plain-language readability pass on the pay-a-fine problem doc must not fire accessibility-review."
+tags: [accessibility-review, negative, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. People outside the team found `docs/pay-fine/problem.md` hard to follow. Can you suggest plainer wording, with shorter sentences and no jargon? Report the suggestions only; don't change the file.
+  model: sonnet
+  max_turns: 20
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: does-not-fire-accessibility-review
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?accessibility-review"'
+    min: 0
+    max: 0
+    arm: both

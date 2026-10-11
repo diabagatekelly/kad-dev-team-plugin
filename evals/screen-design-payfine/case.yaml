@@ -1,0 +1,114 @@
+schema_version: "1.0"
+name: screen-design-payfine
+description: "Pay-a-fine slice with a binding design system in visual-ux/: screen-design fires (design-system doesn't), asks nothing the docs answer, writes one HTML mockup per state the criteria name, reuses the system's patterns, adds nothing out of scope, claims no screenshot and carries the accessibility placeholder forward."
+tags: [screen-design, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for the pay-a-fine feature are in `docs/pay-fine/`, and the project's design system is in `docs/pay-fine/visual-ux/`. Design the screen for slice 1 (`docs/pay-fine/slice-001.md`), and save the screen design as `docs/pay-fine/visual-ux/screen-design-001.md`.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:screen-design"'
+    min: 1
+  - type: tool_used
+    name: does-not-fire-design-system
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?design-system"'
+    min: 0
+    max: 0
+    arm: both
+  - type: file_exists
+    name: screen-design-written
+    path: docs/pay-fine/visual-ux/screen-design-001.md
+  - type: regex
+    name: three-mockups-in-visual-ux
+    target: trace
+    pattern: '(?:"name":"Write","input":\{[^{}]*"file_path":"[^"]*visual-ux/[^"]*\.html"[\s\S]*){3}'
+  - type: llm
+    name: one-mockup-per-state
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/screen-design-001.md
+    weight: 1
+    criteria: |
+      The slice's criteria name three states a member sees: their outstanding fines with amounts, a fine shown as paid after a successful payment, and a declined payment with the fine still outstanding.
+
+      PASS if each of the three has its own HTML mockup file in `visual-ux/` referenced from the document. Extra mockups (for example a payment in progress) are fine.
+
+      FAIL if any of the three has no mockup of its own, or two of them share one file with the difference only described in prose.
+  - type: llm
+    name: reuses-the-system
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/screen-design-001.md
+    weight: 1
+    criteria: |
+      The design system declares a page shell, Button (with a busy state), choosable Card (a radio group with a visible "Selected" label), Form field, Notice (success `role="status"`, error `role="alert"`) and Amount.
+
+      PASS if the document says which of these patterns each state uses, uses the Notice pattern for the declined and paid messages, and either needs nothing new or lists what it needs under a "new patterns" heading for the design system to adopt.
+
+      FAIL if it composes the states from treatments the system doesn't have without flagging them as new, or changes a declared token or pattern for this screen.
+  - type: llm
+    name: nothing-out-of-scope
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/screen-design-001.md
+    weight: 1
+    criteria: |
+      The requirements put paying several fines in one payment and saved cards out of scope, and nothing in the slice asks for search, filtering, sorting, payment history or receipts.
+
+      PASS if the design adds none of these. Mentioning one as out of scope or as an open question is fine.
+
+      FAIL if any of them is designed in (for example a "pay all" button, a "save this card" checkbox, a filter, or a receipt download).
+  - type: llm
+    name: copy-rules
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/screen-design-001.md
+    weight: 1
+    criteria: |
+      PASS if the interface copy the document gives follows these rules: the pay button names the outcome verb-first (for example "Pay $3.00", not "Submit" or "Continue"); the declined message says what happened and what the member can do next, without blaming them; the success message names what succeeded, in the past tense.
+
+      FAIL if the pay button is generic, the declined message gives no next step, or the success message doesn't say what was paid.
+  - type: llm
+    name: placeholder-carried-forward
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/screen-design-001.md
+    weight: 1
+    criteria: |
+      The slice still has an unfilled accessibility placeholder for `accessibility-engineer`.
+
+      PASS if the document's open questions (or equivalent section) carry it forward as still open, with accessibility-engineer (or its accessibility review) as the next step, and the document does not claim the screen has been verified accessible or WCAG-conformant.
+
+      FAIL if the placeholder isn't mentioned as open, or the document claims verified conformance.
+  - type: llm
+    name: no-screenshot-claimed
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/screen-design-001.md
+    weight: 1
+    criteria: |
+      This session has no browser or screenshot tool, so the mockups can be written but not viewed.
+
+      PASS if the document does not reference a screenshot as if one was saved, and does not claim the mockups were opened or looked at in a browser. Saying they couldn't be viewed, or saying nothing about viewing, is fine.
+
+      FAIL if it references a screenshot file as existing, or claims the mockups were viewed.
+  - type: llm
+    name: asks-nothing-the-docs-answer
+    focus: last_message
+    weight: 1
+    criteria: |
+      The slice names every state and the design system covers every pattern the screen needs, so nothing about states, density or which interactions to include is left to ask.
+
+      PASS if the response delivers the design without asking the user about states, density or interactions. A question about something genuinely unresolved (for example what a member with no outstanding fines should see) is fine if the design is delivered anyway.
+
+      FAIL if it stops to ask about something the slice or design system already answers.

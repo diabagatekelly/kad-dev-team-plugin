@@ -1,0 +1,79 @@
+schema_version: "1.0"
+name: design-system-payfine-phase3
+description: "Pay-a-fine design system, phase 3: the user picks the second candidate; the skill writes the system to visual-ux/ with all token categories, a platform with provenance, accessibility by construction and only the winner's mockup, claiming no screenshot. No baseline arm: the history is a with-plugin transcript."
+tags: [design-system, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    The second one. Go with that.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: file_exists
+    name: system-written
+    path: docs/pay-fine/visual-ux/design-system-001.md
+  - type: regex
+    name: winner-mockup-in-visual-ux
+    target: trace
+    pattern: '"name":"Write","input":\{[^{}]*"file_path":"[^"]*visual-ux/[^"]*\.html"'
+  - type: llm
+    name: chosen-direction-committed
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-001.md
+    weight: 1
+    criteria: |
+      Three candidates were presented: Warm Civic (terracotta and amber on cream, serif headings, rounded cards with shadow), Crisp Civic-Tech (deep blue on cool grey-white, all sans-serif, flat, tight radii, dense rows) and Reading Room (forest green and gold, italic serif display, dashed rules). The user chose the second one, Crisp Civic-Tech.
+
+      PASS if the Direction section is Crisp Civic-Tech, states a specific point of view tied to this product (library members paying fines in a portal), and the rejected candidates are described in prose with a reason, with no saved file or screenshot of their own.
+
+      FAIL if it documents a different candidate, the direction is generic ("clean and modern") with nothing about this product, or a rejected candidate is linked as a saved file.
+  - type: llm
+    name: tokens-every-category
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-001.md
+    weight: 1
+    criteria: |
+      PASS if the document gives a declared value, or an explicit "none, deliberately", for each of: colour, typography, spacing, border-radius, shadow/elevation and motion.
+
+      FAIL if any of the six is missing with no statement that it was left out on purpose.
+  - type: llm
+    name: platform-with-provenance
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-001.md
+    weight: 1
+    criteria: |
+      The user said most members will open the portal on their phones; the planning docs show it is a browser app.
+
+      PASS if the document states the platform (a web app built for phones first, or responsive with phones as the main case) and says where that came from (the user, the planning docs, or decided here with the user).
+
+      FAIL if the platform is not stated, contradicts phone-first, or is stated with no source.
+  - type: llm
+    name: accessibility-by-construction
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-001.md
+    weight: 1
+    criteria: |
+      PASS if the document declares one focus treatment for interactive elements; gives a contrast ratio (a number) for every text colour in its palette, including muted or secondary text, against the background it is used on, each at least 4.5:1 (3:1 only for text it declares as large); sets a minimum touch-target size; has a heading scale with distinguishable levels; and does not claim that screens built on it have been verified as WCAG-conformant (stating that its own ratios were computed or checked is fine).
+
+      FAIL if any of these is missing; if any text colour (muted, secondary and meta text included) has no stated ratio, or a stated ratio under its threshold; if contrast is only asserted ("good contrast"); or if it claims built screens were verified conformant.
+  - type: llm
+    name: mockup-referenced-no-screenshot-claimed
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-001.md
+    weight: 1
+    criteria: |
+      This session has no browser or screenshot tool.
+
+      PASS if the document references the chosen direction's HTML mockup in `visual-ux/` and does not reference a screenshot as if one exists (saying none could be taken is fine).
+
+      FAIL if no HTML mockup is referenced, or a screenshot file is referenced as saved.
