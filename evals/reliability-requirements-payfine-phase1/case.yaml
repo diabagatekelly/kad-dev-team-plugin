@@ -1,0 +1,57 @@
+schema_version: "1.0"
+name: reliability-requirements-payfine-phase1
+description: "Pay-a-fine slice, phase 1: asked to fill the reliability placeholder, the skill must ask what the repository cannot answer before writing criteria, and not ask what it can."
+tags: [reliability-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+
+    The next slice adds this to it; nothing for it is built yet.
+
+    # Slice: a member pays an outstanding fine from the portal
+
+    ## Thin path
+    A signed-in member opens the portal, sees their outstanding fines, picks one and pays it by card. The fine then shows as paid.
+
+    ## Acceptance criteria (functional, already settled)
+    - Given a signed-in member with outstanding fines, when they open their fines in the portal, they see each one and its amount.
+    - Given the member pays a fine and the payment succeeds, the fine shows as paid.
+    - Given the payment is declined, the fine stays outstanding and the member is told.
+    - [RELIABILITY — placeholder, to be authored by devsecops-engineer]
+
+    The engineer picking this up adds: "If Stripe is slow I'll give up after 10 seconds and show the member 'payment failed, please try again'. Simplest thing."
+
+    Fill in the reliability placeholder for this slice.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: asks-before-writing
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule is to establish the target by asking before writing criteria: what happens if this is unavailable for an hour, whether there is a target worth stating, and who notices when it breaks and how. Nothing in the repository says.
+
+      PASS if the response ends by asking the user questions, has not written its finished acceptance criteria (a summary of what it found in the code, or a criterion it plans to write, is fine), and at least two questions are of that kind. Further questions about design or scope do not change the verdict.
+
+      FAIL if it delivers finished reliability acceptance criteria without asking, or asks fewer than two of those.
+  - type: llm
+    name: does-not-ask-what-the-code-answers
+    focus: last_message
+    weight: 1
+    criteria: |
+      The repository already settles several things: payments go to Stripe through `infra/payments/stripe-fine-payments.ts`; `fines/collect-fine.ts` charges and then settles the fine in a separate step; an error reporter is wired (`infra/monitoring/error-reporter.ts`, used by `infra/http/respond.ts`); `ops/alerts.yml` holds the existing alert rules.
+
+      PASS if the response does not ask the user any of these as if unknown (for example "which payment provider do you use?", "is there any error reporting or monitoring?", "how is a payment recorded?"). Stating what it found in the code (for example that an error reporter exists but the payment path never calls it), or asking the user to confirm a specific reading of it, passes.
+
+      FAIL if it asks the user to supply any of those facts as an open question.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-requirements"'
+    min: 1

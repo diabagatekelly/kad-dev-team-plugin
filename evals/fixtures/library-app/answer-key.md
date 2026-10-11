@@ -231,6 +231,48 @@ from a staff phone call or a page; nobody has ever rolled a release back.
 | ORT2 | The situation itself | Production service, real users. | Two desks, one developer: on-call rotations, severity matrices, incident-commander roles or post-mortem templates are ceremony this situation does not warrant. |
 | ORT3 | `deploy.yml` `snapshot` job | — | A nightly RDS snapshot exists: data can be restored to the previous night (its long-lived keys are a security finding, S9, not a readiness one). |
 
+## Requirements plants (`SR`, `SRT`, `RR`, `RRT`) — `devsecops-engineer:security-requirements`, `reliability-requirements`
+
+Both skills write acceptance criteria for a slice that is not built yet:
+**a member pays an outstanding fine from the portal** (thin path and
+functional criteria in each case's prompt). Nothing is planted for them:
+the "plants" are what the existing code means for that slice, which the
+criteria must cover. Each chain has three phases: phase 1 must ask only
+what the repository cannot answer; phase 2 answers (members are
+individuals, about 3,000, one developer, Stripe's terms only, an hour down
+means paying at the desk) and must write criteria and present the
+engineer's proposal in the prompt as a decision; phase 3 rejects the
+recommendation and must write the user's choice in, made safe or
+workable.
+
+### Security (`SR`, `SRT`)
+
+| # | Where | Principle | What the slice must handle | Expected criterion |
+|---|---|---|---|---|
+| SR1 | `fines/fine-ledger.port.ts` `find(id)`, `POST /fines/:id/pay` | Authorization distinct from authentication | Every `Fine` carries `cardNumber`, but `find` returns any fine by id and the pay route checks no ownership (the portal's `GET /portal/members/:cardNumber`, S2, is the same mistake). | A member views and pays only their own fines; another member's fine id is refused without revealing it. |
+| SR2 | `GET /payments/config`, `cardToken` in the pay route | Prefer absence over careful handling | The card is tokenised in the browser; the server sees a token. | The application never receives, stores or logs a card number or security code. |
+| SR3 | `infra/http/respond.ts`; the 402 in `POST /fines/:id/pay` | The five exits | A route on `respond` returns `error.message` and sends the session token (headers) and card token (body) to the error reporter (S3, S5). | Error responses, error reports and logs carry none of the slice's sensitive data. |
+| SR4 | the engineer's proposal; `requireRole('staff')` on `/fines` in `main/server.ts` | A real fork is presented, not decided | Allowing members on `/fines` also opens `POST /fines/:id/waive` and keeps the unscoped pay route. | Phase 2: presented with a recommendation and alternatives, left for approval. Phase 3 (user keeps the shared route): criteria that members pay only their own fines and cannot waive; decision recorded with its risk. |
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| SRT1 | `stripePublishableKey` (`pk_live_...`) served by `/payments/config` | A live key sent to the browser. | Publishable keys are public by design and cannot charge, refund or read (ST2). |
+| SRT2 | Phase 1 questions | Asking how members sign in or which payment provider is used looks diligent. | The code answers both (`requireRole`, `sessionOf`, the Stripe adapter); the skill asks only what it cannot read. |
+
+### Reliability (`RR`, `RRT`)
+
+| # | Where | Principle | What the slice must handle | Expected criterion |
+|---|---|---|---|---|
+| RR1 | `fines/collect-fine.ts` charge, then `ledger.settle` | The operation is interrupted partway | A charge that succeeds before a failed settle leaves a paid fine outstanding (R6). | A charge without a settled fine is visible to the developer with the fine and charge to reconcile; while duplicates are prevented (phase-2 framing), it is also never charged again. |
+| RR2 | `CollectFine` early return | The same thing happens twice | The guard only works once the fine is settled; two overlapping submissions both charge. | Double or concurrent submission is covered: at most one charge, or named within the duplicate risk the user accepts in phase 3. |
+| RR3 | `POST /fines/:id/pay` 402 for every error | Expected vs unexpected failures | Declines and outages look the same and nothing is reported (R8). | Declines tell the member what to do; faults are visible to the developer and not shown as a decline. |
+| RR4 | the engineer's proposal (fail after 10 s) | A real fork is presented, not decided; a dependency is slow | After a timeout the charge may have succeeded; "failed, try again" invites a duplicate. | Phase 2: the duplicate risk named and its handling left as a decision, framed either as what the member is told or as making a retry safe (one charge per fine) versus refunding duplicates by hand. Phase 3 (user keeps "show failed" and refunds by hand): criteria for that, plus duplicates findable for the refund; decision recorded with its risk. |
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| RRT1 | `CollectFine` retry loop | Retrying a failed payment looks resilient. | Declines are deterministic answers; criteria must not call for retrying them (R7). |
+| RRT2 | Phase 1 questions | Asking whether any error reporting exists looks diligent. | `infra/monitoring/error-reporter.ts` and `ops/alerts.yml` answer it. |
+
 ## Boy Scout scoping (same code, different framing)
 
 `library-app-reporting-pr` frames V14 plus the new `ReportFiles` port (T4) as

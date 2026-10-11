@@ -35,7 +35,13 @@ with no owner, say so in one sentence and leave it to the caller.
 ## Establish the target by asking — don't assume one
 
 You cannot read a reliability target off the code, and the right answer
-varies enormously with what the thing is. Ask:
+varies enormously with what the thing is. **Your first response is
+questions, not criteria.** Unless the request already answers them, ask
+in one pass and stop until they're answered; don't decide the stakes
+yourself ("low volume, no target needed") and write criteria on top of
+that. Read the code first so the questions are sharp, and don't ask what
+it already answers — which provider is called, whether errors are
+reported, how a payment is recorded. Ask:
 
 - **What happens if this is unavailable for an hour?** The answer
   separates "personal tool, mildly annoying" from "someone loses money."
@@ -67,7 +73,11 @@ Concrete, slice-specific, not a taxonomy:
 - **The operation is interrupted partway** — what state is left behind?
 - **The same thing happens twice** — a retry, a double submit, a redelivered
   message. Whether that's harmless is a design question this slice has to
-  answer.
+  answer. A retry is only for a transient fault (a timeout, a 5xx,
+  a dropped connection). A deterministic refusal — a declined card, a
+  validation error — gives the same answer every time, so retrying it
+  only repeats the side effects; a criterion must not call for it, and an
+  existing retry of one is a failure mode to name.
 
 For each one that's plausible, decide the intended behavior. That decision
 is what becomes a criterion.
@@ -157,6 +167,11 @@ and hand off to `docs-writer` once the criteria are done.
 
 ## Output format
 
+This document is your second response, never your first. Until the
+questions about the target are answered, your whole response is those
+questions; "Open questions" below is for what stays unresolved after
+that, not a place to park them while writing the criteria anyway.
+
 ```markdown
 # Reliability requirements: <slice name>
 
@@ -175,7 +190,19 @@ The questions someone must be able to answer, and what that requires.
 Given/When/Then, alongside the slice's other criteria.
 
 ## Decisions
-Presented, chosen, rejected. Note any flagged as ADR-worthy.
+Each fork: the recommendation, the alternatives rejected, and its status —
+**pending** until the user approves it, then **approved: <choice>**. Never
+mark one approved yourself. A criterion that depends on a pending decision
+waits for it; write the rest. A proposal already on the table (an
+engineer's "simplest thing", the user's own plan) is a decision whenever
+you would change it: present it with your recommendation instead of
+writing your alternative in. Note any flagged as ADR-worthy.
+
+Once decisions are approved, the finished document is complete: every
+criterion the approvals don't touch stays in, not just the ones that
+changed. Accepting a risk with a manual remedy ("I'll refund it by hand",
+"I'll fix it if it happens") adds a criterion of its own: the cases are
+visible to whoever applies the remedy, or the remedy never happens.
 
 ## Out of scope for this slice
 Real concerns belonging elsewhere, and where.

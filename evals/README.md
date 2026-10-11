@@ -18,8 +18,9 @@ at:
   `architecture-review-neg-*` trigger cases, and the `security-review-*`
   suite for `devsecops-engineer:security-review` (five cases on the same
   fixture plus two negative trigger cases), followed by the
-  `reliability-review-*`, `supply-chain-review-*` and
-  `operational-readiness-*` suites on the same fixture. Results land in
+  `reliability-review-*`, `supply-chain-review-*`,
+  `operational-readiness-*`, `security-requirements-*` and
+  `reliability-requirements-*` suites on the same fixture. Results land in
   `evals/results/<timestamp>/` (gitignored) each time the suite runs;
   nothing is hand-copied into case directories.
 
@@ -157,6 +158,10 @@ therefore runs as a chain of cases:
    kept directory (the parent of `out/` in the run's `tracePath`) from a run
    whose question is a good one, and run
    `tools/freeze-history.sh <kept-dir> evals/<phase-2-case>/history.jsonl`.
+   A resumed phase (2 onward) writes its transcript next to its own
+   `history.jsonl` instead, one branch per run; freeze it with
+   `tools/freeze-history.sh evals/<case>/<session>.jsonl <next>/history.jsonl
+   "<text from the chosen run's final message>"`.
    It keeps only the user and assistant turns, so review the message text,
    nothing else, before committing. It writes the plugin's path as
    `<plugin-root>` and refuses to write one containing your home
@@ -214,7 +219,11 @@ score is history, not a claim about today.
 | `architecture-review-neg-security-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `architecture-review-neg-test-quality-review` | real, Sonnet and Fable: never invokes `architecture-review` in either arm | yes |
 | `software-architect:technology-bootstrap` | 6/6 PASS, inline | yes |
-| `devsecops-engineer:security-requirements` | 7/7 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
+| `devsecops-engineer:security-requirements` | 7/7 PASS, inline | no — superseded by the `security-requirements-*` real cases below |
+| `security-requirements-payfine-phase1` | real, Sonnet: 3/3 runs with plugin (`results/20261011-req-cal7`), 0/1 without on both passes that ran a baseline — given the pay-a-fine slice and the engineer's "let members onto `/fines`" proposal, asks about obligations and who may see whose data, and does not ask how members sign in or which provider handles payment (the code says) | yes |
+| `security-requirements-payfine-phase2` | real, Sonnet: 9/9 over 3 runs (`results/20261011-req-sec-p2c`) — presents the shared-route proposal as a pending decision (it would expose staff-only waiving and skip the ownership check), decides nothing for the user, no false alarm on the publishable key. No baseline arm: the history is a with-plugin transcript | yes |
+| `security-requirements-payfine-phase3` | real, Sonnet: 18/18 over 3 runs (`results/20261011-req-sec-p3a`) — the user keeps the shared route; finished criteria written for it and made safe (members pay only their own fines, cannot waive), card data never received, error and monitoring exits covered, decision recorded without re-arguing | yes |
+| `security-requirements-neg-review` | real, Sonnet: never invokes `security-requirements` in either arm (a review of live code) | yes |
 | `security-review-http` | real, Sonnet: 3/3 plants + 2/2 traps with plugin, 1 run — refund route outside every auth prefix, internal error text to callers, request headers/bodies to monitoring; traps: prefix-mounted staff auth, public catalog search. Baseline missed the error-text finding | yes |
 | `security-review-portal-pr` | real, Sonnet: 5/5 with plugin, 1 run — member-profile IDOR, SQL injection in history search, PR scoping of pre-existing problems; traps: session-scoped routes, prefix-mounted member auth | yes |
 | `security-review-config` | real, Sonnet: 5/5 with plugin, 1 run — hardcoded SendGrid fallback key (rotation required), long-lived AWS keys beside an OIDC job, workflow-wide secrets; traps: Stripe publishable key, `id-token: write`. Baseline called the publishable key a leaked secret | yes |
@@ -230,7 +239,11 @@ score is history, not a claim about today.
 | `supply-chain-review-accept-phase2` | real, Sonnet: 3/3 on 2 runs plus the final pass (`results/20261010-sc-p2b`) — the first case built on `context.history_file`: resumes a frozen phase-1 question, answers "accepted risk" with a reason, and checks the write-up keeps the user's classification and reason, adds no unenforced expiry, and flags the acceptance as ADR-worthy without drafting it. No baseline arm: the history is a with-plugin transcript. The ADR flag failed until it became an explicit recording step, and that fix only reached phase 2 after phase 1 was re-run and re-frozen | yes |
 | `supply-chain-review-neg-security` | real, Sonnet: never invokes `supply-chain-review` in either arm | yes |
 | `supply-chain-review-neg-reliability` | real, Sonnet: never invokes `supply-chain-review` in either arm | yes |
-| `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | no — `SKILL.md` gained the rules `AGENT.md` used to hold (2026-10-10 cleanliness pass); migrating to the real CLI next |
+| `devsecops-engineer:reliability-requirements` | 5/5 PASS, inline | no — superseded by the `reliability-requirements-*` real cases below |
+| `reliability-requirements-payfine-phase1` | real, Sonnet: 2/2 runs with plugin (`results/20261011-req-rel-p1e`), 0/1 without on both passes that ran a baseline — same slice with the engineer's "show 'failed, try again' after 10 s" proposal; asks what an hour down costs, the target and who notices, not what the code says | yes |
+| `reliability-requirements-payfine-phase2` | real, Sonnet: 8/9 over 3 runs, 2/3 clean (`results/20261011-req-rel-p2e`) — names the duplicate charge a timed-out retry can cause and leaves its handling as a pending decision (the miss settles it), no retry of declines | yes |
+| `reliability-requirements-payfine-phase3` | real, Sonnet: 18/18 over 3 runs (`results/20261011-req-rel-p3c`) — the user keeps "show failed" and refunds duplicates by hand; finished criteria for that, duplicates made findable for the refund, charge-without-settle caught, double submit covered, declines vs faults, no retry of declines | yes |
+| `reliability-requirements-neg-review` | real, Sonnet: never invokes `reliability-requirements` in either arm (a review of live code) | yes |
 | `reliability-review-nightly` | real, Sonnet: 8/8 with plugin vs 5/8 without, 1 run (`results/20261010-final-reliability-review`) — unhandled rejection from the timer-driven job, no per-loan isolation, a database pool leaked per run, a mailer with no timeout, a postal adapter that swallows failures; traps: the reminder loop's catch, re-run idempotency, a correct transient-only SMS retry. The pool leak was missed in two of six calibration runs | yes |
 | `reliability-review-nightly-via-agent` | real, Sonnet: 8/8 with plugin, delegation to `devsecops-engineer` confirmed via `Agent`; the no-plugin arm (3/8) is not a comparison, the agent doesn't exist without the plugin | yes |
 | `reliability-review-http` | real, Sonnet: 5/5 with plugin vs 3/5 without, 1 run — expected and unexpected failures conflated in `respond.ts`, unbounded loan history, holds kept only in memory; traps: the catalog route's 503 handling, the capped search. Unbounded history and in-memory holds each missed once across calibration | yes |
@@ -687,3 +700,29 @@ grader, or the `agent-eval` harness that a case already covers.
   never asked the situation questions in two calibration passes and was
   dropped. Regressions: `security-review-config` 5/5,
   `supply-chain-review-workflows` 3/3.
+- **`devsecops-engineer`'s two requirements skills moved onto the fixture
+  as three-phase chains** over one slice that isn't built yet — a member
+  pays an outstanding fine from the portal — plus a negative trigger case
+  each. Nothing new is planted: the existing code is what the criteria
+  must cover (`SR`/`RR` rows in the answer key), and each prompt carries
+  an engineer's proposal so phase 2 has a known fork for phase 3 to
+  reject. Skill fixes: the first response is questions, after reading the
+  code and without asking what it answers (both skills reviewed straight
+  away in every first run); obligations and who may see whose data are
+  never in the code; the document is the second response, so questions
+  can't be parked under "Open questions" while criteria get written
+  anyway (the security skill did exactly that until this went into the
+  output section); a decision stays pending until the user approves it
+  and criteria depending on it wait; a proposal already on the table is a
+  decision whenever the skill would change it; values public by design
+  aren't secrets; a retry is only for transient faults; after approval
+  the finished document is complete, and accepting a risk with a manual
+  remedy adds a criterion that the cases are findable. Case lessons:
+  phase 2 can't demand finished criteria when the skill correctly stops
+  at a fork, so criteria are graded in phase 3; later-phase graders must
+  agree with the user's answer (one demanded duplicate prevention after
+  the user accepted duplicates); a grader whose PASS condition lists
+  examples gets read as a checklist; and `freeze-history.sh` now also
+  freezes a resumed phase, from the transcript it writes next to
+  `history.jsonl` plus text from the chosen run's final message. Only the
+  last `--case` flag counts.

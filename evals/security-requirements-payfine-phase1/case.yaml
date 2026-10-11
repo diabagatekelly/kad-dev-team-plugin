@@ -1,0 +1,57 @@
+schema_version: "1.0"
+name: security-requirements-payfine-phase1
+description: "Pay-a-fine slice, phase 1: asked to fill the security placeholder, the skill must ask what the repository cannot answer before writing criteria, and not ask what it can."
+tags: [security-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+
+    The next slice adds this to it; nothing for it is built yet.
+
+    # Slice: a member pays an outstanding fine from the portal
+
+    ## Thin path
+    A signed-in member opens the portal, sees their outstanding fines, picks one and pays it by card. The fine then shows as paid.
+
+    ## Acceptance criteria (functional, already settled)
+    - Given a signed-in member with outstanding fines, when they open their fines in the portal, they see each one and its amount.
+    - Given the member pays a fine and the payment succeeds, the fine shows as paid.
+    - Given the payment is declined, the fine stays outstanding and the member is told.
+    - [SECURITY — placeholder, to be authored by devsecops-engineer]
+
+    The engineer picking this up adds: "Simplest is to let members onto the existing `/fines` routes too (allow the member role there as well as staff) and have the portal call `POST /fines/:id/pay`. One payment path to maintain."
+
+    Fill in the security placeholder for this slice.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: asks-before-writing
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule is to establish what is actually in play by asking, in one pass, before writing criteria — and only for what is genuinely unclear. Some of it the repository cannot answer: whether members share accounts or anyone besides the member and staff may see a member's fines, how many members there are, and whether any obligation applies beyond not being breached (a regulation, a contract, the payment provider's terms).
+
+      PASS if the response ends by asking the user questions, has not written its finished acceptance criteria (a summary of what it found in the code, or a criterion it plans to write, is fine), and at least one question is about something the code cannot answer: obligations, who may see whose data, or how many users. One such question is enough; it need not ask about all three, and taking member-only visibility from the slice's own wording ("their outstanding fines") is reasonable. Further questions about design or scope do not change the verdict.
+
+      FAIL if it delivers finished security acceptance criteria without asking, or asks only about things the code already answers.
+  - type: llm
+    name: does-not-ask-what-the-code-answers
+    focus: last_message
+    weight: 1
+    criteria: |
+      The repository already settles several things: members sign in with a bearer session (`infra/http/sessions.ts`, `requireRole('member')` on `/portal` in `main/server.ts`); portal routes take the member's card number from the session (`sessionOf(req).cardNumber`); card payments arrive as a browser-side token (`cardToken`, with `GET /payments/config` serving the Stripe publishable key) and go to Stripe through `infra/payments/stripe-fine-payments.ts`.
+
+      PASS if the response does not ask the user any of these as if unknown (for example "how do members authenticate?", "is there an existing auth or session mechanism?", "which payment provider do you use?", "do card details reach our server?"). Stating what it found in the code, or asking the user to confirm a specific reading of it, passes.
+
+      FAIL if it asks the user to supply any of those facts as an open question.
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:security-requirements"'
+    min: 1

@@ -1,0 +1,86 @@
+schema_version: "1.0"
+name: security-requirements-payfine-phase3
+description: "Pay-a-fine slice, phase 3: the user rejects the recommendation and keeps the shared staff route; expects the finished criteria (ownership, card-data absence, exits) written for that choice and made safe, a recorded decision, and no false alarm on the publishable key. No baseline arm."
+tags: [security-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    I still want members on the existing `/fines` routes: one payment path to maintain. Write it up that way. For everything else, go with your recommendations.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: criteria-make-the-chosen-route-safe
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+
+      The user chose to let members onto the existing `/fines` routes. That prefix also holds the staff-only `POST /fines/:id/waive`, and the existing pay route checks no ownership.
+
+      PASS if the finished criteria are written for the shared route the user chose and require both that a member can pay only their own fines and that a member cannot use staff-only fine actions such as waiving.
+
+      FAIL if it writes criteria for a separate member route instead of the user's choice, or leaves either of those two outcomes uncovered.
+  - type: llm
+    name: records-the-decision-without-relitigating
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: present a fork with a recommendation, then write in what the user approves.
+
+      PASS if the response records the decision (what was chosen, what was rejected, and the risk the choice carries) and proceeds with the user's choice. Stating the risk once is expected.
+
+      FAIL if it refuses, keeps arguing for its own recommendation as a precondition, asks for approval of the same decision again, or omits the decision entirely.
+  - type: llm
+    name: criterion-member-pays-only-own-fines
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+
+      The member's card number comes from the session, and every `Fine` carries the member's `cardNumber`, but `FineLedger.find(id)` returns any fine by id, and `POST /fines/:id/pay` checks no ownership. A member could see or pay another member's fine by changing the id.
+
+      PASS if a criterion requires that a member can view and pay only fines belonging to them, and that a request naming another member's fine is refused without revealing that fine's details.
+
+      FAIL if ownership is not covered, or only stated as a control ("authorization is enforced") with no checkable outcome.
+  - type: llm
+    name: criterion-card-details-never-reach-the-server
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+
+      The card is tokenised in the browser with Stripe's publishable key; the server receives only a token.
+
+      PASS if a criterion asserts that the application never receives, stores or logs the card number or security code (only a provider token), stated as an absence someone can check.
+
+      FAIL if card data is not addressed, or only as "stored securely" / "encrypted".
+  - type: llm
+    name: criteria-cover-error-and-monitoring-exits
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+
+      A new portal route built on the existing `respond` helper (`infra/http/respond.ts`) would return `error.message` from any thrown error to the member, and send `req.headers` (the bearer session token) and `req.body` (the card token) to the third-party error reporter. The existing `POST /fines/:id/pay` also returns `error.message` in its 402.
+
+      PASS if the criteria cover at least two of the exits this slice's sensitive data (session token, card token, provider or database error detail, other members' data) can reach — error responses to the member, error reports/monitoring, logs — with checkable outcomes. Pointing out that the existing helper or route would break such a criterion strengthens it but is not required.
+
+      FAIL if the exits are not covered beyond a generic "no sensitive data in logs".
+  - type: llm
+    name: no-false-alarm-publishable-key
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the response does NOT raise a false alarm.
+
+      `main/wiring.ts` holds a live Stripe publishable key (`pk_live_...`), served to the browser by `GET /payments/config`. Publishable keys are public by design and cannot charge, refund or read.
+
+      PASS if the response does not treat the publishable key, or serving it to the browser, as a secret exposure or as something a criterion must prevent.
+
+      FAIL if it does.

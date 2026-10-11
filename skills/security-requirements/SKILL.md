@@ -45,8 +45,16 @@ and leave it to the caller.
 ## First, establish what's actually in play — ask, don't assume
 
 You cannot derive these from the code, and getting them wrong produces a
-confident set of criteria aimed at the wrong system. Ask before anything
-else, in one pass, only for what's genuinely unclear:
+confident set of criteria aimed at the wrong system. **Your first
+response is questions, not criteria.** Unless the request already
+answers them, ask in one pass and stop until they're answered; don't fill
+a gap with an assumption ("no obligations stated", "single tenant") and
+write criteria on top of it. Read the code first so the questions are
+sharp, and don't ask what it already answers — how users sign in, which
+provider handles payment, what pattern exists. Obligations, and who may
+see whose data, are never in the code: roles in a session say who *can*
+reach a route, not who *should* see a record. Ask those unless the
+request states them. Ask only for what's genuinely unclear:
 
 - **What sensitive data does this slice touch?** Not a generic list —
   what this system actually handles. Credentials, tokens, financial
@@ -89,7 +97,9 @@ actually deserves a criterion.
 Not every answer becomes a criterion. Write criteria for the ones where a
 plausible attacker gets something that matters — and say plainly which
 ones you considered and dismissed, so the next person doesn't re-derive
-them.
+them. A value that is public by design (a payment provider's
+publishable key, a public client id) is not a secret, and serving it to a
+browser is not an exposure.
 
 ## Trace each sensitive data class through the slice
 
@@ -156,6 +166,11 @@ criteria are finished — don't detour into writing the ADR yourself.
 
 ## Output format
 
+This document is your second response, never your first. Until the
+questions about what's in play are answered, your whole response is those
+questions; "Open questions" below is for what stays unresolved after
+that, not a place to park them while writing the criteria anyway.
+
 ```markdown
 # Security requirements: <slice name>
 
@@ -173,8 +188,13 @@ Given/When/Then, sitting alongside the slice's functional criteria.
 Success paths and failure paths.
 
 ## Decisions
-Anything presented for approval, what was chosen, and what was rejected.
-Note any flagged as ADR-worthy.
+Each fork: the recommendation, the alternatives rejected, and its status —
+**pending** until the user approves it, then **approved: <choice>**. Never
+mark one approved yourself. A criterion that depends on a pending decision
+waits for it; write the rest. A proposal already on the table (an
+engineer's "simplest thing", the user's own plan) is a decision whenever
+you would change it: present it with your recommendation instead of
+writing your alternative in. Note any flagged as ADR-worthy.
 
 ## Out of scope for this slice
 Security concerns that are real but belong elsewhere, and where they go.

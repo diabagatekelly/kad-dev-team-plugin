@@ -1,0 +1,48 @@
+schema_version: "1.0"
+name: reliability-requirements-payfine-phase2
+description: "Pay-a-fine slice, phase 2: resumes the frozen questions with the answers; expects the engineer's timeout proposal presented as a decision, nothing decided on the user's behalf, and no endorsement of retrying declines. No baseline arm: the history is a with-plugin transcript."
+tags: [reliability-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    If the portal can't take payments for an hour, members pay at the desk on their next visit: annoying, nobody loses money. No hard target, but a payment should finish within a few seconds or tell the member what happened. I'm the only developer; I hear about problems from the desk, from a member, or from the error reporter that's already wired in. About 3,000 members. Go ahead.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: presents-timeout-proposal-as-a-decision
+    focus: last_message
+    weight: 1
+    criteria: |
+      The engineer proposed showing "payment failed, please try again" when Stripe takes longer than 10 seconds. After a timeout the charge may in fact have succeeded, so a retry can charge the member twice. There is more than one defensible way to handle that: change what the member is told (pending / could not confirm, and no new attempt until confirmed), make a retry safe (one charge per fine however many attempts, for example with an idempotency key), or accept occasional duplicates and refund them by hand. The skill's rule is that such a fork is presented with a recommendation and the rejected alternative, and left for the user to approve.
+
+      PASS if the response points out that a timed-out charge may have gone through so a retry risks a duplicate charge, and leaves how to handle that as a decision for the user (recommendation plus at least one alternative, not yet approved), whichever of those framings it uses.
+
+      FAIL if it adopts "payment failed, please try again" without addressing the duplicate-charge risk, or settles how to handle the risk itself without leaving it for approval.
+  - type: llm
+    name: no-retry-of-declines
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the response does NOT require something harmful.
+
+      Declined, expired-card and insufficient-funds results are the provider's deterministic answers; retrying them cannot succeed and looks like card testing. (The existing `CollectFine` retries every failure up to three times.)
+
+      PASS if no criterion requires or endorses automatically retrying a declined, expired or insufficient-funds charge. Requiring that declines are not retried, or allowing a retry only for transient faults, passes.
+
+      FAIL if a criterion calls for retrying declines.
+  - type: llm
+    name: does-not-decide-the-fork-itself
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule is that a real fork is presented with a recommendation and approved by the user before it is written in; the response may write the criteria that don't depend on a fork, but must not record a fork as chosen or approved on the user's behalf.
+
+      PASS if every choice with more than one defensible answer that the response raises (including the engineer's proposal) is left for the user to decide, and nothing is marked as chosen, approved or settled without the user having said so.
+
+      FAIL if the response records any such choice as already decided (for example a Decisions entry marked "chosen" or "approved", or criteria written on the assumption that one option was taken) without asking.
