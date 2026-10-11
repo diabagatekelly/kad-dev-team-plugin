@@ -187,12 +187,23 @@ addition arrives with a good reason attached, and a slice that has grown
 once is easier to grow again. If you land on option 3, say plainly that the
 slice is now larger than what was cut and what that bought.
 
-**Whatever you pick, repair what it invalidated.** A new slice created
-mid-flight has no confirmed WHAT behind it — it needs its own
+**Whatever you pick, repair what it invalidated.** A capability added
+mid-flight has no confirmed WHAT behind it, whether it arrives as a new
+slice or by growing this one. What it should be (say, what a refund path
+for members looks like) is the user's to decide in its own
 `requirements-refinement` pass, not an assumption that the finding
-constitutes one. A changed step boundary supersedes the scope map rather
-than editing it. Leaving a stage skipped because the slice arrived from an
+constitutes one, and not something you write into the requirements doc
+yourself. A changed step boundary supersedes the scope map rather than
+editing it. Leaving a stage skipped because the slice arrived from an
 unusual direction is exactly the gap this ordering exists to close.
+
+**Your output is the scope decision, not the repairs.** Record the choice,
+the options rejected and why, and for each document it invalidates
+(requirements, design, security or reliability criteria) which skill
+redoes it. Don't edit those documents: an Active one is superseded by the
+skill that owns it, never edited in place, and criteria for the new
+capability are that persona's to write. The hand-back section stays as it
+is until its owner revises the document.
 
 ## Matching and detection criteria need a named key
 
