@@ -24,3 +24,13 @@ reviewer should pay attention to.
   current: name the specific model/tool and its role (plan, implement,
   review), not just "AI." Update the note when the tooling or role
   changes — a stale provenance note is a lie by omission.
+
+**Write for skimming.** Lead with the point; prefer bullets and headers to
+prose; a paragraph is one or two sentences at most. If a sentence wouldn't
+change what the reader does next, cut it.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it.

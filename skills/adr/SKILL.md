@@ -18,6 +18,20 @@ check all three before writing one:
 If any of the three is "no," this isn't ADR territory — a README note or a
 comment is probably enough.
 
+**Your response opens with the three checks**, before any question or
+draft, one line each:
+
+```
+Architectural: yes/no — <why>
+Significant: yes/no — <why>
+Non-obvious: yes/no — <why>
+```
+
+Any "no" and you stop there: say it isn't ADR territory, suggest the
+lighter home (a commit message, a PR description, a comment, or nothing),
+and write no ADR unless the user then insists. Being asked for an ADR
+doesn't make a decision ADR-worthy.
+
 **Template:**
 
 ```markdown
@@ -52,3 +66,13 @@ information; don't destroy it.
 function names, no testing approach — those belong in the code or in a
 design doc, and including them here guarantees the ADR goes stale. If a
 sentence describes implementation rather than the decision itself, cut it.
+
+**Write for skimming.** Lead with the point; prefer bullets and headers to
+prose; a paragraph is one or two sentences at most. If a sentence wouldn't
+change what the reader does next, cut it.
+
+**Where the output goes is given, not chosen.** If `orchestrator` invoked
+this skill, it named the target directory: save there. Invoked directly,
+use the location the user gave or that the conversation plainly implies;
+if nothing says, ask before writing anything. Never search the project
+for a place to put it.

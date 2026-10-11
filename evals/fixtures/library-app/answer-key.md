@@ -293,6 +293,28 @@ quarter, so the abstraction has a real second case) and approves the rest.
 |---|---|---|---|
 | ADT1 | `FinePayments`, one implementation | A one-implementation interface looks premature. | It is the interface the Dependency Rule requires to keep the Stripe SDK out of the fines module (compare T3, V8). Generalising it is fine; calling it premature is not. |
 
+## Docs plants (`D`, `DT`) — `docs-writer:why-comments`, `staleness-audit`
+
+These live outside `app/`, in `docs-plants/`, and only the case that uses
+them copies them in: `why-comments/fines/collect-fine.ts` replaces the app's
+file (same code, comments added), `staleness/docs/` becomes the run's
+`docs/`. No other case sees them.
+
+| # | Where | Violation | Expected |
+|---|---|---|---|
+| D1 | `fines/collect-fine.ts` "Look up the fine.", "Throw if there is no fine." | WHAT comments: the next line already says it. | Delete. |
+| D2 | `fines/collect-fine.ts` "Charge once; Stripe retries failed charges on its side." | Contradicts the loop under it, which charges up to three times. | Delete or rewrite to match; flagged as wrong, not just redundant. |
+| D3 | `docs/lending-rules.md` | Stale: 14-day loans, 3 renewals, renewal adds to the due date. The code has 21 days, 2 renewals, and the new due date is 21 days from the renewal day. | Update to the code or delete. |
+| D4 | `docs/collect-fine.md` | Restates `CollectFine.run` line by line. | Delete. |
+| D5 | `docs/release-signoff.md` | Ceremonial: every row the same person and a tick, nothing a reader could act on. | Delete; no replacement process. |
+| D6 | `docs/adr/adr-002-reminders-email-only.md` | Orphaned decision: Accepted, but `notifications/` sends SMS and postal reminders. | Supersede (or mark superseded), not edit in place. |
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| DT1 | `fines/collect-fine.ts` "Return quietly instead of throwing: the desk screen resubmits..." | A long comment on a one-line guard. | It records a caller behaviour the code can't show. Keep. |
+| DT2 | `docs/fines.md` | Describes a rule the code also implements. | It records why (processing fees, the only-fine condition), which the code doesn't say. Keep. |
+| DT3 | `docs/adr/adr-001-stripe-for-card-payments.md` | An old ADR. | Still true: payments go through Stripe with tokenised cards. Keep. |
+
 ## Boy Scout scoping (same code, different framing)
 
 `library-app-reporting-pr` frames V14 plus the new `ReportFiles` port (T4) as

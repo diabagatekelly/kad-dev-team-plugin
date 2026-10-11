@@ -23,3 +23,11 @@ Report findings the same way any review does: file, the specific claim that's
 wrong or pointless, and what to do about it (delete, update, or supersede).
 Don't propose new process to prevent staleness — the fix is almost always
 "delete the doc," not "add a review cadence."
+
+**Audit the docs, not the code.** When a doc and the code disagree, the
+finding is the doc. If the code looks like the thing that's wrong, say so
+in one line and leave it to `code-review`, rather than reviewing it here.
+
+**Write for skimming.** Lead with the point; prefer bullets and headers to
+prose; a paragraph is one or two sentences at most. If a sentence wouldn't
+change what the reader does next, cut it.

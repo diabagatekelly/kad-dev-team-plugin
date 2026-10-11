@@ -1,0 +1,70 @@
+schema_version: "1.0"
+name: staleness-audit-docs
+description: "A docs/ folder with a stale rules page, a page restating code, a ceremonial sign-off log and an ADR the code overturned, plus three sound docs: staleness-audit fires, finds the four, keeps the three, proposes no new process."
+tags: [staleness-audit, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. Can you go through `docs/` and tell me what's worth keeping? Don't change anything yet.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:staleness-audit"'
+    min: 1
+  - type: llm
+    name: finds-stale-lending-rules
+    focus: last_message
+    weight: 1
+    criteria: |
+      `docs/lending-rules.md` says loans run 14 days, renew up to 3 times, and each renewal adds 14 days to the due date. The code has 21-day loans, 2 renewals, and sets the new due date 21 days from the renewal day.
+
+      PASS if the response flags the page as wrong about the code (at least one of those mismatches named) and recommends updating or deleting it.
+
+      FAIL if it is missed or kept as is.
+  - type: llm
+    name: finds-restated-code
+    focus: last_message
+    weight: 1
+    criteria: |
+      `docs/collect-fine.md` narrates `CollectFine.run` line by line.
+
+      PASS if the response recommends deleting it because the code already says the same.
+
+      FAIL if it keeps it.
+  - type: llm
+    name: finds-ceremony
+    focus: last_message
+    weight: 1
+    criteria: |
+      `docs/release-signoff.md` is a table of releases each ticked and signed off by the same "maintainer", with nothing a reader could act on.
+
+      PASS if the response recommends deleting it as ceremony and does not propose a replacement process.
+
+      FAIL if it keeps it or proposes a new or better sign-off process.
+  - type: llm
+    name: finds-orphaned-adr
+    focus: last_message
+    weight: 1
+    criteria: |
+      `docs/adr/adr-002-reminders-email-only.md` is Accepted and says reminders go by email only, never SMS or post; `notifications/` sends SMS and postal reminders.
+
+      PASS if the response flags the disagreement and recommends superseding the ADR (or marking it superseded) rather than editing it in place or leaving it.
+
+      FAIL if it is missed, kept as is, or the fix is to edit the accepted ADR's text.
+  - type: llm
+    name: keeps-the-sound-docs
+    focus: last_message
+    weight: 1
+    criteria: |
+      Two docs are sound: `docs/fines.md` (the small-fine waiver rule and why it exists, which the code doesn't say), `docs/adr/adr-001-stripe-for-card-payments.md` (still true), and nothing in them disagrees with the code.
+
+      PASS if the response recommends keeping both.
+
+      FAIL if it recommends deleting or superseding either.

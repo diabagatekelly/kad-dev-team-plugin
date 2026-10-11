@@ -17,3 +17,8 @@ something the code cannot express on its own:
 Never write a comment that a reader could produce by reading the next line.
 `// increment counter` above `counter++` is noise, not documentation. Delete
 comments like this on sight during review rather than leaving them.
+
+**Judge the comments, not the code.** For each comment in scope: keep,
+delete, or rewrite (give the rewrite). Naming, logic and structure belong
+to `code-review`; if you notice a real code problem, one line saying so
+and where is enough.

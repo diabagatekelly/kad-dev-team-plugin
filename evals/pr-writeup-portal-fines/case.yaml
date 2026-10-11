@@ -1,0 +1,88 @@
+schema_version: "1.0"
+name: pr-writeup-portal-fines
+description: "A finished change (members see their outstanding fines in the portal), AI-written, no ticket mentioned: pr-writeup fires, describes the change accurately in plain language, asks about a ticket instead of assuming, and names the AI tool and its role."
+tags: [pr-writeup, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. This change is done and ready for review; I need a PR description for it. Claude Code wrote the code from my description and I reviewed it line by line. The point is that members asked to see what they owe without phoning the desk.
+
+    ```diff
+    --- a/infra/http/portal-routes.ts
+    +++ b/infra/http/portal-routes.ts
+    @@ -1,3 +1,4 @@
+     import type { Router } from 'express-lite';
+    +import type { FineLedger } from '../../fines/fine-ledger.port';
+     import type { LoanHistory } from '../../lending/loan-history.port';
+     import type { LoanStore } from '../../lending/loan-store.port';
+    @@ -10,6 +11,7 @@ export interface PortalReaders {
+       members: MemberDirectory;
+       loans: LoanStore;
+       history: LoanHistory;
+    +  fines: FineLedger;
+     }
+    @@ -23,6 +25,15 @@ export function registerPortalRoutes(router: Router, readers: PortalReaders, res
+         await respond(req, res, 200, () => readers.history.forCard(sessionOf(req).cardNumber, titleContains));
+       });
+     
+    +  router.get('/portal/fines', async (req, res) => {
+    +    await respond(req, res, 200, async () => {
+    +      const fines = await readers.fines.outstandingFor(sessionOf(req).cardNumber);
+    +      return fines.map((fine) => ({ id: fine.id, amountCents: fine.amountCents, assessedOn: fine.assessedOn }));
+    +    });
+    +  });
+    +
+       router.get('/portal/members/:cardNumber', async (req, res) => {
+    --- a/main/server.ts
+    +++ b/main/server.ts
+    @@ -57,6 +57,7 @@ registerPortalRoutes(
+         members: wiring.memberDirectory(),
+         loans: wiring.loanStore(),
+         history: wiring.loanHistory(),
+    +    fines: wiring.fineLedger(),
+       },
+       respond,
+     );
+    ```
+  model: sonnet
+  max_turns: 20
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:pr-writeup"'
+    min: 1
+  - type: llm
+    name: asks-about-a-ticket
+    focus: last_message
+    weight: 1
+    criteria: |
+      No ticket or issue was mentioned. The PR should neither invent one nor silently assume none is wanted.
+
+      PASS if the response asks whether there is a ticket to reference, or whether to file one or leave the PR self-contained. Asking before writing, or writing the description and asking alongside it, both pass.
+
+      FAIL if it invents a ticket ID, or says nothing about a ticket at all.
+  - type: llm
+    name: describes-the-change
+    focus: last_message
+    weight: 1
+    criteria: |
+      The change adds a portal endpoint that returns the signed-in member's outstanding fines (id, amount, date assessed), taken from the session's card number, so members can see what they owe without phoning the desk.
+
+      PASS if the response, or the description it drafts, says what changed and why in plain language consistent with that, and points the reviewer at something worth checking. If the response only asks questions before drafting, PASS if what it says about the change is accurate.
+
+      FAIL if it describes behaviour the diff does not have (paying fines, a new page, a new database table).
+  - type: llm
+    name: names-the-ai-role
+    focus: last_message
+    weight: 1
+    criteria: |
+      Claude Code wrote the code and the author reviewed it line by line.
+
+      PASS if any description drafted says so, naming Claude Code (or the model) and its role. If the response only asks questions before drafting, PASS if it does not contradict this.
+
+      FAIL if a drafted description omits the AI involvement, or says only "AI-assisted" without naming the tool and its role.

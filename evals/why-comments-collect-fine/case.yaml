@@ -1,0 +1,60 @@
+schema_version: "1.0"
+name: why-comments-collect-fine
+description: "fines/collect-fine.ts with four planted comments: why-comments fires, deletes the two WHAT comments, flags the one that contradicts the code, keeps the WHY comment, and doesn't turn into a code review."
+tags: [why-comments, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. I added some comments to `fines/collect-fine.ts` while I was in there. Are they worth keeping?
+  model: sonnet
+  max_turns: 20
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:why-comments"'
+    min: 1
+  - type: llm
+    name: deletes-what-comments
+    focus: last_message
+    weight: 1
+    criteria: |
+      "Look up the fine." and "Throw if there is no fine." each say only what the next line of code says.
+
+      PASS if the response recommends deleting both.
+
+      FAIL if it keeps either, or rewrites either into another comment.
+  - type: llm
+    name: flags-the-wrong-comment
+    focus: last_message
+    weight: 1
+    criteria: |
+      "Charge once; Stripe retries failed charges on its side." sits above a loop that charges up to three times, so the comment is false.
+
+      PASS if the response says this comment is wrong or contradicts the code, and recommends deleting or correcting it.
+
+      FAIL if it keeps it, or deletes it only as redundant without noticing it is false.
+  - type: llm
+    name: keeps-the-why-comment
+    focus: last_message
+    weight: 1
+    criteria: |
+      The comment above the settled-or-waived guard ("Return quietly instead of throwing: the desk screen resubmits a payment after a dropped connection...") records a caller behaviour the code cannot show.
+
+      PASS if the response keeps it (trimming its wording is fine).
+
+      FAIL if it recommends deleting it.
+  - type: llm
+    name: stays-on-comments
+    focus: last_message
+    weight: 1
+    criteria: |
+      The question was about the comments.
+
+      PASS if the response is a review of the comments. A short aside (a few sentences) that the retry loop looks like a code problem worth checking is fine, including why.
+
+      FAIL if it goes on to review other parts of the code: findings on naming, structure, error mapping or anything beyond that one aside.

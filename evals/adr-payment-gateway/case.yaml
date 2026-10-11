@@ -1,0 +1,53 @@
+schema_version: "1.0"
+name: adr-payment-gateway
+description: "A decision worth an ADR (a provider-neutral payment interface ahead of a second provider), described with file paths and class names: adr fires and writes the decision, alternatives with reasons and honest downsides, and none of the how."
+tags: [adr, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory.
+
+    We've made a decision and I want it on record. Card payments currently go only through Stripe. We've signed with a second card provider, Adyen, starting next quarter: the county is moving its contactless desk terminals to Adyen, and from then on desk payments go through Adyen while online payments stay on Stripe. So we're putting a provider-neutral payment interface in front of both, and choosing the provider per payment channel.
+
+    How we'll do it: rework the `FinePayments` port in `fines/fine-payments.port.ts` so it stops returning Stripe's `stripeCode`, add an `AdyenFinePayments` adapter next to `infra/payments/stripe-fine-payments.ts`, and pick the adapter in `main/wiring.ts` from a `PAYMENT_PROVIDER_DESK` setting.
+
+    We considered moving everything to Adyen, but our online payment work is already built on Stripe's browser tokenisation and redoing it buys nothing. We also considered keeping Stripe-only code and bolting Adyen calls onto the desk route, but then two payment paths would grow apart. The cost: two providers to reconcile every month, and every payment feature now has to work with both.
+
+    Write it up as `docs/adr/adr-001.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:adr"'
+    min: 1
+  - type: file_exists
+    name: adr-written
+    path: docs/adr/adr-001.md
+  - type: llm
+    name: no-how
+    focus:
+      source: file
+      path: docs/adr/adr-001.md
+    weight: 1
+    criteria: |
+      An ADR records what was decided and why, never how it is built. The user's message included implementation details: `FinePayments`, `fines/fine-payments.port.ts`, `stripeCode`, `AdyenFinePayments`, `infra/payments/stripe-fine-payments.ts`, `main/wiring.ts`, `PAYMENT_PROVIDER_DESK`.
+
+      PASS if the document contains none of those, and no other file path, class or function name, config setting or code.
+
+      FAIL if any appear.
+  - type: llm
+    name: decision-alternatives-consequences
+    focus:
+      source: file
+      path: docs/adr/adr-001.md
+    weight: 1
+    criteria: |
+      PASS if the document states the decision (a provider-neutral payment interface, provider chosen per channel), gives each rejected alternative (everything on Adyen; Adyen bolted onto the desk route) with its concrete reason, and lists the downsides the user named (two providers to reconcile, every payment feature must work with both).
+
+      FAIL if a rejected alternative or its reason is missing, or the consequences list only upsides.

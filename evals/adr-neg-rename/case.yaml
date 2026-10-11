@@ -1,0 +1,30 @@
+schema_version: "1.0"
+name: adr-neg-rename
+description: "A rename asked to be written up as an ADR: adr fires, sees it fails the architectural/significant/non-obvious checks, and declines instead of writing one."
+tags: [adr, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We decided to rename `amountCents` to `amountInCents` on fines everywhere, since a couple of people found the old name ambiguous. Write an ADR for it in `docs/adr/`.
+  model: sonnet
+  max_turns: 20
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:adr"'
+    min: 1
+  - type: llm
+    name: declines-the-adr
+    focus: last_message
+    weight: 1
+    criteria: |
+      An ADR is only for a decision that is architectural, significant (costly to reverse, sets a standard, affects several areas) and non-obvious. A field rename is none of these.
+
+      PASS if the response does not write an ADR, says why this isn't ADR territory, and suggests something lighter (a commit message, a PR description, nothing at all). Offering to write one anyway if the user insists is fine.
+
+      FAIL if it writes an ADR, or reports having written one.

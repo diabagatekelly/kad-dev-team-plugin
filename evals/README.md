@@ -196,12 +196,12 @@ score is history, not a claim about today.
 |---|---|---|
 | `docs-writer:problem-framing-doc` | 3/3 PASS | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `docs-writer:scope-map` | 5/5 PASS, inline | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
-| `docs-writer:adr` | — | not written |
-| `docs-writer:why-comments` | — | not written |
+| `docs-writer:adr` | — | superseded by the real case below |
+| `docs-writer:why-comments` | — | superseded by the real case below |
 | `docs-writer:user-story-writeup` | 3/3 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
-| `docs-writer:pr-writeup` | — | not written |
-| `docs-writer:user-facing-docs` | — | not written |
-| `docs-writer:staleness-audit` | — | not written |
+| `docs-writer:pr-writeup` | — | superseded by the real case below |
+| `docs-writer:user-facing-docs` | — | superseded by the real case below |
+| `docs-writer:staleness-audit` | — | superseded by the real case below |
 | `product-manager:requirements-refinement` | 6/6 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `product-slicer:vertical-slicing` | 6/6 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `product-slicer:acceptance-criteria` | 2/2 PASS, inline | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
@@ -222,6 +222,13 @@ score is history, not a claim about today.
 | `problem-framing-doc-payfine` | real, Sonnet: 14/15 over 3 runs; the baseline passed in calibration, a regression guard — the user's own description with "add a pay button" in it: no solution in the doc, Stripe and one-developer as constraints. Known miss 1/3: an unstated "in-person payment must keep working" listed as a constraint beside a related open question | yes |
 | `scope-map-self-service` | real, Sonnet: 14/15 over 3 runs, the miss a judge error (the map routes privacy to each step's requirements pass; re-asked, the judge passes it); baseline misses the privacy routing on both calibration passes — a new, larger problem (`planning/self-service/`: fines, holds, contact details) whose privacy constraint is worded around one step | yes |
 | `user-story-writeup-payfine-phase1` | real, Sonnet: 9/9 over 3 runs; baseline fails on both calibration passes (writes the story or fills the security placeholder) — asked to make slice 1 "ready to track", asks whether and where to file before writing. Before the fix the skill never fired: the run filled the slice's security placeholder instead | yes |
+| `vertical-slicing-handback` | real, Sonnet: 15/15 over 3 runs (`results/20261011-hb-final`); baseline fails on both calibration passes (edits the Active requirements doc and writes the refund slice in full) — the `pay-fine-handback` folder, where the security pass hands back "members have no refund path": owns the decision, cuts a separate refund slice rather than growing slice 1, sends its WHAT to a requirements pass, and leaves the requirements, design and security documents to their owners. Before the fix the skill grew slice 1, wrote the refund requirement itself and authored security criteria for it. After the fix `vertical-slicing-payfine-phase1` re-ran 18/18 and `orchestrator-backward-route` 2/2 | yes |
+| `adr-payment-gateway` | real, Sonnet: 11/12 over 3 runs (`results/20261011-dw-final-*`); baseline fails no-how — a real decision (provider-neutral payments, Adyen at the desk) told with file paths and class names: decision, alternatives with reasons, honest downsides, none of the how. Known miss 1/3: the Context names the `FinePayments` port | yes |
+| `adr-neg-rename` | real, Sonnet: 6/6; baseline writes the ADR — a field rename asked for as an ADR: runs the three checks and declines. Before the fix the skill fired and asked how to scope the ADR instead | yes |
+| `why-comments-collect-fine` | real, Sonnet: 15/15; the baseline passed in calibration, a regression guard — four planted comments in `fines/collect-fine.ts` (D1, D2, DT1, case-only overlay): deletes the WHAT comments, flags the one that contradicts the retry loop, keeps the WHY, stays off the code | yes |
+| `pr-writeup-portal-fines` | real, Sonnet: 12/12; baseline misses the ticket question and the AI role — a finished `/portal/fines` diff written by Claude Code: accurate plain-language description, asks about a ticket instead of assuming, names the tool and its role | yes |
+| `user-facing-docs-renewals` | real, Sonnet: 12/12; the baseline passed in calibration, a regression guard — members' help page for portal renewals: two renewals, 21 days from the renewal day, nothing the code doesn't do. Before the fix it invented a "My Loans → Renew" click path and "no late fines"; one run didn't fire until the description said "help page". The no-click-path grader was dropped after failing plain pages twice | yes |
+| `staleness-audit-docs` | real, Sonnet: 17/18; baseline misses restated code and ceremony — a planted `docs/` (D3–D6, DT2, DT3): stale lending rules, a code-narrating page, a sign-off log, an ADR the code overturned; keeps the waiver doc and the still-true Stripe ADR. Known miss 1/3: proposes a required-reviewers gate after deleting the sign-off log | yes |
 | `library-app-lending-review` | real, Sonnet: 6/6 with plugin vs 4/6 without (runtime cycle missed, ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
 | `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
 | `library-app-members-review` | real, Sonnet: 3/3 with plugin vs 2/3 without (table-shaped domain type missed), 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
@@ -321,10 +328,8 @@ Run with the `agent-eval` skill, one case per invocation.
   invokes a routed skill and never reads the persona's `AGENT.md`, so any
   rule a routed step needs must be in the skill. `devsecops-engineer`,
   `software-architect`, `product-manager`, `product-slicer` and
-  `docs-writer`'s `problem-framing-doc`, `scope-map` and
-  `user-story-writeup` have had that pass; `docs-writer`'s other five
-  skills, `ux-designer`, `accessibility-engineer` and `tdd-coach` have
-  not. Do it as part of each persona's move to the
+  `docs-writer` have had that pass; `ux-designer`,
+  `accessibility-engineer` and `tdd-coach` have not. Do it as part of each persona's move to the
   real suite (playbook step 1 already asks for it).
 
 ~~- **`devsecops-engineer` has one case out of six skills.**~~ **Closed —
@@ -764,8 +769,8 @@ grader, or the `agent-eval` harness that a case already covers.
   scope, contradicting the hand-back's "nobody scoped it", and
   `product-slicer` rightly raised the contradiction instead of slicing.
   Observed, not graded: once routed, `product-slicer` grew the slice on
-  its own judgment and superseded it without asking — a question for its
-  own suite.
+  its own judgment and superseded it without asking — since covered by
+  `vertical-slicing-handback`, see below.
 - **`software-architect`'s other two skills moved to the real suite.**
   `architecture-design` runs on the pay-a-fine slice before its design
   (two phases plus a negative case); `technology-bootstrap` can't use the
@@ -819,3 +824,30 @@ grader, or the `agent-eval` harness that a case already covers.
   and the grader was dropped. The emulated cases are kept for depth and
   marked stale; they feed `AGENT.md` to the model, so re-running them
   can't show the skills stand alone.
+- **`vertical-slicing`'s hand-back path got its own case**
+  (`vertical-slicing-handback`), the problem `orchestrator-backward-route`
+  had only observed. The first run grew slice 1 to include member refunds,
+  wrote the refund requirement into the Active requirements doc itself,
+  authored security criteria for it and edited the design: the skill only
+  said a *new* slice needs a requirements pass. It now says any capability
+  added mid-flight, new slice or growth, gets its WHAT from the user in
+  `requirements-refinement`, and that the slicer's output is the scope
+  decision: it names which documents the choice invalidates and which
+  skill redoes each, and edits none of them. Grader lesson: the first
+  ranked-order grader asserted a separate slice was "available", which
+  is the answer key's opinion, not a fact; a run that rejected it with a
+  concrete reason deserved a pass.
+- **`docs-writer`'s last five skills got real cases**: `adr` (plus a
+  negative), `why-comments`, `pr-writeup`, `user-facing-docs` and
+  `staleness-audit`. Their plants live in `fixtures/library-app/docs-plants/`
+  and only the owning case copies them in, so no other case's app changes
+  (answer key `D`/`DT`). Two skill fixes: `adr` now opens with its three
+  checks as yes/no lines and stops at any "no" — asked for an ADR on a
+  rename, it had fired and asked how to scope one; `user-facing-docs`
+  states only what it checked and names no screens it can't see — it had
+  written "My Loans → Renew" and "no late fines" after reading only
+  `lending/`, and its description now says "help page", which one run
+  needed to fire. Graders: a "no invented rules" grader failed accurate
+  consequences of the code (renewing clears the overdue status) until it
+  listed what follows from the code; the no-click-path grader was dropped
+  after failing plain pages twice.

@@ -1,0 +1,47 @@
+schema_version: "1.0"
+name: user-facing-docs-renewals
+description: "Members' help page for portal renewals, with the rules in the lending code: user-facing-docs fires, leads with why and when, gives the real limits, and writes no click path and no rules the code doesn't have."
+tags: [user-facing-docs, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. Next week members can renew their own loans from the portal; it works exactly like the desk's renew does today (the lending code is in `lending/`). Members will want a help page about it. Write it and save it as `docs/help/renewing-loans.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:user-facing-docs"'
+    min: 1
+  - type: file_exists
+    name: help-page-written
+    path: docs/help/renewing-loans.md
+  - type: llm
+    name: real-limits
+    focus:
+      source: file
+      path: docs/help/renewing-loans.md
+    weight: 1
+    criteria: |
+      The lending code allows two renewals per loan, and a renewal sets the new due date 21 days from the day of renewal (not 21 days added to the old due date).
+
+      PASS if the page states both, in a member's terms.
+
+      FAIL if either is missing or stated wrongly.
+  - type: llm
+    name: no-invented-rules
+    focus:
+      source: file
+      path: docs/help/renewing-loans.md
+    weight: 1
+    criteria: |
+      The renewal code checks only that the loan is still out and has been renewed fewer than two times. It does not check whether the loan is overdue, whether someone has a hold on the book, or whether the member owes fines, and it does not send a confirmation or remove fines.
+
+      Statements that follow from the code are fine: overdue loans, holds and fines don't block renewal; renewing moves the due date, so an overdue loan is no longer overdue; a fine already charged stays. So is telling members to check with the desk.
+
+      FAIL only if it states as fact something the code contradicts or doesn't do, for example "you can't renew a book someone has on hold", "overdue books can't be renewed", "renewing removes a fine you already owe", "you'll get a confirmation email", or "there are no late fines".
