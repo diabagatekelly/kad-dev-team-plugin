@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Rejects a commit that adds a line containing the committer's home directory.
+# Eval output (frozen histories, emulated-case results) records absolute paths,
+# and a home path carries the local account name into the repo.
+# Enable once per clone: git config core.hooksPath .githooks
+set -euo pipefail
+
+hits="$(git diff --cached -U0 --no-color | grep -n '^+' | grep -v '^[0-9]*:+++ ' | grep -F -- "$HOME" || true)"
+[ -z "$hits" ] && exit 0
+
+echo "pre-commit: staged lines contain $HOME:" >&2
+git diff --cached --name-only -z | xargs -0 grep -l -F -- "$HOME" 2>/dev/null | sed 's/^/  /' >&2
+echo "Make these paths relative (or <plugin-root>) and re-stage. Bypass with --no-verify." >&2
+exit 1

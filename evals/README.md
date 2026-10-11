@@ -158,7 +158,10 @@ therefore runs as a chain of cases:
    whose question is a good one, and run
    `tools/freeze-history.sh <kept-dir> evals/<phase-2-case>/history.jsonl`.
    It keeps only the user and assistant turns, so review the message text,
-   nothing else, before committing.
+   nothing else, before committing. It writes the plugin's path as
+   `<plugin-root>` and refuses to write one containing your home
+   directory; `.githooks/pre-commit` rejects any committed line that does
+   (enable it once per clone with `git config core.hooksPath .githooks`).
 3. **Phase N** sets `context.history_file: history.jsonl` and puts the
    scripted answer in `execution.prompt`. Grade the reaction. At least one
    answer in each chain should reject the recommendation, to check the

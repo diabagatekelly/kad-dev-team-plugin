@@ -234,6 +234,11 @@ Invoke with the eval case directory as the argument, e.g.:
      `case_dir/eval-result/output.md`.
    - If step 3b didn't run (phase1 was already a finished artifact):
      write `phase1_output` to `case_dir/eval-result/output.md` only.
+   - Everything written under `case_dir` (here and in steps 5-6) is
+     committed, so before writing, replace every `plugin_root` prefix with
+     a path relative to it (`skills/<slug>/SKILL.md`, not the absolute
+     path the agent read), and check the text contains no home-directory
+     path. Graders identify skills by slug, so this changes no verdict.
 
 5. **Grade each grader file** in `case_dir/graders/*.md`, per its type.
    First decide which captured output the grader judges: if its
