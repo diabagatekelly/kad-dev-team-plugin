@@ -1,6 +1,6 @@
 ---
 name: map-update
-description: Regenerate the architecture map from the real codebase — actual import edges, public exports, external packages — and diff it against whatever was recorded before, mechanically flagging duplication candidates and wrong-direction dependency edges. The only skill that writes the map. Use after code changes, once per implementation candidate (throwaway, worktree-scoped) inside a graded build, and once for real after a slice is finalized.
+description: Regenerate the architecture map from the real codebase — actual import edges, public exports, external packages — and diff it against whatever was recorded before, mechanically flagging duplication candidates and wrong-direction dependency edges. The only skill that writes the map (docs/architecture-map.md at the app root). Use when asked to update the architecture map, after code changes, once per implementation candidate (throwaway, worktree-scoped) inside a graded build, and once for real after a slice is finalized.
 ---
 
 # Map Update
@@ -16,6 +16,10 @@ every pass.
 
 This is the only skill in this persona that ever writes anything to the
 map. `map-query` only ever reads what this skill most recently produced.
+
+The map is the only file this skill writes. Never edit application code,
+even to fix an edge or a duplicate you just flagged: name it in the
+report and leave the fix to whoever owns that call.
 
 ## Extraction: mechanical, from real source, no installed tooling required
 
@@ -78,7 +82,9 @@ recorded, and report, in plain terms:
 
 **Duplication candidates.** Two modules whose exported names/signatures
 overlap substantially, or whose internal import targets overlap
-substantially, get flagged as a candidate pair. State exactly what's
+substantially, get flagged as a candidate pair. Check mechanically, not by eye:
+compare every new or changed module's exported names against every other
+module's, and flag any name exported by two modules. State exactly what's
 shared (the overlapping exports or import targets) and where each side
 lives. Do not characterize whether the overlap is a real duplicate or a
 coincidence — a shared shape between two modules serving genuinely
@@ -109,11 +115,20 @@ guessed toward either verdict.
 New/removed modules, edges, and exports, stated plainly.
 
 ## Duplication candidates
-Pairs, what's shared, where each lives. None found — say so plainly.
+- `<path A>` and `<path B>` share <the overlapping exports or import targets>. Real duplicate or coincidence: not decided here.
+(or) None found.
 
 ## Wrong-direction candidates
-Edges, both modules' tiers, direction. None found — say so plainly.
+- `<importer>` (tier N) → `<imported>` (tier M) — new | carried forward
+(or) None found.
+
+Untiered, direction unknown:
+- `<importer>` (<tier or untiered>) → `<imported>` (<tier or untiered>)
 ```
+
+Each candidate line states the shared facts and stops. No "looks like", no
+"probably intentional", no history read from comments to argue either way:
+any sentence about *why* the overlap exists is a verdict.
 
 No severity on anything in this output, no ranking, no recommendation.
 Whoever reads this diff — a reviewer, `architecture-design` on the next
@@ -135,23 +150,16 @@ replaces the persisted map — it becomes the map the next slice's
 
 ## Where the map lives
 
-The map is project-level infrastructure, not a per-slice artifact —
-resolved once per project, the same cadence `technology-bootstrap` already
-uses, not once per invocation. This skill never asks where it lives — it
-carries no `AskUserQuestion` tool (see below). Whoever invokes it (the
-persona consulting `architecture-cartographer`, or `orchestrator` inside
-the quarantine flow's Grade/Finalize steps) resolves the location once,
-the first time it's needed, and passes it in; every later run in the same
-project reuses that same answer without asking again. If this skill is
-ever invoked with no location given and none obviously implied, say so
-plainly and stop rather than guessing or searching the project for one.
+The map is project-level infrastructure, not a per-slice artifact, and
+it always lives at `docs/architecture-map.md` at the root of the app — the directory that holds the app's manifest (`package.json`, `pyproject.toml`, `go.mod`, ...), wherever that sits in the repository. A real run reads the prior map there and
+overwrites it, creating `docs/` if it doesn't exist; with no prior map,
+everything is new. A throwaway run reads the real project's map from that
+path and writes nothing.
 
 ## No AskUserQuestion
 
 Nothing here ever depends on information only a human can supply in the
-moment, including where the map lives — that's resolved by whichever
-persona invokes this skill, before invoking it, never by this skill
-itself. Tiers are read from what's already decided; a module or edge this
+moment; the map's location is fixed (see above). Tiers are read from what's already decided; a module or edge this
 skill can't resolve renders as an explicit, honest unknown rather than a
 question. This skill runs to completion every time, including inside a
 worktree-isolated candidate build where no one is available to answer

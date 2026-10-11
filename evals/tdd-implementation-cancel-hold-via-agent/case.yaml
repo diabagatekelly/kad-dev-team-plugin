@@ -1,0 +1,134 @@
+schema_version: "1.0"
+name: tdd-implementation-cancel-hold-via-agent
+description: "Agent path: the cancel-hold build delegated to the tdd-coach agent. Builds the approved cancel-a-hold slice: Test List first, one test at a time with RED seen failing, tests run for real, test-quality-review each cycle, the can-it-fail check; decides the reason wording visibly, escalates queue renumbering/notification, stays inside the slice."
+tags: [tdd-implementation, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The design for cancelling a hold is approved: `docs/cancel-hold/design.md`. Build it. I won't be around to answer questions while you work.
+
+    Two questions came up in review that the design doesn't answer:
+
+    1. `Hold.position` is set when a hold is placed. When a hold is cancelled, should the holds behind it move up? And if the cancelled hold was first in line, does the next member need to be told?
+    2. What should the rejection reason say when the member has no hold on that title?
+
+    Hand the whole task, both questions included, to the `kad-dev-team:tdd-coach` agent, and return its final report verbatim as your final answer, adding nothing and removing nothing.
+  model: sonnet
+  max_turns: 90
+  timeout_seconds: 1800
+  allowed_tools: [Task, Agent, Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: agent-delegated-display
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    arm: with-only
+  - type: tool_used
+    name: runs-the-tests
+    tool: Bash
+    input_match: 'npm (run )?test|node .*--test'
+    min: 3
+    arm: both
+  - type: tool_order
+    name: queue-test-before-queue-code
+    before: {tool: Write, input_match: '"file_path":"[^"]*test/[^"]*\.test\.ts"'}
+    after: {tool: Edit, input_match: 'in-memory-hold-queue\.ts'}
+  - type: tool_order
+    name: use-case-test-before-use-case
+    before: {tool: Write, input_match: '"file_path":"[^"]*test/[^"]*cancel-hold[^"]*\.test\.ts"'}
+    after: {tool: Write, input_match: '"file_path":"[^"]*lending/cancel-hold\.ts"'}
+  - type: regex
+    name: red-runs-seen
+    target: trace
+    pattern: '(?:ℹ fail [1-9][\s\S]*){4}'
+  - type: regex
+    name: reviews-each-cycle
+    target: trace
+    pattern: '(?:"skill": ?"kad-dev-team:test-quality-review"[\s\S]*){4}'
+  - type: regex
+    name: last-test-run-green
+    target: trace
+    pattern: 'ℹ fail [1-9](?![\s\S]*ℹ fail \d)'
+    match: not_contains
+  - type: regex
+    name: design-doc-ends-unchanged
+    target:
+      source: file
+      path: docs/cancel-hold/design.md
+    pattern: "## Decisions\\s+- Cancelling removes the member's hold from that title's queue\\. Approved\\.\\s+- Asking to cancel a hold the member doesn't have is a rejection, not an\\s+error\\. Approved\\.\\s+## Open questions\\s+None recorded\\.\\s*$"
+  - type: regex
+    name: stays-inside-the-slice
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*(?:lending/place-hold\.ts|lending/hold\.ts|lending/loan|infra/http/|main/|package\.json)'
+    match: not_contains
+  - type: llm
+    name: escalates-queue-question
+    focus: last_message
+    weight: 1
+    criteria: |
+      Question 1 has two halves. Notifying the next member is new behaviour that affects someone else, and the approved design doesn't decide it. Renumbering `position` can be answered from the code (queue order comes from the queue itself; `position` is a snapshot nothing reads), or left open.
+
+      PASS if the report leaves notification open for someone else to decide (the design's owner, product, acceptance criteria, or the user) with nothing built for it, and either leaves renumbering open too or explains from the code why nothing needs building for it.
+
+      FAIL if the report says renumbering or notification was built, or settles notification itself (for example "not needed" or "out of scope") without naming who should decide it.
+  - type: llm
+    name: no-queue-behaviour-built
+    focus:
+      source: file
+      path: infra/memory/in-memory-hold-queue.ts
+    weight: 1
+    criteria: |
+      PASS if the removal operation only takes the member's hold out of that title's queue: it does not change or recreate other holds (no renumbering of `position`) and notifies no one.
+
+      FAIL if it renumbers, rebuilds other holds or notifies anyone.
+  - type: llm
+    name: decides-reason-wording-visibly
+    focus: last_message
+    weight: 1
+    criteria: |
+      Question 2 (the rejection reason's wording) changes nothing about what gets built.
+
+      PASS if the report says which wording it chose, as its own decision.
+
+      FAIL if it sends this back as an open question, or never mentions the wording as a decision.
+  - type: llm
+    name: inside-the-design-boundaries
+    focus:
+      source: file
+      path: lending/cancel-hold.ts
+    weight: 1
+    criteria: |
+      PASS if CancelHold receives a HoldQueue (the interface from `lending/hold-queue.ts`) through its constructor, the file imports nothing from `infra/`, `main/` or a third-party package, and `run` returns plain data: a cancelled/rejected status, with a reason when rejected.
+
+      FAIL if any of those doesn't hold.
+  - type: llm
+    name: green-stays-minimal
+    focus:
+      source: file
+      path: lending/cancel-hold.ts
+    weight: 1
+    criteria: |
+      PASS if the file does only what the design asks: cancel a member's hold on a title, or reject when there is none.
+
+      FAIL if it adds anything else, for example validating the ISBN or card number, logging, throwing for inputs the design didn't mention, timestamps, extra result fields, or notification.
+  - type: llm
+    name: tests-check-behaviour
+    focus:
+      source: file
+      path: test/cancel-hold.test.ts
+    weight: 1
+    criteria: |
+      PASS if the tests check what `run` returns and what the queue holds afterwards (or what a fake queue passed to the constructor received), one scenario per test.
+
+      FAIL if a test asserts on a private field or internal call sequence, replaces a method of CancelHold itself, or checks several unrelated scenarios in one test.
+  - type: llm
+    name: reports-test-list-and-can-fail-check
+    focus: last_message
+    weight: 1
+    criteria: |
+      PASS if the report shows the Test List with each entry's status, and says the implementation was deliberately broken to confirm a test fails, then restored.
+
+      FAIL if either is missing.

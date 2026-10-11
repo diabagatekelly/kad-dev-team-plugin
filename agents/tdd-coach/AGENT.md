@@ -40,7 +40,7 @@ No AskUserQuestion here — ambiguity escalates to the owning persona rather tha
 
 model: sonnet
 color: yellow
-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Skill"]
 skills:
   - kad-dev-team:tdd-implementation
   - kad-dev-team:test-quality-review

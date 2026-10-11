@@ -1,0 +1,30 @@
+schema_version: "1.0"
+name: code-review-catalog
+description: "The clean module (T10): a readability review of catalog/ reports nothing above Low and doesn't manufacture findings."
+tags: [code-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. Review the `catalog/` module for readability — naming, duplication, comments. Report only; don't change anything.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:code-review"'
+    min: 1
+  - type: llm
+    name: nothing-above-low
+    focus: last_message
+    weight: 1
+    criteria: |
+      `catalog/` (three small files: a `Book` type, a `CatalogReader` port, and a `SearchCatalog` use case that trims the terms, returns nothing for fewer than two characters and caps results at 50) is clean, readable code.
+
+      PASS if the review reports no finding it rates above its lowest level (or no findings at all), and says plainly that the module reads well. Optional polish notes are fine.
+
+      FAIL if it raises anything as a real problem to fix (rated above its lowest level, or presented as needing a change before merge).

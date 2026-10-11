@@ -1,0 +1,104 @@
+schema_version: "1.0"
+name: test-quality-review-fines
+description: "test/fines.test.ts with planted smells (Q1-Q5): the subject's own method mocked, an unwired mock, a weak cap assertion, a call-order assertion, an untested export; traps: a designated fake stubbed per test, exact assertions (QT1, QT2)."
+tags: [test-quality-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. I wrote `test/fines.test.ts` for the fines module. Are these tests actually testing anything? Report what you find; don't change anything.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:test-quality-review"'
+    min: 1
+  - type: llm
+    name: finds-subject-mocked
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      The test 'returns the assessed fine' replaces `run` on the AssessOverdueFine instance it is testing with `mock.method(assess, 'run', ...)`, then asserts that `run` returns what the stub returns. It can never fail.
+
+      PASS if the review flags this test as testing a stand-in instead of the real code (it can't fail, proves nothing), treats it as the most serious problem in the file or as must-fix, and proposes calling the real `run` and asserting on its result.
+
+      FAIL if it is missed, or treated as a minor or optional issue.
+  - type: llm
+    name: finds-unwired-mock
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      In 'does not charge inside the grace period', `record = mock.fn()` is never attached to the ledger or the use case, so `record.mock.callCount() === 0` holds whatever the code does.
+
+      PASS if the review says this mock is never wired to anything the code calls, so the assertion can't catch a fine being recorded, and proposes asserting on something real (the fake ledger's recorded fines, the null result).
+
+      FAIL if it is missed, or flagged only as "weak" without saying the mock is never connected.
+  - type: llm
+    name: finds-weak-cap-assertion
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      'caps the fine at ten dollars' asserts only `amountCents > 0`, which an uncapped fine also satisfies.
+
+      PASS if the review flags that this assertion can't catch a missing or wrong cap and proposes asserting the exact capped amount (1000 cents).
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-call-order-assertion
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      'looks up outstanding fines before recording a new one' asserts the order of two ledger calls rather than an outcome. A refactor that kept the behaviour but queried differently would break it.
+
+      PASS if the review flags this test as checking how the code works (call order, internal steps) rather than what it produces, and proposes removing it or replacing it with an outcome check (the no-double-fine test already covers the behaviour).
+
+      FAIL if it is missed, or the test is called a good one.
+  - type: llm
+    name: finds-untested-percentOf
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `fines/money.ts` exports `roundHalfUpCents` (tested) and `percentOf` (never tested anywhere).
+
+      PASS if the review says `percentOf` has no test anywhere in it, including as one item in a broader list of untested code.
+
+      FAIL if `percentOf` is never named as untested.
+  - type: llm
+    name: no-false-alarm-fake-ledger
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `FakeFineLedger` is an in-memory stand-in for the FineLedger port, passed to the use case's constructor. 'does not assess a loan that already has an outstanding fine' stubs the fake's `outstandingFor` with `mock.method` to return an existing fine. The use case itself runs for real.
+
+      PASS if the review does not present the fake, or that stub in that test, as a violation (mocking the subject, over-mocking, a mock that intercepts nothing). Mentioning that seeding the fake through its constructor would be simpler is fine as a minor note.
+
+      FAIL if either is reported as a real problem with the test.
+  - type: llm
+    name: no-false-alarm-exact-tests
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      'charges 25 cents a day after the three-day grace period' (exact amount, and checks what was recorded), the three `isOutstanding` tests, and 'rounds half a cent up' assert exact results of real calls.
+
+      PASS if the review does not report any of these as weak, invalid or testing implementation details.
+
+      FAIL if it does.

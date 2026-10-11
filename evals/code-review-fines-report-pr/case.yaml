@@ -1,0 +1,78 @@
+schema_version: "1.0"
+name: code-review-fines-report-pr
+description: "A fines-report PR (one new file) reviewed for readability: a run() doing five jobs, member rules living in a report class (feature envy), a year/month data clump, the reporting month as a raw string handled three ways; the Stripe SDK used directly is named for architecture-review, not graded."
+tags: [code-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. This PR adds one new file, `reporting/fines-report.ts`. Review it for readability before I merge. Report only; don't change anything.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:code-review"'
+    min: 1
+  - type: llm
+    name: finds-run-doing-several-jobs
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `FinesReport.run` validates the month, queries fines, filters malformed rows, de-duplicates, fetches card payments from Stripe, totals by status, logs, and assembles the summary, one step after another in a single method.
+
+      PASS if the review flags `run` as doing several distinct jobs and proposes splitting it into named steps.
+
+      FAIL if it is missed, or mentioned only in passing as long without a recommendation.
+  - type: llm
+    name: finds-feature-envy
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `FineChaseList.shouldChase` checks the fine against its own `minimumCents`, then applies four rules about the member (status is active, membership not expired, has contact details for the preferred channel), reading five member fields. `members/member.ts` already owns `isActive` for the first two.
+
+      PASS if the review flags that most of `shouldChase` is about the member rather than about chasing fines (feature envy, logic in the wrong place, or duplicating `isActive`), and proposes moving the member checks next to the member (for example reusing or extending `isActive`, or a member-side "is reachable" function).
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-data-clump
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `fromYear, fromMonth, toYear, toMonth` travel together through `periodLabel`, `monthsInPeriod` and `runFinesReportForPeriod` (which takes seven parameters in all).
+
+      PASS if the review flags the four values traveling together and proposes one period/range object for them. Also naming the seven-parameter list is welcome, not required.
+
+      FAIL if the repeated group isn't flagged.
+  - type: llm
+    name: finds-month-as-raw-string
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      The reporting month is a raw string in `run` (checked with a `YYYY-MM` regex), split back into numbers further down the same method, and rebuilt from separate year and month numbers in `monthsInPeriod`. Nothing owns what a valid month is.
+
+      PASS if the review flags that the month's `YYYY-MM` format is built or parsed in more than one place and proposes one owner for it: a month or period value that formats and parses itself, or a single format/parse helper. Proposing this as part of the year/month data-clump fix counts.
+
+      FAIL if nothing in the review gives the month format one owner.
+  - type: llm
+    name: hands-sdk-to-architecture-review
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. `FinesReport` constructs a `StripeClient` from `process.env` and calls it directly. Whether a payment SDK belongs in a report is a structural question for an architecture review, not a readability finding.
+
+      PASS if the review doesn't mention it, or names it outside its own ranked findings as something for an architecture review (or `architecture-review`).
+
+      FAIL if it appears as one of the review's own ranked readability findings.

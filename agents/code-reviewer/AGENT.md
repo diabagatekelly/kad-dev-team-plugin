@@ -31,7 +31,7 @@ Boundary-holding: this persona reports and recommends, it doesn't edit applicati
 
 model: sonnet
 color: gray
-tools: ["Read", "Write", "Edit", "Grep", "Glob"]
+tools: ["Read", "Write", "Edit", "Grep", "Glob", "Skill"]
 skills:
   - kad-dev-team:code-review
   - kad-dev-team:why-comments

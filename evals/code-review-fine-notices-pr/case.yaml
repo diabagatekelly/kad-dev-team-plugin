@@ -1,0 +1,110 @@
+schema_version: "1.0"
+name: code-review-fine-notices-pr
+description: "A fine-notices PR (two new files) reviewed for readability: triplicated notice logic without flagging the guard clause, a false 'whole dollars' comment, a name that says count but sums, a WHAT comment, duplicate test names; traps: a WHY comment, a vague-not-wrong name ranked below the wrong one, the over-mocked test left to test-quality-review."
+tags: [code-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. This PR adds fine notices: two new files, `notifications/fine-notice.ts` and `test/fine-notice.test.ts`. Can you review it for readability before I merge — naming, duplication, comments? Report only; don't change anything.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:code-review"'
+    min: 1
+  - type: llm
+    name: finds-triplicated-notice-logic
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `emailFineNotice`, `smsFineNotice` and `letterFineNotice` each repeat the same four lines (filter outstanding fines, return null if none, format the dollar amount, build the "1 fine / N fines" phrase), differing only in the final sentence.
+
+      PASS if the review flags this three-way repetition as a real finding and proposes pulling the shared part into one place (a helper that returns the count phrase and amount, or similar).
+
+      FAIL if it is missed, or only noted as something to watch.
+  - type: llm
+    name: guard-clause-not-the-finding
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. Each of the three notice functions has a one-line guard, `if (owed.length === 0) return null;`. A short conventional guard repeated across functions is not itself a duplication problem.
+
+      PASS if the review does not present the repeated guard line as a problem in its own right. Describing the duplication finding without mentioning the guard, or listing it among the shared lines a helper would absorb, both pass.
+
+      FAIL if the review says the guard clause itself is duplication that needs fixing, separately from the shared formatting logic.
+  - type: llm
+    name: finds-false-dollars-comment
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      The comment above `countOutstanding` says "Amounts are in whole dollars." The function sums `amountCents`, and the callers divide by 100: the comment is false.
+
+      PASS if the review flags this comment as wrong (it says dollars, the value is cents), treats it as among the most serious findings in the review (it will mislead someone into a wrong edit), and proposes correcting or deleting it.
+
+      FAIL if it is missed, or treated as a minor or cosmetic comment issue.
+  - type: llm
+    name: finds-wrong-name
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `countOutstanding` doesn't count anything: it returns the total of the outstanding fines in cents.
+
+      PASS if the review flags the name as wrong (not merely vague), proposes a name that says what it returns (for example `totalOutstandingCents`), and rates it more serious than its finding about `build` being vaguely named, if it has one.
+
+      FAIL if it is missed, or ranked at or below a vague-name finding on `build`.
+  - type: llm
+    name: finds-what-comment
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      In `build`, the comment "Check the member's contact preference." says only what the next lines plainly do.
+
+      PASS if the review recommends deleting it.
+
+      FAIL if it is missed or kept.
+  - type: llm
+    name: finds-duplicate-test-names
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      Both tests in `test/fine-notice.test.ts` are named `'works'`.
+
+      PASS if the review flags the identical, uninformative test names and suggests names that say what each test checks.
+
+      FAIL if the test file's names aren't mentioned.
+  - type: llm
+    name: keeps-the-why-comment
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. In `letterFineNotice`, the comment explaining why letters say "within 14 days" (the fee schedule only allows suspension 14 days after a written notice, and only a letter counts as written) records a rule the code can't show.
+
+      PASS if the review keeps it (not flagged, or praised). Suggesting a shorter wording is fine.
+
+      FAIL if it recommends deleting it.
+  - type: llm
+    name: leaves-mocking-to-test-quality-review
+    focus: last_message
+    weight: 1
+    criteria: |
+      Judge substance only. The second `'works'` test wraps `notices.build` in `mock.fn` with a replacement implementation and asserts the mock was called once, so it never runs the real code. Judging whether a test is over-mocked or proves nothing belongs to a test-quality review, not a readability review.
+
+      PASS if the review either doesn't judge that test's mocking, or names it as something for a test-quality review (or `test-quality-review`) to look at, outside its own ranked findings.
+
+      FAIL if the mocking problem appears as one of the review's own ranked readability findings.

@@ -1,5 +1,0 @@
-PASS
-
-Judge agent (final run, after the coverage-sweep fix — see summary): the review includes an explicit "Finding: `formatReceiptLine` has zero tests," naming the export and confirming no test references it.
-
-This grader FAILed on the prior run (present on the first ever run of this fixture, absent on the run right after a different, unrelated fixture fix). Diagnosed as a real, structural gap rather than pure variance: `SKILL.md`'s "Missing coverage" category was one item in a prose list judged per-test, with no explicit step forcing a systematic cross-check of the implementation's exports against the test file — exactly the kind of check that's vulnerable to losing out to whatever more novel finding (in the missed run, an actual bug in `isValidCustomerId`) grabs attention that pass. Fixed by adding an explicit, separate "sweep for missing coverage first, mechanically" step to `SKILL.md`, ahead of the per-test issue categories. Re-run, now clean — and the sweep also caught a second gap (`calculateTotal`'s multi-item summing was never asserted) that no prior run had found at all.

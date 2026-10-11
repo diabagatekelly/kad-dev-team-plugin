@@ -1,6 +1,6 @@
 ---
 name: map-query
-description: Answer "does something like this already exist" against the persisted architecture map — a comparable module or interface at the structural level, a comparable function or helper at the implementation level. Read-only; never regenerates the map and never judges whether a returned candidate is close enough to reuse. Use before writing a design doc or before writing code, whenever the question is whether something comparable already exists.
+description: Answer "does something like this already exist?" from the architecture map (docs/architecture-map.md at the app root) — a comparable module or interface at the structural level, a comparable function or helper at the implementation level. Use whenever someone asks to check the architecture map, or asks before designing or writing code whether something comparable exists. Read-only; never scans the source instead and never judges whether a candidate is close enough to reuse.
 ---
 
 # Map Query
@@ -22,14 +22,8 @@ this skill's own conclusion.
 
 ## Where the map lives
 
-This skill carries no `AskUserQuestion` tool and never resolves the map's
-location itself. The persona consulting you (`architecture-design` at the
-structural level, `tdd-implementation` at the implementation level) tells
-you where to look — the same input it already resolved once per project
-before loading this skill inline, the way `orchestrator` resolves a
-problem's artifacts directory before routing to anything. If you're
-invoked with no location given and none obviously implied, say so plainly
-and stop rather than guessing or searching the project for one.
+The map is always `docs/architecture-map.md` at the root of the app — the directory that holds the app's manifest (`package.json`, `pyproject.toml`, `go.mod`, ...), wherever that sits in the repository. Read it there. If no file is there, no map
+exists yet — don't look for one anywhere else.
 
 ## Read-only, always
 
@@ -104,7 +98,7 @@ conversation — this isn't a skill that produces its own saved artifact:
 - <path> (tier: <tier> | untiered) — exports: <relevant exports>; shares: <the specific overlap>
 - ...
 
-(or) **Nothing comparable found in the map.**
+(or) **Nothing comparable found in the map.** (end the answer there: no "adjacent" modules, no "close enough to extend?")
 (or) **Could not be answered at this granularity** — <what's missing and why>.
 ```
 

@@ -1,0 +1,65 @@
+schema_version: "1.0"
+name: map-query-consults
+description: "Three does-it-exist questions answered from the map at its fixed home (docs/architecture-map.md, no path given) only: the member directory at the structural level, daysBetween found by shape for diffInDays, nothing for a PDF receipt; the known-stale map is caveated; facts, no reuse verdicts."
+tags: [map-query, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The cancel-hold slice merged this morning, after the map was last updated. Before we write anything, check the map for each of these:
+
+    1. We're designing a slice that stores and looks up a member's contact preferences by card number. Does a comparable boundary already exist?
+    2. I'm about to write `diffInDays(a, b)`: whole calendar days between two dates. Does something like it already exist?
+    3. I'm about to write a helper that renders a fine receipt as a PDF. Does something like it already exist?
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:map-query"'
+    min: 1
+  - type: llm
+    name: structural-candidate-as-fact
+    focus: last_message
+    weight: 1
+    criteria: |
+      PASS if the answer to question 1 names `members/member-directory.port.ts` (`MemberDirectory`, tier 1) as a candidate, ideally with its Postgres adapter, using facts the map records (path, tier, exports, edges), and doesn't tell the asker whether to reuse it.
+
+      FAIL if it is missed, if an invented module is offered, or if the answer rules on reuse ("use this", "extend MemberDirectory", "build a new one").
+  - type: llm
+    name: finds-daysBetween-by-shape
+    focus: last_message
+    weight: 1
+    criteria: |
+      No module is named `diffInDays`, but `utils/date-utils.ts` (untiered) exports `daysBetween`.
+
+      PASS if the answer to question 2 surfaces `daysBetween` in `utils/date-utils.ts` as a candidate despite the different name, says it is untiered (or gives no tier), and leaves the reuse call to the asker.
+
+      FAIL if it reports nothing found, or rules on reuse.
+  - type: llm
+    name: honest-empty-result
+    focus: last_message
+    weight: 1
+    criteria: |
+      Nothing in the map renders documents or PDFs.
+
+      PASS if the answer to question 3 says plainly that nothing comparable is in the map. Naming nearby modules while saying they are not comparable is fine.
+
+      FAIL if it presents a stretched candidate (a CSV export, a report, a notice builder) as comparable, or is vague about whether anything was found.
+  - type: llm
+    name: caveats-stale-map
+    focus: last_message
+    weight: 1
+    criteria: |
+      PASS if the response warns, anywhere, that the map predates this morning's cancel-hold merge, so its answers may miss what that slice added.
+
+      FAIL if there is no such warning, or if it says it checked the current code to fill the gap.
+  - type: regex
+    name: answers-from-the-map
+    target: trace
+    pattern: '"name":"Grep","input":\{(?![^{}]*architecture-map)'
+    match: not_contains

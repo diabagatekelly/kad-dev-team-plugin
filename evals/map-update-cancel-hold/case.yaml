@@ -1,0 +1,103 @@
+schema_version: "1.0"
+name: map-update-cancel-hold
+description: "After the cancel-hold slice lands, the map is regenerated in place at its fixed home (docs/architecture-map.md, no path given): new rows extracted faithfully, tiers carried forward or taken from the design, utils/ left untiered, the new tier-1 -> tier-3 edge and the untiered edge flagged without verdicts, the shared roundHalfUpCents flagged as a duplication candidate, pre-existing candidates not reported as new, no severity, no app code touched."
+tags: [map-update, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The cancel-hold slice has landed (its design is `docs/cancel-hold/design.md`). Update the architecture map to match the code as it is now, and tell me what changed.
+  model: sonnet
+  max_turns: 80
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:map-update"'
+    min: 1
+  - type: llm
+    name: new-rows-extracted
+    focus:
+      source: file
+      path: docs/architecture-map.md
+    weight: 1
+    criteria: |
+      PASS if the map's module table has a row for `lending/cancel-hold.ts` (tier 1; internal edges to `infra/memory/in-memory-hold-queue.ts` and `utils/money-format.ts`; no external packages; exports `CancelHold` and `CancelHoldResult`) and a row for `utils/money-format.ts` (untiered; no edges; exports `roundHalfUpCents` and `formatCents`).
+
+      FAIL if either row is missing, or has a wrong tier, a missing or invented edge, or a missing or invented export.
+  - type: llm
+    name: keeps-existing-rows-and-tiers
+    focus:
+      source: file
+      path: docs/architecture-map.md
+    weight: 1
+    criteria: |
+      The previous map had about 70 module rows: `catalog/`, `members/`, `lending/`, `fines/` and `notifications/` at tier 1, `reporting/` at tier 2, `infra/` and `main/` at tier 3, and `services/payment-service.ts`, `utils/date-utils.ts` and the two `test/` files untiered.
+
+      PASS if the updated table still lists those modules (for example `catalog/book.ts`, `fines/money.ts`, `main/jobs.ts`, `infra/http/respond.ts`, `services/payment-service.ts`) with the same tiers.
+
+      FAIL if any existing module is dropped, or any existing tier changed (including giving `services/` or `utils/date-utils.ts` a tier).
+  - type: llm
+    name: flags-new-wrong-direction-edge
+    focus:
+      source: file
+      path: docs/architecture-map.md
+    weight: 1
+    criteria: |
+      PASS if the map flags `lending/cancel-hold.ts` (tier 1) → `infra/memory/in-memory-hold-queue.ts` (tier 3) as a wrong-direction candidate, naming both tiers, as a fact rather than a ruling (no "must fix", no prescribed fix).
+
+      FAIL if it is missing, or presented as a confirmed violation with a demanded fix.
+  - type: llm
+    name: untiered-edge-direction-unknown
+    focus:
+      source: file
+      path: docs/architecture-map.md
+    weight: 1
+    criteria: |
+      `lending/cancel-hold.ts` (tier 1) → `utils/money-format.ts` (untiered) can't be checked mechanically.
+
+      PASS if the map reports this edge as untiered / direction unknown (or equivalent), and does not call it either correct or wrong.
+
+      FAIL if it is omitted from the flags entirely, or judged either way, or if `utils/money-format.ts` is given a tier to make the check possible.
+  - type: llm
+    name: flags-duplication-candidate
+    focus:
+      source: file
+      path: docs/architecture-map.md
+    weight: 1
+    criteria: |
+      `utils/money-format.ts` and `fines/money.ts` both export `roundHalfUpCents`.
+
+      PASS if the map flags this pair as a duplication candidate, names the shared export, and leaves open whether it is a real duplicate (no "merge these", no "these are fine").
+
+      FAIL if it is missing, or a verdict is given.
+  - type: llm
+    name: pre-existing-flags-not-new
+    focus:
+      source: file
+      path: docs/architecture-map.md
+    weight: 1
+    criteria: |
+      The previous map already listed `lending/return-book.ts` → `main/wiring.ts` and `notifications/sms-reminder.ts` → `infra/sms/sms-gateway.port.ts` as wrong-direction candidates.
+
+      PASS if the "changes since the prior map" section does not list either edge as new. Carrying them forward in the candidates section is fine.
+
+      FAIL if either is reported as a new edge or a new candidate in this update.
+  - type: llm
+    name: no-severity
+    focus:
+      source: file
+      path: docs/architecture-map.md
+    weight: 1
+    criteria: |
+      PASS if nothing in the map attaches a severity or rating to any flag (no Critical/High/Medium/Low, no "serious", no scores, no "should be fixed first").
+
+      FAIL if any does.
+  - type: regex
+    name: writes-only-the-map
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?:(?!/)(?!docs/architecture-map\.md")|[^"]*/home/cwd/(?!docs/architecture-map\.md"))[^"]*"'
+    match: not_contains

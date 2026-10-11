@@ -1,0 +1,38 @@
+schema_version: "1.0"
+name: map-query-no-map
+description: "Asked to check the architecture map when docs/architecture-map.md doesn't exist: says no map exists yet and does not answer from a live scan of the source."
+tags: [map-query, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. I'm about to write a helper that counts whole calendar days between two dates. Check the architecture map first: does something like it already exist?
+  model: sonnet
+  max_turns: 20
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:map-query"'
+    min: 1
+  - type: llm
+    name: says-no-map
+    focus: last_message
+    weight: 1
+    criteria: |
+      No architecture map exists in the project (there is no `docs/architecture-map.md`).
+
+      PASS if the response says no map exists yet and points to generating one first (a map update).
+
+      FAIL if it answers as though a map had been checked.
+  - type: llm
+    name: no-live-scan-answer
+    focus: last_message
+    weight: 1
+    criteria: |
+      PASS if the response does not answer the question from a search of the source code (for example by reporting `daysBetween` in `utils/date-utils.ts` as what it found).
+
+      FAIL if it reports candidates it found by searching the code.

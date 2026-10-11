@@ -26,6 +26,8 @@ app/
   .github/        deploy and release-notes workflows, dependabot   S9, S10, ST5; SC4, SC5, SCT2, SCT3
   Dockerfile, package-lock.json, audit-ci.jsonc   image, lockfile, accepted advisories   SC1, SC2, SC3, SC6, SC7, SC8, SCT1, SCT4, SCT5
   types/          ambient declarations for the fictional third-party packages
+docs-plants/      case-only overlays for docs-writer cases (D, DT)
+code-plants/      case-only overlays for the code personas: tdd/ (an in-place test runner and an approved design), test-quality/ (Q, QT), code-review/ (C, CT), map/ (generated architecture maps)
 answer-key.md     every V (planted violation) and T (trap), with the principle each exercises
 verify.sh         type-checks, proves the runtime cycle crashes and the type-only one doesn't, runs test/
 scaffold.sh       copies app/ into an eval run's working directory; each case has a stub that execs it
@@ -71,14 +73,12 @@ invites:
   `answer-key.md` and `evals/security-review-*`.
 - `devsecops-engineer` / `reliability-review`: done, see the `R`/`RT` rows
   in `answer-key.md` and `evals/reliability-review-*`.
-- `tdd-coach` / `test-quality-review`: there are no tests. Add a `test/`
-  directory with planted smells (a spy that replaces the subject, a test
-  that asserts a mock was called) and clean tests as traps.
-- `code-reviewer` / `code-review`: `reporting/export-report.ts` and the
-  three `*-reminder.ts` files carry duplication and naming material.
-- `architecture-cartographer` / `map-update`: the import graph is real;
-  V2 and T1 are a ready-made cycle pair, V1/T9 a ready-made duplication
-  candidate.
+- `tdd-coach`, `code-reviewer`, `architecture-cartographer`: done, as
+  case-only overlays in `code-plants/` (see the `Q`/`QT` and `C`/`CT`
+  rows in `answer-key.md`, and `evals/tdd-implementation-*`,
+  `test-quality-review-*`, `code-review-*`, `map-*`). The maps in
+  `code-plants/map/` were generated mechanically from `app/`; regenerate
+  them if `app/`'s imports or exports change.
 
 When a plant for one persona would change what another persona's case
 expects, update the other persona's answer-key rows and re-run its cases

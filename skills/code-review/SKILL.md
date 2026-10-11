@@ -8,7 +8,14 @@ description: Review existing or changed code for local, code-level readability �
 ## Scope
 
 You're reading and judging code that already exists — you don't write or
-edit application code here, you produce a findings report. Your altitude is
+edit application code here, you produce a findings report. That holds even
+for a one-line fix someone asks you to just make: name the exact rename,
+extraction or deletion in the finding and leave the change to whoever owns
+the file.
+
+**Where the report goes is given, not chosen.** Return it as your
+response. Save it to a file only when whoever invoked you named one;
+never search the project for a place to put it. Your altitude is
 a single function, file, or small cluster of them: does this read clearly,
 is it duplicated, are its names honest, do its comments earn their place.
 
@@ -87,6 +94,13 @@ together, name that but leave the structural call to `architecture-review`.
 
 ## Function- and class-level readability
 
+**Sweep before you judge, as its own step.** The checks below are easy to
+apply to whatever caught your eye and skip everywhere else. Before writing
+findings, list every function, method and class in scope and run each one
+past every check in this section — in particular feature envy and data
+clumps, which never look alarming on their own. Something that passes the
+sweep needs no mention.
+
 These are size and shape anchors, not hard gates — a function or class past
 one of these rough sizes usually needs a closer look, because a reader can
 no longer hold the whole thing in their head at once, but going over the
@@ -121,9 +135,12 @@ prompt to look, not as the finding itself.
 
 ## Comments
 
-Judge every comment with `kad-dev-team:why-comments` — a comment earns its
-place only by explaining something the code can't express on its own, never
-by restating what the next line already says.
+Judge every comment with `kad-dev-team:why-comments`: invoke it with the
+`Skill` tool on the files in scope. The consult returns an answer, not the
+turn: fold its verdicts into your findings and carry on with this skill in
+the same response. A comment earns its place only by explaining something
+the code can't express on its own, never by restating what the next line
+already says.
 
 ## Severity
 

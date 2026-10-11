@@ -20,7 +20,10 @@ at:
   fixture plus two negative trigger cases), followed by the
   `reliability-review-*`, `supply-chain-review-*`,
   `operational-readiness-*`, `security-requirements-*` and
-  `reliability-requirements-*` suites on the same fixture. Results land in
+  `reliability-requirements-*` suites on the same fixture, and the code
+  personas' `tdd-implementation-*`, `test-quality-review-*`,
+  `code-review-*` and `map-*` cases (their plants are case-only overlays in
+  `fixtures/library-app/code-plants/`). Results land in
   `evals/results/<timestamp>/` (gitignored) each time the suite runs;
   nothing is hand-copied into case directories.
 
@@ -77,7 +80,12 @@ last one wins; `add_dirs`, `scaffold_script` and `baseline_file` must all
 resolve inside the case directory, and symlinks out are refused; the
 `baseline` grader compares against a checked-in reference transcript, not
 the live no-plugin arm; a `tool_used` grader on a subagent call needs
-`tool: Agent`; a `tool_used` grader that isn't `tool: Skill` is scored in
+`tool: Agent`; an `llm` grader with `focus: trace` sees only the first and
+last 12 trace messages (the rest is elided), so on a long run it is really
+grading the final report — check process with `regex` (which scans the
+whole trace; `(?:…[\s\S]*){N}` with `contains` means "at least N"),
+`tool_order` and `tool_used`, and code with `focus: {source: file, path}`;
+a `tool_used` grader that isn't `tool: Skill` is scored in
 both arms unless marked `arm: with-only`; `AskUserQuestion` is never
 available and the scaffolded project's `.claude/settings.json` (hooks
 included) is ignored, see "Interactive skills" below. A full pass costs about $7.50 at
@@ -229,6 +237,20 @@ score is history, not a claim about today.
 | `pr-writeup-portal-fines` | real, Sonnet: 12/12; baseline misses the ticket question and the AI role — a finished `/portal/fines` diff written by Claude Code: accurate plain-language description, asks about a ticket instead of assuming, names the tool and its role | yes |
 | `user-facing-docs-renewals` | real, Sonnet: 12/12; the baseline passed in calibration, a regression guard — members' help page for portal renewals: two renewals, 21 days from the renewal day, nothing the code doesn't do. Before the fix it invented a "My Loans → Renew" click path and "no late fines"; one run didn't fire until the description said "help page". The no-click-path grader was dropped after failing plain pages twice | yes |
 | `staleness-audit-docs` | real, Sonnet: 17/18; baseline misses restated code and ceremony — a planted `docs/` (D3–D6, DT2, DT3): stale lending rules, a code-narrating page, a sign-off log, an ADR the code overturned; keeps the waiver doc and the still-true Stripe ADR. Known miss 1/3: proposes a required-reviewers gate after deleting the sign-off log | yes |
+| `tdd-implementation-cancel-hold` | real, Sonnet: 50/54 over 3 runs (`results/20261011-final2-*`); baseline fails every process check in calibration (no Test List, no RED, no review, writes the code first) — the approved cancel-a-hold design built test-first, graded mechanically on the full trace (`regex`/`tool_order`) and on the written files: tests before code, RED runs seen, a `test-quality-review` call every cycle, last run green, design doc ends unchanged, nothing outside the slice touched; the reason wording decided and named, notification left to its owner. Known misses: the main agent edits the design doc before invoking the skill (2/3; the skill then reverts it), one report without its Test List, one multi-scenario test | yes |
+| `tdd-implementation-named-fix` | real, Sonnet: 3/3 runs clean (`results/20261011-final-*`); baseline makes the edit and writes no tests in calibration — V15 handed back as a review finding: `LoanStore` through the constructor, `main/server.ts` updated, behaviour unchanged and pinned by new tests that run green, nothing else touched, honest about tests coming after the structural change. Before the trigger fix the skill fired in 1 of 4 runs | yes |
+| `tdd-implementation-cancel-hold-via-agent` | real, Sonnet: 25/32 over 2 runs, delegation to `tdd-coach` confirmed — the agent's own TDD process passes; the misses come from the parent, which writes answers into the design doc before delegating, where the subagent can't see that the doc changed (no git in the sandbox) | yes |
+| `test-quality-review-fines` | real, Sonnet: 3/3 runs clean; baseline misses the call-order test (calls it "correct") and the untested `percentOf` — the planted `test/fines.test.ts` (Q1–Q5): subject's own method mocked, unwired mock, weak cap assertion, call-order assertion, untested export; traps: a designated fake stubbed per test, exact assertions. The skill didn't fire until its description named "are these tests actually testing anything?" | yes |
+| `test-quality-review-reminders` | real, Sonnet: 2/3 runs clean, the third a last-message artifact (the review was complete; the final message is a postscript about a stopped background task); the baseline passed in calibration, a regression guard — the app's own reminder tests: the untested email channel, no false alarm on constructor-injected fakes, "sound but incomplete" | yes |
+| `test-quality-review-neg-code-review` | real, Sonnet: never invokes `test-quality-review` (a readability request) | yes |
+| `code-review-fine-notices-pr` | real, Sonnet: 2/3 runs clean, the third the same postscript artifact; baseline grades the over-mocked test as its own finding — triplicated notice logic without flagging the guard clause, a false "whole dollars" comment, a name that says count but sums ranked above a vague one, a WHAT comment, duplicate test names; keeps the WHY comment; `why-comments` consulted via `Skill` | yes |
+| `code-review-fines-report-pr` | real, Sonnet: 13/15 over 3 runs, 1/3 clean (`results/20261011-final-*`) — a `run()` doing several jobs, member rules in a report class (feature envy), a year/month data clump, the month format with no owner; the Stripe SDK named for `architecture-review`. Feature envy was missed in every run (both arms) until the skill gained a sweep-every-function step and the plant changed from a formatter (which reviews rightly passed) to misplaced business rules. Known misses: the month format (2/3), feature envy (2/3) | yes |
+| `code-review-catalog` | real, Sonnet: 3/3; the baseline passed in calibration, a regression guard — the clean module, nothing above Low | yes |
+| `code-review-neg-architecture` | real, Sonnet: never invokes `code-review` (a dependency-direction question) | yes |
+| `code-review-fine-notices-pr-via-agent` | real, Sonnet: 2/2 runs clean, delegation to `code-reviewer` confirmed | yes |
+| `map-update-cancel-hold` | real, Sonnet: 27/27 over 3 runs (one run's scratch script in the sandbox's temp dir was counted against it until the grader limited itself to project files); baseline attaches severity in calibration — after the cancel-hold slice lands, regenerates `docs/architecture-map.md` with no path given: new rows faithful, tiers carried forward, `utils/` untiered, the new tier-1 → tier-3 edge and the untiered edge flagged without verdicts, the shared `roundHalfUpCents` flagged, pre-existing candidates not reported as new, no app code touched. Before the template fix one run called the duplicate "fresh rather than intentional" | yes |
+| `map-query-consults` | real, Sonnet: 3/3 runs clean; baseline misses the structural candidate and the shape match and greps the source — three does-it-exist questions answered from the map at its fixed home: `MemberDirectory`, `daysBetween` for `diffInDays`, nothing for a PDF, the stale map caveated | yes |
+| `map-query-no-map` | real, Sonnet: 2/3 runs clean; baseline answers by grepping — no map exists: says so and points to `map-update`. Known miss 1/3: mentions a file it noticed while locating the app root | yes |
 | `library-app-lending-review` | real, Sonnet: 6/6 with plugin vs 4/6 without (runtime cycle missed, ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
 | `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
 | `library-app-members-review` | real, Sonnet: 3/3 with plugin vs 2/3 without (table-shaped domain type missed), 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
@@ -280,11 +302,6 @@ score is history, not a claim about today.
 | `ux-designer:design-system` | 9/9 PASS (after one re-run), three-phase | yes |
 | `ux-designer:screen-design` | 9/9 PASS, single-phase | yes |
 | `accessibility-engineer:accessibility-review` | 8/9 PASS, single-phase — the one failure is `skill-invoked`, a mechanical self-report miss, not a substantive gap; see the case's `eval-score/summary.md` | yes |
-| `tdd-coach:tdd-implementation` | 10/10 PASS, single-phase, six runs — one case-authoring bug fixed, then three real skill-text findings each fixed and re-verified (naming discipline, a reuse-messaging distinction, and a fill-vs-escalate rule for missing collaborators that was over-corrected once before landing); see the case's `eval-score/summary.md` for the full sequence | yes |
-| `tdd-coach:test-quality-review` | 10/10 PASS, single-phase, three runs — a case-authoring bug (a passthrough spy that didn't replace behavior) fixed, then a real skill-text gap (missing coverage had no systematic sweep step, so it lost out to a more novel finding one run) fixed and re-verified, see the case's `eval-score/summary.md` | yes |
-| `code-reviewer:code-review` | 17/17 PASS, single-phase, four runs — fixture expanded from 7 to 17 graders to cover every checklist item in the skill (primitive obsession, feature envy, data clumps, size-anchor restraint in both directions, wrong-vs-vague naming severity, test-file scope in both directions); one real skill-text gap (a duplication finding folding an exempt guard clause into "what's identical") recurred on the larger fixture after an initial fix, then held after a stronger, example-based fix; see the case's `eval-score/summary.md` | yes |
-| `architecture-cartographer:map-query` | 6/6 PASS, single-phase — first-ever run, clean, no skill-text fixes; a deliberate shape-not-name matching trap (`OrderRepository` vs. a differently-named `CaseDirectory`) and a staleness trap (an unincorporated branch a teammate mentions) both worked as intended, see the case's `eval-score/summary.md` | yes |
-| `architecture-cartographer:map-update` | 6/6 PASS, single-phase — first-ever run, clean, no skill-text fixes; tier carry-forward/fresh-assignment/honest-`untiered` handling, a duplication-candidate trap, and a wrong-direction-candidate trap all worked as intended with no severity or live question anywhere, see the case's `eval-score/summary.md` | yes |
 
 ### The `example/` directory
 
@@ -328,9 +345,26 @@ Run with the `agent-eval` skill, one case per invocation.
   invokes a routed skill and never reads the persona's `AGENT.md`, so any
   rule a routed step needs must be in the skill. `devsecops-engineer`,
   `software-architect`, `product-manager`, `product-slicer` and
-  `docs-writer` have had that pass; `ux-designer`,
-  `accessibility-engineer` and `tdd-coach` have not. Do it as part of each persona's move to the
-  real suite (playbook step 1 already asks for it).
+  `docs-writer`, `tdd-coach`, `code-reviewer` and
+  `architecture-cartographer` have had that pass; `ux-designer` and
+  `accessibility-engineer` have not. Do it as part of each persona's move
+  to the real suite (playbook step 1 already asks for it).
+- **The `tdd-implementation` quarantine flow is uncovered.** The real cases
+  invoke the skill directly and through the `tdd-coach` agent; the
+  orchestrator's quarantine/grade/combine/finalize flow (two worktree
+  candidates, parallel reviewers) has no case. Worktree isolation inside
+  the eval sandbox is unproven.
+- **The main agent acts before `tdd-implementation` loads.** Asked to build
+  a design, Sonnet reads around and often writes its own answers to the
+  design's open questions into the design doc before invoking the skill
+  (2/3 runs even after the description says "invoke it first"). The skill
+  now reverts such an edit and treats the question as open; through the
+  agent path the parent's edit is invisible to the subagent, so
+  `tdd-implementation-cancel-hold-via-agent` stays weak for that reason.
+- **software-architect has no `Skill` tool.** `architecture-design`
+  consults `map-query` and the devsecops skills through the `Skill` tool,
+  which the agent path can't use. tdd-coach and code-reviewer were given
+  it this session; software-architect wasn't changed.
 
 ~~- **`devsecops-engineer` has one case out of six skills.**~~ **Closed —
   all six skills now have a case, all passing.** `security-requirements`
@@ -371,21 +405,11 @@ Run with the `agent-eval` skill, one case per invocation.
   instruction. Any future case for a persona whose skill instructs real
   tool use (browser automation, code execution) should expect the same
   gap until this harness gains a real tool-restriction mechanism.
-- **Confirmed for a second persona: `tdd-coach:tdd-implementation`'s
-  entire discipline is "run things for real, every time," and the dry run
-  can't do that.** The Read/Grep/Glob-only grant (never `Bash`/`Write`/
-  `Edit`, even though the real persona's own tools include all three)
-  means every RED/GREEN/REFACTOR "run the test suite" moment in the
-  captured output is narrated — what invoking the runner would show — not
-  literally executed. The case still tested everything gradable from the
-  narrated text (Test List discipline, minimal-GREEN, refactor hygiene,
-  escalation vs. silent-decide, mock wiring, boundary adherence) and
-  scored 9/10; what it structurally cannot verify is whether the persona
-  would actually run a real test runner and read real output when let
-  loose, as opposed to producing a plausible-looking transcript of doing
-  so. Real dogfooding against `evals/example/` (not yet done — see
-  `PERSONAS.md` "Next to build") is the only way to close this gap for
-  this persona.
+- ~~**`tdd-coach:tdd-implementation` couldn't be checked running for real.**~~
+  **Closed.** The real cases run Node's test runner in the sandbox (the
+  `code-plants/tdd/` overlay's `test/ts-resolve.mjs` lets
+  `node --experimental-transform-types --test` load the app's TypeScript
+  with no install) and grade the trace mechanically.
 - **`technology-bootstrap`'s advisor-consult path is only softly graded.**
   Consulting `devsecops-engineer` inline is treated as expected-but-not-
   required, because the emulation harness can't distinguish an inline
@@ -851,3 +875,41 @@ grader, or the `agent-eval` harness that a case already covers.
   consequences of the code (renewing clears the overdue status) until it
   listed what follows from the code; the no-click-path grader was dropped
   after failing plain pages twice.
+- **The code personas moved to real cases**: `tdd-coach`
+  (`tdd-implementation`, `test-quality-review`), `code-reviewer`
+  (`code-review`) and `architecture-cartographer` (`map-query`,
+  `map-update`), 14 cases on case-only overlays in
+  `fixtures/library-app/code-plants/` (`verify.sh` type-checks each overlay
+  and runs its tests; answer key `Q`/`QT`, `C`/`CT`). The emulated cases are
+  deleted. Skill fixes:
+  - `tdd-implementation` now stands alone (gap sorting, missing
+    collaborators, reused wording, boundaries, a fix with no tests yet).
+    Its trigger names what users say and says to invoke it first: before
+    that it never fired on "build it" or "apply the fix".
+  - Calibration also added minimal GREEN (the next entry's `else` waits
+    for its test), a `test-quality-review` `Skill` call every cycle (a
+    "review: clean" line without one is a skip), no edits to the design
+    or other stages' documents, and reverting such an edit made earlier
+    in the conversation.
+  - `test-quality-review` and `map-query` fire on the user's wording.
+    `code-review` sweeps every function past its checklist before judging
+    (feature envy was missed otherwise). `map-update` templates its
+    candidate lines ("not decided here") and compares export names
+    mechanically.
+  - The map now lives at `docs/architecture-map.md` at the app root (the
+    user's call), so no consulting skill passes a location.
+  - tdd-coach and code-reviewer gained the `Skill` tool, which their own
+    consults need.
+
+  The tooling lesson outranks the skill fixes. An `llm` grader on
+  `focus: trace` sees only 24 messages, so every trace-judged TDD grader
+  was really grading the final report until the process checks moved to
+  `regex`/`tool_order`. Validate such graders offline against kept traces
+  before spending runs. Grader lessons: a revert counts as an edit (grade
+  the doc's final content instead); a scratch script in the sandbox's
+  temp dir isn't "editing the project"; a formatter reading another
+  object's fields isn't feature envy, and reviews were right to pass it;
+  when a gap has a half the code answers, the grader shouldn't demand it
+  be escalated. Two misses were a last-message artifact: a postscript
+  about a stopped background task replaced the review as the final
+  message.

@@ -5,7 +5,9 @@
 #      really crashes at module load,
 #   3. the type-only cycle (lending/hold.ts <-> hold-queue.ts) really doesn't,
 #   4. the clean catalog module loads,
-#   5. the test suite under test/ passes.
+#   5. the test suite under test/ passes,
+#   6. each case-only code overlay (code-plants/) type-checks on top of the
+#      app, and its tests pass when run in place (`npm test`'s command).
 # Run from anywhere: bash evals/fixtures/library-app/verify.sh
 set -euo pipefail
 
@@ -49,5 +51,19 @@ echo "ok: catalog loads"
 echo "== test suite passes (test/)"
 (cd "$out" && node --test test/*.test.js >"$out/test.log" 2>&1) || { echo "FAIL: tests"; cat "$out/test.log"; exit 1; }
 echo "ok: $(grep -m1 '^ℹ pass' "$out/test.log")"
+
+echo "== code overlays type-check and their tests pass"
+tdd="$(cd "$(dirname "${BASH_SOURCE[0]}")/code-plants/tdd" && pwd)"
+for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/*; do
+  dir="$out/overlay-$(basename "$overlay")"
+  mkdir -p "$dir"
+  cp -R "$app"/. "$dir"/
+  cp -R "$tdd"/. "$dir"/
+  cp -R "$overlay"/. "$dir"/
+  (cd "$dir" && "$out/deps/node_modules/.bin/tsc" -p tsconfig.json --noEmit --typeRoots "$out/deps/node_modules/@types")
+  (cd "$dir" && node --experimental-transform-types --no-warnings --import ./test/ts-resolve.mjs --test test/*.test.ts >"$dir.log" 2>&1) \
+    || { echo "FAIL: tests in overlay $(basename "$overlay")"; cat "$dir.log"; exit 1; }
+  echo "ok: $(basename "$overlay"): $(grep -m1 '^ℹ pass' "$dir.log")"
+done
 
 echo "all checks passed"

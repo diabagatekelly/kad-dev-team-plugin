@@ -315,6 +315,58 @@ file (same code, comments added), `staleness/docs/` becomes the run's
 | DT2 | `docs/fines.md` | Describes a rule the code also implements. | It records why (processing fees, the only-fine condition), which the code doesn't say. Keep. |
 | DT3 | `docs/adr/adr-001-stripe-for-card-payments.md` | An old ADR. | Still true: payments go through Stripe with tokenised cards. Keep. |
 
+## Test-quality plants (`Q`, `QT`) and build cases — `tdd-coach`
+
+Like the docs plants, these live outside `app/` so no other case sees
+them: `code-plants/tdd/` (a `package.json` whose `test` script runs the
+TypeScript tests in place through `test/ts-resolve.mjs`, plus an approved
+design doc) and `code-plants/test-quality/fines/` (a planted
+`test/fines.test.ts` and its fake). Every planted test passes; that is
+the point.
+
+| # | Where | Violation | Expected |
+|---|---|---|---|
+| Q1 | `test/fines.test.ts` 'returns the assessed fine' | Replaces `AssessOverdueFine.run` on the subject itself, then asserts the stub's own return value. Can't fail. | The most serious finding. Fix: call the real `run` and assert the fine it returns. |
+| Q2 | 'does not charge inside the grace period' | `record = mock.fn()` is never wired to the ledger; `callCount() === 0` holds whatever the code does. | Flag the unwired mock. Fix: assert `ledger.recorded` is empty (and the result is null). |
+| Q3 | 'caps the fine at ten dollars' | `amountCents > 0` passes for an uncapped fine too. | Flag as a weak assertion. Fix: assert exactly 1000. |
+| Q4 | 'looks up outstanding fines before recording a new one' | Asserts the order of two ledger calls, not an outcome; a refactor that kept the behaviour (one query by loan id) breaks it. | Flag as implementation detail. Fix: drop it; 'does not assess a loan that already has an outstanding fine' covers the behaviour. |
+| Q5 | `fines/money.ts` `percentOf` | Exported, imported module, no test. (The not-yet-due branch, `daysLate <= 0`, is also untested; flagging it is correct too.) | Flag missing coverage. |
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| QT1 | `FakeFineLedger`, and `mock.method(ledger, 'outstandingFor', ...)` in 'does not assess a loan that already has an outstanding fine' | Mocking. | A designated fake for an external port, stubbed per test; the subject runs for real. |
+| QT2 | 'charges 25 cents a day...', the three `isOutstanding` tests, 'rounds half a cent up' | Nothing. | Exact assertions on real behaviour. |
+| QT3 | `test/send-due-reminder.test.ts` inline gateways passed to the constructors | Hand-rolled doubles. | Constructor-injected fakes that capture what was sent. Its real gap is coverage: the email channel (and the missing-phone/address throws) are untested. |
+
+Build cases (`tdd-implementation-*`), graded on the trace and the files written:
+
+- `cancel-hold`: the design in `docs/cancel-hold/design.md`. Expected: CancelHold with its queue injected, a removal operation on the `HoldQueue` port and in `InMemoryHoldQueue`, plain-data result, nothing else touched (`place-hold.ts` carries V3 and `loan.ts` V2; both stay). The prompt's question 1 (renumber positions, notify the next member) is load-bearing: escalate, don't build. Question 2 (reason wording) is decide-and-note.
+- `named-fix`: V15 handed back as a review finding. Expected: `LoanStore` through the constructor, `main/server.ts` updated, behaviour unchanged, ReturnBook's behaviour pinned by tests (none existed; `return-book.ts` can't load under test before the fix because `main/wiring.ts` imports the fictional vendor packages), nothing else in `lending/` touched.
+
+## Readability plants (`C`, `CT`) — `code-reviewer:code-review`
+
+Case-only overlays in `code-plants/code-review/`, each a PR of new files.
+
+| # | Where | Violation | Expected |
+|---|---|---|---|
+| C1 | `fine-notices`: `emailFineNotice`/`smsFineNotice`/`letterFineNotice` | The same four lines (filter outstanding, empty check, format amount, count phrase) three times. | A real finding; extract the shared part. |
+| C2 | `fine-notices`: comment above `countOutstanding` | "Amounts are in whole dollars"; the value is cents. | Among the most serious: actively misleading. Correct or delete. |
+| C3 | `fine-notices`: `countOutstanding` | Says count, returns a cents total. | Wrong name, ranked above the merely vague `build`. Rename (`totalOutstandingCents`). |
+| C4 | `fine-notices`: "Check the member's contact preference." in `build` | WHAT comment. | Delete. |
+| C5 | `fine-notices`: `test/fine-notice.test.ts` | Both tests named `'works'`. | Rename to say what each checks. |
+| C6 | `fines-report`: `FinesReport.run` | Validates, queries, filters, de-duplicates, calls Stripe, totals, logs, assembles. | Split into named steps. |
+| C7 | `fines-report`: `FineChaseList.shouldChase` | One check on its own `minimumCents`, four rules about the member (active, not expired, reachable on the preferred channel); `members/member.ts` already has `isActive`. | Feature envy; move the member checks next to the member (reuse or extend `isActive`). An earlier plant, a formatter reading member fields, was dropped: formatting another object's data is a formatter's job, and reviews rightly passed it. |
+| C8 | `fines-report`: `fromYear, fromMonth, toYear, toMonth` | Data clump across three signatures; `runFinesReportForPeriod` takes seven parameters. | One period object. |
+| C9 | `fines-report`: the reporting month | A `YYYY-MM` string checked by regex, split to numbers, rebuilt from numbers elsewhere. | Primitive obsession; one owner for "month". |
+
+| # | Where | Why it looks wrong | Why it isn't |
+|---|---|---|---|
+| CT1 | `fine-notices`: `if (owed.length === 0) return null;` in all three | Repeated. | A one-line guard; not a duplication finding of its own. |
+| CT2 | `fine-notices`: the "within 14 days" comment in `letterFineNotice` | A long comment. | Records the fee-schedule rule the code can't show. Keep. |
+| CT3 | `fine-notices`: the second `'works'` test | Mocks `build` and asserts the mock ran. | A test-quality problem (it never runs real code), for `test-quality-review`, not a readability finding. Its name is C5. |
+| CT4 | `fines-report`: `StripeClient` built from `process.env` inside `FinesReport` | An SDK in a report (V12's pattern). | Structural: named for `architecture-review`, not ranked as readability. |
+| CT5 | `catalog/` | Nothing. | The clean module (T10); nothing above Low. |
+
 ## Boy Scout scoping (same code, different framing)
 
 `library-app-reporting-pr` frames V14 plus the new `ReportFiles` port (T4) as

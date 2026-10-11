@@ -1,0 +1,92 @@
+schema_version: "1.0"
+name: tdd-implementation-named-fix
+description: "A reviewer-named fix (V15: ReturnBook reaching into main/wiring.ts) applied through the TDD loop: behaviour pinned by tests that run for real, constructor injection with server.ts updated, behaviour unchanged, nothing else in lending/ touched."
+tags: [tdd-implementation, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. `architecture-review` handed back this finding on `lending/` — apply the fix. I won't be around to answer questions while you work.
+
+    > **ReturnBook depends on the composition root.** `lending/return-book.ts` imports `loanStore()` from `main/wiring.ts` and calls it in a field initializer. `main/wiring.ts` imports every adapter, the ORM and `process.env`, so the use case now depends on all of them and can't be given a fake store. Fix: take `LoanStore` through the constructor like `RenewLoan`; only `main/` should import `main/wiring.ts`. ReturnBook's behaviour must not change.
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation"'
+    min: 1
+  - type: tool_used
+    name: runs-the-tests
+    tool: Bash
+    input_match: 'npm (run )?test|node .*--test'
+    min: 2
+    arm: both
+  - type: llm
+    name: takes-store-through-constructor
+    focus:
+      source: file
+      path: lending/return-book.ts
+    weight: 1
+    criteria: |
+      PASS if `ReturnBook` receives its `LoanStore` through its constructor and the file no longer imports anything from `main/`.
+
+      FAIL if it still imports from `main/`, or obtains the store any way other than a constructor parameter.
+  - type: llm
+    name: behaviour-unchanged
+    focus:
+      source: file
+      path: lending/return-book.ts
+    weight: 1
+    criteria: |
+      Before the fix, `run(loanId)` threw `no loan <id>` when the loan didn't exist, returned without doing anything when the loan was already returned, and otherwise updated the loan with `returnedOn` set to the clock's current time as an ISO string.
+
+      PASS if `run` still does exactly those three things.
+
+      FAIL if any of them changed, or new behaviour was added (validation, logging, a different error, a return value).
+  - type: llm
+    name: wiring-updated
+    focus:
+      source: file
+      path: main/server.ts
+    weight: 1
+    criteria: |
+      PASS if `main/server.ts` constructs `ReturnBook` with a loan store from the wiring (for example `new ReturnBook(wiring.loanStore(), wiring.clock())`, in whatever parameter order the new constructor uses).
+
+      FAIL if `ReturnBook` is still constructed with only a clock, or with arguments that don't match its new constructor.
+  - type: llm
+    name: pins-behaviour-with-tests
+    focus:
+      source: file
+      path: test/return-book.test.ts
+    weight: 1
+    criteria: |
+      PASS if the tests cover ReturnBook's behaviour (a missing loan throws, an already-returned loan is left alone, an open loan gets `returnedOn` set to the clock's time) using a fake or in-memory LoanStore passed to the constructor.
+
+      FAIL if any of the three is untested, or the tests only check that the constructor accepts an argument.
+  - type: regex
+    name: last-test-run-green
+    target: trace
+    pattern: 'ℹ fail [1-9](?![\s\S]*ℹ fail \d)'
+    match: not_contains
+  - type: regex
+    name: a-green-run-happened
+    target: trace
+    pattern: 'ℹ fail 0'
+  - type: llm
+    name: honest-about-order
+    focus: last_message
+    weight: 1
+    criteria: |
+      PASS if the response says whether tests covered ReturnBook before the change and how the behaviour was verified (for example: none existed; the tests were written before or after the structural change, and why).
+
+      FAIL if it claims existing tests were re-run and passed when none covered ReturnBook, or says nothing about how the unchanged behaviour was verified.
+  - type: regex
+    name: touches-only-the-fix
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*(?:lending/(?!return-book\.ts)|infra/|fines/|members/|notifications/|reporting/|package\.json)'
+    match: not_contains

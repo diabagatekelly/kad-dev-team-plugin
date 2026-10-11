@@ -1,6 +1,6 @@
 ---
 name: test-quality-review
-description: Critique an existing test file's quality — over-mocking, false positives, tests that verify nothing, missing coverage, implementation-detail assertions. Use on demand against any test file, or inline as part of tdd-implementation's own Red-Green-Refactor loop after each cycle.
+description: Critique existing tests — over-mocking, false positives, tests that verify nothing, untested exports and branches, implementation-detail assertions. Use whenever someone asks whether tests are any good ("are these tests actually testing anything?", "review my tests", "can you check this test file?"), and inline in tdd-implementation's loop after each cycle. Reports only; never edits the tests.
 ---
 
 # Test Quality Review
@@ -110,8 +110,11 @@ stub's internals rather than the outcome it produces.
 
 ## Severity
 
-Critical / High / Medium / Low, matching this roster's shared scale (see
-`AGENT.md`). Mocking the code under test is always Critical. Excessive
+Critical / High / Medium / Low, the scale every reviewer in this roster
+uses. Critical is a test that can't fail whatever the code does. High is a
+test that can fail but checks the wrong thing or the wrong layer. Medium
+is a test that verifies nothing real, or a real gap in what's tested. Low
+is style. Mocking the code under test is always Critical. Excessive
 mocking, implementation-detail assertions, wrong-boundary tests, and a
 mock that doesn't intercept anything are High. Useless tests, false
 positives, missing coverage, revealed defensive code, and incomplete
@@ -130,7 +133,10 @@ archive of every cycle.
 
 **Invoked standalone** — on demand against an existing test file, or as
 one of several parallel graders reviewing a finished candidate
-implementation — write a findings report:
+implementation — write a findings report as your response. Save it to a
+file only when whoever invoked you named one; never search the project for
+a place to put it. Read and report only: don't edit the test file or the
+code, even for a one-line fix — describe the fix instead.
 
 ```markdown
 ## Test Review: <file>
