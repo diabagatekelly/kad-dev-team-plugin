@@ -1,0 +1,60 @@
+schema_version: "1.0"
+name: user-story-writeup-payfine-phase2
+description: "Resumes phase 1 with the answer (GitHub, save it here, don't file it): user-story-writeup writes the story to the given path as a GitHub issue body, a user story from the slice with its criteria and placeholders carried as they are, nothing invented, and doesn't file it."
+tags: [user-story-writeup, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Yes, file it, in GitHub. Don't create the issue yourself: save the write-up as `docs/pay-fine/user-story-001.md` and I'll paste it in.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: file_exists
+    name: story-written
+    path: docs/pay-fine/user-story-001.md
+  - type: regex
+    name: does-not-file-it
+    target: trace
+    pattern: 'gh\s+(?:issue|api)'
+    match: not_contains
+  - type: llm
+    name: written-as-a-user-story
+    focus:
+      source: file
+      path: docs/pay-fine/user-story-001.md
+    weight: 1
+    criteria: |
+      The slice: a signed-in member opens the portal, sees their outstanding fines, picks one and pays it by card, and the fine then shows as paid. The point is that members needn't come to the desk to pay.
+
+      PASS if the document reads as a not-yet-built work item framed around the member: who benefits, what they can do once it ships, and why. It follows from the slice's thin path without needing the slice open beside it.
+
+      FAIL if it reads as a PR description of finished work, a bare task list for developers, or leaves out who benefits or why.
+  - type: llm
+    name: criteria-carried-as-they-are
+    focus:
+      source: file
+      path: docs/pay-fine/user-story-001.md
+    weight: 1
+    criteria: |
+      The slice's acceptance criteria are: a signed-in member with outstanding fines sees each one and its amount; a successful payment shows the fine as paid; a declined payment leaves the fine outstanding and tells the member; plus a SECURITY placeholder and a RELIABILITY placeholder, both left for devsecops-engineer.
+
+      PASS if all three criteria appear without being tightened, loosened or added to, and both placeholders appear still as placeholders (not filled in with security or reliability criteria).
+
+      FAIL if any criterion is missing or changed, new criteria are added, or either placeholder is missing or written out.
+  - type: llm
+    name: nothing-invented
+    focus:
+      source: file
+      path: docs/pay-fine/user-story-001.md
+    weight: 1
+    criteria: |
+      The user said only: GitHub, and they will paste it in themselves.
+
+      PASS if the document is a title and a markdown body suited to a GitHub issue and invents nothing it can't know: no issue number, assignee, milestone, project board, due date or estimate presented as real. A placeholder reference line for the issue number is fine; suggested labels clearly offered as suggestions are fine.
+
+      FAIL if it states any of those as fact.

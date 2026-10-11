@@ -143,6 +143,18 @@ nine-case suite with the pairwise judge) before trusting anything.
    or carrying an accidental problem, and only then is the skill wrong.
    A case both arms pass is a regression guard, not evidence of uplift;
    say so in the coverage table.
+
+   To check a judge verdict, reproduce the eval's own call:
+   `--judge-model sonnet` resolves to `claude-sonnet-5-5`, while
+   `claude -p --model sonnet` may reach a different model, which can
+   disagree. Use `claude -p --model claude-sonnet-5-5 --system-prompt
+   "You are a strict, terse evaluation judge for coding-agent traces."`
+   with the criterion, the output, and "Respond with exactly one word:
+   PASS or FAIL." A reply with any FAIL in it counts as a fail. Asking
+   the same model to explain can pass a document the one-word judge
+   fails. When a grader stacks exceptions ("these may appear in either
+   section", "this is not an addition"), the one-word judge tends to
+   fail it; split it into plain checks.
 5. **Fix the skill only for a failure that survives step 4**, re-run the
    affected cases, and record the finding in this README's findings list
    and the persona's `PERSONAS.md` row.
@@ -188,9 +200,8 @@ therefore runs as a chain of cases:
 
 Answers arrive as a user message rather than an `AskUserQuestion` result,
 which is the one fidelity gap. This replaces the `.claude/skills/agent-eval`
-stand-in for the two-phase and approval-loop cases below; the emulated
-cases in the table are the backlog, and each one's `prompt.md` already names
-the plants a `library-app` case would need.
+stand-in for two-phase and approval-loop cases; only the emulated
+`orchestrator` case still uses it.
 
 ## Coverage
 
@@ -204,21 +215,15 @@ score is history, not a claim about today.
 
 | Case | Last result | Current? |
 |---|---|---|
-| `docs-writer:problem-framing-doc` | 3/3 PASS | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
-| `docs-writer:scope-map` | 5/5 PASS, inline | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `docs-writer:adr` | — | superseded by the real case below |
 | `docs-writer:why-comments` | — | superseded by the real case below |
-| `docs-writer:user-story-writeup` | 3/3 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `docs-writer:pr-writeup` | — | superseded by the real case below |
 | `docs-writer:user-facing-docs` | — | superseded by the real case below |
 | `docs-writer:staleness-audit` | — | superseded by the real case below |
-| `product-manager:requirements-refinement` | 6/6 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
-| `product-slicer:vertical-slicing` | 6/6 PASS, two-phase | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
-| `product-slicer:acceptance-criteria` | 2/2 PASS, inline | stale — persona rules moved into the skill; not re-run, the real case below covers phase 1 |
 | `orchestrator` | 15/15 PASS, skill-only | yes — kept as the broad check on the routing table (13 described directories, dry run); the real cases below cover what it can't |
 | `orchestrator-security-stage` | real, Sonnet: 2/2 runs all pass (`results/20261011-orch-cal2`); baseline fails routing and writes no log — "what's next?" on a real planning folder fires the orchestrator, which routes to `security-requirements` by invoking the skill, passes the save location, writes the log at routing time, and the persona asks its questions | yes |
 | `orchestrator-superseded-scope-map` | real, Sonnet: 2/2 runs all pass — real inspection: reads `## Status` and routes to requirements for the Active map's step 1, not to slicing from the superseded map's requirements doc. The baseline also routes correctly here, so this is a regression guard on inspection, with the skill-invocation graders as the plugin-fired check | yes |
-| `orchestrator-backward-route` | real, Sonnet: 2/2 runs all pass — a "Handed back to product-slicer — blocking" section routes to `product-slicer`, not forward to reliability criteria; the log records why | yes |
+| `orchestrator-backward-route` | real, Sonnet: 2/2 runs all pass, again after `vertical-slicing` gained its stop-first rule (`results/rrf-*`) — a "Handed back to product-slicer — blocking" section routes to `product-slicer`, not forward to reliability criteria; the log records why | yes |
 | `orchestrator-asks-for-target` | real, Sonnet: 2/2 runs all pass; baseline 0/1 — no folder given, it asks where the artifacts are before anything else and doesn't search the project | yes |
 | `architecture-design-payfine-phase1` | real, Sonnet: 1/1 with plugin on both passes (`results/20261011-sa-p1f-architecture-design-payfine-phase1`); the baseline writes the design straight away — the pay-a-fine slice before design, with the engineer's generic `PaymentGateway` registry proposal: presents it as a decision, recommends against it (one provider; `FinePayments` already isolates Stripe), and waits | yes |
 | `architecture-design-payfine-phase2` | real, Sonnet: 27/27 over 3 runs (`results/20261011-sa-final-architecture-design-payfine-phase2`) — the user overrules (a second provider is signed), approves the rest; the saved design states its importance ordering, stays conceptual, records each decision's approval, names what crosses its boundaries, builds the approved gateway on the existing `CollectFine` path, notes the leaky payment port (V7) and doesn't call the one-implementation port premature. Graded on the saved file. No baseline arm | yes |
@@ -227,12 +232,15 @@ score is history, not a claim about today.
 | `technology-bootstrap-phase2` | real, Sonnet: 2/3 runs clean (`results/20261011-sa-p2g-technology-bootstrap-phase2`) — the answer delegates the test runner and package manager but never mentions a UI framework; recommends one with alternatives and waits instead of settling it | yes |
 | `technology-bootstrap-phase3` | real, Sonnet: 15/15 over 3 runs (`results/20261011-sa-final3-boot3`) — the user approves React with Vite; the saved bootstrap decides only what the first test forces, defers persistence with the in-memory reason, treats pinning as a choice, records rejected alternatives and open categories, and shows each choice as approved or delegated. Graded on the saved file. No baseline arm | yes |
 | `requirements-refinement-payfine-phase1` | real, Sonnet: 12/12 over 3 runs (`results/20261011-np-final-*`); baseline 2/3 in calibration (writes technical design into the answer) — the pay-a-fine problem doc only, asked to "work out exactly what we want built": asks what to build before writing, doesn't ask what the problem doc or code answers | yes |
-| `vertical-slicing-payfine-phase1` | real, Sonnet: 18/18 over 3 runs; baseline 4/5 in calibration (no separate security and accessibility placeholders) — problem plus Active requirements, saves `slice-001.md`: stays inside "confirmed in scope", both placeholders, slice set named, doesn't re-ask the WHAT | yes |
+| `vertical-slicing-payfine-phase1` | real, Sonnet: 17/18 over 3 runs after the stop-first rule (`results/rrf-*`), the miss a grader that read "paid or waived fines don't show as outstanding" as adding waivers; reworded, and all three kept slices pass it with the eval's judge model; baseline 4/5 in calibration (no separate security and accessibility placeholders) — problem plus Active requirements, saves `slice-001.md`: stays inside "confirmed in scope", both placeholders, slice set named, doesn't re-ask the WHAT | yes |
 | `acceptance-criteria-payfine` | real, Sonnet: 9/9 over 3 runs; the baseline passed in calibration, so this is a regression guard — the engineer's "handles errors gracefully": rejected as untestable, and the undecided non-decline failures are flagged or routed to the reliability placeholder, not settled in the rewrite | yes |
 | `problem-framing-doc-payfine` | real, Sonnet: 14/15 over 3 runs; the baseline passed in calibration, a regression guard — the user's own description with "add a pay button" in it: no solution in the doc, Stripe and one-developer as constraints. Known miss 1/3: an unstated "in-person payment must keep working" listed as a constraint beside a related open question | yes |
 | `scope-map-self-service` | real, Sonnet: 14/15 over 3 runs, the miss a judge error (the map routes privacy to each step's requirements pass; re-asked, the judge passes it); baseline misses the privacy routing on both calibration passes — a new, larger problem (`planning/self-service/`: fines, holds, contact details) whose privacy constraint is worded around one step | yes |
 | `user-story-writeup-payfine-phase1` | real, Sonnet: 9/9 over 3 runs; baseline fails on both calibration passes (writes the story or fills the security placeholder) — asked to make slice 1 "ready to track", asks whether and where to file before writing. Before the fix the skill never fired: the run filled the slice's security placeholder instead | yes |
-| `vertical-slicing-handback` | real, Sonnet: 15/15 over 3 runs (`results/20261011-hb-final`); baseline fails on both calibration passes (edits the Active requirements doc and writes the refund slice in full) — the `pay-fine-handback` folder, where the security pass hands back "members have no refund path": owns the decision, cuts a separate refund slice rather than growing slice 1, sends its WHAT to a requirements pass, and leaves the requirements, design and security documents to their owners. Before the fix the skill grew slice 1, wrote the refund requirement itself and authored security criteria for it. After the fix `vertical-slicing-payfine-phase1` re-ran 18/18 and `orchestrator-backward-route` 2/2 | yes |
+| `user-story-writeup-payfine-phase2` | real, Sonnet: 15/15 over 3 runs (`results/rrf-*`) — resumes phase 1 with "GitHub, save it here, I'll paste it in": writes the story to the given path as a user story, carries the three criteria and both placeholders as they are, invents no issue number or assignee, and doesn't file it | yes |
+| `requirements-refinement-payfine-phase2` | real, Sonnet: 23/24 over 3 runs (`results/rrf2-*`) — resumes phase 1 with the user's answers (pay online now, not see-only; payment link rejected; one fine, no saved cards): template sections, the user's own trade-off, scope as confirmed, both constraints as consequences. Known miss 1/3: "one developer" given only as the reason for scope cuts the user had already made for their own reasons | yes |
+| `vertical-slicing-no-requirements` | real, Sonnet: 12/12 over 3 runs; baseline fails on both calibration passes (cuts the slice) — problem doc only, and the user says "just decide, we don't need to talk it through": writes nothing and hands back to `requirements-refinement`. Before the fix the skill read its own stop rule and cut the slice anyway, with a note that the scope was its own judgment |
+| `vertical-slicing-handback` | real, Sonnet: 15/15 over 3 runs (`results/20261011-hb-final`, and again after the stop-first rule, `results/rrf-*`); baseline fails on both calibration passes (edits the Active requirements doc and writes the refund slice in full) — the `pay-fine-handback` folder, where the security pass hands back "members have no refund path": owns the decision, cuts a separate refund slice rather than growing slice 1, sends its WHAT to a requirements pass, and leaves the requirements, design and security documents to their owners. Before the fix the skill grew slice 1, wrote the refund requirement itself and authored security criteria for it. After the fix `vertical-slicing-payfine-phase1` re-ran 18/18 and `orchestrator-backward-route` 2/2 | yes |
 | `adr-payment-gateway` | real, Sonnet: 11/12 over 3 runs (`results/20261011-dw-final-*`); baseline fails no-how — a real decision (provider-neutral payments, Adyen at the desk) told with file paths and class names: decision, alternatives with reasons, honest downsides, none of the how. Known miss 1/3: the Context names the `FinePayments` port | yes |
 | `adr-neg-rename` | real, Sonnet: 6/6; baseline writes the ADR — a field rename asked for as an ADR: runs the three checks and declines. Before the fix the skill fired and asked how to scope the ADR instead | yes |
 | `why-comments-collect-fine` | real, Sonnet: 15/15; the baseline passed in calibration, a regression guard — four planted comments in `fines/collect-fine.ts` (D1, D2, DT1, case-only overlay): deletes the WHAT comments, flags the one that contradicts the retry loop, keeps the WHY, stays off the code | yes |
@@ -340,9 +348,10 @@ what's cheapest.
 | 7 | ~~`software-architect:architecture-review`~~ | **Run: 4/4 PASS.** Regression confirmation, no news. Case since retired in favour of the `library-app-*` suite. |
 | 8 | ~~`software-architect:architecture-design`~~ | **Reworked, then run: 8/8 PASS.** Graders split into four `portable-*` (hold for any design doc) and three `fixture-*` (this case's own sync/async and premature-abstraction content) per `NOTES.md`'s plan. First-ever gradable result for this case, and the first real test of the "Technology at a boundary" section added since it was last run. |
 
-All eight cases in this backlog have now been run at least once.
-
-Run with the `agent-eval` skill, one case per invocation.
+All eight cases in this backlog have now been run at least once. Every one
+except `orchestrator` has since been replaced by real cases and deleted;
+their summaries are in git history. `orchestrator` is the last emulated
+case. Run it with the `agent-eval` skill.
 
 ### Known coverage gaps
 
@@ -946,3 +955,22 @@ grader, or the `agent-eval` harness that a case already covers.
   `accessibility-review-payfine` gives no uplift, since the baseline finds
   textbook plants too; harder plants (a focus ring that is declared but
   invisible, a contrast failure only after `:hover`) would be the next step.
+- **The last multi-phase product skills moved to real cases.**
+  `requirements-refinement` and `user-story-writeup` gained a real phase 2
+  (the user's answers, resumed from a frozen phase 1), and
+  `vertical-slicing` a case for its no-requirements stop. The remaining
+  emulated cases for `docs-writer`, `product-manager` and `product-slicer`
+  are deleted, which leaves `orchestrator` as the only emulated case.
+  - `vertical-slicing` cut a slice with no requirements doc when the user
+    said "just decide, we don't need to talk it through". It loaded its
+    stop rule, read on, and cut the slice anyway with a note that the
+    scope was its own judgment. The stop now opens the skill: no Active
+    requirements doc means no file and no slice sketched in the reply,
+    whatever the user says about skipping it.
+  - The eval's judge is `claude-sonnet-5-5`, while `claude -p --model
+    sonnet` in this shell reaches a different model. A grader that
+    failed 9/9 inside the eval passed 6/6 when re-asked that way, and
+    Sonnet 5.5 passed it too when allowed to explain. Earlier "re-asked,
+    the judge passes it" notes in this README used `claude -p --model
+    sonnet` and may not reflect the eval's judge. The playbook (step 4)
+    now gives the exact reproduction.

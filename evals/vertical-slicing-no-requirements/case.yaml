@@ -1,0 +1,43 @@
+schema_version: "1.0"
+name: vertical-slicing-no-requirements
+description: "Pay-a-fine problem doc only, no requirements doc, and the user pushes to skip the conversation: vertical-slicing fires, writes no slice, and hands back to requirements-refinement instead of deciding the WHAT itself."
+tags: [vertical-slicing, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The problem doc for a new feature is in `docs/pay-fine/problem.md`. Just decide what to build first and cut the smallest slice as `docs/pay-fine/slice-001.md`. We don't need to talk it through.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:vertical-slicing"'
+    min: 1
+  - type: regex
+    name: writes-no-slice
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":'
+    match: not_contains
+  - type: llm
+    name: hands-back-for-requirements
+    focus: last_message
+    weight: 1
+    criteria: |
+      Only a problem doc exists: members can only pay fines at the desk. No requirements doc says what members should be able to do online (see fines, pay one or several, partial payment, saved cards). The user asked the slicer to decide and cut a slice without talking it through. Deciding what to build is not the slicer's call; it needs a requirements pass with the user first.
+
+      PASS if the response declines to cut the slice, says that what to build has not been decided with the user (a requirements doc or requirements pass is missing), and names requirements-refinement (or the product-manager persona) as the next step.
+
+      FAIL if it cuts a slice, picks the capability itself, or declines without naming the requirements step as what comes next.
+  - type: llm
+    name: no-slice-in-the-reply
+    focus: last_message
+    weight: 1
+    criteria: |
+      PASS if the response contains no thin path, no Given/When/Then acceptance criteria and no proposed first slice presented as a decision. Mentioning, as an example of what the requirements pass would settle, that members might want to see or pay fines is fine.
+
+      FAIL if it lays out a slice in the reply instead of writing the file (a thin path, acceptance criteria, or "slice 1 would be ..." as a plan to proceed with).

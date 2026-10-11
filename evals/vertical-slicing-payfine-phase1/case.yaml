@@ -30,7 +30,7 @@ graders:
     criteria: |
       The Active requirements doc confirms: a member sees their own outstanding fines, pays one by card, it then shows as paid to them and staff, and a declined card leaves it outstanding and tells them. It puts paying several fines in one payment, and saved cards, out of scope.
 
-      PASS if the slice written up in full stays inside that: it does not include paying several fines at once, saved cards, or anything the requirements doc does not mention (reminders, refunds, waivers). A one-line list of later slices may mention anything.
+      PASS if the slice written up in full stays inside that: it does not include paying several fines at once, saved cards, or a capability the requirements doc does not mention (sending reminders, refunds, waiving fines). Saying which fines count as outstanding (for example that paid or waived ones don't show) is part of seeing outstanding fines, not a new capability. A one-line list of later slices may mention anything.
 
       FAIL if the fully written slice includes any of those.
   - type: llm

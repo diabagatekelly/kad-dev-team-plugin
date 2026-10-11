@@ -21,7 +21,7 @@ needs a scripted answer to produce its final artifact.
 ## Usage
 
 Invoke with the eval case directory as the argument, e.g.:
-`/agent-eval /path/to/kad-developer-suite/evals/docs-writer:problem-framing-doc`
+`/agent-eval /path/to/kad-developer-suite/evals/orchestrator`
 
 ## Procedure
 

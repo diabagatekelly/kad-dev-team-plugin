@@ -5,6 +5,14 @@ description: Cut the smallest end-to-end shippable slice from a problem — pick
 
 # Vertical Slicing
 
+**First, find the Active requirements doc for this unit. If there isn't
+one, stop here:** write nothing, cut no slice, and don't sketch one in
+your reply. Say that what to build hasn't been decided with the user yet
+and hand back to `requirements-refinement`. This holds when the user says
+to skip it ("just decide", "we don't need to talk it through"): what gets
+built is theirs to confirm, not yours to infer, and a slice cut anyway
+with a note that it's your own judgment is still a slice cut on a guess.
+
 ## What a vertical slice is
 
 A slice cuts **through** all layers a feature touches (UI, logic, storage,
@@ -24,10 +32,10 @@ Start from `product-manager`'s requirements doc for the unit being worked
 set and not a capability choice you're inferring yourself. Its "confirmed
 in scope" is the whole of what you're slicing: never reach past it into a
 scope map's later steps or the requirements doc's own "confirmed out, for
-now" list. **If no Active requirements doc exists for this unit, stop:**
-say so and hand back to `requirements-refinement`. Don't infer the WHAT
-from the problem doc or scope map yourself, and don't re-ask the user
-what the requirements doc already settled.
+now" list. Without an Active requirements doc, stop (see the top of
+this skill). Don't infer the WHAT from the problem doc or scope map
+yourself, and don't re-ask the user what the requirements doc already
+settled.
 
 Slicing decides what gets built first, not how it's built: technology,
 architecture and module structure are `architecture-design`'s, code is

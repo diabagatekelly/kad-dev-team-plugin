@@ -1,0 +1,103 @@
+schema_version: "1.0"
+name: requirements-refinement-payfine-phase2
+description: "Resumes phase 1 with the user's answers: requirements-refinement writes requirements-001.md in its template, keeps the user's own trade-off (pay online now, not a see-only first version), stays inside what was confirmed, and reconciles both problem-doc constraints as consequences."
+tags: [requirements-refinement, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Members with an outstanding fine who already use the portal, and the desk staff, who should stop taking these payments.
+
+    Members want to clear a fine without a trip in just for that. Seeing the fine isn't enough: I want them to be able to pay it online in this first version, even though taking payments is the riskier part. A "see your fines, then come in" version wouldn't save the desk any time, and that's the whole point.
+
+    The simplest version that counts: a member sees their own outstanding fines, pays one by card, and it shows as paid to them and to staff. If the card is declined, the fine stays owed and they're told. A fine is paid in full, no partial payments, and it doesn't need to tie into renewals.
+
+    We thought about staff emailing a Stripe payment link for each fine, but that's still the desk doing it by hand, fine by fine.
+
+    Paying several fines in one go can wait; most members only ever have one. No saved cards: we don't want to keep anyone's card details.
+
+    Save it as `docs/pay-fine/requirements-001.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: file_exists
+    name: requirements-written
+    path: docs/pay-fine/requirements-001.md
+  - type: llm
+    name: template-sections
+    focus:
+      source: file
+      path: docs/pay-fine/requirements-001.md
+    weight: 1
+    criteria: |
+      PASS if the document has a Status marked Active and sections (any heading level, wording close to these) for: User; What they need; Why this, why now; Confirmed in scope; Confirmed out, for now; Constraints in force.
+
+      FAIL if any of these is missing or the status is absent.
+  - type: llm
+    name: keeps-the-users-trade-off
+    focus:
+      source: file
+      path: docs/pay-fine/requirements-001.md
+    weight: 1
+    criteria: |
+      The user chose to have members pay online in the first version even though taking payments is the riskier part, because a version where members only see their fines and still come in wouldn't save desk staff any time, which is the point. They also rejected staff emailing a Stripe payment link per fine, because that is still the desk doing it by hand.
+
+      PASS if the document records the choice to pay online now together with the user's reason (it saves the desk the work; seeing fines alone wouldn't), and records the rejected payment-link alternative with its reason.
+
+      FAIL if the reasoning is missing or generic, the choice is presented as the safe or obvious option, or a different rationale (such as risk avoidance or smallest-first) is substituted for the user's.
+  - type: llm
+    name: in-scope-as-confirmed
+    focus:
+      source: file
+      path: docs/pay-fine/requirements-001.md
+    weight: 1
+    criteria: |
+      PASS if the "Confirmed in scope" section says that a member sees their own outstanding fines, pays one by card, the fine then shows as paid to the member and to staff, and a declined card leaves the fine outstanding and tells the member; and it puts no other capability in scope, such as refunds, reminders, emailed receipts or a staff report. Details of those four (paid through Stripe, paid in full) are not other capabilities.
+
+      FAIL if any of those four is missing from the section, or it adds another capability.
+  - type: llm
+    name: exclusions-with-reasons
+    focus:
+      source: file
+      path: docs/pay-fine/requirements-001.md
+    weight: 1
+    criteria: |
+      PASS if the "Confirmed out, for now" section lists both of these with their reasons: paying several fines in one payment (most members only have one), and saved cards (the library doesn't want to keep card details). Other entries in the section don't matter.
+
+      FAIL if either is missing from that section or has no reason.
+  - type: llm
+    name: constraints-as-consequences
+    focus:
+      source: file
+      path: docs/pay-fine/requirements-001.md
+    weight: 1
+    criteria: |
+      The problem doc has two constraints: card payments already go through Stripe and nothing about that changes; one developer maintains the service.
+
+      PASS if the document addresses both, and for each says what it forces for this feature rather than restating it. Examples that pass: online payments go through the existing Stripe setup, not a new provider (or card details are handled by Stripe and never kept by the library); with one developer, nothing here can depend on a new service to run or on someone matching payments to fines by hand, so a payment marks its fine paid by itself. Any concrete consequence of this kind passes.
+
+      FAIL if either constraint is missing, or either is only copied across ("one developer maintains the service") with no consequence drawn for this feature.
+  - type: llm
+    name: no-thin-path-or-criteria
+    focus:
+      source: file
+      path: docs/pay-fine/requirements-001.md
+    weight: 1
+    criteria: |
+      PASS if the document contains no thin path, no Given/When/Then acceptance criteria, no slicing decision (what to build first) and no technical design presented as decided (routes, modules, data model, Stripe API calls). Plain-language statements of what the user confirmed are fine.
+
+      FAIL if it contains any of those.
+  - type: llm
+    name: finishes-without-reasking
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user has just answered who benefits, what they want, why, the simplest version, the alternative they rejected, what's out, and where to save the document.
+
+      PASS if the response reports the requirements as written and does not ask the user any of those things again. A short pointer to the next step (slicing) or a genuinely new question is fine.
+
+      FAIL if it asks the user to re-decide something they just answered, or ends without having written the document.
