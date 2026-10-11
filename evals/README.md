@@ -215,11 +215,6 @@ score is history, not a claim about today.
 
 | Case | Last result | Current? |
 |---|---|---|
-| `docs-writer:adr` | — | superseded by the real case below |
-| `docs-writer:why-comments` | — | superseded by the real case below |
-| `docs-writer:pr-writeup` | — | superseded by the real case below |
-| `docs-writer:user-facing-docs` | — | superseded by the real case below |
-| `docs-writer:staleness-audit` | — | superseded by the real case below |
 | `orchestrator` | 15/15 PASS, skill-only | yes — kept as the broad check on the routing table (13 described directories, dry run); the real cases below cover what it can't |
 | `orchestrator-security-stage` | real, Sonnet: 2/2 runs all pass (`results/20261011-orch-cal2`); baseline fails routing and writes no log — "what's next?" on a real planning folder fires the orchestrator, which routes to `security-requirements` by invoking the skill, passes the save location, writes the log at routing time, and the persona asks its questions | yes |
 | `orchestrator-superseded-scope-map` | real, Sonnet: 2/2 runs all pass — real inspection: reads `## Status` and routes to requirements for the Active map's step 1, not to slicing from the superseded map's requirements doc. The baseline also routes correctly here, so this is a regression guard on inspection, with the skill-invocation graders as the plugin-fired check | yes |
@@ -259,10 +254,11 @@ score is history, not a claim about today.
 | `code-review-neg-architecture` | real, Sonnet: never invokes `code-review` (a dependency-direction question) | yes |
 | `code-review-fine-notices-pr-via-agent` | real, Sonnet: 2/2 runs clean, delegation to `code-reviewer` confirmed | yes |
 | `map-update-cancel-hold` | real, Sonnet: 27/27 over 3 runs (one run's scratch script in the sandbox's temp dir was counted against it until the grader limited itself to project files); baseline attaches severity in calibration — after the cancel-hold slice lands, regenerates `docs/architecture-map.md` with no path given: new rows faithful, tiers carried forward, `utils/` untiered, the new tier-1 → tier-3 edge and the untiered edge flagged without verdicts, the shared `roundHalfUpCents` flagged, pre-existing candidates not reported as new, no app code touched. Before the template fix one run called the duplicate "fresh rather than intentional" | yes |
-| `map-query-consults` | real, Sonnet: 3/3 runs clean; baseline misses the structural candidate and the shape match and greps the source — three does-it-exist questions answered from the map at its fixed home: `MemberDirectory`, `daysBetween` for `diffInDays`, nothing for a PDF, the stale map caveated | yes |
-| `map-query-no-map` | real, Sonnet: 2/3 runs clean; baseline answers by grepping — no map exists: says so and points to `map-update`. Known miss 1/3: mentions a file it noticed while locating the app root | yes |
+| `map-query-consults` | real, Sonnet: 3/3 runs clean, again after the consult-hand-back line (`results/sa2-*`); baseline misses the structural candidate and the shape match and greps the source — three does-it-exist questions answered from the map at its fixed home: `MemberDirectory`, `daysBetween` for `diffInDays`, nothing for a PDF, the stale map caveated | yes |
+| `map-query-no-map` | real, Sonnet: 2/3 runs clean, 3/3 after the consult-hand-back line (`results/sa2-*`); baseline answers by grepping — no map exists: says so and points to `map-update`. Known miss 1/3: mentions a file it noticed while locating the app root | yes |
 | `library-app-lending-review` | real, Sonnet: 6/6 with plugin vs 4/6 without (runtime cycle missed, ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
-| `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
+| `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, again after `Skill` was added to the agent (`results/sa1-*`), delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
+| `architecture-design-payfine-via-agent` | real, Sonnet: 3/3 runs clean (`results/sa2-*`); with-only, the no-plugin arm has no agent to delegate to — the pay-a-fine design handed to the `software-architect` agent with the architecture map in place: `architecture-design` runs inside the agent, consults `map-query` through `Skill`, builds on the fines pieces the map records, and stops at its first decisions. Before the fix 2/3: one run returned the `map-query` report as its final answer, one read the map itself instead of consulting | yes |
 | `library-app-members-review` | real, Sonnet: 3/3 with plugin vs 2/3 without (table-shaped domain type missed), 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
 | `library-app-fines-review` | real, Sonnet: 4/4 with plugin vs 2/4 without (policy-mixed-with-mechanics and the premature strategy interface missed), 1 run | yes |
 | `library-app-notifications-review` | real, Sonnet: 3/3 both arms, 1 run — missing channel abstraction, port on the implementer's side, one-impl-port-over-I/O trap | yes |
@@ -375,10 +371,13 @@ case. Run it with the `agent-eval` skill.
   now reverts such an edit and treats the question as open; through the
   agent path the parent's edit is invisible to the subagent, so
   `tdd-implementation-cancel-hold-via-agent` stays weak for that reason.
-- **software-architect has no `Skill` tool.** `architecture-design`
-  consults `map-query` and the devsecops skills through the `Skill` tool,
-  which the agent path can't use. tdd-coach and code-reviewer were given
-  it this session; software-architect wasn't changed.
+- ~~**software-architect has no `Skill` tool.**~~ **Closed.**
+  software-architect and product-slicer now list `Skill` (their skills
+  consult `map-query`, the devsecops skills and `acceptance-criteria`).
+  The eval can't show the difference: it doesn't enforce an agent's
+  `tools:` list, so a subagent called `Skill` and `Agent` before either
+  was listed. What the agent path does show is covered by
+  `architecture-design-payfine-via-agent`.
 
 ~~- **`devsecops-engineer` has one case out of six skills.**~~ **Closed —
   all six skills now have a case, all passing.** `security-requirements`
@@ -974,3 +973,13 @@ grader, or the `agent-eval` harness that a case already covers.
     the judge passes it" notes in this README used `claude -p --model
     sonnet` and may not reflect the eval's judge. The playbook (step 4)
     now gives the exact reproduction.
+- **software-architect and product-slicer got the `Skill` tool, and the
+  architect's agent path got a real design case.** The eval doesn't
+  enforce an agent's `tools:` list, so the case passed before the tool was
+  added; it caught something else. Through the agent, a `map-query`
+  consult ended the turn: the subagent's final message was the map report,
+  and the design never resumed. `map-query` now says that when another
+  skill consulted it, its report is that skill's input and the caller's
+  work carries on in the same response; 3/3 clean after. One earlier run
+  also read the map directly instead of consulting `map-query`; it didn't
+  recur in the final three.

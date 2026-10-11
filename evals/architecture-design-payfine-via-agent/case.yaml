@@ -1,0 +1,51 @@
+schema_version: "1.0"
+name: architecture-design-payfine-via-agent
+description: "Agent path: the pay-a-fine design delegated to the software-architect agent, with an architecture map in place. architecture-design runs inside the agent, consults map-query through the Skill tool before deciding anything, and presents its first decisions for approval instead of writing the design."
+tags: [architecture-design, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, and its architecture map is at `docs/architecture-map.md`. We're planning a new feature; the planning documents are in `docs/pay-fine/` (problem, requirements, the slice and its user story). Design the structure for `slice-001` before any code is written, and save the design in `docs/pay-fine/`.
+
+    Hand the whole task to the `kad-dev-team:software-architect` agent, and return its final report verbatim as your final answer, adding nothing and removing nothing.
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 1200
+  allowed_tools: [Task, Agent, Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: agent-delegated-display
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?software-architect'
+    min: 1
+    arm: with-only
+  - type: regex
+    name: design-skill-runs
+    target: trace
+    pattern: '"skill": ?"kad-dev-team:architecture-design"'
+  - type: regex
+    name: consults-map-query
+    target: trace
+    pattern: '"skill": ?"kad-dev-team:map-query"'
+  - type: llm
+    name: uses-what-the-map-found
+    focus: last_message
+    weight: 1
+    criteria: |
+      The architecture map records that the fines module already has a `CollectFine` use case (`fines/collect-fine.ts`), a `FineLedger` port and a `FinePayments` port with a Stripe adapter (`infra/payments/stripe-fine-payments.ts`), and that the member portal has its own routes (`infra/http/portal-routes.ts`).
+
+      PASS if the response names at least one of these existing pieces as something the design builds on or must decide whether to reuse.
+
+      FAIL if it designs the slice as though none of them existed.
+  - type: llm
+    name: presents-decisions-and-waits
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: every real decision is presented on its own, with a recommendation and the rejected alternative(s), and approved before anything is written into the final design.
+
+      PASS if the response presents at least one real decision with a recommendation and an alternative, and stops for the user's approval without a finished design (no complete design document in the response, and no claim that one was saved).
+
+      FAIL if it delivers or saves a finished design, or settles the decisions itself.

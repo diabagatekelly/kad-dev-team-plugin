@@ -86,7 +86,11 @@ thorough than the map actually supports.
 ## Output
 
 A short report, returned directly to the asking persona in the same
-conversation — this isn't a skill that produces its own saved artifact:
+conversation — this isn't a skill that produces its own saved artifact.
+When another skill consulted you mid-task (`architecture-design`,
+`tdd-implementation`), the report is that skill's input, not your final
+message: write it, then carry straight on with the calling skill's work in
+the same response. The report:
 
 ```markdown
 ## Map query: <what was asked about>

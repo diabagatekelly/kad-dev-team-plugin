@@ -40,7 +40,7 @@ Bootstrap trigger, distinct from designing structure. Note what it won't do: no 
 
 model: sonnet
 color: purple
-tools: ["Read", "Write", "Edit", "Grep", "Glob", "AskUserQuestion"]
+tools: ["Read", "Write", "Edit", "Grep", "Glob", "AskUserQuestion", "Skill"]
 skills:
   - kad-dev-team:architecture-design
   - kad-dev-team:architecture-review

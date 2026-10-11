@@ -31,7 +31,7 @@ Acceptance-criteria-quality trigger — sends untestable criteria back before th
 
 model: sonnet
 color: green
-tools: ["Read", "Write", "Edit", "Grep", "Glob", "AskUserQuestion"]
+tools: ["Read", "Write", "Edit", "Grep", "Glob", "AskUserQuestion", "Skill"]
 skills:
   - kad-dev-team:vertical-slicing
   - kad-dev-team:acceptance-criteria
