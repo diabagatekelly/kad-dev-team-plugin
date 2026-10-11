@@ -165,11 +165,14 @@ assumed. Everything below is scaled to this.
 Current state, and gaps.
 
 ## How we'd put it back
-The rollback path, whether it's been exercised, roughly how long, and
-what can't be reversed.
+The rollback path, roughly how long, and what can't be reversed.
+**Rehearsed:** yes (when, how long it took) / no. A "no" is always its
+own finding, fixed by a rehearsal, whatever else breaks the path.
 
 ## What someone needs to know
-The short list, and where it lives.
+The short list.
+**Written down:** where, or nowhere. "Nowhere" is a finding, fixed by one
+short note next to the code.
 
 ## Findings
 Every gap the sections above name, each as its own finding with a fix — an
