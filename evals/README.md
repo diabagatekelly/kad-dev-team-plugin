@@ -242,7 +242,7 @@ score is history, not a claim about today.
 | `staleness-audit-docs` | real, Sonnet: 17/18; baseline misses restated code and ceremony — a planted `docs/` (D3–D6, DT2, DT3): stale lending rules, a code-narrating page, a sign-off log, an ADR the code overturned; keeps the waiver doc and the still-true Stripe ADR. Known miss 1/3: proposes a required-reviewers gate after deleting the sign-off log | yes |
 | `tdd-implementation-cancel-hold` | real, Sonnet: 53/54 over 3 runs (`results/g4-*`); baseline fails every process check in calibration (no Test List, no RED, no review, writes the code first) — the approved cancel-a-hold design built test-first, graded mechanically on the full trace (`regex`/`tool_order`) and on the written files: tests before code, RED runs seen, a `test-quality-review` call every cycle, last run green, design doc ends unchanged, nothing outside the slice touched; the reason wording decided and named, notification left to its owner. The main agent no longer edits the design doc before invoking the skill (0/3, was 2/3) since the description says to leave its open questions to the skill. Known miss: one report without its Test List | yes |
 | `tdd-implementation-named-fix` | real, Sonnet: 3/3 runs clean (`results/g4-*`); baseline makes the edit and writes no tests in calibration — V15 handed back as a review finding: `LoanStore` through the constructor, `main/server.ts` updated, behaviour unchanged and pinned by new tests that run green, nothing else touched, honest about tests coming after the structural change. Before the trigger fix the skill fired in 1 of 4 runs | yes |
-| `tdd-implementation-cancel-hold-via-agent` | real, Sonnet: 23/30 over 2 runs (`results/g4-*`), delegation to `tdd-coach` confirmed. The parent no longer touches the design doc before delegating (0/2). The misses are now the subagent's own process: three RED runs seen where four are expected, a skipped `test-quality-review` in some cycles, and one run that wrote its open questions into the design doc | yes |
+| `tdd-implementation-cancel-hold-via-agent` | real, Sonnet: 48/60 over 4 runs (`results/k1-*`, after `tdd-coach`'s `AGENT.md` was cut to the persona and a pointer to its skills; 23/30 before, so no measurable change), delegation to `tdd-coach` confirmed. The parent no longer touches the design doc before delegating. `red-runs-seen` fails every agent run, but it counts failing runs (four or more), not tests: the agent saw 4–6 distinct tests fail before passing, the same as the direct path, and runs fewer repeat runs while red. The real agent-path miss is judgment: in 3/4 runs the subagent settles the notification question itself ("no notification is sent", reasoned from the code) instead of leaving it to the design's owner, which the direct path does 3/3. Also once each: a skipped review in a cycle, open questions written into the design doc | yes |
 | `test-quality-review-fines` | real, Sonnet: 3/3 runs clean; baseline misses the call-order test (calls it "correct") and the untested `percentOf` — the planted `test/fines.test.ts` (Q1–Q5): subject's own method mocked, unwired mock, weak cap assertion, call-order assertion, untested export; traps: a designated fake stubbed per test, exact assertions. The skill didn't fire until its description named "are these tests actually testing anything?" | yes |
 | `test-quality-review-reminders` | real, Sonnet: 2/3 runs clean, the third a last-message artifact (the review was complete; the final message is a postscript about a stopped background task); the baseline passed in calibration, a regression guard — the app's own reminder tests: the untested email channel, no false alarm on constructor-injected fakes, "sound but incomplete" | yes |
 | `test-quality-review-neg-code-review` | real, Sonnet: never invokes `test-quality-review` (a readability request) | yes |
@@ -999,3 +999,15 @@ grader, or the `agent-eval` harness that a case already covers.
     skill is back to its committed text and the chaining stays a known
     miss: it only affects a problem small enough to need no scope map.
   - `.claude/skills/agent-eval` is retired with its last case.
+- **`tdd-coach` lost its own TDD paraphrase.** Its `AGENT.md` restated the
+  process from before the persona rules moved into
+  `tdd-implementation`, without any of the skill's later fixes. It now
+  keeps only the mandate, the no-asking rule and where output goes, and
+  says to follow the skill. The agent path scored the same before and
+  after (77% vs 80%), so the paraphrase wasn't the cause of the gap, but
+  one source can't drift. Looking closer, the gap is smaller than the
+  score: `red-runs-seen` counts runs, and the agent sees as many distinct
+  tests fail as the direct path. What remains is judgment: through the
+  agent, the notification question gets settled in the report instead of
+  handed to its owner (3/4), likely because a background agent that can't
+  ask leans toward deciding.
