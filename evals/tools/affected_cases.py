@@ -15,7 +15,8 @@ A case is affected when any changed file is something it loads:
 Changes elsewhere (the README, `evals/tools/`, PERSONAS.md) affect no case.
 
 Usage: python3 -I evals/tools/affected_cases.py [--base origin/main] [file ...]
-  With no files, compares HEAD with --base using `git diff --name-only`.
+  With no files, lists what differs from --base, uncommitted and untracked
+  files included.
   Prints one case name per line.
 """
 import argparse
@@ -111,8 +112,12 @@ def fixture_paths(case):
 
 
 def changed_files(base):
-    out = subprocess.check_output(["git", "diff", "--name-only", f"{base}...HEAD"], cwd=ROOT, text=True)
-    return [l for l in out.splitlines() if l]
+    """Files that differ from `base`'s merge point, uncommitted and new
+    files included, so a run before committing sees the work in progress."""
+    merge_base = subprocess.check_output(["git", "merge-base", base, "HEAD"], cwd=ROOT, text=True).strip()
+    tracked = subprocess.check_output(["git", "diff", "--name-only", merge_base], cwd=ROOT, text=True)
+    new = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True)
+    return sorted({l for l in (tracked + new).splitlines() if l})
 
 
 def affected(files):

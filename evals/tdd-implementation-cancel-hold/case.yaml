@@ -137,3 +137,7 @@ graders:
       PASS if the report shows the Test List with each entry's status, and says the implementation was deliberately broken to confirm a test fails, then restored.
 
       FAIL if either is missing.
+  - type: regex
+    name: final-review-runs
+    target: trace
+    pattern: '^(?=[\s\S]*"skill": ?"kad-dev-team:architecture-review")(?=[\s\S]*"skill": ?"kad-dev-team:code-review")(?=[\s\S]*"skill": ?"kad-dev-team:security-review")(?=[\s\S]*"skill": ?"kad-dev-team:reliability-review")'

@@ -90,3 +90,7 @@ graders:
     target: trace
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*(?:lending/(?!return-book\.ts)|infra/|fines/|members/|notifications/|reporting/|package\.json)'
     match: not_contains
+  - type: regex
+    name: final-review-runs
+    target: trace
+    pattern: '^(?=[\s\S]*"skill": ?"kad-dev-team:architecture-review")(?=[\s\S]*"skill": ?"kad-dev-team:code-review")(?=[\s\S]*"skill": ?"kad-dev-team:security-review")(?=[\s\S]*"skill": ?"kad-dev-team:reliability-review")'

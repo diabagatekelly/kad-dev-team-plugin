@@ -215,6 +215,29 @@ If the project already commits as part of this work, keep the failing test
 and its implementation as separate, ordered commits (test, implementation,
 refactor). Don't invent a commit discipline the project hasn't asked for.
 
+## FINAL REVIEW — unless the orchestrator grades it
+
+When the goal is complete (and after a handed-back fix too), review the
+whole change once before reporting. Skip this only when your task says
+`orchestrator` will review the result: its quarantine flow runs the same
+reviewers on every candidate, and running them twice wastes the work.
+
+1. **Check the change mechanically.** List the files you changed. Each one
+   is inside the slice the design names (or the fix named); the design doc
+   and other stages' documents are unchanged; the full suite is green.
+   Anything outside the slice gets reverted, or kept and justified in the
+   report.
+2. **Run the reviewers on those files**, each with the `Skill` tool and
+   each told the exact files: `architecture-review`, `code-review`,
+   `security-review` and `reliability-review`, plus `accessibility-review`
+   if the slice is UI-touching. `test-quality-review` already ran every
+   cycle. Each returns an answer, not the turn: carry on with this skill in
+   the same response.
+3. **Fix what's Critical or High** through "Applying a fix handed back
+   from review" below, then re-run only the reviewer that raised it.
+   Report Medium and Low findings without acting on them; a finding that
+   asks for something outside the slice is an escalation, not a fix.
+
 ## Applying a fix handed back from review
 
 A named fix — from `test-quality-review`, `architecture-review` or anyone
@@ -246,6 +269,8 @@ State, in this shape:
 - **Decided gaps** — each small gap you filled and what you chose.
 - **Escalated** — each load-bearing gap or structural fork, and who owns it.
 - **Noticed, not touched** — problems outside the slice, one line each.
+- **Final review** — files changed, and each reviewer's result (or that
+  `orchestrator` will grade it, if your task said so).
 - **On completion** — Test List exhausted, full suite green, the
-  can-it-fail spot-check done, `test-quality-review` with nothing Critical
-  or High outstanding.
+  can-it-fail spot-check done, no reviewer with anything Critical or High
+  outstanding.

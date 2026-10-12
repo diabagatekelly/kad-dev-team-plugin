@@ -213,7 +213,8 @@ which is the one fidelity gap.
 When a change is meant to move a score, re-record that case's bar with
 `tools/record_thresholds.py <case>` and commit it in the same PR. Run it
 by hand with `python3 -I evals/tools/eval_gate.py` (against
-`origin/main`), `--cases …`, or `--all` (108 cases, roughly half an hour
+`origin/main`, uncommitted and new files included, so it works before you
+commit), `--cases …`, or `--all` (108 cases, roughly half an hour
 to an hour). The workflow needs an `ANTHROPIC_API_KEY` repository secret,
 and pins the Claude Code version the bars were recorded on. It has been run
 locally but not yet on GitHub's runners, where the sandbox needs
@@ -281,6 +282,7 @@ score is history, not a claim about today.
 | `test-quality-review-neg-code-review` | real, Sonnet: never invokes `test-quality-review` (a readability request) | yes |
 | `code-review-fine-notices-pr` | real, Sonnet: 2/3 runs clean, the third the same postscript artifact; baseline grades the over-mocked test as its own finding — triplicated notice logic without flagging the guard clause, a false "whole dollars" comment, a name that says count but sums ranked above a vague one, a WHAT comment, duplicate test names; keeps the WHY comment; `why-comments` consulted via `Skill` | yes |
 | `code-review-fines-report-pr` | real, Sonnet: 13/15 over 3 runs, 1/3 clean (`results/20261011-final-*`) — a `run()` doing several jobs, member rules in a report class (feature envy), a year/month data clump, the month format with no owner; the Stripe SDK named for `architecture-review`. Feature envy was missed in every run (both arms) until the skill gained a sweep-every-function step and the plant changed from a formatter (which reviews rightly passed) to misplaced business rules. Known misses: the month format (2/3), feature envy (2/3) | yes |
+| `code-review-days-left-pr` | real, Sonnet: 27/30 over 3 runs (`results/m5-*`); in calibration the baseline missed two or three of the four plants on each pass — a days-left PR reviewed with no hint about size: an options parameter nothing passes or reads, a flag nothing sets, a null check the type rules out, a catch that only rethrows (answer key `CB1`–`CB4`); traps: two branches the tests pin and reuse of `daysBetween` (`CBT1`–`CBT3`). Before the description put "invoke first" and the general-review trigger at its start, `code-review` never fired on "review it before I merge"; it now fires 2/3. Misses: the impossible-null check in two runs | yes |
 | `code-review-catalog` | real, Sonnet: 3/3; the baseline passed in calibration, a regression guard — the clean module, nothing above Low | yes |
 | `code-review-neg-architecture` | real, Sonnet: never invokes `code-review` (a dependency-direction question) | yes |
 | `code-review-fine-notices-pr-via-agent` | real, Sonnet: 2/2 runs clean, delegation to `code-reviewer` confirmed | yes |
@@ -1044,3 +1046,23 @@ grader, or the `agent-eval` harness that a case already covers.
   agent, the notification question gets settled in the report instead of
   handed to its owner (3/4), likely because a background agent that can't
   ask leans toward deciding.
+- **Direct `tdd-implementation` runs now get the orchestrator's review, and
+  `code-review` looks for code the change doesn't need.**
+  - Outside the orchestrator, `tdd-implementation` ends with a final
+    review: the changed files checked against the slice and the design
+    doc, then `architecture-review`, `code-review`, `security-review` and
+    `reliability-review` (and `accessibility-review` for UI) on those
+    files, Critical and High fixed through the loop. The orchestrator's
+    quarantine flow tells its instances it grades them, so they skip it.
+    A `final-review-runs` trace grader on the three TDD cases passed in
+    every gate run.
+  - `code-review` gained "More than the change needs": unused options, a
+    flag nothing sets, impossible-case checks, a catch that only
+    rethrows; the fix is to delete. `code-review-days-left-pr` plants all
+    four. The skill wasn't firing at all on a plain "review it before I
+    merge": its description led with scope and named readability as the
+    trigger. Leading with "invoke first" and the general-review trigger
+    got it to 2/3.
+  - These changes were the eval gate's first real use: it picked 26
+    affected cases from the diff (code-review, orchestrator, TDD and one
+    negative) and all 26 met their bars.

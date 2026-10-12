@@ -281,8 +281,9 @@ against the same slice — real async `Agent` calls, each with
 repo. Give both the identical task: the slice's design doc, its
 runtime-safety criteria, its screen-design/accessibility criteria if
 UI-touching, and where to save output — the same inputs a single
-non-quarantined execution would get, nothing added about quarantine,
-grading, or a second candidate existing. Blindness here is structural,
+non-quarantined execution would get, plus one line saying `orchestrator`
+reviews the result afterwards (so it skips its own final review), and
+nothing about quarantine or a second candidate existing. Blindness here is structural,
 not something to enforce by instruction: two fresh spawns with no shared
 context already can't see each other. Wait for both to finish before
 continuing. Each worktree-isolated run returns its own path and branch —
@@ -327,7 +328,7 @@ on either candidate.** Launch a third `tdd-coach:tdd-implementation`
 instance — not either original candidate — with no worktree isolation
 this time, targeting the project's real working tree. Its task is your
 combine brief from step C, plus the same original slice inputs from step
-A. It builds a genuinely new implementation informed by both candidates
+A, including the line that `orchestrator` reviews the result (step E). It builds a genuinely new implementation informed by both candidates
 and every finding against either, not a patch on top of whichever
 candidate combine preferred. This is the real, final artifact — the one
 that answers "has this slice been implemented" for step 2's future

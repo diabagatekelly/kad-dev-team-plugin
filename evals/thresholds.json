@@ -99,6 +99,16 @@
       "why-comments"
     ]
   },
+  "code-review-days-left-pr": {
+    "score": 0.9,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/m5-code-review-days-left-pr.json",
+    "skills_invoked": [
+      "code-review",
+      "why-comments"
+    ]
+  },
   "code-review-fine-notices-pr": {
     "score": 0.815,
     "runs": 3,

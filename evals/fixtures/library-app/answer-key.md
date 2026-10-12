@@ -367,6 +367,24 @@ Case-only overlays in `code-plants/code-review/`, each a PR of new files.
 | CT4 | `fines-report`: `StripeClient` built from `process.env` inside `FinesReport` | An SDK in a report (V12's pattern). | Structural: named for `architecture-review`, not ranked as readability. |
 | CT5 | `catalog/` | Nothing. | The clean module (T10); nothing above Low. |
 
+A third PR, `code-plants/code-review/days-left/` (case
+`code-review-days-left-pr`), adds `lending/days-left.ts` and its test with
+four kinds of code the change doesn't need; the review is asked for with no
+hint about size.
+
+| # | Where | Violation | Expected |
+|---|---|---|---|
+| CB1 | `daysLeft(..., options: DaysLeftOptions = {})` | Options no caller passes and nothing reads. | Remove the parameter and its interface. |
+| CB2 | `DAYS_LEFT_ENABLED` | A flag set to `true` that nothing changes, with a branch for `false`. | Remove the flag and its branch. |
+| CB3 | `loan === null \|\| loan === undefined` | `loan` is a non-nullable `Loan`; every caller passes one. | Remove the check. |
+| CB4 | `try { ... } catch (error) { throw error; }` | Only rethrows. | Remove the try/catch. |
+
+| # | Where | Why it looks extra | Why it isn't |
+|---|---|---|---|
+| CBT1 | `if (days < 0) return { kind: 'overdue' }` | A special case. | A test pins it: overdue, not a negative count. |
+| CBT2 | `if (!loan.isOpen()) return null` | An early return. | A test pins it: a returned loan has no countdown. |
+| CBT3 | `daysBetween` | An import for one call. | The app's own date helper; reusing it is right. |
+
 ## Accessibility plants (`A`, `AT`) — `accessibility-engineer:accessibility-review`
 
 Case-only overlay in `ui-plants/accessibility-review/`: one mockup,

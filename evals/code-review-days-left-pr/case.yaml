@@ -1,0 +1,120 @@
+schema_version: "1.0"
+name: code-review-days-left-pr
+description: "A days-left PR for the member portal (two new files) reviewed with no hint about bloat: four kinds of code the change doesn't need (unused options, a flag nothing sets, a null check the type rules out, a catch that only rethrows); traps: the overdue and returned-loan branches tests pin, and reuse of daysBetween."
+tags: [code-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. This PR adds a days-left countdown the member portal will show for each open loan: two new files, `lending/days-left.ts` and `test/days-left.test.ts`. Please review it before I merge and save the review as `docs/reviews/days-left.md`. Don't change the code.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:code-review"'
+    min: 1
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/days-left.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*\.ts"'
+    match: not_contains
+  - type: llm
+    name: finds-unused-options
+    focus:
+      source: file
+      path: docs/reviews/days-left.md
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `daysLeft` takes an `options: DaysLeftOptions` parameter (`roundingMode`, `locale`) that no caller or test passes and the function never reads.
+
+      PASS if the review flags the options parameter (and its interface) as unneeded and proposes removing it.
+
+      FAIL if it is missed, or treated as fine to keep for later.
+  - type: llm
+    name: finds-unused-flag
+    focus:
+      source: file
+      path: docs/reviews/days-left.md
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `DAYS_LEFT_ENABLED` is a constant set to `true` that nothing changes, read or configures, with an `if (!DAYS_LEFT_ENABLED) return null;` branch for a value nobody sets.
+
+      PASS if the review flags the flag and its branch as unneeded and proposes removing them.
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-impossible-null-check
+    focus:
+      source: file
+      path: docs/reviews/days-left.md
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `daysLeft` checks `loan === null || loan === undefined` and throws, but `loan` is typed as a non-nullable `Loan` and the only callers (the tests) always pass one.
+
+      PASS if the review flags the null check as handling a case the type already rules out, and proposes removing it.
+
+      FAIL if it is missed.
+  - type: llm
+    name: finds-rethrowing-catch
+    focus:
+      source: file
+      path: docs/reviews/days-left.md
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      The body is wrapped in `try { ... } catch (error) { throw error; }`, which only rethrows what it caught.
+
+      PASS if the review flags the try/catch as doing nothing and proposes removing it.
+
+      FAIL if it is missed.
+  - type: llm
+    name: keeps-the-overdue-branch
+    focus:
+      source: file
+      path: docs/reviews/days-left.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT call needed code unneeded. `if (days < 0) return { kind: 'overdue' };` turns a negative count into an overdue result; a test pins it ("an overdue loan says overdue rather than a negative count").
+
+      PASS if the review does not propose removing the overdue branch.
+
+      FAIL if it calls that branch unneeded or proposes removing it.
+  - type: llm
+    name: keeps-the-returned-loan-branch
+    focus:
+      source: file
+      path: docs/reviews/days-left.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT call needed code unneeded. `if (!loan.isOpen()) return null;` gives a returned loan no countdown; a test pins it ("a returned loan has no countdown").
+
+      PASS if the review does not propose removing the returned-loan branch.
+
+      FAIL if it calls that branch unneeded or proposes removing it.
+  - type: llm
+    name: keeps-the-shared-date-helper
+    focus:
+      source: file
+      path: docs/reviews/days-left.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm. The day count uses the app's existing `daysBetween` from `utils/date-utils.ts` rather than its own date arithmetic, which is the right reuse.
+
+      PASS if the review does not object to using `daysBetween` or propose replacing it with local date arithmetic.
+
+      FAIL if it does.

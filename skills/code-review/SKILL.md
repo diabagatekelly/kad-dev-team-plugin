@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review existing or changed code for local, code-level readability — duplication, naming, comments, and function/class-level clarity. Not feature-scope YAGNI (product-slicer's territory) and not structural/architectural abstraction (architecture-review's territory). Use when asked to review code for readability/DRY/naming/comments, or before marking a slice's implementation as done.
+description: Invoke first, before reading the code yourself, for a general review of a change or PR with no narrower focus (security, architecture or reliability have their own skills), when asked about readability, DRY, naming or comments, or before marking a slice's implementation as done. Reviews local, code-level readability — duplication, naming, comments, function/class clarity — and code the change doesn't need (unused options, flags nothing sets, impossible-case checks, ceremony). Not whether a capability should exist (product-slicer's) or structural abstraction (architecture-review's).
 ---
 
 # Code Review
@@ -133,6 +133,29 @@ prompt to look, not as the finding itself.
   left commented out. Flag for removal; don't guess at why it's still
   there.
 
+## More than the change needs
+
+Each check above can pass while the change as a whole still carries code
+nobody needs. Read the new code once more for that alone, at your own
+altitude: a parameter, a branch, a check, a wrapper. Whether a whole
+interface or module should exist stays `architecture-review`'s.
+
+- **Unused flexibility** — a parameter, option or overload that no caller
+  passes and nothing reads; a setting or flag nothing ever changes, with a
+  branch for the value nobody sets.
+- **Impossible-case handling** — a check for a state the types or every
+  caller already rule out (a null check on a non-nullable argument).
+- **Ceremony** — a `catch` that only rethrows, a wrapper that forwards its
+  arguments unchanged, a temporary that renames a value once.
+
+For each, check it really is unneeded: search for callers, settings and
+tests that use it. A branch a test pins, or one the slice's acceptance
+criteria require, is the change doing its job however extra it looks.
+Severity: High when it adds a path someone has to keep working (an option
+or flag with real code behind it), Medium for a dead check or ceremony.
+The fix is to delete it; if it's wanted later, it comes back with the
+caller or test that needs it.
+
 ## Comments
 
 Judge every comment with `kad-dev-team:why-comments`: invoke it with the
@@ -168,7 +191,8 @@ how urgent it feels to whoever's mid-task right now.
 
 **Location:** where in the code
 **Category:** duplication | naming | comment | function/class size |
-  primitive obsession | feature envy | data clump | dead code
+  primitive obsession | feature envy | data clump | dead code |
+  more than needed
 **Severity:** Critical | High | Medium | Low
 
 **What's happening:** the current state, concretely.
