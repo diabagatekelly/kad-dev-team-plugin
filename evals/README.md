@@ -207,7 +207,7 @@ score is history, not a claim about today.
 | `orchestrator-backward-route` | real, Sonnet: 2/2 runs all pass, again after `vertical-slicing` gained its stop-first rule (`results/rrf-*`) — a "Handed back to product-slicer — blocking" section routes to `product-slicer`, not forward to reliability criteria; the log records why | yes |
 | `orchestrator-asks-for-target` | real, Sonnet: 2/2 runs all pass; baseline 0/1 — no folder given, it asks where the artifacts are before anything else and doesn't search the project | yes |
 | `orchestrator-route-problem-framing` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — a new, empty planning folder: routes to `problem-framing-doc`. The first version left the folder empty on disk; an empty directory doesn't reach the sandbox, so the orchestrator searched for it and stopped. The prompt now says the folder is new | yes |
-| `orchestrator-route-scope-decision` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — a problem doc and nothing else: routes to `scope-map` to decide whether a map is needed. Known miss 1/2: once `scope-map` decided no map, the orchestrator went straight on to `requirements-refinement` without asking, against step 5's never-chain-silently rule | yes |
+| `orchestrator-route-scope-decision` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — a problem doc and nothing else: routes to `scope-map` to decide whether a map is needed. Known miss 1/2: once `scope-map` decided no map, the orchestrator went straight on to `requirements-refinement` without asking, against step 5's never-chain-silently rule. Four attempted fixes each caused a worse regression elsewhere and were reverted (see findings) | yes |
 | `orchestrator-route-slicing` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — problem plus an Active requirements doc: routes to `vertical-slicing` | yes |
 | `orchestrator-route-user-story` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — a slice not yet written up: routes to `user-story-writeup` | yes |
 | `orchestrator-route-design` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — a user story and no design: routes to `architecture-design`. The miss was the grader: it forbade any `security-requirements` call, and `architecture-design` legitimately consults it inline; that check is now `not-tdd-implementation`, which both runs pass | yes |
@@ -989,5 +989,13 @@ grader, or the `agent-eval` harness that a case already covers.
     consults `security-requirements`, so "never invokes X" checks have to
     allow consults. Real miss found: after `scope-map` decided a problem
     needs no map, the orchestrator chained into `requirements-refinement`
-    without asking (1/2).
+    without asking (1/2). Four wordings were tried, each followed by all
+    16 orchestrator cases re-run (`results/h1-*` to `h4-*`). Every one that
+    stopped the chaining (15/15) also made other rows stop and ask before
+    running their routed skill at all (design-system, technology-bootstrap,
+    implementation; 1 or 2 runs in 2 each), and the neutral wording that
+    didn't ("a no-map decision is this step's result") let the chaining
+    back in (2/3). Any extra "ask" near routing spreads to every row. The
+    skill is back to its committed text and the chaining stays a known
+    miss: it only affects a problem small enough to need no scope map.
   - `.claude/skills/agent-eval` is retired with its last case.
