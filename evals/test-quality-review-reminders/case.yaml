@@ -7,12 +7,22 @@ context:
 execution:
   prompt: |
     The library-lending app is in your current working directory. Can you check the tests in `test/send-due-reminder.test.ts`? I want to know if they're any good. Report only; don't change anything.
+
+    Save your answer as `docs/reviews/test-quality-review-reminders.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/test-quality-review-reminders.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/test-quality-review-reminders\.md")[^"]*"'
+    match: not_contains
   - type: tool_used
     name: skill-invoked-display
     tool: Skill
@@ -20,7 +30,9 @@ graders:
     min: 1
   - type: llm
     name: finds-untested-email-channel
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-reminders.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -32,7 +44,9 @@ graders:
       FAIL if it doesn't mention the email path.
   - type: llm
     name: no-false-alarm-inline-fakes
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-reminders.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -44,7 +58,9 @@ graders:
       FAIL if it reports them as a real problem with the tests.
   - type: llm
     name: keeps-proportion
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-reminders.md
     weight: 1
     criteria: |
       The two tests exercise the real SendDueReminder with constructor-injected fakes and assert exact output; the file's real weakness is what it doesn't cover.

@@ -7,12 +7,22 @@ context:
 execution:
   prompt: |
     The library-lending app is in your current working directory. Review the `catalog/` module for readability — naming, duplication, comments. Report only; don't change anything.
+
+    Save your answer as `docs/reviews/code-review-catalog.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/code-review-catalog.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/code-review-catalog\.md")[^"]*"'
+    match: not_contains
   - type: tool_used
     name: skill-invoked-display
     tool: Skill
@@ -20,7 +30,9 @@ graders:
     min: 1
   - type: llm
     name: nothing-above-low
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-catalog.md
     weight: 1
     criteria: |
       `catalog/` (three small files: a `Book` type, a `CatalogReader` port, and a `SearchCatalog` use case that trims the terms, returns nothing for fewer than two characters and caps results at 50) is clean, readable code.

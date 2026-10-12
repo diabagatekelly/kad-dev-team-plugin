@@ -6,18 +6,30 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `package-lock.json`, `Dockerfile`, `audit-ci.jsonc`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `package-lock.json`, `Dockerfile`, `audit-ci.jsonc`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
 
     Audit this repo's dependency posture for how packages reach production: `package.json`, `package-lock.json`, the `Dockerfile`, `.github/dependabot.yml`, and how the CI workflow and the image build install them.
+
+    Save the review as `docs/reviews/supply-chain-review-build.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/supply-chain-review-build.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/supply-chain-review-build\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: finds-base-image-tag
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-build.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -29,19 +41,23 @@ graders:
       FAIL if it is missed, or accepted because Dependabot watches docker.
   - type: llm
     name: finds-image-build-ignores-lockfile
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-build.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
 
       The `Dockerfile` copies only `package.json` and runs `npm install --omit=dev`, so every image build resolves the manifest's caret ranges fresh: the committed `package-lock.json` that CI installs with `npm ci` never reaches the production image.
 
-      PASS if the review identifies that the image build installs without the lockfile (or not in frozen mode), states that production can therefore get different versions from what CI tested, treats it at the highest or second-highest severity it uses, and proposes copying the lockfile and using `npm ci` (or equivalent frozen install).
+      PASS if the review identifies that the image build installs without the lockfile (or not in frozen mode), states that production can therefore get different versions from what CI tested, rates it Critical or High (or the top two tiers of whatever scale it uses), and proposes copying the lockfile and using `npm ci` (or equivalent frozen install).
 
-      FAIL if it is missed or rated Low.
+      FAIL if it is missed or rated Medium or lower.
   - type: llm
     name: finds-install-scripts-enabled
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-build.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -53,7 +69,9 @@ graders:
       FAIL if it is missed.
   - type: llm
     name: no-false-alarm-manifest-ranges
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-build.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -65,7 +83,9 @@ graders:
       FAIL if it reports the manifest's caret ranges as a Medium-or-above finding on their own, independent of the image build.
   - type: llm
     name: no-false-alarm-dependabot
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-build.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.

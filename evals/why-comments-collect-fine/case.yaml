@@ -7,12 +7,22 @@ context:
 execution:
   prompt: |
     The library-lending app is in your current working directory. I added some comments to `fines/collect-fine.ts` while I was in there. Are they worth keeping?
+
+    Save your answer as `docs/reviews/why-comments-collect-fine.md`.
   model: sonnet
   max_turns: 20
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/why-comments-collect-fine.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/why-comments-collect-fine\.md")[^"]*"'
+    match: not_contains
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -20,7 +30,9 @@ graders:
     min: 1
   - type: llm
     name: deletes-what-comments
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/why-comments-collect-fine.md
     weight: 1
     criteria: |
       "Look up the fine." and "Throw if there is no fine." each say only what the next line of code says.
@@ -30,7 +42,9 @@ graders:
       FAIL if it keeps either, or rewrites either into another comment.
   - type: llm
     name: flags-the-wrong-comment
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/why-comments-collect-fine.md
     weight: 1
     criteria: |
       "Charge once; Stripe retries failed charges on its side." sits above a loop that charges up to three times, so the comment is false.
@@ -40,7 +54,9 @@ graders:
       FAIL if it keeps it, or deletes it only as redundant without noticing it is false.
   - type: llm
     name: keeps-the-why-comment
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/why-comments-collect-fine.md
     weight: 1
     criteria: |
       The comment above the settled-or-waived guard ("Return quietly instead of throwing: the desk screen resubmits a payment after a dropped connection...") records a caller behaviour the code cannot show.
@@ -50,7 +66,9 @@ graders:
       FAIL if it recommends deleting it.
   - type: llm
     name: stays-on-comments
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/why-comments-collect-fine.md
     weight: 1
     criteria: |
       The question was about the comments.

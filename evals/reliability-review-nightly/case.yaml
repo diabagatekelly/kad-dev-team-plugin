@@ -6,30 +6,44 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
 
     Review the nightly job for how it behaves when things go wrong: `main/jobs.ts`, how `main/server.ts` schedules it, and the adapters it drives through `main/wiring.ts` (email, SMS, postal, Postgres). Is it ready for production?
+
+    Save the review as `docs/reviews/reliability-review-nightly.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/reliability-review-nightly.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/reliability-review-nightly\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: finds-unhandled-nightly-rejection
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-nightly.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
 
       `main/server.ts` schedules the nightly job with `setInterval(() => { void runNightly(); }, 24 * 60 * 60 * 1000)`. `runNightly` in `main/jobs.ts` has no top-level try/catch, and `void` discards its promise, so any error thrown outside the per-reminder `try` (for example `loans.findOpen()`, a fine assessment, `members.findByCard`, or the monthly report export) becomes an unhandled promise rejection. The service targets Node 24, where an unhandled rejection terminates the process: the HTTP server goes down with the job, and nothing is written through the app logger or sent to monitoring.
 
-      PASS if the review identifies that a failure in the nightly job is unhandled at its entry point, and states a concrete consequence (the process crashing / the web server going down, or the failure being invisible), treats it at the highest or second-highest severity it uses, and proposes catching and reporting failures at the job boundary (or running the job outside the web process).
+      PASS if the review identifies that a failure in the nightly job is unhandled at its entry point, and states a concrete consequence (the process crashing / the web server going down, or the failure being invisible), rates it Critical or High (or the top two tiers of whatever scale it uses), and proposes catching and reporting failures at the job boundary (or running the job outside the web process).
 
-      FAIL if it is missed, or only mentioned as a style point, or rated Low.
+      FAIL if it is missed, or only mentioned as a style point, or rated Medium or lower.
   - type: llm
     name: finds-no-isolation-in-fine-loop
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-nightly.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -41,7 +55,9 @@ graders:
       FAIL if it is missed.
   - type: llm
     name: finds-member-directory-pool-leak
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-nightly.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -53,19 +69,23 @@ graders:
       FAIL if it is missed.
   - type: llm
     name: finds-mailer-without-timeout
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-nightly.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
 
       `infra/email/sendgrid-mailer.ts` constructs `new MailClient(apiKey)` without `timeoutMs`; `types/vendor.d.ts` documents that without it a request waits indefinitely. The nightly job sends reminders one at a time, so a single hung email request stalls every reminder after it and the monthly report, with nothing logged. The SMS adapter sets a 5-second timeout.
 
-      PASS if the review flags the missing timeout on the email client (or on outbound reminder calls including email) and connects it to the serial nightly loop stalling, and proposes setting a timeout.
+      PASS if the review flags the missing timeout on the email client (or on outbound reminder calls including email) and proposes setting a timeout. Connecting it to the serial nightly loop stalling strengthens the finding but is not required.
 
       FAIL if it is missed.
   - type: llm
     name: finds-postal-queue-swallows-errors
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-nightly.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -77,7 +97,9 @@ graders:
       FAIL if it is missed or treated as acceptable logging.
   - type: llm
     name: no-false-alarm-reminder-loop-catch
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-nightly.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -89,7 +111,9 @@ graders:
       FAIL if it says the reminder loop's catch hides or swallows failures and asks for it to stop continuing or to rethrow.
   - type: llm
     name: no-false-alarm-duplicate-fines-on-rerun
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-nightly.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -101,7 +125,9 @@ graders:
       FAIL if it reports that a sequential re-run or retry of the nightly job double-fines members, ignoring the `alreadyAssessed` check.
   - type: llm
     name: no-false-alarm-sms-retry
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-nightly.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.

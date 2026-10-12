@@ -31,7 +31,8 @@ evals/
   fixtures/library-app # shared fixture app with an answer key; personas plant defects in overlays
   thresholds.json      # each case's bar for the eval gate
   tools/               # eval_gate.py, affected_cases.py, record_thresholds.py, rejudge.py,
-                       # freeze-history.sh, audit_report.py, pairwise_judge.py, new-case.sh
+                       # freeze-history.sh, audit_report.py, pairwise_judge.py, new-case.sh,
+                       # validation_gate.py (mechanical checks on a real implementation candidate)
   example/             # one running problem, worked end to end by the real roster
 .github/workflows/
   eval-gate.yml        # runs the affected eval cases on every PR touching skills, agents or evals

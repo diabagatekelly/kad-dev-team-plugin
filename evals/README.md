@@ -88,7 +88,18 @@ whole trace; `(?:…[\s\S]*){N}` with `contains` means "at least N"),
 a `tool_used` grader that isn't `tool: Skill` is scored in
 both arms unless marked `arm: with-only`; `AskUserQuestion` is never
 available and the scaffolded project's `.claude/settings.json` (hooks
-included) is ignored, see "Interactive skills" below. A full pass costs about $7.50 at
+included) is ignored, see "Interactive skills" below.
+
+**Grade a report from a saved file, not from `last_message`.** The judge
+has failed a long review as `last_message` and passed the identical text
+as a file, and an agent-path run can end on a one-line postscript that
+then gets graded instead of the report. Every review case therefore asks
+for the review at `docs/reviews/<case>.md` (`Write` in `allowed_tools`, a
+`review-written` `file_exists` grader, each `llm` grader with
+`focus: {source: file, path: …}`, and a `leaves-the-code-alone` trace
+regex that fails any other Write or Edit); the tdd cases do the same with
+`docs/reports/<case>.md`. `last_message` is for a phase that ends in
+questions. A full pass costs about $7.50 at
 `--runs 1` plus about $2 for the pairwise judge; the suite's `runs: 3`
 default triples the first number.
 
@@ -205,20 +216,46 @@ which is the one fidelity gap.
    `scaffold.sh` copies), and any edited case. A README or tool change
    reaches none.
 2. `tools/eval_gate.py` runs them once each, six at a time, and re-runs
-   at full `runs:` any case that lands more than 0.1 below its bar in
-   `thresholds.json` (the judge is noisy; one run proves little).
-3. The check fails if a case is still below its bar, and the job summary
-   shows the table. Results are uploaded as an artifact.
+   at full `runs:` any case that is suspect: its score lands more than
+   0.1 below its bar in `thresholds.json`, or a grader the bar recorded
+   as passing every run fails (the judge is noisy; one run proves
+   little).
+3. The check fails if a case is still below its bar, or if an
+   always-passing grader failed in every re-run. The aggregate tolerance
+   absorbs judge noise; the per-grader check is what stops one grader
+   regressing for good inside a case with ten graders, where losing it
+   moves the aggregate by less than the tolerance. The job summary shows
+   the table, with the lost graders named. Results are uploaded as an
+   artifact.
+
+**Bars come from gate runs.** The gate scores with `--ablation none`,
+where every grader counts; calibration runs use `--ablation with-without`,
+where the CLI treats skill-invoked `tool_used` graders as unscored
+indicators. A bar recorded from a calibration run therefore has a
+smaller denominator than the score the gate compares it with, and the
+gate reads slightly high against it. `record_thresholds.py` stores each
+bar's `mode` and warns when it is `calibration`; `--gate-only` ignores
+calibration results altogether. The per-grader rates it stores
+(`graders`) are what the regression check reads; bars recorded before
+that field existed get the aggregate check only until re-recorded.
 
 When a change is meant to move a score, re-record that case's bar with
-`tools/record_thresholds.py <case>` and commit it in the same PR. Run it
-by hand with `python3 -I evals/tools/eval_gate.py` (against
-`origin/main`, uncommitted and new files included, so it works before you
-commit), `--cases …`, or `--all` (108 cases, roughly half an hour
-to an hour). The workflow needs an `ANTHROPIC_API_KEY` repository secret,
-and pins the Claude Code version the bars were recorded on. It has been run
-locally but not yet on GitHub's runners, where the sandbox needs
-`bubblewrap`.
+`tools/record_thresholds.py <case>` from a gate run of it and commit it
+in the same PR. Run the gate by hand with `python3 -I
+evals/tools/eval_gate.py` (against `origin/main`, uncommitted and new
+files included, so it works before you commit), `--cases …`, or `--all`
+(108 cases, roughly half an hour to an hour). The workflow needs an
+`ANTHROPIC_API_KEY` repository secret, and pins the Claude Code version
+the bars were recorded on. It has been run locally but not yet on
+GitHub's runners, where the sandbox needs `bubblewrap`.
+
+**A case that grants `Bash` needs a sandbox backend on the machine.** On
+Windows the CLI refuses to start such a run ("sandbox required but
+unavailable"), scores it as all-fail at turn zero, and the gate reports
+it as an error rather than a score. Run the tdd, map-update and other
+Bash-granting cases on macOS, on Linux or WSL2 with `bubblewrap`, or
+through the workflow's `workflow_dispatch` input. Cases with no shell
+grant run anywhere.
 
 Audit mode (`hooks/audit.sh`, see the top-level README) is where new cases
 should come from: the `audit-review` skill reads real sessions against the

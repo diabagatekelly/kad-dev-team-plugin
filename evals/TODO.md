@@ -1,0 +1,170 @@
+# Eval suite work list
+
+From `AUDIT-2026-10-12.md`. Phases are ordered by dependency: each phase's
+re-record depends on the previous phase's graders being right, so finish a
+phase before running its evals. "Run" marks items that need a paid eval run
+to close; everything else is a file edit. Keep the README playbook's rule:
+read every failure before re-recording a bar.
+
+## A. Gate arithmetic (no runs except the final re-record)
+
+- [x] A1. Delete `agent-delegated-legacy-task-display` (`tool: Task`) from
+      `library-app-lending-review-via-agent` and
+      `code-review-fine-notices-pr-via-agent`. (Their bars still include
+      the old failure until A5 re-records them.)
+- [x] A2. `architecture-review-neg-security-review` and
+      `architecture-review-neg-test-quality-review`: no conversion needed,
+      the markdown format is the same one the other eleven negative cases
+      use; they only lacked a recorded run. Gate-run once, both 1.0,
+      recorded.
+- [x] A3. `record_thresholds.py` stores per-grader pass rates (`graders`);
+      `eval_gate.py` re-runs a case when an always-passing grader fails
+      and fails the gate when it fails in every re-run. Bars recorded
+      before this field existed get the aggregate check only until A5.
+- [x] A4. Bars come from gate-mode runs. `record_thresholds.py` records
+      `mode` and warns on calibration sources; `--gate-only` filters them.
+      Documented in the README's "Eval gate". A5 is what actually moves
+      every existing bar onto gate mode.
+- [ ] A5. After B, C and F land: `eval_gate.py --all` once, then
+      `record_thresholds.py` for everything. Run (108 cases, the big one).
+
+## B. tdd cases as the mechanical gate (depends on nothing; do before C)
+
+- [x] B1. `code-plants/tdd/package.json`: `--test-reporter=spec` added.
+- [x] B2. `a-green-run-happened` copied into both cancel-hold cases.
+- [x] B3. `red-runs-seen` replaced by `red-then-green-per-test`: a test-file
+      Write or Edit, no other Write/Edit before a red summary, then a green
+      summary, three times.
+- [x] B4. `can-fail-check-in-trace` added beside the report grader: after
+      the last test-file edit, green, then red, then green with no later
+      red.
+- [x] B5. `no-bash-writes` added to both cancel-hold cases, `named-fix` and
+      `map-update-cancel-hold`: a Bash command that redirects, `tee`s,
+      `sed -i`s, heredocs, `cp`/`mv`/`rm`s into any app directory fails.
+- [x] B6. `design-doc-unchanged` now anchors the whole fixture text,
+      whitespace-insensitive (verified to reject an edit in Structure).
+- [x] B7. `writes-only-the-map` matches on the path suffix.
+- [x] B8. `escalates-queue-question` requires naming `acceptance-criteria`
+      or `architecture-design` as the owner; "product" or "the user" fails.
+- [x] B9. `reviews-each-cycle` requires a test run between consecutive
+      reviews.
+- [x] B10. `map-query-before-implementation` tool_order added to all three
+      tdd cases.
+      All of B3–B9 verified against synthetic traces
+      (scratch `test_b.py`): each passes a disciplined trace and fails the
+      shortcut it was written for.
+- [ ] B11. Run the four changed cases at `runs: 3`, read failures,
+      re-record. Run. **Blocked on this Windows machine:** `claude plugin
+      eval` refuses any case that grants Bash when no sandbox backend is
+      active ("sandbox required but unavailable … Windows sandbox is not
+      active"), so every tdd and map-update run exits at turn zero and is
+      scored as all-fail. Run these through the GitHub workflow
+      (`workflow_dispatch` with the four case names; it installs
+      bubblewrap), or under WSL2 with bubblewrap, or on a Mac. The
+      zero-turn results from 2026-10-12 were deleted; `eval_gate.py` and
+      `record_thresholds.py` now treat an all-errored result as an error,
+      not a score.
+- [x] B12. `tools/validation_gate.py`: suite green, optional Node coverage
+      per changed file, scope diff against `--allow` prefixes, `--protect`
+      files unchanged; JSON verdict, exit 1 on any failure. Exercised on
+      the scaffolded tdd fixture: catches an under-covered file, an
+      out-of-scope edit, an untracked file, and a touched design doc, and
+      passes a clean change. Not yet wired into the orchestrator's Grade
+      step (that is a skill change, see PERSONAS.md's quarantine flow).
+
+## C. Long reports to files (one pattern, many cases)
+
+- [x] C1. 31 review cases now save the report as
+      `docs/reviews/<case>.md` (`Write` allowed, `review-written`
+      file_exists, every llm grader on the file, `leaves-the-code-alone`
+      forbids any other Write/Edit); the three tdd cases save their report
+      as `docs/reports/<case>.md` (`report-written`). Via-agent prompts
+      tell the subagent to save and still return the report verbatim.
+- [x] C2. `reliability-review-catalog/reports-nothing-above-low` counts
+      only findings located under `catalog/`, the catalog reader or the
+      catalog route; the capacity sentence is gone.
+- [x] C3. Five severity graders now say Critical or High passes, Medium or
+      lower fails.
+- [x] C4. "Or equivalent" wording in the holds, mailer-timeout and
+      member-object graders; the authentication/authorization wording
+      clause dropped from the IDOR grader.
+- [ ] C5. Run the changed cases, read failures, re-record. Run. Dispatched
+      through the GitHub workflow (see B11 for why not locally); the
+      repository needs an `ANTHROPIC_API_KEY` secret first.
+
+## D. Phase chains
+
+- [ ] D1. Re-freeze `security-requirements`, `reliability-requirements`,
+      `supply-chain-review-accept` and `technology-bootstrap` chains from
+      the current skill text, with each case's own `allowed_tools`. Phase 2
+      stops at the fork with no criteria written (the skill's own rule).
+      Run (phase-1 runs to freeze from).
+- [ ] D2. Phase-3 graders: keep only what phase 2 could not contain (the
+      decision record, the flipped choice, duplicates-findable).
+- [ ] D3. Add one rejecting chain: `technology-bootstrap-phase3-reject`
+      ("no, npm and Jest"), graded on recording the user's choice and the
+      recommendation as rejected.
+- [ ] D4. `design-system-payfine-phase3`: reword
+      `chosen-direction-committed` and `rejected-candidates-in-prose` so
+      they don't name the frozen candidates; have the scaffold write the
+      three candidate files.
+- [ ] D5. Phase-1 question graders: `requirements-refinement` requires the
+      trade-off and rejected-alternatives questions;
+      `operational-readiness-release-phase1` requires the rollback
+      question.
+- [ ] D6. `requirements-refinement-payfine-phase2`: leave one thing unsaid
+      in the prompt (what staff see) and grade that the doc marks it open.
+- [ ] D7. Re-run the chains, re-record. Run.
+
+## E. Leaks (edits only, re-run with C5 or D7)
+
+- [ ] E1. `acceptance-criteria-payfine`: new vague criterion, not the
+      skill's worked example (or move the example out of the skill).
+- [ ] E2. `vertical-slicing-handback`: different handed-back capability in
+      the fixture, no option menu in `security-requirements-001.md`;
+      change the skill's refund example.
+- [ ] E3. Cut the hint sentence from `security-review-reminders`,
+      `reliability-review-http`, `reliability-review-fine-payment`; drop
+      the staleness sentence from `map-query-consults` and make the map
+      header date carry it.
+- [ ] E4. Remove persona names from `pay-fine-security/design-001.md`,
+      `pay-fine-screen/…/screen-design-001.md`, `backward-pm/slice-000.md`.
+- [ ] E5. `test-quality-review-fines`: reword the prompt so it isn't the
+      description's trigger sentence.
+- [ ] E6. `scope-map-self-service` fixture: drop the sentence that
+      generalises the privacy constraint for the skill.
+
+## F. Routing, restraint, UI
+
+- [ ] F1. Each `orchestrator-route-*` case: one LLM grader on
+      `orchestrator-log.md` (names the matched row and an artifact path
+      under the target) and one on `last_message` (ends with the routed
+      skill's questions or a stop, not the next artifact).
+- [ ] F2. `orchestrator-asks-for-target`: fix the `\\.md` regex and check
+      `Grep` as well as `Glob`.
+- [ ] F3. Restraint cases (`*-catalog-review`): add a positive grader
+      requiring at least two of the module's real controls to be named.
+- [ ] F4. Every "does not flag" trap grader: PASS only if the review has at
+      least one real finding and none is the trap.
+- [ ] F5. `accessibility-review-payfine-subtle`: copy
+      `leaves-the-mockup-alone`, `says-it-read-the-markup`,
+      `criteria-split-now-and-later`; both accessibility cases: grade
+      `slice-001.md` for the filled placeholder.
+- [ ] F6. `screen-design-payfine`: trace regex on the mockup Writes for the
+      system's token values; `design-system-payfine-phase2`: pin candidate
+      filenames and grade the files.
+- [ ] F7. `architecture-design-payfine-phase1`: trace guard against any
+      Write under `docs/pay-fine/`.
+- [ ] F8. `adr-*`: regex on the three worthiness checks in the response.
+- [ ] F9. `vertical-slicing-payfine-phase1`: `tool_used` on
+      `acceptance-criteria`; grade the deferred and still-open sections.
+- [ ] F10. Run the changed cases, re-record. Run.
+
+## G. Only after A–F
+
+- [ ] G1. Harder plants and rejecting answers so scores leave the 1.0
+      ceiling.
+- [ ] G2. A lite variant of `tdd-implementation` as a second plugin dir,
+      run through the same cases as a third arm.
+- [ ] G3. Coverage items from the audit's section 8 that no case checks
+      (stop-and-report paths, ADR hand-offs, consult calls).

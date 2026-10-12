@@ -7,12 +7,22 @@ context:
 execution:
   prompt: |
     The library-lending app is in your current working directory. This PR adds fine notices: two new files, `notifications/fine-notice.ts` and `test/fine-notice.test.ts`. Can you review it for readability before I merge — naming, duplication, comments? Report only; don't change anything.
+
+    Save your answer as `docs/reviews/code-review-fine-notices-pr.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/code-review-fine-notices-pr.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/code-review-fine-notices-pr\.md")[^"]*"'
+    match: not_contains
   - type: tool_used
     name: skill-invoked-display
     tool: Skill
@@ -20,7 +30,9 @@ graders:
     min: 1
   - type: llm
     name: finds-triplicated-notice-logic
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -32,7 +44,9 @@ graders:
       FAIL if it is missed, or only noted as something to watch.
   - type: llm
     name: guard-clause-not-the-finding
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
     weight: 1
     criteria: |
       Judge substance only. Each of the three notice functions has a one-line guard, `if (owed.length === 0) return null;`. A short conventional guard repeated across functions is not itself a duplication problem.
@@ -42,7 +56,9 @@ graders:
       FAIL if the review says the guard clause itself is duplication that needs fixing, separately from the shared formatting logic.
   - type: llm
     name: finds-false-dollars-comment
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -54,7 +70,9 @@ graders:
       FAIL if it is missed, or treated as a minor or cosmetic comment issue.
   - type: llm
     name: finds-wrong-name
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -66,7 +84,9 @@ graders:
       FAIL if it is missed, or ranked at or below a vague-name finding on `build`.
   - type: llm
     name: finds-what-comment
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -78,7 +98,9 @@ graders:
       FAIL if it is missed or kept.
   - type: llm
     name: finds-duplicate-test-names
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -90,7 +112,9 @@ graders:
       FAIL if the test file's names aren't mentioned.
   - type: llm
     name: keeps-the-why-comment
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
     weight: 1
     criteria: |
       Judge substance only. In `letterFineNotice`, the comment explaining why letters say "within 14 days" (the fee schedule only allows suspension 14 days after a written notice, and only a letter counts as written) records a rule the code can't show.
@@ -100,7 +124,9 @@ graders:
       FAIL if it recommends deleting it.
   - type: llm
     name: leaves-mocking-to-test-quality-review
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
     weight: 1
     criteria: |
       Judge substance only. The second `'works'` test wraps `notices.build` in `mock.fn` with a replacement implementation and asserts the mock was called once, so it never runs the real code. Judging whether a test is over-mocked or proves nothing belongs to a test-quality review, not a readability review.

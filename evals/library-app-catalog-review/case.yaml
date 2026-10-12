@@ -6,18 +6,30 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; don't change the code.
 
     Review the `catalog/` module for architecture issues, including its port and the Postgres adapter in `infra/postgres/postgres-catalog-reader.ts`.
+
+    Save the review as `docs/reviews/library-app-catalog-review.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/library-app-catalog-review.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/library-app-catalog-review\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: reports-nothing-above-low
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-catalog-review.md
     weight: 1
     criteria: |
       `catalog/` is intentionally clean: the `CatalogReader` port is owned by `catalog/`, the Postgres adapter maps rows to the plain `Book` type and never leaks ORM/driver types, and `search-catalog.ts` is pure logic against the port.

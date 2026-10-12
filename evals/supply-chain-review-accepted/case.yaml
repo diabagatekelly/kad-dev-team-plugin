@@ -6,18 +6,30 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `package-lock.json`, `Dockerfile`, `audit-ci.jsonc`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `package-lock.json`, `Dockerfile`, `audit-ci.jsonc`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
 
     Review how this repo handles dependency findings it has decided not to fix: the advisories allowlisted in `audit-ci.jsonc` (CI runs `audit-ci` with it), and the licenses of what `package-lock.json` pulls in. Is anything accepted badly, or missing a decision?
+
+    Save the review as `docs/reviews/supply-chain-review-accepted.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/supply-chain-review-accepted.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/supply-chain-review-accepted\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: finds-bare-allowlist-entry
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-accepted.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -29,7 +41,9 @@ graders:
       FAIL if it is missed, or if the review itself declares which classification applies without asking or deferring to the user.
   - type: llm
     name: finds-unenforced-temporary-acceptance
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-accepted.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -41,7 +55,9 @@ graders:
       FAIL if it is missed, or if the date is accepted as a working expiry.
   - type: llm
     name: finds-agpl-transitive
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-accepted.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -53,7 +69,9 @@ graders:
       FAIL if it is missed.
   - type: llm
     name: no-false-alarm-documented-acceptance
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-accepted.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -65,7 +83,9 @@ graders:
       FAIL if it reports this entry as lacking a classification or reason, at Medium or above.
   - type: llm
     name: no-false-alarm-dev-only-advisory
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/supply-chain-review-accepted.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
