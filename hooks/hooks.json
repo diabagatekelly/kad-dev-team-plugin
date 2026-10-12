@@ -1,0 +1,14 @@
+{
+  "description": "Audit mode: off unless KAD_AUDIT=1. Logs prompts and kad-dev-team skill and agent calls, and keeps the transcript of any session that used the plugin. See hooks/audit.sh.",
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/audit.sh\"" } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Skill|Agent|Task", "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/audit.sh\"" } ] }
+    ],
+    "SessionEnd": [
+      { "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/audit.sh\"" } ] }
+    ]
+  }
+}

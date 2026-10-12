@@ -1,0 +1,54 @@
+# Runs the eval cases a pull request can affect and fails the check if any
+# case scores below its bar in evals/thresholds.json. See evals/README.md,
+# "Eval gate".
+name: Eval gate
+
+on:
+  pull_request:
+    paths: ["skills/**", "agents/**", "evals/**"]
+  workflow_dispatch:
+    inputs:
+      cases:
+        description: "Case names to run, space-separated, or 'all'. Empty: what changed against main."
+        required: false
+        default: ""
+
+concurrency:
+  group: eval-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      # The eval sandboxes each run with bubblewrap on Linux.
+      - run: sudo apt-get update && sudo apt-get install -y bubblewrap socat
+      # Pinned to the version the recorded bars came from; move it together
+      # with a re-recorded thresholds.json.
+      - run: npm install -g @anthropic-ai/claude-code@2.1.296
+      - name: Run the gate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CASES: ${{ github.event.inputs.cases }}
+          BASE: ${{ github.base_ref || 'main' }}
+        run: |
+          if [ "$CASES" = "all" ]; then
+            python3 -I evals/tools/eval_gate.py --all
+          elif [ -n "$CASES" ]; then
+            python3 -I evals/tools/eval_gate.py --cases $CASES
+          else
+            python3 -I evals/tools/eval_gate.py --base "origin/$BASE"
+          fi
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: evals/results/
+          if-no-files-found: ignore

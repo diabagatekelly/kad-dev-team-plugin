@@ -147,7 +147,10 @@ nine-case suite with the pairwise judge) before trusting anything.
 5. **Fix the skill only for a failure that survives step 4**, re-run the
    affected cases, and record the finding in this README's findings list
    and the persona's `PERSONAS.md` row.
-6. **Keep run output out of git.** `results/` is ignored; the coverage
+6. **Record the bar.** Once a case's result is accepted, run
+   `tools/record_thresholds.py <case>` and commit the `thresholds.json`
+   change with the case, so the eval gate has something to hold it to.
+7. **Keep run output out of git.** `results/` is ignored; the coverage
    table carries the numbers and the results directory name, nothing else.
 
 ### Interactive skills: one case per phase, chained by `history_file`
@@ -189,6 +192,36 @@ therefore runs as a chain of cases:
 
 Answers arrive as a user message rather than an `AskUserQuestion` result,
 which is the one fidelity gap.
+
+## Eval gate
+
+`.github/workflows/eval-gate.yml` runs on every pull request that touches
+`skills/`, `agents/` or `evals/`:
+
+1. `tools/affected_cases.py` picks the cases the diff can reach: a changed
+   skill's own cases and the cases whose runs were seen consulting it
+   (`skills_invoked` in `thresholds.json`), a changed agent's delegation
+   cases and its skills' cases, a changed fixture's cases (from what each
+   `scaffold.sh` copies), and any edited case. A README or tool change
+   reaches none.
+2. `tools/eval_gate.py` runs them once each, six at a time, and re-runs
+   at full `runs:` any case that lands more than 0.1 below its bar in
+   `thresholds.json` (the judge is noisy; one run proves little).
+3. The check fails if a case is still below its bar, and the job summary
+   shows the table. Results are uploaded as an artifact.
+
+When a change is meant to move a score, re-record that case's bar with
+`tools/record_thresholds.py <case>` and commit it in the same PR. Run it
+by hand with `python3 -I evals/tools/eval_gate.py` (against
+`origin/main`), `--cases …`, or `--all` (108 cases, roughly half an hour
+to an hour). The workflow needs an `ANTHROPIC_API_KEY` repository secret,
+and pins the Claude Code version the bars were recorded on. It has been run
+locally but not yet on GitHub's runners, where the sandbox needs
+`bubblewrap`.
+
+Audit mode (`hooks/audit.sh`, see the top-level README) is where new cases
+should come from: the `audit-review` skill reads real sessions against the
+skills' rules and turns each real miss into a fixture-based case.
 
 ## Coverage
 

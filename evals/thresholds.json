@@ -1,0 +1,909 @@
+{
+  "acceptance-criteria-payfine": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-np-final-acceptance-criteria-payfine.json",
+    "skills_invoked": [
+      "acceptance-criteria"
+    ]
+  },
+  "accessibility-review-neg-readability": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/g9-accessibility-review-neg-readability.json"
+  },
+  "accessibility-review-payfine": {
+    "score": 0.972,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/g9-accessibility-review-payfine.json",
+    "skills_invoked": [
+      "accessibility-review"
+    ]
+  },
+  "accessibility-review-payfine-subtle": {
+    "score": 0.926,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/g9-accessibility-review-payfine-subtle.json",
+    "skills_invoked": [
+      "accessibility-review"
+    ]
+  },
+  "adr-neg-rename": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-dw-final-adr-neg-rename.json",
+    "skills_invoked": [
+      "adr"
+    ]
+  },
+  "adr-payment-gateway": {
+    "score": 0.917,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-dw-final-adr-payment-gateway.json",
+    "skills_invoked": [
+      "adr"
+    ]
+  },
+  "architecture-design-neg-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-sa-cal1-architecture-design-neg-review.json",
+    "skills_invoked": [
+      "architecture-review"
+    ]
+  },
+  "architecture-design-payfine-phase1": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-architecture-design-payfine-phase1.json",
+    "skills_invoked": [
+      "architecture-design",
+      "map-query"
+    ]
+  },
+  "architecture-design-payfine-phase2": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-sa-final-architecture-design-payfine-phase2.json",
+    "skills_invoked": [
+      "adr",
+      "docs-writer"
+    ]
+  },
+  "architecture-design-payfine-via-agent": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/sa2-architecture-design-payfine-via-agent.json",
+    "skills_invoked": [
+      "architecture-design",
+      "map-query"
+    ]
+  },
+  "code-review-catalog": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-code-review-catalog.json",
+    "skills_invoked": [
+      "code-review",
+      "why-comments"
+    ]
+  },
+  "code-review-fine-notices-pr": {
+    "score": 0.815,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-code-review-fine-notices-pr.json",
+    "skills_invoked": [
+      "code-review",
+      "why-comments"
+    ]
+  },
+  "code-review-fine-notices-pr-via-agent": {
+    "score": 0.9,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-code-review-fine-notices-pr-via-agent.json",
+    "skills_invoked": [
+      "code-review",
+      "why-comments"
+    ]
+  },
+  "code-review-fines-report-pr": {
+    "score": 0.889,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-code-review-fines-report-pr.json",
+    "skills_invoked": [
+      "code-review",
+      "why-comments"
+    ]
+  },
+  "code-review-neg-architecture": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-code-review-neg-architecture.json",
+    "skills_invoked": [
+      "architecture-review"
+    ]
+  },
+  "design-system-payfine-phase1": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/ui5-design-system-payfine-phase1.json",
+    "skills_invoked": [
+      "design-system"
+    ]
+  },
+  "design-system-payfine-phase2": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/ui5-design-system-payfine-phase2.json"
+  },
+  "design-system-payfine-phase3": {
+    "score": 0.917,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/g8-design-system-payfine-phase3.json"
+  },
+  "library-app-catalog-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-recheck-catalog.json"
+  },
+  "library-app-fines-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-library-app.json"
+  },
+  "library-app-lending-review": {
+    "score": 0.818,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-recheck-library-app-lending-review.json"
+  },
+  "library-app-lending-review-via-agent": {
+    "score": 0.867,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/sa1-library-app-lending-review-via-agent.json",
+    "skills_invoked": [
+      "architecture-review"
+    ]
+  },
+  "library-app-members-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-library-app.json"
+  },
+  "library-app-notifications-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-library-app.json"
+  },
+  "library-app-reporting-pr": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-library-app.json"
+  },
+  "library-app-reporting-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-recheck-library-app-reporting-review.json"
+  },
+  "library-app-structure-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-sc-regress-structure.json"
+  },
+  "map-query-consults": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/sa2-map-query-consults.json",
+    "skills_invoked": [
+      "map-query",
+      "map-update"
+    ]
+  },
+  "map-query-no-map": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/sa2-map-query-no-map.json",
+    "skills_invoked": [
+      "map-query"
+    ]
+  },
+  "map-update-cancel-hold": {
+    "score": 0.963,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final2-map-update-cancel-hold.json",
+    "skills_invoked": [
+      "map-update"
+    ]
+  },
+  "operational-readiness-neg-reliability": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-or-cal1.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "operational-readiness-neg-security": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-or-cal1.json"
+  },
+  "operational-readiness-ops-phase1": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-or-p1h.json",
+    "skills_invoked": [
+      "operational-readiness"
+    ]
+  },
+  "operational-readiness-ops-phase2": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-or-p2h.json"
+  },
+  "operational-readiness-release-phase1": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-or-p1h.json",
+    "skills_invoked": [
+      "operational-readiness"
+    ]
+  },
+  "operational-readiness-release-phase2": {
+    "score": 0.933,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-or-p2h.json"
+  },
+  "orchestrator-asks-for-target": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-orch-cal2.json",
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-backward-route": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/rrf-orchestrator-backward-route.json",
+    "skills_invoked": [
+      "orchestrator",
+      "vertical-slicing"
+    ]
+  },
+  "orchestrator-route-accessibility": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-accessibility.json",
+    "skills_invoked": [
+      "accessibility-review",
+      "orchestrator"
+    ]
+  },
+  "orchestrator-route-backward-requirements": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-backward-requirements.json",
+    "skills_invoked": [
+      "orchestrator",
+      "requirements-refinement"
+    ]
+  },
+  "orchestrator-route-design": {
+    "score": 0.9,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-design.json",
+    "skills_invoked": [
+      "architecture-design",
+      "map-query",
+      "orchestrator",
+      "security-requirements"
+    ]
+  },
+  "orchestrator-route-design-system": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-design-system.json",
+    "skills_invoked": [
+      "design-system",
+      "orchestrator"
+    ]
+  },
+  "orchestrator-route-implementation": {
+    "score": 0.9,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-implementation.json",
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-route-problem-framing": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-problem-framing.json",
+    "skills_invoked": [
+      "orchestrator",
+      "problem-framing-doc"
+    ]
+  },
+  "orchestrator-route-reliability": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-reliability.json",
+    "skills_invoked": [
+      "orchestrator",
+      "reliability-requirements"
+    ]
+  },
+  "orchestrator-route-scope-decision": {
+    "score": 0.9,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-scope-decision.json",
+    "skills_invoked": [
+      "orchestrator",
+      "requirements-refinement",
+      "scope-map"
+    ]
+  },
+  "orchestrator-route-screen-design": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-screen-design.json",
+    "skills_invoked": [
+      "orchestrator",
+      "screen-design"
+    ]
+  },
+  "orchestrator-route-slicing": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-slicing.json",
+    "skills_invoked": [
+      "acceptance-criteria",
+      "orchestrator",
+      "product-slicer",
+      "vertical-slicing"
+    ]
+  },
+  "orchestrator-route-tech-bootstrap": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-tech-bootstrap.json",
+    "skills_invoked": [
+      "orchestrator",
+      "technology-bootstrap"
+    ]
+  },
+  "orchestrator-route-user-story": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/g8-orchestrator-route-user-story.json",
+    "skills_invoked": [
+      "orchestrator",
+      "user-story-writeup"
+    ]
+  },
+  "orchestrator-security-stage": {
+    "score": 1,
+    "runs": 4,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-qfirst-orchestrator-security-stage.json",
+    "skills_invoked": [
+      "orchestrator",
+      "security-requirements"
+    ]
+  },
+  "orchestrator-superseded-scope-map": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-orch-cal2.json",
+    "skills_invoked": [
+      "orchestrator",
+      "requirements-refinement"
+    ]
+  },
+  "pr-writeup-portal-fines": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-dw-final-pr-writeup-portal-fines.json",
+    "skills_invoked": [
+      "pr-writeup"
+    ]
+  },
+  "problem-framing-doc-payfine": {
+    "score": 0.933,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-np-final-problem-framing-doc-payfine.json",
+    "skills_invoked": [
+      "problem-framing-doc"
+    ]
+  },
+  "reliability-requirements-neg-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-req-cal1.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "reliability-requirements-payfine-phase1": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress2-reliability-requirements-payfine-phase1.json",
+    "skills_invoked": [
+      "reliability-requirements"
+    ]
+  },
+  "reliability-requirements-payfine-phase2": {
+    "score": 0.889,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-req-rel-p2e.json",
+    "skills_invoked": [
+      "reliability-requirements"
+    ]
+  },
+  "reliability-requirements-payfine-phase3": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-req-rel-p3c.json"
+  },
+  "reliability-review-alerts": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/g3-reliability-review-alerts.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "reliability-review-catalog": {
+    "score": 0.667,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/g3-reliability-review-catalog.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "reliability-review-fine-payment": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/g3-reliability-review-fine-payment.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "reliability-review-http": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/g3-reliability-review-http.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "reliability-review-neg-architecture": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/g3-reliability-review-neg-architecture.json",
+    "skills_invoked": [
+      "architecture-review"
+    ]
+  },
+  "reliability-review-neg-security": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/g3-reliability-review-neg-security.json",
+    "skills_invoked": [
+      "security-review"
+    ]
+  },
+  "reliability-review-nightly": {
+    "score": 0.875,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/g3-reliability-review-nightly.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "reliability-review-nightly-via-agent": {
+    "score": 0.875,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/g3-reliability-review-nightly-via-agent.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "requirements-refinement-payfine-phase1": {
+    "score": 0.875,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/rr1-requirements-refinement-payfine-phase1.json",
+    "skills_invoked": [
+      "requirements-refinement"
+    ]
+  },
+  "requirements-refinement-payfine-phase2": {
+    "score": 0.958,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/rrf2-requirements-refinement-payfine-phase2.json"
+  },
+  "scope-map-self-service": {
+    "score": 0.933,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-np-final-scope-map-self-service.json",
+    "skills_invoked": [
+      "scope-map"
+    ]
+  },
+  "screen-design-payfine": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/ui3-screen-design-payfine.json",
+    "skills_invoked": [
+      "screen-design"
+    ]
+  },
+  "security-requirements-neg-review": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-req-cal1.json"
+  },
+  "security-requirements-payfine-phase1": {
+    "score": 1,
+    "runs": 4,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-qfirst-security-requirements-payfine-phase1.json",
+    "skills_invoked": [
+      "security-requirements"
+    ]
+  },
+  "security-requirements-payfine-phase2": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-req-sec-p2c.json"
+  },
+  "security-requirements-payfine-phase3": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-req-sec-p3a.json"
+  },
+  "security-review-catalog": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-recheck2-catalog.json"
+  },
+  "security-review-config": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-or-regress-security-review-config.json"
+  },
+  "security-review-http": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-security-review.json"
+  },
+  "security-review-neg-architecture": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-security-review.json"
+  },
+  "security-review-neg-reliability": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-security-review.json"
+  },
+  "security-review-portal-pr": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-security-review.json"
+  },
+  "security-review-reminders": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261010-final-security-review.json"
+  },
+  "staleness-audit-docs": {
+    "score": 0.944,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-dw-final-staleness-audit-docs.json",
+    "skills_invoked": [
+      "staleness-audit"
+    ]
+  },
+  "supply-chain-review-accept-phase1": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress-supply-chain-review.json",
+    "skills_invoked": [
+      "supply-chain-review"
+    ]
+  },
+  "supply-chain-review-accept-phase2": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress-supply-chain-review.json"
+  },
+  "supply-chain-review-accepted": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress-supply-chain-review.json",
+    "skills_invoked": [
+      "supply-chain-review"
+    ]
+  },
+  "supply-chain-review-build": {
+    "score": 0.8,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress-supply-chain-review.json",
+    "skills_invoked": [
+      "supply-chain-review"
+    ]
+  },
+  "supply-chain-review-build-via-agent": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress-supply-chain-review.json",
+    "skills_invoked": [
+      "supply-chain-review"
+    ]
+  },
+  "supply-chain-review-neg-reliability": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress-supply-chain-review.json",
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
+  "supply-chain-review-neg-security": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress-supply-chain-review.json"
+  },
+  "supply-chain-review-workflows": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-regress-supply-chain-review.json",
+    "skills_invoked": [
+      "supply-chain-review"
+    ]
+  },
+  "tdd-implementation-cancel-hold": {
+    "score": 0.981,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/g4-tdd-implementation-cancel-hold.json",
+    "skills_invoked": [
+      "map-query",
+      "tdd-implementation",
+      "test-quality-review"
+    ]
+  },
+  "tdd-implementation-cancel-hold-via-agent": {
+    "score": 0.812,
+    "runs": 4,
+    "claude_version": "2.1.296",
+    "source": "results/k1-tdd-implementation-cancel-hold-via-agent.json",
+    "skills_invoked": [
+      "adr",
+      "map-query",
+      "tdd-implementation",
+      "test-quality-review"
+    ]
+  },
+  "tdd-implementation-named-fix": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/g4-tdd-implementation-named-fix.json",
+    "skills_invoked": [
+      "map-query",
+      "tdd-implementation",
+      "test-quality-review"
+    ]
+  },
+  "technology-bootstrap-phase1": {
+    "score": 1,
+    "runs": 1,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-sa-p1f-technology-bootstrap-phase1.json",
+    "skills_invoked": [
+      "technology-bootstrap"
+    ]
+  },
+  "technology-bootstrap-phase2": {
+    "score": 0.833,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-sa-p2g-technology-bootstrap-phase2.json",
+    "skills_invoked": [
+      "supply-chain-review",
+      "technology-bootstrap"
+    ]
+  },
+  "technology-bootstrap-phase3": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-sa-final3-boot3.json",
+    "skills_invoked": [
+      "adr"
+    ]
+  },
+  "test-quality-review-fines": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-test-quality-review-fines.json",
+    "skills_invoked": [
+      "test-quality-review"
+    ]
+  },
+  "test-quality-review-neg-code-review": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-test-quality-review-neg-code-review.json",
+    "skills_invoked": [
+      "code-review",
+      "why-comments"
+    ]
+  },
+  "test-quality-review-reminders": {
+    "score": 0.833,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-final-test-quality-review-reminders.json",
+    "skills_invoked": [
+      "test-quality-review"
+    ]
+  },
+  "user-facing-docs-renewals": {
+    "score": 0.867,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-dw-final-user-facing-docs-renewals.json",
+    "skills_invoked": [
+      "user-facing-docs"
+    ]
+  },
+  "user-story-writeup-payfine-phase1": {
+    "score": 1,
+    "runs": 2,
+    "claude_version": "2.1.296",
+    "source": "results/rr1-user-story-writeup-payfine-phase1.json",
+    "skills_invoked": [
+      "security-requirements",
+      "user-story-writeup"
+    ]
+  },
+  "user-story-writeup-payfine-phase2": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/rrf-user-story-writeup-payfine-phase2.json"
+  },
+  "vertical-slicing-handback": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/rrf-vertical-slicing-handback.json",
+    "skills_invoked": [
+      "security-requirements",
+      "vertical-slicing"
+    ]
+  },
+  "vertical-slicing-no-requirements": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/rrf-vertical-slicing-no-requirements.json",
+    "skills_invoked": [
+      "acceptance-criteria",
+      "vertical-slicing"
+    ]
+  },
+  "vertical-slicing-payfine-phase1": {
+    "score": 0.944,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/rrf-vertical-slicing-payfine-phase1.json",
+    "skills_invoked": [
+      "acceptance-criteria",
+      "vertical-slicing"
+    ]
+  },
+  "why-comments-collect-fine": {
+    "score": 1,
+    "runs": 3,
+    "claude_version": "2.1.296",
+    "source": "results/20261011-dw-final2-wc.json",
+    "skills_invoked": [
+      "why-comments"
+    ]
+  }
+}

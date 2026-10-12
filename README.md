@@ -24,22 +24,27 @@ agents/
   <persona>/AGENT.md  # persona definition: frontmatter + system prompt
 skills/
   <skill>/SKILL.md    # backing knowledge a persona (or you, directly) can invoke
+hooks/
+  hooks.json, audit.sh # audit mode: off unless KAD_AUDIT=1 (see below)
 evals/
-  <case>/case.yaml     # real `claude plugin eval` case (library-app-*, architecture-review-neg-*)
-  <case>/prompt.md     # emulated case for the agent-eval stand-in; graders/*.md score the output
-  fixtures/library-app # shared fixture app with an answer key; other personas plant defects in it
-  tools/               # new-case.sh scaffolder, pairwise_judge.py blind side-by-side judge
+  <case>/case.yaml     # a `claude plugin eval` case (negative trigger cases use prompt.md + graders/)
+  fixtures/library-app # shared fixture app with an answer key; personas plant defects in overlays
+  thresholds.json      # each case's bar for the eval gate
+  tools/               # eval_gate.py, affected_cases.py, record_thresholds.py, rejudge.py,
+                       # freeze-history.sh, audit_report.py, pairwise_judge.py, new-case.sh
   example/             # one running problem, worked end to end by the real roster
+.github/workflows/
+  eval-gate.yml        # runs the affected eval cases on every PR touching skills, agents or evals
 .synthesis/
   <persona>.md          # internal only — source synthesis notes, deleted once roster is complete
 ```
 
-Evals run two ways. `claude plugin eval` runs the real cases
-(`case.yaml`) as genuine child processes with a no-plugin baseline arm;
-the older emulated cases (`prompt.md`) run through the homegrown
-`agent-eval` skill. `evals/README.md` has the playbook for building a real
-suite for another skill, and `evals/fixtures/library-app/README.md`
-explains the shared fixture app those suites review.
+`claude plugin eval` runs every case as a genuine child process, with a
+no-plugin baseline arm for comparison. A pull request that changes a skill,
+an agent or an eval runs the cases it can affect and fails if any scores
+below its bar (`evals/README.md`, "Eval gate"). `evals/README.md` also has
+the playbook for building a suite for another skill, and
+`evals/fixtures/library-app/README.md` explains the shared fixture app.
 
 `evals/example/` is the dogfooding record, not a test case: one real problem
 carried from framing through requirements, slicing, design, runtime-safety
@@ -58,6 +63,24 @@ claude --plugin-dir /Users/kellydiabagate/Documents/kad-developer-suite
 
 You can combine this with other `--plugin-dir` flags to load alongside other
 plugins you're iterating on.
+
+## Audit mode
+
+To check how the personas behave in real work, turn audit mode on for the
+sessions you want recorded:
+
+```bash
+export KAD_AUDIT=1                   # or "env": {"KAD_AUDIT": "1"} in settings.json
+export KAD_AUDIT_DIR=~/kad-audit     # optional; defaults to ~/.claude/kad-audit
+```
+
+The plugin's hooks then log each prompt and every `kad-dev-team` skill and
+agent call, and keep the full transcript of any session that used the
+plugin. Nothing leaves your machine, and sessions that never used the
+plugin aren't kept. In this repo, ask Claude to "review the audit logs"
+(the `audit-review` skill): it reads the flagged sessions against the
+skills' own rules and proposes fixes and eval cases.
+`evals/tools/audit_report.py` gives the raw overview.
 
 ## Installing for real (once pushed to a repo)
 
