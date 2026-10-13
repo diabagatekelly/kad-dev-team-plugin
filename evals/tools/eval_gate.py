@@ -49,6 +49,9 @@ def run_case(case, runs, tag):
     out = os.path.join(EVALS, "results", f"{tag}-{case}.json")
     args = ["claude", "plugin", "eval", ".", "--case", case, "--ablation", "none",
             "--scaffold", "--judge-model", "sonnet", "--no-publish", "--trust-plugin",
+            # keep-temp: the CLI otherwise deletes the scaffold (and the trace
+            # in it) on exit, before keep_traces can copy it
+            "--keep-temp",
             "--allow-tools", "Write", "Edit", "Bash", "--json", out]
     if runs:
         args[args.index("--ablation"):args.index("--ablation")] = ["--runs", str(runs)]
@@ -88,6 +91,11 @@ def keep_traces(case, out):
         shutil.copyfile(src, dst)
         run["tracePath"] = dst
         changed = True
+        # the scaffold dir (/tmp/claude-eval-XXXX/out/trace.jsonl) is only
+        # kept for this copy; drop it so --keep-temp doesn't fill the disk
+        scaffold = os.path.dirname(os.path.dirname(src))
+        if os.path.basename(scaffold).startswith("claude-eval-"):
+            shutil.rmtree(scaffold, ignore_errors=True)
     if changed:
         data = json.load(open(out, encoding="utf-8"))
         data["cases"][0] = case

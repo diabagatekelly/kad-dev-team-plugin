@@ -110,10 +110,17 @@
     }
   },
   "code-review-catalog": {
-    "score": 1,
-    "runs": 3,
+    "score": 1.0,
+    "runs": 1,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-code-review-catalog.json",
+    "source": "results/gate-20261013T134050-code-review-catalog.json",
+    "graders": {
+      "leaves-the-code-alone": 1.0,
+      "nothing-above-low": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "code-review",
       "why-comments"
@@ -357,10 +364,20 @@
     }
   },
   "library-app-structure-review": {
-    "score": 1,
+    "score": 1.0,
     "runs": 1,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-sc-regress-structure.json"
+    "source": "results/gate-20261013T134050-library-app-structure-review.json",
+    "graders": {
+      "finds-payment-sdk-outside-its-adapter": 1.0,
+      "finds-technical-role-directories": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-bootstrap-and-near-miss-names": 1.0,
+      "no-false-alarm-date-library-tier": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    }
   },
   "map-query-consults": {
     "score": 1,
@@ -382,10 +399,23 @@
     ]
   },
   "map-update-cancel-hold": {
-    "score": 0.963,
-    "runs": 3,
+    "score": 1.0,
+    "runs": 1,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final2-map-update-cancel-hold.json",
+    "source": "results/gate-20261013T134050-map-update-cancel-hold.json",
+    "graders": {
+      "flags-duplication-candidate": 1.0,
+      "flags-new-wrong-direction-edge": 1.0,
+      "keeps-existing-rows-and-tiers": 1.0,
+      "new-rows-extracted": 1.0,
+      "no-bash-writes": 1.0,
+      "no-severity": 1.0,
+      "pre-existing-flags-not-new": 1.0,
+      "skill-invoked-display": 1.0,
+      "untiered-edge-direction-unknown": 1.0,
+      "writes-only-the-map": 1.0
+    },
     "skills_invoked": [
       "map-update"
     ]
@@ -1117,10 +1147,23 @@
     ]
   },
   "test-quality-review-fines": {
-    "score": 1,
-    "runs": 3,
+    "score": 1.0,
+    "runs": 1,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-test-quality-review-fines.json",
+    "source": "results/gate-20261013T134050-test-quality-review-fines.json",
+    "graders": {
+      "finds-call-order-assertion": 1.0,
+      "finds-subject-mocked": 1.0,
+      "finds-untested-percentOf": 1.0,
+      "finds-unwired-mock": 1.0,
+      "finds-weak-cap-assertion": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-exact-tests": 1.0,
+      "no-false-alarm-fake-ledger": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "test-quality-review"
     ]

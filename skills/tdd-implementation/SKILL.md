@@ -256,6 +256,9 @@ else — goes through the same loop, not a free-form patch:
    in the report, not in the diff.
 5. Run the FINAL REVIEW above on the files the fix touched, the same as
    at the end of a slice, unless your task says `orchestrator` grades it.
+   All four reviewers, however small the change: a one-line refactor has
+   shipped a missed null check before, and reading the files yourself is
+   not a substitute for the reviewer that was written for it.
 
 Report what changed, that verification passed, and what the reviewers said.
 

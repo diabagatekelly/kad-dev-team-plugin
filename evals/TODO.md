@@ -136,8 +136,23 @@ read every failure before re-recording a bar.
       is, a skill question for G. Two single-run bars carry one failed
       grader (`code-review-fine-notices-pr-via-agent`,
       `reliability-review-nightly-via-agent`); re-run at 3 when cheap.
-      Remaining: re-run the five changed cases and the two cancel-hold
-      cases, record. The gate now copies traces beside the results.
+      Third run (38406868836, $2.34 before the balance ran out):
+      `code-review-catalog`, `library-app-structure-review`,
+      `map-update-cancel-hold`, `test-quality-review-fines` all 1.00,
+      recorded. `tdd-implementation-named-fix` 0.85 then 0.81: it still
+      fails `no-bash-writes` (unknown command; no trace, see below) and
+      `final-review-runs`, and this time the report says why: "code-review,
+      security-review and reliability-review were not run. The change is a
+      constructor-injection refactor", "applied by reading the files
+      myself". The skill's step 5 now says all four, however small. The
+      cancel-hold cases got one run each (0.38 direct over 40 turns, 0.41
+      via-agent over 3 turns) before the balance died; both need traces to
+      read. No traces reached the artifact: the CLI deletes its scaffold on
+      exit, so the gate now passes `--keep-temp`, copies the trace beside
+      the result and removes the scaffold itself.
+      Remaining, on WSL2 (credits are gone): `tdd-implementation-named-fix`,
+      `tdd-implementation-cancel-hold`, `tdd-implementation-cancel-hold-via-agent`
+      at `runs: 3` with traces, read, record.
 
 ## D. Phase chains
 
