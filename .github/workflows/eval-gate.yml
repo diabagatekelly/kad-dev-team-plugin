@@ -19,7 +19,11 @@ concurrency:
 
 jobs:
   gate:
-    runs-on: ubuntu-latest
+    # 22.04, not latest: Ubuntu 24.04 restricts unprivileged user namespaces
+    # and bubblewrap then cannot bring up loopback ("bwrap: loopback: Failed
+    # RTM_NEWADDR"), which leaves every run without a shell. Review cases
+    # limp along on Read and Grep; the tdd cases cannot run tests.
+    runs-on: ubuntu-22.04
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +34,9 @@ jobs:
           node-version: "24"
       # The eval sandboxes each run with bubblewrap on Linux.
       - run: sudo apt-get update && sudo apt-get install -y bubblewrap socat
+      # Prove a sandbox starts before anything is spent.
+      - name: Check the sandbox starts
+        run: bwrap --ro-bind / / --dev /dev --unshare-all --die-with-parent -- /bin/true
       # Pinned to the version the recorded bars came from; move it together
       # with a re-recorded thresholds.json.
       - run: npm install -g @anthropic-ai/claude-code@2.1.296

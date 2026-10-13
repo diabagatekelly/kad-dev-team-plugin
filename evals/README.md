@@ -253,7 +253,13 @@ with "Not logged in" and costs nothing. A user-scoped key
 (`sk-ant-usr-…`) also needs an `ANTHROPIC_WORKSPACE_ID` secret, which
 the workflow turns into the `anthropic-workspace-id` header; without it
 every request fails with a 400 before any case runs. On GitHub's
-runners the sandbox needs `bubblewrap`, which the workflow installs.
+runners the sandbox needs `bubblewrap`, which the workflow installs, on
+an image whose kernel lets an unprivileged user namespace configure
+loopback (Ubuntu 22.04; 24.04's AppArmor restriction breaks it). With
+a broken sandbox every run has no shell: review cases quietly fall back
+to Read and Grep and still pass, which is why the workflow probes
+`bwrap` before the gate runs. Budget about $0.45 per review case
+including the judge; a tdd case costs more.
 
 **The gate needs a sandbox backend on the machine.** It grants `Bash`
 (with `Write` and `Edit`) to every case so one invocation fits every

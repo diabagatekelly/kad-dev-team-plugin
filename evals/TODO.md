@@ -92,9 +92,25 @@ read every failure before re-recording a bar.
 - [x] C4. "Or equivalent" wording in the holds, mailer-timeout and
       member-object graders; the authentication/authorization wording
       clause dropped from the IDOR grader.
-- [ ] C5. Run the changed cases, read failures, re-record. Run. Dispatched
-      through the GitHub workflow (see B11 for why not locally); the
-      repository needs an `ANTHROPIC_API_KEY` secret first.
+- [ ] C5. Run the changed cases, read failures, re-record. Run. First
+      real workflow run 2026-10-13 (run 38386051763): 12 of the 35 cases
+      ran clean, all 1.00; then the workspace's credit balance ran out and
+      the other 23 errored. Three cases failed one grader before that:
+      `code-review-catalog/nothing-above-low` (the reviewer rated a bare
+      `2` constant Medium in a 35-line clean module: a real restraint
+      miss, re-run at 3 to see the rate),
+      `library-app-catalog-review/reports-nothing-above-low` (grader
+      fault: the judge counted High items in the review's "pre-existing,
+      outside `catalog/`" list; now location-scoped like C2), and
+      `reliability-review-alerts/no-false-alarm-burn-rate-alerts`
+      (fixture fault: the burn alerts selected `path="/books/search"`
+      while the route is `/books/search/:terms`, so the reviewer flagged a
+      real mismatch; the selectors now use the route template). Bash was
+      unavailable in every run (bubblewrap's loopback setup is blocked by
+      AppArmor on Ubuntu 24.04 runners); the workflow now runs on 22.04
+      and probes the sandbox before spending. Nothing recorded from this
+      run: re-run all 35 with a working shell and credits (about $0.45 a
+      review case, the tdd cases more), then record with `--gate-only`.
 
 ## D. Phase chains
 

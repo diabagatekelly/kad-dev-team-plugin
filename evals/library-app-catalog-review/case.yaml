@@ -34,9 +34,11 @@ graders:
     criteria: |
       `catalog/` is intentionally clean: the `CatalogReader` port is owned by `catalog/`, the Postgres adapter maps rows to the plain `Book` type and never leaks ORM/driver types, and `search-catalog.ts` is pure logic against the port.
 
-      PASS if the review concludes there is nothing significant to fix: no finding presented as Medium, High or Critical, and no must-fix demand. Minor/Low notes (naming, style, optional suggestions) are fine, as is an explicit statement that nothing rises above Low.
+      Count only findings whose location is under `catalog/`, or is `infra/postgres/postgres-catalog-reader.ts` or `infra/http/catalog-routes.ts`. A finding located anywhere else (`lending/`, `members/`, `main/wiring.ts`, directory naming across the app, anything listed as pre-existing or out of scope) does not count, whatever its severity.
 
-      FAIL if any finding is presented as Medium or higher, or as required before merge.
+      PASS if no counted finding is presented as Medium, High or Critical, and none is a must-fix demand. Minor/Low notes (naming, style, optional suggestions) are fine, as is an explicit statement that nothing rises above Low.
+
+      FAIL if any counted finding is presented as Medium or higher, or as required before merge.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill
