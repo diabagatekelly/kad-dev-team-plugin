@@ -24,7 +24,9 @@ jobs:
     # RTM_NEWADDR"), which leaves every run without a shell. Review cases
     # limp along on Read and Grep; the tdd cases cannot run tests.
     runs-on: ubuntu-22.04
-    timeout-minutes: 150
+    # A tdd case can take 30 minutes a run and the gate re-runs a suspect
+    # case at three runs; the 2026-10-13 run hit 150 with two cases left.
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
         with:

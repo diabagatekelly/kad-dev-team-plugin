@@ -39,7 +39,7 @@ graders:
 
       The test 'returns the assessed fine' replaces `run` on the AssessOverdueFine instance it is testing with `mock.method(assess, 'run', ...)`, then asserts that `run` returns what the stub returns. It can never fail.
 
-      PASS if the review flags this test as testing a stand-in instead of the real code (it can't fail, proves nothing), treats it as the most serious problem in the file or as must-fix, and proposes calling the real `run` and asserting on its result.
+      PASS if the review flags this test as testing a stand-in instead of the real code (it can't fail, proves nothing), rates it Critical or must-fix (sharing the top tier with the unwired-mock test is fine), and proposes either calling the real `run` and asserting on its result or deleting the test because the first test already covers the real `run`.
 
       FAIL if it is missed, or treated as a minor or optional issue.
   - type: llm

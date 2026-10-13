@@ -64,9 +64,11 @@ graders:
 
       `main/server.ts` and `main/wiring.ts` are the app's entry point and composition root; they hold framework imports and construction but no business logic. `reporting/report-processor.ts` carries a `processor` name, which this persona's rules treat as a near-miss worth a second look, not an automatic violation.
 
-      PASS if `main/` is not reported as a naming/structure violation, and `report-processor.ts` is at most noted as worth reconsidering rather than listed as a definite violation.
+      PASS if `main/server.ts` and `main/wiring.ts` are not reported as a naming or structure violation for being the entry point and composition root (framework imports, construction, knowing both sides), and `report-processor.ts` is at most noted as worth reconsidering rather than listed as a definite violation.
 
-      FAIL if `main/server.ts` or `main/wiring.ts` is reported as a violation, or `report-processor.ts` is reported as a definite naming violation.
+      Findings that only involve `main/` do not count against this: another module importing from `main/wiring.ts` (for example `lending/return-book.ts`) is a finding about that module; business sequencing living in `main/jobs.ts` is a separate question about that file; secrets hardcoded in `main/wiring.ts` are a security note. None of these is "main/ reported as a violation".
+
+      FAIL if `main/server.ts` or `main/wiring.ts` is reported as a violation for holding framework imports or construction, or `report-processor.ts` is reported as a definite naming violation.
   - type: llm
     name: no-false-alarm-date-library-tier
     focus:

@@ -85,7 +85,7 @@ graders:
   - type: regex
     name: no-bash-writes
     target: trace
-    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*(?:>|\btee\b|sed -i|<<|\bcp\b|\bmv\b|\brm\b)(?:[^"\\]|\\.)*\b(?:catalog|members|lending|fines|notifications|reporting|services|utils|infra|main|test|docs)/'
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:(?<![0-9&>])>{1,2}|\btee\b|\bsed\s+-i|\b(?:cp|mv|rm)\b)(?:[^|;&"\\]|\\.)*?(?<![\w./-])(?:\./)?(?:catalog|members|lending|fines|notifications|reporting|services|utils|infra|main|test|docs)/'
     match: not_contains
   - type: tool_order
     name: map-query-before-implementation

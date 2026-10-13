@@ -254,8 +254,10 @@ else — goes through the same loop, not a free-form patch:
 3. Run the tests again and confirm green.
 4. Change nothing the fix didn't name. Other problems you notice nearby go
    in the report, not in the diff.
+5. Run the FINAL REVIEW above on the files the fix touched, the same as
+   at the end of a slice, unless your task says `orchestrator` grades it.
 
-Report what changed and that verification passed.
+Report what changed, that verification passed, and what the reviewers said.
 
 ## Reporting
 

@@ -52,8 +52,10 @@ read every failure before re-recording a bar.
       or `architecture-design` as the owner; "product" or "the user" fails.
 - [x] B9. `reviews-each-cycle` requires a test run between consecutive
       reviews.
-- [x] B10. `map-query-before-implementation` tool_order added to all three
-      tdd cases.
+- [x] B10. `map-query-before-implementation` tool_order added to the two
+      cancel-hold cases. Not `named-fix`: the skill's handed-back path is a
+      structural fix, not a Test List entry, and the consult rule applies
+      before an entry's implementation (4/4 gate runs never consulted).
       All of B3–B9 verified against synthetic traces
       (scratch `test_b.py`): each passes a disciplined trace and fails the
       shortcut it was written for.
@@ -108,9 +110,34 @@ read every failure before re-recording a bar.
       real mismatch; the selectors now use the route template). Bash was
       unavailable in every run (bubblewrap's loopback setup is blocked by
       AppArmor on Ubuntu 24.04 runners); the workflow now runs on 22.04
-      and probes the sandbox before spending. Nothing recorded from this
-      run: re-run all 35 with a working shell and credits (about $0.45 a
-      review case, the tdd cases more), then record with `--gate-only`.
+      and probes the sandbox before spending. Nothing recorded from that
+      run.
+      Second run (38387443843, Ubuntu 22.04, shell working, $16.35): 34 of
+      36 cases finished before the 150-minute job limit (now 300); the two
+      cancel-hold tdd cases did not. 30 bars recorded in gate mode. Read
+      failures: `no-bash-writes` matched `2>/dev/null … lending/` (any
+      `>` counted as a write; the pattern now needs a write token and an
+      app path in the same shell segment, 23 synthetic commands checked);
+      `library-app-structure-review` judge counted `main/jobs.ts` business
+      sequencing and `lending/` importing `main/wiring.ts` as "main/
+      reported as a violation" (criterion now says those pass);
+      `test-quality-review-fines/finds-subject-mocked` failed 4/4 because
+      the review proposed deleting the can't-fail test (the first test
+      already covers the real `run`) and shared Critical with the
+      unwired-mock test (criterion now accepts both);
+      `code-review-catalog/nothing-above-low` failed 4/4 on the bare `2`
+      rated Medium, a fair readability point, so the fixture now names
+      `MIN_TERMS_LENGTH` with a why comment; `tdd-implementation-named-fix`
+      never ran the final reviewers in 4/4 runs because the skill's
+      handed-back section ended at "report" while FINAL REVIEW said it
+      applies after a fix too (step 5 added to the section).
+      `why-comments-collect-fine/stays-on-comments` 2/4: the skill wanders
+      into code review (retry loop, duplicated description); recorded as
+      is, a skill question for G. Two single-run bars carry one failed
+      grader (`code-review-fine-notices-pr-via-agent`,
+      `reliability-review-nightly-via-agent`); re-run at 3 when cheap.
+      Remaining: re-run the five changed cases and the two cancel-hold
+      cases, record. The gate now copies traces beside the results.
 
 ## D. Phase chains
 

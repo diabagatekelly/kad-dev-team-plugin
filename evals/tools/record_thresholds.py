@@ -91,6 +91,9 @@ def main():
             seen = invoked.setdefault(c["name"], set())
             for r in runs:
                 trace = r.get("tracePath") or ""
+                if trace and not os.path.isfile(trace):
+                    # a trace the gate copied beside the result on another machine
+                    trace = os.path.join(os.path.dirname(path), os.path.basename(trace))
                 if os.path.isfile(trace):
                     seen.update(re.findall(r'"skill": ?"kad-dev-team:([a-z-]+)"', open(trace).read()))
             if started > latest.get(c["name"], ("",))[0]:

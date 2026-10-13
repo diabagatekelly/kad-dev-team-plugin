@@ -24,6 +24,7 @@ import argparse
 import concurrent.futures
 import datetime
 import json
+import shutil
 import os
 import subprocess
 import sys
@@ -56,6 +57,7 @@ def run_case(case, runs, tag):
     try:
         c = json.load(open(out, encoding="utf-8"))["cases"][0]
         runs = c["arms"]["with"]
+        keep_traces(c, out)
         clean = [r for r in runs if not r.get("error")]
         if runs and not clean:
             # The CLI still scores a run that never started: every grader
@@ -70,6 +72,26 @@ def run_case(case, runs, tag):
         return score, len(clean), grader_rates(clean), None
     except (OSError, ValueError, KeyError, IndexError):
         return None, 0, {}, f"no result (exit {code}; see {os.path.relpath(out[:-5] + '.log', ROOT)})"
+
+
+def keep_traces(case, out):
+    """Copy each run's trace next to the result file and point the result at
+    the copy: the CLI leaves traces in a temp dir, which a CI artifact of
+    `evals/results/` would not include, and a failed regex grader is
+    unreadable without the trace."""
+    changed = False
+    for i, run in enumerate(case["arms"]["with"]):
+        src = run.get("tracePath")
+        if not src or not os.path.isfile(src):
+            continue
+        dst = f"{out[:-5]}-run{i}.trace.jsonl"
+        shutil.copyfile(src, dst)
+        run["tracePath"] = dst
+        changed = True
+    if changed:
+        data = json.load(open(out, encoding="utf-8"))
+        data["cases"][0] = case
+        json.dump(data, open(out, "w", encoding="utf-8"), indent=2)
 
 
 def grader_rates(runs):
