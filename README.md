@@ -32,7 +32,10 @@ evals/
   thresholds.json      # each case's bar for the eval gate
   tools/               # eval_gate.py, affected_cases.py, record_thresholds.py, rejudge.py,
                        # freeze-history.sh, audit_report.py, pairwise_judge.py, new-case.sh,
-                       # validation_gate.py (mechanical checks on a real implementation candidate)
+                       # validation_gate.py (mechanical checks on a real implementation candidate),
+                       # summarize_results.py and report_evidence.py (read a results dir or CI artifact),
+                       # wsl-setup.sh (run the gate locally under WSL2)
+  HANDOFF-2026-10-13.md # where the eval audit stands and how to continue it; TODO.md is the work list
   example/             # one running problem, worked end to end by the real roster
 .github/workflows/
   eval-gate.yml        # runs the affected eval cases on every PR touching skills, agents or evals
