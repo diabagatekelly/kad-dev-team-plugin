@@ -249,8 +249,11 @@ files included, so it works before you commit), `--cases …`, or `--all`
 the bars were recorded on. The secret must carry a value: `gh secret
 set` reads the value from stdin, so run it from an interactive terminal
 or pass `--body`; an empty secret fails every case in under a minute
-with "Not logged in" and costs nothing. On GitHub's runners the sandbox
-needs `bubblewrap`, which the workflow installs.
+with "Not logged in" and costs nothing. A user-scoped key
+(`sk-ant-usr-…`) also needs an `ANTHROPIC_WORKSPACE_ID` secret, which
+the workflow turns into the `anthropic-workspace-id` header; without it
+every request fails with a 400 before any case runs. On GitHub's
+runners the sandbox needs `bubblewrap`, which the workflow installs.
 
 **The gate needs a sandbox backend on the machine.** It grants `Bash`
 (with `Write` and `Edit`) to every case so one invocation fits every
