@@ -261,6 +261,12 @@ to Read and Grep and still pass, which is why the workflow probes
 `bwrap` before the gate runs. Budget about $0.45 per review case
 including the judge; a tdd case costs more.
 
+To run the gate locally on a Claude subscription instead, use WSL2:
+`wsl --install -d Ubuntu-22.04` from an elevated PowerShell, reboot,
+then `bash evals/tools/wsl-setup.sh` inside Ubuntu (bubblewrap, Node 24,
+the pinned CLI, a sandbox probe) and clone the repo into the Linux
+filesystem. The script prints the remaining steps.
+
 **The gate needs a sandbox backend on the machine.** It grants `Bash`
 (with `Write` and `Edit`) to every case so one invocation fits every
 case; on Windows the CLI therefore refuses to start any gate run
