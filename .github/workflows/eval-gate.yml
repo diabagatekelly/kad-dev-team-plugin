@@ -38,7 +38,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # A user-scoped key (sk-ant-usr-...) is rejected unless every
           # request names a workspace; a workspace-scoped key ignores this.
-          ANTHROPIC_CUSTOM_HEADERS: ${{ secrets.ANTHROPIC_WORKSPACE_ID && format('anthropic-workspace-id: {0}', secrets.ANTHROPIC_WORKSPACE_ID) || '' }}
+          ANTHROPIC_CUSTOM_HEADERS: "${{ secrets.ANTHROPIC_WORKSPACE_ID && format('anthropic-workspace-id: {0}', secrets.ANTHROPIC_WORKSPACE_ID) || '' }}"
           CASES: ${{ github.event.inputs.cases }}
           BASE: ${{ github.base_ref || 'main' }}
         run: |
