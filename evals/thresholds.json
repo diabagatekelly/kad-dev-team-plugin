@@ -89,26 +89,6 @@
       "map-query"
     ]
   },
-  "architecture-review-neg-security-review": {
-    "score": 1,
-    "runs": 1,
-    "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261012T231001-architecture-review-neg-security-review.json",
-    "graders": {
-      "does-not-invoke-architecture-review": 1.0
-    }
-  },
-  "architecture-review-neg-test-quality-review": {
-    "score": 1,
-    "runs": 1,
-    "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261012T231001-architecture-review-neg-test-quality-review.json",
-    "graders": {
-      "does-not-invoke-architecture-review": 1.0
-    }
-  },
   "code-review-catalog": {
     "score": 1,
     "runs": 3,

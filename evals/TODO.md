@@ -12,11 +12,15 @@ read every failure before re-recording a bar.
       `library-app-lending-review-via-agent` and
       `code-review-fine-notices-pr-via-agent`. (Their bars still include
       the old failure until A5 re-records them.)
-- [x] A2. `architecture-review-neg-security-review` and
+- [ ] A2. `architecture-review-neg-security-review` and
       `architecture-review-neg-test-quality-review`: no conversion needed,
       the markdown format is the same one the other eleven negative cases
-      use; they only lacked a recorded run. Gate-run once, both 1.0,
-      recorded.
+      use; they only lacked a recorded run. The 2026-10-12 local "gate
+      run" was a zero-turn sandbox refusal (the gate grants Bash to every
+      case) that the `tool_used` count-0 grader passed vacuously; those
+      bars and result files were removed. Record from the GitHub workflow
+      (`cases: architecture-review-neg-security-review
+      architecture-review-neg-test-quality-review`). Run.
 - [x] A3. `record_thresholds.py` stores per-grader pass rates (`graders`);
       `eval_gate.py` re-runs a case when an always-passing grader fails
       and fails the gate when it fails in every re-run. Bars recorded

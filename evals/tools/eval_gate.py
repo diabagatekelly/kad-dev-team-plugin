@@ -56,21 +56,26 @@ def run_case(case, runs, tag):
     try:
         c = json.load(open(out, encoding="utf-8"))["cases"][0]
         runs = c["arms"]["with"]
-        if runs and all(r.get("error") for r in runs):
-            # The CLI still scores a run that never started (every grader
-            # fails), which would read as a regression instead of a broken
-            # machine: a Bash-granting case on a host with no sandbox, say.
+        clean = [r for r in runs if not r.get("error")]
+        if runs and not clean:
+            # The CLI still scores a run that never started: every grader
+            # fails, or a "called 0 times" grader passes vacuously. Either
+            # reads as a verdict instead of a broken machine (a Bash-granting
+            # case on a host with no sandbox, say), so it is an error here.
             first = " ".join(str(runs[0]["error"]).split())[:160]
             return None, len(runs), {}, f"every run errored: {first}"
-        return c["aggregates"]["score"], len(runs), grader_rates(c), None
+        # Errored runs (timeouts, refused starts) say nothing about the skill;
+        # the score and the per-grader rates come from the clean runs only.
+        score = sum(r["score"] for r in clean) / len(clean)
+        return score, len(clean), grader_rates(clean), None
     except (OSError, ValueError, KeyError, IndexError):
         return None, 0, {}, f"no result (exit {code}; see {os.path.relpath(out[:-5] + '.log', ROOT)})"
 
 
-def grader_rates(case):
-    """Share of the case's with-arm runs each scored grader passed."""
+def grader_rates(runs):
+    """Share of the given runs each scored grader passed."""
     passed, seen = {}, {}
-    for run in case["arms"]["with"]:
+    for run in runs:
         for g in run.get("graders", []):
             if g.get("scored") is False:
                 continue

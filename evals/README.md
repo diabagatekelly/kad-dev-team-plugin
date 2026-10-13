@@ -246,16 +246,22 @@ evals/tools/eval_gate.py` (against `origin/main`, uncommitted and new
 files included, so it works before you commit), `--cases …`, or `--all`
 (108 cases, roughly half an hour to an hour). The workflow needs an
 `ANTHROPIC_API_KEY` repository secret, and pins the Claude Code version
-the bars were recorded on. It has been run locally but not yet on
-GitHub's runners, where the sandbox needs `bubblewrap`.
+the bars were recorded on. The secret must carry a value: `gh secret
+set` reads the value from stdin, so run it from an interactive terminal
+or pass `--body`; an empty secret fails every case in under a minute
+with "Not logged in" and costs nothing. On GitHub's runners the sandbox
+needs `bubblewrap`, which the workflow installs.
 
-**A case that grants `Bash` needs a sandbox backend on the machine.** On
-Windows the CLI refuses to start such a run ("sandbox required but
-unavailable"), scores it as all-fail at turn zero, and the gate reports
-it as an error rather than a score. Run the tdd, map-update and other
-Bash-granting cases on macOS, on Linux or WSL2 with `bubblewrap`, or
-through the workflow's `workflow_dispatch` input. Cases with no shell
-grant run anywhere.
+**The gate needs a sandbox backend on the machine.** It grants `Bash`
+(with `Write` and `Edit`) to every case so one invocation fits every
+case; on Windows the CLI therefore refuses to start any gate run
+("sandbox required but unavailable"). The CLI still scores such a
+zero-turn run: every positive grader fails and a "called 0 times"
+grader passes vacuously, so both tools score only the runs that did not
+error and report a case with none as an error, not a score. Run the gate
+on macOS, on Linux or WSL2 with `bubblewrap`, or through the workflow's
+`workflow_dispatch` input. Running `claude plugin eval` by hand without
+the `Bash` grant works anywhere for cases that don't need a shell.
 
 Audit mode (`hooks/audit.sh`, see the top-level README) is where new cases
 should come from: the `audit-review` skill reads real sessions against the

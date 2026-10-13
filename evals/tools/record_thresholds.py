@@ -55,10 +55,10 @@ def mode_of(path):
     return "gate" if os.path.basename(path).startswith("gate-") else "calibration"
 
 
-def grader_rates(case):
-    """Share of the case's with-arm runs each scored grader passed."""
+def grader_rates(runs):
+    """Share of the given runs each scored grader passed."""
     passed, seen = {}, {}
-    for run in case["arms"]["with"]:
+    for run in runs:
         for g in run.get("graders", []):
             if g.get("scored") is False:
                 continue
@@ -85,8 +85,8 @@ def main():
             if c["name"] not in only or not runs:
                 continue
             if all(r.get("error") for r in runs):
-                # A run that never started is scored as all-fail by the
-                # CLI; it is not a bar.
+                # A run that never started is still scored by the CLI (all
+                # fail, or a count-0 grader passing vacuously); not a bar.
                 continue
             seen = invoked.setdefault(c["name"], set())
             for r in runs:
@@ -104,16 +104,18 @@ def main():
             continue
         _, path, data, c = latest[name]
         mode = mode_of(path)
+        # Errored runs say nothing about the skill; the bar is the clean runs.
+        clean = [r for r in c["arms"]["with"] if not r.get("error")]
         if mode != "gate":
             print(f"{name}: bar recorded from a calibration run, not a gate run; "
                   f"skill-invoked graders are scored differently there", file=sys.stderr)
         entry = {
-            "score": round(c["aggregates"]["score"], 3),
-            "runs": len(c["arms"]["with"]),
+            "score": round(sum(r["score"] for r in clean) / len(clean), 3),
+            "runs": len(clean),
             "mode": mode,
             "claude_version": data.get("claudeVersion"),
             "source": os.path.relpath(path, EVALS).replace(os.sep, "/"),
-            "graders": grader_rates(c),
+            "graders": grader_rates(clean),
         }
         skills = sorted(invoked.get(name, set()) | set(table.get(name, {}).get("skills_invoked", [])))
         if skills:
