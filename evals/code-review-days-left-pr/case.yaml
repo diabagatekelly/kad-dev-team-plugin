@@ -24,7 +24,7 @@ graders:
   - type: regex
     name: leaves-the-code-alone
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*\.ts"'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*\.ts"'
     match: not_contains
   - type: llm
     name: finds-unused-options

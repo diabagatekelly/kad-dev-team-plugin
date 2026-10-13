@@ -39,10 +39,17 @@ cat <<'EOF'
 
 Next, inside Ubuntu:
   1. claude            # log in once with the subscription, then /exit
-  2. git clone https://github.com/diabagatekelly/kad-dev-team-plugin.git ~/kad-dev-team-plugin
-     (clone into the Linux filesystem, not /mnt/c: bubblewrap and the
-     scaffold are many times slower on the Windows mount)
-  3. cd ~/kad-dev-team-plugin && git checkout eval-audit-fixes
+  2. git clone /mnt/c/Users/<you>/Documents/Development/Portfolio/kad-dev-team-plugin ~/kad-dev-team-plugin
+     cd ~/kad-dev-team-plugin
+     git remote set-url origin https://github.com/diabagatekelly/kad-dev-team-plugin.git
+     git config --global credential.helper "/mnt/c/Program Files/Git/mingw64/bin/git-credential-manager.exe"
+     (clone from the Windows checkout, not from GitHub: the repo is
+     private and a clone over HTTPS inside WSL hangs on a credential
+     prompt it can never show. Clone into the Linux filesystem, not
+     /mnt/c: bubblewrap and the scaffold are many times slower on the
+     Windows mount. The credential helper line lets later pushes from
+     WSL reuse Windows' stored GitHub login.)
+  3. git checkout eval-audit-fixes
   4. python3 -I evals/tools/eval_gate.py --cases <case ...>
      Results land in evals/results/; commit the re-recorded bars from
      there or copy the gate-*.json files back to the Windows checkout.

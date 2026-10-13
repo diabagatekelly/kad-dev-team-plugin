@@ -99,7 +99,7 @@ graders:
   - type: regex
     name: writes-only-the-map
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/architecture-map\.md")[^"]*"'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/architecture-map\.md")[^"]*"'
     match: not_contains
   - type: regex
     name: no-bash-writes

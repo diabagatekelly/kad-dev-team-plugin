@@ -31,7 +31,7 @@ graders:
   - type: regex
     name: three-mockups-in-visual-ux
     target: trace
-    pattern: '(?:"name":"Write","input":\{[^{}]*"file_path":"[^"]*visual-ux/[^"]*\.html"[\s\S]*){3}'
+    pattern: '(?:"name":"Write","input":\{[^{}]*"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html"[\s\S]*){3}'
   - type: llm
     name: one-mockup-per-state
     focus:

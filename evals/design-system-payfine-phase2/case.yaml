@@ -17,11 +17,11 @@ graders:
   - type: regex
     name: renders-candidates
     target: trace
-    pattern: '(?:"name":"Write","input":\{[^{}]*"file_path":"[^"]*\.html"[\s\S]*){2}'
+    pattern: '(?:"name":"Write","input":\{[^{}]*"(?:file_path|path)":"[^"]*\.html"[\s\S]*){2}'
   - type: regex
     name: nothing-in-visual-ux-yet
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*visual-ux/'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*visual-ux/'
     match: not_contains
   - type: llm
     name: asks-which-candidate

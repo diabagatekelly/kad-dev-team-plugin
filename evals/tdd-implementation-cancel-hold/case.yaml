@@ -44,20 +44,24 @@ graders:
     arm: both
   - type: tool_order
     name: queue-test-before-queue-code
-    before: {tool: Write, input_match: '"file_path":"[^"]*test/[^"]*\.test\.ts"'}
+    before: {tool: Write, input_match: '"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"'}
     after: {tool: Edit, input_match: 'in-memory-hold-queue\.ts'}
   - type: tool_order
     name: use-case-test-before-use-case
-    before: {tool: Write, input_match: '"file_path":"[^"]*test/[^"]*cancel-hold[^"]*\.test\.ts"'}
-    after: {tool: Write, input_match: '"file_path":"[^"]*lending/cancel-hold\.ts"'}
+    before: {tool: Write, input_match: '"(?:file_path|path)":"[^"]*test/[^"]*cancel-hold[^"]*\.test\.ts"'}
+    after: {tool: Write, input_match: '"(?:file_path|path)":"[^"]*lending/cancel-hold\.ts"'}
   - type: regex
-    name: red-then-green-per-test
+    name: test-run-after-each-test-edit
     target: trace
-    pattern: '(?:[\s\S]*?"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*test/[^"]*\.test\.ts"(?:(?!"name":"(?:Edit|Write)")[\s\S])*?ℹ fail [1-9][\s\S]*?ℹ fail 0){3}'
+    pattern: '(?:[\s\S]*?"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"(?:(?!"name":"(?:Edit|Write)")[\s\S])*?"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:npm (?:run )?test|node [^"\\]*--test)){3}'
+  - type: regex
+    name: red-then-green-seen
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"(?:(?!"name":"(?:Edit|Write)")[\s\S])*?ℹ fail [1-9][\s\S]*?ℹ fail 0'
   - type: regex
     name: reviews-each-cycle
     target: trace
-    pattern: '(?:[\s\S]*?(?:npm (?:run )?test|node [^"\\]*--test)[\s\S]*?"skill": ?"kad-dev-team:test-quality-review"){4}'
+    pattern: '(?:[\s\S]*?(?:npm (?:run )?test|node [^"\\]*--test)[\s\S]*?"skill": ?"kad-dev-team:test-quality-review"){3}'
   - type: regex
     name: last-test-run-green
     target: trace
@@ -70,7 +74,7 @@ graders:
   - type: regex
     name: can-fail-check-in-trace
     target: trace
-    pattern: '"file_path":"[^"]*\.test\.ts"(?:(?!"file_path":"[^"]*\.test\.ts")[\s\S])*ℹ fail 0(?:(?!"file_path":"[^"]*\.test\.ts")[\s\S])*ℹ fail [1-9](?:(?!"file_path":"[^"]*\.test\.ts")[\s\S])*ℹ fail 0(?:(?!"file_path":"[^"]*\.test\.ts")(?!ℹ fail [1-9])[\s\S])*$'
+    pattern: '"(?:file_path|path)":"[^"]*\.test\.ts"(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail 0(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail [1-9](?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail 0(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")(?!ℹ fail [1-9])[\s\S])*$'
   - type: regex
     name: design-doc-unchanged
     target:
@@ -80,7 +84,7 @@ graders:
   - type: regex
     name: stays-inside-the-slice
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*(?:lending/place-hold\.ts|lending/hold\.ts|lending/loan|infra/http/|main/|package\.json)'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:lending/place-hold\.ts|lending/hold\.ts|lending/loan|infra/http/|main/|package\.json)'
     match: not_contains
   - type: regex
     name: no-bash-writes

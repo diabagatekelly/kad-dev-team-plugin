@@ -24,7 +24,7 @@ graders:
   - type: regex
     name: leaves-the-mockup-alone
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*\.html"'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*\.html"'
     match: not_contains
   - type: llm
     name: finds-unreachable-fine-choice

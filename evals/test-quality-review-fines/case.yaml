@@ -21,7 +21,7 @@ graders:
   - type: regex
     name: leaves-the-code-alone
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/test-quality-review-fines\.md")[^"]*"'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/test-quality-review-fines\.md")[^"]*"'
     match: not_contains
   - type: tool_used
     name: skill-invoked-display

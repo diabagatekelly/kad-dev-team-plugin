@@ -95,7 +95,7 @@ graders:
   - type: regex
     name: touches-only-the-fix
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*(?:lending/(?!return-book\.ts)|infra/|fines/|members/|notifications/|reporting/|package\.json)'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:lending/(?!return-book\.ts)|infra/|fines/|members/|notifications/|reporting/|package\.json)'
     match: not_contains
   - type: regex
     name: no-bash-writes

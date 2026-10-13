@@ -150,9 +150,60 @@ read every failure before re-recording a bar.
       read. No traces reached the artifact: the CLI deletes its scaffold on
       exit, so the gate now passes `--keep-temp`, copies the trace beside
       the result and removes the scaffold itself.
-      Remaining, on WSL2 (credits are gone): `tdd-implementation-named-fix`,
-      `tdd-implementation-cancel-hold`, `tdd-implementation-cancel-hold-via-agent`
-      at `runs: 3` with traces, read, record.
+      Fourth run (WSL2 Ubuntu 26.04 on the subscription, traces kept,
+      2026-10-13): `named-fix` 0.92 over 20 turns, `cancel-hold` 0.92
+      over 38, `via-agent` 0.64 then 0.70 at 3. All four reviewers ran
+      after the handed-back fix (step 5 verified, 1/1). Traces read:
+      `no-bash-writes` fires on real shell writes, not a false match:
+      the named-fix run applied the fix with a Python heredoc over
+      `lending/return-book.ts` and `main/server.ts`, did the can-it-fail
+      flip with `sed -i`, and wrote the report with `cat >`; every
+      via-agent run (4/4) created the test and the use case with `cat >`
+      heredocs and never called Write or Edit, which is why every
+      ordering grader reported "Write never called". Not harness-induced:
+      CLI 2.1.296 injects its Bash-first editing steer only in auto or
+      bypass mode, and evals run under dontAsk. The skill never said
+      which tools to edit with; it now does (Write/Edit only, including
+      the can-fail flip and the report). The grader stays as it is.
+      The direct `cancel-hold` run was disciplined (Write/Edit, three
+      cycles, RED seen on cycle 2, can-fail check, four reviewers) and
+      lost two graders to their own strictness: `red-then-green-per-test`
+      wanted three RED-then-GREEN pairs, but cycle 3 legitimately passed
+      first (the skill allows it and the report said so) and cycle 1's
+      red summary was cut off by the model's own `| head -30`;
+      `reviews-each-cycle` wanted four cycles and the design has three
+      behaviours. Now `test-run-after-each-test-edit` {3} (a summary line
+      before any other edit) plus `red-then-green-seen` {1}, and reviews
+      at {3}. Checked against the kept traces: the direct run passes all
+      nine trace regexes, the heredoc via-agent run still fails four.
+      The earlier "edited before invoking the skill" run did not recur
+      (skill invoked at turn 2 in every run). Two name misses: one
+      via-agent run called `architecture-cartographer:map-query` first
+      (not found) because the skill text named it that way; the text now
+      names `map-query` / `kad-dev-team:map-query`. And the first `Agent`
+      call in every via-agent run used `kad-dev-team:tdd-coach` and got
+      "not found": 2.1.296 lists agents as `kad-dev-team:tdd-coach:AGENT`.
+      The model recovers in one turn and the display grader accepts
+      both; left alone.
+      Verification run (one each, new skill text): `named-fix` 1.00,
+      `cancel-hold` 0.96, `via-agent` 0.96, every file now written with
+      Write/Edit, the can-fail flip included. The two misses were grader
+      faults: the model called Write with a `path` key instead of
+      `file_path` (the CLI accepts it), so every grader anchored on
+      `"file_path"` missed the test file; all case files now match
+      `"(?:file_path|path)"`. And `test-run-after-each-test-edit` looked
+      for the runner's summary line, which the model's own `| head -20`
+      cut off on cycle 1; it now looks for the `npm test` command itself
+      between the test edit and the next edit.
+      Recording run at `--runs 3` (gate option added): `cancel-hold`
+      1.00, `via-agent` 1.00, both recorded. `named-fix` 0.92 x3, every
+      run failing `last-test-run-green`: with the can-fail flip now done
+      by Edit, the model breaks, runs (red), restores, and reports "the
+      suite was green again" without running it. A narrated result, the
+      thing the skill's first rule forbids. The REPEAT section now says
+      the restore must be re-run and the last run before reporting must
+      be green. Re-run at 3: 1.00, recorded. All three tdd bars are gate
+      mode at three runs with per-grader rates.
 
 ## D. Phase chains
 

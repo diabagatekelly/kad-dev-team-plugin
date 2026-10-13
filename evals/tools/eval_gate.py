@@ -18,7 +18,7 @@ record one with `record_thresholds.py` once it has a result you accept.
 Bars recorded before per-grader rates existed get the aggregate check only.
 
 Usage: python3 -I evals/tools/eval_gate.py [--base origin/main] [--cases a b ... | --all]
-           [--jobs 6] [--tolerance 0.1] [--dry-run]
+           [--jobs 6] [--tolerance 0.1] [--runs 1] [--dry-run]
 """
 import argparse
 import concurrent.futures
@@ -95,6 +95,12 @@ def keep_traces(case, out):
         # kept for this copy; drop it so --keep-temp doesn't fill the disk
         scaffold = os.path.dirname(os.path.dirname(src))
         if os.path.basename(scaffold).startswith("claude-eval-"):
+            # --keep-temp seals home/ and tmp/ at mode 000 and makes the
+            # kept dir read-only; rmtree would leave them behind.
+            for root, dirs, _ in os.walk(scaffold):
+                os.chmod(root, 0o700)
+                for d in dirs:
+                    os.chmod(os.path.join(root, d), 0o700)
             shutil.rmtree(scaffold, ignore_errors=True)
     if changed:
         data = json.load(open(out, encoding="utf-8"))
@@ -130,6 +136,9 @@ def main():
     p.add_argument("--all", action="store_true", help="every case, not just the affected ones")
     p.add_argument("--jobs", type=int, default=6)
     p.add_argument("--tolerance", type=float, default=0.1)
+    p.add_argument("--runs", type=int, default=1,
+                   help="runs per case on the first pass (1); use the case's own "
+                        "count, e.g. 3, when the result is meant to be recorded")
     p.add_argument("--dry-run", action="store_true")
     a = p.parse_args()
 
@@ -149,7 +158,7 @@ def main():
 
     rows = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=a.jobs) as pool:
-        first = {pool.submit(run_case, c, 1, tag): c for c in cases}
+        first = {pool.submit(run_case, c, a.runs, tag): c for c in cases}
         retry = {}
         for f in concurrent.futures.as_completed(first):
             case = first[f]
@@ -159,7 +168,8 @@ def main():
             lost = regressed(bar_rates, rates)
             rows[case] = {"bar": bar, "score": score, "runs": runs, "error": err,
                           "rerun": False, "lost": lost}
-            if score is not None and bar is not None and (score < bar - a.tolerance or lost):
+            # A first pass already at several runs is its own re-run.
+            if a.runs == 1 and score is not None and bar is not None and (score < bar - a.tolerance or lost):
                 retry[pool.submit(run_case, case, None, tag + "-rerun")] = case
         for f in concurrent.futures.as_completed(retry):
             case = retry[f]

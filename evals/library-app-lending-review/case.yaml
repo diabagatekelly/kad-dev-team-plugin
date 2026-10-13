@@ -23,7 +23,7 @@ graders:
   - type: regex
     name: leaves-the-code-alone
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"(?![^"]*docs/reviews/library-app-lending-review\.md")[^"]*"'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/library-app-lending-review\.md")[^"]*"'
     match: not_contains
   - type: llm
     name: finds-orm-inside-checkout-use-case

@@ -30,6 +30,14 @@ directly. Only if the tests genuinely can't run, say so and stop: a cycle
 you can't run isn't a cycle, and "I couldn't run them" never becomes
 "done".
 
+**Change files with the `Write` and `Edit` tools, never through the
+shell.** A test, the code that passes it, the can-it-fail break and its
+restore, the report: each lands as its own `Write` or `Edit`, so a
+reviewer, the orchestrator's grader and the trace can see what changed
+and in what order. A file written by shell redirection, a heredoc, `tee`,
+`sed -i` or `cp`/`mv` hides exactly that, however small the change. Bash
+is for running things: the test runner, `git`, listing and reading files.
+
 **TDD is the default, not an unconditional rule.** An exploratory spike, a
 throwaway prototype, pure configuration with no logic, or an explicit
 request to skip it are the exceptions — the moment a spike is kept, the
@@ -130,10 +138,11 @@ its full cycle (through REVIEW) is complete.
 
 ## Check what already exists first
 
-Before writing an entry's implementation, consult
-`architecture-cartographer:map-query` at the implementation level — does a
-comparable function, class or helper already exist. Invoke it with the
-`Skill` tool; the consult returns an answer, not the turn: carry on with
+Before writing an entry's implementation, consult `map-query` (the
+`kad-dev-team:map-query` skill, owned by `architecture-cartographer`) at
+the implementation level — does a comparable function, class or helper
+already exist. Invoke it with the `Skill` tool, under that name; the
+consult returns an answer, not the turn: carry on with
 this skill in the same response. If it reports that no map exists yet, say
 so once in your report and carry on.
 
@@ -206,7 +215,9 @@ Pick the next entry and start again until the list is exhausted.
 **Before declaring the goal complete**, spot-check the one or two
 highest-risk assertions: break the implementation on purpose (a wrong
 comparison, an off-by-one, a flipped condition), run the tests and confirm
-one fails, then restore the code and confirm green. Coverage should land
+one fails, then restore the code and run the suite again. The last test
+run before you report must be green; a restore you didn't re-run is not
+confirmed, however obvious the revert. Coverage should land
 at or near 100% line and branch as a result of testing every real
 behaviour on the list — treat a gap as a missing Test List entry, not a
 number to pad.
