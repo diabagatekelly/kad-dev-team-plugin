@@ -1,0 +1,11 @@
+{
+  "tdd-implementation-named-fix": {
+    "inputs": "7950666782ec4808dbbc5d01ae1741fb6d13848810af0d5e3bab1eb4c62e60fa",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261013T212323-tdd-implementation-named-fix.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-13T21:24:40Z"
+  }
+}

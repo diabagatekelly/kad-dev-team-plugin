@@ -1,6 +1,11 @@
-# Runs the eval cases a pull request can affect and fails the check if any
-# case scores below its bar in evals/thresholds.json. See evals/README.md,
-# "Eval gate".
+# Pull requests: a free check that every eval case the diff can reach has
+# a passing gate run recorded in evals/evidence.json against exactly the
+# files it loads (see evals/README.md, "Eval gate"). The runs themselves
+# happen on a developer machine on a Claude subscription, not here.
+#
+# Manual dispatch: the paid path, which runs the cases on this runner with
+# an API key. Kept for the day an ANTHROPIC_API_KEY secret exists again;
+# it fails at the first model call without one.
 name: Eval gate
 
 on:
@@ -18,7 +23,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gate:
+  evidence:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check the evidence
+        env:
+          BASE: ${{ github.base_ref || 'main' }}
+        run: python3 -I evals/tools/eval_evidence.py --base "origin/$BASE"
+
+  run:
+    if: github.event_name == 'workflow_dispatch'
     # 22.04, not latest: Ubuntu 24.04 restricts unprivileged user namespaces
     # and bubblewrap then cannot bring up loopback ("bwrap: loopback: Failed
     # RTM_NEWADDR"), which leaves every run without a shell. Review cases
@@ -49,14 +68,13 @@ jobs:
           # request names a workspace; a workspace-scoped key ignores this.
           ANTHROPIC_CUSTOM_HEADERS: "${{ secrets.ANTHROPIC_WORKSPACE_ID && format('anthropic-workspace-id: {0}', secrets.ANTHROPIC_WORKSPACE_ID) || '' }}"
           CASES: ${{ github.event.inputs.cases }}
-          BASE: ${{ github.base_ref || 'main' }}
         run: |
           if [ "$CASES" = "all" ]; then
             python3 -I evals/tools/eval_gate.py --all
           elif [ -n "$CASES" ]; then
             python3 -I evals/tools/eval_gate.py --cases $CASES
           else
-            python3 -I evals/tools/eval_gate.py --base "origin/$BASE"
+            python3 -I evals/tools/eval_gate.py --base origin/main
           fi
       - if: always()
         uses: actions/upload-artifact@v4

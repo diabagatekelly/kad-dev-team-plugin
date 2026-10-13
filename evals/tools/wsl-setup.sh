@@ -49,8 +49,9 @@ Next, inside Ubuntu:
      /mnt/c: bubblewrap and the scaffold are many times slower on the
      Windows mount. The credential helper line lets later pushes from
      WSL reuse Windows' stored GitHub login.)
-  3. git checkout eval-audit-fixes
-  4. python3 -I evals/tools/eval_gate.py --cases <case ...>
-     Results land in evals/results/; commit the re-recorded bars from
-     there or copy the gate-*.json files back to the Windows checkout.
+  3. Done. From then on, from the repository root on Windows:
+       wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh [--cases <case ...> | --all]
+     mirrors the checkout into the clone, runs the gate, and copies the
+     results, evals/evidence.json and evals/thresholds.json back, ready
+     to commit. (Inside Ubuntu by hand: python3 -I evals/tools/eval_gate.py)
 EOF

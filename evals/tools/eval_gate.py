@@ -1,7 +1,10 @@
 """Run the eval cases a change affects and pass or fail it against the bar.
 
 1. Picks the cases with `affected_cases.py` (or takes `--cases`).
-2. Runs each once, plugin arm only, up to `--jobs` cases at a time.
+2. Runs each once, plugin arm only, up to `--jobs` cases at a time and
+   `--parallel` agent runs in flight across them (a case at several runs
+   gets them as concurrent children of one CLI process, `-j`, so a
+   three-run case takes about the time of one run).
 3. A case is suspect when its score lands below its bar in
    `thresholds.json` (minus `--tolerance`), or when any grader the bar
    recorded as passing in every run fails. A suspect case is re-run at its
@@ -17,13 +20,19 @@ A case with no recorded bar is reported as new and doesn't fail the gate;
 record one with `record_thresholds.py` once it has a result you accept.
 Bars recorded before per-grader rates existed get the aggregate check only.
 
+Every case that passes is written to `evals/evidence.json` with a
+fingerprint of the files it loads (`eval_evidence.py`); commit that file
+with the change, it is what the pull-request check reads instead of
+running anything. A case that fails loses its entry.
+
 Usage: python3 -I evals/tools/eval_gate.py [--base origin/main] [--cases a b ... | --all]
-           [--jobs 6] [--tolerance 0.1] [--runs 1] [--dry-run]
+           [--jobs 6] [--parallel 8] [--tolerance 0.1] [--runs 1] [--dry-run]
 """
 import argparse
 import concurrent.futures
 import datetime
 import json
+import re
 import shutil
 import os
 import subprocess
@@ -36,19 +45,66 @@ EVALS = os.path.dirname(TOOLS)
 ROOT = os.path.dirname(EVALS)
 sys.path.insert(0, TOOLS)
 import affected_cases  # noqa: E402
+import eval_evidence  # noqa: E402
 
 
 _start_lock = threading.Lock()
 
 
-def run_case(case, runs, tag):
+class Slots:
+    """A budget of agent runs in flight across every CLI process the gate
+    starts. A case takes as many slots as runs it will make concurrently;
+    they all share the one credential's rate limit."""
+
+    def __init__(self, total):
+        self.total = max(1, total)
+        self.free = self.total
+        self.cv = threading.Condition()
+
+    def take(self, want):
+        want = max(1, min(want, self.total, 8))  # the CLI caps -j at 8
+        with self.cv:
+            self.cv.wait_for(lambda: self.free >= want)
+            self.free -= want
+        return want
+
+    def give(self, n):
+        with self.cv:
+            self.free += n
+            self.cv.notify_all()
+
+
+def case_runs(case):
+    """The case's own `runs:`; the CLI's default is 3."""
+    path = os.path.join(EVALS, case, "case.yaml")
+    if os.path.isfile(path):
+        m = re.search(r"^runs:\s*(\d+)", open(path, encoding="utf-8").read(), re.M)
+        if m:
+            return int(m.group(1))
+    return 3
+
+
+def run_case(case, runs, tag, slots):
+    """One CLI invocation of the case. `runs` None means the case's own
+    count. Returns a dict: score, runs, rates, error, version, source."""
+    want = runs or case_runs(case)
+    j = slots.take(want)
+    try:
+        return _run_case(case, runs, tag, j)
+    finally:
+        slots.give(j)
+
+
+def _run_case(case, runs, tag, j):
     # The CLI names its HTML report folder by the second a run starts, and
     # refuses to reuse one, so keep launches at least a second apart.
     with _start_lock:
         time.sleep(1.1)
     out = os.path.join(EVALS, "results", f"{tag}-{case}.json")
+    source = os.path.relpath(out, EVALS).replace(os.sep, "/")
     args = ["claude", "plugin", "eval", ".", "--case", case, "--ablation", "none",
             "--scaffold", "--judge-model", "sonnet", "--no-publish", "--trust-plugin",
+            "--concurrency", str(j),
             # keep-temp: the CLI otherwise deletes the scaffold (and the trace
             # in it) on exit, before keep_traces can copy it
             "--keep-temp",
@@ -57,8 +113,11 @@ def run_case(case, runs, tag):
         args[args.index("--ablation"):args.index("--ablation")] = ["--runs", str(runs)]
     log = open(out[:-5] + ".log", "w")
     code = subprocess.run(args, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
+    result = {"score": None, "runs": 0, "rates": {}, "error": None, "version": None, "source": source}
     try:
-        c = json.load(open(out, encoding="utf-8"))["cases"][0]
+        data = json.load(open(out, encoding="utf-8"))
+        c = data["cases"][0]
+        result["version"] = data.get("claudeVersion")
         runs = c["arms"]["with"]
         keep_traces(c, out)
         clean = [r for r in runs if not r.get("error")]
@@ -68,13 +127,13 @@ def run_case(case, runs, tag):
             # reads as a verdict instead of a broken machine (a Bash-granting
             # case on a host with no sandbox, say), so it is an error here.
             first = " ".join(str(runs[0]["error"]).split())[:160]
-            return None, len(runs), {}, f"every run errored: {first}"
+            return {**result, "runs": len(runs), "error": f"every run errored: {first}"}
         # Errored runs (timeouts, refused starts) say nothing about the skill;
         # the score and the per-grader rates come from the clean runs only.
         score = sum(r["score"] for r in clean) / len(clean)
-        return score, len(clean), grader_rates(clean), None
-    except (OSError, ValueError, KeyError, IndexError):
-        return None, 0, {}, f"no result (exit {code}; see {os.path.relpath(out[:-5] + '.log', ROOT)})"
+        return {**result, "score": score, "runs": len(clean), "rates": grader_rates(clean)}
+    except (OSError, ValueError, KeyError, IndexError, ZeroDivisionError):
+        return {**result, "error": f"no result (exit {code}; see {os.path.relpath(out[:-5] + '.log', ROOT)})"}
 
 
 def keep_traces(case, out):
@@ -134,7 +193,10 @@ def main():
     p.add_argument("--base", default="origin/main")
     p.add_argument("--cases", nargs="*")
     p.add_argument("--all", action="store_true", help="every case, not just the affected ones")
-    p.add_argument("--jobs", type=int, default=6)
+    p.add_argument("--jobs", type=int, default=6, help="cases at a time (6)")
+    p.add_argument("--parallel", type=int, default=8,
+                   help="agent runs in flight across all cases (8); a case at "
+                        "several runs takes that many at once")
     p.add_argument("--tolerance", type=float, default=0.1)
     p.add_argument("--runs", type=int, default=1,
                    help="runs per case on the first pass (1); use the case's own "
@@ -156,26 +218,30 @@ def main():
     os.makedirs(os.path.join(EVALS, "results"), exist_ok=True)
     tag = "gate-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S")
 
-    rows = {}
+    rows, version = {}, None
+    slots = Slots(a.parallel)
     with concurrent.futures.ThreadPoolExecutor(max_workers=a.jobs) as pool:
-        first = {pool.submit(run_case, c, a.runs, tag): c for c in cases}
+        first = {pool.submit(run_case, c, a.runs, tag, slots): c for c in cases}
         retry = {}
         for f in concurrent.futures.as_completed(first):
             case = first[f]
-            score, runs, rates, err = f.result()
+            r = f.result()
+            version = r["version"] or version
             bar = bars.get(case, {}).get("score")
             bar_rates = bars.get(case, {}).get("graders", {})
-            lost = regressed(bar_rates, rates)
-            rows[case] = {"bar": bar, "score": score, "runs": runs, "error": err,
-                          "rerun": False, "lost": lost}
+            lost = regressed(bar_rates, r["rates"])
+            rows[case] = {"bar": bar, "score": r["score"], "runs": r["runs"], "error": r["error"],
+                          "rerun": False, "lost": lost, "source": r["source"]}
             # A first pass already at several runs is its own re-run.
-            if a.runs == 1 and score is not None and bar is not None and (score < bar - a.tolerance or lost):
-                retry[pool.submit(run_case, case, None, tag + "-rerun")] = case
+            if a.runs == 1 and r["score"] is not None and bar is not None and (
+                    r["score"] < bar - a.tolerance or lost):
+                retry[pool.submit(run_case, case, None, tag + "-rerun", slots)] = case
         for f in concurrent.futures.as_completed(retry):
             case = retry[f]
-            score, runs, rates, err = f.result()
-            lost = regressed(bars.get(case, {}).get("graders", {}), rates)
-            rows[case].update(score=score, runs=runs, error=err, rerun=True, lost=lost)
+            r = f.result()
+            lost = regressed(bars.get(case, {}).get("graders", {}), r["rates"])
+            rows[case].update(score=r["score"], runs=r["runs"], error=r["error"], rerun=True,
+                              lost=lost, source=r["source"])
 
     failed = []
     lines = ["| Case | Bar | Score | Runs | Graders lost | Result |", "|---|---|---|---|---|---|"]
@@ -207,6 +273,11 @@ def main():
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         open(summary, "a").write(report)
+    # The proof the pull-request check reads: every passing case, with a
+    # fingerprint of what it loaded; a failing case loses its old entry.
+    eval_evidence.record({c: rows[c] for c in rows if c not in failed}, failed, version)
+    print(f"evidence for {len(rows) - len(failed)} case(s) written to evals/evidence.json; "
+          f"commit it with the change.")
     return 1 if failed else 0
 
 

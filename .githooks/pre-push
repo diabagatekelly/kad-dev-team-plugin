@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Refuses a push when an eval case this branch affects has no passing gate
+# run recorded in evals/evidence.json against the files it loads now: the
+# same check the pull request runs, caught before the push. It runs no
+# model calls; a few seconds of Python. Bypass with --no-verify.
+# Enable once per clone: git config core.hooksPath .githooks
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+# On Windows `python3` may be the Store stub, which only prints an advert.
+for py in python3 python; do
+  if "$py" -c "pass" >/dev/null 2>&1; then break; fi
+done
+exec "$py" -I evals/tools/eval_evidence.py --base origin/main

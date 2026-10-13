@@ -31,6 +31,12 @@ read every failure before re-recording a bar.
       every existing bar onto gate mode.
 - [ ] A5. After B, C and F land: `eval_gate.py --all` once, then
       `record_thresholds.py` for everything. Run (108 cases, the big one).
+      Since 2026-10-13 this is also what clears the PR check: the branch
+      reaches nearly every case and `evals/evidence.json` holds one entry
+      (`tdd-implementation-named-fix`, from the run that proved the
+      parallel path). `wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh
+      --all`, about 20 minutes wall-clock at eight runs in flight, but
+      roughly three five-hour subscription windows of usage.
 
 ## B. tdd cases as the mechanical gate (depends on nothing; do before C)
 

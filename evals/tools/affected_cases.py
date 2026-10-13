@@ -120,31 +120,60 @@ def changed_files(base):
     return sorted({l for l in (tracked + new).splitlines() if l})
 
 
+def repo_files():
+    """Every file in the working tree that git would see: tracked files that
+    still exist, plus untracked files that aren't ignored."""
+    tracked = subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True)
+    new = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True)
+    return sorted(f for f in set((tracked + new).splitlines())
+                  if f and os.path.isfile(os.path.join(ROOT, f)))
+
+
+class Reach:
+    """What each case loads, so a file can be asked which cases it reaches."""
+
+    def __init__(self):
+        thresholds_path = os.path.join(EVALS, "thresholds.json")
+        self.recorded = json.load(open(thresholds_path)) if os.path.isfile(thresholds_path) else {}
+        self.owned = agent_skills()
+        self.deps = {}
+
+    def _deps(self, case):
+        if case not in self.deps:
+            self.deps[case] = (tags_of(case),
+                               set(self.recorded.get(case, {}).get("skills_invoked", [])),
+                               agents_named(case) & set(self.owned),
+                               fixture_paths(case))
+        return self.deps[case]
+
+    def reaches(self, case, f):
+        tags, invoked, delegates, fixtures = self._deps(case)
+        parts = f.split("/")
+        if f.startswith(f"evals/{case}/"):
+            return True
+        if parts[0] == "skills" and len(parts) > 2 and (parts[1] in tags or parts[1] in invoked):
+            return True
+        if parts[0] == "agents" and len(parts) > 2 and (
+                parts[1] in delegates or self.owned.get(parts[1], set()) & tags):
+            return True
+        if f.startswith("evals/fixtures/"):
+            rel = f[len("evals/"):]
+            return any(rel == p or (p.endswith("/") and rel.startswith(p)) or rel.startswith(p + "/")
+                       for p in fixtures)
+        return False
+
+
+def inputs_of(case, files=None, reach=None):
+    """The files (of `files`, default the whole working tree) that `case`
+    loads: the same set a change is matched against in `affected`, so a
+    fingerprint of them says whether a recorded run still applies."""
+    reach = reach or Reach()
+    return [f for f in (files if files is not None else repo_files()) if reach.reaches(case, f)]
+
+
 def affected(files):
-    thresholds_path = os.path.join(EVALS, "thresholds.json")
-    recorded = json.load(open(thresholds_path)) if os.path.isfile(thresholds_path) else {}
-    owned = agent_skills()
-    hits = set()
-    for case in case_dirs():
-        tags = tags_of(case)
-        invoked = set(recorded.get(case, {}).get("skills_invoked", []))
-        delegates = agents_named(case) & set(owned)
-        fixtures = fixture_paths(case)
-        for f in files:
-            parts = f.split("/")
-            if f.startswith(f"evals/{case}/"):
-                hits.add(case)
-            elif parts[0] == "skills" and len(parts) > 2 and (parts[1] in tags or parts[1] in invoked):
-                hits.add(case)
-            elif parts[0] == "agents" and len(parts) > 2 and (
-                    parts[1] in delegates or owned.get(parts[1], set()) & tags):
-                hits.add(case)
-            elif f.startswith("evals/fixtures/"):
-                rel = f[len("evals/"):]
-                if any(rel == p or (p.endswith("/") and rel.startswith(p)) or rel.startswith(p + "/")
-                       for p in fixtures):
-                    hits.add(case)
-    return sorted(hits)
+    reach = Reach()
+    return sorted(case for case in case_dirs() if any(reach.reaches(case, f) for f in files))
 
 
 def main():

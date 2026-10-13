@@ -206,8 +206,26 @@ which is the one fidelity gap.
 
 ## Eval gate
 
-`.github/workflows/eval-gate.yml` runs on every pull request that touches
-`skills/`, `agents/` or `evals/`:
+The gate is two parts: a run that costs model time, done on your machine
+on the Claude subscription, and a free check on every pull request that
+the run happened against exactly the files the change touches. Like a
+coverage gate: the cost is paid once, locally, and the PR carries the
+proof.
+
+**Running the gate.** From the repository root on Windows:
+
+```
+wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh            # what changed against main
+wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh --cases a b
+wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh --all      # every case
+```
+
+`tools/wsl-gate.sh` mirrors the checkout (uncommitted work included)
+into the WSL2 clone, runs `tools/eval_gate.py` there and copies the new
+results, `evidence.json` and `thresholds.json` back, so the next step
+is to commit. Inside Linux or macOS run `python3 -I
+evals/tools/eval_gate.py` directly. Windows itself cannot run it (below).
+What the gate does:
 
 1. `tools/affected_cases.py` picks the cases the diff can reach: a changed
    skill's own cases and the cases whose runs were seen consulting it
@@ -215,18 +233,39 @@ which is the one fidelity gap.
    cases and its skills' cases, a changed fixture's cases (from what each
    `scaffold.sh` copies), and any edited case. A README or tool change
    reaches none.
-2. `tools/eval_gate.py` runs them once each, six at a time, and re-runs
-   at full `runs:` any case that is suspect: its score lands more than
-   0.1 below its bar in `thresholds.json`, or a grader the bar recorded
-   as passing every run fails (the judge is noisy; one run proves
-   little).
-3. The check fails if a case is still below its bar, or if an
-   always-passing grader failed in every re-run. The aggregate tolerance
-   absorbs judge noise; the per-grader check is what stops one grader
-   regressing for good inside a case with ten graders, where losing it
-   moves the aggregate by less than the tolerance. The job summary shows
-   the table, with the lost graders named. Results are uploaded as an
-   artifact.
+2. `tools/eval_gate.py` runs them once each, up to six cases and eight
+   agent runs at a time (`--jobs`, `--parallel`). A case at several runs
+   (`--runs 3`, or a re-run) gets its runs as concurrent children of one
+   CLI process, so a three-run case takes about the time of one run; a
+   tdd case is two to three minutes, a review case one to two. Every run
+   shares the subscription's one rate limit, so the cap is on runs in
+   flight, not cases. It re-runs at full `runs:` any case that is
+   suspect: its score lands more than 0.1 below its bar in
+   `thresholds.json`, or a grader the bar recorded as passing every run
+   fails (the judge is noisy; one run proves little).
+3. It fails if a case is still below its bar, or if an always-passing
+   grader failed in every re-run. The aggregate tolerance absorbs judge
+   noise; the per-grader check is what stops one grader regressing for
+   good inside a case with ten graders, where losing it moves the
+   aggregate by less than the tolerance. The table names the lost
+   graders. Results, logs and every run's trace land in `results/`
+   (gitignored).
+4. Every case that passed is written to `evidence.json`: a fingerprint
+   of the files it loads (the same set step 1 matches a diff against,
+   with CRLF folded so Linux and Windows agree), its score, bar, run
+   count and result file. A case that failed loses its entry.
+
+**The pull-request check.** `.github/workflows/eval-gate.yml` runs
+`tools/eval_evidence.py` on every pull request that touches `skills/`,
+`agents/` or `evals/`: for each case the diff reaches, the committed
+`evidence.json` must hold an entry whose fingerprint matches the files
+as they are in the PR and whose score clears the current bar. A missing
+entry, a stale one (something the case loads changed after the run) or
+a bar it no longer clears fails the check and prints the command to
+run. No model is called; it takes seconds and needs no secret. The same
+check runs as a pre-push hook once `git config core.hooksPath .githooks`
+is set, so the refusal arrives before the push, with the same command.
+Bypass a push with `--no-verify`; the PR check still stands.
 
 **Bars come from gate runs.** The gate scores with `--ablation none`,
 where every grader counts; calibration runs use `--ablation with-without`,
@@ -240,32 +279,25 @@ calibration results altogether. The per-grader rates it stores
 that field existed get the aggregate check only until re-recorded.
 
 When a change is meant to move a score, re-record that case's bar with
-`tools/record_thresholds.py <case>` from a gate run of it and commit it
-in the same PR. Run the gate by hand with `python3 -I
-evals/tools/eval_gate.py` (against `origin/main`, uncommitted and new
-files included, so it works before you commit), `--cases …`, or `--all`
-(108 cases, roughly half an hour to an hour). The workflow needs an
-`ANTHROPIC_API_KEY` repository secret, and pins the Claude Code version
-the bars were recorded on. The secret must carry a value: `gh secret
-set` reads the value from stdin, so run it from an interactive terminal
-or pass `--body`; an empty secret fails every case in under a minute
-with "Not logged in" and costs nothing. A user-scoped key
-(`sk-ant-usr-…`) also needs an `ANTHROPIC_WORKSPACE_ID` secret, which
-the workflow turns into the `anthropic-workspace-id` header; without it
-every request fails with a 400 before any case runs. On GitHub's
-runners the sandbox needs `bubblewrap`, which the workflow installs, on
-an image whose kernel lets an unprivileged user namespace configure
-loopback (Ubuntu 22.04; 24.04's AppArmor restriction breaks it). With
-a broken sandbox every run has no shell: review cases quietly fall back
-to Read and Grep and still pass, which is why the workflow probes
-`bwrap` before the gate runs. Budget about $0.45 per review case
-including the judge; a tdd case costs more.
+`tools/record_thresholds.py --gate-only <case>` from a gate run of it
+(on Windows, after `wsl-gate.sh` copied the results back) and commit it
+with the evidence in the same PR. The gate works before you commit:
+`affected_cases.py` includes uncommitted and new files, and the
+fingerprint is of the working tree.
 
-To run the gate locally on a Claude subscription instead, use WSL2:
-`wsl --install -d Ubuntu-22.04` from an elevated PowerShell, reboot,
-then `bash evals/tools/wsl-setup.sh` inside Ubuntu (bubblewrap, Node 24,
-the pinned CLI, a sandbox probe) and clone the repo into the Linux
-filesystem. The script prints the remaining steps.
+**The paid path still exists.** The workflow's `workflow_dispatch` runs
+the cases on GitHub's own runner with an `ANTHROPIC_API_KEY` repository
+secret (and, for a user-scoped `sk-ant-usr-…` key, an
+`ANTHROPIC_WORKSPACE_ID` secret the workflow turns into the
+`anthropic-workspace-id` header). No such secrets exist today and the
+dispatch fails at the first model call without them; the pull-request
+check does not use them. If they come back: `gh secret set` reads the
+value from stdin, so run it from an interactive terminal or pass
+`--body`; the runner image must be Ubuntu 22.04 (24.04's AppArmor
+restriction on unprivileged user namespaces breaks bubblewrap's loopback
+setup, after which review cases quietly fall back to Read and Grep and
+still pass, which is why the job probes `bwrap` first); budget about
+$0.45 per review case including the judge, more for a tdd case.
 
 **The gate needs a sandbox backend on the machine.** It grants `Bash`
 (with `Write` and `Edit`) to every case so one invocation fits every
@@ -273,10 +305,13 @@ case; on Windows the CLI therefore refuses to start any gate run
 ("sandbox required but unavailable"). The CLI still scores such a
 zero-turn run: every positive grader fails and a "called 0 times"
 grader passes vacuously, so both tools score only the runs that did not
-error and report a case with none as an error, not a score. Run the gate
-on macOS, on Linux or WSL2 with `bubblewrap`, or through the workflow's
-`workflow_dispatch` input. Running `claude plugin eval` by hand without
-the `Bash` grant works anywhere for cases that don't need a shell.
+error and report a case with none as an error, not a score. WSL2 is the
+answer on Windows: `wsl --install -d Ubuntu-22.04` from an elevated
+PowerShell, reboot, then `bash evals/tools/wsl-setup.sh` inside Ubuntu
+(bubblewrap, Node 24, the pinned CLI, a sandbox probe); the script
+prints how to make the clone and log in. Running `claude plugin eval`
+by hand without the `Bash` grant works anywhere for cases that don't
+need a shell.
 
 Audit mode (`hooks/audit.sh`, see the top-level README) is where new cases
 should come from: the `audit-review` skill reads real sessions against the
