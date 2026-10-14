@@ -97,6 +97,24 @@ def run_case(case, runs, tag, slots):
         slots.give(j)
 
 
+GATED_TOOLS = ("Write", "Edit", "Bash")
+
+
+def case_tool_grant(case):
+    """The gated tools the case's own `allowed_tools` names, as the CLI's
+    operator grant for that case. Granting every case all three let a
+    Write-only case write its files through shell heredocs or a generator
+    script, where a grader that reads Write calls saw nothing
+    (screen-design-payfine, 2026-10-14)."""
+    try:
+        text = open(os.path.join(EVALS, case, "case.yaml"), encoding="utf-8").read()
+    except OSError:
+        return []
+    m = re.search(r"^\s*allowed_tools:\s*\[([^\]]*)\]", text, re.M)
+    named = {t.strip().strip("'\"") for t in m.group(1).split(",")} if m else set()
+    return [t for t in GATED_TOOLS if t in named]
+
+
 def _run_case(case, runs, tag, j):
     # The CLI names its HTML report folder by the second a run starts, and
     # refuses to reuse one, so keep launches at least a second apart.
@@ -109,8 +127,10 @@ def _run_case(case, runs, tag, j):
             "--concurrency", str(j),
             # keep-temp: the CLI otherwise deletes the scaffold (and the trace
             # in it) on exit, before keep_traces can copy it
-            "--keep-temp",
-            "--allow-tools", "Write", "Edit", "Bash", "--json", out]
+            "--keep-temp", "--json", out]
+    grant = case_tool_grant(case)
+    if grant:
+        args += ["--allow-tools", *grant]
     if runs:
         args[args.index("--ablation"):args.index("--ablation")] = ["--runs", str(runs)]
     log = open(out[:-5] + ".log", "w")

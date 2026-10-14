@@ -30,7 +30,8 @@ read every failure before re-recording a bar.
       `mode` and warns on calibration sources; `--gate-only` filters them.
       Documented in the README's "Eval gate". A5 is what actually moves
       every existing bar onto gate mode.
-- [ ] A5. After B, C and F land: `eval_gate.py --all --runs 3` once, then
+- [x] A5. (Done 2026-10-14; the record is at the end of this entry.)
+      After B, C and F land: `eval_gate.py --all --runs 3` once, then
       `record_thresholds.py --gate-only` for everything. Run (109 cases,
       about 330 runs, two subscription windows). Still open after the
       2026-10-13 full run: that run was one run per case, so 68 bars are
@@ -121,6 +122,68 @@ read every failure before re-recording a bar.
       when a concurrent child refreshed the subscription token, so the
       gate now re-runs such a case once. The subscription's session
       limit hit after about 170 runs in one window.
+      **Full three-run gate, 2026-10-14 (WSL2, `--all --runs 3`):**
+      started 00:55 EDT; 68 cases ran clean in 35 minutes, then the
+      subscription session limit ("resets 5am") errored the other 41 on
+      all three runs, and the gate dropped their evidence with the
+      failures'. Resumed at 06:50 with `--stale` (38 affected cases,
+      132 runs, 27 minutes, no error), then the five unaffected cases
+      the limit had hit, then re-runs of what the reads below changed.
+      Every one of the 109 bars is now a gate-mode three-run bar with
+      per-grader rates (`record_thresholds.py --gate-only`), and
+      `evidence.json` covers 109/109. Read from the traces:
+      - `screen-design-payfine` 0.85: `three-mockups-in-visual-ux`
+        (a trace regex on `Write` calls) failed every run. In two runs
+        the model had written the HTML through Bash, a Python generator
+        and a heredoc, which the case never granted: the gate passed
+        `--allow-tools Write Edit Bash` to every case. `eval_gate.py`
+        now grants each case only the gated tools its `allowed_tools`
+        names. The third run, and one of three on the re-run, was a
+        real miss: one HTML file with every state side by side, which
+        `one-mockup-per-state` also failed. The skill's rendering step
+        said "write the mockup as a real HTML file", singular, against
+        its own one-per-state rule; it now says one file per state.
+        Re-run 1.00 at 3, four to six files each.
+      - `test-quality-review-reminders` 0.89: `no-false-alarm-inline-
+        fakes` failed 2/3 on reviews whose email finding said the
+        no-op email fake "can't fail" and should capture its calls.
+        The grader meant the SMS and postal capture fakes; the reviews
+        praised those. Grader now says that naming the email fake's
+        no-op inside the untested-email finding is part of that
+        finding. Re-run 1.00 at 3.
+      - `technology-bootstrap-phase3` 0.80 then 0.73: `recommends-
+        rather-than-decides` failed 17/18 votes on documents that
+        record recommendation, rejected alternative and approval for
+        every category. The CLI keeps no judge rationale, so a Sonnet
+        judge was asked by hand with the same document and criterion:
+        the grader told it the user "delegated the package manager
+        ('whatever you'd recommend')", when phase 2 actually set a
+        criterion for it ("pick the one where safe is the default"),
+        so the document's accurate "the user asked for the manager
+        where safe is the default" read as an invented requirement.
+        Grader now quotes the user's actual words per category.
+        Re-run 0.93 at 3 (one run still lost that grader 3/3).
+      - `reliability-requirements-payfine-phase1` 0.89, `security-
+        requirements-payfine-phase1` 0.78, `-phase3` 0.89: the known
+        D1/D5 graders. Phase 1 asked "is there on-call or alerting?"
+        with `ops/alerts.yml` in the repo; security phase 1 asked
+        "does the portal tokenise cards in the browser?" after stating
+        it would treat that as the design; security phase 3 lost
+        `criteria-cover-error-and-monitoring-exits` once and `records-
+        the-decision-without-relitigating` once on documents that meet
+        both by the letter. Bars recorded from these runs (0.889,
+        0.778, 0.889); the second samples came in at 0.89, 1.00, 0.94.
+      - `reliability-review-catalog` 0.83 and `-alerts` 0.89 in the
+        first half: both 1.00 on the resumed run. Judge variance.
+      Two facts for the playbook: recording bars rewrites each case's
+      `skills_invoked`, which is part of its reach, so five cases'
+      evidence went stale with no file edited (the orchestrator cases
+      had consulted `reliability-requirements` in some run; the two
+      neg cases had invoked `security-review`): record bars first,
+      then take the final evidence run. And the CLI stores judge
+      votes but no rationale; `claude -p` with the grader's criterion
+      and the judged file reproduces the verdict with reasons in one
+      call, which is how the bootstrap grader fault was found.
 
 ## B. tdd cases as the mechanical gate (depends on nothing; do before C)
 

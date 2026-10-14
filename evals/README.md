@@ -299,10 +299,16 @@ setup, after which review cases quietly fall back to Read and Grep and
 still pass, which is why the job probes `bwrap` first); budget about
 $0.45 per review case including the judge, more for a tdd case.
 
-**The gate needs a sandbox backend on the machine.** It grants `Bash`
-(with `Write` and `Edit`) to every case so one invocation fits every
-case; on Windows the CLI therefore refuses to start any gate run
-("sandbox required but unavailable"). The CLI still scores such a
+**A case that grants `Bash` needs a sandbox backend on the machine.**
+The gate grants each case only the gated tools its own `allowed_tools`
+names (`Write`, `Edit`, `Bash`; four cases name `Bash`). Until
+2026-10-14 it granted all three to every case, and a Write-only case
+would then write its files through a shell heredoc or a generator
+script that a grader reading `Write` calls could not see. On Windows
+the CLI refuses to start a run that grants `Bash` ("sandbox required
+but unavailable"), so the four tdd and map-update cases need WSL2
+there; the rest should run on Windows, untried. The CLI still scores a
+refused
 zero-turn run: every positive grader fails and a "called 0 times"
 grader passes vacuously, so both tools score only the runs that did not
 error and report a case with none as an error, not a score. WSL2 is the

@@ -191,11 +191,13 @@ Render an actual mockup of the screen rather than describing it in prose —
 this is a visual question, and a paragraph is a weak medium for it. Do
 this for real, not aspirationally:
 
-1. Write the mockup as a real HTML file, styled with the design system's
-   actual token values (real hex codes, real spacing numbers) — not a
-   placeholder that only makes sense if someone imagines the CSS applied.
-   Save it in `visual-ux/`, alongside `design-system`'s own output — one
-   place for everything this persona has produced.
+1. Write each mockup as its own real HTML file — one file per state the
+   criteria name, as above, not one page with every state laid out side
+   by side — styled with the design system's actual token values (real
+   hex codes, real spacing numbers), not a placeholder that only makes
+   sense if someone imagines the CSS applied. Save them in `visual-ux/`,
+   alongside `design-system`'s own output — one place for everything
+   this persona has produced.
 2. Open it in a browser and look at it before presenting it. If browser
    automation is available in this session, use it — that is exactly what
    it's for. Screenshot what you actually built and save the screenshot in

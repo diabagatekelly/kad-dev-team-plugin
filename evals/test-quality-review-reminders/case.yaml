@@ -53,7 +53,7 @@ graders:
 
       The tests pass small hand-written gateways (`{ send: async () => {} }`, a `sendText` that pushes to an array, a `queue` that pushes to an array) into the reminder classes' constructors, and assert on what was captured.
 
-      PASS if the review does not present these as a mocking problem (over-mocking, mocking the subject, mocks that intercept nothing). Suggesting a named fake or a shared helper is fine as a minor note.
+      PASS if the review does not present these as a mocking problem (over-mocking, mocking the subject, mocks that intercept nothing). Suggesting a named fake or a shared helper is fine as a minor note. Saying, inside the finding that the email path is untested, that the email fake's `send` discards what it is given and should capture it so an email test can assert on it, is part of that coverage finding, not a mocking alarm.
 
       FAIL if it reports them as a real problem with the tests.
   - type: llm
