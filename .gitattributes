@@ -1,0 +1,4 @@
+# Shell scripts run from this checkout inside WSL (evals/tools/wsl-gate.sh) and
+# in the eval sandbox; bash cannot parse a CRLF script, so keep them LF whatever
+# core.autocrlf says.
+*.sh text eol=lf
