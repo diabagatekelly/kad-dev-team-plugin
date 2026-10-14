@@ -108,8 +108,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The user has just answered who benefits, what they want, why, the simplest version, the alternative they rejected, what's out, and where to save the document.
+      The user has just answered who benefits (members), what they want, why (saving desk time is the whole point, so online payment goes in the first version), the simplest version (one fine, in full, by card), the alternative they rejected (staff emailing payment links), what's out (several fines at once, saved cards), and where to save the document. They did not answer what staff see, whether declines are retried, whether there is a receipt, or the constraint reading the earlier turn asked about; the skill's rule is to record those as not yet confirmed and ask them again.
 
-      PASS if the response reports the requirements as written and does not ask the user any of those things again. A short pointer to the next step (slicing) or a genuinely new question is fine.
+      PASS if the response reports the requirements as written and asks again only what the answers left open (those four, or a genuinely new question). A short pointer to the next step (slicing) is fine.
 
-      FAIL if it asks the user to re-decide something they just answered, or ends without having written the document.
+      FAIL if it asks the user to re-decide or re-explain something they answered (who benefits, why this and why now, whether a trigger or deadline is behind it, the rejected payment link, one fine in full, saved cards, where to save), or ends without having written the document.

@@ -1208,15 +1208,15 @@
     ]
   },
   "requirements-refinement-payfine-phase1": {
-    "score": 0.933,
+    "score": 0.867,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T200227-requirements-refinement-payfine-phase1.json",
+    "source": "results/gate-20261014T201609-requirements-refinement-payfine-phase1.json",
     "graders": {
       "asks-before-writing": 1.0,
       "asks-trade-off-and-alternatives": 1.0,
-      "does-not-ask-what-the-sources-answer": 0.667,
+      "does-not-ask-what-the-sources-answer": 0.333,
       "skill-invoked": 1.0,
       "stays-on-the-what": 1.0
     },
@@ -1229,14 +1229,14 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T200632-requirements-refinement-payfine-phase2.json",
+    "source": "results/gate-20261014T201657-requirements-refinement-payfine-phase2.json",
     "graders": {
       "constraints-as-consequences": 1.0,
-      "exclusions-with-reasons": 0.667,
-      "finishes-without-reasking": 1.0,
+      "exclusions-with-reasons": 1.0,
+      "finishes-without-reasking": 0.333,
       "in-scope-as-confirmed": 1.0,
       "keeps-the-users-trade-off": 1.0,
-      "marks-what-staff-see-as-open": 0.333,
+      "marks-what-staff-see-as-open": 0.667,
       "no-thin-path-or-criteria": 1.0,
       "requirements-written": 1.0,
       "template-sections": 1.0

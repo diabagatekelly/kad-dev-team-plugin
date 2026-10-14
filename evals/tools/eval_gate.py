@@ -50,6 +50,7 @@ ROOT = os.path.dirname(EVALS)
 sys.path.insert(0, TOOLS)
 import affected_cases  # noqa: E402
 import eval_evidence  # noqa: E402
+import history_stale  # noqa: E402
 
 
 _start_lock = threading.Lock()
@@ -259,6 +260,18 @@ def main():
               else "Every affected case has current evidence; nothing to run.")
         return 0
     print(f"{len(cases)} affected case(s): {' '.join(cases)}", flush=True)
+    # A resumed phase runs the skill text frozen in its history, not the
+    # file; a result against a stale history says nothing about the skill
+    # as it is now (requirements-refinement phase 2, 2026-10-14).
+    for case in cases:
+        history = os.path.join(EVALS, case, "history.jsonl")
+        if os.path.isfile(history):
+            stale = sorted({name for name, body in history_stale.loaded_skills(history)
+                            if history_stale.current(name) != body})
+            if stale:
+                print(f"WARNING: {case} resumes a history whose loaded text of "
+                      f"{', '.join(stale)} no longer matches the skill; re-freeze it "
+                      f"from the earlier phase before trusting its score.", flush=True)
     if a.dry_run:
         return 0
     os.makedirs(os.path.join(EVALS, "results"), exist_ok=True)

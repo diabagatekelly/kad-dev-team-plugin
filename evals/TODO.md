@@ -508,6 +508,22 @@ read every failure before re-recording a bar.
         what is forced and its owner, not the code change (two runs in
         three had prescribed the member route and its ownership check,
         which `no-thin-path-or-criteria` caught, 3/3 after the rule).
+      - Then `history_stale.py` showed those three batches had run
+        phase 2 against the history frozen on 2026-10-11, carrying the
+        skill text from before both rules: a resumed phase runs the
+        text in its history, not the file. Phase 1 re-run and re-frozen
+        (twice: the second after a third rule), the gate now warns
+        before running a case whose history is stale. With the current
+        text, all three runs record "Not yet confirmed" and two of
+        three name the staff view there. The replies then re-asked
+        things the user had answered (a deadline when they gave the
+        why; other alternatives when they gave one), which the
+        `finishes-without-reasking` grader caught 3/3; the skill now
+        says a question answered without every example is answered.
+        Final sample 24/27: one run clean, the other two re-ask a long
+        list of genuinely open items (waivable fines, duplicate
+        charges, how card details are collected) and the judge reads
+        the list as re-asking; recorded as it scores (0.89).
       - `vertical-slicing-handback` lost a run to the skill not firing
         at all ("Sort it out."), then went 3/3 again: a trigger flake for
         G to look at. `orchestrator-route-design-system` routes to

@@ -46,6 +46,12 @@ under "Not yet confirmed" in the document, with what the answer would
 change, and ask it again in your reply. A document that quietly confirms
 something nobody said is the inference this skill exists to prevent.
 
+The reverse holds too: a question the user answered is answered, even
+when they didn't speak to every example you offered or gave a reason
+where you asked for a trigger. Don't ask for the examples they skipped,
+and don't ask again for a deadline when they told you why. Re-ask only
+what they didn't address at all.
+
 **Then reconcile the problem doc's constraints — a separate pass from
 asking what they want.** The questions above decide the WHAT. This decides
 what is already binding on it, and it is the step most likely to be
