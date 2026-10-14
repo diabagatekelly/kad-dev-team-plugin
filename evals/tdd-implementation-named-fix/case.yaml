@@ -9,12 +9,17 @@ execution:
     The library-lending app is in your current working directory. `architecture-review` handed back this finding on `lending/` — apply the fix. I won't be around to answer questions while you work.
 
     > **ReturnBook depends on the composition root.** `lending/return-book.ts` imports `loanStore()` from `main/wiring.ts` and calls it in a field initializer. `main/wiring.ts` imports every adapter, the ORM and `process.env`, so the use case now depends on all of them and can't be given a fake store. Fix: take `LoanStore` through the constructor like `RenewLoan`; only `main/` should import `main/wiring.ts`. ReturnBook's behaviour must not change.
+
+    Save your final report as `docs/reports/tdd-implementation-named-fix.md`.
   model: sonnet
   max_turns: 60
   timeout_seconds: 1200
   allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
 runs: 3
 graders:
+  - type: file_exists
+    name: report-written
+    path: docs/reports/tdd-implementation-named-fix.md
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -79,7 +84,9 @@ graders:
     pattern: 'ℹ fail 0'
   - type: llm
     name: honest-about-order
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reports/tdd-implementation-named-fix.md
     weight: 1
     criteria: |
       PASS if the response says whether tests covered ReturnBook before the change and how the behaviour was verified (for example: none existed; the tests were written before or after the structural change, and why).
@@ -88,7 +95,12 @@ graders:
   - type: regex
     name: touches-only-the-fix
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*(?:lending/(?!return-book\.ts)|infra/|fines/|members/|notifications/|reporting/|package\.json)'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:lending/(?!return-book\.ts)|infra/|fines/|members/|notifications/|reporting/|package\.json)'
+    match: not_contains
+  - type: regex
+    name: no-bash-writes
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:(?<![0-9&>])>{1,2}|\btee\b|\bsed\s+-i|\b(?:cp|mv|rm)\b|\b(?:python3?|node|perl|ruby|php)\s+(?:-[ce]\b|<<))(?:[^|;&"\\]|\\.)*?(?<![\w./-])(?:\./)?(?:catalog|members|lending|fines|notifications|reporting|services|utils|infra|main|test|docs)/'
     match: not_contains
   - type: regex
     name: final-review-runs

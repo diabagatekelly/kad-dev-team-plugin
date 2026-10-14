@@ -24,10 +24,11 @@ structural decision stays true regardless of exact syntax.
 
 ## Check what already exists first
 
-Before working out this slice's structure, consult
-`architecture-cartographer:map-query` at the structural level — does a
-comparable module, interface, or boundary already exist. Invoke it with
-the `Skill` tool and ask inline, in this same conversation, the same
+Before working out this slice's structure, consult `map-query` (the
+`kad-dev-team:map-query` skill, owned by `architecture-cartographer`) at
+the structural level — does a comparable module, interface, or boundary
+already exist. Invoke it with the `Skill` tool, under that name, and ask
+inline, in this same conversation, the same
 in-conversation consult this skill already uses below for a
 runtime-safety question; it's `background: true` but carries no
 `AskUserQuestion` of its own, so there's nothing to launch and nothing to
@@ -204,6 +205,18 @@ you considered and rejected — then stop and get the user's approval via
 `AskUserQuestion` before moving to the next decision or writing anything
 into the final doc. If they change it, that's the decision now — the
 design reflects their call, not your original recommendation.
+
+If `AskUserQuestion` isn't available to you — you're running as a
+delegated agent, and a subagent can't put a question to the user — the
+loop doesn't collapse into deciding alone or saving a draft "pending
+approval". Put the first decision in your final report, with its
+recommendation and the rejected alternative(s), and stop there: nothing
+saved, no design document written, drafts included, and no structure,
+technology or violations sections laid out around it, because a reply
+that walks through every section is the design delivered, whatever the
+decisions are labelled. Whoever delegated to you relays the question and
+re-invokes you with the answer; a file on disk marked pending reads as
+the design to anyone who finds it.
 
 This replaces guessing at ambiguity — there's no "decide silently unless
 genuinely stuck" mode here. A confident recommendation (rejecting a

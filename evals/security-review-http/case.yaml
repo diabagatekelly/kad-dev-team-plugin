@@ -6,18 +6,30 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
 
     Do a security review of the HTTP layer: everything under `infra/http/` and how `main/server.ts` wires it up. Follow whatever it calls into as far as you need to judge it.
+
+    Save the review as `docs/reviews/security-review-http.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/security-review-http.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/security-review-http\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: finds-unauthenticated-refund-route
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/security-review-http.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -29,7 +41,9 @@ graders:
       FAIL if it is missed, or rated Medium/Low, or the review claims the route is already protected.
   - type: llm
     name: finds-internal-error-text-returned-to-caller
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/security-review-http.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -41,7 +55,9 @@ graders:
       FAIL if it is missed, or treated purely as an ergonomics/code-quality point with no information-disclosure concern.
   - type: llm
     name: finds-request-headers-sent-to-monitoring
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/security-review-http.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -53,7 +69,9 @@ graders:
       FAIL if it is missed.
   - type: llm
     name: no-false-alarm-prefix-mounted-auth
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/security-review-http.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -65,7 +83,9 @@ graders:
       FAIL if it reports any of those routes as reachable without authentication, or asks for an authentication check to be added to them as a required fix.
   - type: llm
     name: no-false-alarm-public-catalog-search
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/security-review-http.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.

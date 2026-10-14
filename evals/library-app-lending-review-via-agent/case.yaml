@@ -6,18 +6,30 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; don't change the code.
 
     Use the `kad-dev-team:software-architect` agent to review the `lending/` module for architecture issues, and return its findings report verbatim as your final answer, adding nothing and removing nothing (including its opening section on the importance ordering it assumed). Read its ports, the adapters under `infra/` that implement them, and `main/` as needed to judge it.
+
+    Have it save its report as `docs/reviews/library-app-lending-review-via-agent.md` as well; still return the report verbatim.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Task, Agent, Skill, Read, Grep, Glob]
+  allowed_tools: [Task, Agent, Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/library-app-lending-review-via-agent.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/library-app-lending-review-via-agent\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: finds-orm-inside-checkout-use-case
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-lending-review-via-agent.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -29,7 +41,9 @@ graders:
       FAIL if it is missed, or presented as minor/optional.
   - type: llm
     name: finds-runtime-import-cycle
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-lending-review-via-agent.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -41,7 +55,9 @@ graders:
       FAIL if missed, dismissed as harmless or type-only, or treated as optional cleanup.
   - type: llm
     name: finds-http-request-in-place-hold
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-lending-review-via-agent.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -53,7 +69,9 @@ graders:
       FAIL if missed.
   - type: llm
     name: no-false-alarm-type-only-cycle
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-lending-review-via-agent.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -65,7 +83,9 @@ graders:
       FAIL if it is reported as a genuine circular dependency problem or asked to be fixed before merge.
   - type: llm
     name: finds-use-case-reaching-into-wiring
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-lending-review-via-agent.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -77,7 +97,9 @@ graders:
       FAIL if it is missed, or excused as acceptable composition-root wiring because the function returns an interface type.
   - type: llm
     name: states-assumed-importance-ordering
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-lending-review-via-agent.md
     weight: 0.5
     criteria: |
       The reviewer is expected to say, explicitly, which parts of this module it treats as more important (the lending rules and policy) versus less important (Postgres persistence, HTTP, third-party libraries) and that findings are judged against that ordering, rather than leaving the ordering implicit.
@@ -86,12 +108,6 @@ graders:
   - type: tool_used
     name: agent-delegated-display
     tool: Agent
-    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?software-architect'
-    min: 1
-    arm: with-only
-  - type: tool_used
-    name: agent-delegated-legacy-task-display
-    tool: Task
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?software-architect'
     min: 1
     arm: with-only

@@ -1,348 +1,757 @@
 {
   "acceptance-criteria-payfine": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-np-final-acceptance-criteria-payfine.json",
+    "source": "results/gate-20261014T045557-acceptance-criteria-payfine.json",
+    "graders": {
+      "flags-undecided-behaviour": 1.0,
+      "rejects-and-rewrites": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "acceptance-criteria"
     ]
   },
   "accessibility-review-neg-readability": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g9-accessibility-review-neg-readability.json"
+    "source": "results/gate-20261014T045557-accessibility-review-neg-readability.json",
+    "graders": {
+      "does-not-fire-accessibility-review": 1.0
+    }
   },
   "accessibility-review-payfine": {
     "score": 0.972,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g9-accessibility-review-payfine.json",
+    "source": "results/gate-20261014T104758-accessibility-review-payfine.json",
+    "graders": {
+      "criteria-split-now-and-later": 0.667,
+      "finds-low-contrast-meta-text": 1.0,
+      "finds-missing-live-region": 1.0,
+      "finds-unlabelled-name-field": 1.0,
+      "finds-unreachable-fine-choice": 1.0,
+      "leaves-the-mockup-alone": 1.0,
+      "no-false-alarm-card-number-label": 1.0,
+      "no-false-alarm-decorative-icon": 1.0,
+      "no-false-alarm-focus-style": 1.0,
+      "review-written": 1.0,
+      "says-it-read-the-markup": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "accessibility-review"
     ]
   },
   "accessibility-review-payfine-subtle": {
-    "score": 0.926,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g9-accessibility-review-payfine-subtle.json",
+    "source": "results/gate-20261014T104758-accessibility-review-payfine-subtle.json",
+    "graders": {
+      "finds-broken-error-link": 1.0,
+      "finds-hover-contrast": 1.0,
+      "finds-no-visible-name-label": 1.0,
+      "finds-pay-button-focus-removed": 1.0,
+      "no-false-alarm-card-number-label": 1.0,
+      "no-false-alarm-fine-choice": 1.0,
+      "no-false-alarm-input-focus-ring": 1.0,
+      "review-written": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "accessibility-review"
     ]
   },
   "adr-neg-rename": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-dw-final-adr-neg-rename.json",
+    "source": "results/gate-20261014T104758-adr-neg-rename.json",
+    "graders": {
+      "declines-the-adr": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "adr"
     ]
   },
   "adr-payment-gateway": {
-    "score": 0.917,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-dw-final-adr-payment-gateway.json",
+    "source": "results/gate-20261014T104758-adr-payment-gateway.json",
+    "graders": {
+      "adr-written": 1.0,
+      "decision-alternatives-consequences": 1.0,
+      "no-how": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "adr"
     ]
   },
   "architecture-design-neg-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-sa-cal1-architecture-design-neg-review.json",
+    "source": "results/gate-20261014T045557-architecture-design-neg-review.json",
+    "graders": {
+      "architecture-design-not-invoked": 1.0
+    },
     "skills_invoked": [
       "architecture-review"
     ]
   },
   "architecture-design-payfine-phase1": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-architecture-design-payfine-phase1.json",
+    "source": "results/gate-20261014T045557-architecture-design-payfine-phase1.json",
+    "graders": {
+      "presents-decisions-and-waits": 1.0,
+      "recommends-against-the-speculative-registry": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "architecture-design",
       "map-query"
     ]
   },
   "architecture-design-payfine-phase2": {
-    "score": 1,
+    "score": 0.917,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-sa-final-architecture-design-payfine-phase2.json",
+    "source": "results/gate-20261014T045557-architecture-design-payfine-phase2.json",
+    "graders": {
+      "boundaries-name-what-crosses": 1.0,
+      "builds-on-the-existing-payment-path": 1.0,
+      "decisions-show-approval": 0.333,
+      "keeps-the-one-implementation-port": 1.0,
+      "notes-the-leaky-payment-port": 1.0,
+      "reflects-the-users-gateway-choice": 1.0,
+      "states-importance-ordering": 1.0,
+      "stays-conceptual": 1.0
+    },
     "skills_invoked": [
       "adr",
       "docs-writer"
     ]
   },
   "architecture-design-payfine-via-agent": {
-    "score": 1,
+    "score": 0.867,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/sa2-architecture-design-payfine-via-agent.json",
+    "source": "results/gate-20261014T045557-architecture-design-payfine-via-agent.json",
+    "graders": {
+      "agent-delegated-display": 1.0,
+      "consults-map-query": 0.333,
+      "design-skill-runs": 1.0,
+      "presents-decisions-and-waits": 1.0,
+      "uses-what-the-map-found": 1.0
+    },
     "skills_invoked": [
       "architecture-design",
       "map-query"
     ]
   },
-  "code-review-catalog": {
-    "score": 1,
+  "architecture-review-neg-security-review": {
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-code-review-catalog.json",
+    "source": "results/gate-20261014T045557-architecture-review-neg-security-review.json",
+    "graders": {
+      "does-not-invoke-architecture-review": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
+  },
+  "architecture-review-neg-test-quality-review": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.296",
+    "source": "results/gate-20261014T045557-architecture-review-neg-test-quality-review.json",
+    "graders": {
+      "does-not-invoke-architecture-review": 1.0
+    },
+    "skills_invoked": [
+      "test-quality-review"
+    ]
+  },
+  "code-review-catalog": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.296",
+    "source": "results/gate-20261014T045557-code-review-catalog.json",
+    "graders": {
+      "leaves-the-code-alone": 1.0,
+      "nothing-above-low": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "code-review",
       "why-comments"
     ]
   },
   "code-review-days-left-pr": {
-    "score": 0.9,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/m5-code-review-days-left-pr.json",
+    "source": "results/gate-20261014T045557-code-review-days-left-pr.json",
+    "graders": {
+      "finds-impossible-null-check": 1.0,
+      "finds-rethrowing-catch": 1.0,
+      "finds-unused-flag": 1.0,
+      "finds-unused-options": 1.0,
+      "keeps-the-overdue-branch": 1.0,
+      "keeps-the-returned-loan-branch": 1.0,
+      "keeps-the-shared-date-helper": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "code-review",
       "why-comments"
     ]
   },
   "code-review-fine-notices-pr": {
-    "score": 0.815,
+    "score": 0.97,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-code-review-fine-notices-pr.json",
+    "source": "results/gate-20261014T045557-code-review-fine-notices-pr.json",
+    "graders": {
+      "finds-duplicate-test-names": 1.0,
+      "finds-false-dollars-comment": 1.0,
+      "finds-triplicated-notice-logic": 1.0,
+      "finds-what-comment": 1.0,
+      "finds-wrong-name": 1.0,
+      "guard-clause-not-the-finding": 1.0,
+      "keeps-the-why-comment": 1.0,
+      "leaves-mocking-to-test-quality-review": 0.667,
+      "leaves-the-code-alone": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "code-review",
       "why-comments"
     ]
   },
   "code-review-fine-notices-pr-via-agent": {
-    "score": 0.9,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-code-review-fine-notices-pr-via-agent.json",
+    "source": "results/gate-20261014T045557-code-review-fine-notices-pr-via-agent.json",
+    "graders": {
+      "agent-delegated-display": 1.0,
+      "finds-duplicate-test-names": 1.0,
+      "finds-false-dollars-comment": 1.0,
+      "finds-triplicated-notice-logic": 1.0,
+      "finds-what-comment": 1.0,
+      "finds-wrong-name": 1.0,
+      "guard-clause-not-the-finding": 1.0,
+      "keeps-the-why-comment": 1.0,
+      "leaves-mocking-to-test-quality-review": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "review-written": 1.0
+    },
     "skills_invoked": [
       "code-review",
       "why-comments"
     ]
   },
   "code-review-fines-report-pr": {
-    "score": 0.889,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-code-review-fines-report-pr.json",
+    "source": "results/gate-20261014T045557-code-review-fines-report-pr.json",
+    "graders": {
+      "finds-data-clump": 1.0,
+      "finds-feature-envy": 1.0,
+      "finds-month-as-raw-string": 1.0,
+      "finds-run-doing-several-jobs": 1.0,
+      "hands-sdk-to-architecture-review": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "code-review",
       "why-comments"
     ]
   },
   "code-review-neg-architecture": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-code-review-neg-architecture.json",
+    "source": "results/gate-20261014T045557-code-review-neg-architecture.json",
+    "graders": {
+      "does-not-fire-code-review": 1.0
+    },
     "skills_invoked": [
       "architecture-review"
     ]
   },
   "design-system-payfine-phase1": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/ui5-design-system-payfine-phase1.json",
+    "source": "results/gate-20261014T045557-design-system-payfine-phase1.json",
+    "graders": {
+      "asks-reference-or-generate": 1.0,
+      "skill-invoked": 1.0,
+      "writes-nothing-yet": 1.0
+    },
     "skills_invoked": [
       "design-system"
     ]
   },
   "design-system-payfine-phase2": {
-    "score": 1,
-    "runs": 3,
-    "claude_version": "2.1.296",
-    "source": "results/ui5-design-system-payfine-phase2.json"
-  },
-  "design-system-payfine-phase3": {
     "score": 0.917,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-design-system-payfine-phase3.json"
+    "source": "results/gate-20261014T045557-design-system-payfine-phase2.json",
+    "graders": {
+      "asks-which-candidate": 0.667,
+      "honest-about-viewing": 1.0,
+      "nothing-in-visual-ux-yet": 1.0,
+      "renders-candidates": 1.0
+    }
+  },
+  "design-system-payfine-phase3": {
+    "score": 0.875,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.296",
+    "source": "results/gate-20261014T045557-design-system-payfine-phase3.json",
+    "graders": {
+      "accessibility-by-construction": 0.667,
+      "chosen-direction-committed": 1.0,
+      "mockup-referenced-no-screenshot-claimed": 1.0,
+      "platform-with-provenance": 1.0,
+      "rejected-candidates-in-prose": 0.333,
+      "system-written": 1.0,
+      "tokens-every-category": 1.0,
+      "winner-mockup-in-visual-ux": 1.0
+    }
   },
   "library-app-catalog-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-recheck-catalog.json"
+    "source": "results/gate-20261014T045557-library-app-catalog-review.json",
+    "graders": {
+      "leaves-the-code-alone": 1.0,
+      "reports-nothing-above-low": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "library-app-fines-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-library-app.json"
+    "source": "results/gate-20261014T045557-library-app-fines-review.json",
+    "graders": {
+      "finds-policy-mixed-with-mechanics": 1.0,
+      "finds-premature-waiver-strategy": 1.0,
+      "finds-provider-codes-leaking-through-port": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "respects-documented-rounding-split": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "library-app-lending-review": {
-    "score": 0.818,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-recheck-library-app-lending-review.json"
+    "source": "results/gate-20261014T045557-library-app-lending-review.json",
+    "graders": {
+      "finds-http-request-in-place-hold": 1.0,
+      "finds-orm-inside-checkout-use-case": 1.0,
+      "finds-runtime-import-cycle": 1.0,
+      "finds-use-case-reaching-into-wiring": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-type-only-cycle": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0,
+      "states-assumed-importance-ordering": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "library-app-lending-review-via-agent": {
-    "score": 0.867,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/sa1-library-app-lending-review-via-agent.json",
+    "source": "results/gate-20261014T045557-library-app-lending-review-via-agent.json",
+    "graders": {
+      "agent-delegated-display": 1.0,
+      "finds-http-request-in-place-hold": 1.0,
+      "finds-orm-inside-checkout-use-case": 1.0,
+      "finds-runtime-import-cycle": 1.0,
+      "finds-use-case-reaching-into-wiring": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-type-only-cycle": 1.0,
+      "review-written": 1.0,
+      "states-assumed-importance-ordering": 1.0
+    },
     "skills_invoked": [
       "architecture-review"
     ]
   },
   "library-app-members-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-library-app.json"
+    "source": "results/gate-20261014T045557-library-app-members-review.json",
+    "graders": {
+      "finds-table-shaped-domain-type": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "locates-driver-type-in-port-file": 1.0,
+      "no-false-alarm-date-library": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "library-app-notifications-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-library-app.json"
+    "source": "results/gate-20261014T045557-library-app-notifications-review.json",
+    "graders": {
+      "finds-missing-channel-abstraction": 1.0,
+      "finds-port-on-implementer-side": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-single-impl-mailer-port": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "library-app-reporting-pr": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-library-app.json"
+    "source": "results/gate-20261014T045557-library-app-reporting-pr.json",
+    "graders": {
+      "finds-new-code-mixing-levels": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-report-files-port": 1.0,
+      "review-written": 1.0,
+      "scopes-legacy-issues-as-non-blocking": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "library-app-reporting-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-recheck-library-app-reporting-review.json"
+    "source": "results/gate-20261014T045557-library-app-reporting-review.json",
+    "graders": {
+      "finds-orchestration-mixed-with-csv-bytes": 1.0,
+      "finds-sdk-constructed-in-revenue-report": 1.0,
+      "finds-sql-level-port": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "library-app-structure-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-sc-regress-structure.json"
+    "source": "results/gate-20261014T045557-library-app-structure-review.json",
+    "graders": {
+      "finds-payment-sdk-outside-its-adapter": 1.0,
+      "finds-technical-role-directories": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-bootstrap-and-near-miss-names": 1.0,
+      "no-false-alarm-date-library-tier": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "map-query-consults": {
-    "score": 1,
+    "score": 0.944,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/sa2-map-query-consults.json",
+    "source": "results/gate-20261014T045557-map-query-consults.json",
+    "graders": {
+      "answers-from-the-map": 1.0,
+      "caveats-stale-map": 1.0,
+      "finds-daysBetween-by-shape": 1.0,
+      "honest-empty-result": 0.667,
+      "skill-invoked-display": 1.0,
+      "structural-candidate-as-fact": 1.0
+    },
     "skills_invoked": [
       "map-query",
       "map-update"
     ]
   },
   "map-query-no-map": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/sa2-map-query-no-map.json",
+    "source": "results/gate-20261014T045557-map-query-no-map.json",
+    "graders": {
+      "no-live-scan-answer": 1.0,
+      "says-no-map": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "map-query"
     ]
   },
   "map-update-cancel-hold": {
-    "score": 0.963,
+    "score": 0.967,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final2-map-update-cancel-hold.json",
+    "source": "results/gate-20261014T045557-map-update-cancel-hold.json",
+    "graders": {
+      "flags-duplication-candidate": 1.0,
+      "flags-new-wrong-direction-edge": 1.0,
+      "keeps-existing-rows-and-tiers": 1.0,
+      "new-rows-extracted": 1.0,
+      "no-bash-writes": 0.667,
+      "no-severity": 1.0,
+      "pre-existing-flags-not-new": 1.0,
+      "skill-invoked-display": 1.0,
+      "untiered-edge-direction-unknown": 1.0,
+      "writes-only-the-map": 1.0
+    },
     "skills_invoked": [
       "map-update"
     ]
   },
   "operational-readiness-neg-reliability": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-or-cal1.json",
+    "source": "results/gate-20261014T045557-operational-readiness-neg-reliability.json",
+    "graders": {
+      "operational-readiness-not-invoked": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "operational-readiness-neg-security": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-or-cal1.json"
+    "source": "results/gate-20261014T045557-operational-readiness-neg-security.json",
+    "graders": {
+      "operational-readiness-not-invoked": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
   },
   "operational-readiness-ops-phase1": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-or-p1h.json",
+    "source": "results/gate-20261014T045557-operational-readiness-ops-phase1.json",
+    "graders": {
+      "asks-situation-first": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "operational-readiness"
     ]
   },
   "operational-readiness-ops-phase2": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-or-p2h.json"
+    "source": "results/gate-20261014T045557-operational-readiness-ops-phase2.json",
+    "graders": {
+      "finds-missing-config-starts-silently": 1.0,
+      "finds-nightly-job-has-no-signal": 1.0,
+      "finds-nothing-written-for-2am": 1.0,
+      "no-enterprise-ceremony": 1.0,
+      "no-false-alarm-no-backups": 1.0
+    }
   },
   "operational-readiness-release-phase1": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-or-p1h.json",
+    "source": "results/gate-20261014T045557-operational-readiness-release-phase1.json",
+    "graders": {
+      "asks-situation-first": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "operational-readiness"
     ]
   },
   "operational-readiness-release-phase2": {
-    "score": 0.933,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-or-p2h.json"
+    "source": "results/gate-20261014T045557-operational-readiness-release-phase2.json",
+    "graders": {
+      "finds-deploy-success-unverified": 1.0,
+      "finds-irreversible-migration-coupled-to-release": 1.0,
+      "finds-rollback-never-exercised": 1.0,
+      "no-enterprise-ceremony": 1.0,
+      "no-false-alarm-no-rollback-path": 1.0
+    }
   },
   "orchestrator-asks-for-target": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-orch-cal2.json",
+    "source": "results/gate-20261014T045557-orchestrator-asks-for-target.json",
+    "graders": {
+      "asks-where-artifacts-live": 1.0,
+      "does-not-search-for-artifacts": 1.0,
+      "orchestrator-invoked": 1.0
+    },
     "skills_invoked": [
       "orchestrator"
     ]
   },
   "orchestrator-backward-route": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/rrf-orchestrator-backward-route.json",
+    "source": "results/gate-20261014T045557-orchestrator-backward-route.json",
+    "graders": {
+      "does-not-go-forward-to-reliability": 1.0,
+      "does-not-hunt-for-agent-files": 1.0,
+      "invokes-vertical-slicing": 1.0,
+      "log-written": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-back-to-the-owner": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "vertical-slicing"
     ]
   },
   "orchestrator-route-accessibility": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-accessibility.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-accessibility.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-screen-design": 1.0,
+      "not-tdd-implementation": 1.0,
+      "not-technology-bootstrap": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-accessibility-review": 1.0
+    },
     "skills_invoked": [
       "accessibility-review",
-      "orchestrator"
+      "orchestrator",
+      "reliability-requirements"
     ]
   },
   "orchestrator-route-backward-requirements": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-backward-requirements.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-backward-requirements.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-architecture-design": 1.0,
+      "not-user-story-writeup": 1.0,
+      "not-vertical-slicing": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-requirements-refinement": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "requirements-refinement"
     ]
   },
   "orchestrator-route-design": {
-    "score": 0.9,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-design.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-design.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-tdd-implementation": 1.0,
+      "not-user-story-writeup": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-architecture-design": 1.0
+    },
     "skills_invoked": [
       "architecture-design",
       "map-query",
@@ -351,49 +760,92 @@
     ]
   },
   "orchestrator-route-design-system": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-design-system.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-design-system.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-accessibility-review": 1.0,
+      "not-reliability-requirements": 1.0,
+      "not-screen-design": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-design-system": 1.0
+    },
     "skills_invoked": [
       "design-system",
-      "orchestrator"
+      "orchestrator",
+      "reliability-requirements"
     ]
   },
   "orchestrator-route-implementation": {
-    "score": 0.9,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-implementation.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-implementation.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-reliability-requirements": 1.0,
+      "not-technology-bootstrap": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-tdd-implementation": 1.0
+    },
     "skills_invoked": [
       "orchestrator"
     ]
   },
   "orchestrator-route-problem-framing": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-problem-framing.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-problem-framing.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-requirements-refinement": 1.0,
+      "not-scope-map": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-problem-framing-doc": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "problem-framing-doc"
     ]
   },
   "orchestrator-route-reliability": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-reliability.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-reliability.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-security-requirements": 1.0,
+      "not-tdd-implementation": 1.0,
+      "not-technology-bootstrap": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-reliability-requirements": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "reliability-requirements"
     ]
   },
   "orchestrator-route-scope-decision": {
-    "score": 0.9,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-scope-decision.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-scope-decision.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-requirements-refinement": 1.0,
+      "not-vertical-slicing": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-scope-map": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "requirements-refinement",
@@ -401,20 +853,37 @@
     ]
   },
   "orchestrator-route-screen-design": {
-    "score": 1,
-    "runs": 2,
+    "score": 0.933,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-screen-design.json",
+    "source": "results/gate-20261014T112505-orchestrator-route-screen-design.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-accessibility-review": 1.0,
+      "not-design-system": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-screen-design": 0.667
+    },
     "skills_invoked": [
       "orchestrator",
+      "reliability-requirements",
       "screen-design"
     ]
   },
   "orchestrator-route-slicing": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-slicing.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-slicing.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-requirements-refinement": 1.0,
+      "not-user-story-writeup": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-vertical-slicing": 1.0
+    },
     "skills_invoked": [
       "acceptance-criteria",
       "orchestrator",
@@ -423,173 +892,327 @@
     ]
   },
   "orchestrator-route-tech-bootstrap": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-tech-bootstrap.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-tech-bootstrap.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-reliability-requirements": 1.0,
+      "not-tdd-implementation": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-technology-bootstrap": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "technology-bootstrap"
     ]
   },
   "orchestrator-route-user-story": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g8-orchestrator-route-user-story.json",
+    "source": "results/gate-20261014T045557-orchestrator-route-user-story.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-architecture-design": 1.0,
+      "not-vertical-slicing": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-user-story-writeup": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "user-story-writeup"
     ]
   },
   "orchestrator-security-stage": {
-    "score": 1,
-    "runs": 4,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-qfirst-orchestrator-security-stage.json",
+    "source": "results/gate-20261014T045557-orchestrator-security-stage.json",
+    "graders": {
+      "does-not-ask-where-to-save": 1.0,
+      "does-not-hunt-for-agent-files": 1.0,
+      "invokes-security-requirements": 1.0,
+      "log-written": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-security-requirements": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "security-requirements"
     ]
   },
   "orchestrator-superseded-scope-map": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-orch-cal2.json",
+    "source": "results/gate-20261014T045557-orchestrator-superseded-scope-map.json",
+    "graders": {
+      "does-not-hunt-for-agent-files": 1.0,
+      "does-not-slice": 1.0,
+      "invokes-requirements-refinement": 1.0,
+      "log-written": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-requirements-for-the-active-map": 1.0
+    },
     "skills_invoked": [
       "orchestrator",
       "requirements-refinement"
     ]
   },
   "pr-writeup-portal-fines": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-dw-final-pr-writeup-portal-fines.json",
+    "source": "results/gate-20261014T045557-pr-writeup-portal-fines.json",
+    "graders": {
+      "asks-about-a-ticket": 1.0,
+      "describes-the-change": 1.0,
+      "names-the-ai-role": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "pr-writeup"
     ]
   },
   "problem-framing-doc-payfine": {
-    "score": 0.933,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-np-final-problem-framing-doc-payfine.json",
+    "source": "results/gate-20261014T045557-problem-framing-doc-payfine.json",
+    "graders": {
+      "assumptions-stay-open": 1.0,
+      "constraints-as-constraints": 1.0,
+      "no-solution-designed": 1.0,
+      "problem-doc-written": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "problem-framing-doc"
     ]
   },
   "reliability-requirements-neg-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-req-cal1.json",
+    "source": "results/gate-20261014T045557-reliability-requirements-neg-review.json",
+    "graders": {
+      "reliability-requirements-not-invoked": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "reliability-requirements-payfine-phase1": {
-    "score": 1,
+    "score": 0.889,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress2-reliability-requirements-payfine-phase1.json",
+    "source": "results/gate-20261014T104758-reliability-requirements-payfine-phase1.json",
+    "graders": {
+      "asks-before-writing": 1.0,
+      "does-not-ask-what-the-code-answers": 0.667,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "reliability-requirements"
     ]
   },
   "reliability-requirements-payfine-phase2": {
-    "score": 0.889,
+    "score": 0.778,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-req-rel-p2e.json",
+    "source": "results/gate-20261014T045557-reliability-requirements-payfine-phase2.json",
+    "graders": {
+      "does-not-decide-the-fork-itself": 0.333,
+      "no-retry-of-declines": 1.0,
+      "presents-timeout-proposal-as-a-decision": 1.0
+    },
     "skills_invoked": [
       "reliability-requirements"
     ]
   },
   "reliability-requirements-payfine-phase3": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-req-rel-p3c.json"
+    "source": "results/gate-20261014T045557-reliability-requirements-payfine-phase3.json",
+    "graders": {
+      "criteria-make-the-chosen-behaviour-workable": 1.0,
+      "criterion-charge-without-settle-is-caught": 1.0,
+      "criterion-double-submit-is-covered": 1.0,
+      "no-retry-of-declines": 1.0,
+      "records-the-decision-without-relitigating": 1.0,
+      "separates-declines-from-faults": 1.0
+    }
   },
   "reliability-review-alerts": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g3-reliability-review-alerts.json",
+    "source": "results/gate-20261014T104758-reliability-review-alerts.json",
+    "graders": {
+      "finds-non-actionable-cpu-page": 1.0,
+      "finds-page-on-any-error": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-burn-rate-alerts": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "reliability-review-catalog": {
-    "score": 0.667,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g3-reliability-review-catalog.json",
+    "source": "results/gate-20261014T104758-reliability-review-catalog.json",
+    "graders": {
+      "leaves-the-code-alone": 1.0,
+      "reports-nothing-above-low": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "reliability-review-fine-payment": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g3-reliability-review-fine-payment.json",
+    "source": "results/gate-20261014T045557-reliability-review-fine-payment.json",
+    "graders": {
+      "finds-charge-then-settle-without-idempotency": 1.0,
+      "finds-pay-route-hides-unexpected-failures": 1.0,
+      "finds-retrying-declines-in-use-case": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-settled-fine-guard": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "reliability-review-http": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g3-reliability-review-http.json",
+    "source": "results/gate-20261014T045557-reliability-review-http.json",
+    "graders": {
+      "finds-in-memory-holds": 1.0,
+      "finds-respond-conflates-expected-and-unexpected": 1.0,
+      "finds-unbounded-loan-history": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-catalog-route": 1.0,
+      "no-false-alarm-catalog-search-bounded": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "reliability-review-neg-architecture": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g3-reliability-review-neg-architecture.json",
+    "source": "results/gate-20261014T045557-reliability-review-neg-architecture.json",
+    "graders": {
+      "reliability-review-not-invoked": 1.0
+    },
     "skills_invoked": [
       "architecture-review"
     ]
   },
   "reliability-review-neg-security": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g3-reliability-review-neg-security.json",
+    "source": "results/gate-20261014T045557-reliability-review-neg-security.json",
+    "graders": {
+      "reliability-review-not-invoked": 1.0
+    },
     "skills_invoked": [
       "security-review"
     ]
   },
   "reliability-review-nightly": {
-    "score": 0.875,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g3-reliability-review-nightly.json",
+    "source": "results/gate-20261014T045557-reliability-review-nightly.json",
+    "graders": {
+      "finds-mailer-without-timeout": 1.0,
+      "finds-member-directory-pool-leak": 1.0,
+      "finds-no-isolation-in-fine-loop": 1.0,
+      "finds-postal-queue-swallows-errors": 1.0,
+      "finds-unhandled-nightly-rejection": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-duplicate-fines-on-rerun": 1.0,
+      "no-false-alarm-reminder-loop-catch": 1.0,
+      "no-false-alarm-sms-retry": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "reliability-review-nightly-via-agent": {
-    "score": 0.875,
-    "runs": 1,
+    "score": 0.939,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g3-reliability-review-nightly-via-agent.json",
+    "source": "results/gate-20261014T045557-reliability-review-nightly-via-agent.json",
+    "graders": {
+      "agent-delegated-display": 1.0,
+      "finds-mailer-without-timeout": 1.0,
+      "finds-member-directory-pool-leak": 1.0,
+      "finds-no-isolation-in-fine-loop": 1.0,
+      "finds-postal-queue-swallows-errors": 1.0,
+      "finds-unhandled-nightly-rejection": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-duplicate-fines-on-rerun": 0.333,
+      "no-false-alarm-reminder-loop-catch": 1.0,
+      "no-false-alarm-sms-retry": 1.0,
+      "review-written": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "requirements-refinement-payfine-phase1": {
-    "score": 0.875,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/rr1-requirements-refinement-payfine-phase1.json",
+    "source": "results/gate-20261014T045557-requirements-refinement-payfine-phase1.json",
+    "graders": {
+      "asks-before-writing": 1.0,
+      "does-not-ask-what-the-sources-answer": 1.0,
+      "skill-invoked": 1.0,
+      "stays-on-the-what": 1.0
+    },
     "skills_invoked": [
       "requirements-refinement"
     ]
@@ -597,321 +1220,716 @@
   "requirements-refinement-payfine-phase2": {
     "score": 0.958,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/rrf2-requirements-refinement-payfine-phase2.json"
+    "source": "results/gate-20261014T045557-requirements-refinement-payfine-phase2.json",
+    "graders": {
+      "constraints-as-consequences": 1.0,
+      "exclusions-with-reasons": 1.0,
+      "finishes-without-reasking": 1.0,
+      "in-scope-as-confirmed": 1.0,
+      "keeps-the-users-trade-off": 1.0,
+      "no-thin-path-or-criteria": 0.667,
+      "requirements-written": 1.0,
+      "template-sections": 1.0
+    }
   },
   "scope-map-self-service": {
-    "score": 0.933,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-np-final-scope-map-self-service.json",
+    "source": "results/gate-20261014T045557-scope-map-self-service.json",
+    "graders": {
+      "privacy-routed-to-every-step": 1.0,
+      "scope-map-written": 1.0,
+      "skill-invoked": 1.0,
+      "steps-cover-the-problem": 1.0,
+      "steps-only": 1.0
+    },
     "skills_invoked": [
       "scope-map"
     ]
   },
   "screen-design-payfine": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/ui3-screen-design-payfine.json",
+    "source": "results/gate-20261014T112505-screen-design-payfine.json",
+    "graders": {
+      "asks-nothing-the-docs-answer": 1.0,
+      "copy-rules": 1.0,
+      "does-not-fire-design-system": 1.0,
+      "no-screenshot-claimed": 1.0,
+      "nothing-out-of-scope": 1.0,
+      "one-mockup-per-state": 1.0,
+      "placeholder-carried-forward": 1.0,
+      "reuses-the-system": 1.0,
+      "screen-design-written": 1.0,
+      "skill-invoked": 1.0,
+      "three-mockups-in-visual-ux": 1.0
+    },
     "skills_invoked": [
       "screen-design"
     ]
   },
   "security-requirements-neg-review": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-req-cal1.json"
+    "source": "results/gate-20261014T045557-security-requirements-neg-review.json",
+    "graders": {
+      "security-requirements-not-invoked": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
   },
   "security-requirements-payfine-phase1": {
-    "score": 1,
-    "runs": 4,
+    "score": 0.778,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-qfirst-security-requirements-payfine-phase1.json",
+    "source": "results/gate-20261014T104758-security-requirements-payfine-phase1.json",
+    "graders": {
+      "asks-before-writing": 1.0,
+      "does-not-ask-what-the-code-answers": 0.333,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "security-requirements"
     ]
   },
   "security-requirements-payfine-phase2": {
-    "score": 1,
+    "score": 0.778,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-req-sec-p2c.json"
+    "source": "results/gate-20261014T104758-security-requirements-payfine-phase2.json",
+    "graders": {
+      "does-not-decide-the-fork-itself": 0.333,
+      "no-false-alarm-publishable-key": 1.0,
+      "presents-shared-route-as-a-decision": 1.0
+    }
   },
   "security-requirements-payfine-phase3": {
-    "score": 1,
+    "score": 0.889,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-req-sec-p3a.json"
+    "source": "results/gate-20261014T104758-security-requirements-payfine-phase3.json",
+    "graders": {
+      "criteria-cover-error-and-monitoring-exits": 0.667,
+      "criteria-make-the-chosen-route-safe": 1.0,
+      "criterion-card-details-never-reach-the-server": 1.0,
+      "criterion-member-pays-only-own-fines": 1.0,
+      "no-false-alarm-publishable-key": 1.0,
+      "records-the-decision-without-relitigating": 0.667
+    }
   },
   "security-review-catalog": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-recheck2-catalog.json"
+    "source": "results/gate-20261014T104758-security-review-catalog.json",
+    "graders": {
+      "leaves-the-code-alone": 1.0,
+      "reports-nothing-above-low": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
   },
   "security-review-config": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-or-regress-security-review-config.json"
+    "source": "results/gate-20261014T104758-security-review-config.json",
+    "graders": {
+      "finds-hardcoded-sendgrid-key": 1.0,
+      "finds-long-lived-aws-keys-in-snapshot-job": 1.0,
+      "finds-workflow-wide-secrets-and-default-permissions": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-oidc-deploy-job": 1.0,
+      "no-false-alarm-stripe-publishable-key": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
   },
   "security-review-http": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-security-review.json"
+    "source": "results/gate-20261014T104758-security-review-http.json",
+    "graders": {
+      "finds-internal-error-text-returned-to-caller": 1.0,
+      "finds-request-headers-sent-to-monitoring": 1.0,
+      "finds-unauthenticated-refund-route": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-prefix-mounted-auth": 1.0,
+      "no-false-alarm-public-catalog-search": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
   },
   "security-review-neg-architecture": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-security-review.json"
+    "source": "results/gate-20261014T112757-security-review-neg-architecture.json",
+    "graders": {
+      "security-review-not-invoked": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review"
+    ]
   },
   "security-review-neg-reliability": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-security-review.json"
+    "source": "results/gate-20261014T104758-security-review-neg-reliability.json",
+    "graders": {
+      "security-review-not-invoked": 1.0
+    },
+    "skills_invoked": [
+      "reliability-review"
+    ]
   },
   "security-review-portal-pr": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-security-review.json"
+    "source": "results/gate-20261014T104758-security-review-portal-pr.json",
+    "graders": {
+      "finds-member-profile-idor": 1.0,
+      "finds-sql-injection-in-history-search": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-prefix-mounted-member-auth": 1.0,
+      "no-false-alarm-session-scoped-routes": 1.0,
+      "pre-existing-issues-not-blocking": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
   },
   "security-review-reminders": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261010-final-security-review.json"
+    "source": "results/gate-20261014T104758-security-review-reminders.json",
+    "graders": {
+      "finds-real-looking-pii-in-test-fixtures": 1.0,
+      "finds-whole-member-object-logged": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-identifier-only-log": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
   },
   "staleness-audit-docs": {
-    "score": 0.944,
+    "score": 0.889,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-dw-final-staleness-audit-docs.json",
+    "source": "results/gate-20261014T104758-staleness-audit-docs.json",
+    "graders": {
+      "finds-ceremony": 0.667,
+      "finds-orphaned-adr": 1.0,
+      "finds-restated-code": 0.667,
+      "finds-stale-lending-rules": 1.0,
+      "keeps-the-sound-docs": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "staleness-audit"
     ]
   },
   "supply-chain-review-accept-phase1": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress-supply-chain-review.json",
+    "source": "results/gate-20261014T104758-supply-chain-review-accept-phase1.json",
+    "graders": {
+      "asks-for-classification": 1.0,
+      "no-unenforced-temporary-option": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "supply-chain-review"
     ]
   },
   "supply-chain-review-accept-phase2": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress-supply-chain-review.json"
+    "source": "results/gate-20261014T104758-supply-chain-review-accept-phase2.json",
+    "graders": {
+      "flags-adr-worthy": 1.0,
+      "no-unenforced-expiry": 1.0,
+      "records-users-classification-and-reason": 1.0
+    }
   },
   "supply-chain-review-accepted": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress-supply-chain-review.json",
+    "source": "results/gate-20261014T104758-supply-chain-review-accepted.json",
+    "graders": {
+      "finds-agpl-transitive": 1.0,
+      "finds-bare-allowlist-entry": 1.0,
+      "finds-unenforced-temporary-acceptance": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-dev-only-advisory": 1.0,
+      "no-false-alarm-documented-acceptance": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "supply-chain-review"
     ]
   },
   "supply-chain-review-build": {
-    "score": 0.8,
-    "runs": 1,
+    "score": 0.958,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress-supply-chain-review.json",
+    "source": "results/gate-20261014T104758-supply-chain-review-build.json",
+    "graders": {
+      "finds-base-image-tag": 1.0,
+      "finds-image-build-ignores-lockfile": 1.0,
+      "finds-install-scripts-enabled": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-dependabot": 1.0,
+      "no-false-alarm-manifest-ranges": 0.667,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "supply-chain-review"
     ]
   },
   "supply-chain-review-build-via-agent": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress-supply-chain-review.json",
+    "source": "results/gate-20261014T104758-supply-chain-review-build-via-agent.json",
+    "graders": {
+      "agent-delegated-display": 1.0,
+      "finds-base-image-tag": 1.0,
+      "finds-image-build-ignores-lockfile": 1.0,
+      "finds-install-scripts-enabled": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-dependabot": 1.0,
+      "no-false-alarm-manifest-ranges": 1.0,
+      "review-written": 1.0
+    },
     "skills_invoked": [
       "supply-chain-review"
     ]
   },
   "supply-chain-review-neg-reliability": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress-supply-chain-review.json",
+    "source": "results/gate-20261014T104758-supply-chain-review-neg-reliability.json",
+    "graders": {
+      "supply-chain-review-not-invoked": 1.0
+    },
     "skills_invoked": [
       "reliability-review"
     ]
   },
   "supply-chain-review-neg-security": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress-supply-chain-review.json"
+    "source": "results/gate-20261014T112757-supply-chain-review-neg-security.json",
+    "graders": {
+      "supply-chain-review-not-invoked": 1.0
+    }
   },
   "supply-chain-review-workflows": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-regress-supply-chain-review.json",
+    "source": "results/gate-20261014T104758-supply-chain-review-workflows.json",
+    "graders": {
+      "finds-branch-ref-release-notes": 1.0,
+      "finds-tag-pinned-slack-action": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-sha-pinned-actions": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "supply-chain-review"
     ]
   },
   "tdd-implementation-cancel-hold": {
-    "score": 0.981,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g4-tdd-implementation-cancel-hold.json",
+    "source": "results/gate-20261014T104758-tdd-implementation-cancel-hold.json",
+    "graders": {
+      "a-green-run-happened": 1.0,
+      "can-fail-check-in-trace": 1.0,
+      "decides-reason-wording-visibly": 1.0,
+      "design-doc-unchanged": 1.0,
+      "escalates-queue-question": 1.0,
+      "final-review-runs": 1.0,
+      "green-stays-minimal": 1.0,
+      "inside-the-design-boundaries": 1.0,
+      "last-test-run-green": 1.0,
+      "map-query-before-implementation": 1.0,
+      "no-bash-writes": 1.0,
+      "no-queue-behaviour-built": 1.0,
+      "queue-test-before-queue-code": 1.0,
+      "red-then-green-seen": 1.0,
+      "report-written": 1.0,
+      "reports-test-list-and-can-fail-check": 1.0,
+      "reviews-each-cycle": 1.0,
+      "runs-the-tests": 1.0,
+      "skill-before-any-edit": 1.0,
+      "skill-before-any-write": 1.0,
+      "skill-invoked": 1.0,
+      "stays-inside-the-slice": 1.0,
+      "test-run-after-each-test-edit": 1.0,
+      "tests-check-behaviour": 1.0,
+      "use-case-test-before-use-case": 1.0
+    },
     "skills_invoked": [
+      "architecture-review",
+      "code-review",
       "map-query",
+      "reliability-review",
+      "security-review",
       "tdd-implementation",
       "test-quality-review"
     ]
   },
   "tdd-implementation-cancel-hold-via-agent": {
-    "score": 0.812,
-    "runs": 4,
+    "score": 0.971,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/k1-tdd-implementation-cancel-hold-via-agent.json",
+    "source": "results/gate-20261014T104758-tdd-implementation-cancel-hold-via-agent.json",
+    "graders": {
+      "a-green-run-happened": 1.0,
+      "agent-delegated-display": 1.0,
+      "can-fail-check-in-trace": 1.0,
+      "decides-reason-wording-visibly": 1.0,
+      "design-doc-unchanged": 1.0,
+      "escalates-queue-question": 0.667,
+      "final-review-runs": 1.0,
+      "green-stays-minimal": 1.0,
+      "inside-the-design-boundaries": 1.0,
+      "last-test-run-green": 1.0,
+      "map-query-before-implementation": 1.0,
+      "no-bash-writes": 1.0,
+      "no-queue-behaviour-built": 1.0,
+      "queue-test-before-queue-code": 1.0,
+      "red-then-green-seen": 1.0,
+      "report-written": 1.0,
+      "reports-test-list-and-can-fail-check": 1.0,
+      "reviews-each-cycle": 0.667,
+      "runs-the-tests": 1.0,
+      "stays-inside-the-slice": 1.0,
+      "test-run-after-each-test-edit": 1.0,
+      "tests-check-behaviour": 1.0,
+      "use-case-test-before-use-case": 1.0
+    },
     "skills_invoked": [
       "adr",
+      "architecture-review",
+      "code-review",
       "map-query",
+      "reliability-review",
+      "security-review",
       "tdd-implementation",
       "test-quality-review"
     ]
   },
   "tdd-implementation-named-fix": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/g4-tdd-implementation-named-fix.json",
+    "source": "results/gate-20261014T104758-tdd-implementation-named-fix.json",
+    "graders": {
+      "a-green-run-happened": 1.0,
+      "behaviour-unchanged": 1.0,
+      "final-review-runs": 1.0,
+      "honest-about-order": 1.0,
+      "last-test-run-green": 1.0,
+      "no-bash-writes": 1.0,
+      "pins-behaviour-with-tests": 1.0,
+      "report-written": 1.0,
+      "runs-the-tests": 1.0,
+      "skill-invoked": 1.0,
+      "takes-store-through-constructor": 1.0,
+      "touches-only-the-fix": 1.0,
+      "wiring-updated": 1.0
+    },
     "skills_invoked": [
+      "architecture-review",
+      "code-review",
       "map-query",
+      "reliability-review",
+      "security-review",
       "tdd-implementation",
       "test-quality-review"
     ]
   },
   "technology-bootstrap-phase1": {
-    "score": 1,
-    "runs": 1,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-sa-p1f-technology-bootstrap-phase1.json",
+    "source": "results/gate-20261014T112757-technology-bootstrap-phase1.json",
+    "graders": {
+      "asks-before-settling": 1.0,
+      "asks-only-what-the-first-test-forces": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "technology-bootstrap"
     ]
   },
   "technology-bootstrap-phase2": {
-    "score": 0.833,
+    "score": 0.867,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-sa-p2g-technology-bootstrap-phase2.json",
+    "source": "results/gate-20261014T112757-technology-bootstrap-phase2.json",
+    "graders": {
+      "asks-only-what-the-first-test-forces": 1.0,
+      "consult-is-inline-not-a-spawn": 1.0,
+      "consults-supply-chain-for-pinning": 0.667,
+      "no-reflexive-security-consult": 1.0,
+      "recommends-ui-framework-and-waits": 0.667
+    },
     "skills_invoked": [
       "supply-chain-review",
       "technology-bootstrap"
     ]
   },
   "technology-bootstrap-phase3": {
-    "score": 1,
+    "score": 0.933,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-sa-final3-boot3.json",
+    "source": "results/gate-20261014T113725-technology-bootstrap-phase3.json",
+    "graders": {
+      "asks-only-what-the-first-test-forces": 1.0,
+      "defers-persistence-with-the-in-memory-reason": 1.0,
+      "pinning-posture-treated-as-a-choice": 1.0,
+      "recommends-rather-than-decides": 0.667,
+      "records-non-choices-and-open-categories": 1.0
+    },
     "skills_invoked": [
       "adr"
     ]
   },
   "test-quality-review-fines": {
-    "score": 1,
+    "score": 0.967,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-test-quality-review-fines.json",
+    "source": "results/gate-20261014T104758-test-quality-review-fines.json",
+    "graders": {
+      "finds-call-order-assertion": 1.0,
+      "finds-subject-mocked": 1.0,
+      "finds-untested-percentOf": 1.0,
+      "finds-unwired-mock": 1.0,
+      "finds-weak-cap-assertion": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-exact-tests": 0.667,
+      "no-false-alarm-fake-ledger": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "test-quality-review"
     ]
   },
   "test-quality-review-neg-code-review": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-test-quality-review-neg-code-review.json",
+    "source": "results/gate-20261014T104758-test-quality-review-neg-code-review.json",
+    "graders": {
+      "does-not-fire-test-quality-review": 1.0
+    },
     "skills_invoked": [
       "code-review",
       "why-comments"
     ]
   },
   "test-quality-review-reminders": {
-    "score": 0.833,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-final-test-quality-review-reminders.json",
+    "source": "results/gate-20261014T112223-test-quality-review-reminders.json",
+    "graders": {
+      "finds-untested-email-channel": 1.0,
+      "keeps-proportion": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-inline-fakes": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "test-quality-review"
     ]
   },
   "user-facing-docs-renewals": {
-    "score": 0.867,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-dw-final-user-facing-docs-renewals.json",
+    "source": "results/gate-20261014T104758-user-facing-docs-renewals.json",
+    "graders": {
+      "help-page-written": 1.0,
+      "no-invented-rules": 1.0,
+      "real-limits": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "user-facing-docs"
     ]
   },
   "user-story-writeup-payfine-phase1": {
-    "score": 1,
-    "runs": 2,
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/rr1-user-story-writeup-payfine-phase1.json",
+    "source": "results/gate-20261014T104758-user-story-writeup-payfine-phase1.json",
+    "graders": {
+      "asks-where-before-writing": 1.0,
+      "does-not-ask-what-the-slice-answers": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "security-requirements",
       "user-story-writeup"
     ]
   },
   "user-story-writeup-payfine-phase2": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/rrf-user-story-writeup-payfine-phase2.json"
+    "source": "results/gate-20261014T104758-user-story-writeup-payfine-phase2.json",
+    "graders": {
+      "criteria-carried-as-they-are": 1.0,
+      "does-not-file-it": 1.0,
+      "nothing-invented": 1.0,
+      "story-written": 1.0,
+      "written-as-a-user-story": 1.0
+    }
   },
   "vertical-slicing-handback": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/rrf-vertical-slicing-handback.json",
+    "source": "results/gate-20261014T104758-vertical-slicing-handback.json",
+    "graders": {
+      "does-not-grow-casually": 1.0,
+      "leaves-the-what-to-requirements": 1.0,
+      "owns-the-decision": 1.0,
+      "security-criteria-untouched": 1.0,
+      "skill-invoked": 1.0
+    },
     "skills_invoked": [
       "security-requirements",
       "vertical-slicing"
     ]
   },
   "vertical-slicing-no-requirements": {
-    "score": 1,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/rrf-vertical-slicing-no-requirements.json",
+    "source": "results/gate-20261014T104758-vertical-slicing-no-requirements.json",
+    "graders": {
+      "hands-back-for-requirements": 1.0,
+      "no-slice-in-the-reply": 1.0,
+      "skill-invoked": 1.0,
+      "writes-no-slice": 1.0
+    },
     "skills_invoked": [
       "acceptance-criteria",
       "vertical-slicing"
     ]
   },
   "vertical-slicing-payfine-phase1": {
-    "score": 0.944,
+    "score": 1.0,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/rrf-vertical-slicing-payfine-phase1.json",
+    "source": "results/gate-20261014T104758-vertical-slicing-payfine-phase1.json",
+    "graders": {
+      "does-not-reask-the-what": 1.0,
+      "names-the-slice-set": 1.0,
+      "separate-security-and-accessibility-placeholders": 1.0,
+      "skill-invoked": 1.0,
+      "slice-written": 1.0,
+      "stays-in-confirmed-scope": 1.0
+    },
     "skills_invoked": [
       "acceptance-criteria",
       "vertical-slicing"
     ]
   },
   "why-comments-collect-fine": {
-    "score": 1,
+    "score": 0.857,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-dw-final2-wc.json",
+    "source": "results/gate-20261014T104758-why-comments-collect-fine.json",
+    "graders": {
+      "deletes-what-comments": 1.0,
+      "flags-the-wrong-comment": 1.0,
+      "keeps-the-why-comment": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "review-written": 1.0,
+      "skill-invoked": 1.0,
+      "stays-on-comments": 0.0
+    },
     "skills_invoked": [
       "why-comments"
     ]

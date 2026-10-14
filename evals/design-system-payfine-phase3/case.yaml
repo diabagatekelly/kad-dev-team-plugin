@@ -20,7 +20,7 @@ graders:
   - type: regex
     name: winner-mockup-in-visual-ux
     target: trace
-    pattern: '"name":"Write","input":\{[^{}]*"file_path":"[^"]*visual-ux/[^"]*\.html"'
+    pattern: '"name":"Write","input":\{[^{}]*"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html"'
   - type: llm
     name: chosen-direction-committed
     focus:

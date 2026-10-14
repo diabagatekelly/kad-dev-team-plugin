@@ -7,12 +7,22 @@ context:
 execution:
   prompt: |
     The library-lending app is in your current working directory. I wrote `test/fines.test.ts` for the fines module. Are these tests actually testing anything? Report what you find; don't change anything.
+
+    Save your answer as `docs/reviews/test-quality-review-fines.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/test-quality-review-fines.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/test-quality-review-fines\.md")[^"]*"'
+    match: not_contains
   - type: tool_used
     name: skill-invoked-display
     tool: Skill
@@ -20,19 +30,23 @@ graders:
     min: 1
   - type: llm
     name: finds-subject-mocked
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
 
       The test 'returns the assessed fine' replaces `run` on the AssessOverdueFine instance it is testing with `mock.method(assess, 'run', ...)`, then asserts that `run` returns what the stub returns. It can never fail.
 
-      PASS if the review flags this test as testing a stand-in instead of the real code (it can't fail, proves nothing), treats it as the most serious problem in the file or as must-fix, and proposes calling the real `run` and asserting on its result.
+      PASS if the review flags this test as testing a stand-in instead of the real code (it can't fail, proves nothing), rates it Critical or must-fix (sharing the top tier with the unwired-mock test is fine), and proposes either calling the real `run` and asserting on its result or deleting the test because the first test already covers the real `run`.
 
       FAIL if it is missed, or treated as a minor or optional issue.
   - type: llm
     name: finds-unwired-mock
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -44,7 +58,9 @@ graders:
       FAIL if it is missed, or flagged only as "weak" without saying the mock is never connected.
   - type: llm
     name: finds-weak-cap-assertion
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -56,7 +72,9 @@ graders:
       FAIL if it is missed.
   - type: llm
     name: finds-call-order-assertion
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -68,7 +86,9 @@ graders:
       FAIL if it is missed, or the test is called a good one.
   - type: llm
     name: finds-untested-percentOf
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -80,7 +100,9 @@ graders:
       FAIL if `percentOf` is never named as untested.
   - type: llm
     name: no-false-alarm-fake-ledger
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -92,7 +114,9 @@ graders:
       FAIL if either is reported as a real problem with the test.
   - type: llm
     name: no-false-alarm-exact-tests
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.

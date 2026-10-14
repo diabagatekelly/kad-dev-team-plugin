@@ -12,7 +12,9 @@ A case is affected when any changed file is something it loads:
   expanded; the shared `library-app/scaffold.sh` and
   `bootstrap-empty/scaffold.sh` stand for the directories they copy).
 
-Changes elsewhere (the README, `evals/tools/`, PERSONAS.md) affect no case.
+A case whose entry in `evals/thresholds.json` differs from the base is
+affected too: its evidence has to clear the bar as it now stands. Changes
+elsewhere (the README, `evals/tools/`, PERSONAS.md) affect no case.
 
 Usage: python3 -I evals/tools/affected_cases.py [--base origin/main] [file ...]
   With no files, lists what differs from --base, uncommitted and untracked
@@ -111,40 +113,89 @@ def fixture_paths(case):
     return found
 
 
+def merge_base(base):
+    return subprocess.check_output(["git", "merge-base", base, "HEAD"], cwd=ROOT, text=True).strip()
+
+
 def changed_files(base):
     """Files that differ from `base`'s merge point, uncommitted and new
     files included, so a run before committing sees the work in progress."""
-    merge_base = subprocess.check_output(["git", "merge-base", base, "HEAD"], cwd=ROOT, text=True).strip()
-    tracked = subprocess.check_output(["git", "diff", "--name-only", merge_base], cwd=ROOT, text=True)
+    tracked = subprocess.check_output(["git", "diff", "--name-only", merge_base(base)], cwd=ROOT, text=True)
     new = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True)
     return sorted({l for l in (tracked + new).splitlines() if l})
 
 
-def affected(files):
-    thresholds_path = os.path.join(EVALS, "thresholds.json")
-    recorded = json.load(open(thresholds_path)) if os.path.isfile(thresholds_path) else {}
-    owned = agent_skills()
-    hits = set()
-    for case in case_dirs():
-        tags = tags_of(case)
-        invoked = set(recorded.get(case, {}).get("skills_invoked", []))
-        delegates = agents_named(case) & set(owned)
-        fixtures = fixture_paths(case)
-        for f in files:
-            parts = f.split("/")
-            if f.startswith(f"evals/{case}/"):
-                hits.add(case)
-            elif parts[0] == "skills" and len(parts) > 2 and (parts[1] in tags or parts[1] in invoked):
-                hits.add(case)
-            elif parts[0] == "agents" and len(parts) > 2 and (
-                    parts[1] in delegates or owned.get(parts[1], set()) & tags):
-                hits.add(case)
-            elif f.startswith("evals/fixtures/"):
-                rel = f[len("evals/"):]
-                if any(rel == p or (p.endswith("/") and rel.startswith(p)) or rel.startswith(p + "/")
-                       for p in fixtures):
-                    hits.add(case)
-    return sorted(hits)
+def changed_bars(base):
+    """Cases whose `thresholds.json` entry differs from `base`'s merge point:
+    a bar raised, recorded or removed with no file the case loads touched."""
+    path = "evals/thresholds.json"
+    try:
+        old = json.loads(subprocess.check_output(["git", "show", f"{merge_base(base)}:{path}"],
+                                                 cwd=ROOT, text=True, stderr=subprocess.DEVNULL))
+    except (subprocess.CalledProcessError, ValueError):
+        old = {}
+    full = os.path.join(ROOT, path)
+    new = json.load(open(full, encoding="utf-8")) if os.path.isfile(full) else {}
+    return {c for c in set(old) | set(new) if old.get(c) != new.get(c)}
+
+
+def repo_files():
+    """Every file in the working tree that git would see: tracked files that
+    still exist, plus untracked files that aren't ignored."""
+    tracked = subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True)
+    new = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True)
+    return sorted(f for f in set((tracked + new).splitlines())
+                  if f and os.path.isfile(os.path.join(ROOT, f)))
+
+
+class Reach:
+    """What each case loads, so a file can be asked which cases it reaches."""
+
+    def __init__(self):
+        thresholds_path = os.path.join(EVALS, "thresholds.json")
+        self.recorded = json.load(open(thresholds_path)) if os.path.isfile(thresholds_path) else {}
+        self.owned = agent_skills()
+        self.deps = {}
+
+    def _deps(self, case):
+        if case not in self.deps:
+            self.deps[case] = (tags_of(case),
+                               set(self.recorded.get(case, {}).get("skills_invoked", [])),
+                               agents_named(case) & set(self.owned),
+                               fixture_paths(case))
+        return self.deps[case]
+
+    def reaches(self, case, f):
+        tags, invoked, delegates, fixtures = self._deps(case)
+        parts = f.split("/")
+        if f.startswith(f"evals/{case}/"):
+            return True
+        if parts[0] == "skills" and len(parts) > 2 and (parts[1] in tags or parts[1] in invoked):
+            return True
+        if parts[0] == "agents" and len(parts) > 2 and (
+                parts[1] in delegates or self.owned.get(parts[1], set()) & tags):
+            return True
+        if f.startswith("evals/fixtures/"):
+            rel = f[len("evals/"):]
+            return any(rel == p or (p.endswith("/") and rel.startswith(p)) or rel.startswith(p + "/")
+                       for p in fixtures)
+        return False
+
+
+def inputs_of(case, files=None, reach=None):
+    """The files (of `files`, default the whole working tree) that `case`
+    loads: the same set a change is matched against in `affected`, so a
+    fingerprint of them says whether a recorded run still applies."""
+    reach = reach or Reach()
+    return [f for f in (files if files is not None else repo_files()) if reach.reaches(case, f)]
+
+
+def affected(files, base=None):
+    reach = Reach()
+    cases = {case for case in case_dirs() if any(reach.reaches(case, f) for f in files)}
+    if base and "evals/thresholds.json" in files:
+        cases |= changed_bars(base) & set(case_dirs())
+    return sorted(cases)
 
 
 def main():
@@ -152,7 +203,7 @@ def main():
     p.add_argument("--base", default="origin/main")
     p.add_argument("files", nargs="*")
     a = p.parse_args()
-    for case in affected(a.files or changed_files(a.base)):
+    for case in affected(a.files or changed_files(a.base), a.base):
         print(case)
 
 

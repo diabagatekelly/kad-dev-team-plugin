@@ -17,11 +17,15 @@ graders:
   - type: regex
     name: renders-candidates
     target: trace
-    pattern: '(?:"name":"Write","input":\{[^{}]*"file_path":"[^"]*\.html"[\s\S]*){2}'
+    # Two candidate HTML files reach disk, by the Write tool or by a shell
+    # heredoc (`cat > a.html <<'EOF'`, Sonnet's habit); how they are written
+    # isn't the point of this grader. A bare `>` is not accepted: the
+    # candidates' own HTML is full of them.
+    pattern: '(?:(?:"name":"Write","input":\{[^{}]*"(?:file_path|path)":"[^"]*\.html"|>\s*[\w./-]*\.html\s*<<)[\s\S]*?){2}'
   - type: regex
     name: nothing-in-visual-ux-yet
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"file_path":"[^"]*visual-ux/'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*visual-ux/'
     match: not_contains
   - type: llm
     name: asks-which-candidate

@@ -6,18 +6,30 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; don't change the code.
 
     Review the `members/` module for architecture issues. Read its port, the Postgres adapter under `infra/postgres/` that implements it, and anything else you need.
+
+    Save the review as `docs/reviews/library-app-members-review.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/library-app-members-review.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/library-app-members-review\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: locates-driver-type-in-port-file
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-members-review.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -29,7 +41,9 @@ graders:
       FAIL if missed, or if the finding is attributed only to the use cases.
   - type: llm
     name: finds-table-shaped-domain-type
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-members-review.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -41,7 +55,9 @@ graders:
       FAIL if this is not noticed.
   - type: llm
     name: no-false-alarm-date-library
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-members-review.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.

@@ -6,18 +6,30 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
 
     Review the HTTP layer for reliability: `infra/http/respond.ts`, the lending, portal and catalog routes in `infra/http/`, and the stores they read from and write to. How does it behave when a dependency fails, and is anything going to fall over as data grows?
+
+    Save the review as `docs/reviews/reliability-review-http.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/reliability-review-http.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/reliability-review-http\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: finds-respond-conflates-expected-and-unexpected
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-http.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -29,7 +41,9 @@ graders:
       FAIL if it is missed, or only the security angle (error messages reaching callers, headers sent to monitoring) is raised without the expected-versus-unexpected point.
   - type: llm
     name: finds-unbounded-loan-history
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-http.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -41,19 +55,23 @@ graders:
       FAIL if it is missed.
   - type: llm
     name: finds-in-memory-holds
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-http.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
 
       Holds are stored by `InMemoryHoldQueue` (`infra/memory/in-memory-hold-queue.ts`), a process-wide singleton in `main/wiring.ts`. Every deploy, restart or crash silently discards every hold members have placed, and nothing ever removes a hold, so the map only grows.
 
-      PASS if the review flags that holds live only in process memory and are lost on restart/deploy (data loss), and proposes persisting them behind the existing `HoldQueue` port. Mentioning unbounded growth is a plus, not required.
+      PASS if the review flags that holds live only in process memory and are lost on restart/deploy (data loss), and proposes persisting them (behind the existing `HoldQueue` port, or an equivalent durable store). Mentioning unbounded growth is a plus, not required.
 
       FAIL if it is missed.
   - type: llm
     name: no-false-alarm-catalog-route
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-http.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
@@ -65,7 +83,9 @@ graders:
       FAIL if it reports that this handler swallows errors, hides failures from monitoring, or answers a dependency failure wrongly.
   - type: llm
     name: no-false-alarm-catalog-search-bounded
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-http.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.

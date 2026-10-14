@@ -87,7 +87,7 @@ graders:
       path: docs/technology-bootstrap-001.md
     weight: 1
     criteria: |
-      This is the written bootstrap, after the user answered: they set TypeScript themselves, delegated the test runner and the package manager ("whatever you'd recommend"), and approved the recommended UI framework. A "Decided" section is expected now; what matters is how each entry got there.
+      This is the written bootstrap, after the user answered: they set TypeScript themselves, delegated the test runner ("whatever you'd recommend as the standard choice for that ecosystem"), set a criterion for the package manager ("whatever means I don't have to remember a flag to stay safe; pick the one where that's the default"), and approved the recommended UI framework. Their last turn ("go ahead and write it up") approves the whole recommended set, so an entry that says the user approved it, delegated it, or asked for the property it was picked on, is recording that accurately. A "Decided" section is expected now; what matters is how each entry got there.
 
       PASS if every forced category records the recommendation with its reasoning, the alternative(s) considered and rejected, and that the user set or approved it (or delegated it), and if the weight of the set suits a solo maintainer who wants little tooling.
 

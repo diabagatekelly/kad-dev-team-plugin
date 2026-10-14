@@ -31,18 +31,25 @@ evals/
   fixtures/library-app # shared fixture app with an answer key; personas plant defects in overlays
   thresholds.json      # each case's bar for the eval gate
   tools/               # eval_gate.py, affected_cases.py, record_thresholds.py, rejudge.py,
-                       # freeze-history.sh, audit_report.py, pairwise_judge.py, new-case.sh
+                       # freeze-history.sh, audit_report.py, pairwise_judge.py, new-case.sh,
+                       # validation_gate.py (mechanical checks on a real implementation candidate),
+                       # summarize_results.py and report_evidence.py (read a results dir or CI artifact),
+                       # eval_evidence.py (the PR check: a passing gate run recorded against these exact files),
+                       # wsl-setup.sh and wsl-gate.sh (set up, then run the gate under WSL2 in one command)
+  HANDOFF-2026-10-13.md # where the eval audit stands and how to continue it; TODO.md is the work list
   example/             # one running problem, worked end to end by the real roster
 .github/workflows/
-  eval-gate.yml        # runs the affected eval cases on every PR touching skills, agents or evals
+  eval-gate.yml        # PR check: every affected eval case has a passing local gate run in evals/evidence.json
 .synthesis/
   <persona>.md          # internal only — source synthesis notes, deleted once roster is complete
 ```
 
 `claude plugin eval` runs every case as a genuine child process, with a
 no-plugin baseline arm for comparison. A pull request that changes a skill,
-an agent or an eval runs the cases it can affect and fails if any scores
-below its bar (`evals/README.md`, "Eval gate"). `evals/README.md` also has
+an agent or an eval must carry, in `evals/evidence.json`, a passing local
+gate run of every case it can affect against exactly those files; the PR
+check verifies that without calling a model (`evals/README.md`, "Eval
+gate"). `evals/README.md` also has
 the playbook for building a suite for another skill, and
 `evals/fixtures/library-app/README.md` explains the shared fixture app.
 

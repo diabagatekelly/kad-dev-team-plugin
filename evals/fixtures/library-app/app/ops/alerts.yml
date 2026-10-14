@@ -1,12 +1,12 @@
 # Alert rules for the lending service. Evaluated by the monitoring provider
 # against the events infra/monitoring/error-reporter.ts sends and the load
-# balancer's request metrics.
+# balancer's request metrics, which it labels by route template.
 service: library-lending
 
 objectives:
   catalog-search:
     description: Public catalog search answers successfully.
-    target: 99.5% of /books/search requests return 2xx, over 30 days
+    target: 99.5% of /books/search/:terms requests return 2xx, over 30 days
 
 alerts:
   - name: request-errors
@@ -21,7 +21,7 @@ alerts:
 
   - name: catalog-search-error-budget-burn
     condition: >
-      ratio(lb.requests{path="/books/search", status=~"5.."}, lb.requests{path="/books/search"})
+      ratio(lb.requests{route="/books/search/:terms", status=~"5.."}, lb.requests{route="/books/search/:terms"})
       > 14.4 * (1 - 0.995) over 1h
     severity: page
     notify: desk-systems-oncall
@@ -29,7 +29,7 @@ alerts:
 
   - name: catalog-search-slow-burn
     condition: >
-      ratio(lb.requests{path="/books/search", status=~"5.."}, lb.requests{path="/books/search"})
+      ratio(lb.requests{route="/books/search/:terms", status=~"5.."}, lb.requests{route="/books/search/:terms"})
       > 3 * (1 - 0.995) over 24h
     severity: ticket
     notify: desk-systems-queue

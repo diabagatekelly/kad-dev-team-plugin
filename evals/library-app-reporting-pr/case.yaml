@@ -6,18 +6,30 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; do not modify anything.
+    The library-lending app is in your current working directory (its root holds `package.json`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`). Read whatever you need; don't change the code.
 
     Review this PR for architecture issues. The PR adds `reporting/export-report.ts`, `reporting/report-files.port.ts` and `infra/files/local-report-files.ts`, and modifies `reporting/report-processor.ts` (the new `exporter` constructor parameter and the `runAndExport` method). Everything else in `reporting/`, and the rest of the app, is pre-existing and untouched by this PR.
+
+    Save the review as `docs/reviews/library-app-reporting-pr.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/library-app-reporting-pr.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/library-app-reporting-pr\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: finds-new-code-mixing-levels
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-reporting-pr.md
     weight: 1
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
@@ -29,7 +41,9 @@ graders:
       FAIL if not noticed, or if it is folded into remarks about the legacy module.
   - type: llm
     name: scopes-legacy-issues-as-non-blocking
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-reporting-pr.md
     weight: 1
     criteria: |
       Judge substance only. This checks how the review treats problems that predate the PR: they should be named, but kept out of the PR's own findings and not made a condition of merging.
@@ -41,7 +55,9 @@ graders:
       FAIL if pre-existing and new findings are not distinguished, or if the review requires cleaning up the pre-existing code as a condition of merging.
   - type: llm
     name: no-false-alarm-report-files-port
-    focus: last_message
+    focus:
+      source: file
+      path: docs/reviews/library-app-reporting-pr.md
     weight: 1
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.

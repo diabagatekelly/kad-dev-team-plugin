@@ -88,7 +88,18 @@ whole trace; `(?:…[\s\S]*){N}` with `contains` means "at least N"),
 a `tool_used` grader that isn't `tool: Skill` is scored in
 both arms unless marked `arm: with-only`; `AskUserQuestion` is never
 available and the scaffolded project's `.claude/settings.json` (hooks
-included) is ignored, see "Interactive skills" below. A full pass costs about $7.50 at
+included) is ignored, see "Interactive skills" below.
+
+**Grade a report from a saved file, not from `last_message`.** The judge
+has failed a long review as `last_message` and passed the identical text
+as a file, and an agent-path run can end on a one-line postscript that
+then gets graded instead of the report. Every review case therefore asks
+for the review at `docs/reviews/<case>.md` (`Write` in `allowed_tools`, a
+`review-written` `file_exists` grader, each `llm` grader with
+`focus: {source: file, path: …}`, and a `leaves-the-code-alone` trace
+regex that fails any other Write or Edit); the tdd cases do the same with
+`docs/reports/<case>.md`. `last_message` is for a phase that ends in
+questions. A full pass costs about $7.50 at
 `--runs 1` plus about $2 for the pairwise judge; the suite's `runs: 3`
 default triples the first number.
 
@@ -195,30 +206,119 @@ which is the one fidelity gap.
 
 ## Eval gate
 
-`.github/workflows/eval-gate.yml` runs on every pull request that touches
-`skills/`, `agents/` or `evals/`:
+The gate is two parts: a run that costs model time, done on your machine
+on the Claude subscription, and a free check on every pull request that
+the run happened against exactly the files the change touches. Like a
+coverage gate: the cost is paid once, locally, and the PR carries the
+proof.
+
+**Running the gate.** From the repository root on Windows:
+
+```
+wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh            # what changed against main
+wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh --cases a b
+wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh --all      # every case
+```
+
+`tools/wsl-gate.sh` mirrors the checkout (uncommitted work included)
+into the WSL2 clone, runs `tools/eval_gate.py` there and copies the new
+results, `evidence.json` and `thresholds.json` back, so the next step
+is to commit. Inside Linux or macOS run `python3 -I
+evals/tools/eval_gate.py` directly. Windows itself cannot run it (below).
+What the gate does:
 
 1. `tools/affected_cases.py` picks the cases the diff can reach: a changed
    skill's own cases and the cases whose runs were seen consulting it
    (`skills_invoked` in `thresholds.json`), a changed agent's delegation
    cases and its skills' cases, a changed fixture's cases (from what each
-   `scaffold.sh` copies), and any edited case. A README or tool change
-   reaches none.
-2. `tools/eval_gate.py` runs them once each, six at a time, and re-runs
-   at full `runs:` any case that lands more than 0.1 below its bar in
-   `thresholds.json` (the judge is noisy; one run proves little).
-3. The check fails if a case is still below its bar, and the job summary
-   shows the table. Results are uploaded as an artifact.
+   `scaffold.sh` copies), any edited case, and any case whose entry in
+   `thresholds.json` differs from the base (its evidence must clear the
+   bar as it now stands). A README or tool change reaches none.
+2. `tools/eval_gate.py` runs them once each, up to six cases and eight
+   agent runs at a time (`--jobs`, `--parallel`). A case at several runs
+   (`--runs 3`, or a re-run) gets its runs as concurrent children of one
+   CLI process, so a three-run case takes about the time of one run; a
+   tdd case is two to three minutes, a review case one to two. Every run
+   shares the subscription's one rate limit, so the cap is on runs in
+   flight, not cases. It re-runs at full `runs:` any case that is
+   suspect: its score lands more than 0.1 below its bar in
+   `thresholds.json`, or a grader the bar recorded as passing every run
+   fails (the judge is noisy; one run proves little).
+3. It fails if a case is still below its bar, or if an always-passing
+   grader failed in every re-run. The aggregate tolerance absorbs judge
+   noise; the per-grader check is what stops one grader regressing for
+   good inside a case with ten graders, where losing it moves the
+   aggregate by less than the tolerance. The table names the lost
+   graders. Results, logs and every run's trace land in `results/`
+   (gitignored).
+4. Every case that passed is written to `evidence.json`: a fingerprint
+   of the files it loads (the same set step 1 matches a diff against,
+   with CRLF folded so Linux and Windows agree), its score, bar, run
+   count and result file. A case that failed loses its entry.
+
+**The pull-request check.** `.github/workflows/eval-gate.yml` runs
+`tools/eval_evidence.py` on every pull request that touches `skills/`,
+`agents/` or `evals/`: for each case the diff reaches, the committed
+`evidence.json` must hold an entry whose fingerprint matches the files
+as they are in the PR and whose score clears the current bar. A missing
+entry, a stale one (something the case loads changed after the run) or
+a bar it no longer clears fails the check and prints the command to
+run. No model is called; it takes seconds and needs no secret. The same
+check runs as a pre-push hook once `git config core.hooksPath .githooks`
+is set, so the refusal arrives before the push, with the same command.
+Bypass a push with `--no-verify`; the PR check still stands.
+
+**Bars come from gate runs.** The gate scores with `--ablation none`,
+where every grader counts; calibration runs use `--ablation with-without`,
+where the CLI treats skill-invoked `tool_used` graders as unscored
+indicators. A bar recorded from a calibration run therefore has a
+smaller denominator than the score the gate compares it with, and the
+gate reads slightly high against it. `record_thresholds.py` stores each
+bar's `mode` and warns when it is `calibration`; `--gate-only` ignores
+calibration results altogether. The per-grader rates it stores
+(`graders`) are what the regression check reads; bars recorded before
+that field existed get the aggregate check only until re-recorded.
 
 When a change is meant to move a score, re-record that case's bar with
-`tools/record_thresholds.py <case>` and commit it in the same PR. Run it
-by hand with `python3 -I evals/tools/eval_gate.py` (against
-`origin/main`, uncommitted and new files included, so it works before you
-commit), `--cases …`, or `--all` (108 cases, roughly half an hour
-to an hour). The workflow needs an `ANTHROPIC_API_KEY` repository secret,
-and pins the Claude Code version the bars were recorded on. It has been run
-locally but not yet on GitHub's runners, where the sandbox needs
-`bubblewrap`.
+`tools/record_thresholds.py --gate-only <case>` from a gate run of it
+(on Windows, after `wsl-gate.sh` copied the results back) and commit it
+with the evidence in the same PR. The gate works before you commit:
+`affected_cases.py` includes uncommitted and new files, and the
+fingerprint is of the working tree.
+
+**The paid path still exists.** The workflow's `workflow_dispatch` runs
+the cases on GitHub's own runner with an `ANTHROPIC_API_KEY` repository
+secret (and, for a user-scoped `sk-ant-usr-…` key, an
+`ANTHROPIC_WORKSPACE_ID` secret the workflow turns into the
+`anthropic-workspace-id` header). No such secrets exist today and the
+dispatch fails at the first model call without them; the pull-request
+check does not use them. If they come back: `gh secret set` reads the
+value from stdin, so run it from an interactive terminal or pass
+`--body`; the runner image must be Ubuntu 22.04 (24.04's AppArmor
+restriction on unprivileged user namespaces breaks bubblewrap's loopback
+setup, after which review cases quietly fall back to Read and Grep and
+still pass, which is why the job probes `bwrap` first); budget about
+$0.45 per review case including the judge, more for a tdd case.
+
+**A case that grants `Bash` needs a sandbox backend on the machine.**
+The gate grants each case only the gated tools its own `allowed_tools`
+names (`Write`, `Edit`, `Bash`; four cases name `Bash`). Until
+2026-10-14 it granted all three to every case, and a Write-only case
+would then write its files through a shell heredoc or a generator
+script that a grader reading `Write` calls could not see. On Windows
+the CLI refuses to start a run that grants `Bash` ("sandbox required
+but unavailable"), so the four tdd and map-update cases need WSL2
+there; the rest should run on Windows, untried. The CLI still scores a
+refused
+zero-turn run: every positive grader fails and a "called 0 times"
+grader passes vacuously, so both tools score only the runs that did not
+error and report a case with none as an error, not a score. WSL2 is the
+answer on Windows: `wsl --install -d Ubuntu-22.04` from an elevated
+PowerShell, reboot, then `bash evals/tools/wsl-setup.sh` inside Ubuntu
+(bubblewrap, Node 24, the pinned CLI, a sandbox probe); the script
+prints how to make the clone and log in. Running `claude plugin eval`
+by hand without the `Bash` grant works anywhere for cases that don't
+need a shell.
 
 Audit mode (`hooks/audit.sh`, see the top-level README) is where new cases
 should come from: the `audit-review` skill reads real sessions against the
