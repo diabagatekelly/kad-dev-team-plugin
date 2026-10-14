@@ -1,13 +1,13 @@
 schema_version: "1.0"
 name: technology-bootstrap-phase3-reject
-description: "Bootstrap phase 3, rejecting answer: the user overrules the test-runner and package-manager recommendations (npm and Jest, because they know them) and approves the UI framework; expects the bootstrap written with the user's choices recorded as decided and the recommendations as rejected, the pinning posture restated for the manager the user chose rather than dropped, no re-arguing, and still only what the first test forces. Same frozen phase 2 as technology-bootstrap-phase3. Graded on the saved file. No baseline arm."
+description: "Bootstrap phase 3, rejecting answer: the user overrules the test-runner and package-manager recommendations (npm and Jest, because they know them) and accepts the rest, deferring the UI framework included; expects the bootstrap written with the user's choices recorded as decided and the recommendations as rejected, the pinning posture restated for the manager the user chose rather than dropped, no re-arguing, and still only what the first test forces. Same frozen phase 2 as technology-bootstrap-phase3. Graded on the saved file. No baseline arm."
 tags: [technology-bootstrap]
 context:
   scaffold_script: scaffold.sh
   history_file: history.jsonl
 execution:
   prompt: |
-    No on two of those. I'll take npm and Jest: I already know both and I don't want to learn new tools for a side project. React with Vite is fine. Write it up that way and save it as `docs/technology-bootstrap-001.md`.
+    No on two of those. I'll take npm and Jest: I already know both and I don't want to learn new tools for a side project. The rest is fine as you recommend, deferring the UI framework included. Write it up that way and save it as `docs/technology-bootstrap-001.md`.
   model: sonnet
   max_turns: 40
   timeout_seconds: 900
@@ -29,7 +29,7 @@ graders:
       path: docs/technology-bootstrap-001.md
     weight: 1
     criteria: |
-      The skill recommends and the user decides. The user rejected two recommendations and chose npm as the package manager and Jest as the test runner, because they already know both and don't want to learn new tools for a side project; they approved React with Vite.
+      The skill recommends and the user decides. The user rejected two recommendations and chose npm as the package manager and Jest as the test runner, because they already know both and don't want to learn new tools for a side project; they approved the rest as recommended, including deferring the UI framework.
 
       PASS if the document records npm and Jest as the decided choices, made by the user, with the user's reason (familiarity, no new tools), and records the skill's own recommendations for those two categories as the alternatives rejected, with the reason they were recommended still readable (so the next person can tell it was a considered overrule, not an oversight).
 

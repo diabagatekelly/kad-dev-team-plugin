@@ -41,11 +41,11 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The skill's rule is that a real fork is presented with a recommendation and approved by the user before it is written in.
+      The skill's rule is that a real fork is presented with a recommendation and approved by the user before it is written in. The skill also says most of what it writes applies a rule directly and needs no approval: that a decline gets its own message and is not retried, that unexpected faults reach the error reporter and look different from a decline, that one identifier ties a payment's records together, that tokens stay out of logs. Those are not forks.
 
-      PASS if every choice with more than one defensible answer that the response raises (including the engineer's proposal) is left for the user to decide: a recommendation is fine, but nothing is marked chosen, approved, settled or "going with" without the user having said so.
+      PASS if every fork the response raises (including the engineer's proposal) is put to the user for approval: a recommendation, however firmly worded or used as a heading, is fine as long as the response asks the user to approve, change or reject it, and nothing is marked approved or recorded as the user's choice before they said so. Rule applications like those above may be listed as what will be written without asking.
 
-      FAIL if the response records any such choice as already decided (for example a decision marked "chosen" or "approved", or an announcement that it will proceed with one option) without asking.
+      FAIL if a fork is recorded as approved, chosen or settled on the user's behalf, or the response announces it will proceed with one option of a fork without asking.
   - type: llm
     name: no-criteria-before-approval
     focus: last_message

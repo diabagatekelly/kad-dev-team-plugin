@@ -33,6 +33,12 @@ git ls-files -mo --exclude-standard -z \
 find . -name '*.sh' -not -path './.git/*' -exec chmod +x {} +
 
 mkdir -p evals/results "$win/evals/results"
+# WSL's /tmp is a tmpfs, and WSL stops the VM a few seconds after the last
+# `wsl` command exits, so a run directory the gate keeps there
+# (--keep-scaffold, for freeze-history.sh) is gone before the next command
+# can read it. Keep the CLI's temp directories on the Linux disk instead.
+export TMPDIR="${TMPDIR:-$HOME/.cache/kad-eval-tmp}"
+mkdir -p "$TMPDIR"
 marker="$(mktemp)"
 rc=0
 python3 -I evals/tools/eval_gate.py "$@" || rc=$?

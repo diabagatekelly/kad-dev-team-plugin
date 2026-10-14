@@ -65,20 +65,20 @@
   "architecture-design-payfine-phase1": {
     "inputs": "aa82e3182449c10b6e435274a8063f624efaa165e4eaa6aafb71713054a90390",
     "score": 1.0,
-    "bar": 1,
+    "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T045557-architecture-design-payfine-phase1.json",
+    "source": "results/gate-20261014T193255-architecture-design-payfine-phase1.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
+    "recorded": "2026-10-14T19:34:51Z"
   },
   "architecture-design-payfine-phase2": {
-    "inputs": "ac283d9a21caa3098142552ca9575244bc8723b3ae9bfb95fce26062c9517867",
+    "inputs": "a9c89df971b17fb56c13c82bbed2fa303993cc280f291bef5edc5f6aeeaace92",
     "score": 0.917,
-    "bar": 1,
+    "bar": 0.917,
     "runs": 3,
-    "source": "results/gate-20261014T045557-architecture-design-payfine-phase2.json",
+    "source": "results/gate-20261014T193600-architecture-design-payfine-phase2.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
+    "recorded": "2026-10-14T19:40:54Z"
   },
   "architecture-design-payfine-via-agent": {
     "inputs": "85b1e88ea03646d6ba737cf0895a9a4c81c62e8b6dc654ba2e853b944805e34d",
@@ -317,20 +317,20 @@
   "operational-readiness-ops-phase1": {
     "inputs": "07e7c8a5e7e08166cd2a2401dce77c7658b89bbbbec1ea7c5e98510cf272a151",
     "score": 1.0,
-    "bar": 1,
+    "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T045557-operational-readiness-ops-phase1.json",
+    "source": "results/gate-20261014T193255-operational-readiness-ops-phase1.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
+    "recorded": "2026-10-14T19:34:51Z"
   },
   "operational-readiness-ops-phase2": {
-    "inputs": "b1c93a6652799d51c9728a02e968c47e8c7b3e499fe63fc1608cbdd2df6c97c1",
+    "inputs": "4d6d55134716f103e3308bf5ccf9ca55048e36a9bc9671e7dbc34a73987b88bd",
     "score": 1.0,
-    "bar": 1,
+    "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T045557-operational-readiness-ops-phase2.json",
+    "source": "results/gate-20261014T193600-operational-readiness-ops-phase2.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
+    "recorded": "2026-10-14T19:40:54Z"
   },
   "operational-readiness-release-phase1": {
     "inputs": "99b75f881ad4ad933f02734ac8f0ed3a24b90cf9b1b4e679d582b226d88f736b",
@@ -522,22 +522,22 @@
     "recorded": "2026-10-14T05:32:26Z"
   },
   "reliability-requirements-payfine-phase1": {
-    "inputs": "e3181bd9a37078c797b25aa9a92afdc5b4e9d7f31df19293081a88a0e5a01a30",
+    "inputs": "eabff5ad54dbfe6f4b7c69b2c62948497b0f1e67113b47ed4af7bbe20bcaf1f9",
     "score": 0.889,
     "bar": 0.889,
     "runs": 3,
-    "source": "results/gate-20261014T113916-reliability-requirements-payfine-phase1.json",
+    "source": "results/gate-20261014T193255-reliability-requirements-payfine-phase1.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:43:01Z"
+    "recorded": "2026-10-14T19:34:51Z"
   },
   "reliability-requirements-payfine-phase2": {
-    "inputs": "d3024199f4fae1c4b56f4a8a08b1877a2bb336d73cce7b612875e4fb7f49ad1f",
-    "score": 0.778,
+    "inputs": "cc1a3408ce18a6ddda8e7e1e314ab3ad8a412487d1b8a6434431e7d906a47297",
+    "score": 0.833,
     "bar": 0.778,
     "runs": 3,
-    "source": "results/gate-20261014T045557-reliability-requirements-payfine-phase2.json",
+    "source": "results/gate-20261014T193600-reliability-requirements-payfine-phase2.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
+    "recorded": "2026-10-14T19:40:54Z"
   },
   "reliability-requirements-payfine-phase3": {
     "inputs": "ca3496620447e69d1bfc890d0ee0577d0850976b68bce6071171b1fcd8232c76",
@@ -666,22 +666,22 @@
     "recorded": "2026-10-14T11:43:01Z"
   },
   "security-requirements-payfine-phase1": {
-    "inputs": "f91cc25ee7ecd18eff20f49d99ca1bc8d77179bbcb85dfc892d2b76f68beb4b7",
-    "score": 1.0,
+    "inputs": "74f8dcf558dd198a3735b3c73375ea2481107213079ba49718c011e0dfd49667",
+    "score": 0.778,
     "bar": 0.778,
     "runs": 3,
-    "source": "results/gate-20261014T113916-security-requirements-payfine-phase1.json",
+    "source": "results/gate-20261014T193255-security-requirements-payfine-phase1.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:43:01Z"
+    "recorded": "2026-10-14T19:34:51Z"
   },
   "security-requirements-payfine-phase2": {
-    "inputs": "d8bcbdd0e9f732cc061f49058a2c12a33c0015906a745bc0ca294b75c623b1d2",
-    "score": 0.778,
-    "bar": 0.667,
+    "inputs": "bc4e2f5894a64c5360025fb9a020aa624c9c746cd55278f104301ac56f1dd616",
+    "score": 0.833,
+    "bar": 0.778,
     "runs": 3,
-    "source": "results/gate-20261014T104758-security-requirements-payfine-phase2.json",
+    "source": "results/gate-20261014T193600-security-requirements-payfine-phase2.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
+    "recorded": "2026-10-14T19:40:54Z"
   },
   "security-requirements-payfine-phase3": {
     "inputs": "c3e9f67a9267c817f9939e0182bb25c08208c70fb298c09b2e282f0be77be566",
@@ -767,20 +767,20 @@
   "supply-chain-review-accept-phase1": {
     "inputs": "3f4788ab0e8c898caf65f50d6b2e12d00d957443134bd231d6469040dfaf2398",
     "score": 1.0,
-    "bar": 1,
+    "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T104758-supply-chain-review-accept-phase1.json",
+    "source": "results/gate-20261014T193255-supply-chain-review-accept-phase1.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
+    "recorded": "2026-10-14T19:34:51Z"
   },
   "supply-chain-review-accept-phase2": {
-    "inputs": "03429966ece0225d693087f4acf1acf6e272bdef45c214b72128f506ef9d9850",
+    "inputs": "b64828b7551e607b0516e7ffdb27a040d619386531bc6762788fd352cba4cf3d",
     "score": 1.0,
-    "bar": 1,
+    "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T104758-supply-chain-review-accept-phase2.json",
+    "source": "results/gate-20261014T193600-supply-chain-review-accept-phase2.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
+    "recorded": "2026-10-14T19:40:54Z"
   },
   "supply-chain-review-accepted": {
     "inputs": "7b9a93c28c34d8a2a5322a0efd0b482c92e775aa0f6f8420a5c3e810b07ab196",
@@ -873,13 +873,13 @@
     "recorded": "2026-10-14T11:29:56Z"
   },
   "technology-bootstrap-phase2": {
-    "inputs": "5af35ff99759ce913c942e1abde3117c597c36ef6e21edec0c1819b0b5a5452f",
-    "score": 0.867,
-    "bar": 0.833,
+    "inputs": "cd01e216484006730cd0ece2be4cea6207dc3ac824b07cbb93fccfab06fd8d1d",
+    "score": 1.0,
+    "bar": 0.867,
     "runs": 3,
-    "source": "results/gate-20261014T112757-technology-bootstrap-phase2.json",
+    "source": "results/gate-20261014T193600-technology-bootstrap-phase2.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:29:56Z"
+    "recorded": "2026-10-14T19:40:54Z"
   },
   "technology-bootstrap-phase3": {
     "inputs": "0031dd3e8538ca2d79d127d941907b6fa6c05d02646725ae569fd48d700bc80b",

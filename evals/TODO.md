@@ -393,21 +393,84 @@ read every failure before re-recording a bar.
       the current skill text, with each case's own `allowed_tools`. Phase 2
       stops at the fork with no criteria written (the skill's own rule).
       Run (phase-1 runs to freeze from).
-- [ ] D2. Phase-3 graders: keep only what phase 2 could not contain (the
+      *2026-10-14, in progress.* The skill's rule did not say it: both
+      requirements skills said "get approval before writing them in" and,
+      in the same breath, "a criterion that depends on a pending decision
+      waits for it; write the rest", so every phase-2 run wrote the whole
+      document with the decisions marked pending, and the phase-2 judge
+      failed two runs in three on `does-not-decide-the-fork-itself`
+      against documents of three thousand words that said "nothing is
+      marked approved" at the end (`gate-20261014T104758`,
+      `gate-20261014T045557`). Both skills now say approval comes before
+      the document: after the questions, the next response is the forks
+      (one at a time through `AskUserQuestion` when it exists, all of
+      them in one plain-text turn when it doesn't), no criteria yet, and
+      the document is written once after the approvals. That is also
+      what the real flow does when the question tool is there. A
+      staleness check over every `history.jsonl` (diff of the loaded
+      `SKILL.md` text against the file) found two more stale chains
+      besides the audit's three: `architecture-design-payfine-phase2`
+      (the 2026-10-14 `map-query` naming fix) and
+      `operational-readiness-ops-phase2`; both are re-frozen here too.
+      `technology-bootstrap-phase2`'s history is current, but phase 3's
+      is re-frozen from a new phase-2 run because the phase-2 prompt
+      changed (below). `eval_gate.py --keep-scaffold` keeps a run's
+      directory for `freeze-history.sh`, so a freeze comes from a gate
+      run instead of a hand-run CLI.
+- [x] D2. Phase-3 graders: keep only what phase 2 could not contain (the
       decision record, the flipped choice, duplicates-findable).
-- [ ] D3. Add one rejecting chain: `technology-bootstrap-phase3-reject`
+      *2026-10-14.* With D1's skill rule, phase 2 cannot contain criteria
+      at all, so the two requirements phase-3 cases keep their criteria
+      graders and gain `decisions-all-approved` (the user's "go with your
+      recommendations" approves every other fork; nothing may stay
+      pending) and grade the saved file (`docs/pay-fine/
+      <skill>-001.md`, `Write` granted, `leaves-the-code-alone` guard)
+      instead of a long `last_message`. `technology-bootstrap-phase3`
+      drops `defers-persistence-with-the-in-memory-reason` (folded into
+      `records-non-choices-and-open-categories` as the required reason)
+      and `pinning-posture-treated-as-a-choice`, which moves to phase 2
+      where the recommendation is actually made; it gains a
+      `writes-nothing-else` guard (the runs offered to scaffold; the
+      document is the output). `technology-bootstrap-phase2`'s prompt now
+      asks for the whole set in one message: two runs in three followed
+      the skill's one-at-a-time loop literally (runtime first, UI
+      framework "next"), which the UI-framework grader and the
+      supply-chain consult regex both read as a miss; the grader also
+      accepts "comes next, not settled".
+- [x] D3. Add one rejecting chain: `technology-bootstrap-phase3-reject`
       ("no, npm and Jest"), graded on recording the user's choice and the
-      recommendation as rejected.
-- [ ] D4. `design-system-payfine-phase3`: reword
+      recommendation as rejected. *2026-10-14.* Same frozen phase 2 as
+      phase 3; graded on the saved file: the user's choices decided with
+      their reason and the recommendations recorded as rejected, no
+      re-arguing, and the pinning posture restated for npm (`npm ci` is
+      a remembered command, not a default) rather than dropped.
+- [x] D4. `design-system-payfine-phase3`: reword
       `chosen-direction-committed` and `rejected-candidates-in-prose` so
       they don't name the frozen candidates; have the scaffold write the
-      three candidate files.
-- [ ] D5. Phase-1 question graders: `requirements-refinement` requires the
+      three candidate files. *2026-10-14.* The scaffold recreates them
+      from `history.jsonl` with the new `tools/history_files.py` (the
+      resumed run had nothing to rewrite into `visual-ux/` before). The
+      direction graders say "the second of three candidates" and count
+      two rejected ones; which candidate won is a trace regex for the
+      second candidate's brand colour in the `visual-ux/` mockup, pinned
+      in the case and checked by the scaffold so a re-freeze fails
+      loudly. `rejected-candidates-in-prose` had failed 2/3 on documents
+      that gave each rejected candidate a reason of the document's own
+      ("warmer than a money-owed screen needs"); the criterion now says
+      any kind of reason counts.
+- [x] D5. Phase-1 question graders: `requirements-refinement` requires the
       trade-off and rejected-alternatives questions;
       `operational-readiness-release-phase1` requires the rollback
-      question.
-- [ ] D6. `requirements-refinement-payfine-phase2`: leave one thing unsaid
+      question. *2026-10-14.* Each is its own grader
+      (`asks-trade-off-and-alternatives`,
+      `asks-whether-rollback-was-ever-run`).
+- [x] D6. `requirements-refinement-payfine-phase2`: leave one thing unsaid
       in the prompt (what staff see) and grade that the doc marks it open.
+      *2026-10-14.* "shows as paid to them and to staff" is now "shows as
+      paid"; `marks-what-staff-see-as-open` fails a document that
+      confirms a staff-facing view either way or says nothing about it,
+      and `in-scope-as-confirmed` lists a staff-facing view among the
+      capabilities that must not be added.
 - [ ] D7. Re-run the chains, re-record. Run.
 
 ## E. Leaks (edits only, re-run with C5 or D7)

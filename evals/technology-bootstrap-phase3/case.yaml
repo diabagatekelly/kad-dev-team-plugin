@@ -1,13 +1,13 @@
 schema_version: "1.0"
 name: technology-bootstrap-phase3
-description: "Bootstrap phase 3: the user approves the UI framework recommendation; expects the bootstrap written to the given path and nothing else, covering only forced choices, each recorded as set, delegated or approved by the user with its rejected alternatives, and the unforced categories left open with owners. Graded on the saved file; what phase 2 already said (the recommendations and their reasoning) is not re-graded here. No baseline arm."
+description: "Bootstrap phase 3: the user approves the whole recommended set, deferring the UI framework included; expects the bootstrap written to the given path and nothing else, covering only forced choices, each recorded as set, delegated or approved by the user with its rejected alternatives, and the unforced categories left open with owners. Graded on the saved file; what phase 2 already said (the recommendations and their reasoning) is not re-graded here. No baseline arm."
 tags: [technology-bootstrap]
 context:
   scaffold_script: scaffold.sh
   history_file: history.jsonl
 execution:
   prompt: |
-    React with Vite is fine. Go ahead and write it up, and save it as `docs/technology-bootstrap-001.md`.
+    All fine as you recommend, deferring the UI framework included. Go ahead and write it up, and save it as `docs/technology-bootstrap-001.md`.
   model: sonnet
   max_turns: 40
   timeout_seconds: 900
@@ -56,11 +56,11 @@ graders:
       path: docs/technology-bootstrap-001.md
     weight: 1
     criteria: |
-      This is the written bootstrap, after the user answered: they set TypeScript themselves, delegated the test runner ("whatever you'd recommend as the standard choice for that ecosystem"), set a criterion for the package manager ("whatever means I don't have to remember a flag to stay safe; pick the one where that's the default"), and approved the recommended UI framework (React with Vite). Their last turn ("go ahead and write it up") approves the whole recommended set, so an entry that says the user approved it, delegated it, or asked for the property it was picked on, is recording that accurately. A "Decided" section is expected now; what matters is how each entry got there.
+      This is the written bootstrap, after the user answered: they set TypeScript themselves, delegated the test runner ("whatever you'd recommend as the standard choice for that ecosystem"), set a criterion for the package manager ("whatever means I don't have to remember a flag to stay safe; pick the one where that's the default"), and approved the skill's recommendation to defer the UI framework because the first test does not drive a screen. Their last turn ("all fine as you recommend") approves the whole recommended set, so an entry that says the user approved it, delegated it, or asked for the property it was picked on, is recording that accurately. A "Decided" section is expected now; what matters is how each entry got there.
 
-      PASS if every forced category records the recommendation with its reasoning, the alternative(s) considered and rejected, and that the user set or approved it (or delegated it), and if the weight of the set suits a solo maintainer who wants little tooling.
+      PASS if every decided category (language and runtime, test runner, package manager) records the recommendation with its reasoning, the alternative(s) considered and rejected, and that the user set or approved it (or delegated it); the UI framework appears as deliberately not decided with the reason; and the weight of the set suits a solo maintainer who wants little tooling.
 
-      FAIL if any forced category reads as chosen by the skill with no approval or delegation recorded, carries no rejected alternative, or the set recommends team-scale tooling with no acknowledgement of the solo situation.
+      FAIL if any decided category reads as chosen by the skill with no approval or delegation recorded, carries no rejected alternative, if a UI framework is recorded as decided, or the set recommends team-scale tooling with no acknowledgement of the solo situation.
   - type: llm
     name: records-non-choices-and-open-categories
     focus:

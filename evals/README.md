@@ -179,14 +179,21 @@ therefore runs as a chain of cases:
    in plain text and end its turn. Grade the question: it asks about the
    real decision, gives its recommendation and the rejected alternatives,
    and has not decided anything unilaterally.
-2. **Freeze it.** Run phase 1 with `--keep-temp --json <file>`, take the
-   kept directory (the parent of `out/` in the run's `tracePath`) from a run
-   whose question is a good one, and run
-   `tools/freeze-history.sh <kept-dir> evals/<phase-2-case>/history.jsonl`.
+2. **Freeze it.** Run phase 1 through the gate with `--keep-scaffold`
+   (`wsl-gate.sh --keep-scaffold --runs 3 --cases <phase-1>`): each run's
+   kept directory is printed and recorded as `scaffoldDir` in the result.
+   Read the three final messages, take a run whose question is a good one,
+   and run `tools/freeze-history.sh <kept-dir>
+   evals/<phase-2-case>/history.jsonl` in the clone that ran it (by hand,
+   the CLI's `--keep-temp --json <file>` gives the same directory: the
+   parent of `out/` in the run's `tracePath`).
    A resumed phase (2 onward) writes its transcript next to its own
    `history.jsonl` instead, one branch per run; freeze it with
    `tools/freeze-history.sh evals/<case>/<session>.jsonl <next>/history.jsonl
-   "<text from the chosen run's final message>"`.
+   "<text from the chosen run's final message>"`. In WSL that transcript
+   is in the clone, and `wsl-gate.sh`'s next mirror deletes it, so freeze
+   before the next run and write the output to the Windows checkout
+   (`/mnt/c/...`).
    It keeps only the user and assistant turns, so review the message text,
    nothing else, before committing. It writes the plugin's path as
    `<plugin-root>` and refuses to write one containing your home
@@ -199,7 +206,19 @@ therefore runs as a chain of cases:
    Re-freeze downstream phases whenever the skill text changes at all:
    a frozen history carries the `SKILL.md` text as it was loaded in the
    earlier phase, so a later phase keeps running the old instructions
-   until the earlier phase is re-run and re-frozen.
+   until the earlier phase is re-run and re-frozen;
+   `tools/history_stale.py` lists every history whose loaded skill text
+   no longer matches the skill (it found two stale chains the audit's
+   reading of commit dates had missed). A resumed run starts
+   in a fresh sandbox, so anything the frozen turns wrote with `Write`
+   is gone; a phase that needs those files (design candidates to choose
+   from) recreates them in its `scaffold.sh` with
+   `tools/history_files.py history.jsonl . --require`, and pins nothing
+   from the frozen text in a grader without a check that fails loudly
+   when the history changes (`design-system-payfine-phase3`'s scaffold
+   checks the pinned brand colour is still the second candidate's).
+   Grade a phase that ends in questions or forks on `last_message` (it is
+   short); grade a phase that writes the document on the saved file.
 
 Answers arrive as a user message rather than an `AskUserQuestion` result,
 which is the one fidelity gap.
