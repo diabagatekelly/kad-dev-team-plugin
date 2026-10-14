@@ -25,11 +25,16 @@ Usage: python3 -I evals/tools/validation_gate.py [--project DIR] [--base HEAD]
            [--allow lending/ --allow test/ ...] [--protect docs/x/design.md ...]
            [--test-cmd "npm test"] [--coverage] [--min-line 90] [--min-branch 80]
            [--json out.json]
+The test command is split the way a shell would and run without one (so
+no pipes or `&&`); its program is resolved on PATH, which is how `npm`
+finds its `npm.cmd` shim on Windows.
 """
 import argparse
 import json
 import os
 import re
+import shlex
+import shutil
 import subprocess
 import sys
 
@@ -81,7 +86,13 @@ def run_tests(project, cmd, coverage):
         cmd, node_options = coverage_command(project, cmd)
         if node_options:
             env["NODE_OPTIONS"] = node_options
-    proc = subprocess.run(cmd, cwd=project, shell=True, capture_output=True, text=True,
+    argv = shlex.split(cmd)
+    if not argv:
+        raise SystemExit("FAIL  --test-cmd is empty" + chr(10) + "validation gate: FAIL")
+    program = shutil.which(argv[0])
+    if not program:
+        raise SystemExit(f"FAIL  --test-cmd: {argv[0]} is not on PATH" + chr(10) + "validation gate: FAIL")
+    proc = subprocess.run([program, *argv[1:]], cwd=project, capture_output=True, text=True,
                           env=env, encoding="utf-8", errors="replace")
     out = proc.stdout + proc.stderr
     fails = re.findall(r"ℹ fail (\d+)", out)

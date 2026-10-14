@@ -134,7 +134,9 @@ def _run_case(case, runs, tag, j):
     if runs:
         args[args.index("--ablation"):args.index("--ablation")] = ["--runs", str(runs)]
     log = open(out[:-5] + ".log", "w")
-    code = subprocess.run(args, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT).returncode
+    # args is a fixed list plus the case's directory name; no shell is involved.
+    code = subprocess.run(args, cwd=ROOT, stdout=log,  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+                          stderr=subprocess.STDOUT).returncode
     result = {"score": None, "runs": 0, "rates": {}, "error": None, "version": None, "source": source}
     try:
         data = json.load(open(out, encoding="utf-8"))
