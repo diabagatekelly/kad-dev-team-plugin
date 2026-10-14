@@ -388,12 +388,13 @@ read every failure before re-recording a bar.
 
 ## D. Phase chains
 
-- [ ] D1. Re-freeze `security-requirements`, `reliability-requirements`,
+- [x] D1. Re-freeze `security-requirements`, `reliability-requirements`,
       `supply-chain-review-accept` and `technology-bootstrap` chains from
       the current skill text, with each case's own `allowed_tools`. Phase 2
       stops at the fork with no criteria written (the skill's own rule).
       Run (phase-1 runs to freeze from).
-      *2026-10-14, in progress.* The skill's rule did not say it: both
+      *2026-10-14, done.* Every history is current
+      (`tools/history_stale.py`). The skill's rule did not say it: both
       requirements skills said "get approval before writing them in" and,
       in the same breath, "a criterion that depends on a pending decision
       waits for it; write the rest", so every phase-2 run wrote the whole
@@ -471,7 +472,54 @@ read every failure before re-recording a bar.
       confirms a staff-facing view either way or says nothing about it,
       and `in-scope-as-confirmed` lists a staff-facing view among the
       capabilities that must not be added.
-- [ ] D7. Re-run the chains, re-record. Run.
+- [x] D7. Re-run the chains, re-record. Run.
+      *2026-10-14, done.* Four passes in WSL2 (about 170 runs in all, one
+      five-hour window); every phase-D case has a gate-mode three-run bar
+      and current evidence. What the runs turned up, in order:
+      - The two requirements phase-2 cases stop at the forks in every run
+        once the skill says approval comes before the document; their
+        phase-3 cases score 27/27 each on the saved file, the user's
+        overrule recorded and every other decision approved. The
+        phase-2 fork grader still loses a run in three to the judge
+        reading an openly stated assumption or a firm heading as a
+        decision; two rewordings got it from 4/6 lost to 1/3, and the
+        bars (0.92) carry the rest.
+      - `technology-bootstrap-phase2`: two runs in three followed the
+        skill's one-at-a-time loop literally (runtime first, UI framework
+        "next"), which the UI-framework grader and the consult regex
+        both read as a miss; the prompt now asks for the whole set in
+        one message. Every run then argued the UI framework is not forced
+        by a domain-level first test, so both phase-3 prompts approve the
+        deferral instead of React with Vite. Phase 3's approval grader
+        demanded rejected alternatives inside each entry while the
+        template gives them their own section (0/3 until reworded).
+      - `technology-bootstrap-phase3-reject` (new): 18/18 once its
+        relitigation grader let a sub-choice that follows from the
+        overrule (a committed `.npmrc`) stay open; recorded at 0.89 from
+        the last batch, where one run lost `does-not-relitigate` again.
+      - `requirements-refinement-payfine-phase2`: the staff-view grader
+        scored 0/9 over three batches because the scripted answer's
+        "desk staff, who should stop taking these payments" reads as
+        answering the phase-1 staff question; with staff left out of the
+        answer it is 1/3, and that one is the skill's new rule working
+        (an unanswered question recorded as a finding to resolve). Two
+        skill rules came out of it: an answer that skips a question is
+        recorded as not yet confirmed and asked again; a finding names
+        what is forced and its owner, not the code change (two runs in
+        three had prescribed the member route and its ownership check,
+        which `no-thin-path-or-criteria` caught, 3/3 after the rule).
+      - `vertical-slicing-handback` lost a run to the skill not firing
+        at all ("Sort it out."), then went 3/3 again: a trigger flake for
+        G to look at. `orchestrator-route-design-system` routes to
+        `reliability-requirements` one run in three on the unlabeled
+        slice fixture, every batch; bar recorded at 0.89 (F1).
+      - Facts for the handoff: WSL's `/tmp` is a tmpfs that dies with the
+        VM seconds after each `wsl` command, so kept run directories now
+        live under `~/.cache/kad-eval-tmp` (`wsl-gate.sh` sets `TMPDIR`);
+        the Windows checkout had rewritten every `.sh` with CRLF after
+        the merge, so `.gitattributes` pins them to LF; the CLI appends
+        an `ARGUMENTS:` line to a skill invoked with arguments, which the
+        staleness check ignores.
 
 ## E. Leaks (edits only, re-run with C5 or D7)
 
