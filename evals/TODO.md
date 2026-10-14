@@ -12,7 +12,8 @@ read every failure before re-recording a bar.
       `library-app-lending-review-via-agent` and
       `code-review-fine-notices-pr-via-agent`. (Their bars still include
       the old failure until A5 re-records them.)
-- [ ] A2. `architecture-review-neg-security-review` and
+- [x] A2. (Recorded from the 2026-10-13 morning gate run, 1 run each.)
+      `architecture-review-neg-security-review` and
       `architecture-review-neg-test-quality-review`: no conversion needed,
       the markdown format is the same one the other eleven negative cases
       use; they only lacked a recorded run. The 2026-10-12 local "gate
@@ -29,8 +30,13 @@ read every failure before re-recording a bar.
       `mode` and warns on calibration sources; `--gate-only` filters them.
       Documented in the README's "Eval gate". A5 is what actually moves
       every existing bar onto gate mode.
-- [ ] A5. After B, C and F land: `eval_gate.py --all` once, then
-      `record_thresholds.py` for everything. Run (108 cases, the big one).
+- [ ] A5. After B, C and F land: `eval_gate.py --all --runs 3` once, then
+      `record_thresholds.py --gate-only` for everything. Run (109 cases,
+      about 330 runs, two subscription windows). Still open after the
+      2026-10-13 full run: that run was one run per case, so 68 bars are
+      still calibration bars (aggregate check only, no per-grader rates)
+      and 31 gate bars come from a single run. Evidence is not a bar:
+      the PR check passed against those weak bars within tolerance.
       Since 2026-10-13 this is also what clears the PR check: the branch
       reaches nearly every case and `evals/evidence.json` holds one entry
       (`tdd-implementation-named-fix`, from the run that proved the
@@ -143,7 +149,8 @@ read every failure before re-recording a bar.
       All of B3–B9 verified against synthetic traces
       (scratch `test_b.py`): each passes a disciplined trace and fails the
       shortcut it was written for.
-- [ ] B11. Run the four changed cases at `runs: 3`, read failures,
+- [x] B11. (Done 2026-10-13 in WSL2; the entries below are the record.)
+      Run the four changed cases at `runs: 3`, read failures,
       re-record. Run. **Blocked on this Windows machine:** `claude plugin
       eval` refuses any case that grants Bash when no sandbox backend is
       active ("sandbox required but unavailable … Windows sandbox is not
@@ -178,7 +185,8 @@ read every failure before re-recording a bar.
 - [x] C4. "Or equivalent" wording in the holds, mailer-timeout and
       member-object graders; the authentication/authorization wording
       clause dropped from the IDOR grader.
-- [ ] C5. Run the changed cases, read failures, re-record. Run. First
+- [x] C5. (Done; every review case passed the 2026-10-13 full run.)
+      Run the changed cases, read failures, re-record. Run. First
       real workflow run 2026-10-13 (run 38386051763): 12 of the 35 cases
       ran clean, all 1.00; then the workspace's credit balance ran out and
       the other 23 errored. Three cases failed one grader before that:
