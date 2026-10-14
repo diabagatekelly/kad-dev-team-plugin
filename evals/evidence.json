@@ -378,13 +378,13 @@
     "recorded": "2026-10-14T19:52:55Z"
   },
   "orchestrator-route-backward-requirements": {
-    "inputs": "87c000e2138cbb5b0343008e9b4660ab697e4267c43e431ed4b9f5e63fbddfc9",
+    "inputs": "9a6920e10bda9f02d11331c1a7f3b3f8acf33af611d00b2a5f882e04519cc25b",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T195625-orchestrator-route-backward-requirements.json",
+    "source": "results/gate-20261014T200227-orchestrator-route-backward-requirements.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T20:00:42Z"
+    "recorded": "2026-10-14T20:05:16Z"
   },
   "orchestrator-route-design": {
     "inputs": "40a093d8fd3dc8310820e35edbb7651b59785671d5a80abfb57c92a18763fede",
@@ -423,13 +423,13 @@
     "recorded": "2026-10-14T19:52:55Z"
   },
   "orchestrator-route-scope-decision": {
-    "inputs": "9ec9f9ae4d2b0173d0ca15c828698ca9e991d2de97dd5a56ef2cf60177a92927",
+    "inputs": "9fce8e234ed3a5763f4e246fb71565493fc0c83b3a3e94b2d99d1254c71609b2",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T195625-orchestrator-route-scope-decision.json",
+    "source": "results/gate-20261014T200227-orchestrator-route-scope-decision.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T20:00:42Z"
+    "recorded": "2026-10-14T20:05:16Z"
   },
   "orchestrator-route-screen-design": {
     "inputs": "1b33f23eaab0c841b1ef58b18bd84341ccb305b05a9eeb280a3f64f560e47082",
@@ -477,13 +477,13 @@
     "recorded": "2026-10-14T19:52:55Z"
   },
   "orchestrator-superseded-scope-map": {
-    "inputs": "116edf04b7dc85efd2753068c295c0e15c5d82494f8bcbb4eb289f377d21316a",
+    "inputs": "942279c8fa0246ae00785ef211ffa2e86aa3b4de6b48d84c4c4e76f3984a4d8a",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T195625-orchestrator-superseded-scope-map.json",
+    "source": "results/gate-20261014T200227-orchestrator-superseded-scope-map.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T20:00:42Z"
+    "recorded": "2026-10-14T20:05:16Z"
   },
   "pr-writeup-portal-fines": {
     "inputs": "36dadfbf0c44cdf3a8ccf70d3cb64293e6abe4a8680ffe2f5feccc0c9548c4fc",
@@ -612,13 +612,22 @@
     "recorded": "2026-10-14T05:32:26Z"
   },
   "requirements-refinement-payfine-phase1": {
-    "inputs": "1fc0debc095585ad1c03982add14cb867893a0cfd335b87400c5f3ba71c511ef",
-    "score": 1.0,
+    "inputs": "e3d3802fa0f331de299d6ab1af5b1f875b60d4defcbb7a37613f927089628034",
+    "score": 0.933,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T195625-requirements-refinement-payfine-phase1.json",
+    "source": "results/gate-20261014T200227-requirements-refinement-payfine-phase1.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T20:00:42Z"
+    "recorded": "2026-10-14T20:05:16Z"
+  },
+  "requirements-refinement-payfine-phase2": {
+    "inputs": "38557ea56949532fb652cbb7a56262e91d67972d7d72954b6390654ef7d4e3e7",
+    "score": 0.889,
+    "bar": 0.958,
+    "runs": 3,
+    "source": "results/gate-20261014T200227-requirements-refinement-payfine-phase2.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-14T20:05:16Z"
   },
   "scope-map-self-service": {
     "inputs": "235ea1eba21dfa3456d715d6247d215524bd7d127ac80cd2419f37bbec747ced",
@@ -873,13 +882,13 @@
     "recorded": "2026-10-14T20:00:42Z"
   },
   "technology-bootstrap-phase3-reject": {
-    "inputs": "7486a0cb3358c93af288ba7e8381f4cd9b178fa9b9078ae6f949a73cde36c0c7",
-    "score": 0.889,
+    "inputs": "b2edf7fa2c9c942a1bb70d5d52b9ff211d1f670aa76198ee339dc6a77165644f",
+    "score": 1.0,
     "bar": null,
     "runs": 3,
-    "source": "results/gate-20261014T195625-technology-bootstrap-phase3-reject.json",
+    "source": "results/gate-20261014T200227-technology-bootstrap-phase3-reject.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T20:00:42Z"
+    "recorded": "2026-10-14T20:05:16Z"
   },
   "test-quality-review-fines": {
     "inputs": "b1dfed12c1ffc029ccab778505038692fa881c92307c5ddbf4626658274738b6",

@@ -7,7 +7,7 @@ context:
   history_file: history.jsonl
 execution:
   prompt: |
-    Members with an outstanding fine who already use the portal, and the desk staff, who should stop taking these payments.
+    Members with an outstanding fine who already use the portal.
 
     Members want to clear a fine without a trip in just for that. Seeing the fine isn't enough: I want them to be able to pay it online in this first version, even though taking payments is the riskier part. A "see your fines, then come in" version wouldn't save the desk any time, and that's the whole point.
 
@@ -66,11 +66,11 @@ graders:
       path: docs/pay-fine/requirements-001.md
     weight: 1
     criteria: |
-      The skill's rule: the WHAT is decided by asking, never by inference, and a question the answers left unsettled is recorded in the document as not yet confirmed and asked again, not filled in or dropped. The user named desk staff as users who "should stop taking these payments" and said a paid fine "shows as paid"; they never said what staff see of an online payment, nor whether the desk keeps the ability to take a payment at all. Either is a staff-side question the answers left open.
+      The skill's rule: the WHAT is decided by asking, never by inference, and a question the answers left unsettled is recorded in the document as not yet confirmed and asked again, not filled in or dropped. The earlier turn asked whether this piece also needs to change desk staff's job (for example staff seeing a payment's status). The user's answer named only members as the people who benefit, said saving the desk time is the point, and said a paid fine "shows as paid"; it never said whether staff's job changes, what staff see of an online payment, or whether the desk keeps taking payments. That is a question asked and not answered.
 
-      PASS if the document itself records at least one such staff-side question as not yet confirmed (an open question, a "not yet confirmed" line or section, or a scope note that it is unresolved rather than confirmed in or out): what staff see of an online payment, or whether the desk still takes payments after this ships. Raising it in the reply as well is good; raising it only in the reply does not count.
+      PASS if the document itself records staff's part as not yet confirmed (an open question, a "not yet confirmed" line or section, or a scope note that it is unresolved rather than confirmed in or out), in any of these forms: whether staff's job changes, what staff see of an online payment, or whether the desk still takes payments after this ships. Raising it in the reply as well is good; raising it only in the reply does not count.
 
-      FAIL if the document states a staff-facing behaviour (a view of the payment, the desk path staying or going) as confirmed, or says nothing about either question beyond naming staff as users.
+      FAIL if the document states a staff-facing behaviour (staff seeing the payment, the desk path staying or going, staff as a confirmed user of this piece) as confirmed, or says nothing about staff beyond the desk-time motivation.
   - type: llm
     name: exclusions-with-reasons
     focus:
