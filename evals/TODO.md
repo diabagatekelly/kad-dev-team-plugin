@@ -37,6 +37,84 @@ read every failure before re-recording a bar.
       parallel path). `wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh
       --all`, about 20 minutes wall-clock at eight runs in flight, but
       roughly three five-hour subscription windows of usage.
+      **First full gate run, 2026-10-13 evening (WSL2, `--parallel 8`):**
+      92 affected cases in 36 minutes wall-clock including twelve
+      automatic three-run re-runs, no rate limit, no errored run; 84
+      passed and got evidence, 8 below bar. Read from the traces:
+      - `orchestrator-route-implementation` 0.60 (2/2 runs): routed
+        correctly in prose, then asked "Do you want me to continue?"
+        about the quarantine flow's cost before writing the log, so
+        `log-written` and the routing grader (reads the log) both
+        failed. The skill's log rule now says the entry precedes any
+        question to the user, cost confirmations included. Re-run 1.00.
+      - `reliability-review-catalog` 0.75 (3/3, had passed 1.00 that
+        morning on one run): every run rated a Medium on the clean
+        module, "capture context lacks a `catalog` tag / request id" or
+        "pool-wait semantics unverified", co-locating the alerts.yml
+        alert-fatigue finding with the route. The skill's own Medium
+        tier said "missing context in error handling", which is what the
+        model applied. The Severity section now says an observability
+        gap is Medium only when the failure could not be told apart with
+        what is reported, that an unverified behaviour is a question not
+        a Medium, and that Location is where the fix goes. Re-run 1.00;
+        the other six reliability-review cases and the three tdd cases
+        (whose final review loads the skill) re-ran green.
+      - `design-system-payfine-phase2` 0.75: runs 2 and 3 wrote the
+        three candidate HTML files with `cat > a.html <<'EOF'` heredocs
+        and `renders-candidates` (Write-only) saw nothing. The grader
+        now accepts a heredoc target too (not a bare `>`, the candidates'
+        own HTML is full of them). How the files are written isn't this
+        grader's point, unlike the tdd cases. `asks-which-candidate`
+        failed once on a reply that called one candidate "the most
+        legible" while asking which to keep; judge call, left. Re-run
+        pass.
+      - `architecture-design-payfine-phase2` 0.88: `decisions-show-
+        approval` FAIL 9/9 votes on a Decisions section that carries
+        recommendation, rejected alternative and approval for each
+        decision; the next run passed 3/3. Judge variance on a 9k-char
+        file; nothing changed.
+      - `architecture-design-payfine-via-agent` 0.73: the delegated
+        architect can't ask (no `AskUserQuestion` in a subagent), so it
+        saved a draft design with every decision "pending" and the
+        waits grader failed 3/3. The skill now says what to do without
+        `AskUserQuestion`: the first decision only in the final report,
+        nothing saved, no sections laid out around it (a first wording
+        that allowed "the few independent decisions" produced a reply
+        that walked through structure, technology and violations, which
+        the judge rightly read as the design delivered: phase1 0.78).
+        With the tightened text phase1 is 1.00 at 3; via-agent presents
+        and waits but skips the `map-query` consult inside the subagent
+        in most runs (1/3, 2/3, then 3/3 skipped), which the direct
+        phase1 run never does. Found 2026-10-14: the skill named the
+        consult `architecture-cartographer:map-query`, the same wrong
+        name the tdd skill had; the subagent read the map file instead
+        of invoking anything. Now `map-query` / `kad-dev-team:map-query`.
+        With the right name the subagent still reads the map file
+        instead of invoking the skill in 2 of 3 runs (0.87 at 3); the
+        direct phase1 run invokes it 3/3. Recorded honestly at 0.867
+        (`consults-map-query` 0.333) for G: a delegated architect that
+        treats "consult map-query" as "read the map".
+        `security-requirements-payfine-phase2` recorded at 0.667 (gate,
+        3 runs, fork grader 0/3) the same morning, for D1.
+      - `security-requirements-payfine-phase1` 0.78 and `-phase2` 0.78,
+        `reliability-requirements-payfine-phase2` 0.67: the fork and
+        question graders (`does-not-decide-the-fork-itself`,
+        `does-not-ask-what-the-code-answers`) with split judge votes
+        and scores that bounce between 0.67 and 0.89 from run to run.
+        Phase 2 writes criteria on the assumption of its own
+        recommendation; phase 1 asks "is `cardToken` a browser-side
+        token?" as a question rather than a confirmation. D1 and D5
+        territory; two bars recorded honestly from gate runs (0.889,
+        0.778) to be re-recorded after D.
+      Two more facts the run produced: with three graders at three runs
+      one grader flip moves a score by 0.11, more than the 0.1
+      tolerance, so a bar recorded from one three-run sample fails the
+      next sample as often as not (A-phase arithmetic, open: tolerance
+      should reflect grader count, or the per-grader rates should carry
+      the verdict); and two cases errored with "OAuth token revoked"
+      when a concurrent child refreshed the subscription token, so the
+      gate now re-runs such a case once. The subscription's session
+      limit hit after about 170 runs in one window.
 
 ## B. tdd cases as the mechanical gate (depends on nothing; do before C)
 

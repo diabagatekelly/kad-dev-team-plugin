@@ -249,6 +249,11 @@ directly; this skill doesn't offer a way to opt out on its own judgment.
 every time this step runs — as soon as you've routed, before invoking the
 routed skill.** A routed skill often stops partway to ask the user
 something, so an entry left until the step finishes may never be written.
+The same goes for any question you put to the user yourself about the
+routed step, such as whether to go ahead with the quarantine flow given
+its cost, or whether something is already built: write the entry first,
+then ask. The entry records where the state table routed, not the user's
+consent to proceed, and a reply of "not now" gets its own entry later.
 This is the only
 retrospective record that every stage actually ran rather than getting
 silently skipped; a graded final artifact says nothing about the path

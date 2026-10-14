@@ -44,7 +44,7 @@ def results(exclude):
         if any(fnmatch.fnmatch(os.path.basename(path), g) for g in exclude):
             continue
         try:
-            data = json.load(open(path))
+            data = json.load(open(path, encoding="utf-8"))
         except (OSError, ValueError):
             continue
         if isinstance(data, dict) and data.get("cases") and not data.get("partial"):
@@ -95,10 +95,10 @@ def main():
                     # a trace the gate copied beside the result on another machine
                     trace = os.path.join(os.path.dirname(path), os.path.basename(trace))
                 if os.path.isfile(trace):
-                    seen.update(re.findall(r'"skill": ?"kad-dev-team:([a-z-]+)"', open(trace).read()))
+                    seen.update(re.findall(r'"skill": ?"kad-dev-team:([a-z-]+)"', open(trace, encoding="utf-8").read()))
             if started > latest.get(c["name"], ("",))[0]:
                 latest[c["name"]] = (started, path, data, c)
-    table = json.load(open(OUT)) if os.path.isfile(OUT) else {}
+    table = json.load(open(OUT, encoding="utf-8")) if os.path.isfile(OUT) else {}
     for name in cases:
         if name not in only:
             continue
@@ -125,7 +125,7 @@ def main():
             entry["skills_invoked"] = skills
         table[name] = entry
     table = {k: table[k] for k in sorted(table) if k in cases}
-    with open(OUT, "w") as f:
+    with open(OUT, "w", encoding="utf-8") as f:
         json.dump(table, f, indent=2)
         f.write("\n")
     print(f"wrote {len(table)} cases to {os.path.relpath(OUT, os.getcwd())}")

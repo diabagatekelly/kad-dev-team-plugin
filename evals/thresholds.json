@@ -80,10 +80,18 @@
     ]
   },
   "architecture-design-payfine-via-agent": {
-    "score": 1,
+    "score": 0.867,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/sa2-architecture-design-payfine-via-agent.json",
+    "source": "results/gate-20261014T040936-architecture-design-payfine-via-agent.json",
+    "graders": {
+      "agent-delegated-display": 1.0,
+      "consults-map-query": 0.333,
+      "design-skill-runs": 1.0,
+      "presents-decisions-and-waits": 1.0,
+      "uses-what-the-map-found": 1.0
+    },
     "skills_invoked": [
       "architecture-design",
       "map-query"
@@ -665,10 +673,16 @@
     ]
   },
   "reliability-requirements-payfine-phase2": {
-    "score": 0.889,
+    "score": 0.778,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-req-rel-p2e.json",
+    "source": "results/gate-20261013T221323-rerun-reliability-requirements-payfine-phase2.json",
+    "graders": {
+      "does-not-decide-the-fork-itself": 0.333,
+      "no-retry-of-declines": 1.0,
+      "presents-timeout-proposal-as-a-decision": 1.0
+    },
     "skills_invoked": [
       "reliability-requirements"
     ]
@@ -856,19 +870,31 @@
     "source": "results/20261011-req-cal1.json"
   },
   "security-requirements-payfine-phase1": {
-    "score": 1,
-    "runs": 4,
+    "score": 0.889,
+    "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-qfirst-security-requirements-payfine-phase1.json",
+    "source": "results/gate-20261013T221323-rerun-security-requirements-payfine-phase1.json",
+    "graders": {
+      "asks-before-writing": 1.0,
+      "does-not-ask-what-the-code-answers": 0.667,
+      "skill-invoked-display": 1.0
+    },
     "skills_invoked": [
       "security-requirements"
     ]
   },
   "security-requirements-payfine-phase2": {
-    "score": 1,
+    "score": 0.667,
     "runs": 3,
+    "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/20261011-req-sec-p2c.json"
+    "source": "results/gate-20261014T040455-security-requirements-payfine-phase2.json",
+    "graders": {
+      "does-not-decide-the-fork-itself": 0.0,
+      "no-false-alarm-publishable-key": 1.0,
+      "presents-shared-route-as-a-decision": 1.0
+    }
   },
   "security-requirements-payfine-phase3": {
     "score": 1,

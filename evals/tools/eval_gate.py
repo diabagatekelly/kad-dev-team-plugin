@@ -25,8 +25,10 @@ fingerprint of the files it loads (`eval_evidence.py`); commit that file
 with the change, it is what the pull-request check reads instead of
 running anything. A case that fails loses its entry.
 
-Usage: python3 -I evals/tools/eval_gate.py [--base origin/main] [--cases a b ... | --all]
+Usage: python3 -I evals/tools/eval_gate.py [--base origin/main] [--cases a b ... | --all] [--stale]
            [--jobs 6] [--parallel 8] [--tolerance 0.1] [--runs 1] [--dry-run]
+  --stale narrows the set to cases without current evidence: after a skill
+  edit, that is exactly the cases the edit reaches.
 """
 import argparse
 import concurrent.futures
@@ -193,6 +195,9 @@ def main():
     p.add_argument("--base", default="origin/main")
     p.add_argument("--cases", nargs="*")
     p.add_argument("--all", action="store_true", help="every case, not just the affected ones")
+    p.add_argument("--stale", action="store_true",
+                   help="only the affected cases whose evidence is missing, stale or below bar: "
+                        "what the pull-request check would fail on")
     p.add_argument("--jobs", type=int, default=6, help="cases at a time (6)")
     p.add_argument("--parallel", type=int, default=8,
                    help="agent runs in flight across all cases (8); a case at "
@@ -208,9 +213,13 @@ def main():
         cases = list(affected_cases.case_dirs())
     else:
         cases = a.cases or affected_cases.affected(affected_cases.changed_files(a.base))
+    if a.stale:
+        verdicts = eval_evidence.check(cases, a.tolerance)
+        cases = [c for c in cases if verdicts[c][0] != "ok"]
     bars = json.load(open(os.path.join(EVALS, "thresholds.json")))
     if not cases:
-        print("No eval case is affected by this change.")
+        print("No eval case is affected by this change." if not a.stale
+              else "Every affected case has current evidence; nothing to run.")
         return 0
     print(f"{len(cases)} affected case(s): {' '.join(cases)}", flush=True)
     if a.dry_run:
@@ -226,6 +235,12 @@ def main():
         for f in concurrent.futures.as_completed(first):
             case = first[f]
             r = f.result()
+            if r["error"] and "authenticate" in r["error"].lower():
+                # A subscription login rotates its OAuth token; a child that
+                # was holding the old one gets "token revoked" when another
+                # child refreshed it. The case said nothing: start it again
+                # once, with the credentials as they are now.
+                r = run_case(case, a.runs, tag + "-retry", slots)
             version = r["version"] or version
             bar = bars.get(case, {}).get("score")
             bar_rates = bars.get(case, {}).get("graders", {})

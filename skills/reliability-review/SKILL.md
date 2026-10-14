@@ -193,7 +193,15 @@ lower it.
 - **Low** — instrumentation worth having; minor cleanups; speed
   improvements with a real but modest story.
 
-Severity tracks production consequence. Dev-environment relaxations are
+An observability or error-context gap is Medium only when a failure on
+that path could not be told apart from the others with what is already
+reported; when the cause is already distinguishable (a failure reason, a
+path, an error class) and what's missing would make diagnosis quicker or
+tidier (a component tag, a request id, a richer context, a runbook whose
+wording doesn't match the field names), it's Low. Likewise a behaviour
+you could not verify (a library's pool-wait semantics, say) is a
+question to raise, not a Medium finding: say what you couldn't check and
+what would settle it. Severity tracks production consequence. Dev-environment relaxations are
 legitimate — what matters is whether they reach production. Don't inflate
 severity to force a fix: when a recommendation collides with simplicity,
 cost or scope, state the trade-off and let the user decide.
@@ -203,7 +211,7 @@ cost or scope, state the trade-off and let the user decide.
 ```markdown
 ## Finding: <short title>
 
-**Location:** where in the code or config
+**Location:** where in the code or config — the file(s) the fix would change, not every file that touches the symptom
 **Category:** what kind of issue
 **Severity:** Critical | High | Medium | Low
 
