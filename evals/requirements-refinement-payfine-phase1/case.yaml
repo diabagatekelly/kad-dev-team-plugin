@@ -29,6 +29,16 @@ graders:
 
       FAIL if it delivers finished requirements without asking, decides the scope itself and only asks for a rubber stamp on a complete document, or asks only about things the problem doc or code already answer.
   - type: llm
+    name: asks-trade-off-and-alternatives
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's question list includes two things no document answers: whether there is a priority or trade-off the user cares about for this piece (why this, why now; for example wanting the riskier version because that is the whole point), and whether they considered and rejected other approaches, and why. Engineering heuristics (smallest first, least risk) are not allowed to stand in for the user's answer to either.
+
+      PASS if the response asks the user both: about a priority or trade-off they care about (or why this, why now), and about alternatives they considered or rejected. Wording does not matter; both must be asked, not assumed.
+
+      FAIL if either is not asked, or is replaced by the skill's own assumption (for example proposing the smallest version as the obvious choice instead of asking what trade-off the user wants).
+  - type: llm
     name: does-not-ask-what-the-sources-answer
     focus: last_message
     weight: 1

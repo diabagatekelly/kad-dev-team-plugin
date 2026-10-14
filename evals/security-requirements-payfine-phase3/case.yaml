@@ -1,25 +1,35 @@
 schema_version: "1.0"
 name: security-requirements-payfine-phase3
-description: "Pay-a-fine slice, phase 3: the user rejects the recommendation and keeps the shared staff route; expects the finished criteria (ownership, card-data absence, exits) written for that choice and made safe, a recorded decision, and no false alarm on the publishable key. No baseline arm."
+description: "Pay-a-fine slice, phase 3: the user rejects the recommendation and keeps the shared staff route; expects the finished document saved, with every decision approved, the criteria (ownership, staff-only actions, card-data absence, exits) written for that choice and made safe, the decision recorded without re-arguing, and no false alarm on the publishable key. Graded on the saved file. No baseline arm."
 tags: [security-requirements, library-app]
 context:
   scaffold_script: scaffold.sh
   history_file: history.jsonl
 execution:
   prompt: |
-    I still want members on the existing `/fines` routes: one payment path to maintain. Write it up that way. For everything else, go with your recommendations.
+    I still want members on the existing `/fines` routes: one payment path to maintain. Write it up that way. For everything else, go with your recommendations. Save the finished document as `docs/pay-fine/security-requirements-001.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: document-written
+    path: docs/pay-fine/security-requirements-001.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/pay-fine/security-requirements-001\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: criteria-make-the-chosen-route-safe
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/security-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the document's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
 
       The user chose to let members onto the existing `/fines` routes. That prefix also holds the staff-only `POST /fines/:id/waive`, and the existing pay route checks no ownership.
 
@@ -28,20 +38,36 @@ graders:
       FAIL if it writes criteria for a separate member route instead of the user's choice, or leaves either of those two outcomes uncovered.
   - type: llm
     name: records-the-decision-without-relitigating
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/security-requirements-001.md
     weight: 1
     criteria: |
-      The skill's rule: present a fork with a recommendation, then write in what the user approves.
+      The skill's rule: present a fork with a recommendation, then write in what the user approves. The user rejected the recommendation (a separate member route) and kept the engineer's shared route.
 
-      PASS if the response records the decision (what was chosen, what was rejected, and the risk the choice carries) and proceeds with the user's choice. Stating the risk once is expected.
+      PASS if the document records that decision as the user's approved choice, names the recommendation as the rejected alternative, states the risk the choice carries once, and proceeds with the user's choice.
 
-      FAIL if it refuses, keeps arguing for its own recommendation as a precondition, asks for approval of the same decision again, or omits the decision entirely.
+      FAIL if it refuses, keeps arguing for its own recommendation as a precondition, asks for approval of the same decision again, leaves the decision marked pending, or omits the decision entirely.
+  - type: llm
+    name: decisions-all-approved
+    focus:
+      source: file
+      path: docs/pay-fine/security-requirements-001.md
+    weight: 1
+    criteria: |
+      The user said "for everything else, go with your recommendations", which approves every other fork the skill presented. The skill's rule: a decision is marked approved only by the user, and a criterion that depends on a pending decision waits for it.
+
+      PASS if every decision the document lists is marked approved (the user's choice for the route, the recommendation for the others), no decision is left pending, and no criterion is marked as waiting on a decision. A genuinely new question the user never saw (for example the exact value of a rate limit) may stay open.
+
+      FAIL if a decision the user approved is still marked pending or presented as needing approval, or a criterion is withheld as waiting on one.
   - type: llm
     name: criterion-member-pays-only-own-fines
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/security-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the document's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
 
       The member's card number comes from the session, and every `Fine` carries the member's `cardNumber`, but `FineLedger.find(id)` returns any fine by id, and `POST /fines/:id/pay` checks no ownership. A member could see or pay another member's fine by changing the id.
 
@@ -50,10 +76,12 @@ graders:
       FAIL if ownership is not covered, or only stated as a control ("authorization is enforced") with no checkable outcome.
   - type: llm
     name: criterion-card-details-never-reach-the-server
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/security-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the document's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
 
       The card is tokenised in the browser with Stripe's publishable key; the server receives only a token.
 
@@ -62,10 +90,12 @@ graders:
       FAIL if card data is not addressed, or only as "stored securely" / "encrypted".
   - type: llm
     name: criteria-cover-error-and-monitoring-exits
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/security-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the document's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
 
       A new portal route built on the existing `respond` helper (`infra/http/respond.ts`) would return `error.message` from any thrown error to the member, and send `req.headers` (the bearer session token) and `req.body` (the card token) to the third-party error reporter. The existing `POST /fines/:id/pay` also returns `error.message` in its 402.
 
@@ -74,13 +104,15 @@ graders:
       FAIL if the exits are not covered beyond a generic "no sensitive data in logs".
   - type: llm
     name: no-false-alarm-publishable-key
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/security-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only. This checks that the response does NOT raise a false alarm.
+      Judge substance only. This checks that the document does NOT raise a false alarm.
 
       `main/wiring.ts` holds a live Stripe publishable key (`pk_live_...`), served to the browser by `GET /payments/config`. Publishable keys are public by design and cannot charge, refund or read.
 
-      PASS if the response does not treat the publishable key, or serving it to the browser, as a secret exposure or as something a criterion must prevent.
+      PASS if the document does not treat the publishable key, or serving it to the browser, as a secret exposure or as something a criterion must prevent.
 
       FAIL if it does.

@@ -164,16 +164,30 @@ Name the behavior; let the implementation follow.
 Real forks here — accepting a single point of failure, choosing to degrade
 rather than fail on a given path, committing to a target, deciding that
 duplicate operations must be prevented rather than tolerated — get
-presented one at a time with a recommendation and rejected alternatives,
-and approved before they're written in. Flag any that clear the ADR bar
-and hand off to `docs-writer` once the criteria are done.
+presented with a recommendation and rejected alternatives, and approved
+before they're written in. Flag any that clear the ADR bar and hand off
+to `docs-writer` once the criteria are done.
+
+**Approval comes before the document, not inside it.** Once the
+questions about the target are answered, your next response is the
+forks: for each, what needs deciding, your recommendation and why, the
+alternatives you rejected, and whether it clears the ADR bar. Present
+them one at a time through `AskUserQuestion` when it is available;
+without it, present all of them in one plain-text response and end your
+turn there. Don't write the criteria yet, not even the ones no fork
+touches: a document with half its criteria marked "waits on decision 2"
+gets reviewed as a draft instead of decided, and the forks usually
+decide the shape the rest follow. The document is written once, after
+the approvals, complete.
 
 ## Output format
 
-This document is your second response, never your first. Until the
-questions about the target are answered, your whole response is those
-questions; "Open questions" below is for what stays unresolved after
-that, not a place to park them while writing the criteria anyway.
+This document comes after the questions are answered and the forks are
+approved, never before. Until the questions about the target are
+answered, your whole response is those questions; until the forks are
+approved, your whole response is the forks. "Open questions" below is
+for what stays unresolved after that, not a place to park either while
+writing the criteria anyway.
 
 ```markdown
 # Reliability requirements: <slice name>
@@ -194,12 +208,16 @@ Given/When/Then, alongside the slice's other criteria.
 
 ## Decisions
 Each fork: the recommendation, the alternatives rejected, and its status —
-**pending** until the user approves it, then **approved: <choice>**. Never
-mark one approved yourself. A criterion that depends on a pending decision
-waits for it; write the rest. A proposal already on the table (an
-engineer's "simplest thing", the user's own plan) is a decision whenever
-you would change it: present it with your recommendation instead of
-writing your alternative in. Note any flagged as ADR-worthy.
+**approved: <choice>** as the user gave it, or **pending** for one the
+user didn't answer. Never mark one approved yourself. When the user
+rejects your recommendation, record their choice as the approved one,
+your recommendation as rejected, and the risk the choice carries, once;
+then write the criteria for their choice and make it as workable as it
+can be made. A criterion that depends on a pending decision waits for
+it; write the rest. A proposal already on the table (an engineer's
+"simplest thing", the user's own plan) is a decision whenever you would
+change it: present it with your recommendation instead of writing your
+alternative in. Note any flagged as ADR-worthy.
 
 Once decisions are approved, the finished document is complete: every
 criterion the approvals don't touch stays in, not just the ones that

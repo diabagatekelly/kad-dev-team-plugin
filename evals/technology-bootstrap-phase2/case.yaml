@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: technology-bootstrap-phase2
-description: "Bootstrap phase 2: the user answers (solo, TypeScript, standard runner, safe-by-default package manager, nothing else decided); expects the UI framework (which the answer does not cover) recommended and left for approval rather than chosen, and nothing beyond what the first test forces. No baseline arm."
+description: "Bootstrap phase 2: the user answers (solo, TypeScript, standard runner, safe-by-default package manager, nothing else decided) and asks for the whole forced set in one message; expects the UI framework (which the answer does not cover) recommended and left for approval rather than chosen, the package manager picked on its pinning posture after an inline supply-chain consult, and nothing beyond what the first test forces. No baseline arm."
 tags: [technology-bootstrap]
 context:
   scaffold_script: scaffold.sh
@@ -8,6 +8,8 @@ context:
 execution:
   prompt: |
     Just me: solo side project, and I'd rather not maintain a lot of tooling. I'm most fluent in TypeScript and want to stay there; the UI will be a web app anyway. For the test runner, whatever you'd recommend as the standard choice for that ecosystem. For the package manager, I want whatever means I don't have to remember a flag to stay safe; pick the one where that's the default. Anything else (hosting, CI, a database, a deployment target, an auth provider): I haven't thought about it and don't want to decide it now.
+
+    Give me your recommendations for the whole set in one message rather than one at a time; I'll approve or change each.
   model: sonnet
   max_turns: 40
   timeout_seconds: 900
@@ -21,9 +23,9 @@ graders:
     criteria: |
       The user's answer covered the language (TypeScript), the test runner and the package manager ("whatever you'd recommend"), and said not to decide hosting, CI, a database, a deployment target or an auth provider. It did not mention a UI framework. Slice 1's actor is a person looking at a transaction list, so a UI framework is plausibly forced, and the skill's rule is that a category the user hasn't spoken to gets its own recommendation and its own wait.
 
-      PASS if the response recommends a UI framework with its reasoning and at least one rejected alternative and asks the user to approve it, without writing the finished bootstrap with a UI framework already chosen. Also PASS if it argues no UI framework is forced by the first test and leaves it open.
+      PASS if the response recommends a UI framework with its reasoning and at least one rejected alternative and asks the user to approve it, without writing the finished bootstrap with a UI framework already chosen. Also PASS if it argues no UI framework is forced by the first test and leaves it open, or if it recommends other categories first and says the UI framework recommendation comes next, without settling it.
 
-      FAIL if it settles a UI framework itself (for example a written bootstrap listing React as decided) without the user's approval.
+      FAIL if it settles a UI framework itself (for example a written bootstrap listing React as decided, or "going with React") without the user's approval.
   - type: llm
     name: asks-only-what-the-first-test-forces
     focus: last_message
@@ -47,6 +49,16 @@ graders:
       and — if the first test drives a UI or crosses HTTP — a UI or HTTP
       framework. A brief mention that some other category will be needed
       eventually is fine; asking the user to settle it now is not.
+  - type: llm
+    name: pinning-posture-treated-as-a-choice
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user asked for the package manager where the safe posture is the default rather than a flag to remember. The skill's rule is that the package manager's lockfile and pinning posture is part of the bootstrap decision, decided on defaults-over-flags: prefer the manager where content-hashed lockfiles and verified (frozen) installs are the default, because a flag-based posture depends on everyone remembering the flag.
+
+      PASS if the response recommends a package manager and says what posture it gets by default (hashed lockfile, installs that refuse to drift, or equivalent) and why that beats the alternative(s) it rejected, so the choice is visibly made on pinning rather than on speed or ergonomics alone.
+
+      FAIL if the package manager is recommended with no pinning reasoning, if pinning is mentioned only as something to configure later, or if no package manager is recommended at all.
   - type: regex
     name: consults-supply-chain-for-pinning
     target: trace

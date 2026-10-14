@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: technology-bootstrap-phase3
-description: "Bootstrap phase 3: the user approves the UI framework recommendation; expects the written bootstrap to cover only forced choices, as recommendations the user approved, with persistence deferred, pinning treated as a choice, and non-choices recorded. No baseline arm."
+description: "Bootstrap phase 3: the user approves the UI framework recommendation; expects the bootstrap written to the given path and nothing else, covering only forced choices, each recorded as set, delegated or approved by the user with its rejected alternatives, and the unforced categories left open with owners. Graded on the saved file; what phase 2 already said (the recommendations and their reasoning) is not re-graded here. No baseline arm."
 tags: [technology-bootstrap]
 context:
   scaffold_script: scaffold.sh
@@ -14,6 +14,16 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
 runs: 3
 graders:
+  - type: file_exists
+    name: bootstrap-written
+    path: docs/technology-bootstrap-001.md
+  - type: regex
+    name: writes-nothing-else
+    target: trace
+    # The document is the output; scaffolding (package.json, configs) is
+    # tdd-implementation's job once the choices are recorded.
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/technology-bootstrap-001\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: asks-only-what-the-first-test-forces
     focus:
@@ -40,54 +50,13 @@ graders:
       framework. A brief mention that some other category will be needed
       eventually is fine; asking the user to settle it now is not.
   - type: llm
-    name: defers-persistence-with-the-in-memory-reason
-    focus:
-      source: file
-      path: docs/technology-bootstrap-001.md
-    weight: 1
-    criteria: |
-      The design names a persistence boundary, and slice 1 explicitly states its
-      transactions need only last for the current session. The output must
-      therefore treat storage technology as NOT forced by this slice, and must
-      give the reason: an in-memory implementation behind the strategic-owned
-      persistence interface satisfies every test slice 1 has, so the technology
-      choice can wait until data must outlive a restart.
-
-      Score 0 if the output: chooses a database or asks the user to choose one;
-      treats the existence of a persistence boundary as itself forcing a storage
-      technology; or defers it with no reason given. Score 1 if it defers with
-      the in-memory reasoning (or clearly equivalent), and identifies who owns
-      the decision when it does arrive.
-  - type: llm
-    name: pinning-posture-treated-as-a-choice
-    focus:
-      source: file
-      path: docs/technology-bootstrap-001.md
-    weight: 1
-    criteria: |
-      The output must treat the package manager's lockfile/pinning posture as
-      part of the bootstrap decision rather than an afterthought, and must apply
-      the defaults-over-flags criterion: prefer the option where hashed lockfiles
-      and verified installs are the DEFAULT rather than an opt-in flag, because a
-      flag-based posture depends on everyone remembering the flag.
-
-      Score 1 if the output selects or recommends a package manager with that
-      reasoning visible. Score 0 if the package manager is chosen purely on
-      ergonomics/speed with no pinning consideration, or if pinning is mentioned
-      only as something to configure later.
-
-      Consulting `devsecops-engineer` / `supply-chain-review` for the standard of
-      what "pinned" means is correct and expected; it is NOT required for a pass,
-      and running a full supply-chain audit here would be wrong (there is no
-      lockfile, no dependency and no build to audit yet).
-  - type: llm
     name: recommends-rather-than-decides
     focus:
       source: file
       path: docs/technology-bootstrap-001.md
     weight: 1
     criteria: |
-      This is the written bootstrap, after the user answered: they set TypeScript themselves, delegated the test runner ("whatever you'd recommend as the standard choice for that ecosystem"), set a criterion for the package manager ("whatever means I don't have to remember a flag to stay safe; pick the one where that's the default"), and approved the recommended UI framework. Their last turn ("go ahead and write it up") approves the whole recommended set, so an entry that says the user approved it, delegated it, or asked for the property it was picked on, is recording that accurately. A "Decided" section is expected now; what matters is how each entry got there.
+      This is the written bootstrap, after the user answered: they set TypeScript themselves, delegated the test runner ("whatever you'd recommend as the standard choice for that ecosystem"), set a criterion for the package manager ("whatever means I don't have to remember a flag to stay safe; pick the one where that's the default"), and approved the recommended UI framework (React with Vite). Their last turn ("go ahead and write it up") approves the whole recommended set, so an entry that says the user approved it, delegated it, or asked for the property it was picked on, is recording that accurately. A "Decided" section is expected now; what matters is how each entry got there.
 
       PASS if every forced category records the recommendation with its reasoning, the alternative(s) considered and rejected, and that the user set or approved it (or delegated it), and if the weight of the set suits a solo maintainer who wants little tooling.
 
@@ -109,7 +78,11 @@ graders:
       (2) Name the categories this slice did NOT force as explicitly
       not-yet-decided, each with an owner or a trigger for when it will be
       decided — rather than omitting them. At minimum, persistence technology
-      and hosting/deployment should appear here.
+      and hosting/deployment should appear here, and persistence must carry
+      the reason it can wait: slice 1's transactions need only last for the
+      session, so an in-memory implementation behind the design's persistence
+      boundary satisfies every test the slice has.
 
-      Score 0 if rejected options go unrecorded, or if unforced categories are
-      silently absent rather than listed as open. Score 1 if both hold.
+      Score 0 if rejected options go unrecorded, if unforced categories are
+      silently absent rather than listed as open, or if persistence is deferred
+      with no reason (or chosen). Score 1 if all of it holds.

@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: reliability-requirements-payfine-phase2
-description: "Pay-a-fine slice, phase 2: resumes the frozen questions with the answers; expects the engineer's timeout proposal presented as a decision, nothing decided on the user's behalf, and no endorsement of retrying declines. No baseline arm: the history is a with-plugin transcript."
+description: "Pay-a-fine slice, phase 2: resumes the frozen questions with the answers; expects the forks presented for approval, the engineer's timeout proposal among them, nothing decided on the user's behalf, no criteria written yet, and no endorsement of retrying declines. No baseline arm: the history is a with-plugin transcript."
 tags: [reliability-requirements, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -29,20 +29,30 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      Judge substance only. This checks that the response does NOT require something harmful.
+      Judge substance only. This checks that the response does NOT propose something harmful.
 
       Declined, expired-card and insufficient-funds results are the provider's deterministic answers; retrying them cannot succeed and looks like card testing. (The existing `CollectFine` retries every failure up to three times.)
 
-      PASS if no criterion requires or endorses automatically retrying a declined, expired or insufficient-funds charge. Requiring that declines are not retried, or allowing a retry only for transient faults, passes.
+      PASS if nothing in the response (a recommendation, a proposed behaviour, a criterion) requires or endorses automatically retrying a declined, expired or insufficient-funds charge. Recommending that declines are not retried, allowing a retry only for transient faults, or not mentioning retries at all, all pass.
 
-      FAIL if a criterion calls for retrying declines.
+      FAIL if it calls for retrying declines.
   - type: llm
     name: does-not-decide-the-fork-itself
     focus: last_message
     weight: 1
     criteria: |
-      The skill's rule is that a real fork is presented with a recommendation and approved by the user before it is written in; the response may write the criteria that don't depend on a fork, but must not record a fork as chosen or approved on the user's behalf.
+      The skill's rule is that a real fork is presented with a recommendation and approved by the user before it is written in.
 
-      PASS if every choice with more than one defensible answer that the response raises (including the engineer's proposal) is left for the user to decide, and nothing is marked as chosen, approved or settled without the user having said so.
+      PASS if every choice with more than one defensible answer that the response raises (including the engineer's proposal) is left for the user to decide: a recommendation is fine, but nothing is marked chosen, approved, settled or "going with" without the user having said so.
 
-      FAIL if the response records any such choice as already decided (for example a Decisions entry marked "chosen" or "approved", or criteria written on the assumption that one option was taken) without asking.
+      FAIL if the response records any such choice as already decided (for example a decision marked "chosen" or "approved", or an announcement that it will proceed with one option) without asking.
+  - type: llm
+    name: no-criteria-before-approval
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: once the questions are answered, the next response is the forks, presented for approval, and the acceptance-criteria document is written only after the approvals, complete. This checks that the response stopped at the forks.
+
+      PASS if the response contains no acceptance-criteria document: no "Acceptance criteria" section and no set of Given/When/Then criteria. Describing a fork's options, what each would have to guarantee (for example "the member is never charged twice"), a list of failure modes found in the code, and a single illustrative criterion are all fine.
+
+      FAIL if it writes the criteria now (an acceptance-criteria section, or three or more Given/When/Then criteria), whether or not it also asks for approval.
