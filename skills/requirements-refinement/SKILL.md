@@ -66,6 +66,13 @@ note about the future; it means nothing here may assume one hardcoded
 identity. A constraint carried forward as a quotation has not been
 reconciled.
 
+**A finding says what is forced and who decides it, not how to build it.**
+One or two lines: the capability nobody has scoped, or the behaviour that
+needs deciding, and the stage it goes to. Naming the file that shows it is
+fine; prescribing the change (which route, which check, what the code
+should do instead) is the design conversation, and writing it here is the
+HOW this skill stays out of.
+
 **A constraint that looks like a later step's problem is the one that gets
 dropped.** "Applies to every step" includes this step. If the scope map
 sets a constraint aside as cross-cutting, that makes it *yours to apply

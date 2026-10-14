@@ -497,6 +497,14 @@ read every failure before re-recording a bar.
       `orchestrator-log.md` (names the matched row and an artifact path
       under the target) and one on `last_message` (ends with the routed
       skill's questions or a stop, not the next artifact).
+      *Note from D7 (2026-10-14):* `orchestrator-route-design-system`
+      routed to `reliability-requirements` in one run of three. The
+      shared `ui-plants/pay-fine/slice-001.md` lists its security and
+      reliability criteria unlabeled among the functional ones (one
+      reliability criterion, the double charge), so "runtime-safety
+      criteria filled" is a judgment call there. Label the sections in
+      the fixture when F touches the route cases; it is shared by every
+      UI case, so the change invalidates their evidence together.
 - [ ] F2. `orchestrator-asks-for-target`: fix the `\\.md` regex and check
       `Grep` as well as `Glob`.
 - [ ] F3. Restraint cases (`*-catalog-review`): add a positive grader

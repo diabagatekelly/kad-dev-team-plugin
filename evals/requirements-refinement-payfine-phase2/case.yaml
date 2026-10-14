@@ -66,11 +66,11 @@ graders:
       path: docs/pay-fine/requirements-001.md
     weight: 1
     criteria: |
-      The skill's rule: the WHAT is decided by asking, never by inference. The user named desk staff as users who should stop taking these payments, and the earlier turn asked whether staff need to see payment status; the user's answer said only that a paid fine "shows as paid", and never said what staff see of an online payment (whether it shows at the desk, how, or whether that is part of this piece at all).
+      The skill's rule: the WHAT is decided by asking, never by inference, and a question the answers left unsettled is recorded in the document as not yet confirmed and asked again, not filled in or dropped. The user named desk staff as users who "should stop taking these payments" and said a paid fine "shows as paid"; they never said what staff see of an online payment, nor whether the desk keeps the ability to take a payment at all. Either is a staff-side question the answers left open.
 
-      PASS if the document says that what staff see of an online payment was not settled: as an open question for the user, a line that it is still to be confirmed, or a note in the scope sections that it is unresolved rather than confirmed in or out.
+      PASS if the document itself records at least one such staff-side question as not yet confirmed (an open question, a "not yet confirmed" line or section, or a scope note that it is unresolved rather than confirmed in or out): what staff see of an online payment, or whether the desk still takes payments after this ships. Raising it in the reply as well is good; raising it only in the reply does not count.
 
-      FAIL if the document states a staff-facing view of the payment (or its absence) as confirmed, or says nothing about what staff see at all.
+      FAIL if the document states a staff-facing behaviour (a view of the payment, the desk path staying or going) as confirmed, or says nothing about either question beyond naming staff as users.
   - type: llm
     name: exclusions-with-reasons
     focus:

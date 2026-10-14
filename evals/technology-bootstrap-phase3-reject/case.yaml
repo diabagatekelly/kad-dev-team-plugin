@@ -43,9 +43,9 @@ graders:
     criteria: |
       The user overruled two recommendations and said to write it up that way.
 
-      PASS if the document proceeds with the user's choices: it may state once, as a recorded consequence, what the choice gives up (for example that npm's verified install is a separate command), but it does not argue the user should reconsider, does not mark the choice provisional or pending, and does not ask for the same decision again.
+      PASS if the document proceeds with the user's choices: it may state once, as a recorded consequence, what the choice gives up (for example that npm's verified install is a separate command), but it does not argue the user should reconsider, does not mark npm or Jest themselves as provisional or pending, and does not ask for the same decision again. A new sub-choice that follows from the user's choice (a committed `.npmrc` to recover part of the posture, which Jest transform to use) may be proposed and left for the user; that is not re-asking the decision.
 
-      FAIL if it re-argues for pnpm or Vitest, labels the user's choices as mistakes or as pending reconsideration, or asks the user to confirm them again.
+      FAIL if it re-argues for pnpm or Vitest, labels the user's choices as mistakes or as pending reconsideration, or asks the user to confirm npm or Jest again.
   - type: llm
     name: pinning-posture-restated-for-npm
     focus:
