@@ -92,7 +92,8 @@ def run_tests(project, cmd, coverage):
     program = shutil.which(argv[0])
     if not program:
         raise SystemExit(f"FAIL  --test-cmd: {argv[0]} is not on PATH" + chr(10) + "validation gate: FAIL")
-    proc = subprocess.run([program, *argv[1:]], cwd=project, capture_output=True, text=True,
+    # The operator's own test command, resolved above and run without a shell.
+    proc = subprocess.run([program, *argv[1:]], cwd=project, capture_output=True, text=True,  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
                           env=env, encoding="utf-8", errors="replace")
     out = proc.stdout + proc.stderr
     fails = re.findall(r"ℹ fail (\d+)", out)
