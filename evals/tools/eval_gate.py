@@ -232,7 +232,7 @@ def main():
     if a.all:
         cases = list(affected_cases.case_dirs())
     else:
-        cases = a.cases or affected_cases.affected(affected_cases.changed_files(a.base))
+        cases = a.cases or affected_cases.affected(affected_cases.changed_files(a.base), a.base)
     if a.stale:
         verdicts = eval_evidence.check(cases, a.tolerance)
         cases = [c for c in cases if verdicts[c][0] != "ok"]
@@ -246,6 +246,10 @@ def main():
         return 0
     os.makedirs(os.path.join(EVALS, "results"), exist_ok=True)
     tag = "gate-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S")
+    # What each case loads as the runs start; evidence is recorded only
+    # against inputs that are still the same when they finish.
+    files, reach = affected_cases.repo_files(), affected_cases.Reach()
+    before = {c: eval_evidence.fingerprint(c, files, reach) for c in cases}
 
     rows, version = {}, None
     slots = Slots(a.parallel)
@@ -310,8 +314,11 @@ def main():
         open(summary, "a").write(report)
     # The proof the pull-request check reads: every passing case, with a
     # fingerprint of what it loaded; a failing case loses its old entry.
-    eval_evidence.record({c: rows[c] for c in rows if c not in failed}, failed, version)
-    print(f"evidence for {len(rows) - len(failed)} case(s) written to evals/evidence.json; "
+    moved = eval_evidence.record({c: rows[c] for c in rows if c not in failed}, failed, version, before)
+    if moved:
+        print(f"no evidence for {', '.join(moved)}: a file they load changed while the gate ran; "
+              f"run them again.")
+    print(f"evidence for {len(rows) - len(failed) - len(moved)} case(s) written to evals/evidence.json; "
           f"commit it with the change.")
     return 1 if failed else 0
 

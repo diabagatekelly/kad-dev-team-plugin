@@ -50,7 +50,9 @@ Next, inside Ubuntu:
      Windows mount. The credential helper line lets later pushes from
      WSL reuse Windows' stored GitHub login.)
   3. Done. From then on, from the repository root on Windows:
-       wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh [--cases <case ...> | --all]
+       wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh [--cases <case ...> | --all]
+     (Ubuntu-22.04 is the name the install above registers; a distro
+     installed another way may be plain Ubuntu. `wsl -l` lists them.)
      mirrors the checkout into the clone, runs the gate, and copies the
      results, evals/evidence.json and evals/thresholds.json back, ready
      to commit. (Inside Ubuntu by hand: python3 -I evals/tools/eval_gate.py)

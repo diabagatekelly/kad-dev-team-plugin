@@ -288,13 +288,13 @@
     "recorded": "2026-10-14T05:32:26Z"
   },
   "map-update-cancel-hold": {
-    "inputs": "c1118c1bc63e8105791ad482ec40ba2b6da70bd994d7746c71d8ee7eb03f9025",
-    "score": 0.967,
-    "bar": 1.0,
+    "inputs": "f6d26dd4fc267accfa2b89c89ccb9ec7a6939ba2034045abda109ef1adae60d4",
+    "score": 1.0,
+    "bar": 0.967,
     "runs": 3,
-    "source": "results/gate-20261014T045557-map-update-cancel-hold.json",
+    "source": "results/gate-20261014T184954-map-update-cancel-hold.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
+    "recorded": "2026-10-14T18:56:22Z"
   },
   "operational-readiness-neg-reliability": {
     "inputs": "756c5106333b8ca6bfe49f760a1d75bb250ca328ef4635677854a1a49f6d4b56",
@@ -837,31 +837,31 @@
     "recorded": "2026-10-14T11:16:52Z"
   },
   "tdd-implementation-cancel-hold": {
-    "inputs": "58456654872612633a591325db45c8e67993082609eddede472d08659f5f1adf",
+    "inputs": "fca9ed5a88e4d1f7610629216769fd97ec60a7f0a6390442f8b17f0444140824",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T104758-tdd-implementation-cancel-hold.json",
+    "source": "results/gate-20261014T184954-tdd-implementation-cancel-hold.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
+    "recorded": "2026-10-14T18:56:22Z"
   },
   "tdd-implementation-cancel-hold-via-agent": {
-    "inputs": "9b351cfa1f2a381b97761cfaf9f86be6a219c77a9e906a1c4c27933878598885",
-    "score": 0.971,
-    "bar": 1.0,
+    "inputs": "a5ea482e85e9d7c9ab30fce32ecb85c7f88ecfaa10a52a7dcb1f7d60e3ee86f2",
+    "score": 1.0,
+    "bar": 0.971,
     "runs": 3,
-    "source": "results/gate-20261014T104758-tdd-implementation-cancel-hold-via-agent.json",
+    "source": "results/gate-20261014T184954-tdd-implementation-cancel-hold-via-agent.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
+    "recorded": "2026-10-14T18:56:22Z"
   },
   "tdd-implementation-named-fix": {
-    "inputs": "8c30aceb84ccd3682f80ec7b050643b230f21273970a3c59218e71b03a025a2e",
+    "inputs": "35002a09963e7938976d1027aaed20b35d948bd33cc55d5565e0d8bb67c3967a",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261014T104758-tdd-implementation-named-fix.json",
+    "source": "results/gate-20261014T184954-tdd-implementation-named-fix.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
+    "recorded": "2026-10-14T18:56:22Z"
   },
   "technology-bootstrap-phase1": {
     "inputs": "09ec3e06cb45f29b2297d61af175b3e3b5e19a029e062637533827c4d4150003",

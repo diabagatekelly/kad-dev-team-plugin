@@ -9,9 +9,14 @@ and agents it exercises, the fixtures its scaffold copies: the same set
 seen against that fingerprint. `eval_gate.py` writes an entry for every
 case that passed; the check fails a pull request when a case the diff
 reaches has no entry, or an entry whose fingerprint no longer matches
-(something it loads changed since the run), or whose score no longer
-clears the bar in `thresholds.json`. Like a coverage gate: the cost is
-paid once, locally, and the PR carries the proof.
+(something it loads changed since the run), or has no bar in
+`thresholds.json` to clear, or whose score no longer clears it. Like a
+coverage gate: the cost is paid once, locally, and the PR carries the
+proof.
+
+The gate fingerprints each case before its runs start and records an
+entry only if the fingerprint is the same when they finish: a skill
+edited during a run was not what the score tested.
 
 The fingerprint hashes file contents with CRLF folded to LF, so a run
 recorded in a Linux clone matches a Windows checkout of the same tree.
@@ -57,16 +62,24 @@ def save(table):
         f.write("\n")
 
 
-def record(passed, failed, version=None):
+def record(passed, failed, version=None, before=None):
     """`passed`: case -> row from the gate (score, runs, bar, source).
-    `failed`: cases whose old evidence no longer holds."""
+    `failed`: cases whose old evidence no longer holds. `before`: case ->
+    fingerprint taken before the runs; a case whose inputs moved since gets
+    no entry. Returns the cases dropped for that."""
     table = load()
     files = affected_cases.repo_files()
     reach = affected_cases.Reach()
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    moved = []
     for case, row in passed.items():
+        inputs = fingerprint(case, files, reach)
+        if before and before.get(case) not in (None, inputs):
+            moved.append(case)
+            table.pop(case, None)
+            continue
         table[case] = {
-            "inputs": fingerprint(case, files, reach),
+            "inputs": inputs,
             "score": None if row["score"] is None else round(row["score"], 3),
             "bar": row["bar"],
             "runs": row["runs"],
@@ -77,7 +90,7 @@ def record(passed, failed, version=None):
     for case in failed:
         table.pop(case, None)
     save(table)
-    return table
+    return moved
 
 
 def check(cases, tolerance):
@@ -94,7 +107,9 @@ def check(cases, tolerance):
             out[case] = ("no evidence", "never passed the gate, or its last run failed")
         elif e["inputs"] != fingerprint(case, files, reach):
             out[case] = ("stale", "a file it loads changed since " + str(e.get("recorded", "?"))[:10])
-        elif bar is not None and (e["score"] is None or e["score"] < bar - tolerance):
+        elif bar is None:
+            out[case] = ("no bar", "no entry in thresholds.json; record one with record_thresholds.py")
+        elif e["score"] is None or e["score"] < bar - tolerance:
             out[case] = ("below bar", f"evidence {e['score']} against a bar of {bar}")
         else:
             out[case] = ("ok", f"{e['score']} on {str(e.get('recorded', '?'))[:10]}")
@@ -112,7 +127,7 @@ def main():
     if a.all:
         cases = list(affected_cases.case_dirs())
     else:
-        cases = a.cases or affected_cases.affected(affected_cases.changed_files(a.base))
+        cases = a.cases or affected_cases.affected(affected_cases.changed_files(a.base), a.base)
     if not cases:
         print("No eval case is affected by this change; no evidence needed.")
         return 0
@@ -127,7 +142,7 @@ def main():
     report = head + "\n\n" + "\n".join(lines) + "\n"
     if missing:
         report += ("\nRun the gate for them and commit `evals/evidence.json` with the change:\n\n"
-                   "    wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh --cases " + " ".join(missing) + "\n\n"
+                   "    wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh --cases " + " ".join(missing) + "\n\n"
                    "(from the Windows checkout; inside Linux, `python3 -I evals/tools/eval_gate.py --cases ...`)\n")
     print(report)
     summary = os.environ.get("GITHUB_STEP_SUMMARY")

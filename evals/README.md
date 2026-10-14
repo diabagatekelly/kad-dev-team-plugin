@@ -215,9 +215,9 @@ proof.
 **Running the gate.** From the repository root on Windows:
 
 ```
-wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh            # what changed against main
-wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh --cases a b
-wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh --all      # every case
+wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh            # what changed against main
+wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh --cases a b
+wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh --all      # every case
 ```
 
 `tools/wsl-gate.sh` mirrors the checkout (uncommitted work included)
@@ -231,8 +231,9 @@ What the gate does:
    skill's own cases and the cases whose runs were seen consulting it
    (`skills_invoked` in `thresholds.json`), a changed agent's delegation
    cases and its skills' cases, a changed fixture's cases (from what each
-   `scaffold.sh` copies), and any edited case. A README or tool change
-   reaches none.
+   `scaffold.sh` copies), any edited case, and any case whose entry in
+   `thresholds.json` differs from the base (its evidence must clear the
+   bar as it now stands). A README or tool change reaches none.
 2. `tools/eval_gate.py` runs them once each, up to six cases and eight
    agent runs at a time (`--jobs`, `--parallel`). A case at several runs
    (`--runs 3`, or a re-run) gets its runs as concurrent children of one

@@ -12,7 +12,9 @@ A case is affected when any changed file is something it loads:
   expanded; the shared `library-app/scaffold.sh` and
   `bootstrap-empty/scaffold.sh` stand for the directories they copy).
 
-Changes elsewhere (the README, `evals/tools/`, PERSONAS.md) affect no case.
+A case whose entry in `evals/thresholds.json` differs from the base is
+affected too: its evidence has to clear the bar as it now stands. Changes
+elsewhere (the README, `evals/tools/`, PERSONAS.md) affect no case.
 
 Usage: python3 -I evals/tools/affected_cases.py [--base origin/main] [file ...]
   With no files, lists what differs from --base, uncommitted and untracked
@@ -111,13 +113,30 @@ def fixture_paths(case):
     return found
 
 
+def merge_base(base):
+    return subprocess.check_output(["git", "merge-base", base, "HEAD"], cwd=ROOT, text=True).strip()
+
+
 def changed_files(base):
     """Files that differ from `base`'s merge point, uncommitted and new
     files included, so a run before committing sees the work in progress."""
-    merge_base = subprocess.check_output(["git", "merge-base", base, "HEAD"], cwd=ROOT, text=True).strip()
-    tracked = subprocess.check_output(["git", "diff", "--name-only", merge_base], cwd=ROOT, text=True)
+    tracked = subprocess.check_output(["git", "diff", "--name-only", merge_base(base)], cwd=ROOT, text=True)
     new = subprocess.check_output(["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT, text=True)
     return sorted({l for l in (tracked + new).splitlines() if l})
+
+
+def changed_bars(base):
+    """Cases whose `thresholds.json` entry differs from `base`'s merge point:
+    a bar raised, recorded or removed with no file the case loads touched."""
+    path = "evals/thresholds.json"
+    try:
+        old = json.loads(subprocess.check_output(["git", "show", f"{merge_base(base)}:{path}"],
+                                                 cwd=ROOT, text=True, stderr=subprocess.DEVNULL))
+    except (subprocess.CalledProcessError, ValueError):
+        old = {}
+    full = os.path.join(ROOT, path)
+    new = json.load(open(full, encoding="utf-8")) if os.path.isfile(full) else {}
+    return {c for c in set(old) | set(new) if old.get(c) != new.get(c)}
 
 
 def repo_files():
@@ -171,9 +190,12 @@ def inputs_of(case, files=None, reach=None):
     return [f for f in (files if files is not None else repo_files()) if reach.reaches(case, f)]
 
 
-def affected(files):
+def affected(files, base=None):
     reach = Reach()
-    return sorted(case for case in case_dirs() if any(reach.reaches(case, f) for f in files))
+    cases = {case for case in case_dirs() if any(reach.reaches(case, f) for f in files)}
+    if base and "evals/thresholds.json" in files:
+        cases |= changed_bars(base) & set(case_dirs())
+    return sorted(cases)
 
 
 def main():
@@ -181,7 +203,7 @@ def main():
     p.add_argument("--base", default="origin/main")
     p.add_argument("files", nargs="*")
     a = p.parse_args()
-    for case in affected(a.files or changed_files(a.base)):
+    for case in affected(a.files or changed_files(a.base), a.base):
         print(case)
 
 

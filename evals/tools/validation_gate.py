@@ -9,12 +9,15 @@ them without spending reviewers on it:
    failures (Node's spec reporter: `ℹ fail 0`; anything else: exit code).
 2. coverage: with `--coverage`, Node's `--experimental-test-coverage` table
    reports line and branch coverage at or above `--min-line` / `--min-branch`
-   for the files the change touched.
+   for the source files the change touched. A changed source file the table
+   does not list was never loaded by a test, and fails.
 3. scope: every file changed since `--base` (git) is inside one of the
    `--allow` path prefixes. Untracked files count as changed.
 4. protected: every `--protect` file is byte-identical to `--base`.
 
-Exit 0 when every check passes, 1 otherwise. The same checks are what the
+Exit 0 when every check passes, 1 otherwise (also when git cannot compute
+the change set: an unknown `--base` must not read as "nothing changed").
+The same checks are what the
 `tdd-implementation-*` eval cases prove with trace regexes; this is the
 runtime version for real candidates.
 
@@ -32,7 +35,10 @@ import sys
 
 
 def git(project, *args):
-    return subprocess.run(["git", *args], cwd=project, capture_output=True, text=True)
+    proc = subprocess.run(["git", *args], cwd=project, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise SystemExit(f"FAIL  git {' '.join(args)}: {proc.stderr.strip()}\nvalidation gate: FAIL")
+    return proc
 
 
 def changed_files(project, base):
@@ -46,7 +52,7 @@ def check_scope(files, allow):
     return {"passed": not outside, "changed": files, "outside": outside}
 
 
-def check_protected(project, base, protect, changed_files):
+def check_protected(project, protect, changed_files):
     """A protected file fails if git reports it changed since base (so a
     CRLF checkout doesn't count as a change), or if it is missing."""
     changed = [p for p in protect
@@ -108,20 +114,29 @@ def parse_coverage(output):
     return rows
 
 
+SOURCE = (".ts", ".js", ".mjs", ".cjs")
+
+
 def check_coverage(output, files, min_line, min_branch):
+    """`files`: the changed files that exist. Node lists every file the tests
+    loaded, so a changed source file with no row was never loaded: that is
+    zero coverage, not nothing to check."""
     rows = parse_coverage(output)
     if not rows:
         return {"passed": False, "reason": "no coverage table in the test output", "files": {}}
-    checked, low = {}, []
+    checked, low, unmeasured = {}, [], []
     for f in files:
-        if f.startswith("test/") or f.endswith(".test.ts") or f not in rows:
+        if f.startswith("test/") or f.endswith(".test.ts") or not f.endswith(SOURCE):
+            continue
+        if f not in rows:
+            unmeasured.append(f)
             continue
         line, branch = rows[f]
         checked[f] = {"line": line, "branch": branch}
         if line < min_line or branch < min_branch:
             low.append(f)
-    return {"passed": not low, "files": checked, "below_minimum": low,
-            "min_line": min_line, "min_branch": min_branch}
+    return {"passed": not low and not unmeasured, "files": checked, "below_minimum": low,
+            "not_measured": unmeasured, "min_line": min_line, "min_branch": min_branch}
 
 
 def main():
@@ -143,11 +158,12 @@ def main():
     report = {"base": a.base, "checks": {}}
     report["checks"]["suite"], output = run_tests(project, a.test_cmd, a.coverage)
     if a.coverage:
-        report["checks"]["coverage"] = check_coverage(output, files, a.min_line, a.min_branch)
+        present = [f for f in files if os.path.isfile(os.path.join(project, f))]
+        report["checks"]["coverage"] = check_coverage(output, present, a.min_line, a.min_branch)
     if a.allow:
         report["checks"]["scope"] = check_scope(files, a.allow)
     if a.protect:
-        report["checks"]["protected"] = check_protected(project, a.base, a.protect, files)
+        report["checks"]["protected"] = check_protected(project, a.protect, files)
     report["passed"] = all(c["passed"] for c in report["checks"].values())
 
     if a.json:
@@ -160,7 +176,8 @@ def main():
         elif name == "protected" and c["changed"]:
             detail = " changed: " + ", ".join(c["changed"])
         elif name == "coverage" and not c["passed"]:
-            detail = " " + (c.get("reason") or "below minimum: " + ", ".join(c["below_minimum"]))
+            detail = " " + (c.get("reason") or "below minimum: " + ", ".join(
+                c["below_minimum"] + [f + " (not in the coverage table)" for f in c["not_measured"]]))
         elif name == "suite" and not c["passed"]:
             detail = f" exit {c['exit_code']}, summary fail count {c['summary_fail_count']}"
         print(f"{'PASS' if c['passed'] else 'FAIL'}  {name}{detail}")

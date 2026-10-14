@@ -184,6 +184,30 @@ read every failure before re-recording a bar.
       votes but no rationale; `claude -p` with the grader's criterion
       and the judged file reproduces the verdict with reasons in one
       call, which is how the bootstrap grader fault was found.
+      **Sourcery review of PR #2, 2026-10-14:** 22 findings, 8 taken.
+      `validation_gate.py` now fails when git cannot compute the change
+      set (an unknown base read as "nothing changed"), fails coverage
+      for a changed source file the table does not list (never loaded
+      by a test), and lost an unused parameter. `eval_evidence.check`
+      reports a case with evidence but no bar instead of passing it.
+      A changed `thresholds.json` entry now makes its case affected,
+      so a raised bar is checked against the evidence. The gate
+      fingerprints each case before its runs and records no evidence
+      for one whose inputs moved while it ran. `wsl-gate.sh` passes
+      `--` to sed; the documented distro name matches what the setup
+      installs. The Bash guard covers inline interpreters (B5 above);
+      the four cases re-run at 3. Declined, with the reasons on the
+      PR: token revocation is retried (the error text contains
+      "authenticate"); `Edit` on a new file cannot happen and a wrong
+      tool fails the ordering grader rather than passing it; a trace
+      can fake `ℹ fail 0` only if the model prints the reporter's
+      summary itself; a CLI version mismatch would invalidate every bar
+      on each upgrade; evaluator-tool edits fingerprinting every case
+      would cost a full run per tool edit; removed graders show in the
+      diff; partial runs keep the September rule (clean runs only, the
+      count recorded); one developer takes runs one at a time; the
+      opengrep subprocess hits are a list call without a shell and the
+      operator's own test command.
 
 ## B. tdd cases as the mechanical gate (depends on nothing; do before C)
 
@@ -198,6 +222,8 @@ read every failure before re-recording a bar.
 - [x] B5. `no-bash-writes` added to both cancel-hold cases, `named-fix` and
       `map-update-cancel-hold`: a Bash command that redirects, `tee`s,
       `sed -i`s, heredocs, `cp`/`mv`/`rm`s into any app directory fails.
+      (2026-10-14: an inline interpreter, `python3 -c`, `node -e` or a
+      heredoc into one, naming an app directory counts as a write too.)
 - [x] B6. `design-doc-unchanged` now anchors the whole fixture text,
       whitespace-insensitive (verified to reject an edit in Structure).
 - [x] B7. `writes-only-the-map` matches on the path suffix.

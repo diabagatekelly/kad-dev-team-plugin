@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run the eval gate in the WSL2 clone from the Windows checkout, one command:
 #
-#   wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh [eval_gate.py arguments]
+#   wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh [eval_gate.py arguments]
 #
 # from the repository root on Windows. It mirrors this checkout (committed
 # or not) into ~/kad-dev-team-plugin, strips the CRLF the mount brings in,
@@ -29,7 +29,7 @@ rsync -a --delete --exclude .git --exclude /evals/results --exclude __pycache__ 
 git config core.fileMode false
 git ls-files -mo --exclude-standard -z \
   | grep -z -v -E '\.(png|jpe?g|gif|ico|woff2?|pdf)$' \
-  | xargs -0 -r sed -i 's/\r$//'
+  | xargs -0 -r sed -i 's/\r$//' --
 find . -name '*.sh' -not -path './.git/*' -exec chmod +x {} +
 
 mkdir -p evals/results "$win/evals/results"
