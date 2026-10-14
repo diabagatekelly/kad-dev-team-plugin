@@ -43,7 +43,7 @@ graders:
     criteria: |
       The skill's rule is that a real fork is presented with a recommendation and approved by the user before it is written in. The skill also says most of what it writes applies a rule directly and needs no approval: that the server never receives a card number, that the amount comes from the ledger, that tokens stay out of logs and error reports, that another member's fine gets the same response as a missing one. Those are not forks.
 
-      PASS if every fork the response raises (including the engineer's proposal) is put to the user for approval: a recommendation, however firmly worded or used as a heading, is fine as long as the response asks the user to approve, change or reject it, and nothing is marked approved or recorded as the user's choice before they said so. Rule applications like those above may be listed as what will be written without asking.
+      PASS if every fork the response raises (including the engineer's proposal) is put to the user for approval: a recommendation, however firmly worded or used as a heading, is fine as long as the response asks the user to approve, change or reject it, and nothing is marked approved or recorded as the user's choice before they said so. Rule applications like those above may be listed as what will be written without asking. An assumption stated openly as one, about something the user's answer did not cover (receipts out of scope, staff keeping the desk flow, the browser tokenising cards as the code already does), is not a fork decided on their behalf.
 
       FAIL if a fork is recorded as approved, chosen or settled on the user's behalf, or the response announces it will proceed with one option of a fork without asking.
   - type: llm

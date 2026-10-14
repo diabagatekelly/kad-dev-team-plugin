@@ -38,6 +38,14 @@ behalf.
 - Were there alternative approaches they considered or rejected, and why?
   Capture the reason, not just the choice.
 
+**An answer that skips one of your questions is not an answer to it.**
+When the user's reply settles most of what you asked and says nothing
+about the rest (what staff see of it, say), don't fill the gap from the
+problem doc or from what seems reasonable, and don't drop it. Record it
+under "Not yet confirmed" in the document, with what the answer would
+change, and ask it again in your reply. A document that quietly confirms
+something nobody said is the inference this skill exists to prevent.
+
 **Then reconcile the problem doc's constraints — a separate pass from
 asking what they want.** The questions above decide the WHAT. This decides
 what is already binding on it, and it is the step most likely to be
@@ -104,6 +112,11 @@ What was raised but the user confirmed isn't part of this piece yet, and
 why. Narrower than the scope map's whole-problem "Out of scope"; distinct
 from `product-slicer`'s own "Explicitly deferred," which covers
 slicing-technique deferrals decided later, once a thin path exists.
+
+## Not yet confirmed
+Anything you asked that the user's answers didn't settle, one line each:
+the question and what the answer would change. Neither in nor out until
+they say. Omit the section when nothing is open.
 
 ## Constraints in force
 Every constraint from the problem doc, one line each: what it forces for

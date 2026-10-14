@@ -31,9 +31,9 @@ graders:
     criteria: |
       The skill recommends and the user decides. The user rejected two recommendations and chose npm as the package manager and Jest as the test runner, because they already know both and don't want to learn new tools for a side project; they approved the rest as recommended, including deferring the UI framework.
 
-      PASS if the document records npm and Jest as the decided choices, made by the user, with the user's reason (familiarity, no new tools), and records the skill's own recommendations for those two categories as the alternatives rejected, with the reason they were recommended still readable (so the next person can tell it was a considered overrule, not an oversight).
+      PASS if the document records npm and Jest as the decided choices, made by the user, with the user's reason (familiarity, no new tools), and records the skill's own recommendations (pnpm, Vitest) for those two categories as the alternatives the user declined, so the next person can tell it was a considered overrule, not an oversight. Keeping the recommendation's own reasoning readable is a plus, not required.
 
-      FAIL if the document records the skill's recommendations as decided anyway, drops the user's reason, presents the user's choice as the skill's own recommendation, or leaves the rejected recommendations out of the record.
+      FAIL if the document records the skill's recommendations as decided anyway, drops the user's reason, presents the user's choice as the skill's own recommendation, or leaves the declined recommendations out of the record.
   - type: llm
     name: does-not-relitigate
     focus:

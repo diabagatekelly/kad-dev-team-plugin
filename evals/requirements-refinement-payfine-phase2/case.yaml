@@ -100,9 +100,9 @@ graders:
       path: docs/pay-fine/requirements-001.md
     weight: 1
     criteria: |
-      PASS if the document contains no thin path, no Given/When/Then acceptance criteria, no slicing decision (what to build first) and no technical design presented as decided (routes, modules, data model, Stripe API calls). Plain-language statements of what the user confirmed are fine.
+      PASS if the document contains no thin path, no Given/When/Then acceptance criteria, no slicing decision (what to build first) and no technical design presented as decided (routes, modules, data model, Stripe API calls). Plain-language statements of what the user confirmed are fine. So is a finding that names existing code (a route, a retry loop) to say what a constraint forces or that a capability is unscoped, as long as it is routed to another stage (`product-slicer`, `security-requirements`, `reliability-requirements`, design) and decides nothing about how it will be built.
 
-      FAIL if it contains any of those.
+      FAIL if it contains any of those: a thin path, acceptance criteria, a build order, or a design decision made here.
   - type: llm
     name: finishes-without-reasking
     focus: last_message

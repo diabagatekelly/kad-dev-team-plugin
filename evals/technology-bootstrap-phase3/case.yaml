@@ -58,9 +58,11 @@ graders:
     criteria: |
       This is the written bootstrap, after the user answered: they set TypeScript themselves, delegated the test runner ("whatever you'd recommend as the standard choice for that ecosystem"), set a criterion for the package manager ("whatever means I don't have to remember a flag to stay safe; pick the one where that's the default"), and approved the skill's recommendation to defer the UI framework because the first test does not drive a screen. Their last turn ("all fine as you recommend") approves the whole recommended set, so an entry that says the user approved it, delegated it, or asked for the property it was picked on, is recording that accurately. A "Decided" section is expected now; what matters is how each entry got there.
 
-      PASS if every decided category (language and runtime, test runner, package manager) records the recommendation with its reasoning, the alternative(s) considered and rejected, and that the user set or approved it (or delegated it); the UI framework appears as deliberately not decided with the reason; and the weight of the set suits a solo maintainer who wants little tooling.
+      The skill's template puts the rejected options in their own "Considered and rejected" section, so they need not sit inside each entry; and one statement that covers every entry ("all approved as recommended", "chosen for the user's fluency") is a record of how it was settled.
 
-      FAIL if any decided category reads as chosen by the skill with no approval or delegation recorded, carries no rejected alternative, if a UI framework is recorded as decided, or the set recommends team-scale tooling with no acknowledgement of the solo situation.
+      PASS if each decided category (language and runtime, test runner, package manager) records the choice, why the slice forced it and its reasoning; how it was settled is recorded (set by the user, delegated, or approved as recommended, per entry or in one statement for all); each decided category has at least one rejected alternative somewhere in the document; the UI framework appears as deliberately not decided with the reason; and the weight of the set suits a solo maintainer who wants little tooling.
+
+      FAIL if a decided category reads as chosen by the skill with no approval or delegation recorded anywhere, has no rejected alternative anywhere in the document, if a UI framework is recorded as decided, or the set recommends team-scale tooling with no acknowledgement of the solo situation.
   - type: llm
     name: records-non-choices-and-open-categories
     focus:
