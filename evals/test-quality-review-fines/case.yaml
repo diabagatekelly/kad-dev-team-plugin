@@ -6,7 +6,7 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory. I wrote `test/fines.test.ts` for the fines module. Are these tests actually testing anything? Report what you find; don't change anything.
+    The library-lending app is in your current working directory. I wrote `test/fines.test.ts` for the fines module and I'm not confident it would catch a real bug. Have a look at the file and tell me what you make of it. Report what you find; don't change anything.
 
     Save your answer as `docs/reviews/test-quality-review-fines.md`.
   model: sonnet
@@ -121,8 +121,8 @@ graders:
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
 
-      'charges 25 cents a day after the three-day grace period' (exact amount, and checks what was recorded), the three `isOutstanding` tests, and 'rounds half a cent up' assert exact results of real calls.
+      'charges 25 cents a day after the three-day grace period' (exact amount, and checks what was recorded), the three `isOutstanding` tests, and 'rounds half a cent up' assert exact results of real calls. They are sound tests.
 
-      PASS if the review does not report any of these as weak, invalid or testing implementation details.
+      PASS if the review treats them as valid tests of real behaviour. Saying one is sound but thin (a single data point, a missing boundary case) and suggesting more cases or a fuller assertion is fine and does not count against it.
 
-      FAIL if it does.
+      FAIL if it reports any of them as a false positive, as unable to fail, as asserting the wrong thing, as brittle because the expected value is exact, or as testing implementation details.

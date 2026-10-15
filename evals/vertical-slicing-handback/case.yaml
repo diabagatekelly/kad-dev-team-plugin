@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: vertical-slicing-handback
-description: "Pay-a-fine planning folder where the security pass handed back a blocking scope change (members have no refund path): vertical-slicing fires, owns the decision, works the ranked order instead of growing slice 1, and names what the choice needs repaired."
+description: "Pay-a-fine planning folder where the security pass handed back a blocking scope change (a member paying online gets no receipt): vertical-slicing fires, owns the decision, works the ranked order instead of growing slice 1, and names what the choice needs repaired."
 tags: [vertical-slicing, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -23,7 +23,7 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The security pass found that members have no way to get a refund and handed the scope decision to slicing. Being handed the finding is being handed the call.
+      The security pass found that a member paying online gets no receipt, which the library's merchant agreement requires, and handed the scope decision to slicing. Being handed the finding is being handed the call.
 
       PASS if the response states which resolution it chose and why. Asking the user to confirm a specific choice it has made is fine.
 
@@ -35,7 +35,7 @@ graders:
     criteria: |
       The ranked order for a scope change is: a new slice delivering the missing capability on its own; otherwise narrowing the current slice so the need stops applying; growing the current slice only as a last resort.
 
-      PASS if it chooses a new slice for the refund path (ahead of slice 1, or one that must ship before slice 1 is released), or narrows slice 1 with a concrete reason the need stops applying, or chooses growth after rejecting both other options with a concrete reason each and saying slice 1 is now larger than what was cut.
+      PASS if it chooses a new slice for receipts (one that must ship before slice 1 is released to members, or is cut now and sequenced with it), or narrows slice 1 with a concrete reason the need stops applying, or chooses growth after rejecting both other options with a concrete reason each and saying slice 1 is now larger than what was cut.
 
       FAIL if it grows slice 1 without a concrete reason against each of the other two options, or presents growth as one neutral choice among equals.
   - type: llm
@@ -43,13 +43,13 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      Nobody has asked the user what a member refund path should be. Whatever the scope decision, that WHAT belongs to a requirements pass with the user, and the documents other stages own (requirements, design, security criteria) are theirs to revise.
+      Nobody has asked the user what a receipt should be (what it shows, how a member gets it, whether it is kept on the account). Whatever the scope decision, that WHAT belongs to a requirements pass with the user, and the documents other stages own (requirements, design, security criteria) are theirs to revise.
 
-      PASS if the response sends the refund capability to a requirements pass before it is specified, and does not report having written it into the requirements doc, the design, or the security criteria itself. Saying which documents the choice invalidates and who revises them is the expected shape.
+      PASS if the response sends the receipt capability to a requirements pass before it is specified, and does not report having written it into the requirements doc, the design, or the security criteria itself. Saying which documents the choice invalidates and who revises them is the expected shape.
 
       A one-line provisional name or shape for the new slice, marked as waiting on that requirements pass, is fine, and so is a separate note of the scope decision.
 
-      FAIL if it reports any of: adding the refund capability to the requirements doc, writing a thin path or acceptance criteria for it, or editing the design or the security criteria.
+      FAIL if it reports any of: adding receipts to the requirements doc, writing a thin path or acceptance criteria for them, or editing the design or the security criteria.
   - type: llm
     name: security-criteria-untouched
     focus:
@@ -57,8 +57,8 @@ graders:
       path: docs/pay-fine/security-requirements-001.md
     weight: 1
     criteria: |
-      This is the security pass's document. It ends with a section "Handed back to product-slicer — blocking" about members having no refund path.
+      This is the security pass's document. It ends with a section "Handed back to product-slicer — blocking" about a member getting no receipt for a portal payment.
 
-      PASS if the document has no acceptance criteria about refunds.
+      PASS if the document has no acceptance criteria about receipts.
 
-      FAIL if it contains acceptance criteria about refunds or refund requests.
+      FAIL if it contains acceptance criteria about receipts or what a member receives after paying.

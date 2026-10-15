@@ -6,7 +6,7 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory. The cancel-hold slice merged this morning, after the map was last updated. Before we write anything, check the map for each of these:
+    The library-lending app is in your current working directory. The cancel-hold slice merged this morning. Before we write anything, check the map for each of these:
 
     1. We're designing a slice that stores and looks up a member's contact preferences by card number. Does a comparable boundary already exist?
     2. I'm about to write `diffInDays(a, b)`: whole calendar days between two dates. Does something like it already exist?
@@ -55,11 +55,13 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
+      The prompt says only that the cancel-hold slice merged this morning; the map's header carries the date it was last updated, weeks earlier, and lists nothing for cancelling a hold.
+
       PASS if the response warns, anywhere, that the map predates this morning's cancel-hold merge, so its answers may miss what that slice added.
 
       FAIL if there is no such warning, or if it says it checked the current code to fill the gap.
   - type: regex
     name: answers-from-the-map
     target: trace
-    pattern: '"name":"Grep","input":\{(?![^{}]*architecture-map)'
+    pattern: '"name":"Grep","input":\{(?![^{}]*(?:architecture-map|/docs"|/docs/))'
     match: not_contains

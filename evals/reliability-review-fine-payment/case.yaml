@@ -8,7 +8,7 @@ execution:
   prompt: |
     The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
 
-    Review fine payment for production-readiness: `fines/collect-fine.ts`, the payment adapter it uses under `infra/payments/`, and the `POST /fines/:id/pay` route in `infra/http/fines-routes.ts`. What happens when the payment provider or the database misbehaves?
+    Review fine payment for production-readiness: `fines/collect-fine.ts`, the payment adapter it uses under `infra/payments/`, and the `POST /fines/:id/pay` route in `infra/http/fines-routes.ts`.
 
     Save the review as `docs/reviews/reliability-review-fine-payment.md`.
   model: sonnet

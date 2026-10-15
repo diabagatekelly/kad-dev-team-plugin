@@ -4,9 +4,9 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-acceptance-criteria-payfine.json",
+    "source": "results/gate-20261015T050645-acceptance-criteria-payfine.json",
     "graders": {
-      "flags-undecided-behaviour": 1.0,
+      "flags-undecided-target": 1.0,
       "rejects-and-rewrites": 1.0,
       "skill-invoked": 1.0
     },
@@ -530,16 +530,16 @@
     ]
   },
   "map-query-consults": {
-    "score": 0.944,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-map-query-consults.json",
+    "source": "results/gate-20261015T051648-map-query-consults.json",
     "graders": {
       "answers-from-the-map": 1.0,
       "caveats-stale-map": 1.0,
       "finds-daysBetween-by-shape": 1.0,
-      "honest-empty-result": 0.667,
+      "honest-empty-result": 1.0,
       "skill-invoked-display": 1.0,
       "structural-candidate-as-fact": 1.0
     },
@@ -688,7 +688,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-orchestrator-backward-route.json",
+    "source": "results/gate-20261015T052140-orchestrator-backward-route.json",
     "graders": {
       "does-not-go-forward-to-reliability": 1.0,
       "does-not-hunt-for-agent-files": 1.0,
@@ -698,6 +698,7 @@
       "routes-back-to-the-owner": 1.0
     },
     "skills_invoked": [
+      "acceptance-criteria",
       "orchestrator",
       "vertical-slicing"
     ]
@@ -707,7 +708,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-orchestrator-route-accessibility.json",
+    "source": "results/gate-20261015T050645-orchestrator-route-accessibility.json",
     "graders": {
       "log-written": 1.0,
       "not-screen-design": 1.0,
@@ -727,7 +728,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-orchestrator-route-backward-requirements.json",
+    "source": "results/gate-20261015T050645-orchestrator-route-backward-requirements.json",
     "graders": {
       "log-written": 1.0,
       "not-architecture-design": 1.0,
@@ -878,7 +879,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-orchestrator-route-slicing.json",
+    "source": "results/gate-20261015T051648-orchestrator-route-slicing.json",
     "graders": {
       "log-written": 1.0,
       "not-requirements-refinement": 1.0,
@@ -934,7 +935,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-orchestrator-security-stage.json",
+    "source": "results/gate-20261015T050645-orchestrator-security-stage.json",
     "graders": {
       "does-not-ask-where-to-save": 1.0,
       "does-not-hunt-for-agent-files": 1.0,
@@ -1101,7 +1102,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-reliability-review-fine-payment.json",
+    "source": "results/gate-20261015T050645-reliability-review-fine-payment.json",
     "graders": {
       "finds-charge-then-settle-without-idempotency": 1.0,
       "finds-pay-route-hides-unexpected-failures": 1.0,
@@ -1120,7 +1121,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-reliability-review-http.json",
+    "source": "results/gate-20261015T050645-reliability-review-http.json",
     "graders": {
       "finds-in-memory-holds": 1.0,
       "finds-respond-conflates-expected-and-unexpected": 1.0,
@@ -1247,7 +1248,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-scope-map-self-service.json",
+    "source": "results/gate-20261015T050645-scope-map-self-service.json",
     "graders": {
       "privacy-routed-to-every-step": 1.0,
       "scope-map-written": 1.0,
@@ -1448,7 +1449,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T104758-security-review-reminders.json",
+    "source": "results/gate-20261015T050645-security-review-reminders.json",
     "graders": {
       "finds-real-looking-pii-in-test-fixtures": 1.0,
       "finds-whole-member-object-logged": 1.0,
@@ -1794,7 +1795,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T104758-test-quality-review-fines.json",
+    "source": "results/gate-20261015T051648-test-quality-review-fines.json",
     "graders": {
       "finds-call-order-assertion": 1.0,
       "finds-subject-mocked": 1.0,
@@ -1894,7 +1895,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T104758-vertical-slicing-handback.json",
+    "source": "results/gate-20261015T051648-vertical-slicing-handback.json",
     "graders": {
       "does-not-grow-casually": 1.0,
       "leaves-the-what-to-requirements": 1.0,
@@ -1912,7 +1913,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T104758-vertical-slicing-no-requirements.json",
+    "source": "results/gate-20261015T051648-vertical-slicing-no-requirements.json",
     "graders": {
       "hands-back-for-requirements": 1.0,
       "no-slice-in-the-reply": 1.0,
@@ -1929,7 +1930,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T104758-vertical-slicing-payfine-phase1.json",
+    "source": "results/gate-20261015T051648-vertical-slicing-payfine-phase1.json",
     "graders": {
       "does-not-reask-the-what": 1.0,
       "names-the-slice-set": 1.0,

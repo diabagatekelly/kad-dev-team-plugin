@@ -552,21 +552,85 @@ read every failure before re-recording a bar.
 
 ## E. Leaks (edits only, re-run with C5 or D7)
 
-- [ ] E1. `acceptance-criteria-payfine`: new vague criterion, not the
+Done 2026-10-15 on branch `eval-phase-e`. Three gate passes in WSL2
+(15 cases, then 7, then 1; about 70 runs); every case the edits reach
+has a gate-mode three-run bar and current evidence.
+
+- [x] E1. `acceptance-criteria-payfine`: new vague criterion, not the
       skill's worked example (or move the example out of the skill).
-- [ ] E2. `vertical-slicing-handback`: different handed-back capability in
+      *"Paying a fine is quick; the member isn't left waiting."* The
+      undecided thing is now a time bound instead of a failure outcome,
+      so `flags-undecided-behaviour` became `flags-undecided-target`
+      (a stated bound must be flagged for the user or routed to the
+      reliability placeholder). 9/9; the skill's "handles errors
+      gracefully" example stays where it is.
+- [x] E2. `vertical-slicing-handback`: different handed-back capability in
       the fixture, no option menu in `security-requirements-001.md`;
       change the skill's refund example.
-- [ ] E3. Cut the hint sentence from `security-review-reminders`,
+      *The hand-back is a receipt the merchant agreement requires;* the
+      section states the gap and that it is handed back, nothing about
+      how the slice could change. The skill's example is now a
+      guardian's consent step. `orchestrator-backward-route` shares the
+      fixture and its grader had kept the refund wording: it failed a
+      run that routed correctly and, as product-slicer, chose growth
+      with a reason against each other option (a receipt cannot be
+      demonstrated before a payment exists); reworded to say a chosen
+      option with the others rejected is product-slicer's job. The
+      first handback run also read "recorded against their own card
+      number" as the payment card, contradicting the no-card-number
+      criterion; the fixture now says library card number.
+      **Real miss found:** one run in three answered the hand-back
+      without the skill and wrote the receipt slice in full, edited
+      `slice-001.md` and marked the hand-back picked up (the exact
+      behaviour the skill's hand-back section forbids). The skill has
+      that section but its description never mentioned a hand-back, so
+      "Sort it out" on a security document did not trigger it (the
+      2026-10-14 handoff had seen the same in one run of six). The
+      description now names a scope change handed back by a later
+      stage; 15/15 after, and `vertical-slicing-payfine-phase1`,
+      `vertical-slicing-no-requirements`, `orchestrator-route-slicing`
+      re-ran 1.0 on the new text.
+- [x] E3. Cut the hint sentence from `security-review-reminders`,
       `reliability-review-http`, `reliability-review-fine-payment`; drop
       the staleness sentence from `map-query-consults` and make the map
       header date carry it.
-- [ ] E4. Remove persona names from `pay-fine-security/design-001.md`,
+      *All three reviews 3/3 with every plant found and no trap taken.*
+      `map-query-consults`: the prompt says only that cancel-hold merged
+      this morning; the map's "updated 2026-09-28" header is the only
+      evidence, and every run caveated it (the grader now says so).
+      One run grepped `docs/` (which holds only the map) to confirm no
+      cancel-hold entry; `answers-from-the-map` forbade any Grep not
+      naming the map and now allows the docs folder. 18/18 after.
+- [x] E4. Remove persona names from `pay-fine-security/design-001.md`,
       `pay-fine-screen/…/screen-design-001.md`, `backward-pm/slice-000.md`.
-- [ ] E5. `test-quality-review-fines`: reword the prompt so it isn't the
+      *Done, and `pay-fine-handback/design-001.md` (same section).* The
+      design docs end with "Open questions: none"; the screen design
+      says only that the accessibility criteria are still a placeholder;
+      `slice-000` says nobody confirmed the step's WHAT and no
+      requirements document covers it. The slice placeholders
+      themselves ("to be authored by devsecops-engineer") are the slice
+      template's own text and stay: the orchestrator's routing table
+      keys on them. The three route cases went 3/3 each.
+- [x] E5. `test-quality-review-fines`: reword the prompt so it isn't the
       description's trigger sentence.
-- [ ] E6. `scope-map-self-service` fixture: drop the sentence that
+      *"I'm not confident it would catch a real bug. Have a look at the
+      file and tell me what you make of it."* The skill fired in 6/6
+      runs (the README had recorded it not firing until the description
+      quoted the old sentence). The new wording pulled every review
+      toward "what bug would slip through", so each said the sound
+      exact-value tests were thin (one data point, no boundary case) and
+      suggested more; `no-false-alarm-exact-tests` ("does not report any
+      of these as weak") lost 3/3 to that, and had been at 0.667 before.
+      It now fails only a genuine false alarm (false positive, cannot
+      fail, wrong assertion, brittle-because-exact, implementation
+      detail) and says a sound-but-thin verdict with suggestions is
+      fine. 29/30 after; the one loss is a 2-1 judge split on a
+      9.5k-character review, bar 0.97.
+- [x] E6. `scope-map-self-service` fixture: drop the sentence that
       generalises the privacy constraint for the skill.
+      *Dropped; the grader's framing now says the doc says nothing
+      wider.* 15/15, privacy routed to every step's requirements pass
+      in every run (the previous bar had a borderline miss).
 
 ## F. Routing, restraint, UI
 
