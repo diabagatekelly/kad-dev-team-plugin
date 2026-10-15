@@ -29,7 +29,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T134242-accessibility-review-payfine.json",
+    "source": "results/gate-20261015T214207-accessibility-review-payfine.json",
     "graders": {
       "criteria-split-now-and-later": 1.0,
       "finds-low-contrast-meta-text": 1.0,
@@ -55,7 +55,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T134242-accessibility-review-payfine-subtle.json",
+    "source": "results/gate-20261015T214207-accessibility-review-payfine-subtle.json",
     "graders": {
       "criteria-split-now-and-later": 1.0,
       "finds-broken-error-link": 1.0,
@@ -81,7 +81,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T141902-adr-neg-rename.json",
+    "source": "results/gate-20261015T214207-adr-neg-rename.json",
     "graders": {
       "declines-the-adr": 1.0,
       "opens-with-the-three-checks": 1.0,
@@ -96,12 +96,12 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T141902-adr-payment-gateway.json",
+    "source": "results/gate-20261015T214207-adr-payment-gateway.json",
     "graders": {
       "adr-written": 1.0,
       "decision-alternatives-consequences": 1.0,
+      "document-carries-the-three-checks": 1.0,
       "no-how": 1.0,
-      "opens-with-the-three-checks": 1.0,
       "skill-invoked": 1.0
     },
     "skills_invoked": [
@@ -139,15 +139,15 @@
     ]
   },
   "architecture-design-payfine-phase2": {
-    "score": 0.917,
+    "score": 0.958,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T142258-architecture-design-payfine-phase2.json",
+    "source": "results/gate-20261015T214207-architecture-design-payfine-phase2.json",
     "graders": {
       "boundaries-name-what-crosses": 1.0,
       "builds-on-the-existing-payment-path": 1.0,
-      "decisions-show-approval": 0.333,
+      "decisions-show-approval": 0.667,
       "keeps-the-one-implementation-port": 1.0,
       "notes-the-leaky-payment-port": 1.0,
       "reflects-the-users-gateway-choice": 1.0,
@@ -689,7 +689,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T140248-orchestrator-asks-for-target.json",
+    "source": "results/gate-20261015T214207-orchestrator-asks-for-target.json",
     "graders": {
       "asks-where-artifacts-live": 1.0,
       "does-not-grep-for-artifacts": 1.0,
@@ -813,7 +813,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T140248-orchestrator-route-implementation.json",
+    "source": "results/gate-20261015T215025-orchestrator-route-implementation.json",
     "graders": {
       "log-written": 1.0,
       "not-reliability-requirements": 1.0,
@@ -1303,15 +1303,16 @@
     ]
   },
   "screen-design-payfine": {
-    "score": 1.0,
+    "score": 0.974,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T141302-screen-design-payfine.json",
+    "source": "results/gate-20261015T214207-screen-design-payfine.json",
     "graders": {
       "asks-nothing-the-docs-answer": 1.0,
-      "copy-rules": 1.0,
+      "copy-rules": 0.667,
       "does-not-fire-design-system": 1.0,
+      "each-mockup-styled": 1.0,
       "mockups-carry-the-system-brand-token": 1.0,
       "no-screenshot-claimed": 1.0,
       "nothing-out-of-scope": 1.0,
@@ -1696,11 +1697,11 @@
     ]
   },
   "tdd-implementation-cancel-hold-via-agent": {
-    "score": 0.971,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T164135-tdd-implementation-cancel-hold-via-agent.json",
+    "source": "results/gate-20261015T214207-tdd-implementation-cancel-hold-via-agent.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "agent-delegated-display": 1.0,
@@ -1719,10 +1720,10 @@
       "red-then-green-seen": 1.0,
       "report-written": 1.0,
       "reports-test-list-and-can-fail-check": 1.0,
-      "reviews-each-cycle": 0.667,
+      "reviews-each-cycle": 1.0,
       "runs-the-tests": 1.0,
       "stays-inside-the-slice": 1.0,
-      "test-run-after-each-test-edit": 0.667,
+      "test-run-after-each-test-edit": 1.0,
       "tests-check-behaviour": 1.0,
       "use-case-test-before-use-case": 1.0
     },
@@ -1807,7 +1808,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T164135-technology-bootstrap-phase3.json",
+    "source": "results/gate-20261015T214207-technology-bootstrap-phase3.json",
     "graders": {
       "asks-only-what-the-first-test-forces": 1.0,
       "bootstrap-written": 1.0,
@@ -1974,9 +1975,10 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261015T134242-vertical-slicing-payfine-phase1.json",
+    "source": "results/gate-20261015T214207-vertical-slicing-payfine-phase1.json",
     "graders": {
       "consults-acceptance-criteria": 1.0,
+      "consults-before-writing-the-slice": 1.0,
       "deferred-and-still-open-are-real": 1.0,
       "does-not-reask-the-what": 1.0,
       "names-the-slice-set": 1.0,

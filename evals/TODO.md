@@ -936,6 +936,17 @@ case). Every one has a gate-mode three-run bar and current evidence.
       `subprocess.run` audit in `rejudge.py` (its argument list is built
       from constants and the model name, no user string reaches a
       shell).
+      *Re-run after the Sourcery fixes (eleven cases, 33 runs, after one
+      session-limit false start):* 10/11 passed first time; both adr
+      cases 1.0 on the file-graded block, both accessibility cases,
+      slicing (consult before every write in 3/3), asks-for-target
+      (no Glob or Grep at all), screen-design (`each-mockup-styled` 3/3;
+      `copy-rules` lost one run 3-0, bar 0.97), the two agent-file cases
+      1.0. `orchestrator-route-implementation` 0.83: the tightened log
+      rubric failed three correct entries, because the skill writes the
+      entry before invoking the flow and its template says "see
+      sub-entries below", which is the right line when the run stops to
+      ask; rubric now says so, 1.0 after. Bars recorded for the eleven.
 
 ## G. Only after A–F
 
