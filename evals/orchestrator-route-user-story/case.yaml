@@ -49,9 +49,9 @@ graders:
 
       Here the state is: slice-001 exists and has not been written up as a user story. The right destination is `docs-writer:user-story-writeup`.
 
-      PASS if the log has an entry whose detected state is that one (in its own words or the table's; it need not list every element of the row), whose destination is user-story-writeup, and whose artifact line names a path under `docs/pay-fine/` (the user story). A later entry correcting an earlier one is fine.
+      PASS if the log has an entry whose detected state is that one (in its own words or the table's; it need not list every element of the row), whose destination is user-story-writeup, and whose artifact line names `docs/pay-fine/` as where the story will be saved: the directory alone is fine, since the file name is the skill's to choose, and so is a note that the skill may file it elsewhere if this project does not keep stories locally. A later entry correcting an earlier one is fine.
 
-      FAIL if there is no entry, the entry routes somewhere else, the detected state it names is a different row, or no artifact path under `docs/pay-fine/` is given.
+      FAIL if there is no entry, the entry routes somewhere else, the detected state it names is a different row, or the artifact line names no location at all under `docs/pay-fine/` and leaves the destination entirely to the skill.
   - type: llm
     name: stops-after-the-routed-step
     focus: last_message

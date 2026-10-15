@@ -752,11 +752,93 @@ UI slice (F1).
       the slice file: both sections present and specific, or an
       explicit nothing-to-defer with a reason; filler fails.*
 - [ ] F10. Run the changed cases, re-record. Run.
-      Three batches in WSL: the 26 cases whose graders changed outright;
+      Batches in WSL: the 26 cases whose graders changed outright;
       `design-system-payfine-phase2` with `--keep-scaffold`, then the
       phase 3 re-freeze and re-pin, then phase 3; then the 32 reached
       only by the F4 floor or the F1 fixture. Read every failure before
       recording a bar.
+      *Batch 1 (2026-10-15, 26 cases, 78 runs, 24 passed):* every
+      failure read.
+      - `adr-payment-gateway` 0.80: all three runs loaded the skill and
+        went straight to `Write`, no worthiness checks anywhere in the
+        trace, though the skill says the response opens with them.
+        `adr-neg-rename` 0.89: one run answered "Significant:
+        borderline". **Real miss, fixed in the skill:** write the three
+        lines even when all three are plainly yes, and each is a yes or a
+        no with its reason.
+      - `orchestrator-route-design-system` 0.83: with the fixture
+        labelled, one run still routed to `reliability-requirements`,
+        reasoning that one reliability criterion leaves "failure
+        behaviour otherwise unspecified". The row said "reliability
+        behavior has never been made concrete", a semantic read step 2
+        forbids, while the security row keys on the placeholder.
+        **Fixed in the skill:** the row now says "reliability criteria
+        are still an unfilled placeholder". Reaches every orchestrator
+        case (16), all re-run in batch 2.
+      - `orchestrator-route-slicing` 0.95 and `-scope-decision` 0.90:
+        the new final-message grader lost 3-0 votes on correct runs.
+        `rejudge.py --explain` showed the judge reading a slicer's own
+        call ("same fine is keyed on the fine ID, which was my call") as
+        the orchestrator answering the routed skill's questions, and the
+        scope-map step's "no map needed, one unit" result as the
+        orchestrator deciding for the skill (both runs had invoked
+        `scope-map`). Rubric reworded: a skill that delivers without
+        needing to ask, making judgment calls inside its work, is the
+        second ending; FAIL only when the skill had stopped to ask and
+        the response answers in the user's place; scope-decision names
+        the no-map result as the step's result.
+        `orchestrator-route-reliability` 0.96: the log grader failed a
+        correct entry 3-0; the explained judge first failed it, then
+        corrected itself to PASS. Noise on the heading paraphrasing the
+        row; the rubric now accepts the row's words or the entry's own
+        and says the heading need not list every element.
+      - `screen-design-payfine` 0.92, three different graders over three
+        runs: the brand-token regex missed a run that put every rule in
+        a shared `visual-ux/screen-design-001.css` the mockups link
+        (pattern now accepts one `.html` or `.css` Write under
+        `visual-ux/` with the value; the file count stays with
+        `three-mockups-in-visual-ux`); the judge read a "Paid" group on
+        the same page as payment history and a "choose and pay" default
+        view as a missing list state (both rubrics now say what counts).
+      - `rejudge.py` could not send a prompt holding `→` on Windows
+        (cp1252 stdin); fixed.
+      The other 19 cases went 3/3 on every grader, including all four
+      catalog positives, both accessibility `slice-placeholder-filled`
+      graders (the runs edit the slice unprompted by the skill text),
+      `vertical-slicing-payfine-phase1`'s consult and sections, the
+      ADR-free `architecture-design` phase 1 guard, and the asks-for-target
+      regex fix (no run searched).
+      *Batch 2 (2026-10-15, 19 cases, 57 runs, 17 passed):* the sixteen
+      orchestrator cases after the row change, both adr cases, screen-design.
+      - `orchestrator-route-design-system` 1.0 (was 0.83 and 0.89),
+        `-screen-design` 1.0, `-reliability`, `-scope-decision`,
+        `-slicing` 1.0 on the reworded rubrics; `orchestrator-security-stage`
+        and `-superseded-scope-map` 1.0 on the new row.
+      - `adr-payment-gateway` 0.80 again: the new paragraph was loaded and
+        all three runs still went Skill, Write, "I wrote the ADR" with no
+        checks anywhere. The rule is now the skill's step one in so many
+        words: the three lines come before any tool call, and a fully
+        argued request is the case most worth checking. `adr-neg-rename`
+        1.0 on the first wording.
+      - `orchestrator-route-user-story` 0.90: two log entries left the
+        artifact to the skill ("see the skill's own output"; the
+        directory with "destination to be decided by the skill"). A
+        story's file name is the skill's, and it may not be a local file
+        at all, so the rubric now accepts the directory and fails only an
+        entry that names no location under the target.
+      - `orchestrator-backward-route` 0.95: one run routed to
+        product-slicer, cut the receipt slice, then narrated the whole
+        round trip (requirements-002, design, security) and opened with
+        requirements-refinement as what's next; the existing
+        `routes-back-to-the-owner` failed it 3-0. The skill forbids that
+        narration in its own words; one run in three, left as recorded.
+      - `screen-design-payfine` 0.92: `reuses-the-system` lost 8 of 9
+        votes across all three runs on documents that say no new pattern
+        is needed and then list two optional additions under the
+        new-patterns heading; the explained judge called that a
+        contradiction while conceding it was a close call. The rubric
+        now says that is the second form, not a contradiction. The new
+        brand-token regex passed 3/3 on the .html-or-.css form.
 
 ## G. Only after A–F
 

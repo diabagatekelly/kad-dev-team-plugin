@@ -53,7 +53,7 @@ graders:
     criteria: |
       The design system declares a page shell, Button (with a busy state), choosable Card (a radio group with a visible "Selected" label), Form field, Notice (success `role="status"`, error `role="alert"`) and Amount.
 
-      PASS if the document says which of these patterns each state uses, uses the Notice pattern for the declined and paid messages, and either needs nothing new or lists what it needs under a "new patterns" heading for the design system to adopt.
+      PASS if the document says which of these patterns each state uses, uses the Notice pattern for the declined and paid messages, and either needs nothing new or lists what it needs under a "new patterns" heading for the design system to adopt. Saying nothing new is needed and then, under that heading, offering small additions the system may want to absorb (a non-choosable card for a paid row, styling notes for a provider-hosted field) is the second form, not a contradiction: what matters is that anything beyond the declared patterns is named there.
 
       FAIL if it composes the states from treatments the system doesn't have without flagging them as new, or changes a declared token or pattern for this screen.
   - type: llm

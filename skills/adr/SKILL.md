@@ -18,8 +18,10 @@ check all three before writing one:
 If any of the three is "no," this isn't ADR territory — a README note or a
 comment is probably enough.
 
-**Your response opens with the three checks**, before any question or
-draft, one line each:
+**Step one, every time: the three checks are the first lines of your
+reply.** Before any tool call, before reading a file, before a question
+or a draft, and just as much when the user has already made the case,
+named the alternatives and told you the file name. One line each:
 
 ```
 Architectural: yes/no — <why>
@@ -32,12 +34,13 @@ lighter home (a commit message, a PR description, a comment, or nothing),
 and write no ADR unless the user then insists. Being asked for an ADR
 doesn't make a decision ADR-worthy.
 
-Write the three lines even when all three are plainly yes and the user
-has already made the case: the visible record that the check was made is
-the point, and a response that goes straight to the file has skipped it.
-Each answer is yes or no. A check that feels borderline gets the answer it
-falls on and the reason, not "borderline": the rule below needs a yes or
-a no to act on.
+The three lines are the record that the check was made. A reply that
+opens with a `Write` call, or that goes straight to "I wrote the ADR",
+has skipped the step however sound the decision was; a request that
+arrives fully argued is the case most worth checking, because nobody
+else will. Each answer is yes or no. A check that feels borderline gets
+the answer it falls on and the reason, not "borderline": the rule above
+needs a yes or a no to act on.
 
 **Template:**
 
