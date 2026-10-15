@@ -44,12 +44,14 @@ def main(argv):
     if len(argv) != 2:
         sys.exit(__doc__)
     history, target = argv
-    target = os.path.abspath(target)
+    target = os.path.realpath(target)
     written = []
     for path, content in writes(history):
         if os.path.isabs(path):
             sys.exit(f"refusing absolute path in history: {path}")
-        full = os.path.abspath(os.path.join(target, path))
+        full = os.path.realpath(os.path.join(target, path))
+        # realpath follows any symlink already inside the target, so a
+        # link pointing out of it is caught too, not only a lexical `..`.
         if os.path.commonpath([target, full]) != target:
             sys.exit(f"refusing path outside {target}: {path}")
         os.makedirs(os.path.dirname(full), exist_ok=True)

@@ -209,9 +209,10 @@ therefore runs as a chain of cases:
    until the earlier phase is re-run and re-frozen;
    `tools/history_stale.py` lists every history whose loaded skill text
    no longer matches the skill (it found two stale chains the audit's
-   reading of commit dates had missed), and the gate prints a warning
-   before running such a case: editing a skill and re-running its
-   phase 2 in the same session scores the old text, which is how
+   reading of commit dates had missed), and the gate refuses to run
+   such a case (it fails and loses its evidence until re-frozen):
+   editing a skill and re-running its phase 2 in the same session
+   scores the old text, which is how
    `requirements-refinement-payfine-phase2` got three batches of results
    against a history frozen three days earlier. A resumed run starts
    in a fresh sandbox, so anything the frozen turns wrote with `Write`

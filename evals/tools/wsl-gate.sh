@@ -36,8 +36,9 @@ mkdir -p evals/results "$win/evals/results"
 # WSL's /tmp is a tmpfs, and WSL stops the VM a few seconds after the last
 # `wsl` command exits, so a run directory the gate keeps there
 # (--keep-scaffold, for freeze-history.sh) is gone before the next command
-# can read it. Keep the CLI's temp directories on the Linux disk instead.
-export TMPDIR="${TMPDIR:-$HOME/.cache/kad-eval-tmp}"
+# can read it. Keep the CLI's temp directories on the Linux disk instead,
+# whatever TMPDIR the environment arrived with (KAD_EVAL_TMP overrides).
+export TMPDIR="${KAD_EVAL_TMP:-$HOME/.cache/kad-eval-tmp}"
 mkdir -p "$TMPDIR"
 marker="$(mktemp)"
 rc=0

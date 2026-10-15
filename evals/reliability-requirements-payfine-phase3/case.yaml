@@ -55,11 +55,11 @@ graders:
       path: docs/pay-fine/reliability-requirements-001.md
     weight: 1
     criteria: |
-      The user said "for everything else, go with your recommendations", which approves every other fork the skill presented. The skill's rule: a decision is marked approved only by the user, and a criterion that depends on a pending decision waits for it.
+      The user said "for everything else, go with your recommendations", which approves every other fork the skill presented. The skill's rule: a decision is marked approved only by the user, and a criterion that depends on a pending decision waits for it. Phase 2 presented four forks (pinned from this case's history.jsonl; re-pin them after a re-freeze): (1) the 10-second give-up and its message, where the user overruled the recommended "couldn't confirm" wording and kept "failed, try again"; (2) preventing duplicate charges with an idempotency key, where the user chose instead to tolerate them and refund by hand; (3) removing the automatic retry in `CollectFine`; (4) a charge that succeeds but is not recorded, failing loudly with a manual fix.
 
-      PASS if every decision the document lists is marked approved (the user's choice for the timeout, the recommendation for the others), no decision is left pending, and no criterion is marked as waiting on a decision. A genuinely new question the user never saw may stay open.
+      PASS if the document accounts for all four forks: the first two recorded as the user's choices, the other two as approved recommendations, none left pending, and no criterion marked as waiting on a decision. A genuinely new question the user never saw may stay open.
 
-      FAIL if a decision the user approved is still marked pending or presented as needing approval, or a criterion is withheld as waiting on one.
+      FAIL if any of the four forks is missing from the document, if one the user approved is still marked pending or presented as needing approval, or if a criterion is withheld as waiting on one.
   - type: llm
     name: criterion-charge-without-settle-is-caught
     focus:

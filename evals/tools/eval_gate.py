@@ -262,18 +262,23 @@ def main():
     print(f"{len(cases)} affected case(s): {' '.join(cases)}", flush=True)
     # A resumed phase runs the skill text frozen in its history, not the
     # file; a result against a stale history says nothing about the skill
-    # as it is now (requirements-refinement phase 2, 2026-10-14).
+    # as it is now (requirements-refinement phase 2, 2026-10-14), so such
+    # a case is not run: it fails here, loses its evidence, and stays
+    # failed until the earlier phase is re-run and re-frozen.
+    stale_cases = {}
     for case in cases:
         history = os.path.join(EVALS, case, "history.jsonl")
         if os.path.isfile(history):
             stale = sorted({name for name, body in history_stale.loaded_skills(history)
                             if history_stale.current(name) != body})
             if stale:
-                print(f"WARNING: {case} resumes a history whose loaded text of "
+                stale_cases[case] = stale
+                print(f"NOT RUN: {case} resumes a history whose loaded text of "
                       f"{', '.join(stale)} no longer matches the skill; re-freeze it "
-                      f"from the earlier phase before trusting its score.", flush=True)
+                      f"from the earlier phase first.", flush=True)
+    cases = [c for c in cases if c not in stale_cases]
     if a.dry_run:
-        return 0
+        return 1 if stale_cases else 0
     os.makedirs(os.path.join(EVALS, "results"), exist_ok=True)
     tag = "gate-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S")
     # What each case loads as the runs start; evidence is recorded only
@@ -312,6 +317,10 @@ def main():
             rows[case].update(score=r["score"], runs=r["runs"], error=r["error"], rerun=True,
                               lost=lost, source=r["source"])
 
+    for case, stale in stale_cases.items():
+        rows[case] = {"bar": bars.get(case, {}).get("score"), "score": None, "runs": 0,
+                      "error": f"history carries stale text of {', '.join(stale)}; re-freeze "
+                               f"from the earlier phase", "rerun": False, "lost": [], "source": None}
     failed = []
     lines = ["| Case | Bar | Score | Runs | Graders lost | Result |", "|---|---|---|---|---|---|"]
     for case in sorted(rows):

@@ -529,6 +529,19 @@ read every failure before re-recording a bar.
         G to look at. `orchestrator-route-design-system` routes to
         `reliability-requirements` one run in three on the unlabeled
         slice fixture, every batch; bar recorded at 0.89 (F1).
+      - Sourcery on PR #3 (2026-10-15): five findings, four taken. The
+        gate now refuses to run a case whose history carries stale skill
+        text (it had only warned, and would have recorded evidence for
+        the old text); `wsl-gate.sh` sets `TMPDIR` regardless of the
+        environment's value (`KAD_EVAL_TMP` overrides);
+        `history_files.py` resolves symlinks before its containment
+        check; `decisions-all-approved` on both requirements phase-3
+        cases names the forks phase 2 presented (pinned from the
+        history, re-pin after a re-freeze) so a document that drops one
+        fails. Declined: a collision-proof tag for two gate processes
+        started in the same second, since one subscription runs one
+        gate. Both phase-3 cases re-run: security 27/27, reliability
+        26/27.
       - Facts for the handoff: WSL's `/tmp` is a tmpfs that dies with the
         VM seconds after each `wsl` command, so kept run directories now
         live under `~/.cache/kad-eval-tmp` (`wsl-gate.sh` sets `TMPDIR`);
