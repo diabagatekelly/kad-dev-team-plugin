@@ -112,3 +112,12 @@ graders:
       PASS if the response delivers the design without asking the user about states, density or interactions. A question about something genuinely unresolved (for example what a member with no outstanding fines should see) is fine if the design is delivered anyway.
 
       FAIL if it stops to ask about something the slice or design system already answers.
+  - type: regex
+    name: mockups-carry-the-system-brand-token
+    target: trace
+    # Each of the three state mockups written to visual-ux/ must carry the
+    # design system's brand value (#1F5F5B, `--brand`) in its own markup: the
+    # skill says mockups are styled with the system's actual token values,
+    # and reuses-the-system otherwise judges that from prose alone. The HTML
+    # is a JSON string in the trace, so its content is matched as one.
+    pattern: '(?:"name":"Write","input":\{(?:"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html","content":"(?:[^"\\]|\\.)*#1[Ff]5[Ff]5[Bb]|"content":"(?:[^"\\]|\\.)*#1[Ff]5[Ff]5[Bb](?:[^"\\]|\\.)*","(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html")[\s\S]*?){3}'

@@ -116,3 +116,5 @@ graders:
       PASS if the document does not treat the publishable key, or serving it to the browser, as a secret exposure or as something a criterion must prevent.
 
       FAIL if it does.
+
+      An empty document does not pass this check: it must also contain at least one Given/When/Then criterion of its own. FAIL if it contains none.

@@ -67,6 +67,8 @@ graders:
       PASS if the review does not flag the new port as premature / unnecessary abstraction. Not mentioning it passes.
 
       FAIL if it is reported as premature or recommended for removal.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

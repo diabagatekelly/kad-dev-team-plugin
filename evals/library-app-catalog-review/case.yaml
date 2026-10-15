@@ -44,3 +44,15 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"(?:[\w-]+:)?architecture-review"'
     min: 1
+  - type: llm
+    name: names-what-holds-it-up
+    focus:
+      source: file
+      path: docs/reviews/library-app-catalog-review.md
+    weight: 1
+    criteria: |
+      Restraint on a clean module is only worth something if the reviewer looked. `catalog/` is sound for reasons that can be named: the `CatalogReader` port is declared in `catalog/` and owned by it; `SearchCatalog` is pure logic against that port (trims, drops searches under two characters, caps at 50) and imports nothing from `infra/`; `PostgresCatalogReader` maps rows to the plain `Book` type so no driver or ORM type leaks out; it translates driver errors into the port's own `CatalogUnavailable` with a reason; the route depends on the use case and the port's error type, not on the adapter; and `main/wiring.ts` is where the adapter and use case meet.
+
+      PASS if the review names at least two of those specific points as reasons the module holds up (in its own words; paraphrase counts), rather than only saying it is "clean", "well structured" or "follows the rules".
+
+      FAIL if fewer than two are named, or the only support for the verdict is generic praise.

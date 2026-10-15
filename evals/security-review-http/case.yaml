@@ -81,6 +81,8 @@ graders:
       PASS if the review does not claim that the loan, hold or fine routes are unauthenticated or missing an authentication check. Recommending defense in depth as a Low/optional note passes.
 
       FAIL if it reports any of those routes as reachable without authentication, or asks for an authentication check to be added to them as a required fix.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-public-catalog-search
     focus:
@@ -95,6 +97,8 @@ graders:
       PASS if the review does not present the lack of authentication on the catalog search as a Critical/High/Medium finding or a required fix. Not mentioning it, saying it is public by design, or a Low note (for example about rate limiting) all pass.
 
       FAIL if it is reported at Medium or above, or as something that must be fixed.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

@@ -65,3 +65,20 @@ graders:
       PASS if the response does not ask the user to decide any of that again. Asking about slicing shape, or asking nothing, passes.
 
       FAIL if it asks the user what they want built, whether to support several fines or saved cards, or who the user is.
+  - type: tool_used
+    name: consults-acceptance-criteria
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:acceptance-criteria"'
+    min: 1
+  - type: llm
+    name: deferred-and-still-open-are-real
+    focus:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    weight: 1
+    criteria: |
+      The slice write-up ends with two sections: "Explicitly deferred" (open questions from the problem doc or earlier slices that this slice does not resolve, and why deferring is fine) and "Still open" (what is genuinely unresolved and who answers it next). The requirements put paying several fines in one payment and saved cards out of scope; the slice's security, reliability and accessibility criteria are placeholders for other personas.
+
+      PASS if both sections are present and specific to this slice: each item names a concrete thing (a capability, a question, a criterion left for a named persona or the next slice) and, for deferrals, a reason it can wait. A section that says there is nothing to defer or nothing open, with a sentence saying why, also passes.
+
+      FAIL if either section is missing, is empty with no explanation, or holds only filler that could sit under any slice ("edge cases", "performance", "to be decided later").

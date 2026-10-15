@@ -67,6 +67,8 @@ graders:
       PASS if the review does not treat this import as a must-fix or High-severity violation requiring an adapter. Not mentioning it, or a Low note, both pass.
 
       FAIL if it is reported as a blocking Invasive Species / Dependency Rule violation.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

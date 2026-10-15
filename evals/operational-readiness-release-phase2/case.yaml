@@ -60,6 +60,8 @@ graders:
       PASS if the response describes or names a way to redeploy a previous version (re-running a previous deploy, `release.sh` with an older image, the SHA-tagged images), even while saying this change breaks it.
 
       FAIL only if it says or implies the service has no mechanism to redeploy a previous version in general (for example that previous images are not kept, or that rollback would have to be built from scratch), with no acknowledgement of the existing redeploy path.
+
+      An empty response does not pass this check: the response must also raise at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it raises none.
   - type: llm
     name: no-enterprise-ceremony
     focus: last_message
@@ -72,3 +74,5 @@ graders:
       PASS if the response does not recommend practices that presume a team: an on-call rotation, a severity matrix, an incident-commander role, a formal post-mortem process or template, or a 24/7 paging setup. Lightweight suggestions sized to one developer (a short runbook note, a single alert to their phone) pass.
 
       FAIL if it recommends any team-scale incident-management ceremony as something to put in place.
+
+      An empty response does not pass this check: the response must also raise at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it raises none.

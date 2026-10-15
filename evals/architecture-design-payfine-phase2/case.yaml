@@ -114,3 +114,5 @@ graders:
       PASS if the design does not call the existing `FinePayments` port (or any port isolating real I/O) premature, speculative, or something to remove. Generalising or renaming it into the approved gateway interface is not calling it premature, and calling the *registry* premature before the user overruled it is about the registry, not the port.
 
       FAIL if it does.
+
+      An empty document does not pass this check: the design must also record at least one structural decision of its own. FAIL if it records none.

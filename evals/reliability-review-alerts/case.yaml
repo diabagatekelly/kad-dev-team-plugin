@@ -67,6 +67,8 @@ graders:
       PASS if the review does not report these two alerts as noisy, duplicated, arbitrary or non-actionable. Not mentioning them, or citing them as the model for the others, passes.
 
       FAIL if either is reported as a defect at Medium or above.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

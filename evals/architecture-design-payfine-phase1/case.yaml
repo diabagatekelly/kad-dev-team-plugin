@@ -40,3 +40,11 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
     min: 1
+  - type: regex
+    name: writes-nothing-under-pay-fine
+    target: trace
+    # Phase 1 presents decisions and waits; the design doc is written only
+    # after approval, in a later turn. presents-decisions-and-waits judges
+    # that from the message; this checks the file system agrees.
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/pay-fine/'
+    match: not_contains

@@ -36,6 +36,8 @@ graders:
       PASS if the response does not treat the publishable key, or serving it to the browser, as a secret exposure or as something a criterion must prevent.
 
       FAIL if it does.
+
+      An empty response does not pass this check: the response must also present at least one real fork or decision for the user. FAIL if it presents none.
   - type: llm
     name: does-not-decide-the-fork-itself
     focus: last_message

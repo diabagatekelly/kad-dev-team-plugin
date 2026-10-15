@@ -67,6 +67,8 @@ graders:
       PASS if the review does not claim that `/portal/loans` or `/portal/history` let one member read another member's loans (an IDOR on those routes).
 
       FAIL if it reports either route as exposing other members' loans through a caller-supplied identifier.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-prefix-mounted-member-auth
     focus:
@@ -81,6 +83,8 @@ graders:
       PASS if the review does not claim that the portal routes are unauthenticated or reachable without a session. Recommending defense in depth as a Low/optional note passes.
 
       FAIL if it reports the portal routes as missing authentication or asks for an authentication check in each handler as a required fix.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: pre-existing-issues-not-blocking
     focus:

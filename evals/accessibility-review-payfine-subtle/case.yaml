@@ -21,6 +21,11 @@ graders:
   - type: file_exists
     name: review-written
     path: docs/pay-fine/accessibility-review-001.md
+  - type: regex
+    name: leaves-the-mockup-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*\.html"'
+    match: not_contains
   - type: llm
     name: finds-pay-button-focus-removed
     focus:
@@ -81,6 +86,8 @@ graders:
       PASS if the review does not report the text inputs as lacking a visible focus indicator.
 
       FAIL if it does.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-card-number-label
     focus:
@@ -93,6 +100,8 @@ graders:
       PASS if the review does not report the card number field as unlabelled or its hint as hidden from assistive technology. Pointing out the broken `aria-describedby` on the same field is a different, correct finding.
 
       FAIL if it reports the card number label or hint as hidden or missing.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-fine-choice
     focus:
@@ -105,3 +114,44 @@ graders:
       PASS if the review does not report the fine choice as unreachable by keyboard, unlabelled, or shown by colour alone.
 
       FAIL if it does.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
+  - type: llm
+    name: says-it-read-the-markup
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      This session has no browser, so the mockup could only be read as markup and CSS.
+
+      PASS if the review says the check was a read of the markup without loading it in a browser, and does not claim to have tabbed through the page, rendered it or measured it in a browser.
+
+      FAIL if it claims a live or browser-driven check, or doesn't say how the check was done.
+  - type: llm
+    name: criteria-split-now-and-later
+    focus:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    weight: 1
+    criteria: |
+      PASS if the review contains accessibility acceptance criteria in Given/When/Then form that cover at least a visible focus indicator on the Pay button (and every other control) and the card error message being associated with its field so a screen reader announces it, and keeps criteria checkable against this mockup now apart from those that can only be checked once real code exists (for example focus moving to the error after a real submit, an announcement actually firing).
+
+      FAIL if there are no Given/When/Then criteria, or nothing distinguishes checkable-now from needs-real-code.
+  - type: llm
+    name: slice-placeholder-filled
+    focus:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    weight: 1
+    criteria: |
+      The prompt asked for the slice's accessibility placeholder to be filled in. Before this run, `slice-001.md` ended its acceptance criteria with the line `[ACCESSIBILITY — placeholder, to be authored by accessibility-engineer]`. The orchestrator decides the slice's next stage by whether that placeholder is still there, so the slice file itself has to change.
+
+      PASS if the placeholder line is gone and in its place the slice carries accessibility acceptance criteria in Given/When/Then form (the criteria themselves, or at least the confirmed-now ones with a pointer to `accessibility-review-001.md` for the rest), and the slice's other criteria are unchanged.
+
+      FAIL if the placeholder line is still present, the slice is unchanged, or the placeholder was replaced by nothing more than a reference to the review with no criteria.
+  - type: regex
+    name: writes-only-review-and-slice
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/pay-fine/(?:accessibility-review-001|slice-001)\.md")[^"]*"'
+    match: not_contains

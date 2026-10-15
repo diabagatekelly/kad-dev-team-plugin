@@ -57,6 +57,8 @@ graders:
       PASS if the review does not present the repeated guard line as a problem in its own right. Describing the duplication finding without mentioning the guard, or listing it among the shared lines a helper would absorb, both pass.
 
       FAIL if the review says the guard clause itself is duplication that needs fixing, separately from the shared formatting logic.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: finds-false-dollars-comment
     focus:
@@ -125,6 +127,8 @@ graders:
       PASS if the review keeps it (not flagged, or praised). Suggesting a shorter wording is fine.
 
       FAIL if it recommends deleting it.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: leaves-mocking-to-test-quality-review
     focus:
@@ -137,3 +141,5 @@ graders:
       PASS if the review either doesn't judge that test's mocking, or names it as something for a test-quality review (or `test-quality-review`) to look at, outside its own ranked findings.
 
       FAIL if the mocking problem appears as one of the review's own ranked readability findings.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.

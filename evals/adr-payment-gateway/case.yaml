@@ -51,3 +51,12 @@ graders:
       PASS if the document states the decision (a provider-neutral payment interface, provider chosen per channel), gives each rejected alternative (everything on Adyen; Adyen bolted onto the desk route) with its concrete reason, and lists the downsides the user named (two providers to reconcile, every payment feature must work with both).
 
       FAIL if a rejected alternative or its reason is missing, or the consequences list only upsides.
+  - type: regex
+    name: opens-with-the-three-checks
+    target: trace
+    # The skill's response opens with the three worthiness checks, one line
+    # each: `Architectural: yes/no — <why>`, then Significant, then
+    # Non-obvious. Each must be answered yes or no (bold markers allowed);
+    # the skill's own template in the trace says `yes/no` and is excluded
+    # by the `(?!/)` after the answer.
+    pattern: 'Architectural:?\**:?\s*\**\s*(?:[Yy]es|[Nn]o)\b(?!/)[\s\S]*Significant:?\**:?\s*\**\s*(?:[Yy]es|[Nn]o)\b(?!/)[\s\S]*Non-obvious:?\**:?\s*\**\s*(?:[Yy]es|[Nn]o)\b(?!/)'

@@ -112,6 +112,8 @@ graders:
       PASS if the review does not present the fake, or that stub in that test, as a violation (mocking the subject, over-mocking, a mock that intercepts nothing). Mentioning that seeding the fake through its constructor would be simpler is fine as a minor note.
 
       FAIL if either is reported as a real problem with the test.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-exact-tests
     focus:
@@ -126,3 +128,5 @@ graders:
       PASS if the review treats them as valid tests of real behaviour. Saying one is sound but thin (a single data point, a missing boundary case) and suggesting more cases or a fuller assertion is fine and does not count against it.
 
       FAIL if it reports any of them as a false positive, as unable to fail, as asserting the wrong thing, as brittle because the expected value is exact, or as testing implementation details.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.

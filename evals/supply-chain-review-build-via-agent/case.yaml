@@ -81,6 +81,8 @@ graders:
       PASS if the review does not report the caret ranges in `package.json` as a problem in their own right while the lockfile and `npm ci` hold. Pointing out that the ranges *do* matter where something installs without the lockfile (the Dockerfile) passes; so does a Low note suggesting exact versions.
 
       FAIL if it reports the manifest's caret ranges as a Medium-or-above finding on their own, independent of the image build.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-dependabot
     focus:
@@ -95,6 +97,8 @@ graders:
       PASS if the review does not report having Dependabot configured as a problem. Noting that it does not pin anything, or that its updates need review, passes.
 
       FAIL if the Dependabot configuration itself is reported as a defect at Medium or above.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: agent-delegated-display
     tool: Agent

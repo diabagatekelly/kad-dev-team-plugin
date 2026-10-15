@@ -38,3 +38,27 @@ graders:
   - type: file_exists
     name: log-written
     path: docs/pay-fine/orchestrator-log.md
+  - type: llm
+    name: log-names-row-and-artifact
+    focus:
+      source: file
+      path: docs/pay-fine/orchestrator-log.md
+    weight: 1
+    criteria: |
+      The orchestrator appends one entry to `orchestrator-log.md` in the target directory each time it routes, before invoking the routed skill. Each entry names the detected state that matched, where it routed, and the path the routed step will save to.
+
+      Here the state is: the problem has an Active requirements doc and no slice yet. The right destination is `product-slicer` (`vertical-slicing`, with `acceptance-criteria`).
+
+      PASS if the log has an entry whose detected state is that one (in its own words), whose destination is vertical-slicing, and whose artifact line names a path under `docs/pay-fine/` (the slice file). A later entry correcting an earlier one is fine.
+
+      FAIL if there is no entry, the entry routes somewhere else, the detected state it names is a different row, or no artifact path under `docs/pay-fine/` is given.
+  - type: llm
+    name: stops-after-the-routed-step
+    focus: last_message
+    weight: 1
+    criteria: |
+      The orchestrator executes exactly one routed step per invocation, then reports what it detected, where it routed and what was produced, and asks whether to continue; it never chains into the next stage. Here the routed step is `product-slicer` (`vertical-slicing`, with `acceptance-criteria`).
+
+      PASS if the response ends in one of two ways: with vertical-slicing's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. Either way nothing from a later stage (a user story or a design doc) has been produced.
+
+      FAIL if the response goes on to run or produce a later stage's work, answers the routed skill's questions itself from what it read in the repository and proceeds past them, or routes to something other than vertical-slicing.

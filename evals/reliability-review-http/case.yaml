@@ -81,6 +81,8 @@ graders:
       PASS if the review does not claim that this route hides, swallows or mishandles a dependency failure. Not mentioning it, citing it as the pattern the other routes should follow, or a consistency/maintainability note (for example that it does not share `respond.ts`) all pass, whatever severity the note carries.
 
       FAIL if it reports that this handler swallows errors, hides failures from monitoring, or answers a dependency failure wrongly.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-catalog-search-bounded
     focus:
@@ -95,6 +97,8 @@ graders:
       PASS if the review does not claim that the catalog search returns an unbounded or unpaginated result set. Citing the catalog search's cap as the good example, or not mentioning it, passes. Criticism of the loan-history query does not affect this check.
 
       FAIL only if the review states that the catalog search itself has no limit or can return unbounded results.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

@@ -56,6 +56,8 @@ graders:
       PASS if the review does not present these as a mocking problem (over-mocking, mocking the subject, mocks that intercept nothing). Suggesting a named fake or a shared helper is fine as a minor note. Saying, inside the finding that the email path is untested, that the email fake's `send` discards what it is given and should capture it so an email test can assert on it, is part of that coverage finding, not a mocking alarm.
 
       FAIL if it reports them as a real problem with the tests.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: keeps-proportion
     focus:

@@ -81,6 +81,8 @@ graders:
       PASS if the review does not report this entry as a bare or badly recorded suppression. Saying it is the model the others should follow, or suggesting the reason be re-verified periodically, passes.
 
       FAIL if it reports this entry as lacking a classification or reason, at Medium or above.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-dev-only-advisory
     focus:
@@ -95,6 +97,8 @@ graders:
       PASS if the review does not rate the TypeScript advisory itself as Medium or above. Its finding about how the advisory was accepted (the unenforced date) is separate and does not affect this check.
 
       FAIL if it rates the TypeScript vulnerability itself Medium or higher as a production exposure.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

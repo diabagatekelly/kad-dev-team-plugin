@@ -109,6 +109,8 @@ graders:
       PASS if the review does not present this per-reminder catch-and-continue as swallowing errors or as a reliability defect. Criticising what the log line contains (the whole member object, a security/PII concern) is fine and does not fail this check; so is suggesting a failure count or summary.
 
       FAIL if it says the reminder loop's catch hides or swallows failures and asks for it to stop continuing or to rethrow.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-duplicate-fines-on-rerun
     focus:
@@ -123,6 +125,8 @@ graders:
       PASS if the review does not claim that running the nightly job again, after a previous run finished or crashed, creates duplicate fines. Not mentioning it, noting the guard, or reporting that two *overlapping* runs could both pass the check before either inserts (a check-then-insert race) all pass, at any severity: that race is real.
 
       FAIL if it reports that a sequential re-run or retry of the nightly job double-fines members, ignoring the `alreadyAssessed` check.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-sms-retry
     focus:
@@ -137,6 +141,8 @@ graders:
       PASS if the review does not flag this retry as retrying non-transient failures, as hammering the provider, as misplaced, or as over-engineered. Not mentioning it, citing it as the model the other adapters should follow, or a Low note about a possible duplicate text all pass.
 
       FAIL if it reports this retry logic as a defect at Medium or above.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: agent-delegated-display
     tool: Agent
