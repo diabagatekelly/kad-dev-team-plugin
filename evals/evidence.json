@@ -72,13 +72,13 @@
     "recorded": "2026-10-15T13:54:28Z"
   },
   "architecture-design-payfine-phase2": {
-    "inputs": "a9c89df971b17fb56c13c82bbed2fa303993cc280f291bef5edc5f6aeeaace92",
+    "inputs": "82091744ee5ccffdcaf105d3772246c680a97c962350d57beab09bc5c0a92fd5",
     "score": 0.917,
     "bar": 0.917,
     "runs": 3,
-    "source": "results/gate-20261014T193600-architecture-design-payfine-phase2.json",
+    "source": "results/gate-20261015T142258-architecture-design-payfine-phase2.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T19:40:54Z"
+    "recorded": "2026-10-15T14:27:39Z"
   },
   "architecture-design-payfine-via-agent": {
     "inputs": "85b1e88ea03646d6ba737cf0895a9a4c81c62e8b6dc654ba2e853b944805e34d",
@@ -116,33 +116,6 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T13:54:28Z"
   },
-  "code-review-days-left-pr": {
-    "inputs": "ee39e7585ff7a9301572de5335c1b85f9e665d0f08a953627d170017c5c7e965",
-    "score": 1.0,
-    "bar": 0.9,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-code-review-days-left-pr.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "code-review-fine-notices-pr": {
-    "inputs": "05cad0f9995ff9356736b382978c5d692eafff1c770b5f11a70ba98c8278bf97",
-    "score": 0.97,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-code-review-fine-notices-pr.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "code-review-fine-notices-pr-via-agent": {
-    "inputs": "72da4ad029e9b916c3d8936aaf81b43d563b7e659cf63b95bf70e44dd63f20e9",
-    "score": 1.0,
-    "bar": 0.909,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-code-review-fine-notices-pr-via-agent.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
   "code-review-fines-report-pr": {
     "inputs": "98a34d069c0018b54c9b69ef69136a795767332461baeca086897e6302b38860",
     "score": 1.0,
@@ -179,6 +152,15 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T14:15:45Z"
   },
+  "design-system-payfine-phase3": {
+    "inputs": "73d1466ebdd555e6755eb5c70e8e3274db1a1513f6d7c8aede5231a528c412d1",
+    "score": 0.963,
+    "bar": 0.963,
+    "runs": 3,
+    "source": "results/gate-20261015T142258-design-system-payfine-phase3.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-15T14:27:39Z"
+  },
   "library-app-catalog-review": {
     "inputs": "7e06ff874b353a12f46b5287d319fb6383f2360960dd9f377f91f204ddc285cc",
     "score": 1.0,
@@ -188,75 +170,12 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T13:54:28Z"
   },
-  "library-app-fines-review": {
-    "inputs": "0e958864ddd9fe0eb71dc92b8824724b17c5224be07c5799ed86340848ce459c",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-library-app-fines-review.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "library-app-lending-review": {
-    "inputs": "31f7d58bfa59b4378eeddf4793c9b262da591f324525680d8e9ecd267cba7c23",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-library-app-lending-review.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "library-app-lending-review-via-agent": {
-    "inputs": "3de503c1e1c237e11c8b296736fde825e0de3b5d5bbc061124d30c7511163af8",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-library-app-lending-review-via-agent.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "library-app-members-review": {
-    "inputs": "749c355625c442dbca07e20df4513a1a96e2975e60ca376230bc8fc3b39fa76a",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-library-app-members-review.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "library-app-notifications-review": {
-    "inputs": "90ef680c879a8bd6ee5063b94102741b8f7cba88f418a529fb9d0994da38a588",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-library-app-notifications-review.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "library-app-reporting-pr": {
-    "inputs": "28a9e1c9d70b07cd596b5ac2f643d199ea0a4eedb2db04b4db42158fba11c4f5",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-library-app-reporting-pr.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
   "library-app-reporting-review": {
     "inputs": "314b0df5e784b902dabee501dade73ae9f551634cb6b40a98975c703cd85b7b2",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
     "source": "results/gate-20261014T045557-library-app-reporting-review.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "library-app-structure-review": {
-    "inputs": "0ec89373ae1de4cd0fd8f223a06323bfd103c51bba92d0ed3c45856faf8a7c7d",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-library-app-structure-review.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T05:32:26Z"
   },
@@ -314,15 +233,6 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T19:34:51Z"
   },
-  "operational-readiness-ops-phase2": {
-    "inputs": "4d6d55134716f103e3308bf5ccf9ca55048e36a9bc9671e7dbc34a73987b88bd",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T193600-operational-readiness-ops-phase2.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T19:40:54Z"
-  },
   "operational-readiness-release-phase1": {
     "inputs": "5d5bc07283cde2e79d950ec41af9e6a0875b8d6edefb7518ce7b444a8c8fe6e1",
     "score": 1.0,
@@ -331,15 +241,6 @@
     "source": "results/gate-20261014T194332-operational-readiness-release-phase1.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T19:52:55Z"
-  },
-  "operational-readiness-release-phase2": {
-    "inputs": "272d601a6edaec124395b182e4319ddebefe237483ad48d8462e6e03b824e364",
-    "score": 1.0,
-    "bar": 0.933,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-operational-readiness-release-phase2.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
   },
   "orchestrator-asks-for-target": {
     "inputs": "9791564be205eb25b8f0ddcb72a927f4c0ee59eac51f74566d3e6dd007b38005",
@@ -521,33 +422,6 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T19:34:51Z"
   },
-  "reliability-requirements-payfine-phase2": {
-    "inputs": "be7287da83fbe7a3dbfd98d88d2906560bf99cf33ea70ce8645590ffe091f2f7",
-    "score": 0.917,
-    "bar": 0.778,
-    "runs": 3,
-    "source": "results/gate-20261014T195625-reliability-requirements-payfine-phase2.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T20:00:42Z"
-  },
-  "reliability-requirements-payfine-phase3": {
-    "inputs": "f162aeb2c0ad7858690e658bb6a02a2e6dd546a0974125670bd2121a659a51a2",
-    "score": 0.963,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261015T041632-reliability-requirements-payfine-phase3.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-15T04:17:53Z"
-  },
-  "reliability-review-alerts": {
-    "inputs": "d2294409fbebb1689b41bd1783ffe99e160514f1e709f3cdc16a003817a7562b",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T104758-reliability-review-alerts.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
-  },
   "reliability-review-catalog": {
     "inputs": "33e04956b37aac8476196735ceda04699cee95fe8d6f8be8e204ce6d6872aff3",
     "score": 1.0,
@@ -556,24 +430,6 @@
     "source": "results/gate-20261015T134242-reliability-review-catalog.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T13:54:28Z"
-  },
-  "reliability-review-fine-payment": {
-    "inputs": "dcb01eb79f0484d47799c3b3b2e4f80914833a496e2bb96b03439f034db8aa4c",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261015T050645-reliability-review-fine-payment.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-15T05:13:35Z"
-  },
-  "reliability-review-http": {
-    "inputs": "deaa6a5389df6c443fcf2edf3f880006f7f239febf24fbea8a1ece8a23865ab6",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261015T050645-reliability-review-http.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-15T05:13:35Z"
   },
   "reliability-review-neg-architecture": {
     "inputs": "35c2cfc7525728426f415a93be4c8fde7aa080dae7025edc24a7e5452eb0ffeb",
@@ -590,24 +446,6 @@
     "bar": 1,
     "runs": 3,
     "source": "results/gate-20261014T045557-reliability-review-neg-security.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "reliability-review-nightly": {
-    "inputs": "e1e5775c324f00f76a8dc7df270ff1d9511d637fadbd26a8156030f91bc666ff",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-reliability-review-nightly.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
-  },
-  "reliability-review-nightly-via-agent": {
-    "inputs": "89d1ff738a2decc3920f37d453bb57d690e5a51ee2831c2fd4c2dc91a5fb37d9",
-    "score": 0.939,
-    "bar": 0.909,
-    "runs": 3,
-    "source": "results/gate-20261014T045557-reliability-review-nightly-via-agent.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T05:32:26Z"
   },
@@ -665,24 +503,6 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T19:34:51Z"
   },
-  "security-requirements-payfine-phase2": {
-    "inputs": "044422b415b871fc134da88e782297392c25ef759f9c1ebf82c75c1a20d2949a",
-    "score": 0.917,
-    "bar": 0.778,
-    "runs": 3,
-    "source": "results/gate-20261014T195625-security-requirements-payfine-phase2.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T20:00:42Z"
-  },
-  "security-requirements-payfine-phase3": {
-    "inputs": "9404a7c5b721539c395e435b06a3e431fe34c29fe10eed541cccfe0a924000d6",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261015T041632-security-requirements-payfine-phase3.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-15T04:17:53Z"
-  },
   "security-review-catalog": {
     "inputs": "3789aed02862e00a54dd582cc8a230cc97fdb143ff39d2796b9b22d306766069",
     "score": 1.0,
@@ -691,24 +511,6 @@
     "source": "results/gate-20261015T134242-security-review-catalog.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T13:54:28Z"
-  },
-  "security-review-config": {
-    "inputs": "a3986da9b1b8ab3ad98e4ec87dc06270506bd2148472d73eca587b5bdc57183c",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T104758-security-review-config.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
-  },
-  "security-review-http": {
-    "inputs": "b04529159c74f6026bcb87c02275fa79e54b40f6634daedcdcf26ef561ca5621",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T104758-security-review-http.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
   },
   "security-review-neg-architecture": {
     "inputs": "eab9127f6f1c4d43016e2c2cec9478eae8b96947f2f4ca70fc7b781d27418410",
@@ -727,24 +529,6 @@
     "source": "results/gate-20261014T104758-security-review-neg-reliability.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T11:16:52Z"
-  },
-  "security-review-portal-pr": {
-    "inputs": "54dbb3688a6ee2ad5f4b68ad2fd114bf21f6142a6584827076c616c7edc1a4dc",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T104758-security-review-portal-pr.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
-  },
-  "security-review-reminders": {
-    "inputs": "c9926751a0b332392bc69f15a71f5a7c1917de84965ea79443a466c8dfa97a02",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261015T050645-security-review-reminders.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-15T05:13:35Z"
   },
   "staleness-audit-docs": {
     "inputs": "ac4518beb7f0714fb41322ac249de77482358feb8a7d2ea34489329eccce6a3d",
@@ -773,33 +557,6 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T19:40:54Z"
   },
-  "supply-chain-review-accepted": {
-    "inputs": "7b9a93c28c34d8a2a5322a0efd0b482c92e775aa0f6f8420a5c3e810b07ab196",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T104758-supply-chain-review-accepted.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
-  },
-  "supply-chain-review-build": {
-    "inputs": "e11cb521d9971b02333b74b8ebc11daf813afc91096479370453dbebb1976e6b",
-    "score": 0.958,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T104758-supply-chain-review-build.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
-  },
-  "supply-chain-review-build-via-agent": {
-    "inputs": "067ffefb906664e9c4a6ed1f43c141af3db87903580a48790c4be6f9e0cd7911",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T104758-supply-chain-review-build-via-agent.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
-  },
   "supply-chain-review-neg-reliability": {
     "inputs": "fb7377e1ad79a596b0935571658cdc8f540b8127fb2a91ca10236f5d57d49b02",
     "score": 1.0,
@@ -818,30 +575,12 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T11:29:56Z"
   },
-  "supply-chain-review-workflows": {
-    "inputs": "572007d6d65a107da793ab172844968d383daa9122e9f0535adf3fbe8863578e",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T104758-supply-chain-review-workflows.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:16:52Z"
-  },
   "tdd-implementation-cancel-hold": {
     "inputs": "fca9ed5a88e4d1f7610629216769fd97ec60a7f0a6390442f8b17f0444140824",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
     "source": "results/gate-20261014T184954-tdd-implementation-cancel-hold.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T18:56:22Z"
-  },
-  "tdd-implementation-cancel-hold-via-agent": {
-    "inputs": "a5ea482e85e9d7c9ab30fce32ecb85c7f88ecfaa10a52a7dcb1f7d60e3ee86f2",
-    "score": 1.0,
-    "bar": 0.971,
-    "runs": 3,
-    "source": "results/gate-20261014T184954-tdd-implementation-cancel-hold-via-agent.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T18:56:22Z"
   },
@@ -872,15 +611,6 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T19:40:54Z"
   },
-  "technology-bootstrap-phase3": {
-    "inputs": "725b22751d205e8d4ab9c67448b59a475636025e332d1652cc3591e37925536d",
-    "score": 1.0,
-    "bar": 0.933,
-    "runs": 3,
-    "source": "results/gate-20261014T195625-technology-bootstrap-phase3.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T20:00:42Z"
-  },
   "technology-bootstrap-phase3-reject": {
     "inputs": "b2edf7fa2c9c942a1bb70d5d52b9ff211d1f670aa76198ee339dc6a77165644f",
     "score": 0.889,
@@ -890,15 +620,6 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T20:07:51Z"
   },
-  "test-quality-review-fines": {
-    "inputs": "04a4020f75b87c937ac937bdcf72c71d2fe260004849a74fe7a99a4693443b98",
-    "score": 0.967,
-    "bar": 0.967,
-    "runs": 3,
-    "source": "results/gate-20261015T051648-test-quality-review-fines.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-15T05:20:26Z"
-  },
   "test-quality-review-neg-code-review": {
     "inputs": "a0c0bef4e796b08687330c639638ad41c58f795a5a5706bd493b3078646274e8",
     "score": 1.0,
@@ -907,15 +628,6 @@
     "source": "results/gate-20261014T104758-test-quality-review-neg-code-review.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T11:16:52Z"
-  },
-  "test-quality-review-reminders": {
-    "inputs": "d8cd4610006a5fbafd2197cde099ed8e64ad4a1c384dbfa5ac0b67a3725f0abc",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261014T112223-test-quality-review-reminders.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T11:24:13Z"
   },
   "user-facing-docs-renewals": {
     "inputs": "8d19b1c208fe548f5164095955df0266688659e51f9b7dc5bce06c6e00fe9e67",

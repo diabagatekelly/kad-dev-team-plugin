@@ -839,6 +839,45 @@ UI slice (F1).
         contradiction while conceding it was a close call. The rubric
         now says that is the second form, not a contradiction. The new
         brand-token regex passed 3/3 on the .html-or-.css form.
+      *Batch 2b and 2c (2026-10-15):* user-story 1.0 and screen-design 1.0
+      on the reworded rubrics; `design-system-payfine-phase2` 1.0 on the
+      pinned names (every run wrote `candidate-1.html` to `-3.html` under
+      `docs/pay-fine/design-candidates/`; both file-judged candidates
+      passed every run).
+      - `adr-payment-gateway` 0.80 a third time: with "step one, before
+        any tool call" loaded, all three runs still went Skill, Write,
+        "I wrote the ADR". Nine of nine runs under two wordings that kept
+        the checks in the reply. **Fix that took:** the template gains a
+        "Why this is an ADR" section holding the three lines, and the
+        skill says the lines go there when the ADR is written, so the
+        document carries its own justification and the model writing the
+        file writes them. 1.0 after (and `adr-neg-rename` 1.0 on every
+        wording: when the answer is no, the checks are the reasoning, so
+        they were never skipped there).
+      - `design-system-payfine-phase3` re-frozen from phase 2's run 0
+        ("Friendly Neighbour" picked the branch); second candidate's
+        `--brand` is `#0b6e7a`, pinned in the grader and the scaffold
+        check. First run on the new history 0.81:
+        `rejected-candidates-in-prose` lost every run on documents that
+        name two rejected candidates with reasons and link only the
+        winner, now saved as `visual-ux/candidate-2.html`; the explained
+        judge failed it on that link, then corrected itself to PASS. The
+        rubric now says the winner's file may keep its candidate name and
+        only a link to a rejected candidate's file counts.
+        `accessibility-by-construction` 2-1 in two runs (0.667 before this
+        phase; the CLI flags the 8-9k-character file as judge-noisy).
+      *Batch 3 (2026-10-15, 35 cases):* hit the subscription's session
+      limit after two cases. `design-system-payfine-phase3` passed on the
+      clarified rubric and `architecture-design-payfine-phase2` on its
+      floor; `library-app-lending-review` was cut off mid-case (0.41 over
+      two runs is the limit, not the skill); the other 32 errored on every
+      run. **To resume** (after the reset the error names, 12:40pm
+      America/New_York): `wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh
+      --stale --runs 3`, read every failure, then record bars for every
+      phase-F case with `record_thresholds.py --gate-only` (no bar has
+      been recorded yet in this phase; the gate wrote evidence only), check
+      `eval_evidence.py --base origin/main`, update the hand-off, open the
+      PR.
 
 ## G. Only after A–F
 
