@@ -34,13 +34,16 @@ lighter home (a commit message, a PR description, a comment, or nothing),
 and write no ADR unless the user then insists. Being asked for an ADR
 doesn't make a decision ADR-worthy.
 
-The three lines are the record that the check was made. A reply that
-opens with a `Write` call, or that goes straight to "I wrote the ADR",
-has skipped the step however sound the decision was; a request that
-arrives fully argued is the case most worth checking, because nobody
-else will. Each answer is yes or no. A check that feels borderline gets
-the answer it falls on and the reason, not "borderline": the rule above
-needs a yes or a no to act on.
+The three lines are the record that the check was made, and they outlive
+this reply: when all three are yes and you go on to write the ADR, the
+same three lines go into its "Why this is an ADR" section (template
+below), so the document carries its own justification. A reply that opens
+with a `Write` call, or that goes straight to "I wrote the ADR", with the
+three lines in neither place, has skipped the step however sound the
+decision was; a request that arrives fully argued is the case most worth
+checking, because nobody else will. Each answer is yes or no. A check that
+feels borderline gets the answer it falls on and the reason, not
+"borderline": the rule above needs a yes or a no to act on.
 
 **Template:**
 
@@ -49,6 +52,11 @@ needs a yes or a no to act on.
 
 ## Status
 Proposed | Accepted | Superseded by ADR-NNN
+
+## Why this is an ADR
+Architectural: yes — <why>
+Significant: yes — <why>
+Non-obvious: yes — <why>
 
 ## Context
 The forces at play — constraints, requirements, prior art — stated neutrally,

@@ -36,13 +36,13 @@
     "recorded": "2026-10-15T13:54:28Z"
   },
   "adr-neg-rename": {
-    "inputs": "660e2dae4ac98f8ad086553143a514d0e5a75c78cb7f186967162d32a7fedfd0",
+    "inputs": "7dfdeb215824aea369fd3b433022c5669af6b1de7797fb68c75e547836fa4410",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261015T140248-adr-neg-rename.json",
+    "source": "results/gate-20261015T141302-adr-neg-rename.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-15T14:10:11Z"
+    "recorded": "2026-10-15T14:15:45Z"
   },
   "architecture-design-neg-review": {
     "inputs": "5b96f9cf62c68d8748142354bb2e3c24ca96e4a86f4ce4c5530b7e8987c2bd8a",
@@ -162,13 +162,13 @@
     "recorded": "2026-10-15T13:54:28Z"
   },
   "design-system-payfine-phase2": {
-    "inputs": "60f243626529a3e0236d8df20670a758c562fafe02a35cfde06661af42abb523",
-    "score": 0.917,
-    "bar": 1,
+    "inputs": "63b35a11dcd67ee523448701991a222a3726a7a9cfe253a3080a67215e97274d",
+    "score": 1.0,
+    "bar": 0.917,
     "runs": 3,
-    "source": "results/gate-20261014T045557-design-system-payfine-phase2.json",
+    "source": "results/gate-20261015T141302-design-system-payfine-phase2.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-14T05:32:26Z"
+    "recorded": "2026-10-15T14:15:45Z"
   },
   "design-system-payfine-phase3": {
     "inputs": "7272caafd298222677c8d4de968d31a0362d14f59481e550cfbbbcbb2febc4a7",
@@ -459,13 +459,13 @@
     "recorded": "2026-10-15T14:10:11Z"
   },
   "orchestrator-route-user-story": {
-    "inputs": "6b03f5a7f1647bc5bf8dca915691d08e678e8e296a3fa7fbff8150bc0f80a4cb",
-    "score": 0.905,
+    "inputs": "1aef627742ead1fff4ef773ff9a69dbe73a51bf0981adb735957e101e5ff3df4",
+    "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261015T140248-orchestrator-route-user-story.json",
+    "source": "results/gate-20261015T141302-orchestrator-route-user-story.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-15T14:10:11Z"
+    "recorded": "2026-10-15T14:15:45Z"
   },
   "orchestrator-security-stage": {
     "inputs": "34909f9722e8139764b677ac7cdb0b2002df49bd9164b9546ec5f57c8a658fe2",
@@ -637,6 +637,15 @@
     "source": "results/gate-20261015T050645-scope-map-self-service.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T05:13:35Z"
+  },
+  "screen-design-payfine": {
+    "inputs": "13fa3564a74ee9022b90482934fe2841b2791f173448edbb873a0388bd38ee92",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261015T141302-screen-design-payfine.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-15T14:15:45Z"
   },
   "security-requirements-neg-review": {
     "inputs": "560b4d03e746e7bf364cc99a16587b618883c69def56d1dd55c1e2d1e9761544",

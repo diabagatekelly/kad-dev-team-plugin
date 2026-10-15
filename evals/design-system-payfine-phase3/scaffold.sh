@@ -19,4 +19,4 @@ python3 -I "$here/../tools/history_files.py" "$here/history.jsonl" . --require
 # from the new history; this check makes a stale pin fail here, loudly,
 # instead of in a silently failing grader.
 second="$(ls docs/pay-fine/design-candidates/*.html | sort | sed -n 2p)"
-grep -q '#184A82' "$second" || { echo "second candidate $second lacks the pinned brand colour #184A82; re-pin it from history.jsonl" >&2; exit 1; }
+grep -qi '#0b6e7a' "$second" || { echo "second candidate $second lacks the pinned brand colour #0b6e7a; re-pin it from history.jsonl" >&2; exit 1; }

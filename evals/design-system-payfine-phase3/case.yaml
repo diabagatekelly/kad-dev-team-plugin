@@ -25,10 +25,10 @@ graders:
     name: winner-is-the-second-candidate
     target: trace
     # The mockup written to visual-ux/ carries the second candidate's brand
-    # colour (pinned from history.jsonl's candidate-b Write; scaffold.sh
+    # colour (pinned from history.jsonl's candidate-2.html Write, --brand; scaffold.sh
     # checks the pin). The JSON-encoded HTML holds braces and escaped
     # quotes, so the content is matched as a JSON string, not with [^{}].
-    pattern: '"name":"Write","input":\{"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html","content":"(?:[^"\\]|\\.)*#184A82'
+    pattern: '"name":"Write","input":\{"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html","content":"(?:[^"\\]|\\.)*#0[Bb]6[Ee]7[Aa]'
   - type: llm
     name: chosen-direction-committed
     focus:
