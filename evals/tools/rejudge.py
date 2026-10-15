@@ -48,7 +48,7 @@ def ask(prompt, system=SYSTEM):
         args += ["--system-prompt", system]
     # The prompt goes on stdin: `--tools` takes several values and would
     # swallow a prompt passed after it as one more tool name.
-    reply = subprocess.run(args, input=prompt, capture_output=True, text=True).stdout
+    reply = subprocess.run(args, input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
     return "\n".join(l for l in reply.splitlines() if "connectors are disabled" not in l).strip()
 
 

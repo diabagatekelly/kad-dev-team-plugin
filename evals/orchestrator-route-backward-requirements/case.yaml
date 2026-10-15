@@ -55,7 +55,7 @@ graders:
 
       Here the state is: a backward route: slice-000 says no requirements pass ran for its scope-map step, so the stage that owns WHAT was skipped and the slice stands on nothing confirmed. The right destination is `product-manager:requirements-refinement` for that step, not the next forward row.
 
-      PASS if the log has an entry whose detected state is that one (in its own words), whose destination is requirements-refinement, and whose artifact line names a path under `docs/pay-fine/` (the requirements doc for that step; the entry should say it is a backward route and what was skipped or invalidated). A later entry correcting an earlier one is fine.
+      PASS if the log has an entry whose detected state is that one (in its own words or the table's; it need not list every element of the row), whose destination is requirements-refinement, and whose artifact line names a path under `docs/pay-fine/` (the requirements doc for that step; the entry should say it is a backward route and what was skipped or invalidated). A later entry correcting an earlier one is fine.
 
       FAIL if there is no entry, the entry routes somewhere else, the detected state it names is a different row, or no artifact path under `docs/pay-fine/` is given.
   - type: llm
@@ -65,6 +65,6 @@ graders:
     criteria: |
       The orchestrator executes exactly one routed step per invocation, then reports what it detected, where it routed and what was produced, and asks whether to continue; it never chains into the next stage. Here the routed step is `product-manager:requirements-refinement` for that step, not the next forward row.
 
-      PASS if the response ends in one of two ways: with requirements-refinement's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. Either way nothing from a later stage (a user story or a design for slice-000) has been produced.
+      PASS if the response ends in one of two ways: with requirements-refinement's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is the second ending, not the orchestrator answering its questions. Either way nothing from a later stage (a user story or a design for slice-000) has been produced.
 
-      FAIL if the response goes on to run or produce a later stage's work, answers the routed skill's questions itself from what it read in the repository and proceeds past them, or routes to something other than requirements-refinement.
+      FAIL if the response goes on to run or produce a later stage's work, or if the routed skill had stopped to ask the user something and the response answers that question itself from the repository and carries on past it, or if it routes to something other than requirements-refinement.

@@ -55,7 +55,7 @@ graders:
 
       Here the state is: the slice has a screen design and its accessibility criteria are still a placeholder. The right destination is `accessibility-engineer:accessibility-review`.
 
-      PASS if the log has an entry whose detected state is that one (in its own words), whose destination is accessibility-review, and whose artifact line names a path under `docs/pay-fine/` (the review, or the slice whose placeholder it fills). A later entry correcting an earlier one is fine.
+      PASS if the log has an entry whose detected state is that one (in its own words or the table's; it need not list every element of the row), whose destination is accessibility-review, and whose artifact line names a path under `docs/pay-fine/` (the review, or the slice whose placeholder it fills). A later entry correcting an earlier one is fine.
 
       FAIL if there is no entry, the entry routes somewhere else, the detected state it names is a different row, or no artifact path under `docs/pay-fine/` is given.
   - type: llm
@@ -65,6 +65,6 @@ graders:
     criteria: |
       The orchestrator executes exactly one routed step per invocation, then reports what it detected, where it routed and what was produced, and asks whether to continue; it never chains into the next stage. Here the routed step is `accessibility-engineer:accessibility-review`.
 
-      PASS if the response ends in one of two ways: with accessibility-review's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. Either way nothing from a later stage (technology-bootstrap or implementation) has been produced.
+      PASS if the response ends in one of two ways: with accessibility-review's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is the second ending, not the orchestrator answering its questions. Either way nothing from a later stage (technology-bootstrap or implementation) has been produced.
 
-      FAIL if the response goes on to run or produce a later stage's work, answers the routed skill's questions itself from what it read in the repository and proceeds past them, or routes to something other than accessibility-review.
+      FAIL if the response goes on to run or produce a later stage's work, or if the routed skill had stopped to ask the user something and the response answers that question itself from the repository and carries on past it, or if it routes to something other than accessibility-review.

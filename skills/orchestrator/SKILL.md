@@ -140,7 +140,7 @@ forward.
 | A slice exists for the current unit but hasn't been written up as a user story yet | `docs-writer:user-story-writeup` |
 | The current unit's slice has been written up as a user story but has no design doc yet | `software-architect:architecture-design` for that slice |
 | The slice has a design doc but its security criteria are still an unfilled placeholder | `devsecops-engineer:security-requirements` for that slice |
-| The slice's security criteria are filled but its reliability behavior has never been made concrete | `devsecops-engineer:reliability-requirements` for that slice |
+| The slice's security criteria are filled but its reliability criteria are still an unfilled placeholder | `devsecops-engineer:reliability-requirements` for that slice |
 | The slice is UI-touching, its runtime-safety criteria are filled, and the project has no design-system artifact yet | `ux-designer:design-system` |
 | The slice is UI-touching, its runtime-safety criteria are filled, a design-system exists, but this slice has no screen-design artifact yet | `ux-designer:screen-design` for that slice |
 | The slice is UI-touching, has a screen-design artifact, but its accessibility criteria are still an unfilled placeholder | `accessibility-engineer:accessibility-review` for that slice |

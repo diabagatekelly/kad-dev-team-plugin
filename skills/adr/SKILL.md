@@ -32,6 +32,13 @@ lighter home (a commit message, a PR description, a comment, or nothing),
 and write no ADR unless the user then insists. Being asked for an ADR
 doesn't make a decision ADR-worthy.
 
+Write the three lines even when all three are plainly yes and the user
+has already made the case: the visible record that the check was made is
+the point, and a response that goes straight to the file has skipped it.
+Each answer is yes or no. A check that feels borderline gets the answer it
+falls on and the reason, not "borderline": the rule below needs a yes or
+a no to act on.
+
 **Template:**
 
 ```markdown

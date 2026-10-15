@@ -646,37 +646,117 @@ has a gate-mode three-run bar and current evidence.
 
 ## F. Routing, restraint, UI
 
-- [ ] F1. Each `orchestrator-route-*` case: one LLM grader on
+Edits done 2026-10-15 on branch `eval-phase-f` (commit `61afee4`); the
+runs are F10. The change reaches 58 cases: the 26 whose graders changed
+outright, plus the 32 that hold a trap grader (F4) or copy the shared
+UI slice (F1).
+
+- [x] F1. Each `orchestrator-route-*` case: one LLM grader on
       `orchestrator-log.md` (names the matched row and an artifact path
       under the target) and one on `last_message` (ends with the routed
       skill's questions or a stop, not the next artifact).
-      *Note from D7 (2026-10-14):* `orchestrator-route-design-system`
-      routed to `reliability-requirements` in one run of three. The
-      shared `ui-plants/pay-fine/slice-001.md` lists its security and
-      reliability criteria unlabeled among the functional ones (one
-      reliability criterion, the double charge), so "runtime-safety
-      criteria filled" is a judgment call there. Label the sections in
-      the fixture when F touches the route cases; it is shared by every
-      UI case, so the change invalidates their evidence together.
-- [ ] F2. `orchestrator-asks-for-target`: fix the `\\.md` regex and check
+      *Done for all thirteen route cases, `orchestrator-backward-route`
+      (log grader: names the hand-back, not just the destination) and
+      `orchestrator-route-implementation` (its log grader existed; the
+      final-message grader accepts a stop to ask about the quarantine
+      flow's cost, a report that the flow could not be launched without
+      an `Agent` tool, or its outcome). The final-message rubric accepts
+      either ending the orchestrator's step 5 allows: the routed skill's
+      own questions, or the routed step's result plus the question
+      whether to continue, with nothing from a later stage produced.*
+      *The fixture note:* `ui-plants/pay-fine/slice-001.md` now prefixes
+      its two security bullets with "Security:" and the double-charge
+      bullet with "Reliability:", the convention the cancel-hold slice
+      already used. The 2026-10-14 traces showed
+      `orchestrator-route-screen-design` (bar 0.89, one run routed to
+      `reliability-requirements`) losing its run the same way as
+      `orchestrator-route-design-system`; both bars should return to 1.0.
+      The nine UI cases copy the slice, so their evidence all went
+      stale together.
+- [x] F2. `orchestrator-asks-for-target`: fix the `\\.md` regex and check
       `Grep` as well as `Glob`.
-- [ ] F3. Restraint cases (`*-catalog-review`): add a positive grader
+      *The single-quoted `'\\.md'` was the regex `\\.md`, a literal
+      backslash; now `'\.md'`. A second `tool_used` guard matches the
+      same words in `Grep` input. Checked against `**/*.md`, `docs/**`,
+      `**/problem*` (fail) and `src/**/*.ts`, `*.json` (pass).*
+- [x] F3. Restraint cases (`*-catalog-review`): add a positive grader
       requiring at least two of the module's real controls to be named.
-- [ ] F4. Every "does not flag" trap grader: PASS only if the review has at
+      *`names-what-holds-it-up` on each of the four catalog cases
+      (architecture, security, reliability, code review), each listing
+      the module's actual controls from the source (bound `$1`
+      parameter and `escapeLike` inside it, the `catalog_reader` role
+      and pool, the 2-character minimum and 50-row cap, the
+      `CatalogUnavailable` translation, the generic 503 with path and
+      reason only, the named constants and the WHY comment). Paraphrase
+      counts; generic praise does not.*
+- [x] F4. Every "does not flag" trap grader: PASS only if the review has at
       least one real finding and none is the trap.
-- [ ] F5. `accessibility-review-payfine-subtle`: copy
+      *Sixty graders in thirty-three cases: every `no-false-alarm-*`,
+      the three restraint graders in `code-review-fine-notices-pr` (and
+      via-agent), the three `keeps-*` in `code-review-days-left-pr`,
+      `respects-documented-rounding-split`, `no-enterprise-ceremony`,
+      `no-retry-of-declines`, `keeps-the-one-implementation-port`. Each
+      keeps its wording and gains a closing paragraph sized to what it
+      judges: a review must also report at least one real finding; a
+      phase-2 response must also present at least one real fork; a
+      criteria document must also hold at least one Given/When/Then
+      criterion; the design doc must also record a decision. The catalog
+      cases' `reports-nothing-above-low` are restraint on a clean module
+      and keep their floor through F3 instead.*
+- [x] F5. `accessibility-review-payfine-subtle`: copy
       `leaves-the-mockup-alone`, `says-it-read-the-markup`,
       `criteria-split-now-and-later`; both accessibility cases: grade
       `slice-001.md` for the filled placeholder.
-- [ ] F6. `screen-design-payfine`: trace regex on the mockup Writes for the
+      *Done; the subtle case's criteria grader asks for the Pay button's
+      focus indicator and the error-to-field association at least. Both
+      cases gain `slice-placeholder-filled` (the placeholder line gone,
+      Given/When/Then criteria in its place, other criteria unchanged)
+      and `writes-only-review-and-slice`. The skill's output template
+      says the criteria replace the slice's placeholder but never says
+      to edit the slice file; the prompt asks for it, so the runs will
+      show whether the skill needs the sentence.*
+- [x] F6. `screen-design-payfine`: trace regex on the mockup Writes for the
       system's token values; `design-system-payfine-phase2`: pin candidate
       filenames and grade the files.
-- [ ] F7. `architecture-design-payfine-phase1`: trace guard against any
+      *`mockups-carry-the-system-brand-token`: three Writes to
+      `visual-ux/*.html` each carrying `#1F5F5B` (`--brand`) in their
+      own content, either key order, matched as a JSON string so the
+      HTML's braces and quotes don't cut it short; checked against
+      three good writes, two of three, writes outside `visual-ux/`, and
+      a hex that appears only in a later write. Phase 2's prompt now
+      names `docs/pay-fine/design-candidates/candidate-N.html`; two
+      `file_exists` and two file-judged `candidate-N-is-a-real-render`
+      graders (a full phone-width page of the pay-fine screen with
+      concrete values, not a swatch or a hedge). Distinctness between
+      candidates stays judged from the final message: an LLM grader
+      reads one file, and `focus: trace` elides the middle of the run.
+      The prompt change makes `design-system-payfine-phase3`'s history
+      (frozen from a phase-2 run) describe a different turn, so F10
+      re-runs phase 2 with `--keep-scaffold`, re-freezes phase 3 from
+      it, and re-pins the second candidate's brand colour in phase 3's
+      grader and scaffold check.*
+- [x] F7. `architecture-design-payfine-phase1`: trace guard against any
       Write under `docs/pay-fine/`.
-- [ ] F8. `adr-*`: regex on the three worthiness checks in the response.
-- [ ] F9. `vertical-slicing-payfine-phase1`: `tool_used` on
+      *`writes-nothing-under-pay-fine`, Edit or Write, `not_contains`.*
+- [x] F8. `adr-*`: regex on the three worthiness checks in the response.
+      *`opens-with-the-three-checks` on the trace: `Architectural`,
+      `Significant`, `Non-obvious`, each answered yes or no, bold
+      markers allowed, in that order; the skill's own template in the
+      trace says `yes/no` and is excluded by a lookahead for `/`.
+      Checked against the template alone (fail), plain and bold answers
+      (pass), prose with no checks and two of three (fail).*
+- [x] F9. `vertical-slicing-payfine-phase1`: `tool_used` on
       `acceptance-criteria`; grade the deferred and still-open sections.
+      *`consults-acceptance-criteria` (the skill says to invoke it before
+      writing the criteria) and `deferred-and-still-open-are-real` on
+      the slice file: both sections present and specific, or an
+      explicit nothing-to-defer with a reason; filler fails.*
 - [ ] F10. Run the changed cases, re-record. Run.
+      Three batches in WSL: the 26 cases whose graders changed outright;
+      `design-system-payfine-phase2` with `--keep-scaffold`, then the
+      phase 3 re-freeze and re-pin, then phase 3; then the 32 reached
+      only by the F4 floor or the F1 fixture. Read every failure before
+      recording a bar.
 
 ## G. Only after A–F
 

@@ -41,7 +41,7 @@ graders:
     criteria: |
       The slice's criteria name three states a member sees: their outstanding fines with amounts, a fine shown as paid after a successful payment, and a declined payment with the fine still outstanding.
 
-      PASS if each of the three has its own HTML mockup file in `visual-ux/` referenced from the document. Extra mockups (for example a payment in progress) are fine.
+      PASS if each of the three has its own HTML mockup file in `visual-ux/` referenced from the document. The outstanding-fines state may be the screen's default view, with the card form on the same page (a "choose and pay" mockup counts as it). Extra mockups (for example a payment in progress, or an empty state) are fine.
 
       FAIL if any of the three has no mockup of its own, or two of them share one file with the difference only described in prose.
   - type: llm
@@ -65,7 +65,7 @@ graders:
     criteria: |
       The requirements put paying several fines in one payment and saved cards out of scope, and nothing in the slice asks for search, filtering, sorting, payment history or receipts.
 
-      PASS if the design adds none of these. Mentioning one as out of scope or as an open question is fine.
+      PASS if the design adds none of these. Mentioning one as out of scope or as an open question is fine. Showing the fine that was just paid as paid (a "Paid" tag, or a paid group on the same page) is the slice's own criterion, not payment history; payment history means a record of earlier payments (dates, amounts, a statement) beyond the fine paid in this flow.
 
       FAIL if any of them is designed in (for example a "pay all" button, a "save this card" checkbox, a filter, or a receipt download).
   - type: llm
@@ -115,9 +115,12 @@ graders:
   - type: regex
     name: mockups-carry-the-system-brand-token
     target: trace
-    # Each of the three state mockups written to visual-ux/ must carry the
-    # design system's brand value (#1F5F5B, `--brand`) in its own markup: the
-    # skill says mockups are styled with the system's actual token values,
-    # and reuses-the-system otherwise judges that from prose alone. The HTML
-    # is a JSON string in the trace, so its content is matched as one.
-    pattern: '(?:"name":"Write","input":\{(?:"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html","content":"(?:[^"\\]|\\.)*#1[Ff]5[Ff]5[Bb]|"content":"(?:[^"\\]|\\.)*#1[Ff]5[Ff]5[Bb](?:[^"\\]|\\.)*","(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html")[\s\S]*?){3}'
+    # The mockups written to visual-ux/ must carry the design system's brand
+    # value (#1F5F5B, `--brand`) in markup of their own: the skill says
+    # mockups are styled with the system's actual token values, and
+    # reuses-the-system otherwise judges that from prose alone. One run put
+    # every rule in a shared visual-ux/*.css the mockups link, which is the
+    # same thing, so one Write of an .html or .css under visual-ux/ holding
+    # the value is enough; three-mockups-in-visual-ux counts the files. The
+    # HTML is a JSON string in the trace, so its content is matched as one.
+    pattern: '"name":"Write","input":\{(?:"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.(?:html|css)","content":"(?:[^"\\]|\\.)*#1[Ff]5[Ff]5[Bb]|"content":"(?:[^"\\]|\\.)*#1[Ff]5[Ff]5[Bb](?:[^"\\]|\\.)*","(?:file_path|path)":"[^"]*visual-ux/[^"]*\.(?:html|css)")'
