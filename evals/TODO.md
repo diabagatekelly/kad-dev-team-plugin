@@ -578,7 +578,12 @@ has a gate-mode three-run bar and current evidence.
       option with the others rejected is product-slicer's job. The
       first handback run also read "recorded against their own card
       number" as the payment card, contradicting the no-card-number
-      criterion; the fixture now says library card number.
+      criterion; the fixture now says library card number. Sourcery on
+      PR #4 (taken): `leaves-the-what-to-requirements` called the
+      receipt's contents undecided while the fixture says the merchant
+      agreement fixed them; the rubric now treats the agreement's facts
+      as settled and sends only the rest (channel, re-viewing, who may
+      see it, retention) to requirements. Re-ran 15/15.
       **Real miss found:** one run in three answered the hand-back
       without the skill and wrote the receipt slice in full, edited
       `slice-001.md` and marked the hand-back picked up (the exact
@@ -601,6 +606,13 @@ has a gate-mode three-run bar and current evidence.
       One run grepped `docs/` (which holds only the map) to confirm no
       cancel-hold entry; `answers-from-the-map` forbade any Grep not
       naming the map and now allows the docs folder. 18/18 after.
+      Sourcery on PR #4 (both taken): the allowance matched
+      `architecture-map` anywhere in the Grep input, so a source grep
+      for that word passed, and it missed a bare relative `docs` path;
+      the guard is now anchored on the `path` key (the docs folder or
+      the map file, relative or absolute). Re-ran 1.0, 1.0, 0.94 (one
+      2-1 judge split on `honest-empty-result`, the grader that was at
+      0.667 before this phase); bar left at 1.0.
 - [x] E4. Remove persona names from `pay-fine-security/design-001.md`,
       `pay-fine-screen/…/screen-design-001.md`, `backward-pm/slice-000.md`.
       *Done, and `pay-fine-handback/design-001.md` (same section).* The

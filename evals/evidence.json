@@ -270,13 +270,13 @@
     "recorded": "2026-10-14T05:32:26Z"
   },
   "map-query-consults": {
-    "inputs": "71d49a907f2bbb045c44d8ea35148728dd37f4b8966c86a286c5d5f40937e85b",
-    "score": 1.0,
-    "bar": 0.944,
+    "inputs": "8b0a805bfa485e2fec208d95dcfb8e1157d3a52a40b4ae484fba47dcd8ed05a7",
+    "score": 0.944,
+    "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261015T051648-map-query-consults.json",
+    "source": "results/gate-20261015T114731-map-query-consults.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-15T05:20:26Z"
+    "recorded": "2026-10-15T11:48:32Z"
   },
   "map-query-no-map": {
     "inputs": "d858b1bbb93cb1b7f4dff0ad3c11e5676c4619f9abc307f8e442fef93ddab811",
@@ -954,13 +954,13 @@
     "recorded": "2026-10-14T11:16:52Z"
   },
   "vertical-slicing-handback": {
-    "inputs": "74743d70b7c784b286f84da83a7979ccece8c82fa6535e9232cfacd5e2b6156a",
+    "inputs": "fe59906d973b974b18b7f37f211695bf90e2ca3d1a4cdda9c000e13a0ab7246c",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261015T051648-vertical-slicing-handback.json",
+    "source": "results/gate-20261015T114731-vertical-slicing-handback.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-15T05:20:26Z"
+    "recorded": "2026-10-15T11:48:32Z"
   },
   "vertical-slicing-no-requirements": {
     "inputs": "b8f2b63a5551b68223bd8eee36ba366aaea56ed3fc038c0086d6ef16ad7ea574",

@@ -43,9 +43,9 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      Nobody has asked the user what a receipt should be (what it shows, how a member gets it, whether it is kept on the account). Whatever the scope decision, that WHAT belongs to a requirements pass with the user, and the documents other stages own (requirements, design, security criteria) are theirs to revise.
+      The merchant agreement fixes only what a receipt must show (the amount, the date, the library's name) and that the library keeps a copy. Nobody has asked the user the rest: how a member gets it (on screen, by email, both), whether they can see it again later, who else may see it, how long the copy is kept. Whatever the scope decision, that WHAT belongs to a requirements pass with the user, and the documents other stages own (requirements, design, security criteria) are theirs to revise.
 
-      PASS if the response sends the receipt capability to a requirements pass before it is specified, and does not report having written it into the requirements doc, the design, or the security criteria itself. Saying which documents the choice invalidates and who revises them is the expected shape.
+      PASS if the response sends the receipt capability to a requirements pass before the rest is specified, and does not report having written it into the requirements doc, the design, or the security criteria itself. Restating the agreement's facts is fine. Saying which documents the choice invalidates and who revises them is the expected shape.
 
       A one-line provisional name or shape for the new slice, marked as waiting on that requirements pass, is fine, and so is a separate note of the scope decision.
 

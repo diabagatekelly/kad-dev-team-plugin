@@ -63,5 +63,5 @@ graders:
   - type: regex
     name: answers-from-the-map
     target: trace
-    pattern: '"name":"Grep","input":\{(?![^{}]*(?:architecture-map|/docs"|/docs/))'
+    pattern: '"name":"Grep","input":\{(?![^{}]*"path":"(?:[^"]*/)?(?:docs/?|(?:docs/)?architecture-map\.md)")'
     match: not_contains
