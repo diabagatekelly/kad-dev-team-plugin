@@ -52,7 +52,7 @@ graders:
       path: docs/self-service/scope-map-001.md
     weight: 1
     criteria: |
-      The problem doc's privacy constraint is worded around contact details, but its concern (a member's personal data, including what they borrow and have on hold, is visible only to them and staff) applies to every step: fines show what was borrowed, holds show what a member wants, contact details are personal data.
+      The problem doc's privacy constraint is worded around contact details and says nothing wider, but its concern (a member's personal data is visible only to them and staff) applies to every step: fines show what was borrowed, holds show what a member wants, contact details are personal data.
 
       PASS if the map treats it as applying across the steps and says it is applied in each step's own requirements pass (or equivalent: settled per step before that step is sliced).
 

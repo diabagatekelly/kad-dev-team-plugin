@@ -15,7 +15,6 @@ browser with the publishable key from `GET /payments/config`.
   and `FinePayments` ports, as the staff pay route already does.
 - No new port and no new adapter.
 
-## Open for devsecops-engineer
+## Open questions
 
-Security and reliability criteria for the slice (placeholders in
-`slice-001.md`).
+None. The design reuses what exists and adds no port or adapter.

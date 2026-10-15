@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: orchestrator-backward-route
-description: "Backward routing: security-requirements-001 hands a missing capability (a member refund path) back to product-slicer as blocking. Must route to product-slicer, the owner, not forward to reliability criteria and not resolve it in place."
+description: "Backward routing: security-requirements-001 hands a missing capability (a receipt for a portal payment) back to product-slicer as blocking. Must route to product-slicer, the owner, not forward to reliability criteria and not resolve it in place."
 tags: [orchestrator, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -40,11 +40,11 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      `docs/pay-fine/security-requirements-001.md` ends with "Handed back to product-slicer — blocking": members have no refund path, a capability nobody scoped. The orchestrator's backward rule takes precedence over the forward table and routes to the persona that owns the invalidated artifact — `product-slicer` — not to the next forward row (reliability criteria) and not back to devsecops-engineer to resolve it.
+      `docs/pay-fine/security-requirements-001.md` ends with "Handed back to product-slicer — blocking": a member paying online gets no receipt, which the library's merchant agreement requires, a capability nobody scoped. The orchestrator's backward rule takes precedence over the forward table and routes to the persona that owns the invalidated artifact — `product-slicer` — not to the next forward row (reliability criteria) and not back to devsecops-engineer to resolve it.
 
-      PASS if the response routes to product-slicer (or is working as it, on whether the slice grows or a new slice comes first) because of the hand-back.
+      PASS if the response routes to product-slicer (or is working as it: deciding whether a new slice is cut, slice 1 is narrowed, or slice 1 grows, and saying which and why) because of the hand-back. A scope decision that chooses one option and lists the others as rejected with reasons is product-slicer doing its job and passes.
 
-      FAIL if it continues forward (reliability criteria or later), resolves the refund question itself as devsecops-engineer, or lays out scope options for the user before routing to product-slicer. Options presented by product-slicer itself, once routed there, are its job and pass.
+      FAIL if it continues forward (reliability criteria or later), resolves the receipt question itself as devsecops-engineer, or lays out scope options for the user to pick from without routing to product-slicer.
   - type: file_exists
     name: log-written
     path: docs/pay-fine/orchestrator-log.md

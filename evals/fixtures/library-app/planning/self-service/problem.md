@@ -22,8 +22,7 @@ The branch is cutting desk hours from 60 to 45 a week in the spring.
 - Card payments already go through Stripe; nothing about that changes.
 - One developer maintains the service.
 - Contact details changed online must be visible only to that member and
-  to staff. The library's privacy policy covers all of a member's personal
-  data, including what they borrow and what they have on hold.
+  to staff.
 
 ## Open questions
 

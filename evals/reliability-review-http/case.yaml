@@ -8,7 +8,7 @@ execution:
   prompt: |
     The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
 
-    Review the HTTP layer for reliability: `infra/http/respond.ts`, the lending, portal and catalog routes in `infra/http/`, and the stores they read from and write to. How does it behave when a dependency fails, and is anything going to fall over as data grows?
+    Review the HTTP layer for reliability: `infra/http/respond.ts`, the lending, portal and catalog routes in `infra/http/`, and the stores they read from and write to.
 
     Save the review as `docs/reviews/reliability-review-http.md`.
   model: sonnet

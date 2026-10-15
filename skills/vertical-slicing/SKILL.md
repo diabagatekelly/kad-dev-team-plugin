@@ -1,6 +1,6 @@
 ---
 name: vertical-slicing
-description: Cut the smallest end-to-end shippable slice from a problem — picking what to build first, applying slicing techniques when the thinnest path isn't obvious, catching too-big/too-thin scope, and handling scope-creep pushback. Use once a problem framing doc exists and it's time to decide what to build first, or when a proposed slice looks too big, too thin to demo, or scoped by layer instead of by user value.
+description: Cut the smallest end-to-end shippable slice from a problem — picking what to build first, applying slicing techniques when the thinnest path isn't obvious, catching too-big/too-thin scope, and handling scope-creep pushback. Use once a problem framing doc exists and it's time to decide what to build first, when a proposed slice looks too big, too thin to demo, or scoped by layer instead of by user value, or when a later stage (security, reliability, architecture) hands back a scope change: a capability nobody scoped that a slice turns out to need.
 ---
 
 # Vertical Slicing
@@ -197,9 +197,9 @@ slice is now larger than what was cut and what that bought.
 
 **Whatever you pick, repair what it invalidated.** A capability added
 mid-flight has no confirmed WHAT behind it, whether it arrives as a new
-slice or by growing this one. What it should be (say, what a refund path
-for members looks like) is the user's to decide in its own
-`requirements-refinement` pass, not an assumption that the finding
+slice or by growing this one. What it should be (say, what a guardian's
+consent to a junior member's payment looks like) is the user's to decide
+in its own `requirements-refinement` pass, not an assumption that the finding
 constitutes one, and not something you write into the requirements doc
 yourself. A changed step boundary supersedes the scope map rather than
 editing it. Leaving a stage skipped because the slice arrived from an

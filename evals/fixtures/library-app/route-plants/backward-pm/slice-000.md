@@ -16,7 +16,8 @@ fine with its amount.
 
 ## Still open
 
-A requirements-refinement pass never ran for this step. The slice was cut
-when the scope map was superseded mid-flight, and its WHAT came from the
-desk staff's request rather than from `product-manager`. Flagged rather
-than skipped silently.
+Nobody has confirmed with the user what this step has to do: the slice
+was cut when the scope map was superseded mid-flight, and its thin path
+came from the desk staff's request. No requirements document covers step
+1 (`requirements-001.md` is step 2's). Flagged rather than skipped
+silently.
