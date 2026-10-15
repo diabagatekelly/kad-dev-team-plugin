@@ -646,10 +646,13 @@ has a gate-mode three-run bar and current evidence.
 
 ## F. Routing, restraint, UI
 
-Edits done 2026-10-15 on branch `eval-phase-f` (commit `61afee4`); the
-runs are F10. The change reaches 58 cases: the 26 whose graders changed
-outright, plus the 32 that hold a trap grader (F4) or copy the shared
-UI slice (F1).
+Done 2026-10-15 on branch `eval-phase-f`. Edits in `61afee4`; the runs
+and what they taught are under F10. The change reached 64 cases: the 26
+whose graders changed outright, the 32 that hold a trap grader (F4) or
+copy the shared UI slice (F1), and six more through the two skill fixes
+(`adr` reaches `technology-bootstrap-phase3` and the tdd via-agent case
+through agent files; the orchestrator row reaches every orchestrator
+case). Every one has a gate-mode three-run bar and current evidence.
 
 - [x] F1. Each `orchestrator-route-*` case: one LLM grader on
       `orchestrator-log.md` (names the matched row and an artifact path
@@ -751,7 +754,7 @@ UI slice (F1).
       writing the criteria) and `deferred-and-still-open-are-real` on
       the slice file: both sections present and specific, or an
       explicit nothing-to-defer with a reason; filler fails.*
-- [ ] F10. Run the changed cases, re-record. Run.
+- [x] F10. Run the changed cases, re-record. Run.
       Batches in WSL: the 26 cases whose graders changed outright;
       `design-system-payfine-phase2` with `--keep-scaffold`, then the
       phase 3 re-freeze and re-pin, then phase 3; then the 32 reached
@@ -878,6 +881,36 @@ UI slice (F1).
       been recorded yet in this phase; the gate wrote evidence only), check
       `eval_evidence.py --base origin/main`, update the hand-off, open the
       PR.
+      *Resumed after the reset (33 cases, 99 runs): 33/33 passed.* The
+      graders lost, each read: `code-review-fine-notices-pr`
+      `leaves-mocking-to-test-quality-review` in two runs (0.333; the
+      explained judge passes the run: the mocking is named in the
+      hand-off section and the ranked finding is about the test names,
+      a close call on wording); `reliability-review-alerts`
+      `no-false-alarm-burn-rate-alerts` 3-0 in one run on an 11k-character
+      review that praises both alerts (the explained judge passes it);
+      `reliability-review-nightly` duplicate-fines trap 2-1 once on a
+      16k file; `supply-chain-review-build` dependabot trap and
+      `test-quality-review-fines` exact-tests trap once each, both at
+      their previous bars; the tdd via-agent case's two trace regexes in
+      one run (0.97, as before). None of the five trap losses was the new
+      floor: every review had real findings, and the explained judge
+      named the trap's own wording each time. The floor itself cost no
+      run anywhere in the 33 cases that carry it.
+      *Bars recorded* (`record_thresholds.py --gate-only`, 64 cases; no
+      case went stale from recording this time). Moved: up to 1.0 for
+      `accessibility-review-payfine`, `design-system-payfine-phase2`,
+      `orchestrator-route-design-system` (0.889), `-screen-design`
+      (0.933), both requirements phase-2 chains (0.917; the forks grader
+      went 3/3 this time), `reliability-review-nightly-via-agent`;
+      down for `code-review-fine-notices-pr` 0.97 to 0.94,
+      `orchestrator-backward-route` 1.0 to 0.95 (the round-trip
+      narration above), `reliability-review-alerts` 1.0 to 0.94 and
+      `reliability-review-nightly` 1.0 to 0.97 (long-file judge noise,
+      both). `adr-payment-gateway` 1.0 with the checks in the document.
+      Open for G: the orchestrator narrating the backward round trip
+      (one run in three), and the three long-file review traps that lose
+      a run to the judge each pass.
 
 ## G. Only after A–F
 
