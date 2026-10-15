@@ -50,7 +50,7 @@ graders:
     criteria: |
       Two candidates were rejected when the user picked the second one, without giving a reason.
 
-      PASS if the document describes two rejected candidates in prose, each with a reason it wasn't chosen — the user's reason, the document's own reading of why the chosen one fits this product better, or a plain note that the user picked another without saying why: any of these counts — and links no saved file or screenshot of theirs. A link to the chosen direction's own mockup is fine.
+      PASS if the document describes two rejected candidates in prose, each with a reason it wasn't chosen — the user's reason, the document's own reading of why the chosen one fits this product better, or a plain note that the user picked another without saying why: any of these counts — and links no saved file or screenshot of theirs. A link to the chosen direction's own mockup is fine, whatever that file is called (it is often saved under its candidate name, `candidate-2.html`): only a link to a rejected candidate's file counts against this.
 
       FAIL if fewer than two rejected candidates are described, one has no reason of any kind, or one is linked as a saved file or screenshot.
   - type: llm

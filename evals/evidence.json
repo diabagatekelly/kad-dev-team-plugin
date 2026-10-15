@@ -36,13 +36,22 @@
     "recorded": "2026-10-15T13:54:28Z"
   },
   "adr-neg-rename": {
-    "inputs": "7dfdeb215824aea369fd3b433022c5669af6b1de7797fb68c75e547836fa4410",
+    "inputs": "c599e2aff07c30aaf7beec579a3f9401eceaff642256426cf7ede3a3c9e71b06",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261015T141302-adr-neg-rename.json",
+    "source": "results/gate-20261015T141902-adr-neg-rename.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-15T14:15:45Z"
+    "recorded": "2026-10-15T14:21:37Z"
+  },
+  "adr-payment-gateway": {
+    "inputs": "2b5d66dc28894bd231751674357daf3a58b94f3bbafdb1a0f425bb4b220c63fc",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261015T141902-adr-payment-gateway.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-15T14:21:37Z"
   },
   "architecture-design-neg-review": {
     "inputs": "5b96f9cf62c68d8748142354bb2e3c24ca96e4a86f4ce4c5530b7e8987c2bd8a",
@@ -169,15 +178,6 @@
     "source": "results/gate-20261015T141302-design-system-payfine-phase2.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T14:15:45Z"
-  },
-  "design-system-payfine-phase3": {
-    "inputs": "7272caafd298222677c8d4de968d31a0362d14f59481e550cfbbbcbb2febc4a7",
-    "score": 0.963,
-    "bar": 0.875,
-    "runs": 3,
-    "source": "results/gate-20261014T194332-design-system-payfine-phase3.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-14T19:52:55Z"
   },
   "library-app-catalog-review": {
     "inputs": "7e06ff874b353a12f46b5287d319fb6383f2360960dd9f377f91f204ddc285cc",
