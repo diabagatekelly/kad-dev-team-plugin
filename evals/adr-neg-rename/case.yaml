@@ -31,9 +31,10 @@ graders:
   - type: regex
     name: opens-with-the-three-checks
     target: trace
-    # The skill's response opens with the three worthiness checks, one line
+    # The skill's reply opens with the three worthiness checks, one line
     # each: `Architectural: yes/no — <why>`, then Significant, then
-    # Non-obvious. Each must be answered yes or no (bold markers allowed);
-    # the skill's own template in the trace says `yes/no` and is excluded
-    # by the `(?!/)` after the answer.
-    pattern: 'Architectural:?\**:?\s*\**\s*(?:[Yy]es|[Nn]o)\b(?!/)[\s\S]*Significant:?\**:?\s*\**\s*(?:[Yy]es|[Nn]o)\b(?!/)[\s\S]*Non-obvious:?\**:?\s*\**\s*(?:[Yy]es|[Nn]o)\b(?!/)'
+    # Non-obvious, each answered yes or no. The skill's own template is in
+    # the trace too and is excluded by the `<why>` lookahead; a trace
+    # regex cannot anchor to the start of the reply, so declining-the-adr
+    # carries the judgment and this checks the record exists.
+    pattern: 'Architectural: (?:[Yy]es|[Nn]o)\b(?![^<]{0,12}<why>)[\s\S]*Significant: (?:[Yy]es|[Nn]o)\b(?![^<]{0,12}<why>)[\s\S]*Non-obvious: (?:[Yy]es|[Nn]o)\b(?![^<]{0,12}<why>)'

@@ -32,6 +32,15 @@ graders:
     name: three-mockups-in-visual-ux
     target: trace
     pattern: '(?:"name":"Write","input":\{[^{}]*"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html"[\s\S]*){3}'
+  - type: regex
+    name: each-mockup-styled
+    target: trace
+    # Each of the three mockups written to visual-ux/ either carries the
+    # brand value itself or links a stylesheet (`<link rel="stylesheet"`),
+    # the shared-.css form one run used; the grader above checks the
+    # value is in some file under visual-ux/, this one that every mockup
+    # is styled from it rather than one of them.
+    pattern: '(?:"name":"Write","input":\{(?:"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html","content":"(?:[^"\\]|\\.)*(?:#1[Ff]5[Ff]5[Bb]|<link(?:[^"\\]|\\.)*?stylesheet)|"content":"(?:[^"\\]|\\.)*(?:#1[Ff]5[Ff]5[Bb]|<link(?:[^"\\]|\\.)*?stylesheet)(?:[^"\\]|\\.)*","(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html")[\s\S]*?){3}'
   - type: llm
     name: one-mockup-per-state
     focus:

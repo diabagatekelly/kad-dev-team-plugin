@@ -911,6 +911,31 @@ case). Every one has a gate-mode three-run bar and current evidence.
       Open for G: the orchestrator narrating the backward round trip
       (one run in three), and the three long-file review traps that lose
       a run to the judge each pass.
+      *Sourcery on PR #5, ten findings, seven taken:* the ADR trace regex
+      had gone vacuous once the template itself said `yes — <why>` (the
+      runs did write the section, but the grader could not tell);
+      `adr-payment-gateway` now grades the written file for the "Why
+      this is an ADR" block and `adr-neg-rename`'s trace regex excludes
+      `<why>`, and the skill says where the lines live (reply when
+      declining, document when writing). `each-mockup-styled`: every
+      mockup carries the brand value or links a stylesheet (checked
+      against all nine recent runs, including the shared-.css one).
+      The accessibility write guard anchors its two allowed paths
+      (`backup/docs/pay-fine/slice-001.md` tripped it before; now a
+      stray). `consults-before-writing-the-slice`: no write of
+      `slice-001.md` before the `acceptance-criteria` consult.
+      `orchestrator-asks-for-target`: any `Glob` or `Grep` before asking
+      fails, whatever its pattern. `orchestrator-route-implementation`'s
+      log grader also wants the artifact line or the quarantine
+      sub-entries. Declined: a cross-file distinctness check on the
+      phase-2 candidates (an LLM grader reads one file and `focus:
+      trace` elides the middle of the run; still judged from the final
+      message, as recorded under F6); trace checks that no later-stage
+      skill ran on the route cases (each already carries two or three
+      `not-<skill>` `tool_used` guards for exactly that); the
+      `subprocess.run` audit in `rejudge.py` (its argument list is built
+      from constants and the model name, no user string reaches a
+      shell).
 
 ## G. Only after A–F
 

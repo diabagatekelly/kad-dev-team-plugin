@@ -70,6 +70,13 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:acceptance-criteria"'
     min: 1
+  - type: regex
+    name: consults-before-writing-the-slice
+    target: trace
+    # No Write or Edit of slice-001.md may come before the acceptance-criteria
+    # consult: the skill says to invoke it before writing the criteria.
+    pattern: '^(?:(?!"skill":"kad-dev-team:acceptance-criteria")[\s\S])*"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*slice-001\.md"'
+    match: not_contains
   - type: llm
     name: deferred-and-still-open-are-real
     focus:

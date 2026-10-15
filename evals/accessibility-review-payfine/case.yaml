@@ -153,5 +153,8 @@ graders:
   - type: regex
     name: writes-only-review-and-slice
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/pay-fine/(?:accessibility-review-001|slice-001)\.md")[^"]*"'
+    # The two files this case may write, as the exact relative path or the
+    # sandbox's absolute one (.../cwd/docs/...); a path that merely ends in
+    # one of them (backup/docs/pay-fine/slice-001.md) is still a stray write.
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?!(?:[^"]*/cwd/)?docs/pay-fine/(?:accessibility-review-001|slice-001)\.md")[^"]*"'
     match: not_contains

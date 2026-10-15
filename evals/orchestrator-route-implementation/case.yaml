@@ -27,7 +27,7 @@ graders:
     criteria: |
       The cancel-hold slice is fully specified (design approved, security and reliability criteria filled, not UI-touching) and the library app already has a stack, so the next step is `tdd-coach:tdd-implementation`. The orchestrator reaches it either directly or through its quarantine flow (candidates built in worktrees, then graded and combined).
 
-      PASS if the log routes this slice to tdd-implementation, directly or through the quarantine flow (the orchestrator's template for that route is an entry headed "slice ready for implementation" with "Routed to: quarantine flow").
+      PASS if the log routes this slice to tdd-implementation, directly or through the quarantine flow (the orchestrator's template for that route is an entry headed "slice ready for implementation" with "Routed to: quarantine flow"), and the entry names where the work lands: an artifact path under `docs/cancel-hold/` or the project's source, or the quarantine template's sub-entries (candidates, grade, combine, finalize, re-grade, filled in or marked not run with a reason). An entry with a heading and a destination but no artifact line and no sub-entries fails.
 
       FAIL if it routes to technology-bootstrap or anything else, or the log has no routing entry.
   - type: tool_used
