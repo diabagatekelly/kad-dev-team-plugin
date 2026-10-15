@@ -22,9 +22,19 @@ graders:
     criteria: |
       The skill's rule is to scale everything to the real situation and to establish it before judging: who uses the service, what breaks for them if it is down, and who would find out. Nothing in the repository states those facts.
 
-      PASS if the response asks the user about the situation (at least two of: who uses it / how many, what breaks for them if it is down or wrong, who would notice or be told), and either holds back its verdict until answered or clearly labels anything it says now as provisional pending those answers. Also asking whether a rollback has ever actually been run is a plus, not required.
+      PASS if the response asks the user about the situation (at least two of: who uses it / how many, what breaks for them if it is down or wrong, who would notice or be told), and either holds back its verdict until answered or clearly labels anything it says now as provisional pending those answers.
 
       FAIL if it delivers a finished readiness verdict or a severity-ranked findings report that assumes a scale (enterprise or personal) without asking, or asks nothing about the situation.
+  - type: llm
+    name: asks-whether-rollback-was-ever-run
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: a documented rollback that has never been run is a hypothesis, so alongside the situation questions it asks whether anyone has ever actually run a rollback, and it asks rather than tries (it reads, it does not run anything). A rollback path exists here (`ops/release.sh <image>` onto any SHA-tagged image), but nothing in the repository says whether it has ever been exercised.
+
+      PASS if the response asks the user whether a rollback has ever actually been run or rehearsed (wording does not matter), as a question for the user to answer.
+
+      FAIL if it does not ask, assumes the answer either way, or presents the rollback as tested or untested as a finding without having asked.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

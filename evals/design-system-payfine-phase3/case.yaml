@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: design-system-payfine-phase3
-description: "Pay-a-fine design system, phase 3: the user picks the second candidate; the skill writes the system to visual-ux/ with all token categories, a platform with provenance, accessibility by construction and only the winner's mockup, claiming no screenshot. No baseline arm: the history is a with-plugin transcript."
+description: "Pay-a-fine design system, phase 3: the user picks the second candidate; the skill writes the system to visual-ux/ with all token categories, a platform with provenance, accessibility by construction and only the winner's mockup, claiming no screenshot. The scaffold puts phase 2's candidate files back from the history. No baseline arm: the history is a with-plugin transcript."
 tags: [design-system, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -21,6 +21,14 @@ graders:
     name: winner-mockup-in-visual-ux
     target: trace
     pattern: '"name":"Write","input":\{[^{}]*"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html"'
+  - type: regex
+    name: winner-is-the-second-candidate
+    target: trace
+    # The mockup written to visual-ux/ carries the second candidate's brand
+    # colour (pinned from history.jsonl's candidate-b Write; scaffold.sh
+    # checks the pin). The JSON-encoded HTML holds braces and escaped
+    # quotes, so the content is matched as a JSON string, not with [^{}].
+    pattern: '"name":"Write","input":\{"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.html","content":"(?:[^"\\]|\\.)*#184A82'
   - type: llm
     name: chosen-direction-committed
     focus:
@@ -28,11 +36,11 @@ graders:
       path: docs/pay-fine/visual-ux/design-system-001.md
     weight: 1
     criteria: |
-      Three candidates were presented: Warm Civic (terracotta and amber on cream, serif headings), Crisp Civic-Tech (deep blue on cool grey-white, all sans-serif, flat, dense rows) and Reading Room (forest green and gold, italic serif display). The user chose the second one, Crisp Civic-Tech.
+      Three candidate directions were rendered in the earlier turn, and the user chose the second one.
 
-      PASS if the document's chosen direction is Crisp Civic-Tech and says something specific about this product (library members paying fines in a portal), not only "clean and modern".
+      PASS if the document commits to exactly one chosen direction, identifies it as one of the candidates considered (by its name or by which one it was), and says something specific about this product (library members paying fines in a portal, on their phones), not only "clean and modern".
 
-      FAIL if it documents a different candidate or the direction says nothing about this product.
+      FAIL if it hedges between candidates or blends them, documents more than one as chosen, or the direction says nothing about this product.
   - type: llm
     name: rejected-candidates-in-prose
     focus:
@@ -40,11 +48,11 @@ graders:
       path: docs/pay-fine/visual-ux/design-system-001.md
     weight: 1
     criteria: |
-      The rejected candidates were Warm Civic and Reading Room.
+      Two candidates were rejected when the user picked the second one, without giving a reason.
 
-      PASS if the document describes the rejected candidates in prose, with why they weren't chosen (the user picked the second one without giving a reason, so saying so is enough), and links no file or screenshot of theirs. A link to the chosen design's own mockup is fine.
+      PASS if the document describes two rejected candidates in prose, each with a reason it wasn't chosen — the user's reason, the document's own reading of why the chosen one fits this product better, or a plain note that the user picked another without saying why: any of these counts — and links no saved file or screenshot of theirs. A link to the chosen direction's own mockup is fine.
 
-      FAIL if a rejected candidate is missing, or is linked as a saved file or screenshot.
+      FAIL if fewer than two rejected candidates are described, one has no reason of any kind, or one is linked as a saved file or screenshot.
   - type: llm
     name: tokens-every-category
     focus:

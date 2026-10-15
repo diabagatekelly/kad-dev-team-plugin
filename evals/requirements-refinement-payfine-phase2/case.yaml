@@ -1,17 +1,17 @@
 schema_version: "1.0"
 name: requirements-refinement-payfine-phase2
-description: "Resumes phase 1 with the user's answers: requirements-refinement writes requirements-001.md in its template, keeps the user's own trade-off (pay online now, not a see-only first version), stays inside what was confirmed, and reconciles both problem-doc constraints as consequences."
+description: "Resumes phase 1 with the user's answers: requirements-refinement writes requirements-001.md in its template, keeps the user's own trade-off (pay online now, not a see-only first version), stays inside what was confirmed, marks the one thing the answers left unsaid (what staff see) as open rather than inferring it, and reconciles both problem-doc constraints as consequences."
 tags: [requirements-refinement, library-app]
 context:
   scaffold_script: scaffold.sh
   history_file: history.jsonl
 execution:
   prompt: |
-    Members with an outstanding fine who already use the portal, and the desk staff, who should stop taking these payments.
+    Members with an outstanding fine who already use the portal.
 
     Members want to clear a fine without a trip in just for that. Seeing the fine isn't enough: I want them to be able to pay it online in this first version, even though taking payments is the riskier part. A "see your fines, then come in" version wouldn't save the desk any time, and that's the whole point.
 
-    The simplest version that counts: a member sees their own outstanding fines, pays one by card, and it shows as paid to them and to staff. If the card is declined, the fine stays owed and they're told. A fine is paid in full, no partial payments, and it doesn't need to tie into renewals.
+    The simplest version that counts: a member sees their own outstanding fines, pays one by card, and it shows as paid. If the card is declined, the fine stays owed and they're told. A fine is paid in full, no partial payments, and it doesn't need to tie into renewals.
 
     We thought about staff emailing a Stripe payment link for each fine, but that's still the desk doing it by hand, fine by fine.
 
@@ -56,9 +56,21 @@ graders:
       path: docs/pay-fine/requirements-001.md
     weight: 1
     criteria: |
-      PASS if the "Confirmed in scope" section says that a member sees their own outstanding fines, pays one by card, the fine then shows as paid to the member and to staff, and a declined card leaves the fine outstanding and tells the member; and it puts no other capability in scope, such as refunds, reminders, emailed receipts or a staff report. Details of those four (paid through Stripe, paid in full) are not other capabilities.
+      PASS if the "Confirmed in scope" section says that a member sees their own outstanding fines, pays one by card, the fine then shows as paid, and a declined card leaves the fine outstanding and tells the member; and it puts no other capability in scope, such as refunds, reminders, emailed receipts, a staff report or a staff-facing view of the payment. Details of those four (paid through Stripe, paid in full) are not other capabilities.
 
       FAIL if any of those four is missing from the section, or it adds another capability.
+  - type: llm
+    name: marks-what-staff-see-as-open
+    focus:
+      source: file
+      path: docs/pay-fine/requirements-001.md
+    weight: 1
+    criteria: |
+      The skill's rule: the WHAT is decided by asking, never by inference, and a question the answers left unsettled is recorded in the document as not yet confirmed and asked again, not filled in or dropped. The earlier turn asked whether this piece also needs to change desk staff's job (for example staff seeing a payment's status). The user's answer named only members as the people who benefit, said saving the desk time is the point, and said a paid fine "shows as paid"; it never said whether staff's job changes, what staff see of an online payment, or whether the desk keeps taking payments. That is a question asked and not answered.
+
+      PASS if the document itself records staff's part as not yet confirmed (an open question, a "not yet confirmed" line or section, or a scope note that it is unresolved rather than confirmed in or out), in any of these forms: whether staff's job changes, what staff see of an online payment, or whether the desk still takes payments after this ships. Raising it in the reply as well is good; raising it only in the reply does not count.
+
+      FAIL if the document states a staff-facing behaviour (staff seeing the payment, the desk path staying or going, staff as a confirmed user of this piece) as confirmed, or says nothing about staff beyond the desk-time motivation.
   - type: llm
     name: exclusions-with-reasons
     focus:
@@ -88,16 +100,16 @@ graders:
       path: docs/pay-fine/requirements-001.md
     weight: 1
     criteria: |
-      PASS if the document contains no thin path, no Given/When/Then acceptance criteria, no slicing decision (what to build first) and no technical design presented as decided (routes, modules, data model, Stripe API calls). Plain-language statements of what the user confirmed are fine.
+      PASS if the document contains no thin path, no Given/When/Then acceptance criteria, no slicing decision (what to build first) and no technical design presented as decided (routes, modules, data model, Stripe API calls). Plain-language statements of what the user confirmed are fine. So is a finding that names existing code (a route, a retry loop) to say what a constraint forces or that a capability is unscoped, as long as it is routed to another stage (`product-slicer`, `security-requirements`, `reliability-requirements`, design) and decides nothing about how it will be built.
 
-      FAIL if it contains any of those.
+      FAIL if it contains any of those: a thin path, acceptance criteria, a build order, or a design decision made here.
   - type: llm
     name: finishes-without-reasking
     focus: last_message
     weight: 1
     criteria: |
-      The user has just answered who benefits, what they want, why, the simplest version, the alternative they rejected, what's out, and where to save the document.
+      The user has just answered who benefits (members), what they want, why (saving desk time is the whole point, so online payment goes in the first version), the simplest version (one fine, in full, by card), the alternative they rejected (staff emailing payment links), what's out (several fines at once, saved cards), and where to save the document. They did not answer what staff see, whether declines are retried, whether there is a receipt, or the constraint reading the earlier turn asked about; the skill's rule is to record those as not yet confirmed and ask them again.
 
-      PASS if the response reports the requirements as written and does not ask the user any of those things again. A short pointer to the next step (slicing) or a genuinely new question is fine.
+      PASS if the response reports the requirements as written and asks again only what the answers left open (those four, or a genuinely new question). A short pointer to the next step (slicing) is fine.
 
-      FAIL if it asks the user to re-decide something they just answered, or ends without having written the document.
+      FAIL if it asks the user to re-decide or re-explain something they answered (who benefits, why this and why now, whether a trigger or deadline is behind it, the rejected payment link, one fine in full, saved cards, where to save), or ends without having written the document.

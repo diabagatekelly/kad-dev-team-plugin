@@ -1,25 +1,35 @@
 schema_version: "1.0"
 name: reliability-requirements-payfine-phase3
-description: "Pay-a-fine slice, phase 3: the user rejects the recommendation and keeps 'show failed on timeout'; expects the finished criteria (charge-then-settle, double submit, declines vs faults) written for that choice, duplicates findable for the manual refund, a recorded decision, and no retry of declines. No baseline arm."
+description: "Pay-a-fine slice, phase 3: the user rejects the recommendation and keeps 'show failed on timeout'; expects the finished document saved, with every decision approved, the criteria (charge-then-settle, double submit, declines vs faults) written for that choice, duplicates findable for the manual refund, the decision recorded without re-arguing, and no retry of declines. Graded on the saved file. No baseline arm."
 tags: [reliability-requirements, library-app]
 context:
   scaffold_script: scaffold.sh
   history_file: history.jsonl
 execution:
   prompt: |
-    Keep the engineer's version: on a timeout, tell the member it failed and let them try again. If someone gets charged twice I'll refund it by hand. For everything else, go with your recommendations.
+    Keep the engineer's version: on a timeout, tell the member it failed and let them try again. If someone gets charged twice I'll refund it by hand. For everything else, go with your recommendations. Save the finished document as `docs/pay-fine/reliability-requirements-001.md`.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob]
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  - type: file_exists
+    name: document-written
+    path: docs/pay-fine/reliability-requirements-001.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/pay-fine/reliability-requirements-001\.md")[^"]*"'
+    match: not_contains
   - type: llm
     name: criteria-make-the-chosen-behaviour-workable
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/reliability-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the document's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
 
       The user chose to tell the member a timed-out payment failed and let them retry, accepting occasional duplicate charges that they will refund by hand. A manual refund is only possible if the developer can find the duplicates.
 
@@ -28,20 +38,36 @@ graders:
       FAIL if it writes the "pending, confirm before retry" behaviour instead of the user's choice, or covers the user's choice without any way to find duplicates.
   - type: llm
     name: records-the-decision-without-relitigating
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/reliability-requirements-001.md
     weight: 1
     criteria: |
-      The skill's rule: present a fork with a recommendation, then write in what the user approves.
+      The skill's rule: present a fork with a recommendation, then write in what the user approves. The user rejected the recommendation and kept the engineer's "failed, try again" on a timeout, accepting duplicate charges refunded by hand.
 
-      PASS if the response records the decision (what was chosen, what was rejected, and the accepted risk of duplicate charges) and proceeds with the user's choice. Stating the risk once is expected.
+      PASS if the document records that decision as the user's approved choice, names the recommendation as the rejected alternative, states the accepted risk of duplicate charges once, and proceeds with the user's choice.
 
-      FAIL if it refuses, keeps arguing for its own recommendation as a precondition, asks for approval of the same decision again, or omits the decision entirely.
+      FAIL if it refuses, keeps arguing for its own recommendation as a precondition, asks for approval of the same decision again, leaves the decision marked pending, or omits the decision entirely.
+  - type: llm
+    name: decisions-all-approved
+    focus:
+      source: file
+      path: docs/pay-fine/reliability-requirements-001.md
+    weight: 1
+    criteria: |
+      The user said "for everything else, go with your recommendations", which approves every other fork the skill presented. The skill's rule: a decision is marked approved only by the user, and a criterion that depends on a pending decision waits for it. Phase 2 presented four forks (pinned from this case's history.jsonl; re-pin them after a re-freeze): (1) the 10-second give-up and its message, where the user overruled the recommended "couldn't confirm" wording and kept "failed, try again"; (2) preventing duplicate charges with an idempotency key, where the user chose instead to tolerate them and refund by hand; (3) removing the automatic retry in `CollectFine`; (4) a charge that succeeds but is not recorded, failing loudly with a manual fix.
+
+      PASS if the document accounts for all four forks: the first two recorded as the user's choices, the other two as approved recommendations, none left pending, and no criterion marked as waiting on a decision. A genuinely new question the user never saw may stay open.
+
+      FAIL if any of the four forks is missing from the document, if one the user approved is still marked pending or presented as needing approval, or if a criterion is withheld as waiting on one.
   - type: llm
     name: criterion-charge-without-settle-is-caught
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/reliability-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the document's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
 
       `fines/collect-fine.ts` charges the card and then settles the fine in a separate step. If the settle fails, or the process dies, after a successful charge, the member has paid but the fine still shows outstanding. The user has accepted occasional duplicate charges and will refund them by hand, so preventing a second charge is not required here; noticing this case is.
 
@@ -50,22 +76,26 @@ graders:
       FAIL if the interrupted charge-then-settle case is not covered.
   - type: llm
     name: criterion-double-submit-is-covered
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/reliability-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the document's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
 
       Besides a retry after a timeout, a member can submit the same payment twice at nearly the same time (double click, two tabs). The user accepted occasional duplicate charges, refunded by hand.
 
-      PASS if the response covers double or concurrent submission of the same fine explicitly, either with a criterion that it charges at most once, or by naming it as part of the duplicate-charge risk the user accepted (so it is also found and refunded).
+      PASS if the document covers double or concurrent submission of the same fine explicitly, either with a criterion that it charges at most once, or by naming it as part of the duplicate-charge risk the user accepted (so it is also found and refunded).
 
       FAIL if double or concurrent submission is not addressed at all (a timeout retry alone does not count).
   - type: llm
     name: separates-declines-from-faults
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/reliability-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the response's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
+      Judge substance only: section names, wording and Given/When/Then formatting details do not matter. What matters is whether the document's acceptance criteria (or its decisions, where this criterion says so) require the outcome described, in a form someone could later check.
 
       A declined or expired card, or insufficient funds, is an expected outcome: the member should be told what happened and what to do. A payment-provider outage or a database failure is a fault: it must be visible to the developer and must not be presented to the member as a declined card. The existing `POST /fines/:id/pay` turns every error into a 402 and reports nothing.
 
@@ -74,10 +104,12 @@ graders:
       FAIL if the two are treated alike or faults are not required to be visible.
   - type: llm
     name: no-retry-of-declines
-    focus: last_message
+    focus:
+      source: file
+      path: docs/pay-fine/reliability-requirements-001.md
     weight: 1
     criteria: |
-      Judge substance only. This checks that the response does NOT require something harmful.
+      Judge substance only. This checks that the document does NOT require something harmful.
 
       Declined, expired-card and insufficient-funds results are the provider's deterministic answers; retrying them cannot succeed and looks like card testing. (The existing `CollectFine` retries every failure up to three times.)
 

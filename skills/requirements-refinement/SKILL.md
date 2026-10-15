@@ -38,6 +38,20 @@ behalf.
 - Were there alternative approaches they considered or rejected, and why?
   Capture the reason, not just the choice.
 
+**An answer that skips one of your questions is not an answer to it.**
+When the user's reply settles most of what you asked and says nothing
+about the rest (what staff see of it, say), don't fill the gap from the
+problem doc or from what seems reasonable, and don't drop it. Record it
+under "Not yet confirmed" in the document, with what the answer would
+change, and ask it again in your reply. A document that quietly confirms
+something nobody said is the inference this skill exists to prevent.
+
+The reverse holds too: a question the user answered is answered, even
+when they didn't speak to every example you offered or gave a reason
+where you asked for a trigger. Don't ask for the examples they skipped,
+and don't ask again for a deadline when they told you why. Re-ask only
+what they didn't address at all.
+
 **Then reconcile the problem doc's constraints — a separate pass from
 asking what they want.** The questions above decide the WHAT. This decides
 what is already binding on it, and it is the step most likely to be
@@ -57,6 +71,13 @@ allowed to see it. "Single user today, not single-user forever" is not a
 note about the future; it means nothing here may assume one hardcoded
 identity. A constraint carried forward as a quotation has not been
 reconciled.
+
+**A finding says what is forced and who decides it, not how to build it.**
+One or two lines: the capability nobody has scoped, or the behaviour that
+needs deciding, and the stage it goes to. Naming the file that shows it is
+fine; prescribing the change (which route, which check, what the code
+should do instead) is the design conversation, and writing it here is the
+HOW this skill stays out of.
 
 **A constraint that looks like a later step's problem is the one that gets
 dropped.** "Applies to every step" includes this step. If the scope map
@@ -104,6 +125,11 @@ What was raised but the user confirmed isn't part of this piece yet, and
 why. Narrower than the scope map's whole-problem "Out of scope"; distinct
 from `product-slicer`'s own "Explicitly deferred," which covers
 slicing-technique deferrals decided later, once a thin path exists.
+
+## Not yet confirmed
+Anything you asked that the user's answers didn't settle, one line each:
+the question and what the answer would change. Neither in nor out until
+they say. Omit the section when nothing is open.
 
 ## Constraints in force
 Every constraint from the problem doc, one line each: what it forces for

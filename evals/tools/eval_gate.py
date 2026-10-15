@@ -26,9 +26,11 @@ with the change, it is what the pull-request check reads instead of
 running anything. A case that fails loses its entry.
 
 Usage: python3 -I evals/tools/eval_gate.py [--base origin/main] [--cases a b ... | --all] [--stale]
-           [--jobs 6] [--parallel 8] [--tolerance 0.1] [--runs 1] [--dry-run]
+           [--jobs 6] [--parallel 8] [--tolerance 0.1] [--runs 1] [--dry-run] [--keep-scaffold]
   --stale narrows the set to cases without current evidence: after a skill
   edit, that is exactly the cases the edit reaches.
+  --keep-scaffold leaves each run's kept directory in /tmp (printed, and
+  recorded as `scaffoldDir` in the result), for freeze-history.sh.
 """
 import argparse
 import concurrent.futures
@@ -48,9 +50,11 @@ ROOT = os.path.dirname(EVALS)
 sys.path.insert(0, TOOLS)
 import affected_cases  # noqa: E402
 import eval_evidence  # noqa: E402
+import history_stale  # noqa: E402
 
 
 _start_lock = threading.Lock()
+KEEP_SCAFFOLD = False  # --keep-scaffold: leave each run's kept directory in place
 
 
 class Slots:
@@ -175,7 +179,9 @@ def keep_traces(case, out):
         run["tracePath"] = dst
         changed = True
         # the scaffold dir (/tmp/claude-eval-XXXX/out/trace.jsonl) is only
-        # kept for this copy; drop it so --keep-temp doesn't fill the disk
+        # kept for this copy; drop it so --keep-temp doesn't fill the disk,
+        # unless the run is wanted whole: freeze-history.sh reads the
+        # session transcript under its config/ to chain the next phase.
         scaffold = os.path.dirname(os.path.dirname(src))
         if os.path.basename(scaffold).startswith("claude-eval-"):
             # --keep-temp seals home/ and tmp/ at mode 000 and makes the
@@ -184,7 +190,11 @@ def keep_traces(case, out):
                 os.chmod(root, 0o700)
                 for d in dirs:
                     os.chmod(os.path.join(root, d), 0o700)
-            shutil.rmtree(scaffold, ignore_errors=True)
+            if KEEP_SCAFFOLD:
+                run["scaffoldDir"] = scaffold
+                print(f"kept run {i} of {case['name']}: {scaffold}", flush=True)
+            else:
+                shutil.rmtree(scaffold, ignore_errors=True)
     if changed:
         data = json.load(open(out, encoding="utf-8"))
         data["cases"][0] = case
@@ -229,7 +239,13 @@ def main():
                    help="runs per case on the first pass (1); use the case's own "
                         "count, e.g. 3, when the result is meant to be recorded")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--keep-scaffold", action="store_true",
+                   help="leave every run's kept directory in /tmp (printed, and "
+                        "recorded as scaffoldDir in the result) so a phase can be "
+                        "frozen from it with freeze-history.sh")
     a = p.parse_args()
+    global KEEP_SCAFFOLD
+    KEEP_SCAFFOLD = a.keep_scaffold
 
     if a.all:
         cases = list(affected_cases.case_dirs())
@@ -244,8 +260,25 @@ def main():
               else "Every affected case has current evidence; nothing to run.")
         return 0
     print(f"{len(cases)} affected case(s): {' '.join(cases)}", flush=True)
+    # A resumed phase runs the skill text frozen in its history, not the
+    # file; a result against a stale history says nothing about the skill
+    # as it is now (requirements-refinement phase 2, 2026-10-14), so such
+    # a case is not run: it fails here, loses its evidence, and stays
+    # failed until the earlier phase is re-run and re-frozen.
+    stale_cases = {}
+    for case in cases:
+        history = os.path.join(EVALS, case, "history.jsonl")
+        if os.path.isfile(history):
+            stale = sorted({name for name, body in history_stale.loaded_skills(history)
+                            if history_stale.current(name) != body})
+            if stale:
+                stale_cases[case] = stale
+                print(f"NOT RUN: {case} resumes a history whose loaded text of "
+                      f"{', '.join(stale)} no longer matches the skill; re-freeze it "
+                      f"from the earlier phase first.", flush=True)
+    cases = [c for c in cases if c not in stale_cases]
     if a.dry_run:
-        return 0
+        return 1 if stale_cases else 0
     os.makedirs(os.path.join(EVALS, "results"), exist_ok=True)
     tag = "gate-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S")
     # What each case loads as the runs start; evidence is recorded only
@@ -284,6 +317,10 @@ def main():
             rows[case].update(score=r["score"], runs=r["runs"], error=r["error"], rerun=True,
                               lost=lost, source=r["source"])
 
+    for case, stale in stale_cases.items():
+        rows[case] = {"bar": bars.get(case, {}).get("score"), "score": None, "runs": 0,
+                      "error": f"history carries stale text of {', '.join(stale)}; re-freeze "
+                               f"from the earlier phase", "rerun": False, "lost": [], "source": None}
     failed = []
     lines = ["| Case | Bar | Score | Runs | Graders lost | Result |", "|---|---|---|---|---|---|"]
     for case in sorted(rows):

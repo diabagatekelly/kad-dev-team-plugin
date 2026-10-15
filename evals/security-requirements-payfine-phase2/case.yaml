@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: security-requirements-payfine-phase2
-description: "Pay-a-fine slice, phase 2: resumes the frozen questions with the answers; expects the engineer's shared-route proposal presented as a decision, nothing decided on the user's behalf, and no false alarm on the publishable key. No baseline arm: the history is a with-plugin transcript."
+description: "Pay-a-fine slice, phase 2: resumes the frozen questions with the answers; expects the forks presented for approval, the engineer's shared-route proposal among them, nothing decided on the user's behalf, no criteria written yet, and no false alarm on the publishable key. No baseline arm: the history is a with-plugin transcript."
 tags: [security-requirements, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -21,9 +21,9 @@ graders:
     criteria: |
       The engineer proposed letting members onto the existing staff `/fines` routes. `main/server.ts` puts `requireRole('staff')` on the whole `/fines` prefix, which also holds `POST /fines/:id/waive`; allowing members there would let them reach staff-only actions, and the existing pay route has no ownership check. The skill's rule is that a real fork with more than one defensible answer is presented with a recommendation and the rejected alternatives, and approved before it is written in.
 
-      PASS if the response presents the shared-route proposal as a decision for the user, with a recommendation, at least one alternative, and the reason (at minimum, that it would expose staff-only fine actions or skip the ownership check), and leaves it for the user to approve rather than writing the criteria as if it were settled either way.
+      PASS if the response presents the shared-route proposal as a decision for the user, with a recommendation, at least one alternative, and the reason (at minimum, that it would expose staff-only fine actions or skip the ownership check), and asks the user to approve or change it.
 
-      FAIL if it silently adopts the proposal, silently rejects it and writes criteria for a different design without asking, or does not mention it.
+      FAIL if it silently adopts the proposal, silently rejects it and designs around it without asking, or does not mention it.
   - type: llm
     name: no-false-alarm-publishable-key
     focus: last_message
@@ -41,8 +41,18 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The skill's rule is that a real fork is presented with a recommendation and approved by the user before it is written in; the response may write the criteria that don't depend on a fork, but must not record a fork as chosen or approved on the user's behalf.
+      The skill's rule is that a real fork is presented with a recommendation and approved by the user before it is written in. The skill also says most of what it writes applies a rule directly and needs no approval: that the server never receives a card number, that the amount comes from the ledger, that tokens stay out of logs and error reports, that another member's fine gets the same response as a missing one. Those are not forks.
 
-      PASS if every choice with more than one defensible answer that the response raises (including the engineer's proposal) is left for the user to decide, and nothing is marked as chosen, approved or settled without the user having said so.
+      PASS if every fork the response raises (including the engineer's proposal) is put to the user for approval: a recommendation, however firmly worded or used as a heading, is fine as long as the response asks the user to approve, change or reject it, and nothing is marked approved or recorded as the user's choice before they said so. Rule applications like those above may be listed as what will be written without asking. An assumption stated openly as one, about something the user's answer did not cover (receipts out of scope, staff keeping the desk flow, the browser tokenising cards as the code already does), is not a fork decided on their behalf.
 
-      FAIL if the response records any such choice as already decided (for example a Decisions entry marked "chosen" or "approved", or criteria written on the assumption that one option was taken) without asking.
+      FAIL if a fork is recorded as approved, chosen or settled on the user's behalf, or the response announces it will proceed with one option of a fork without asking.
+  - type: llm
+    name: no-criteria-before-approval
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: once the questions are answered, the next response is the forks, presented for approval, and the acceptance-criteria document is written only after the approvals, complete. This checks that the response stopped at the forks.
+
+      PASS if the response contains no acceptance-criteria document: no "Acceptance criteria" section and no set of Given/When/Then criteria. Describing a fork's options, what each would have to guarantee (for example "members could not reach the waive action"), a summary of what was found in the code, and a single illustrative criterion are all fine.
+
+      FAIL if it writes the criteria now (an acceptance-criteria section, or three or more Given/When/Then criteria), whether or not it also asks for approval.

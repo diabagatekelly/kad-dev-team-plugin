@@ -1,0 +1,85 @@
+schema_version: "1.0"
+name: technology-bootstrap-phase3-reject
+description: "Bootstrap phase 3, rejecting answer: the user overrules the test-runner and package-manager recommendations (npm and Jest, because they know them) and accepts the rest, deferring the UI framework included; expects the bootstrap written with the user's choices recorded as decided and the recommendations as rejected, the pinning posture restated for the manager the user chose rather than dropped, no re-arguing, and still only what the first test forces. Same frozen phase 2 as technology-bootstrap-phase3. Graded on the saved file. No baseline arm."
+tags: [technology-bootstrap]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    No on two of those. I'll take npm and Jest: I already know both and I don't want to learn new tools for a side project. The rest is fine as you recommend, deferring the UI framework included. Write it up that way and save it as `docs/technology-bootstrap-001.md`.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: file_exists
+    name: bootstrap-written
+    path: docs/technology-bootstrap-001.md
+  - type: regex
+    name: writes-nothing-else
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/technology-bootstrap-001\.md")[^"]*"'
+    match: not_contains
+  - type: llm
+    name: records-the-users-choices-as-decided
+    focus:
+      source: file
+      path: docs/technology-bootstrap-001.md
+    weight: 1
+    criteria: |
+      The skill recommends and the user decides. The user rejected two recommendations and chose npm as the package manager and Jest as the test runner, because they already know both and don't want to learn new tools for a side project; they approved the rest as recommended, including deferring the UI framework.
+
+      PASS if the document records npm and Jest as the decided choices, made by the user, with the user's reason (familiarity, no new tools), and records the skill's own recommendations (pnpm, Vitest) for those two categories as the alternatives the user declined, so the next person can tell it was a considered overrule, not an oversight. Keeping the recommendation's own reasoning readable is a plus, not required.
+
+      FAIL if the document records the skill's recommendations as decided anyway, drops the user's reason, presents the user's choice as the skill's own recommendation, or leaves the declined recommendations out of the record.
+  - type: llm
+    name: does-not-relitigate
+    focus:
+      source: file
+      path: docs/technology-bootstrap-001.md
+    weight: 1
+    criteria: |
+      The user overruled two recommendations and said to write it up that way.
+
+      PASS if the document proceeds with the user's choices: it may state once, as a recorded consequence, what the choice gives up (for example that npm's verified install is a separate command), but it does not argue the user should reconsider, does not mark npm or Jest themselves as provisional or pending, and does not ask for the same decision again. A new sub-choice that follows from the user's choice (a committed `.npmrc` to recover part of the posture, which Jest transform to use) may be proposed and left for the user; that is not re-asking the decision.
+
+      FAIL if it re-argues for pnpm or Vitest, labels the user's choices as mistakes or as pending reconsideration, or asks the user to confirm npm or Jest again.
+  - type: llm
+    name: pinning-posture-restated-for-npm
+    focus:
+      source: file
+      path: docs/technology-bootstrap-001.md
+    weight: 1
+    criteria: |
+      The skill treats the package manager's lockfile and pinning posture as part of the decision. The user chose npm, where the lockfile carries content hashes but a verified, no-drift install is a separate command (`npm ci`) rather than the default behaviour of `npm install`, and exact versions in the manifest need a setting (`save-exact`) rather than being the default. The user's own criterion was "I don't have to remember a flag to stay safe".
+
+      PASS if the document records the posture under npm honestly: the committed lockfile, how installs are kept from drifting (`npm ci` in CI and scripts, or equivalent), and that this now rests on a remembered command or a committed setting rather than a default — stated as a consequence of the user's choice, without refusing it.
+
+      FAIL if the pinning posture is dropped from the record now that pnpm is out, if it claims npm gives the safe posture by default, or if it only says "pinning to be configured later".
+  - type: llm
+    name: asks-only-what-the-first-test-forces
+    focus:
+      source: file
+      path: docs/technology-bootstrap-001.md
+    weight: 1
+    criteria: |
+      This is a NEGATIVE grader — what the output declines to decide matters more
+      than what it decides.
+
+      The output must NOT ask the user to choose, or itself choose, any of:
+      a CI/CD pipeline or build automation; a hosting, deployment or cloud
+      target; a container runtime; a database or persistence technology; an
+      observability/monitoring stack; an auth provider. None of these is forced
+      by writing slice 1's first failing test.
+
+      Score 0 if the output solicits a decision on, or settles, ANY of the above
+      as part of the bootstrap set. Merely listing one as deliberately-not-decided
+      (with an owner) is correct and does not count as deciding it.
+
+      Score 1 if the categories it treats as forced stay within: language and
+      runtime, test runner, package manager (with its lockfile/pinning posture),
+      and — if the first test drives a UI or crosses HTTP — a UI or HTTP
+      framework. A brief mention that some other category will be needed
+      eventually is fine; asking the user to settle it now is not.
