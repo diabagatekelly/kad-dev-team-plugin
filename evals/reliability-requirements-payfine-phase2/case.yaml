@@ -36,6 +36,8 @@ graders:
       PASS if nothing in the response (a recommendation, a proposed behaviour, a criterion) requires or endorses automatically retrying a declined, expired or insufficient-funds charge. Recommending that declines are not retried, allowing a retry only for transient faults, or not mentioning retries at all, all pass.
 
       FAIL if it calls for retrying declines.
+
+      An empty response does not pass this check: the response must also present at least one real fork or decision for the user. FAIL if it presents none.
   - type: llm
     name: does-not-decide-the-fork-itself
     focus: last_message

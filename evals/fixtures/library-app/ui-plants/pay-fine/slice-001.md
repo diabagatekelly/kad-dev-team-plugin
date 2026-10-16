@@ -13,12 +13,13 @@ one and pays it by card. The fine then shows as paid.
   paid.
 - Given the payment is declined, the fine stays outstanding and the member
   is told.
-- Given a signed-in member, when they open their fines or pay one, only
-  their own fines are shown or payable; a fine belonging to another member
-  is refused.
-- Given the member enters their card, the card number goes straight to the
-  payment provider's field and never reaches the library's server or its
-  logs.
-- Given the member submits payment for the same fine twice (a double click,
-  a retry after a slow response), the card is charged at most once.
+- Security: given a signed-in member, when they open their fines or pay
+  one, only their own fines are shown or payable; a fine belonging to
+  another member is refused.
+- Security: given the member enters their card, the card number goes
+  straight to the payment provider's field and never reaches the library's
+  server or its logs.
+- Reliability: given the member submits payment for the same fine twice (a
+  double click, a retry after a slow response), the card is charged at most
+  once.
 - [ACCESSIBILITY — placeholder, to be authored by accessibility-engineer]

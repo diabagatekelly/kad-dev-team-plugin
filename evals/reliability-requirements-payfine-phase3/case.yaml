@@ -116,3 +116,5 @@ graders:
       PASS if no criterion requires or endorses automatically retrying a declined, expired or insufficient-funds charge. Requiring that declines are not retried, or allowing a retry only for transient faults, passes.
 
       FAIL if a criterion calls for retrying declines.
+
+      An empty document does not pass this check: it must also contain at least one Given/When/Then criterion of its own. FAIL if it contains none.

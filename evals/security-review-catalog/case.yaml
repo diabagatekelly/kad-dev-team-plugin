@@ -46,3 +46,15 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:security-review"'
     min: 1
+  - type: llm
+    name: names-what-holds-it-up
+    focus:
+      source: file
+      path: docs/reviews/security-review-catalog.md
+    weight: 1
+    criteria: |
+      Restraint on a clean module is only worth something if the reviewer looked. The catalog search is safe for reasons that can be named: every query passes the user's terms as a bound parameter (`$1`), never in the SQL text; `escapeLike` only neutralises LIKE wildcards inside that bound value; public search runs through its own pool as a separate `catalog_reader` role (`publicSearchClient()` in `main/wiring.ts`); the route returns only isbn, title, author and copy count; searches under two characters return nothing and results are capped at 50; failures answer with a generic 503 and report only the request path and a failure reason to monitoring, no query text or stack.
+
+      PASS if the review names at least two of those specific controls as reasons the module is sound (in its own words; paraphrase counts), rather than only saying no issues were found.
+
+      FAIL if fewer than two are named, or the only support for the verdict is generic ("follows best practices", "no vulnerabilities found").

@@ -51,3 +51,13 @@ graders:
       PASS if the document states the decision (a provider-neutral payment interface, provider chosen per channel), gives each rejected alternative (everything on Adyen; Adyen bolted onto the desk route) with its concrete reason, and lists the downsides the user named (two providers to reconcile, every payment feature must work with both).
 
       FAIL if a rejected alternative or its reason is missing, or the consequences list only upsides.
+  - type: regex
+    name: document-carries-the-three-checks
+    target:
+      source: file
+      path: docs/adr/adr-001.md
+    # The skill's template puts the three worthiness checks in the ADR
+    # itself, one line each under a "Why this is an ADR" heading, each
+    # answered yes or no with a reason. Graded on the file, where the
+    # skill's own template text (which says `yes — <why>`) cannot reach.
+    pattern: '## Why this is an ADR\s*Architectural: (?:yes|no) [^\n]*\n\s*Significant: (?:yes|no) [^\n]*\n\s*Non-obvious: (?:yes|no) [^\n<]*\n'

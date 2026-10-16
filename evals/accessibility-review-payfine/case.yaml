@@ -86,6 +86,8 @@ graders:
       PASS if the review does not report the links, inputs or Pay button as lacking a visible focus indicator. Saying the fine cards can't receive focus at all is a different, correct finding.
 
       FAIL if it reports a missing or invisible focus indicator on those elements.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-decorative-icon
     focus:
@@ -98,6 +100,8 @@ graders:
       PASS if the review does not report the icon as missing alt text or an accessible name.
 
       FAIL if it does.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-card-number-label
     focus:
@@ -110,6 +114,8 @@ graders:
       PASS if the review does not report the card number field as unlabelled. A low-priority suggestion to use a `<label>` so clicking the text focuses the field is fine.
 
       FAIL if it reports the field as having no label or no accessible name.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: says-it-read-the-markup
     focus:
@@ -132,3 +138,23 @@ graders:
       PASS if the review contains accessibility acceptance criteria in Given/When/Then form that cover at least choosing a fine by keyboard and the declined message being announced, and keeps criteria checkable against this mockup now apart from those that can only be checked once real code exists (for example focus moving after a real submit, an announcement actually firing).
 
       FAIL if there are no Given/When/Then criteria, or nothing distinguishes checkable-now from needs-real-code.
+  - type: llm
+    name: slice-placeholder-filled
+    focus:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    weight: 1
+    criteria: |
+      The prompt asked for the slice's accessibility placeholder to be filled in. Before this run, `slice-001.md` ended its acceptance criteria with the line `[ACCESSIBILITY — placeholder, to be authored by accessibility-engineer]`. The orchestrator decides the slice's next stage by whether that placeholder is still there, so the slice file itself has to change.
+
+      PASS if the placeholder line is gone and in its place the slice carries accessibility acceptance criteria in Given/When/Then form (the criteria themselves, or at least the confirmed-now ones with a pointer to `accessibility-review-001.md` for the rest), and the slice's other criteria are unchanged.
+
+      FAIL if the placeholder line is still present, the slice is unchanged, or the placeholder was replaced by nothing more than a reference to the review with no criteria.
+  - type: regex
+    name: writes-only-review-and-slice
+    target: trace
+    # The two files this case may write, as the exact relative path or the
+    # sandbox's absolute one (.../cwd/docs/...); a path that merely ends in
+    # one of them (backup/docs/pay-fine/slice-001.md) is still a stray write.
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?!(?:[^"]*/cwd/)?docs/pay-fine/(?:accessibility-review-001|slice-001)\.md")[^"]*"'
+    match: not_contains

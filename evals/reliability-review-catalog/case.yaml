@@ -46,3 +46,15 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:reliability-review"'
     min: 1
+  - type: llm
+    name: names-what-holds-it-up
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-catalog.md
+    weight: 1
+    criteria: |
+      Restraint on a clean module is only worth something if the reviewer looked. The catalog search is production-ready for reasons that can be named: `SearchCatalog` ignores searches under two characters and caps results at 50; `PostgresCatalogReader` runs one bounded, parameterised query on its own memoized 4-connection pool with a 2-second client-side timeout; driver failures are translated into `CatalogUnavailable` with a reason (timeout, connection, query); the route is rate-limited, catches every failure, reports it to monitoring with the path and reason, and answers 503 with a generic message; `ops/runbooks/catalog-search.md` records the catalog's size and p95.
+
+      PASS if the review names at least two of those specific controls as reasons the module holds up (in its own words; paraphrase counts), rather than only saying nothing was found.
+
+      FAIL if fewer than two are named, or the only support for the verdict is generic praise.

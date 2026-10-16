@@ -69,6 +69,8 @@ graders:
       Findings that only involve `main/` do not count against this: another module importing from `main/wiring.ts` (for example `lending/return-book.ts`) is a finding about that module; business sequencing living in `main/jobs.ts` is a separate question about that file; secrets hardcoded in `main/wiring.ts` are a security note. None of these is "main/ reported as a violation".
 
       FAIL if `main/server.ts` or `main/wiring.ts` is reported as a violation for holding framework imports or construction, or `report-processor.ts` is reported as a definite naming violation.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-date-library-tier
     focus:
@@ -83,6 +85,8 @@ graders:
       PASS if this is not reported as a blocking / High-severity Invasive Species finding. Not mentioning it, or a Low note, both pass.
 
       FAIL if it is treated as a violation requiring an adapter before merge.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

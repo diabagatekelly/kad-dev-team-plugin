@@ -18,8 +18,10 @@ check all three before writing one:
 If any of the three is "no," this isn't ADR territory — a README note or a
 comment is probably enough.
 
-**Your response opens with the three checks**, before any question or
-draft, one line each:
+**Step one, every time: the three checks, answered before anything
+else.** Before reading a file, before a question or a draft, and just as
+much when the user has already made the case, named the alternatives
+and told you the file name. One line each:
 
 ```
 Architectural: yes/no — <why>
@@ -32,6 +34,19 @@ lighter home (a commit message, a PR description, a comment, or nothing),
 and write no ADR unless the user then insists. Being asked for an ADR
 doesn't make a decision ADR-worthy.
 
+The three lines are the record that the check was made, and where they
+live depends on the answer. Any "no": they open your reply, followed by
+the lighter home. All three yes: they go into the ADR itself, as its
+"Why this is an ADR" section (template below), so the document carries
+its own justification and a reader never has to trust that the check
+happened; the reply then only needs to say where the file is. An ADR
+without that section, or a reply that goes straight to "I wrote the
+ADR" with the three lines in neither place, has skipped the step however
+sound the decision was; a request that arrives fully argued is the case
+most worth checking, because nobody else will. Each answer is yes or
+no. A check that feels borderline gets the answer it falls on and the
+reason, not "borderline": the rule above needs a yes or a no to act on.
+
 **Template:**
 
 ```markdown
@@ -39,6 +54,11 @@ doesn't make a decision ADR-worthy.
 
 ## Status
 Proposed | Accepted | Superseded by ADR-NNN
+
+## Why this is an ADR
+Architectural: yes — <why>
+Significant: yes — <why>
+Non-obvious: yes — <why>
 
 ## Context
 The forces at play — constraints, requirements, prior art — stated neutrally,

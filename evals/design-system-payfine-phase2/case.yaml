@@ -1,13 +1,13 @@
 schema_version: "1.0"
 name: design-system-payfine-phase2
-description: "Pay-a-fine design system, phase 2: told to generate, the skill renders distinct candidates as HTML outside visual-ux/, says it couldn't view them, and asks which one to keep without writing the system. No baseline arm: the history is a with-plugin transcript."
+description: "Pay-a-fine design system, phase 2: told to generate, the skill renders distinct candidates as HTML outside visual-ux/ (pinned to docs/pay-fine/design-candidates/candidate-N.html so the files themselves are graded), says it couldn't view them, and asks which one to keep without writing the system. No baseline arm: the history is a with-plugin transcript."
 tags: [design-system, library-app]
 context:
   scaffold_script: scaffold.sh
   history_file: history.jsonl
 execution:
   prompt: |
-    No reference. Generate a few real options and show me. Most members will open this on their phones.
+    No reference. Generate a few real options and show me. Most members will open this on their phones. Put the candidate files in `docs/pay-fine/design-candidates/`, named `candidate-1.html`, `candidate-2.html` and so on.
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
@@ -47,3 +47,33 @@ graders:
       PASS if the response gives the user the candidate files' paths to open, and either says it could not view them itself or makes no claim about how they look when rendered.
 
       FAIL if it claims to have opened, viewed or screenshotted them, or describes them in prose with no files to open.
+  - type: file_exists
+    name: candidate-1-written
+    path: docs/pay-fine/design-candidates/candidate-1.html
+  - type: file_exists
+    name: candidate-2-written
+    path: docs/pay-fine/design-candidates/candidate-2.html
+  - type: llm
+    name: candidate-1-is-a-real-render
+    focus:
+      source: file
+      path: docs/pay-fine/design-candidates/candidate-1.html
+    weight: 1
+    criteria: |
+      The user asked for real options to choose between, for a member portal most members open on their phones. A candidate is a complete, committed rendering of the pay-a-fine screen, not a swatch or a prose note in an HTML file.
+
+      PASS if this file is a full HTML page for the pay-a-fine screen (the member's outstanding fines, a way to pay one) with its own concrete values (real colours as hex or named CSS values, a type choice, spacing) applied through CSS, laid out for a phone-width viewport (a viewport meta tag and a narrow or fluid content column), with a single clear direction stated or evident.
+
+      FAIL if the file is a stub, a palette or token list with no screen, a prose description, a copy of another candidate with only colours changed (judge from this file alone: a page that hedges between directions or says it is a variant fails), or has no phone-width layout.
+  - type: llm
+    name: candidate-2-is-a-real-render
+    focus:
+      source: file
+      path: docs/pay-fine/design-candidates/candidate-2.html
+    weight: 1
+    criteria: |
+      The user asked for real options to choose between, for a member portal most members open on their phones. A candidate is a complete, committed rendering of the pay-a-fine screen, not a swatch or a prose note in an HTML file.
+
+      PASS if this file is a full HTML page for the pay-a-fine screen (the member's outstanding fines, a way to pay one) with its own concrete values (real colours as hex or named CSS values, a type choice, spacing) applied through CSS, laid out for a phone-width viewport (a viewport meta tag and a narrow or fluid content column), with a single clear direction stated or evident.
+
+      FAIL if the file is a stub, a palette or token list with no screen, a prose description, a copy of another candidate with only colours changed (judge from this file alone: a page that hedges between directions or says it is a variant fails), or has no phone-width layout.

@@ -94,6 +94,8 @@ graders:
       PASS if the review does not propose removing the overdue branch.
 
       FAIL if it calls that branch unneeded or proposes removing it.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: keeps-the-returned-loan-branch
     focus:
@@ -106,6 +108,8 @@ graders:
       PASS if the review does not propose removing the returned-loan branch.
 
       FAIL if it calls that branch unneeded or proposes removing it.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: keeps-the-shared-date-helper
     focus:
@@ -118,3 +122,5 @@ graders:
       PASS if the review does not object to using `daysBetween` or propose replacing it with local date arithmetic.
 
       FAIL if it does.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.

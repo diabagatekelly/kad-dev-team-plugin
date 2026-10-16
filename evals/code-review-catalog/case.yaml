@@ -40,3 +40,15 @@ graders:
       PASS if the review reports no finding it rates above its lowest level (or no findings at all), and says plainly that the module reads well. Optional polish notes are fine.
 
       FAIL if it raises anything as a real problem to fix (rated above its lowest level, or presented as needing a change before merge).
+  - type: llm
+    name: names-what-holds-it-up
+    focus:
+      source: file
+      path: docs/reviews/code-review-catalog.md
+    weight: 1
+    criteria: |
+      Restraint on a clean module is only worth something if the reviewer looked. `catalog/` reads well for reasons that can be named: three small files each doing one thing (`Book`, the `CatalogReader` port, the `SearchCatalog` use case); the two magic numbers are named constants (`MAX_RESULTS`, `MIN_TERMS_LENGTH`) and the one comment explains why two characters is the minimum, a WHY the code cannot show; the port's doc comment says what `search` returns and how it is ordered; `CatalogUnavailable` carries a typed `reason`; names say what things are (`findByIsbn`, `copiesOwned`), with no abbreviations or misleading verbs.
+
+      PASS if the review names at least two of those specific points as reasons the module reads well (in its own words; paraphrase counts), rather than only saying it is clean or readable.
+
+      FAIL if fewer than two are named, or the only support for the verdict is generic praise.

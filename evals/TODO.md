@@ -646,37 +646,309 @@ has a gate-mode three-run bar and current evidence.
 
 ## F. Routing, restraint, UI
 
-- [ ] F1. Each `orchestrator-route-*` case: one LLM grader on
+Done 2026-10-15 on branch `eval-phase-f`. Edits in `61afee4`; the runs
+and what they taught are under F10. The change reached 64 cases: the 26
+whose graders changed outright, the 32 that hold a trap grader (F4) or
+copy the shared UI slice (F1), and six more through the two skill fixes
+(`adr` reaches `technology-bootstrap-phase3` and the tdd via-agent case
+through agent files; the orchestrator row reaches every orchestrator
+case). Every one has a gate-mode three-run bar and current evidence.
+
+- [x] F1. Each `orchestrator-route-*` case: one LLM grader on
       `orchestrator-log.md` (names the matched row and an artifact path
       under the target) and one on `last_message` (ends with the routed
       skill's questions or a stop, not the next artifact).
-      *Note from D7 (2026-10-14):* `orchestrator-route-design-system`
-      routed to `reliability-requirements` in one run of three. The
-      shared `ui-plants/pay-fine/slice-001.md` lists its security and
-      reliability criteria unlabeled among the functional ones (one
-      reliability criterion, the double charge), so "runtime-safety
-      criteria filled" is a judgment call there. Label the sections in
-      the fixture when F touches the route cases; it is shared by every
-      UI case, so the change invalidates their evidence together.
-- [ ] F2. `orchestrator-asks-for-target`: fix the `\\.md` regex and check
+      *Done for all thirteen route cases, `orchestrator-backward-route`
+      (log grader: names the hand-back, not just the destination) and
+      `orchestrator-route-implementation` (its log grader existed; the
+      final-message grader accepts a stop to ask about the quarantine
+      flow's cost, a report that the flow could not be launched without
+      an `Agent` tool, or its outcome). The final-message rubric accepts
+      either ending the orchestrator's step 5 allows: the routed skill's
+      own questions, or the routed step's result plus the question
+      whether to continue, with nothing from a later stage produced.*
+      *The fixture note:* `ui-plants/pay-fine/slice-001.md` now prefixes
+      its two security bullets with "Security:" and the double-charge
+      bullet with "Reliability:", the convention the cancel-hold slice
+      already used. The 2026-10-14 traces showed
+      `orchestrator-route-screen-design` (bar 0.89, one run routed to
+      `reliability-requirements`) losing its run the same way as
+      `orchestrator-route-design-system`; both bars should return to 1.0.
+      The nine UI cases copy the slice, so their evidence all went
+      stale together.
+- [x] F2. `orchestrator-asks-for-target`: fix the `\\.md` regex and check
       `Grep` as well as `Glob`.
-- [ ] F3. Restraint cases (`*-catalog-review`): add a positive grader
+      *The single-quoted `'\\.md'` was the regex `\\.md`, a literal
+      backslash; now `'\.md'`. A second `tool_used` guard matches the
+      same words in `Grep` input. Checked against `**/*.md`, `docs/**`,
+      `**/problem*` (fail) and `src/**/*.ts`, `*.json` (pass).*
+- [x] F3. Restraint cases (`*-catalog-review`): add a positive grader
       requiring at least two of the module's real controls to be named.
-- [ ] F4. Every "does not flag" trap grader: PASS only if the review has at
+      *`names-what-holds-it-up` on each of the four catalog cases
+      (architecture, security, reliability, code review), each listing
+      the module's actual controls from the source (bound `$1`
+      parameter and `escapeLike` inside it, the `catalog_reader` role
+      and pool, the 2-character minimum and 50-row cap, the
+      `CatalogUnavailable` translation, the generic 503 with path and
+      reason only, the named constants and the WHY comment). Paraphrase
+      counts; generic praise does not.*
+- [x] F4. Every "does not flag" trap grader: PASS only if the review has at
       least one real finding and none is the trap.
-- [ ] F5. `accessibility-review-payfine-subtle`: copy
+      *Sixty graders in thirty-three cases: every `no-false-alarm-*`,
+      the three restraint graders in `code-review-fine-notices-pr` (and
+      via-agent), the three `keeps-*` in `code-review-days-left-pr`,
+      `respects-documented-rounding-split`, `no-enterprise-ceremony`,
+      `no-retry-of-declines`, `keeps-the-one-implementation-port`. Each
+      keeps its wording and gains a closing paragraph sized to what it
+      judges: a review must also report at least one real finding; a
+      phase-2 response must also present at least one real fork; a
+      criteria document must also hold at least one Given/When/Then
+      criterion; the design doc must also record a decision. The catalog
+      cases' `reports-nothing-above-low` are restraint on a clean module
+      and keep their floor through F3 instead.*
+- [x] F5. `accessibility-review-payfine-subtle`: copy
       `leaves-the-mockup-alone`, `says-it-read-the-markup`,
       `criteria-split-now-and-later`; both accessibility cases: grade
       `slice-001.md` for the filled placeholder.
-- [ ] F6. `screen-design-payfine`: trace regex on the mockup Writes for the
+      *Done; the subtle case's criteria grader asks for the Pay button's
+      focus indicator and the error-to-field association at least. Both
+      cases gain `slice-placeholder-filled` (the placeholder line gone,
+      Given/When/Then criteria in its place, other criteria unchanged)
+      and `writes-only-review-and-slice`. The skill's output template
+      says the criteria replace the slice's placeholder but never says
+      to edit the slice file; the prompt asks for it, so the runs will
+      show whether the skill needs the sentence.*
+- [x] F6. `screen-design-payfine`: trace regex on the mockup Writes for the
       system's token values; `design-system-payfine-phase2`: pin candidate
       filenames and grade the files.
-- [ ] F7. `architecture-design-payfine-phase1`: trace guard against any
+      *`mockups-carry-the-system-brand-token`: three Writes to
+      `visual-ux/*.html` each carrying `#1F5F5B` (`--brand`) in their
+      own content, either key order, matched as a JSON string so the
+      HTML's braces and quotes don't cut it short; checked against
+      three good writes, two of three, writes outside `visual-ux/`, and
+      a hex that appears only in a later write. Phase 2's prompt now
+      names `docs/pay-fine/design-candidates/candidate-N.html`; two
+      `file_exists` and two file-judged `candidate-N-is-a-real-render`
+      graders (a full phone-width page of the pay-fine screen with
+      concrete values, not a swatch or a hedge). Distinctness between
+      candidates stays judged from the final message: an LLM grader
+      reads one file, and `focus: trace` elides the middle of the run.
+      The prompt change makes `design-system-payfine-phase3`'s history
+      (frozen from a phase-2 run) describe a different turn, so F10
+      re-runs phase 2 with `--keep-scaffold`, re-freezes phase 3 from
+      it, and re-pins the second candidate's brand colour in phase 3's
+      grader and scaffold check.*
+- [x] F7. `architecture-design-payfine-phase1`: trace guard against any
       Write under `docs/pay-fine/`.
-- [ ] F8. `adr-*`: regex on the three worthiness checks in the response.
-- [ ] F9. `vertical-slicing-payfine-phase1`: `tool_used` on
+      *`writes-nothing-under-pay-fine`, Edit or Write, `not_contains`.*
+- [x] F8. `adr-*`: regex on the three worthiness checks in the response.
+      *`opens-with-the-three-checks` on the trace: `Architectural`,
+      `Significant`, `Non-obvious`, each answered yes or no, bold
+      markers allowed, in that order; the skill's own template in the
+      trace says `yes/no` and is excluded by a lookahead for `/`.
+      Checked against the template alone (fail), plain and bold answers
+      (pass), prose with no checks and two of three (fail).*
+- [x] F9. `vertical-slicing-payfine-phase1`: `tool_used` on
       `acceptance-criteria`; grade the deferred and still-open sections.
-- [ ] F10. Run the changed cases, re-record. Run.
+      *`consults-acceptance-criteria` (the skill says to invoke it before
+      writing the criteria) and `deferred-and-still-open-are-real` on
+      the slice file: both sections present and specific, or an
+      explicit nothing-to-defer with a reason; filler fails.*
+- [x] F10. Run the changed cases, re-record. Run.
+      Batches in WSL: the 26 cases whose graders changed outright;
+      `design-system-payfine-phase2` with `--keep-scaffold`, then the
+      phase 3 re-freeze and re-pin, then phase 3; then the 32 reached
+      only by the F4 floor or the F1 fixture. Read every failure before
+      recording a bar.
+      *Batch 1 (2026-10-15, 26 cases, 78 runs, 24 passed):* every
+      failure read.
+      - `adr-payment-gateway` 0.80: all three runs loaded the skill and
+        went straight to `Write`, no worthiness checks anywhere in the
+        trace, though the skill says the response opens with them.
+        `adr-neg-rename` 0.89: one run answered "Significant:
+        borderline". **Real miss, fixed in the skill:** write the three
+        lines even when all three are plainly yes, and each is a yes or a
+        no with its reason.
+      - `orchestrator-route-design-system` 0.83: with the fixture
+        labelled, one run still routed to `reliability-requirements`,
+        reasoning that one reliability criterion leaves "failure
+        behaviour otherwise unspecified". The row said "reliability
+        behavior has never been made concrete", a semantic read step 2
+        forbids, while the security row keys on the placeholder.
+        **Fixed in the skill:** the row now says "reliability criteria
+        are still an unfilled placeholder". Reaches every orchestrator
+        case (16), all re-run in batch 2.
+      - `orchestrator-route-slicing` 0.95 and `-scope-decision` 0.90:
+        the new final-message grader lost 3-0 votes on correct runs.
+        `rejudge.py --explain` showed the judge reading a slicer's own
+        call ("same fine is keyed on the fine ID, which was my call") as
+        the orchestrator answering the routed skill's questions, and the
+        scope-map step's "no map needed, one unit" result as the
+        orchestrator deciding for the skill (both runs had invoked
+        `scope-map`). Rubric reworded: a skill that delivers without
+        needing to ask, making judgment calls inside its work, is the
+        second ending; FAIL only when the skill had stopped to ask and
+        the response answers in the user's place; scope-decision names
+        the no-map result as the step's result.
+        `orchestrator-route-reliability` 0.96: the log grader failed a
+        correct entry 3-0; the explained judge first failed it, then
+        corrected itself to PASS. Noise on the heading paraphrasing the
+        row; the rubric now accepts the row's words or the entry's own
+        and says the heading need not list every element.
+      - `screen-design-payfine` 0.92, three different graders over three
+        runs: the brand-token regex missed a run that put every rule in
+        a shared `visual-ux/screen-design-001.css` the mockups link
+        (pattern now accepts one `.html` or `.css` Write under
+        `visual-ux/` with the value; the file count stays with
+        `three-mockups-in-visual-ux`); the judge read a "Paid" group on
+        the same page as payment history and a "choose and pay" default
+        view as a missing list state (both rubrics now say what counts).
+      - `rejudge.py` could not send a prompt holding `→` on Windows
+        (cp1252 stdin); fixed.
+      The other 19 cases went 3/3 on every grader, including all four
+      catalog positives, both accessibility `slice-placeholder-filled`
+      graders (the runs edit the slice unprompted by the skill text),
+      `vertical-slicing-payfine-phase1`'s consult and sections, the
+      ADR-free `architecture-design` phase 1 guard, and the asks-for-target
+      regex fix (no run searched).
+      *Batch 2 (2026-10-15, 19 cases, 57 runs, 17 passed):* the sixteen
+      orchestrator cases after the row change, both adr cases, screen-design.
+      - `orchestrator-route-design-system` 1.0 (was 0.83 and 0.89),
+        `-screen-design` 1.0, `-reliability`, `-scope-decision`,
+        `-slicing` 1.0 on the reworded rubrics; `orchestrator-security-stage`
+        and `-superseded-scope-map` 1.0 on the new row.
+      - `adr-payment-gateway` 0.80 again: the new paragraph was loaded and
+        all three runs still went Skill, Write, "I wrote the ADR" with no
+        checks anywhere. The rule is now the skill's step one in so many
+        words: the three lines come before any tool call, and a fully
+        argued request is the case most worth checking. `adr-neg-rename`
+        1.0 on the first wording.
+      - `orchestrator-route-user-story` 0.90: two log entries left the
+        artifact to the skill ("see the skill's own output"; the
+        directory with "destination to be decided by the skill"). A
+        story's file name is the skill's, and it may not be a local file
+        at all, so the rubric now accepts the directory and fails only an
+        entry that names no location under the target.
+      - `orchestrator-backward-route` 0.95: one run routed to
+        product-slicer, cut the receipt slice, then narrated the whole
+        round trip (requirements-002, design, security) and opened with
+        requirements-refinement as what's next; the existing
+        `routes-back-to-the-owner` failed it 3-0. The skill forbids that
+        narration in its own words; one run in three, left as recorded.
+      - `screen-design-payfine` 0.92: `reuses-the-system` lost 8 of 9
+        votes across all three runs on documents that say no new pattern
+        is needed and then list two optional additions under the
+        new-patterns heading; the explained judge called that a
+        contradiction while conceding it was a close call. The rubric
+        now says that is the second form, not a contradiction. The new
+        brand-token regex passed 3/3 on the .html-or-.css form.
+      *Batch 2b and 2c (2026-10-15):* user-story 1.0 and screen-design 1.0
+      on the reworded rubrics; `design-system-payfine-phase2` 1.0 on the
+      pinned names (every run wrote `candidate-1.html` to `-3.html` under
+      `docs/pay-fine/design-candidates/`; both file-judged candidates
+      passed every run).
+      - `adr-payment-gateway` 0.80 a third time: with "step one, before
+        any tool call" loaded, all three runs still went Skill, Write,
+        "I wrote the ADR". Nine of nine runs under two wordings that kept
+        the checks in the reply. **Fix that took:** the template gains a
+        "Why this is an ADR" section holding the three lines, and the
+        skill says the lines go there when the ADR is written, so the
+        document carries its own justification and the model writing the
+        file writes them. 1.0 after (and `adr-neg-rename` 1.0 on every
+        wording: when the answer is no, the checks are the reasoning, so
+        they were never skipped there).
+      - `design-system-payfine-phase3` re-frozen from phase 2's run 0
+        ("Friendly Neighbour" picked the branch); second candidate's
+        `--brand` is `#0b6e7a`, pinned in the grader and the scaffold
+        check. First run on the new history 0.81:
+        `rejected-candidates-in-prose` lost every run on documents that
+        name two rejected candidates with reasons and link only the
+        winner, now saved as `visual-ux/candidate-2.html`; the explained
+        judge failed it on that link, then corrected itself to PASS. The
+        rubric now says the winner's file may keep its candidate name and
+        only a link to a rejected candidate's file counts.
+        `accessibility-by-construction` 2-1 in two runs (0.667 before this
+        phase; the CLI flags the 8-9k-character file as judge-noisy).
+      *Batch 3 (2026-10-15, 35 cases):* hit the subscription's session
+      limit after two cases. `design-system-payfine-phase3` passed on the
+      clarified rubric and `architecture-design-payfine-phase2` on its
+      floor; `library-app-lending-review` was cut off mid-case (0.41 over
+      two runs is the limit, not the skill); the other 32 errored on every
+      run. **To resume** (after the reset the error names, 12:40pm
+      America/New_York): `wsl -d Ubuntu -- bash evals/tools/wsl-gate.sh
+      --stale --runs 3`, read every failure, then record bars for every
+      phase-F case with `record_thresholds.py --gate-only` (no bar has
+      been recorded yet in this phase; the gate wrote evidence only), check
+      `eval_evidence.py --base origin/main`, update the hand-off, open the
+      PR.
+      *Resumed after the reset (33 cases, 99 runs): 33/33 passed.* The
+      graders lost, each read: `code-review-fine-notices-pr`
+      `leaves-mocking-to-test-quality-review` in two runs (0.333; the
+      explained judge passes the run: the mocking is named in the
+      hand-off section and the ranked finding is about the test names,
+      a close call on wording); `reliability-review-alerts`
+      `no-false-alarm-burn-rate-alerts` 3-0 in one run on an 11k-character
+      review that praises both alerts (the explained judge passes it);
+      `reliability-review-nightly` duplicate-fines trap 2-1 once on a
+      16k file; `supply-chain-review-build` dependabot trap and
+      `test-quality-review-fines` exact-tests trap once each, both at
+      their previous bars; the tdd via-agent case's two trace regexes in
+      one run (0.97, as before). None of the five trap losses was the new
+      floor: every review had real findings, and the explained judge
+      named the trap's own wording each time. The floor itself cost no
+      run anywhere in the 33 cases that carry it.
+      *Bars recorded* (`record_thresholds.py --gate-only`, 64 cases; no
+      case went stale from recording this time). Moved: up to 1.0 for
+      `accessibility-review-payfine`, `design-system-payfine-phase2`,
+      `orchestrator-route-design-system` (0.889), `-screen-design`
+      (0.933), both requirements phase-2 chains (0.917; the forks grader
+      went 3/3 this time), `reliability-review-nightly-via-agent`;
+      down for `code-review-fine-notices-pr` 0.97 to 0.94,
+      `orchestrator-backward-route` 1.0 to 0.95 (the round-trip
+      narration above), `reliability-review-alerts` 1.0 to 0.94 and
+      `reliability-review-nightly` 1.0 to 0.97 (long-file judge noise,
+      both). `adr-payment-gateway` 1.0 with the checks in the document.
+      Open for G: the orchestrator narrating the backward round trip
+      (one run in three), and the three long-file review traps that lose
+      a run to the judge each pass.
+      *Sourcery on PR #5, ten findings, seven taken:* the ADR trace regex
+      had gone vacuous once the template itself said `yes — <why>` (the
+      runs did write the section, but the grader could not tell);
+      `adr-payment-gateway` now grades the written file for the "Why
+      this is an ADR" block and `adr-neg-rename`'s trace regex excludes
+      `<why>`, and the skill says where the lines live (reply when
+      declining, document when writing). `each-mockup-styled`: every
+      mockup carries the brand value or links a stylesheet (checked
+      against all nine recent runs, including the shared-.css one).
+      The accessibility write guard anchors its two allowed paths
+      (`backup/docs/pay-fine/slice-001.md` tripped it before; now a
+      stray). `consults-before-writing-the-slice`: no write of
+      `slice-001.md` before the `acceptance-criteria` consult.
+      `orchestrator-asks-for-target`: any `Glob` or `Grep` before asking
+      fails, whatever its pattern. `orchestrator-route-implementation`'s
+      log grader also wants the artifact line or the quarantine
+      sub-entries. Declined: a cross-file distinctness check on the
+      phase-2 candidates (an LLM grader reads one file and `focus:
+      trace` elides the middle of the run; still judged from the final
+      message, as recorded under F6); trace checks that no later-stage
+      skill ran on the route cases (each already carries two or three
+      `not-<skill>` `tool_used` guards for exactly that); the
+      `subprocess.run` audit in `rejudge.py` (its argument list is built
+      from constants and the model name, no user string reaches a
+      shell); that one is opengrep's static rule and the only item that
+      kept Sourcery's check red after the fixes, so the call now carries
+      the reason in a comment and a `nosemgrep` marker for that rule.
+      *Re-run after the Sourcery fixes (eleven cases, 33 runs, after one
+      session-limit false start):* 10/11 passed first time; both adr
+      cases 1.0 on the file-graded block, both accessibility cases,
+      slicing (consult before every write in 3/3), asks-for-target
+      (no Glob or Grep at all), screen-design (`each-mockup-styled` 3/3;
+      `copy-rules` lost one run 3-0, bar 0.97), the two agent-file cases
+      1.0. `orchestrator-route-implementation` 0.83: the tightened log
+      rubric failed three correct entries, because the skill writes the
+      entry before invoking the flow and its template says "see
+      sub-entries below", which is the right line when the run stops to
+      ask; rubric now says so, 1.0 after. Bars recorded for the eleven.
 
 ## G. Only after A–F
 

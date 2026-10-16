@@ -81,6 +81,8 @@ graders:
       PASS if the review does not demand the two rounding helpers be unified or call the duplication a defect while ignoring the documented reason. Not mentioning it, noting it as deliberate, or a Low-severity remark all pass.
 
       FAIL if the review requires merging the helpers or lists the duplication as a must-fix / missing abstraction without acknowledging the comment's reasoning.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

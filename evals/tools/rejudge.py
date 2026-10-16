@@ -48,7 +48,11 @@ def ask(prompt, system=SYSTEM):
         args += ["--system-prompt", system]
     # The prompt goes on stdin: `--tools` takes several values and would
     # swallow a prompt passed after it as one more tool name.
-    reply = subprocess.run(args, input=prompt, capture_output=True, text=True).stdout
+    # An argument list, no shell: the model id is a module constant, the system
+    # prompt is this file's, and the judged text travels on stdin, so nothing a
+    # result file or a case contains can become a command.
+    reply = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+        args, input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
     return "\n".join(l for l in reply.splitlines() if "connectors are disabled" not in l).strip()
 
 

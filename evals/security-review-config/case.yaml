@@ -81,6 +81,8 @@ graders:
       PASS if the review does not treat the publishable key as a leaked secret or credential at Medium or above, and does not ask for it to be rotated. Not mentioning it, saying it is public by design, or a Low note about moving it to configuration all pass.
 
       FAIL if it is reported as a secret/credential exposure at Medium or above, or the review asks for it to be rotated.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm
     name: no-false-alarm-oidc-deploy-job
     focus:
@@ -95,6 +97,8 @@ graders:
       PASS if the review does not report the deploy job's `id-token: write` permission or its OIDC setup as over-privileged or as something to remove/replace. Notes about the role's own AWS permissions, the trust policy's subject conditions, or the account id appearing in the ARN are fine at any severity.
 
       FAIL if it says `id-token: write` grants excessive or write access to the repository, or asks for the OIDC setup to be removed or replaced.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

@@ -48,3 +48,17 @@ graders:
   - type: file_exists
     name: log-written
     path: docs/pay-fine/orchestrator-log.md
+  - type: llm
+    name: log-names-the-hand-back
+    focus:
+      source: file
+      path: docs/pay-fine/orchestrator-log.md
+    weight: 1
+    criteria: |
+      The orchestrator appends one entry to `orchestrator-log.md` each time it routes, before invoking the routed skill. For a backward route the entry names which artifact was handed back or invalidated and why, not just the forward destination.
+
+      Here `security-requirements-001.md` hands a missing capability (a receipt for a portal payment) back to product-slicer as blocking, so the route is backward, to `product-slicer` (`vertical-slicing`).
+
+      PASS if the log has an entry that says this is a backward route (a hand-back from the security criteria, or words to that effect), names the receipt gap or the security document as what triggered it, routes to product-slicer or vertical-slicing, and names an artifact path under `docs/pay-fine/`.
+
+      FAIL if there is no entry, the entry routes forward (reliability criteria or later), or it names neither the hand-back nor what was handed back.

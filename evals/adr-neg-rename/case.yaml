@@ -28,3 +28,13 @@ graders:
       PASS if the response does not write an ADR, says why this isn't ADR territory, and suggests something lighter (a commit message, a PR description, nothing at all). Offering to write one anyway if the user insists is fine.
 
       FAIL if it writes an ADR, or reports having written one.
+  - type: regex
+    name: opens-with-the-three-checks
+    target: trace
+    # The skill's reply opens with the three worthiness checks, one line
+    # each: `Architectural: yes/no — <why>`, then Significant, then
+    # Non-obvious, each answered yes or no. The skill's own template is in
+    # the trace too and is excluded by the `<why>` lookahead; a trace
+    # regex cannot anchor to the start of the reply, so declining-the-adr
+    # carries the judgment and this checks the record exists.
+    pattern: 'Architectural: (?:[Yy]es|[Nn]o)\b(?![^<]{0,12}<why>)[\s\S]*Significant: (?:[Yy]es|[Nn]o)\b(?![^<]{0,12}<why>)[\s\S]*Non-obvious: (?:[Yy]es|[Nn]o)\b(?![^<]{0,12}<why>)'

@@ -21,7 +21,11 @@ graders:
   - type: tool_used
     name: does-not-search-for-artifacts
     tool: Glob
-    input_match: '\\.md|docs|plan|problem|scope|slice'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: does-not-grep-for-artifacts
+    tool: Grep
     min: 0
     max: 0
   - type: llm
