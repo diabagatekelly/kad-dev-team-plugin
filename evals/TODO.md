@@ -935,7 +935,9 @@ case). Every one has a gate-mode three-run bar and current evidence.
       `not-<skill>` `tool_used` guards for exactly that); the
       `subprocess.run` audit in `rejudge.py` (its argument list is built
       from constants and the model name, no user string reaches a
-      shell).
+      shell); that one is opengrep's static rule and the only item that
+      kept Sourcery's check red after the fixes, so the call now carries
+      the reason in a comment and a `nosemgrep` marker for that rule.
       *Re-run after the Sourcery fixes (eleven cases, 33 runs, after one
       session-limit false start):* 10/11 passed first time; both adr
       cases 1.0 on the file-graded block, both accessibility cases,
