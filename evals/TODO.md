@@ -1718,5 +1718,8 @@ first real execution (the hand-off says what to watch).
         limit at launch; and `product-slicer` bounds the unit.
       *Run after the round:* sixteen cases at three runs, 16/16 at bar,
       all sixteen at 1.0 (`results/gate-20261017T232306-*`). Evidence
-      recorded for all sixteen.
+      recorded for all sixteen. Every thread answered; Sourcery resolved
+      six on the fix commit `1ddff20` (the declined one included) and
+      posted no further review; the High sandbox thread was resolved by
+      hand with its reason. Both PR checks green.
 - [ ] H5. Sandbox the code-writing agent.
