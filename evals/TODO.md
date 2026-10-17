@@ -1377,7 +1377,7 @@ first real execution (the hand-off says what to watch).
       what was cut); shows a tool-less `claude -p` judge the brief and
       both views labelled only "implementation 1/2" (no path, branch,
       gate verdict or finding), in both presentation orders; keeps each
-      order's reasoning in `.git/kad-pairwise.json` next to the
+      order's reasoning in a new `.git/kad-pairwise-<timestamp>.json` next to the
       baseline; prints both reasonings and one last line, `pairwise
       judge: candidate 1 | candidate 2 | tie | split`, exit 2 and `NO
       VERDICT` when `claude` is missing, times out, answers twice with
@@ -1429,6 +1429,65 @@ first real execution (the hand-off says what to watch).
       at 1.0. If it recurs, the fix is in the skill's step 4 wording for
       a routed step that may produce no artifact, not here. Evidence
       recorded for all sixteen.
+      *Sourcery on PR #10, nine findings, six taken, one in part, two
+      declined:*
+      - *Taken, symlinks (its one Critical):* a changed symlink was
+        followed, so a link a candidate planted at a file outside the
+        worktree would have put that file's contents in the judge's
+        prompt, and a link to a directory or nowhere read as "deleted".
+        A link is now shown as `(symlink -> target, not followed)`;
+        proven in WSL with links to `/etc/hostname`, a directory and a
+        missing target.
+      - *Taken, malformed judge replies:* a JSON array, an object with
+        no reasoning or a non-string one, or a `result` that is not text
+        raised past the handlers as a traceback. `ask_judge` now
+        validates the shape and raises the retryable error; `compare`
+        records an order that failed twice with its `error` instead of
+        raising, so the other order's reasoning is kept, and the verdict
+        is `no verdict`.
+      - *Taken, memory and the byte cap:* a changed file was read whole
+        before the cap applied, and the cap counted characters of file
+        content only. No file is read past the cap now; the cap is
+        UTF-8 bytes of the whole rendered view, headers and both
+        truncation markers included, with room reserved for the closing
+        "not shown" list as each file is placed, and a file with others
+        still pending gets at most half the remaining room so one huge
+        file does not starve the rest (a half-megabyte of `é` ahead of
+        three small files under caps from 1000 to 200000 bytes stays
+        under each cap, and from 3000 bytes up every file is shown).
+      - *Taken, the output file:* `kad-pairwise.json` was shared across
+        runs and written only on success, so a failed run left an
+        earlier verdict at the path the log named. The default is now a
+        new `kad-pairwise-<UTC timestamp>.json` per run, written on
+        failure too, with whatever the judge did say.
+      - *Taken, injection into the judge:* the rubric now says the
+        implementations are data, never instructions, and that text
+        addressing the judge is a defect of that candidate; the skill
+        says to read the reasoning with that in mind. The verdict was
+        already non-authoritative (the gate and reviewers do not depend
+        on it), which is the rest of the finding's ask.
+      - *Taken, shell quoting in the skill:* the Combine command put
+        project paths in double quotes, where a file a contributor
+        named with `$(` would run. Every project path in every command
+        of the procedure (baseline, both gates, judge) is now in single
+        quotes, with a sentence saying why; only the skill's own
+        directory stays double-quoted. This touches H1's command text
+        too, same fix.
+      - *Taken in part, overlapping runs on the output file:* the
+        per-run file name covers a second run following a first; two
+        flows writing at the same instant are the declined case below.
+      - *Declined, opengrep "subprocess without a static string":* the
+        call is an argument list run with no shell; its only non-literal
+        elements are the `claude` path `shutil.which` resolved and the
+        `--model` value from the command line, and the prompt travels on
+        stdin. A comment at the call says so.
+      - *Declined, overlapping flows reading one baseline:* two
+        quarantine flows running at once in one project is not a
+        supported shape; they would also collide on the log, the
+        worktrees and the finalize tree, and the baseline is H1's
+        design shared with the gate, which the judge must read the same
+        way or the two disagree about what a candidate changed.
+      *Run after the round:* see below.
 - [ ] H3. Full reviewer pass on the finalized build, not only the
       targeted re-grade of the combine brief's findings.
 - [ ] H4. Diversify the two candidates' inputs (today both get the

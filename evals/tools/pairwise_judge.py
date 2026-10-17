@@ -50,7 +50,7 @@ def judge_pair(job):
     # The shape earlier runs' pairwise.json files have: orders keyed by who
     # was shown first, winners named by arm.
     return {"case": case, "run": index,
-            "orders": {f"{o['first']}_first": {"winner": o["winner"], "reasoning": o["reasoning"]}
+            "orders": {f"{o['first']}_first": {k: o[k] for k in ("winner", "reasoning", "error") if k in o}
                        for o in result["orders"]},
             "verdict": result["verdict"], "cost_usd": result["cost_usd"]}
 
@@ -80,7 +80,7 @@ def main():
     summary = {}
     for pair in pairs:
         tally = summary.setdefault(pair["case"], {"with": 0, "without": 0, "tie": 0, "split": 0})
-        tally[pair["verdict"]] += 1
+        tally[pair["verdict"]] = tally.get(pair["verdict"], 0) + 1  # "no verdict" when a judge call failed
     out = {"model": args.model, "summary": summary, "pairs": pairs,
            "cost_usd": sum(p["cost_usd"] for p in pairs)}
     (args.results_dir / "pairwise.json").write_text(json.dumps(out, indent=2))
