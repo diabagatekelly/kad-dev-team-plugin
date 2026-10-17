@@ -952,9 +952,11 @@ case). Every one has a gate-mode three-run bar and current evidence.
 
 ## G. Only after A–F
 
-Started 2026-10-16 on branch `eval-phase-g`, in the order G5, G4, G3
-(the two carried-over findings first, because their evidence was already
-in hand; the coverage work needs runs of its own). G1 and G2 stay open.
+G3, G4 and G5 done 2026-10-16/17 on branch `eval-phase-g` (PR #7, merged
+2026-10-17, `c6b9e19`), in the order G5, G4, G3 (the two carried-over
+findings first, because their evidence was already in hand; the coverage
+work needed runs of its own). G1 and G2 stay open; the hand-off's "What
+to do next" says where each would start.
 
 - [ ] G1. Harder plants and rejecting answers so scores leave the 1.0
       ceiling.
