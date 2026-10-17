@@ -1626,6 +1626,52 @@ first real execution (the hand-off says what to watch).
       - *Taken, "comma paths become ambiguous":* the gate's `changes`
         line prints the file list as JSON.
       *Run after the round:* sixteen cases at three runs, 16/16 at bar, all sixteen at 1.0 (`results/gate-20261017T224145-*`); a first attempt right after the edits lost every run to the session limit (resets on the hour it names, no evidence written). Evidence recorded for all sixteen.
-- [ ] H4. Diversify the two candidates' inputs (today both get the
-      identical task).
+- [x] H4. Diversify the two candidates' inputs (both got the identical
+      task). *2026-10-17, branch `plugin-fix-diversify-inputs`.* The
+      2026-10-12 direction named the shape: run one candidate with
+      slice-only context and one with full-unit context, so the two are
+      not correlated copies, and so the batching question (how much of
+      the unit an implementer should see) is answered by the flow's own
+      judge over real slices rather than decided up front. Step A now
+      gives both instances the same task (build this slice from its
+      design doc and criteria, save output where the orchestrator says,
+      `orchestrator` reviews it, nothing about quarantine) and differs
+      only in read context: candidate 1 reads the slice's documents
+      alone; candidate 2 also reads the unit — its Active requirements
+      document, every slice file cut for the unit, every design doc and
+      screen-design artifact for any of its slices, and the persisted
+      map if there is one — each named by path, with one line that the
+      deliverable is this slice alone and nothing another slice's design
+      describes is to be built or prepared for. The assignment is fixed
+      (the context always goes to candidate 2) so the reading across
+      slices is of one variable, and the log's A line records what
+      candidate 2 got (requirements doc, slice count, design count, map).
+      The judge's `--task` stays the slice documents both were given to
+      deliver, not the unit context, which neither had to build. The
+      combine brief gains one line, what candidate 2's wider read changed
+      if anything (a port shaped for a later slice, a rule taken from the
+      requirements document instead of escalated, a reuse the map showed,
+      or nothing a reader could tell apart), kept or set aside; the C
+      line and the step 5 report carry it, and the skill says that
+      having read more is not itself a reason to build from candidate 2.
+      The finalize instance gets the brief plus the inputs as candidate 2
+      received them, since the brief may lean on how the slice fits the
+      unit. `PERSONAS.md` says so.
+      *Not touched, deliberately:* `tdd-implementation` (it reads what
+      it is handed by path and escalates what the design leaves open;
+      how it treats a requirements document it was given is what the
+      comparison measures, and an edit there re-runs the tdd cases at
+      ten to fifteen minutes a run); the judge script (its `--task` help
+      still describes what both were given); the gate (scope is enforced
+      by `--allow` either way, and over-building inside the slice's own
+      modules for a later slice is the judge's "code the slice does not
+      need" and a reviewer's finding, not a mechanical check).
+      *Run:* sixteen cases at three runs, 16/16 at bar, fifteen at 1.0
+      (`results/gate-20261017T230158-*`); `-route-user-story` 0.95, one
+      run's reply put the skill's filing question in plain text (no
+      `AskUserQuestion` in the case) and then narrated the two stages
+      after it (judge 3-0 FAIL on `stops-after-the-routed-step`), a
+      step 5 miss on a case whose text H4 did not touch, the same
+      one-run noise H1 recorded on this case for a different reason;
+      bar left at 1.0. Evidence recorded for all sixteen.
 - [ ] H5. Sandbox the code-writing agent.
