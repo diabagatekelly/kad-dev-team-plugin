@@ -1537,12 +1537,13 @@ first real execution (the hand-off says what to watch).
       the map diff D's real `map-update` produced; then checks the
       combine brief's findings pass/fail as before. Critical and High
       findings are handed back to the same instance once, as named
-      fixes; the gate runs again on the fix (D's command unchanged), only
-      the raising reviewers re-run on the files the fix touched, and
-      `map-update` runs for real again if the fix changed the build, so
-      the persisted map is the map of the build that ships. A gate
-      failure after the fix ends the procedure as D's second failure
-      does; a Critical or High still standing after the one round is
+      fixes; then, in order, the gate runs again on the fix (D's command
+      plus `--allow` for the persisted map D wrote after its gate ran),
+      `map-update` runs for real again so the persisted map is the map of
+      the build that ships, and every applicable reviewer re-runs on the
+      files the fix touched with the refreshed diff, the brief's findings
+      re-checked with them. A gate failure after the fix ends the
+      procedure as D's second failure does; a Critical or High still standing after the one round is
       reported as outstanding for the user, never fixed by the
       orchestrator and never a second round; Medium and Low are
       reported, not acted on, as in the tdd skill's own final review. The
@@ -1592,7 +1593,39 @@ first real execution (the hand-off says what to watch).
       entry rather than writing a new one; the grader passed it and the
       rule already says a correction is a new entry, so noted, not
       acted on. Evidence recorded for all sixteen.
-      *Sourcery on PR #11:* approved, no findings. Both checks green.
+      *Sourcery on PR #11:* a first review approved with no findings and
+      was dismissed by a second, seven findings, all seven taken:
+      - *Taken, the real one (High, "valid fixes fail the gate"):* D's
+        real `map-update` writes the persisted map after D's gate ran,
+        so the post-fix gate with D's command unchanged would have failed
+        every fix on scope, the map being a change outside the slice.
+        The post-fix gate adds `--allow` for the map's path, the same
+        treatment Finalize's command gives this log.
+      - *Taken, "final build skips all review":* "every reviewer Grade
+        ran" is empty when both candidates failed the gate. E now names
+        the set by Grade's rule (the five always, accessibility if
+        UI-touching), whether or not Grade got to run them.
+      - *Taken, "architecture review uses stale map context":* the
+        post-fix order is now gate, then `map-update` for real, then the
+        reviewers with the refreshed diff; the "if the fix changed the
+        build" condition on the map re-run is gone, a fix is a change.
+      - *Taken, "some reviewers miss the shipped fix":* every applicable
+        reviewer re-runs on the files the fix touched, not only the
+        raising ones. This is the tdd skill's own rule for a handed-back
+        fix (step 5 of that path: all four, however small, after a
+        one-line refactor shipped a missed null check), which the E
+        instance skips because the orchestrator grades it; E's first
+        wording had copied the narrower in-loop rule instead.
+      - *Taken, "brief finding can regress":* the combine brief's
+        findings are checked again after the fix; the E line carries the
+        post-fix result.
+      - *Taken, "reviewers receive the process log":* the files handed
+        to the reviewers are the gate's list minus this log and the
+        persisted map, the flow's own writes; the map reaches them as
+        the diff.
+      - *Taken, "comma paths become ambiguous":* the gate's `changes`
+        line prints the file list as JSON.
+      *Run after the round:* sixteen cases at three runs, 16/16 at bar, all sixteen at 1.0 (`results/gate-20261017T224145-*`); a first attempt right after the edits lost every run to the session limit (resets on the hour it names, no evidence written). Evidence recorded for all sixteen.
 - [ ] H4. Diversify the two candidates' inputs (today both get the
       identical task).
 - [ ] H5. Sandbox the code-writing agent.

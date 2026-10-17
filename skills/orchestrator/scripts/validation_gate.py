@@ -279,8 +279,9 @@ def main():
             detail = " changed: " + ", ".join(c["changed"])
         elif name == "changes":
             # Listed, not only counted: the orchestrator hands the finalized
-            # build's reviewers exactly these files.
-            detail = (f" {c['count']} file(s): " + ", ".join(c["files"]) if c["passed"]
+            # build's reviewers exactly these files. As a JSON list, so a
+            # comma or a space in a name cannot split or join entries.
+            detail = (f" {c['count']} file(s): " + json.dumps(c["files"]) if c["passed"]
                       else " 0 file(s), nothing changed")
         elif name == "coverage" and not c["passed"]:
             detail = " " + (c.get("reason") or "below minimum: " + ", ".join(
