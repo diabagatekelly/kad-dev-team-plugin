@@ -342,8 +342,39 @@ reasons and your combine calls then say whether the wider read helped,
 hurt or changed nothing — the roster's own evidence on how much context
 an implementer should get. Blindness here is structural,
 not something to enforce by instruction: two fresh spawns with no shared
-context already can't see each other. Before launching, record the
-validation gate's baseline in the real project, once:
+context already can't see each other.
+
+Before launching, two things, in this order. First, check the session's
+sandbox, inline with Bash:
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/scripts/sandbox_check.py" --project '<project root>'
+```
+
+The three code-writing instances this flow launches, and the reviewers
+after them, run unattended with Bash in hand, and nothing in this plugin
+can fence them: the sandbox that keeps a command off the machine's keys
+and off the network is a setting of the session they run in, which a
+plugin cannot ship. The script runs inside that sandbox itself, so it
+probes the fence rather than trusting a file: a write outside the project
+is refused; no direct network route exists; the machine's credential files
+(`~/.ssh`, `~/.aws`, the list in its docstring) cannot be read from the
+shell and are each covered by a `Read(...)` deny rule, because the Read
+tool runs outside the sandbox and a candidate holds it. From the settings
+it reads the escape hatches no probe can see before they are used: the
+sandbox enabled, `allowUnsandboxedCommands` off, `failIfUnavailable` on,
+no excluded commands. Its last line is `sandbox check: PASS` or `FAIL`,
+with one line per check above it. On `FAIL` the flow does not start:
+nothing is launched — not candidate 1 alone, not "just the reviewers".
+Write this row's entry with the A line carrying the failing checks and no
+worktrees, report in step 5 what has to change (the README's "Running the
+quarantine flow" section has the settings block; on native Windows the
+answer is a WSL2 session, since Claude Code runs every command unsandboxed
+there), and stop. Don't work around it: no `dangerouslyDisableSandbox`, no
+narrowing the secret list, no editing the settings yourself. The fence is
+the user's to set, and the check runs again the next time this row is
+reached. Second, record the validation gate's baseline in the real
+project, once:
 
 ```
 python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --record-baseline '<project root>/.git/kad-gate-baseline.json'
@@ -489,7 +520,12 @@ the evidence the context difference exists to produce; candidate 2's
 having read more is not itself a reason to build from it.
 
 **D. Finalize — a fresh instance, regenerated independently, not layered
-on either candidate.** Launch a third `tdd-coach:tdd-implementation`
+on either candidate.** Run the sandbox check again first, the same command
+as A: this instance writes into the real tree, half an hour or more has
+passed, and a session's sandbox can be switched off in between. A `FAIL`
+here ends the procedure the way a second gate failure below does — record
+it under D, skip E, and report in step 5 that the slice is not implemented
+and why. Then launch a third `tdd-coach:tdd-implementation`
 instance — not either original candidate — with no worktree isolation
 this time, targeting the project's real working tree. Its task is your
 combine brief from step C, plus the slice inputs from step A as candidate
@@ -598,10 +634,10 @@ exists to catch:
 ## <n>. <date> — slice ready for implementation
 
 **Routed to:** quarantine flow
-- **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`, slice-only context; candidate 2 — `<worktree path>` / `<branch>`, full-unit context: `<requirements doc path>`; slices `<every path>`; designs `<every path, screen designs included>`
+- **A. Quarantine:** sandbox check — `<PASS (<platform>; network allowlist <none | domains>) | FAIL: <failing checks>; flow not started>`; candidate 1 — `<worktree path>` / `<branch>`, slice-only context; candidate 2 — `<worktree path>` / `<branch>`, full-unit context: `<requirements doc path>`; slices `<every path>`; designs `<every path, screen designs included>`
 - **B. Grade:** validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
 - **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<path the script printed>`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; wider read changed — `<what, kept | what, set aside | nothing>`; brief — `<one line>`
-- **D. Finalize:** `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
+- **D. Finalize:** sandbox check — `<PASS | FAIL: <failing checks>; procedure ended>`; `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
 - **E. Re-grade:** reviewers run on the finalized build — `<list>`; findings — `<Critical/High counts>`; combine-brief findings addressed — `<count>` pass, `<count>` fail; handed back — `<none | <count> Critical/High: gate <PASS | FAIL: <failing checks>>; map re-run; re-review on the fix's files <clean | <what still stands>>; brief re-check <count> pass, <count> fail>`
 ```
 
