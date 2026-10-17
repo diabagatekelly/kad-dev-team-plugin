@@ -1480,7 +1480,11 @@ first real execution (the hand-off says what to watch).
         call is an argument list run with no shell; its only non-literal
         elements are the `claude` path `shutil.which` resolved and the
         `--model` value from the command line, and the prompt travels on
-        stdin. A comment at the call says so.
+        stdin. A comment at the call says so, with the same `nosemgrep`
+        marker H1 put on the gate's test-runner call: Sourcery counts
+        this rule's hits as blocking until the thread is resolved or the
+        line carries the marker, and the check stayed red on the
+        resolved thread alone.
       - *Declined, overlapping flows reading one baseline:* two
         quarantine flows running at once in one project is not a
         supported shape; they would also collide on the log, the
@@ -1499,6 +1503,23 @@ first real execution (the hand-off says what to watch).
       holds when the routed skill decides the destination (the slice
       file it will file, or the tracker once chosen, in a correcting
       entry). Evidence recorded for all sixteen.
+      *Run after the `nosemgrep` marker (a comment under the skill
+      directory, so the hash moved):* 16/16 at bar, fourteen at 1.0.
+      `-route-implementation` 0.94: one run's entry routed to the
+      quarantine flow and wrote "A. Quarantine: not started — awaiting
+      user go-ahead" with no **Artifact** line at all (judge 3-0 on
+      `routes-to-tdd-implementation`; the template's "see sub-entries
+      below" was the line to write); 3/3 in the two earlier runs today.
+      `-route-scope-decision` 0.95: the same hedged artifact line as
+      this afternoon ("`scope-map-001.md` if a scope map is warranted;
+      otherwise none", then an Outcome line), judge 3-0. Both bars left
+      at 1.0; neither reaches Combine. That makes three misses today on
+      one theme — the artifact line when the routed step may write
+      nothing, or asks first, or decides the destination itself — so the
+      step 4 wording fix flagged above is now the first thing to do when
+      an orchestrator item next opens the skill: name what the line
+      holds in each of those three cases, and that the line is never
+      omitted or made conditional. Evidence recorded for all sixteen.
 - [ ] H3. Full reviewer pass on the finalized build, not only the
       targeted re-grade of the combine brief's findings.
 - [ ] H4. Diversify the two candidates' inputs (today both get the

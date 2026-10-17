@@ -111,7 +111,9 @@ def ask_judge(prompt, model, timeout=300):
         try:
             # An argument list run without a shell: nothing here is
             # interpolated into a command line, and the prompt is stdin.
-            proc = subprocess.run(
+            # The resolved path stays a variable because on Windows
+            # `claude` may be an .exe or an npm .cmd shim.
+            proc = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
                 [claude, "-p", "--model", model, "--tools", "",
                  "--disable-slash-commands", "--strict-mcp-config",
                  "--no-session-persistence", "--output-format", "json"],
