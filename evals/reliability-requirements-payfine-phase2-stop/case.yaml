@@ -31,9 +31,9 @@ graders:
     criteria: |
       The skill's rule, in its own words: don't lay out the ways the slice could grow for the user to pick from; choosing among them is a scope decision, and it isn't this skill's. A hand-back carries one recommendation; the owner decides whether the gap goes into this slice or out of it.
 
-      FAIL only if the response does one of these two things: (1) lists two or more mechanisms that could fill the gap as options (bullets, numbers, or "one of these: a second processor, paying by phone, lifting the block") without recommending exactly one of them; (2) asks the user to choose among named mechanisms.
+      FAIL only if the response does one of these two things: (1) lays out two or more mechanisms that could fill the outage gap as alternatives, in a list or in prose ("one of these: a second processor, paying by phone, lifting the block"; "a second payment route or a change to how the block is lifted"; a "rejected alternatives" list), whether or not it recommends one of them; (2) asks the user to choose among such mechanisms. The "Held until scope is settled" list is not that: it names the forks the skill is deferring (the timeout and its message, double-charge protection, retries of declines, faults versus declines, visibility of charged-but-outstanding fines), which are not ways to fill the outage gap, and a fork named there with its two sides is still one deferred fork.
 
-      Everything else passes: one recommendation with its reason, including the alternatives it rejects and why ("a provisional lift rather than a second processor, because..."); the in-or-out question, or its two-sided consequence ("either the slice grows a Stripe-independent way to clear the block, or the promise is knowingly not met during outages"); naming the owner (product-slicer, the slice set's owner, the user as the owner of scope); naming the missing capability in a phrase.
+      Everything else passes: one recommendation with its reason, including a contrast to what it is not, inside the recommendation's own sentence ("a provisional lift rather than a second processor, because..."); the in-or-out question, or its two-sided consequence ("either the slice grows a Stripe-independent way to clear the block, or the promise is knowingly not met during outages"); naming the owner (product-slicer, the slice set's owner, the user as the owner of scope); naming the missing capability in a phrase.
   - type: llm
     name: no-criteria-written
     focus: last_message
@@ -41,9 +41,9 @@ graders:
     criteria: |
       The skill's rule: a slice that can't meet its target without an unscoped capability gets a report and a stop, not criteria.
 
-      PASS if the response contains no acceptance-criteria document: no "Acceptance criteria" section and fewer than three Given/When/Then criteria. A summary of what was found in the code, and a single illustrative criterion, are fine.
+      PASS if the response writes no acceptance criteria: no "Acceptance criteria" section, and at most one Given/When/Then criterion, quoted as an illustration of what would have been written. A summary of what was found in the code is fine.
 
-      FAIL if it writes the criteria now (an acceptance-criteria section, or three or more Given/When/Then criteria), whether or not it also reports the gap.
+      FAIL if it writes criteria now, with or without a heading: an acceptance-criteria section, or two or more Given/When/Then criteria anywhere in the response, whether or not it also reports the gap.
   - type: llm
     name: does-not-design-the-fallback
     focus: last_message

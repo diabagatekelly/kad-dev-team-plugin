@@ -38,6 +38,14 @@ graders:
     # is matched as one, in either key order.
     pattern: '"name":"Write","input":\{(?:"(?:file_path|path)":"[^"]*\.(?:html|css)","content":"(?:[^"\\]|\\.)*#5[Bb]2[Aa]86|"content":"(?:[^"\\]|\\.)*#5[Bb]2[Aa]86(?:[^"\\]|\\.)*","(?:file_path|path)":"[^"]*\.(?:html|css)")'
   - type: regex
+    name: mock-carries-reference-typeface
+    target: trace
+    # One brand colour is not a matched reference. The stylesheet's other
+    # defining value is its serif face for body and headings ("Source Serif
+    # 4", Georgia); a mock extracted from it carries one of those names in
+    # its own markup. Same form as the brand grader.
+    pattern: '"name":"Write","input":\{(?:"(?:file_path|path)":"[^"]*\.(?:html|css)","content":"(?:[^"\\]|\\.)*(?:Georgia|Source Serif)|"content":"(?:[^"\\]|\\.)*(?:Georgia|Source Serif)(?:[^"\\]|\\.)*","(?:file_path|path)":"[^"]*\.(?:html|css)")'
+  - type: regex
     name: system-not-settled-before-confirmation
     target: trace
     # The reference path confirms the match with the user before the

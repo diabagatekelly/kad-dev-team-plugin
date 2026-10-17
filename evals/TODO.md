@@ -1152,3 +1152,92 @@ in hand; the coverage work needs runs of its own). G1 and G2 stay open.
       template edit); re-run last, 6/6 at 1.0. Final state:
       `eval_evidence.py --base origin/main` 39/39 affected cases ok,
       `history_stale.py` every chain current, 114 cases with bars.
+      *Sourcery on PR #7, nine findings, six taken, two folded into those,
+      one declined:*
+      - *Taken, the tdd whole-suite grader (three findings):* the
+        pattern matched command text only, so a final run that ended red
+        passed (the separate `last-test-run-green` caught it, but the
+        grader itself did not); `echo npm test` would have passed; a
+        `--test-name-pattern` filter passed as the whole suite; and the
+        fixture's own direct `node ... --test ... test/*.test.ts` form
+        failed as "filtered" because the glob ends in `.test.ts`. The
+        grader now requires a test command as a command word (start of
+        the command or after `;`, `&&`, `||`), no named `.test.ts` file
+        and no filter flag, that command's own output reaching `ℹ fail
+        0` before any later test command, and no test command after it.
+        Checked against eleven synthetic traces and the 78 recorded tdd
+        traces: every modern run passes; the fails are the fifteen
+        empty traces plus the four 2026-10-13 runs that predate phase B,
+        three of which ended red ("green again" narrated without a run,
+        the miss B fixed) and one that wrote tests through Bash heredocs
+        inside the same command as its test run.
+      - *Taken, `no-criteria-written` (both stop cases):* one or two
+        Given/When/Then criteria without a heading passed; now at most
+        one, quoted as an illustration, and two or more fail with or
+        without a heading.
+      - *Taken in part, the scope-menu grader (both stop cases):* a
+        "rejected alternatives" list beside the recommendation was
+        allowed; now a list of two or more mechanisms fails whether or
+        not one is recommended, and only a contrast inside the
+        recommendation's own sentence passes. `rejudge.py
+        --criteria-from --votes 3` on the six recorded outputs: 17 of 18
+        votes unchanged, one output (naming "a second payment route or a
+        change to how the block is lifted" before recommending one) now
+        fails two votes in three, which the skill's template ("naming
+        two ways the gap could be filled is the menu") says it should.
+      - *Taken, the reference-mock grader:* one brand colour was the
+        whole proof of a matched reference; `mock-carries-reference-
+        typeface` now also requires the stylesheet's serif face
+        ("Source Serif 4" or Georgia) in the mock's markup. The three
+        recorded runs all carry it.
+      - *Taken, the orchestrator's two backward-route sentences:* step 3
+        said "state only the single routed destination and why" while
+        step 5 asked for what the owner produced and the offer to
+        re-inspect; step 3 now lists the same four things.
+      - *The re-run after those fixes (22 stale cases, 66 runs) found two
+        more things.* (a) The tightened scope-menu rubric failed every
+        security stop run because the judge read the "Held until scope
+        is settled" bullets (the route fork "versus" its alternative) as
+        a menu; the rubric now says that list names deferred forks, not
+        gap options. Under that text the six recorded outputs re-judge
+        9/9 on the security side; on the reliability side two outputs
+        that say "a payment route that doesn't depend on Stripe, or a
+        different rule for what a blocked member can do" fail 3/3, which
+        the skill's template ("naming two ways the gap could be filled
+        is the menu") says they should. So the template's "What it
+        forces" line now says the missing capability is named by what it
+        has to achieve, not by the ways it could be built; that edit
+        staled both chains again, re-frozen once more. (b)
+        `orchestrator-route-tech-bootstrap` fell to 0.76 with two runs
+        of three stopping to ask whether the design's "existing port"
+        and `PlaceHold` exist, since the repo is empty apart from
+        `docs/`; the shared cancel-hold plant was written for the
+        library app, where they do. Its scaffold now rewrites those
+        words for the empty repo (new port, new adapter, the design's own
+        constructor convention) and fails loudly if "existing" survives.
+        The other two cases that copy the plant scaffold the app too, so
+        the plant itself is unchanged.
+      - *The second re-freeze surfaced the phase-1
+        `does-not-ask-what-the-code-answers` graders again* (reliability
+        3/3 lost, security 2/3), both explained PASS by the judge:
+        reliability's runs asked who watches the error reporter's alerts
+        (people, not code; the reporter named by path); security's asked
+        how the browser collects the card, which the repository cannot
+        answer because the portal's browser code is not in it, while the
+        rubric's own FAIL example read "do card details reach our
+        server?". Both rubrics now say so, the contradicting example is
+        gone, and each names the people-and-process questions that pass.
+        Re-judged under the new text: reliability 3/3, security 8/9 (the
+        one dissent explained PASS). The tech-bootstrap case went 3/3
+        with the patched plant. Final stale-set run: 13/14 at or above
+        bar, with the security phase-1 case re-run after its rubric fix;
+        one-flip losses on `orchestrator-route-design-system` (log
+        grader) and `reliability-requirements-payfine-phase3`
+        (double-submit criterion), noise, bars left at 1.0.
+      - *Declined, "mock check misses actual file":* the brand regex
+        accepts the plum in any written .html or .css rather than the
+        file the reply names. A regex cannot read the reply's path, and
+        the skill lets the pre-confirmation mock live anywhere; the
+        typeface grader narrows the gap, and a mock styled from a linked
+        stylesheet (the form one screen-design run used) must stay
+        legal.

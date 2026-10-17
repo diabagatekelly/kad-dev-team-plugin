@@ -241,8 +241,9 @@ nothing from the document:
 
 **The gap:** what the target requires, and what the slice as scoped
 cannot provide.
-**What it forces:** the scope decision this is, and that it is
-`product-slicer`'s to make, not this skill's.
+**What it forces:** the scope decision this is, with the missing
+capability named by what it has to achieve, not by the ways it could be
+built, and that it is `product-slicer`'s to make, not this skill's.
 **Recommendation:** one way forward and why, if you have a view;
 otherwise leave the line out.
 **Held until scope is settled:** the forks you would have presented, by

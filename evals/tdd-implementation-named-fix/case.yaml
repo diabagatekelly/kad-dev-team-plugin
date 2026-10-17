@@ -110,9 +110,12 @@ graders:
     name: final-run-is-the-whole-suite
     target: trace
     # The skill's rule: after GREEN run the whole suite, and the last test
-    # run before the report is the full suite, green. `npm test` runs
-    # test/*.test.ts; a run naming one .test.ts file is a filtered run. So
-    # the last Bash test command in the trace has to be an `npm test` (any
-    # prefix such as `cd ...;` or suffix such as `| grep` is fine) that
-    # names no .test.ts file, with no test command after it.
-    pattern: '"name":"Bash","input":\{"command":"(?:(?!\.test\.ts)(?:[^"\\]|\\.))*npm (?:run )?test(?:(?!\.test\.ts)(?:[^"\\]|\\.))*"(?![\s\S]*"name":"Bash","input":\{"command":"(?:[^"\\]|\\.)*(?:npm (?:run )?test|--test))'
+    # run before the report is the full suite, green. A test command is
+    # `npm test` or the fixture's own `node ... --test ...` as a command
+    # word (at the start, or after `;`, `&&`, `||`), so a heredoc or echo
+    # that only mentions `npm test` is not one. The last such command in
+    # the trace must name no single .test.ts file (the `test/*.test.ts`
+    # glob is the whole suite) and no --test-name-pattern / --test-only /
+    # --test-skip-pattern filter, its own output must reach `ℹ fail 0`
+    # before any later test command, and no test command may follow it.
+    pattern: '"name":"Bash","input":\{"command":"(?!(?:[^"\\]|\\.)*(?:[\w-]+\.test\.ts|--test-name-pattern|--test-only|--test-skip-pattern))(?:(?:[^"\\]|\\.)*?(?:;|&&|\|\|)\s*)?(?:npm (?:run )?test|node (?:[^"\\]|\\.)*?--test(?= |"))(?:[^"\\]|\\.)*"(?:(?!"name":"Bash","input":\{"command":"(?:(?:[^"\\]|\\.)*?(?:;|&&|\|\|)\s*)?(?:npm (?:run )?test|node (?:[^"\\]|\\.)*?--test(?= |")))[\s\S])*?ℹ fail 0(?![\s\S]*"name":"Bash","input":\{"command":"(?:(?:[^"\\]|\\.)*?(?:;|&&|\|\|)\s*)?(?:npm (?:run )?test|node (?:[^"\\]|\\.)*?--test(?= |")))'
