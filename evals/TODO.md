@@ -1243,3 +1243,127 @@ to do next" says where each would start.
         typeface grader narrows the gap, and a mock styled from a linked
         stylesheet (the form one screen-design run used) must stay
         legal.
+
+## H. The plugin fix order (agreed 2026-10-12; order chosen 2026-10-17: H first, then G1, then G2)
+
+Skill changes, not eval changes: each edits `skills/orchestrator/SKILL.md`
+(or `tdd-implementation`), so each re-runs the orchestrator cases
+`affected_cases.py` lists (sixteen, 48 runs) as the regression check.
+The quarantine flow itself has no case: it needs the `Agent` tool and up
+to twelve reviewers, so these items are proven by reading and by the
+first real execution (the hand-off says what to watch).
+
+- [x] H1. Wire the validation gate into the orchestrator's Grade step.
+      *2026-10-17, branch `plugin-fix-grade-gate`.* The script moved from
+      `evals/tools/validation_gate.py` to
+      `skills/orchestrator/scripts/validation_gate.py`: a skill can only
+      reach a script that ships inside the plugin, and the skill body
+      names it as `${CLAUDE_SKILL_DIR}/scripts/validation_gate.py`, which
+      Claude Code substitutes with the skill's installed directory when
+      the skill loads (the docs' "Available string substitutions"; the
+      variable is not in the Bash tool's environment, only the body
+      substitution works). Grade now runs the gate first, per candidate,
+      against the candidate's worktree with `--base` the commit noted
+      before Quarantine (the gate's default `HEAD` would miss a
+      candidate's committed work), `--allow` the design doc's module
+      directories plus the test directory and the report path,
+      `--protect` the design doc and the slice, `--coverage` on Node; a
+      failing candidate gets no map diff and no reviewers, its checks go
+      in the log's B sub-entry, Combine still reads its code; both
+      failing still reaches Combine with the gate reports as the
+      findings; the orchestrator may not fix, relaunch or widen `--allow`.
+      Finalize runs the same gate on the real tree before the map is
+      persisted, hands a failure back to the same instance once as a
+      named fix, and on a second failure stops and reports the slice as
+      not implemented. The log template's B and D lines carry the
+      verdicts. `PERSONAS.md` and the README say so.
+      *Run:* sixteen orchestrator cases at three runs, 16/16 at bar;
+      `-route-problem-framing` 0.95, one run's log entry gave the target
+      directory as the artifact where the skill had only asked its
+      questions and written nothing yet (judge 2-1 FAIL), the same
+      judgment-call noise F recorded, bar left at 1.0. Evidence recorded
+      for all sixteen.
+      *Also:* `wsl-gate.sh` died with `sed: can't read` on the moved
+      file, because `git ls-files -m` lists a deleted path too; the CRLF
+      strip now skips anything that is not a file.
+      *Not done, deliberately:* no `allowed-tools` Bash rule in the
+      skill's frontmatter for the gate command. The docs say such a rule
+      lets it run without a prompt, but how the pattern matches a
+      substituted path (and a quoted one on Windows) is undocumented;
+      try it once in a real session before relying on it.
+      *Sourcery on PR #9, fourteen findings, eleven taken, one taken in
+      part, two declined:*
+      - *Taken, the real one (two findings, "existing changes fail the
+        gate" and "log entry fails final gate"):* the Finalize gate on
+        the real tree diffed against the commit noted in Quarantine, so
+        every uncommitted planning document and the log's own new entry
+        counted as the build's changes; in a dogfood project where the
+        docs are never committed, Finalize would have failed every time.
+        The gate now has `--record-baseline FILE` (the current commit
+        plus a hash of every file already modified or untracked) and
+        `--baseline FILE` (diff against that commit, ignore those files
+        while their content is unchanged); the skill records it under
+        `.git/` before Quarantine and passes it in Grade and Finalize,
+        and Finalize's `--allow` adds the log file, which keeps changing
+        as the sub-entries are written. Found on the way: `--protect`
+        failed a file that was merely absent, and an uncommitted design
+        doc is absent from every candidate's worktree; a protected file
+        now fails only when it is in the change set, which still covers
+        a deleted tracked file and a baseline-recorded file that is gone
+        from the real tree (the baseline records its project path so a
+        worktree is not blamed for files that were never there).
+      - *Taken, script:* the change set is computed after the test
+        command runs, so a test that edits the tree is caught; `git diff
+        --no-renames` lists both sides of a rename, so a file moved into
+        an allowed directory still shows its old path as outside; an
+        `--allow` entry without a trailing `/` is an exact file, so
+        `report.md.bak` no longer passes as `report.md`; an empty change
+        set is a failed `changes` check; `--timeout` (600 s) turns a hung
+        suite into a failed one; a red suite prints its last thirty
+        lines; `.tsx`/`.jsx` count as source; a test file is anything
+        under a `test`, `tests`, `__tests__` or `spec` directory or named
+        `*.test.*`/`*.spec.*`, not only root `test/` and `.test.ts`.
+      - *Taken, skill text:* every path in the gate commands is quoted;
+        Finalize names `--coverage` among the flags it reuses.
+      - *Taken in part, "failed changes remain in tree":* the finalized
+        build that fails twice stays in the working tree, now said
+        explicitly with its files named in the report; reverting it is
+        the user's call, the same rule that keeps the candidate branches.
+      - *Declined, "candidate tests execute unsandboxed code":* that is
+        H5, and the gate adds no exposure the candidate's own test runs
+        in Quarantine did not already have.
+      - *Declined, the ignored-files half of "untracked changes evade
+        scope":* gitignored files are build output (`node_modules`,
+        coverage directories); counting them would fail every build.
+        The rename half was taken (above).
+      Thirteen scratch scenarios on a throwaway Node repo exercise each
+      check; no eval runs the gate.
+      *Runs after the Sourcery round:* the sixteen cases passed 16/16
+      on the reworded skill, but the script's last two edits landed
+      after that run started and staled them all (the script sits under
+      the skill directory, so the evidence hash covers it). The re-run
+      got five cases through (all at 1.0, `-backward-route` 0.95, one
+      judge flip) before the WSL session limit cut it. The eleven
+      re-ran after the reset: ten at 1.0, `-route-user-story` 0.81 on
+      two different misses in one batch — one run logged the artifact
+      as "to be determined by the skill" instead of a path (the skill
+      had then asked its filing questions, correctly), and one run never
+      invoked the skill, asking instead whether the story was already
+      filed elsewhere (step 2's "take the user's word" read as a
+      question to ask first) and narrating every later stage. The case
+      had passed 3/3 twice earlier the same day on this branch and
+      passed 3/3 again on the re-run, so 1 miss in 12 runs: noise,
+      recorded; bar left at 1.0. If the non-invoking shape recurs, it is
+      a step 2 wording question (the inspection says to take the user's
+      word, which the orchestrator can read as an invitation to ask),
+      not a quarantine-flow one. Evidence current for all sixteen.
+- [ ] H2. Promote `tools/pairwise_judge.py` to the arbiter inside
+      Combine: blind, both orders, reasons kept, the orchestrator's own
+      call made with the judge's verdict in hand rather than instead of
+      it. The script lives under `evals/tools/`; like H1, it has to move
+      into the plugin to be reachable from the skill.
+- [ ] H3. Full reviewer pass on the finalized build, not only the
+      targeted re-grade of the combine brief's findings.
+- [ ] H4. Diversify the two candidates' inputs (today both get the
+      identical task).
+- [ ] H5. Sandbox the code-writing agent.
