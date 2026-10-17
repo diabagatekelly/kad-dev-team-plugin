@@ -1592,6 +1592,7 @@ first real execution (the hand-off says what to watch).
       entry rather than writing a new one; the grader passed it and the
       rule already says a correction is a new entry, so noted, not
       acted on. Evidence recorded for all sixteen.
+      *Sourcery on PR #11:* approved, no findings. Both checks green.
 - [ ] H4. Diversify the two candidates' inputs (today both get the
       identical task).
 - [ ] H5. Sandbox the code-writing agent.
