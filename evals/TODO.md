@@ -1417,6 +1417,18 @@ first real execution (the hand-off says what to watch).
       their own message and no output file. The eval wrapper ran on a
       hand-made two-arm results file and wrote the old `pairwise.json`
       shape. The quarantine flow itself still has no eval case.
+      *Run:* sixteen orchestrator cases at three runs, 16/16 at bar,
+      fifteen at 1.0; `-route-scope-decision` 0.95, one run's log entry
+      gave its artifact as "`docs/pay-fine/scope-map-001.md` if a map is
+      warranted; otherwise none" and then appended an "Outcome: no scope
+      map written" line to the same entry (judge 3-0 FAIL on
+      `log-names-row-and-artifact`). The same grader on the same case
+      lost one run in three under G4 with a cleaner entry, so this is
+      the known judgment-call noise on a conditional artifact line, not
+      a Combine-text effect (the case never reaches Combine); bar left
+      at 1.0. If it recurs, the fix is in the skill's step 4 wording for
+      a routed step that may produce no artifact, not here. Evidence
+      recorded for all sixteen.
 - [ ] H3. Full reviewer pass on the finalized build, not only the
       targeted re-grade of the combine brief's findings.
 - [ ] H4. Diversify the two candidates' inputs (today both get the
