@@ -1785,6 +1785,10 @@ first real execution (the hand-off says what to watch).
       `denyRead` entry and not the sandbox itself. `claude -p` needs its
       prompt on stdin (`< prompt.txt`) when `--allowedTools` is on the
       line, since that flag is variadic and swallows a trailing prompt.
+      *Run:* sixteen orchestrator cases at three runs, 16/16 at bar, all
+      sixteen at 1.0 on the first run
+      (`results/gate-20261017T235049-*`). Evidence recorded for all
+      sixteen.
 - [ ] H6. The first real execution of the quarantine flow (added
       2026-10-17). No eval exercises the flow, so H1 to H4 have been
       proven by reading only; this is their real test, and it runs
