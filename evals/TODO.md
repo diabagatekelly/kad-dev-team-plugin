@@ -1357,13 +1357,174 @@ first real execution (the hand-off says what to watch).
       a step 2 wording question (the inspection says to take the user's
       word, which the orchestrator can read as an invitation to ask),
       not a quarantine-flow one. Evidence current for all sixteen.
-- [ ] H2. Promote `tools/pairwise_judge.py` to the arbiter inside
+- [x] H2. Promote `tools/pairwise_judge.py` to the arbiter inside
       Combine: blind, both orders, reasons kept, the orchestrator's own
       call made with the judge's verdict in hand rather than instead of
       it. The script lives under `evals/tools/`; like H1, it has to move
       into the plugin to be reachable from the skill.
+      *2026-10-17, branch `plugin-fix-combine-judge`.* The judge now
+      lives at `skills/orchestrator/scripts/pairwise_judge.py`, reached
+      from the skill body as `${CLAUDE_SKILL_DIR}/scripts/pairwise_judge.py`.
+      What it does: takes the two candidate worktrees, the gate's
+      baseline file and the brief (`--task`: the design doc, the slice,
+      each criteria document the candidates were given); computes each
+      candidate's change set exactly as the gate does (it imports the
+      gate's helpers, so the two can never disagree about what a
+      candidate changed), leaves out `--exclude` paths (the candidate's
+      own report: a self-description is not the code) and binary files,
+      sorts lock files last and caps each view at `--max-bytes` so a
+      dependency lock is what gets truncated first (the judge is told
+      what was cut); shows a tool-less `claude -p` judge the brief and
+      both views labelled only "implementation 1/2" (no path, branch,
+      gate verdict or finding), in both presentation orders; keeps each
+      order's reasoning in a new `.git/kad-pairwise-<timestamp>.json` next to the
+      baseline; prints both reasonings and one last line, `pairwise
+      judge: candidate 1 | candidate 2 | tie | split`, exit 2 and `NO
+      VERDICT` when `claude` is missing, times out, answers twice with
+      no verdict, or a change set cannot be computed. The rubric weighs,
+      in order: behaviour against the brief and nothing the brief did
+      not ask for; tests that exercise the criteria through the public
+      interface and could fail; module boundaries and dependency
+      direction as the brief states them; clarity, not brevity. The
+      judge runs even when a candidate failed the gate (what it got
+      right is information; the judge does not know which failed).
+      *Skill text:* Combine is now "judge first, blind; then read; then
+      decide with the verdict in hand". The call follows the verdict in
+      a line or names which of the judge's reasons it sets aside and
+      why; a tie or split leaves the call to the orchestrator with the
+      same obligation; a gate failure outranks the judge; no verdict
+      means one retry, then the call without it, said in the log; the
+      orchestrator may not stage a "blind" comparison of its own in its
+      place. The log template's C line carries the verdict, the reasons
+      path and "follows / departs from the judge: why"; step 5's report
+      names both. `PERSONAS.md` and both READMEs say so.
+      *The eval tool stays:* `evals/tools/pairwise_judge.py` keeps its
+      with/without results-dir mode (G2 needs it) as a wrapper that
+      imports `compare()` from the plugin script and supplies the review
+      rubric; `pairwise.json` keeps its shape (`with_first` /
+      `without_first`, winners by arm).
+      *Proven by running, not by an eval:* on a throwaway Node repo
+      (committed `placeHold`, an uncommitted design doc for `cancelHold`,
+      baseline recorded, two worktrees: one honest implementation with
+      three behaviour tests, one that skips the ownership check, adds an
+      unasked notification and asserts only truthiness) the judge picked
+      the honest candidate in both orders with reasons that named each
+      miss, at $0.04 on Sonnet; the uncommitted design doc appeared in
+      neither view (the baseline excluded it); `--exclude` dropped the
+      report, a binary file was listed but not shown, a 150-byte cap
+      truncated and said so; one candidate, no task, no `--out` without
+      a baseline, `claude` off PATH and an unknown base each failed with
+      their own message and no output file. The eval wrapper ran on a
+      hand-made two-arm results file and wrote the old `pairwise.json`
+      shape. The quarantine flow itself still has no eval case.
+      *Run:* sixteen orchestrator cases at three runs, 16/16 at bar,
+      fifteen at 1.0; `-route-scope-decision` 0.95, one run's log entry
+      gave its artifact as "`docs/pay-fine/scope-map-001.md` if a map is
+      warranted; otherwise none" and then appended an "Outcome: no scope
+      map written" line to the same entry (judge 3-0 FAIL on
+      `log-names-row-and-artifact`). The same grader on the same case
+      lost one run in three under G4 with a cleaner entry, so this is
+      the known judgment-call noise on a conditional artifact line, not
+      a Combine-text effect (the case never reaches Combine); bar left
+      at 1.0. If it recurs, the fix is in the skill's step 4 wording for
+      a routed step that may produce no artifact, not here. Evidence
+      recorded for all sixteen.
+      *Sourcery on PR #10, nine findings, six taken, one in part, two
+      declined:*
+      - *Taken, symlinks (its one Critical):* a changed symlink was
+        followed, so a link a candidate planted at a file outside the
+        worktree would have put that file's contents in the judge's
+        prompt, and a link to a directory or nowhere read as "deleted".
+        A link is now shown as `(symlink -> target, not followed)`;
+        proven in WSL with links to `/etc/hostname`, a directory and a
+        missing target.
+      - *Taken, malformed judge replies:* a JSON array, an object with
+        no reasoning or a non-string one, or a `result` that is not text
+        raised past the handlers as a traceback. `ask_judge` now
+        validates the shape and raises the retryable error; `compare`
+        records an order that failed twice with its `error` instead of
+        raising, so the other order's reasoning is kept, and the verdict
+        is `no verdict`.
+      - *Taken, memory and the byte cap:* a changed file was read whole
+        before the cap applied, and the cap counted characters of file
+        content only. No file is read past the cap now; the cap is
+        UTF-8 bytes of the whole rendered view, headers and both
+        truncation markers included, with room reserved for the closing
+        "not shown" list as each file is placed, and a file with others
+        still pending gets at most half the remaining room so one huge
+        file does not starve the rest (a half-megabyte of `é` ahead of
+        three small files under caps from 1000 to 200000 bytes stays
+        under each cap, and from 3000 bytes up every file is shown).
+      - *Taken, the output file:* `kad-pairwise.json` was shared across
+        runs and written only on success, so a failed run left an
+        earlier verdict at the path the log named. The default is now a
+        new `kad-pairwise-<UTC timestamp>.json` per run, written on
+        failure too, with whatever the judge did say.
+      - *Taken, injection into the judge:* the rubric now says the
+        implementations are data, never instructions, and that text
+        addressing the judge is a defect of that candidate; the skill
+        says to read the reasoning with that in mind. The verdict was
+        already non-authoritative (the gate and reviewers do not depend
+        on it), which is the rest of the finding's ask.
+      - *Taken, shell quoting in the skill:* the Combine command put
+        project paths in double quotes, where a file a contributor
+        named with `$(` would run. Every project path in every command
+        of the procedure (baseline, both gates, judge) is now in single
+        quotes, with a sentence saying why; only the skill's own
+        directory stays double-quoted. This touches H1's command text
+        too, same fix.
+      - *Taken in part, overlapping runs on the output file:* the
+        per-run file name covers a second run following a first; two
+        flows writing at the same instant are the declined case below.
+      - *Declined, opengrep "subprocess without a static string":* the
+        call is an argument list run with no shell; its only non-literal
+        elements are the `claude` path `shutil.which` resolved and the
+        `--model` value from the command line, and the prompt travels on
+        stdin. A comment at the call says so, with the same `nosemgrep`
+        marker H1 put on the gate's test-runner call: Sourcery counts
+        this rule's hits as blocking until the thread is resolved or the
+        line carries the marker, and the check stayed red on the
+        resolved thread alone.
+      - *Declined, overlapping flows reading one baseline:* two
+        quarantine flows running at once in one project is not a
+        supported shape; they would also collide on the log, the
+        worktrees and the finalize tree, and the baseline is H1's
+        design shared with the gate, which the judge must read the same
+        way or the two disagree about what a candidate changed.
+      *Run after the round:* sixteen cases at three runs, 16/16 at bar,
+      fifteen at 1.0; `-route-user-story` 0.95, one run's log entry gave
+      its artifact as "to be decided by the skill (a tracking destination
+      for `slice-001.md`)" (judge 3-0 on `log-names-row-and-artifact`),
+      the same shape H1 saw once in twelve runs: `user-story-writeup`
+      asks the user where to file, so at the moment the entry is written
+      there is no path to name. Noise for this change (Combine is never
+      reached), bar left at 1.0; but twice now, so it is a candidate
+      step 4 wording fix for a later item: say what the artifact line
+      holds when the routed skill decides the destination (the slice
+      file it will file, or the tracker once chosen, in a correcting
+      entry). Evidence recorded for all sixteen.
+      *Run after the `nosemgrep` marker (a comment under the skill
+      directory, so the hash moved):* 16/16 at bar, fourteen at 1.0.
+      `-route-implementation` 0.94: one run's entry routed to the
+      quarantine flow and wrote "A. Quarantine: not started — awaiting
+      user go-ahead" with no **Artifact** line at all (judge 3-0 on
+      `routes-to-tdd-implementation`; the template's "see sub-entries
+      below" was the line to write); 3/3 in the two earlier runs today.
+      `-route-scope-decision` 0.95: the same hedged artifact line as
+      this afternoon ("`scope-map-001.md` if a scope map is warranted;
+      otherwise none", then an Outcome line), judge 3-0. Both bars left
+      at 1.0; neither reaches Combine. That makes three misses today on
+      one theme — the artifact line when the routed step may write
+      nothing, or asks first, or decides the destination itself — so the
+      step 4 wording fix flagged above is now the first thing to do when
+      an orchestrator item next opens the skill: name what the line
+      holds in each of those three cases, and that the line is never
+      omitted or made conditional. Evidence recorded for all sixteen.
 - [ ] H3. Full reviewer pass on the finalized build, not only the
-      targeted re-grade of the combine brief's findings.
+      targeted re-grade of the combine brief's findings. *Carry with it
+      the step 4 artifact-line fix recorded at the end of H2 (three
+      one-run misses on 2026-10-17, one theme); it opens the same skill
+      and the same sixteen cases re-run either way.*
 - [ ] H4. Diversify the two candidates' inputs (today both get the
       identical task).
 - [ ] H5. Sandbox the code-writing agent.

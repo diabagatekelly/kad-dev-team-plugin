@@ -142,8 +142,13 @@ every applicable reviewer then grades each surviving
 candidate independently in parallel (`tdd-coach:test-quality-review`,
 `architecture-review`, `devsecops-engineer:security-review`,
 `devsecops-engineer:reliability-review`, and `accessibility-engineer:accessibility-review`
-if UI-touching); `orchestrator` itself makes the one accountable combine
-call, inline; a third, fresh instance regenerates the implementation
+if UI-touching); a blind pairwise judge
+(`skills/orchestrator/scripts/pairwise_judge.py`: both candidates' change
+sets unlabelled, both presentation orders, every reason kept) gives its
+verdict before `orchestrator` reads either candidate; `orchestrator` itself
+then makes the one accountable combine call, inline, with that verdict in
+hand rather than instead of it — following it in a line or naming which of
+the judge's reasons it sets aside; a third, fresh instance regenerates the implementation
 independently from that call rather than patching either candidate; a
 targeted re-grade checks only what the combine brief asked to be fixed.
 Full procedure in `skills/orchestrator/SKILL.md`'s own "Quarantine, grade,
@@ -188,8 +193,8 @@ between problem doc and implementation actually ran rather than getting
 silently skipped. One append-only entry per routed step (never edited —
 a wrong entry gets a correcting entry, not a rewrite), richer sub-entries
 for the quarantine row specifically (all five steps: both candidates'
-worktrees/branches, per-candidate grading summary, the combine basis and
-brief, the finalize artifact, re-grade pass/fail) since that's the one
+worktrees/branches, per-candidate grading summary, the judge's verdict, the
+combine basis and brief, the finalize artifact, re-grade pass/fail) since that's the one
 row a single "routed to" line would most successfully hide a skipped
 step inside. Full format in `skills/orchestrator/SKILL.md`.
 
