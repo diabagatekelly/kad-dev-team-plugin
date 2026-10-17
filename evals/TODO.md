@@ -1674,7 +1674,9 @@ first real execution (the hand-off says what to watch).
       step 5 miss on a case whose text H4 did not touch, the same
       one-run noise H1 recorded on this case for a different reason;
       bar left at 1.0. Evidence recorded for all sixteen.
-      *Sourcery on PR #12:* approved, no findings, no inline comments
-      (one review; H3's second review came after a push, and this PR had
-      none after the review). Both PR checks green.
+      *Sourcery on PR #12:* approved, no findings, no inline comments;
+      the docs push that recorded the approval re-ran its review, which
+      dismissed the first approval (its behaviour on any new push) and
+      passed again with a reviewer's guide and nothing else. Both PR
+      checks green.
 - [ ] H5. Sandbox the code-writing agent.
