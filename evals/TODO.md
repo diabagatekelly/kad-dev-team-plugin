@@ -958,3 +958,18 @@ case). Every one has a gate-mode three-run bar and current evidence.
       run through the same cases as a third arm.
 - [ ] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
+- [ ] G4. From F: `orchestrator-backward-route` 0.95. One run in three
+      routes correctly, cuts the slice, then narrates the whole round
+      trip (requirements-002, design, security) and opens with
+      requirements-refinement as what's next; the skill's step 3 forbids
+      that narration in so many words. Decide whether the skill needs
+      the rule restated where the backward step reports, or whether
+      one run in three is the noise floor for a long inline routing.
+- [ ] G5. From F: three long-file review traps lose a run to the judge
+      each pass with the explained judge passing the run
+      (`reliability-review-alerts` burn-rate, 11k characters;
+      `reliability-review-nightly` duplicate-fines, 16k;
+      `code-review-fine-notices-pr` leaves-mocking, close call on
+      wording). The CLI's own note says to prefer a regex on large
+      artifacts; a findings-only excerpt file, or a shorter review
+      format, would take the judge off the long text.
