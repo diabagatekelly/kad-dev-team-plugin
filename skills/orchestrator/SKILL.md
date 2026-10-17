@@ -291,10 +291,19 @@ non-quarantined execution would get, plus one line saying `orchestrator`
 reviews the result afterwards (so it skips its own final review), and
 nothing about quarantine or a second candidate existing. Blindness here is structural,
 not something to enforce by instruction: two fresh spawns with no shared
-context already can't see each other. Before launching, note the real
-project's current commit (`git rev-parse HEAD`): both worktrees branch
-from it, and it is the `--base` the validation gate diffs against in
-Grade and again in Finalize. Wait for both to finish before
+context already can't see each other. Before launching, record the
+validation gate's baseline in the real project, once:
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project "<project root>" --record-baseline "<project root>/.git/kad-gate-baseline.json"
+```
+
+It notes the current commit — both worktrees branch from it — and
+hashes every file already modified or untracked in the working tree
+(planning documents nobody has committed yet, this log), so the gate in
+Grade and Finalize diffs against that commit without counting those as
+the candidate's changes. The file lives under `.git/` so it is never a
+change itself. Wait for both to finish before
 continuing. Each worktree-isolated run returns its own path and branch —
 note both; you'll need them in the next two steps.
 
@@ -303,20 +312,25 @@ each candidate, before anything else, run the validation gate inline
 with Bash against that candidate's worktree:
 
 ```
-python3 -I ${CLAUDE_SKILL_DIR}/scripts/validation_gate.py --project <worktree path> --base <commit noted in A> --test-cmd "<the project's documented test command>" --allow <slice module dir>/ --allow <test dir>/ --allow <report path> --protect <design doc> --protect <slice file> [--coverage]
+python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project "<worktree path>" --baseline "<project root>/.git/kad-gate-baseline.json" --test-cmd "<the project's documented test command>" --allow "<slice module dir>/" --allow "<test dir>/" --allow "<report path>" --protect "<design doc>" --protect "<slice file>" [--coverage]
 ```
 
-(`python -I` where that is the interpreter's name.) It answers four
+(`python -I` where that is the interpreter's name; every path quoted,
+since a worktree path can carry spaces.) It answers five
 questions no reviewer should spend judgment on: the full suite exits green
-with a clean summary; every changed or added file, untracked ones
-included, sits under an `--allow` prefix — the slice's own modules as the
-design doc names them, the project's test directory, and the path you told
-the candidate to save its report to; every `--protect` file — the design
-doc, the slice, each other stage's document in the target directory — is
-byte-identical to base; and, with `--coverage` (pass it when the project
-runs on Node's test runner), every changed source file was loaded by a
-test and meets the line and branch minimums. The last line printed is
-`validation gate: PASS` or `FAIL`, with one line per check above it. A
+with a clean summary, within the gate's timeout; the candidate changed
+something at all; every changed or added file, untracked ones
+included and both sides of a rename, sits inside an `--allow` entry — a
+directory when the entry ends in `/`, exactly that file otherwise: the
+slice's own modules as the design doc names them, the project's test
+directory, and the path you told the candidate to save its report to;
+every `--protect` file — the design doc, the slice, each other stage's
+document in the target directory — is byte-identical to the baseline;
+and, with `--coverage` (pass it when the project runs on Node's test
+runner), every changed source file was loaded by a test and meets the
+line and branch minimums. The last line printed is
+`validation gate: PASS` or `FAIL`, with one line per check above it and,
+when the suite failed, the last lines of its output. A
 candidate that fails is dropped from the rest of Grade: no map diff, no
 reviewers; its failing checks go in the log's B sub-entry, and Combine
 still reads its code alongside the gate's output, because what it tried
@@ -375,15 +389,20 @@ that answers "has this slice been implemented" for step 2's future
 inspection.
 
 Once the fresh instance finishes, run the same validation gate against
-the real working tree — `--project` the project root, the same `--base`,
-`--allow`, `--protect` and `--test-cmd` as Grade. If it fails, hand the
+the real working tree — `--project` the project root, the same
+`--baseline`, `--protect`, `--test-cmd` and `--coverage` as Grade, and the
+same `--allow` entries plus this log file (its sub-entries for this row
+are being written as the flow goes, so it has changed since the
+baseline). If it fails, hand the
 failing checks back to that same instance once, as a named fix (its
 skill's "Applying a fix handed back from review" path), and run the gate
 again. A second failure ends the procedure: don't launch another
 instance and don't reach for the code yourself; record the failure under
 D, skip E, and report in step 5 that the slice is not implemented and
-which checks it failed. The persisted map below is updated only once the
-finalized build has cleared the gate.
+which checks it failed. Leave the failed build in the working tree as it
+is and name its files in the report: reverting it is the user's call,
+the same rule that keeps the candidate branches below. The persisted map
+below is updated only once the finalized build has cleared the gate.
 
 Then run `architecture-cartographer:map-update`
 for real — inline, not an async `Agent` call, for the same reason as

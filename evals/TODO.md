@@ -1291,6 +1291,61 @@ first real execution (the hand-off says what to watch).
       lets it run without a prompt, but how the pattern matches a
       substituted path (and a quoted one on Windows) is undocumented;
       try it once in a real session before relying on it.
+      *Sourcery on PR #9, fourteen findings, eleven taken, one taken in
+      part, two declined:*
+      - *Taken, the real one (two findings, "existing changes fail the
+        gate" and "log entry fails final gate"):* the Finalize gate on
+        the real tree diffed against the commit noted in Quarantine, so
+        every uncommitted planning document and the log's own new entry
+        counted as the build's changes; in a dogfood project where the
+        docs are never committed, Finalize would have failed every time.
+        The gate now has `--record-baseline FILE` (the current commit
+        plus a hash of every file already modified or untracked) and
+        `--baseline FILE` (diff against that commit, ignore those files
+        while their content is unchanged); the skill records it under
+        `.git/` before Quarantine and passes it in Grade and Finalize,
+        and Finalize's `--allow` adds the log file, which keeps changing
+        as the sub-entries are written. Found on the way: `--protect`
+        failed a file that was merely absent, and an uncommitted design
+        doc is absent from every candidate's worktree; a protected file
+        now fails only when it is in the change set, which still covers
+        a deleted tracked file and a baseline-recorded file that is gone
+        from the real tree (the baseline records its project path so a
+        worktree is not blamed for files that were never there).
+      - *Taken, script:* the change set is computed after the test
+        command runs, so a test that edits the tree is caught; `git diff
+        --no-renames` lists both sides of a rename, so a file moved into
+        an allowed directory still shows its old path as outside; an
+        `--allow` entry without a trailing `/` is an exact file, so
+        `report.md.bak` no longer passes as `report.md`; an empty change
+        set is a failed `changes` check; `--timeout` (600 s) turns a hung
+        suite into a failed one; a red suite prints its last thirty
+        lines; `.tsx`/`.jsx` count as source; a test file is anything
+        under a `test`, `tests`, `__tests__` or `spec` directory or named
+        `*.test.*`/`*.spec.*`, not only root `test/` and `.test.ts`.
+      - *Taken, skill text:* every path in the gate commands is quoted;
+        Finalize names `--coverage` among the flags it reuses.
+      - *Taken in part, "failed changes remain in tree":* the finalized
+        build that fails twice stays in the working tree, now said
+        explicitly with its files named in the report; reverting it is
+        the user's call, the same rule that keeps the candidate branches.
+      - *Declined, "candidate tests execute unsandboxed code":* that is
+        H5, and the gate adds no exposure the candidate's own test runs
+        in Quarantine did not already have.
+      - *Declined, the ignored-files half of "untracked changes evade
+        scope":* gitignored files are build output (`node_modules`,
+        coverage directories); counting them would fail every build.
+        The rename half was taken (above).
+      Thirteen scratch scenarios on a throwaway Node repo exercise each
+      check; no eval runs the gate.
+      *Runs after the Sourcery round:* the sixteen cases passed 16/16
+      on the reworded skill, but the script's last two edits landed
+      after that run started and staled them all (the script sits under
+      the skill directory, so the evidence hash covers it). The re-run
+      got five cases through (all at 1.0, `-backward-route` 0.95, one
+      judge flip) before the WSL session limit cut it. **Open: re-run
+      the eleven stale cases** (`wsl-gate.sh --stale --runs 3` after the
+      limit resets), then the PR's evidence check goes green.
 - [ ] H2. Promote `tools/pairwise_judge.py` to the arbiter inside
       Combine: blind, both orders, reasons kept, the orchestrator's own
       call made with the judge's verdict in hand rather than instead of
