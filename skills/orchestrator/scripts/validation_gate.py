@@ -260,7 +260,8 @@ def main():
     if a.coverage:
         present = [f for f in files if os.path.isfile(os.path.join(project, f))]
         report["checks"]["coverage"] = check_coverage(output, present, a.min_line, a.min_branch)
-    report["checks"]["changes"] = {"passed": bool(files), "count": len(files)}
+    report["checks"]["changes"] = {"passed": bool(files), "count": len(files),
+                                   "files": sorted(files)}
     if a.allow:
         report["checks"]["scope"] = check_scope(files, a.allow)
     if a.protect:
@@ -277,7 +278,11 @@ def main():
         elif name == "protected" and c["changed"]:
             detail = " changed: " + ", ".join(c["changed"])
         elif name == "changes":
-            detail = f" {c['count']} file(s)" + ("" if c["passed"] else ", nothing changed")
+            # Listed, not only counted: the orchestrator hands the finalized
+            # build's reviewers exactly these files. As a JSON list, so a
+            # comma or a space in a name cannot split or join entries.
+            detail = (f" {c['count']} file(s): " + json.dumps(c["files"]) if c["passed"]
+                      else " 0 file(s), nothing changed")
         elif name == "coverage" and not c["passed"]:
             detail = " " + (c.get("reason") or "below minimum: " + ", ".join(
                 c["below_minimum"] + [f + " (not in the coverage table)" for f in c["not_measured"]]))

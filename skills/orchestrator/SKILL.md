@@ -272,6 +272,29 @@ decision record. Each entry:
 **Artifact:** <path the routed step will save to, or "see sub-entries below">
 ```
 
+The **Artifact** line is in every entry and holds one path, never
+omitted and never conditional. The entry is written before the routed
+step runs, so the path is where that step's output will go: a file under
+the target directory, named by the persona's own convention
+(`problem-framing.md`, `scope-map-001.md`, `requirements-002.md`,
+`slice-001.md`, a screen design under `visual-ux/`), with a parenthetical
+where the skill may name it differently. Not the bare directory: that
+says where without saying what. Three cases need saying:
+- the quarantine row: `see sub-entries below`, even when the flow has not
+  started yet — a step that stops to ask for the go-ahead has still
+  routed, and a "not now" gets its own entry later;
+- a routed skill that may decide nothing needs writing (`docs-writer`
+  deciding whether a scope map is warranted): the path the artifact takes
+  if it is written, stated flatly — not "`scope-map-001.md` if warranted,
+  otherwise none", and no outcome appended to the entry afterwards. If
+  the skill decides none is needed, it records that where its own
+  procedure says, and a later entry can say so;
+- `user-story-writeup`, which asks where this project files stories: the
+  path a locally filed story takes under the target directory, with a
+  parenthetical that the skill may file it elsewhere. Where it then went
+  is a new correcting entry, never an edit of this one; "to be decided by
+  the skill" names no path.
+
 For a backward route (the step 3 rule that supersedes the table), log it
 the same way, naming which artifact got superseded and why, not just the
 forward destination.
@@ -459,15 +482,62 @@ run's output replaces the project's persisted map: it becomes what the
 next slice's `architecture-design` and `tdd-implementation` read via
 `map-query`, and what the next slice's own `map-update` runs diff against.
 
-**E. Re-grade — targeted, not a full re-open.** Once the finalized build
-has cleared the gate, re-run only the reviewers whose findings the combine brief
-asked it to address, checking only those specific findings against the
-finalized implementation. Pass/fail per finding, not a fresh grading pass
-across every category from step B.
+**E. Re-grade — the full pass, on the build that ships.** The finalized
+build is a fresh implementation, not either candidate: every finding
+Grade raised was raised against code that no longer exists, and nothing
+this build introduced has been read by anyone yet. Its instance skipped
+its own final review because its task said `orchestrator` reviews the
+result; this step is that review. Once the finalized build has cleared
+the gate and the persisted map is updated, run every reviewer that
+applies by Grade's rule — the five that always apply, plus
+`accessibility-engineer:accessibility-review` if the slice is UI-touching
+— whether or not Grade got as far as running them (it ran none if both
+candidates failed the gate; the finalized build is reviewed in full
+either way), in parallel as real async `Agent` calls against the real
+working tree (up to six more review agents, after D, not part of Grade's
+count). Hand each the files the build changed, as the gate's `changes`
+line lists them, minus this log and the persisted map: those two are the
+flow's own writes, not the build, and a reviewer handed a process record
+raises findings against it. The map reaches the reviewers as the diff
+D's real `map-update` produced, exactly as a candidate's reviewers were
+handed its throwaway diff. Then check the combine brief: each finding it
+asked the build to address, pass or fail against the finalized
+implementation, from the reviewers' reports and your own read of the
+code. Both go in the log's E line.
+
+What the pass finds is handled as the finalize instance would have
+handled its own review, with the same budget the gate has: hand every
+Critical and High finding back to that same instance, once, as named
+fixes through its skill's "Applying a fix handed back from review" path;
+report Medium and Low without acting on them; a finding that asks for
+something outside the slice is an escalation for the report, not a fix.
+After the fix, in this order:
+
+1. Run the gate again: D's command, plus `--allow` for the persisted
+   map's path, which D's real `map-update` wrote after D's gate ran and
+   which would otherwise fail the scope check as a change outside the
+   slice. A fix is a change: scope, protected files and coverage apply
+   to it as to the build. A failure here ends the procedure the way D's
+   second failure does: the build has had its one handed-back round.
+2. Run `architecture-cartographer:map-update` for real once more, so the
+   persisted map is the map of the build that ships and the reviewers
+   below read the fix's own diff, not the pre-fix one.
+3. Re-run every applicable reviewer on the files the fix touched — all
+   of them, not only the ones that raised the findings handed back, the
+   same rule the tdd skill's own handed-back path has (a one-line fix has
+   shipped a missed null check before) — with the refreshed diff, and
+   check the combine brief's findings again against the fixed build: a
+   fix can undo a pass. The E line carries the post-fix results.
+
+A Critical or High still standing after the round is not a second round
+and not something to fix yourself: the slice is reported as implemented
+with that finding outstanding, named in step 5, for the user to decide.
 
 **Reporting this procedure.** Step 5's report names what happened at each
 of the five steps above, not just the final outcome — for Combine, the
-judge's verdict and whether your call followed it. The two candidate
+judge's verdict and whether your call followed it; for Re-grade, each
+reviewer's result on the finalized build, what was handed back, and any
+Critical or High still standing. The two candidate
 worktrees and branches from Quarantine still exist once this completes —
 name both so the user can inspect either directly if they want to, but
 don't merge or delete them yourself; discarding a candidate's branch is
@@ -487,7 +557,7 @@ exists to catch:
 - **B. Grade:** validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
 - **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<path the script printed>`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; brief — `<one line>`
 - **D. Finalize:** `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
-- **E. Re-grade:** findings addressed — `<count>` pass, `<count>` fail
+- **E. Re-grade:** reviewers run on the finalized build — `<list>`; findings — `<Critical/High counts>`; combine-brief findings addressed — `<count>` pass, `<count>` fail; handed back — `<none | <count> Critical/High: gate <PASS | FAIL: <failing checks>>; map re-run; re-review on the fix's files <clean | <what still stands>>; brief re-check <count> pass, <count> fail>`
 ```
 
 **5. Report, then ask whether to continue — never chain silently.** State
@@ -509,7 +579,8 @@ Then:
   and its accessibility criteria filled if it's UI-touching, the project
   has a stack to build on, and `tdd-coach:tdd-implementation` has produced
   working, tested code for it, already graded by `code-reviewer` and every
-  other applicable reviewer inside the quarantine flow's Grade step): don't
+  other applicable reviewer inside the quarantine flow's Grade and Re-grade
+  steps): don't
   propose anything further. Moving on to the next scope-map step's
   requirements or slicing before this one is implemented and reviewed would
   repeat the mistake this rule exists to prevent: deciding too much before

@@ -25,7 +25,8 @@ agents/
 skills/
   <skill>/SKILL.md    # backing knowledge a persona (or you, directly) can invoke
   orchestrator/scripts/validation_gate.py  # the quarantine flow's mechanical gate: suite green,
-                       # scope, protected files, coverage; run per candidate before any reviewer
+                       # scope, protected files, coverage; run per candidate before any reviewer,
+                       # and on the finalized build before it is reviewed in full
   orchestrator/scripts/pairwise_judge.py   # the flow's blind pairwise judge: both candidates' changes,
                        # unlabelled, both orders, reasons kept; run in Combine before the orchestrator's call
 hooks/

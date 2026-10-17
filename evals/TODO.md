@@ -1520,11 +1520,112 @@ first real execution (the hand-off says what to watch).
       an orchestrator item next opens the skill: name what the line
       holds in each of those three cases, and that the line is never
       omitted or made conditional. Evidence recorded for all sixteen.
-- [ ] H3. Full reviewer pass on the finalized build, not only the
+- [x] H3. Full reviewer pass on the finalized build, not only the
       targeted re-grade of the combine brief's findings. *Carry with it
       the step 4 artifact-line fix recorded at the end of H2 (three
       one-run misses on 2026-10-17, one theme); it opens the same skill
       and the same sixteen cases re-run either way.*
+      *2026-10-17, branch `plugin-fix-full-regrade`.* Step E of the
+      quarantine flow is now the full pass: the finalized build is a
+      fresh implementation whose instance skipped its own final review
+      because the task said `orchestrator` reviews it, so until now the
+      only review the shipped code got was the targeted check of the
+      combine brief's findings, raised against candidates that no longer
+      exist. E now runs every reviewer Grade ran (same list, same rule
+      for which apply), in parallel as async `Agent` calls against the
+      real working tree, each handed the files the build changed and
+      the map diff D's real `map-update` produced; then checks the
+      combine brief's findings pass/fail as before. Critical and High
+      findings are handed back to the same instance once, as named
+      fixes; then, in order, the gate runs again on the fix (D's command
+      plus `--allow` for the persisted map D wrote after its gate ran),
+      `map-update` runs for real again so the persisted map is the map of
+      the build that ships, and every applicable reviewer re-runs on the
+      files the fix touched with the refreshed diff, the brief's findings
+      re-checked with them. A gate failure after the fix ends the
+      procedure as D's second failure does; a Critical or High still standing after the one round is
+      reported as outstanding for the user, never fixed by the
+      orchestrator and never a second round; Medium and Low are
+      reported, not acted on, as in the tdd skill's own final review. The
+      log template's E line carries the reviewers run, the finding
+      counts, the brief's pass/fail, the handed-back round with its gate
+      result, and whether the map was re-run; step 5's report names each
+      reviewer's result and anything still standing; the terminal-row
+      wording says the slice was graded in Grade and Re-grade. The gate
+      script now lists the changed files on its `changes` line and in
+      its `--json` report (it only counted them), since E hands the
+      reviewers exactly that list. `PERSONAS.md` and the README say so.
+      *The step 4 artifact-line fix, carried:* the log template is
+      followed by the rule that the **Artifact** line is in every entry
+      as a plain path, never omitted and never conditional, with the
+      three cases the misses were: the quarantine row writes `see
+      sub-entries below` even before the flow starts; a skill that may
+      write nothing gets the path the artifact takes if written, stated
+      flatly, no outcome appended; a skill that chooses its destination
+      gets the target directory, with a correcting entry once it has
+      filed, and "to be decided by the skill" is named as not a location.
+      *First run, a real regression from the wording:* 14/16.
+      `-route-problem-framing` and `-route-slicing` both 0.86, their
+      `log-names-row-and-artifact` grader 3/3 FAIL with `docs/pay-fine/`
+      as the artifact; across the batch nearly every row had written the
+      bare target directory where the previous two batches named a file
+      (`problem-framing.md`, `slice-001.md`, `technology-bootstrap-001.md`)
+      with a parenthetical when unsure. The first wording's third case
+      ("the target directory, as the location the step works in") was
+      read as the rule for every row. Reworded: the line holds one
+      file path under the target directory by the persona's convention,
+      a parenthetical where the skill may name it differently, never the
+      bare directory, with the three cases under that; the user-story
+      case names the path a locally filed story takes, and a correcting
+      entry is a new entry, never an edit (one backward-route run had
+      edited its own entry's line after the skill ran). Same batch:
+      `-route-implementation` 0.94, one judge 2-1 FAIL on a correct
+      "see sub-entries below" line; `-route-design` 0.95, one flip.
+      *Run, on the reworded rule:* sixteen cases at three runs, 16/16 at
+      bar, all sixteen at 1.0 (`results/gate-20261017T182031-*`). Every
+      entry in the batch named a file (`problem-framing.md`,
+      `scope-map-001.md`, `slice-001.md`, `requirements-002.md`,
+      `user-story-001.md` "(the skill may file it elsewhere)",
+      `visual-ux/screen-design-001.md`, `technology-bootstrap-001.md`),
+      the quarantine row "see sub-entries below" 3/3 where the previous
+      batch had lost a judge vote on it. One backward-route run appended
+      an "Outcome (correction to Artifact line)" paragraph to its own
+      entry rather than writing a new one; the grader passed it and the
+      rule already says a correction is a new entry, so noted, not
+      acted on. Evidence recorded for all sixteen.
+      *Sourcery on PR #11:* a first review approved with no findings and
+      was dismissed by a second, seven findings, all seven taken:
+      - *Taken, the real one (High, "valid fixes fail the gate"):* D's
+        real `map-update` writes the persisted map after D's gate ran,
+        so the post-fix gate with D's command unchanged would have failed
+        every fix on scope, the map being a change outside the slice.
+        The post-fix gate adds `--allow` for the map's path, the same
+        treatment Finalize's command gives this log.
+      - *Taken, "final build skips all review":* "every reviewer Grade
+        ran" is empty when both candidates failed the gate. E now names
+        the set by Grade's rule (the five always, accessibility if
+        UI-touching), whether or not Grade got to run them.
+      - *Taken, "architecture review uses stale map context":* the
+        post-fix order is now gate, then `map-update` for real, then the
+        reviewers with the refreshed diff; the "if the fix changed the
+        build" condition on the map re-run is gone, a fix is a change.
+      - *Taken, "some reviewers miss the shipped fix":* every applicable
+        reviewer re-runs on the files the fix touched, not only the
+        raising ones. This is the tdd skill's own rule for a handed-back
+        fix (step 5 of that path: all four, however small, after a
+        one-line refactor shipped a missed null check), which the E
+        instance skips because the orchestrator grades it; E's first
+        wording had copied the narrower in-loop rule instead.
+      - *Taken, "brief finding can regress":* the combine brief's
+        findings are checked again after the fix; the E line carries the
+        post-fix result.
+      - *Taken, "reviewers receive the process log":* the files handed
+        to the reviewers are the gate's list minus this log and the
+        persisted map, the flow's own writes; the map reaches them as
+        the diff.
+      - *Taken, "comma paths become ambiguous":* the gate's `changes`
+        line prints the file list as JSON.
+      *Run after the round:* sixteen cases at three runs, 16/16 at bar, all sixteen at 1.0 (`results/gate-20261017T224145-*`); a first attempt right after the edits lost every run to the session limit (resets on the hour it names, no evidence written). Evidence recorded for all sixteen.
 - [ ] H4. Diversify the two candidates' inputs (today both get the
       identical task).
 - [ ] H5. Sandbox the code-writing agent.

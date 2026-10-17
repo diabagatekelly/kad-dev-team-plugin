@@ -149,8 +149,11 @@ verdict before `orchestrator` reads either candidate; `orchestrator` itself
 then makes the one accountable combine call, inline, with that verdict in
 hand rather than instead of it — following it in a line or naming which of
 the judge's reasons it sets aside; a third, fresh instance regenerates the implementation
-independently from that call rather than patching either candidate; a
-targeted re-grade checks only what the combine brief asked to be fixed.
+independently from that call rather than patching either candidate; the
+same reviewers then grade that finalized build in full — new code no
+reviewer has read, whose instance skipped its own final review for exactly
+this — with Critical and High handed back once as named fixes, the gate
+re-run after, and the combine brief's findings checked pass/fail alongside.
 Full procedure in `skills/orchestrator/SKILL.md`'s own "Quarantine, grade,
 combine" section. **Runs on every slice, no opt-in/opt-out judgment
 call** — no signal in this roster's pipeline reliably predicts
@@ -194,7 +197,7 @@ silently skipped. One append-only entry per routed step (never edited —
 a wrong entry gets a correcting entry, not a rewrite), richer sub-entries
 for the quarantine row specifically (all five steps: both candidates'
 worktrees/branches, per-candidate grading summary, the judge's verdict, the
-combine basis and brief, the finalize artifact, re-grade pass/fail) since that's the one
+combine basis and brief, the finalize artifact, the full re-grade's reviewers, findings and handed-back round) since that's the one
 row a single "routed to" line would most successfully hide a skipped
 step inside. Full format in `skills/orchestrator/SKILL.md`.
 
