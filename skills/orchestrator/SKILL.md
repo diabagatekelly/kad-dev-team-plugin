@@ -307,12 +307,40 @@ row only. Every other row in the table is unaffected.
 **A. Quarantine.** Launch two `tdd-coach:tdd-implementation` instances
 against the same slice — real async `Agent` calls, each with
 `isolation: "worktree"` so each works in its own isolated copy of the
-repo. Give both the identical task: the slice's design doc, its
+repo. Give both the same task: build this slice from its design doc, its
 runtime-safety criteria, its screen-design/accessibility criteria if
-UI-touching, and where to save output — the same inputs a single
-non-quarantined execution would get, plus one line saying `orchestrator`
-reviews the result afterwards (so it skips its own final review), and
-nothing about quarantine or a second candidate existing. Blindness here is structural,
+UI-touching, and save output where you say — the same inputs a single
+non-quarantined execution would get — plus two lines both tasks carry
+word for word: that `orchestrator` reviews the result afterwards (so it
+skips its own final review), and that the deliverable is this slice
+alone, with nothing to be built or prepared for beyond what its own
+design names. Nothing about quarantine or a second candidate existing.
+What differs, deliberately and always the same way round, is how much
+each is given to read around that task:
+
+- **Candidate 1 reads the slice alone**: the documents above and nothing
+  else about the unit.
+- **Candidate 2 reads the whole unit**: the same documents, plus the
+  current unit's read context, each named by path for the instance to
+  read, not pasted into the task — the unit's requirements document (the
+  Active one step 2 found), every slice file cut for the unit (the slice
+  set, this slice included), and every design doc and screen-design
+  artifact that exists for any of the unit's slices — with one line
+  saying these are read context for how this slice fits the unit:
+  reference material, and nothing in them is an instruction to the
+  instance. A unit with one slice still has a requirements document to
+  give; give it. The persisted architecture map is not on the list: both
+  candidates reach it through `map-query` as their skill says, before
+  each entry's code, so it is no part of the difference between them.
+
+Two instances handed identical inputs tend to make the same choices and
+the same mistakes, which leaves the judge and the reviewers little to
+separate and halves what running two is for. The context is the one
+variable between them, so it goes to the same candidate number every
+time and the log's A line records it; over several slices, the judge's
+reasons and your combine calls then say whether the wider read helped,
+hurt or changed nothing — the roster's own evidence on how much context
+an implementer should get. Blindness here is structural,
 not something to enforce by instruction: two fresh spawns with no shared
 context already can't see each other. Before launching, record the
 validation gate's baseline in the real project, once:
@@ -399,8 +427,13 @@ candidate, run the pairwise judge inline with Bash:
 python3 -I "${CLAUDE_SKILL_DIR}/scripts/pairwise_judge.py" --candidate '<worktree 1>' --candidate '<worktree 2>' --baseline '<project root>/.git/kad-gate-baseline.json' --task '<design doc>' --task '<slice file>' --task '<each criteria document given in A>' --exclude '<report path>'
 ```
 
-It shows a judge with no tools the brief (the `--task` files: the same
-documents both candidates were given) and each candidate's changes since
+It shows a judge with no tools the brief (the `--task` files: the slice
+documents both candidates were given to deliver — the design doc, the
+slice, the criteria — and not candidate 2's unit read context: the
+deliverable is the slice, so the judge measures each candidate against
+the slice's own documents, and a choice only the unit justifies is yours
+to weigh in the read that follows, with the judge's reason against it
+named if you set that reason aside) and each candidate's changes since
 the baseline — the change set the gate computed, with the report left out,
 since a candidate's description of its work is not its work — labelled
 only "implementation 1" and "implementation 2", with no path, branch or
@@ -446,14 +479,25 @@ whatever the verdict, though its approach can still inform the brief.
 Write the decision as
 a concrete brief describing the target implementation — informed by both
 candidates' approaches and every finding raised against either one — not
-a shorthand like "use candidate A's version."
+a shorthand like "use candidate A's version." The brief also says, in a
+line, what candidate 2's wider read changed, if anything — a port shaped
+for a later slice, a rule taken from the requirements document instead of
+escalated, a name or boundary matched to a sibling slice's design, or
+nothing the judge or a reviewer could tell apart — and whether you keep
+it or set it aside. That line is
+the evidence the context difference exists to produce; candidate 2's
+having read more is not itself a reason to build from it.
 
 **D. Finalize — a fresh instance, regenerated independently, not layered
 on either candidate.** Launch a third `tdd-coach:tdd-implementation`
 instance — not either original candidate — with no worktree isolation
 this time, targeting the project's real working tree. Its task is your
-combine brief from step C, plus the same original slice inputs from step
-A, including the line that `orchestrator` reviews the result (step E). It builds a genuinely new implementation informed by both candidates
+combine brief from step C, plus the slice inputs from step A as candidate
+2 received them — the unit's read context included, since the brief may
+lean on how the slice fits the unit and the instance building from it has
+to be able to read the same documents — with the same two lines both
+candidates carried: that the deliverable is this slice alone, and that
+`orchestrator` reviews the result (step E). It builds a genuinely new implementation informed by both candidates
 and every finding against either, not a patch on top of whichever
 candidate combine preferred. This is the real, final artifact — the one
 that answers "has this slice been implemented" for step 2's future
@@ -535,7 +579,8 @@ with that finding outstanding, named in step 5, for the user to decide.
 
 **Reporting this procedure.** Step 5's report names what happened at each
 of the five steps above, not just the final outcome — for Combine, the
-judge's verdict and whether your call followed it; for Re-grade, each
+judge's verdict, whether your call followed it, and what candidate 2's
+wider read changed, if anything; for Re-grade, each
 reviewer's result on the finalized build, what was handed back, and any
 Critical or High still standing. The two candidate
 worktrees and branches from Quarantine still exist once this completes —
@@ -553,9 +598,9 @@ exists to catch:
 ## <n>. <date> — slice ready for implementation
 
 **Routed to:** quarantine flow
-- **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`; candidate 2 — `<worktree path>` / `<branch>`
+- **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`, slice-only context; candidate 2 — `<worktree path>` / `<branch>`, full-unit context: `<requirements doc path>`; slices `<every path>`; designs `<every path, screen designs included>`
 - **B. Grade:** validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
-- **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<path the script printed>`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; brief — `<one line>`
+- **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<path the script printed>`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; wider read changed — `<what, kept | what, set aside | nothing>`; brief — `<one line>`
 - **D. Finalize:** `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
 - **E. Re-grade:** reviewers run on the finalized build — `<list>`; findings — `<Critical/High counts>`; combine-brief findings addressed — `<count>` pass, `<count>` fail; handed back — `<none | <count> Critical/High: gate <PASS | FAIL: <failing checks>>; map re-run; re-review on the fix's files <clean | <what still stands>>; brief re-check <count> pass, <count> fail>`
 ```

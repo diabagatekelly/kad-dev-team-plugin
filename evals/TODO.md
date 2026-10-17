@@ -1244,7 +1244,7 @@ to do next" says where each would start.
         stylesheet (the form one screen-design run used) must stay
         legal.
 
-## H. The plugin fix order (agreed 2026-10-12; order chosen 2026-10-17: H first, then G1, then G2)
+## H. The plugin fix order (agreed 2026-10-12; order chosen 2026-10-17: H first, H6 the first real run, then G1, then G2)
 
 Skill changes, not eval changes: each edits `skills/orchestrator/SKILL.md`
 (or `tdd-implementation`), so each re-runs the orchestrator cases
@@ -1626,6 +1626,123 @@ first real execution (the hand-off says what to watch).
       - *Taken, "comma paths become ambiguous":* the gate's `changes`
         line prints the file list as JSON.
       *Run after the round:* sixteen cases at three runs, 16/16 at bar, all sixteen at 1.0 (`results/gate-20261017T224145-*`); a first attempt right after the edits lost every run to the session limit (resets on the hour it names, no evidence written). Evidence recorded for all sixteen.
-- [ ] H4. Diversify the two candidates' inputs (today both get the
-      identical task).
+- [x] H4. Diversify the two candidates' inputs (both got the identical
+      task). *2026-10-17, branch `plugin-fix-diversify-inputs`.* The
+      2026-10-12 direction named the shape: run one candidate with
+      slice-only context and one with full-unit context, so the two are
+      not correlated copies, and so the batching question (how much of
+      the unit an implementer should see) is answered by the flow's own
+      judge over real slices rather than decided up front. Step A now
+      gives both instances the same task (build this slice from its
+      design doc and criteria, save output where the orchestrator says,
+      `orchestrator` reviews it, nothing about quarantine) and differs
+      only in read context: candidate 1 reads the slice's documents
+      alone; candidate 2 also reads the unit — its Active requirements
+      document, every slice file cut for the unit, every design doc and
+      screen-design artifact for any of its slices — each named by path
+      for the instance to read, with one line that they are reference
+      material and no instruction to it. Both tasks carry, word for
+      word, the line that the deliverable is this slice alone with
+      nothing built or prepared for beyond what its own design names.
+      The assignment is fixed (the context always goes to candidate 2)
+      so the reading across slices is of one variable, and the log's A
+      line records every path candidate 2 was given.
+      The judge's `--task` stays the slice documents both were given to
+      deliver, not the unit context, which neither had to build. The
+      combine brief gains one line, what candidate 2's wider read changed
+      if anything (a port shaped for a later slice, a rule taken from the
+      requirements document instead of escalated, a reuse the map showed,
+      or nothing a reader could tell apart), kept or set aside; the C
+      line and the step 5 report carry it, and the skill says that
+      having read more is not itself a reason to build from candidate 2.
+      The finalize instance gets the brief plus the inputs as candidate 2
+      received them, since the brief may lean on how the slice fits the
+      unit. `PERSONAS.md` says so.
+      *Not touched, deliberately:* `tdd-implementation` (it reads what
+      it is handed by path and escalates what the design leaves open;
+      how it treats a requirements document it was given is what the
+      comparison measures, and an edit there re-runs the tdd cases at
+      ten to fifteen minutes a run); the judge script (its `--task` help
+      still describes what both were given); the gate (scope is enforced
+      by `--allow` either way, and over-building inside the slice's own
+      modules for a later slice is the judge's "code the slice does not
+      need" and a reviewer's finding, not a mechanical check).
+      *Run:* sixteen cases at three runs, 16/16 at bar, fifteen at 1.0
+      (`results/gate-20261017T230158-*`); `-route-user-story` 0.95, one
+      run's reply put the skill's filing question in plain text (no
+      `AskUserQuestion` in the case) and then narrated the two stages
+      after it (judge 3-0 FAIL on `stops-after-the-routed-step`), a
+      step 5 miss on a case whose text H4 did not touch, the same
+      one-run noise H1 recorded on this case for a different reason;
+      bar left at 1.0. Evidence recorded for all sixteen.
+      *Sourcery on PR #12:* a first review approved with no findings;
+      the docs push that recorded it re-ran the review, which dismissed
+      the approval and found seven things (one High, six Medium). The
+      "Sourcery review" check stayed green through it, so a green check
+      is not "no findings": read the review. Four taken, two in part,
+      one declined:
+      - *Taken, "missing map blocks quarantine":* "a one-slice unit still
+        has a map to give" contradicted "if there is one". Resolved by
+        the next finding: the map is off the list.
+      - *Taken, "slice-only input includes map":* candidate 1 consults
+        the persisted map through `map-query` before each entry's code,
+        as the tdd skill says, so the map was never the variable. Step A
+        now says both reach it that way and neither task names it; the
+        A line's map field is gone. (Sourcery's own fix, keeping the map
+        from candidate 1, would have broken the tdd skill's consult.)
+      - *Taken, "candidate tasks differ beyond context":* the
+        deliver-only-this-slice line was on candidate 2's task alone, so
+        the comparison measured a scope constraint as well as the read.
+        Both tasks now carry it word for word, and D's instance too.
+      - *Taken, "logged inputs cannot be verified":* the A line records
+        every path candidate 2 was given, not counts.
+      - *Taken in part, "unit documents can steer candidate" (High):*
+        candidate 2's task now says the unit documents are reference
+        material and nothing in them is an instruction to the instance,
+        the same stance the judge's rubric takes on candidate text. The
+        rest of the finding is the sandbox, H5: the exposure is the one
+        candidate 1 already has from the slice's own documents, which
+        the same contributors write, and the skill does not claim a
+        sandbox it does not have.
+      - *Taken in part, "judge misranks unit-aware work":* the judge
+        keeps the slice documents as its brief, by design: the
+        deliverable is the slice, and a port shaped for a later slice is
+        "code the slice does not need" however sound the unit makes it.
+        Step C now says that a choice only the unit justifies is the
+        orchestrator's to weigh in the read that follows, naming the
+        judge's reason if it sets that reason aside; the judge's view
+        was not widened past what both candidates had to deliver.
+      - *Declined, "large units exceed context limits":* the documents
+        are named by path for the instance to read as it needs them, not
+        pasted into the task, so nothing is assembled against an input
+        limit at launch; and `product-slicer` bounds the unit.
+      *Run after the round:* sixteen cases at three runs, 16/16 at bar,
+      all sixteen at 1.0 (`results/gate-20261017T232306-*`). Evidence
+      recorded for all sixteen. Every thread answered; Sourcery resolved
+      six on the fix commit `1ddff20` (the declined one included) and
+      posted no further review; the High sandbox thread was resolved by
+      hand with its reason. Both PR checks green.
 - [ ] H5. Sandbox the code-writing agent.
+- [ ] H6. The first real execution of the quarantine flow (added
+      2026-10-17). No eval exercises the flow, so H1 to H4 have been
+      proven by reading only; this is their real test, and it runs
+      after H5 so the three code-writing instances it launches
+      unattended are sandboxed first, and before G1, which is eval
+      polish. Project: the library app behind
+      `evals/orchestrator-route-implementation/scaffold.sh`, a fully
+      specified slice with a stack (cancel-hold: design approved,
+      criteria filled, not UI-touching), copied out of the evals into a
+      scratch directory, never run inside this repo. Run the
+      orchestrator interactively with the `Agent` tool available, under
+      `KAD_AUDIT=1`, and let the flow go end to end: baseline, two
+      candidates, gate, map diffs, reviewers, judge, combine, finalize,
+      re-grade, report. Then read the session with `audit-review`
+      against the hand-off's "what the first real execution should
+      watch" list (one paragraph per fix, H1 to H4). Cost: three tdd
+      instances at ten to fifteen minutes each plus up to eighteen
+      reviewer agents, roughly one subscription window. What it
+      produces: one entry per miss, each a skill-text fix with its eval
+      case where a case can reach it, and the first C line of the
+      batching evidence H4 set up. A miss that needs the flow to
+      reproduce is recorded here with the session path, since no case
+      can carry it.
