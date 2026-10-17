@@ -1487,7 +1487,18 @@ first real execution (the hand-off says what to watch).
         worktrees and the finalize tree, and the baseline is H1's
         design shared with the gate, which the judge must read the same
         way or the two disagree about what a candidate changed.
-      *Run after the round:* see below.
+      *Run after the round:* sixteen cases at three runs, 16/16 at bar,
+      fifteen at 1.0; `-route-user-story` 0.95, one run's log entry gave
+      its artifact as "to be decided by the skill (a tracking destination
+      for `slice-001.md`)" (judge 3-0 on `log-names-row-and-artifact`),
+      the same shape H1 saw once in twelve runs: `user-story-writeup`
+      asks the user where to file, so at the moment the entry is written
+      there is no path to name. Noise for this change (Combine is never
+      reached), bar left at 1.0; but twice now, so it is a candidate
+      step 4 wording fix for a later item: say what the artifact line
+      holds when the routed skill decides the destination (the slice
+      file it will file, or the tracker once chosen, in a correcting
+      entry). Evidence recorded for all sixteen.
 - [ ] H3. Full reviewer pass on the finalized build, not only the
       targeted re-grade of the combine brief's findings.
 - [ ] H4. Diversify the two candidates' inputs (today both get the
