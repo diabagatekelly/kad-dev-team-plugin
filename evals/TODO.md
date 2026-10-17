@@ -1521,7 +1521,10 @@ first real execution (the hand-off says what to watch).
       holds in each of those three cases, and that the line is never
       omitted or made conditional. Evidence recorded for all sixteen.
 - [ ] H3. Full reviewer pass on the finalized build, not only the
-      targeted re-grade of the combine brief's findings.
+      targeted re-grade of the combine brief's findings. *Carry with it
+      the step 4 artifact-line fix recorded at the end of H2 (three
+      one-run misses on 2026-10-17, one theme); it opens the same skill
+      and the same sixteen cases re-run either way.*
 - [ ] H4. Diversify the two candidates' inputs (today both get the
       identical task).
 - [ ] H5. Sandbox the code-writing agent.
