@@ -1244,7 +1244,7 @@ to do next" says where each would start.
         stylesheet (the form one screen-design run used) must stay
         legal.
 
-## H. The plugin fix order (agreed 2026-10-12; order chosen 2026-10-17: H first, then G1, then G2)
+## H. The plugin fix order (agreed 2026-10-12; order chosen 2026-10-17: H first, H6 the first real run, then G1, then G2)
 
 Skill changes, not eval changes: each edits `skills/orchestrator/SKILL.md`
 (or `tdd-implementation`), so each re-runs the orchestrator cases
@@ -1723,3 +1723,26 @@ first real execution (the hand-off says what to watch).
       posted no further review; the High sandbox thread was resolved by
       hand with its reason. Both PR checks green.
 - [ ] H5. Sandbox the code-writing agent.
+- [ ] H6. The first real execution of the quarantine flow (added
+      2026-10-17). No eval exercises the flow, so H1 to H4 have been
+      proven by reading only; this is their real test, and it runs
+      after H5 so the three code-writing instances it launches
+      unattended are sandboxed first, and before G1, which is eval
+      polish. Project: the library app behind
+      `evals/orchestrator-route-implementation/scaffold.sh`, a fully
+      specified slice with a stack (cancel-hold: design approved,
+      criteria filled, not UI-touching), copied out of the evals into a
+      scratch directory, never run inside this repo. Run the
+      orchestrator interactively with the `Agent` tool available, under
+      `KAD_AUDIT=1`, and let the flow go end to end: baseline, two
+      candidates, gate, map diffs, reviewers, judge, combine, finalize,
+      re-grade, report. Then read the session with `audit-review`
+      against the hand-off's "what the first real execution should
+      watch" list (one paragraph per fix, H1 to H4). Cost: three tdd
+      instances at ten to fifteen minutes each plus up to eighteen
+      reviewer agents, roughly one subscription window. What it
+      produces: one entry per miss, each a skill-text fix with its eval
+      case where a case can reach it, and the first C line of the
+      batching evidence H4 set up. A miss that needs the flow to
+      reproduce is recorded here with the session path, since no case
+      can carry it.
