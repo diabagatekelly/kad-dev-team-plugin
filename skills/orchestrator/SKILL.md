@@ -291,11 +291,44 @@ non-quarantined execution would get, plus one line saying `orchestrator`
 reviews the result afterwards (so it skips its own final review), and
 nothing about quarantine or a second candidate existing. Blindness here is structural,
 not something to enforce by instruction: two fresh spawns with no shared
-context already can't see each other. Wait for both to finish before
+context already can't see each other. Before launching, note the real
+project's current commit (`git rev-parse HEAD`): both worktrees branch
+from it, and it is the `--base` the validation gate diffs against in
+Grade and again in Finalize. Wait for both to finish before
 continuing. Each worktree-isolated run returns its own path and branch —
 note both; you'll need them in the next two steps.
 
-**B. Grade.** For each candidate, before launching its reviewers, run
+**B. Grade.** Gate first, mechanically; review only what clears it. For
+each candidate, before anything else, run the validation gate inline
+with Bash against that candidate's worktree:
+
+```
+python3 -I ${CLAUDE_SKILL_DIR}/scripts/validation_gate.py --project <worktree path> --base <commit noted in A> --test-cmd "<the project's documented test command>" --allow <slice module dir>/ --allow <test dir>/ --allow <report path> --protect <design doc> --protect <slice file> [--coverage]
+```
+
+(`python -I` where that is the interpreter's name.) It answers four
+questions no reviewer should spend judgment on: the full suite exits green
+with a clean summary; every changed or added file, untracked ones
+included, sits under an `--allow` prefix — the slice's own modules as the
+design doc names them, the project's test directory, and the path you told
+the candidate to save its report to; every `--protect` file — the design
+doc, the slice, each other stage's document in the target directory — is
+byte-identical to base; and, with `--coverage` (pass it when the project
+runs on Node's test runner), every changed source file was loaded by a
+test and meets the line and branch minimums. The last line printed is
+`validation gate: PASS` or `FAIL`, with one line per check above it. A
+candidate that fails is dropped from the rest of Grade: no map diff, no
+reviewers; its failing checks go in the log's B sub-entry, and Combine
+still reads its code alongside the gate's output, because what it tried
+is information even when it doesn't clear the floor. If both candidates
+fail, Combine still runs with the two gate reports as the findings, and
+the brief says what the finalize instance has to clear. Don't fix a
+candidate yourself, don't relaunch its instance, and don't widen
+`--allow` or drop a `--protect` to make it pass: an edit outside the
+slice is a finding, and a red suite is a red suite.
+
+Then, for each candidate that cleared the gate, before launching its
+reviewers, run
 `architecture-cartographer:map-update` inline (not an async `Agent` call —
 it's mechanical, not a graded judgment, so it needs none of the isolation
 the reviewers need from each other) against that candidate's own
@@ -313,8 +346,9 @@ candidate's own worktree, as real async `Agent` calls:
 is UI-touching. No persona is weighted above another
 within a candidate's grading pass; read every finding on its own merits.
 That's up to 12 parallel review agents (6 reviewers × 2 candidates, fewer
-if the slice isn't UI-touching) — `map-update`'s two inline runs aren't
-part of that count. Wait for all of them before continuing.
+if the slice isn't UI-touching or a candidate was dropped at the gate) —
+`map-update`'s two inline runs aren't part of that count. Wait for all of
+them before continuing.
 
 **C. Combine — inline, yours alone, not spawned.** Read both candidates'
 actual code from their worktree paths (not just their own self-reports)
@@ -340,15 +374,26 @@ candidate combine preferred. This is the real, final artifact — the one
 that answers "has this slice been implemented" for step 2's future
 inspection.
 
-Once the fresh instance finishes, run `architecture-cartographer:map-update`
+Once the fresh instance finishes, run the same validation gate against
+the real working tree — `--project` the project root, the same `--base`,
+`--allow`, `--protect` and `--test-cmd` as Grade. If it fails, hand the
+failing checks back to that same instance once, as a named fix (its
+skill's "Applying a fix handed back from review" path), and run the gate
+again. A second failure ends the procedure: don't launch another
+instance and don't reach for the code yourself; record the failure under
+D, skip E, and report in step 5 that the slice is not implemented and
+which checks it failed. The persisted map below is updated only once the
+finalized build has cleared the gate.
+
+Then run `architecture-cartographer:map-update`
 for real — inline, not an async `Agent` call, for the same reason as
 Grade's throwaway runs — against the actual working tree this time. This
 run's output replaces the project's persisted map: it becomes what the
 next slice's `architecture-design` and `tdd-implementation` read via
 `map-query`, and what the next slice's own `map-update` runs diff against.
 
-**E. Re-grade — targeted, not a full re-open.** Once the fresh instance
-finishes, re-run only the reviewers whose findings the combine brief
+**E. Re-grade — targeted, not a full re-open.** Once the finalized build
+has cleared the gate, re-run only the reviewers whose findings the combine brief
 asked it to address, checking only those specific findings against the
 finalized implementation. Pass/fail per finding, not a fresh grading pass
 across every category from step B.
@@ -371,9 +416,9 @@ exists to catch:
 
 **Routed to:** quarantine flow
 - **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`; candidate 2 — `<worktree path>` / `<branch>`
-- **B. Grade:** map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
+- **B. Grade:** validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
 - **C. Combine:** chosen basis — `<candidate 1 | candidate 2 | pieces of both>`; brief — `<one line>`
-- **D. Finalize:** `<path to final artifact>`; persistent map updated — `<path>`
+- **D. Finalize:** `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
 - **E. Re-grade:** findings addressed — `<count>` pass, `<count>` fail
 ```
 

@@ -27,9 +27,11 @@ git fetch -q "$win" "refs/remotes/origin/main:refs/remotes/origin/main" 2>/dev/n
 rsync -a --delete --exclude .git --exclude /evals/results --exclude __pycache__ --exclude node_modules \
   "$win/" "$clone/"
 git config core.fileMode false
+# `-m` also lists a file deleted or moved since the mirrored commit, which
+# sed cannot open; skip anything that is not a file here.
 git ls-files -mo --exclude-standard -z \
   | grep -z -v -E '\.(png|jpe?g|gif|ico|woff2?|pdf)$' \
-  | xargs -0 -r sed -i 's/\r$//' --
+  | xargs -0 -r sh -c 'for f; do if [ -f "$f" ]; then sed -i "s/\r$//" -- "$f"; fi; done' _
 find . -name '*.sh' -not -path './.git/*' -exec chmod +x {} +
 
 mkdir -p evals/results "$win/evals/results"

@@ -3,7 +3,8 @@
 Run inside a project (or a candidate's worktree) after an implementation
 lands. It answers four questions that need no judgment, and prints a JSON
 verdict so the orchestrator's Grade step can drop a candidate that fails
-them without spending reviewers on it:
+them without spending reviewers on it (the skill's "Quarantine, grade,
+combine" section says when it runs and with which arguments):
 
 1. suite: the project's test runner exits 0 and prints a summary with no
    failures (Node's spec reporter: `ℹ fail 0`; anything else: exit code).
@@ -21,7 +22,8 @@ The same checks are what the
 `tdd-implementation-*` eval cases prove with trace regexes; this is the
 runtime version for real candidates.
 
-Usage: python3 -I evals/tools/validation_gate.py [--project DIR] [--base HEAD]
+Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/validation_gate.py [--project DIR] [--base HEAD]
+       (from this repository: python3 -I skills/orchestrator/scripts/validation_gate.py ...)
            [--allow lending/ --allow test/ ...] [--protect docs/x/design.md ...]
            [--test-cmd "npm test"] [--coverage] [--min-line 90] [--min-branch 80]
            [--json out.json]

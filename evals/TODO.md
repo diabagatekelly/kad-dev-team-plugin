@@ -1243,3 +1243,61 @@ to do next" says where each would start.
         typeface grader narrows the gap, and a mock styled from a linked
         stylesheet (the form one screen-design run used) must stay
         legal.
+
+## H. The plugin fix order (agreed 2026-10-12; order chosen 2026-10-17: H first, then G1, then G2)
+
+Skill changes, not eval changes: each edits `skills/orchestrator/SKILL.md`
+(or `tdd-implementation`), so each re-runs the orchestrator cases
+`affected_cases.py` lists (sixteen, 48 runs) as the regression check.
+The quarantine flow itself has no case: it needs the `Agent` tool and up
+to twelve reviewers, so these items are proven by reading and by the
+first real execution (the hand-off says what to watch).
+
+- [x] H1. Wire the validation gate into the orchestrator's Grade step.
+      *2026-10-17, branch `plugin-fix-grade-gate`.* The script moved from
+      `evals/tools/validation_gate.py` to
+      `skills/orchestrator/scripts/validation_gate.py`: a skill can only
+      reach a script that ships inside the plugin, and the skill body
+      names it as `${CLAUDE_SKILL_DIR}/scripts/validation_gate.py`, which
+      Claude Code substitutes with the skill's installed directory when
+      the skill loads (the docs' "Available string substitutions"; the
+      variable is not in the Bash tool's environment, only the body
+      substitution works). Grade now runs the gate first, per candidate,
+      against the candidate's worktree with `--base` the commit noted
+      before Quarantine (the gate's default `HEAD` would miss a
+      candidate's committed work), `--allow` the design doc's module
+      directories plus the test directory and the report path,
+      `--protect` the design doc and the slice, `--coverage` on Node; a
+      failing candidate gets no map diff and no reviewers, its checks go
+      in the log's B sub-entry, Combine still reads its code; both
+      failing still reaches Combine with the gate reports as the
+      findings; the orchestrator may not fix, relaunch or widen `--allow`.
+      Finalize runs the same gate on the real tree before the map is
+      persisted, hands a failure back to the same instance once as a
+      named fix, and on a second failure stops and reports the slice as
+      not implemented. The log template's B and D lines carry the
+      verdicts. `PERSONAS.md` and the README say so.
+      *Run:* sixteen orchestrator cases at three runs, 16/16 at bar;
+      `-route-problem-framing` 0.95, one run's log entry gave the target
+      directory as the artifact where the skill had only asked its
+      questions and written nothing yet (judge 2-1 FAIL), the same
+      judgment-call noise F recorded, bar left at 1.0. Evidence recorded
+      for all sixteen.
+      *Also:* `wsl-gate.sh` died with `sed: can't read` on the moved
+      file, because `git ls-files -m` lists a deleted path too; the CRLF
+      strip now skips anything that is not a file.
+      *Not done, deliberately:* no `allowed-tools` Bash rule in the
+      skill's frontmatter for the gate command. The docs say such a rule
+      lets it run without a prompt, but how the pattern matches a
+      substituted path (and a quoted one on Windows) is undocumented;
+      try it once in a real session before relying on it.
+- [ ] H2. Promote `tools/pairwise_judge.py` to the arbiter inside
+      Combine: blind, both orders, reasons kept, the orchestrator's own
+      call made with the judge's verdict in hand rather than instead of
+      it. The script lives under `evals/tools/`; like H1, it has to move
+      into the plugin to be reachable from the skill.
+- [ ] H3. Full reviewer pass on the finalized build, not only the
+      targeted re-grade of the combine brief's findings.
+- [ ] H4. Diversify the two candidates' inputs (today both get the
+      identical task).
+- [ ] H5. Sandbox the code-writing agent.

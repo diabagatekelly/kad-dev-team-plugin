@@ -132,7 +132,13 @@ because every persona it invokes requires it.
 execute inline — the quarantine/grade/combine/finalize flow, wired in and
 running by default, not deferred.** Two isolated `tdd-coach:tdd-implementation`
 instances (real async `Agent` calls, `isolation: "worktree"`) build the
-same slice blind to each other; every applicable reviewer grades each
+same slice blind to each other; a mechanical validation gate
+(`skills/orchestrator/scripts/validation_gate.py`: full suite green, every
+changed file inside the slice's allowed paths, the design and other
+stages' documents untouched, per-file coverage on Node) runs on each
+candidate first and drops one that fails it before any reviewer is spent
+on it, and again on the finalized build before the map is persisted;
+every applicable reviewer then grades each surviving
 candidate independently in parallel (`tdd-coach:test-quality-review`,
 `architecture-review`, `devsecops-engineer:security-review`,
 `devsecops-engineer:reliability-review`, and `accessibility-engineer:accessibility-review`

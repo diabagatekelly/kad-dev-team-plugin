@@ -24,6 +24,8 @@ agents/
   <persona>/AGENT.md  # persona definition: frontmatter + system prompt
 skills/
   <skill>/SKILL.md    # backing knowledge a persona (or you, directly) can invoke
+  orchestrator/scripts/validation_gate.py  # the quarantine flow's mechanical gate: suite green,
+                       # scope, protected files, coverage; run per candidate before any reviewer
 hooks/
   hooks.json, audit.sh # audit mode: off unless KAD_AUDIT=1 (see below)
 evals/
@@ -32,7 +34,6 @@ evals/
   thresholds.json      # each case's bar for the eval gate
   tools/               # eval_gate.py, affected_cases.py, record_thresholds.py, rejudge.py,
                        # freeze-history.sh, audit_report.py, pairwise_judge.py, new-case.sh,
-                       # validation_gate.py (mechanical checks on a real implementation candidate),
                        # summarize_results.py and report_evidence.py (read a results dir or CI artifact),
                        # eval_evidence.py (the PR check: a passing gate run recorded against these exact files),
                        # wsl-setup.sh and wsl-gate.sh (set up, then run the gate under WSL2 in one command)
