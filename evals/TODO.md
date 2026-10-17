@@ -1723,7 +1723,7 @@ first real execution (the hand-off says what to watch).
       posted no further review; the High sandbox thread was resolved by
       hand with its reason. Both PR checks green.
 - [x] H5. Sandbox the code-writing agent. *2026-10-17, branch
-      `plugin-fix-sandbox`.* What the docs settle first (checked
+      `plugin-fix-sandbox`, PR #13.* What the docs settle first (checked
       2026-10-17): the sandbox is a session setting, not an agent's — it
       covers what the Bash tool runs (Seatbelt on macOS, bubblewrap and
       socat on Linux and WSL2; native Windows runs every command
