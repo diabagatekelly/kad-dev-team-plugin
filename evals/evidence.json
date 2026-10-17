@@ -386,6 +386,42 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-17T13:36:25Z"
   },
+  "orchestrator-route-accessibility": {
+    "inputs": "a7896e5886b4911fd03d154f61cf773dab02ab5d3750a1899485d67d246c36e9",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-route-accessibility.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
+  "orchestrator-route-backward-requirements": {
+    "inputs": "58b91a214e49e34cf60c45fdb62974db2fe08dae821d529e4d374b80a8753335",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-route-backward-requirements.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
+  "orchestrator-route-design": {
+    "inputs": "36f08f7a4ee3e25701cf5d2128dd9d8de432537ec33d15500bd87b758e3db789",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-route-design.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
+  "orchestrator-route-design-system": {
+    "inputs": "1178f7a22224a6213b735fbdfae7e8f722f5380ae7e8329b8d3a7fa2b41b4ff9",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-route-design-system.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
   "orchestrator-route-implementation": {
     "inputs": "f9feb6602552f9ad4d409753b5f91c2e29f03eb6c0c25e903794016a0a833a48",
     "score": 1.0,
@@ -412,6 +448,69 @@
     "source": "results/gate-20261017T133418-orchestrator-route-reliability.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-17T13:36:25Z"
+  },
+  "orchestrator-route-scope-decision": {
+    "inputs": "b32270db68e2119819c9fcca2266585c48332301ae31a8ea52121fe83e192731",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-route-scope-decision.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
+  "orchestrator-route-screen-design": {
+    "inputs": "6d8efbb18525e464b346a96cb5767e40597abcbe97047b43fab2275129f1bbdc",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-route-screen-design.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
+  "orchestrator-route-slicing": {
+    "inputs": "306cc26f0837f2cb51444ddf9ab42bdb267b87033ff8f7917a70e224aa4cdcbf",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-route-slicing.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
+  "orchestrator-route-tech-bootstrap": {
+    "inputs": "0a624d8ac1fcb0b3ad5d2e53b031970f1f39a899cc9ffddb97dec7617f300491",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-route-tech-bootstrap.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
+  "orchestrator-route-user-story": {
+    "inputs": "579786c9d56b04120f002fdbbe8faff12f621f7133008ba82c29823a7fb285f2",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165609-orchestrator-route-user-story.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:56:37Z"
+  },
+  "orchestrator-security-stage": {
+    "inputs": "f4bd1d14b6207a3c7c57f0376b0c3b9032673eb77fb9915500e624e2b641b4fd",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-security-stage.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
+  },
+  "orchestrator-superseded-scope-map": {
+    "inputs": "7b7583c58b5c91bfeaf8115b35cd154f49b533a0fa5b61e97d89bea4393421b6",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261017T165045-orchestrator-superseded-scope-map.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-17T16:55:05Z"
   },
   "pr-writeup-portal-fines": {
     "inputs": "36dadfbf0c44cdf3a8ccf70d3cb64293e6abe4a8680ffe2f5feccc0c9548c4fc",

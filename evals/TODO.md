@@ -1343,9 +1343,20 @@ first real execution (the hand-off says what to watch).
       after that run started and staled them all (the script sits under
       the skill directory, so the evidence hash covers it). The re-run
       got five cases through (all at 1.0, `-backward-route` 0.95, one
-      judge flip) before the WSL session limit cut it. **Open: re-run
-      the eleven stale cases** (`wsl-gate.sh --stale --runs 3` after the
-      limit resets), then the PR's evidence check goes green.
+      judge flip) before the WSL session limit cut it. The eleven
+      re-ran after the reset: ten at 1.0, `-route-user-story` 0.81 on
+      two different misses in one batch — one run logged the artifact
+      as "to be determined by the skill" instead of a path (the skill
+      had then asked its filing questions, correctly), and one run never
+      invoked the skill, asking instead whether the story was already
+      filed elsewhere (step 2's "take the user's word" read as a
+      question to ask first) and narrating every later stage. The case
+      had passed 3/3 twice earlier the same day on this branch and
+      passed 3/3 again on the re-run, so 1 miss in 12 runs: noise,
+      recorded; bar left at 1.0. If the non-invoking shape recurs, it is
+      a step 2 wording question (the inspection says to take the user's
+      word, which the orchestrator can read as an invitation to ask),
+      not a quarantine-flow one. Evidence current for all sixteen.
 - [ ] H2. Promote `tools/pairwise_judge.py` to the arbiter inside
       Combine: blind, both orders, reasons kept, the orchestrator's own
       call made with the judge's verdict in hand rather than instead of
