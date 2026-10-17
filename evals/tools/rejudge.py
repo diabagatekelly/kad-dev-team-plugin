@@ -34,9 +34,14 @@ SYSTEM = "You are a strict, terse evaluation judge for coding-agent traces."
 
 
 def criteria_from_case(path, grader):
-    out = subprocess.check_output(
-        ["ruby", "-ryaml", "-rjson", "-e", "puts YAML.load_file(ARGV[0]).to_json", path])
-    for g in json.loads(out)["graders"]:
+    try:
+        import yaml  # the WSL clone has PyYAML; ruby is the fallback where it doesn't
+        case = yaml.safe_load(open(path, encoding="utf-8"))
+    except ImportError:
+        out = subprocess.check_output(
+            ["ruby", "-ryaml", "-rjson", "-e", "puts YAML.load_file(ARGV[0]).to_json", path])
+        case = json.loads(out)
+    for g in case["graders"]:
         if g["name"] == grader:
             return g["criteria"], g.get("focus")
     raise SystemExit(f"{path} has no grader named {grader}")

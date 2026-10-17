@@ -62,11 +62,11 @@ graders:
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
 
-      `ops/alerts.yml` has two catalog-search alerts: a fast error-budget burn (14.4x over 1h, page) and a slow burn (3x over 24h, ticket), both computed against the stated 99.5% objective and both linking `ops/runbooks/catalog-search.md`.
+      `ops/alerts.yml` has two catalog-search alerts: a fast error-budget burn (14.4x over 1h, page) and a slow burn (3x over 24h, ticket), both computed against the stated 99.5% objective and both linking `ops/runbooks/catalog-search.md`. They are the one well-formed pair in the file.
 
-      PASS if the review does not report these two alerts as noisy, duplicated, arbitrary or non-actionable. Not mentioning them, or citing them as the model for the others, passes.
+      PASS if the review does not ask for either alert to be removed, demoted from a page to a ticket, or replaced on the grounds that it is noisy, duplicated, arbitrary or non-actionable. These all pass: not mentioning them; citing them as the model for the others; proposing a refinement that keeps both as they are and adds to them (a short confirmation window alongside the 1h window, a minimum-traffic guard for quiet hours, the same pattern for other routes), whatever severity that refinement carries and even if its wording says the single window can be "noisy" at low volume.
 
-      FAIL if either is reported as a defect at Medium or above.
+      FAIL if the review reports either alert itself as a defect at Medium or above: says it should not page, should not exist, or has no objective or runbook behind it.
 
       An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: tool_used

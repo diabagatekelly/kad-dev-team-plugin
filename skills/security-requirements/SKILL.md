@@ -224,6 +224,26 @@ Security concerns that are real but belong elsewhere, and where they go.
 Anything genuinely unresolved, and who resolves it.
 ```
 
+When the stop rule applies instead (the slice can't be made safe without a
+capability nobody scoped), the whole response is this, and nothing from
+the document:
+
+```markdown
+## Handed back to product-slicer — blocking
+
+**The gap:** what the obligation requires, and what the slice as scoped
+cannot provide.
+**What it forces:** the scope decision this is, and that it is
+`product-slicer`'s to make, not this skill's.
+**Recommendation:** one way forward and why, if you have a view;
+otherwise leave the line out.
+**Held until scope is settled:** the forks you would have presented, by
+name only.
+```
+
+One recommendation, not a list: naming two ways the gap could be filled
+is the menu the rule forbids, even with "the choice isn't mine" after it.
+
 If the honest answer is that this slice has little security surface, say
 so and write few criteria. Padding this out to look thorough trains people
 to skim it, which costs more than the missing criteria would have.

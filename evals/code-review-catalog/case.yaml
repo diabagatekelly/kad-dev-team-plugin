@@ -52,3 +52,8 @@ graders:
       PASS if the review names at least two of those specific points as reasons the module reads well (in its own words; paraphrase counts), rather than only saying it is clean or readable.
 
       FAIL if fewer than two are named, or the only support for the verdict is generic praise.
+  - type: tool_used
+    name: consults-why-comments
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:why-comments"'
+    min: 1

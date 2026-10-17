@@ -232,4 +232,24 @@ Real concerns belonging elsewhere, and where.
 Unresolved, and who resolves them.
 ```
 
+When the stop rule applies instead (the slice can't meet its target
+without a capability nobody scoped), the whole response is this, and
+nothing from the document:
+
+```markdown
+## Handed back to product-slicer — blocking
+
+**The gap:** what the target requires, and what the slice as scoped
+cannot provide.
+**What it forces:** the scope decision this is, and that it is
+`product-slicer`'s to make, not this skill's.
+**Recommendation:** one way forward and why, if you have a view;
+otherwise leave the line out.
+**Held until scope is settled:** the forks you would have presented, by
+name only.
+```
+
+One recommendation, not a list: naming two ways the gap could be filled
+is the menu the rule forbids, even with "the choice isn't mine" after it.
+
 If the slice has few real failure modes, say so and write few criteria.

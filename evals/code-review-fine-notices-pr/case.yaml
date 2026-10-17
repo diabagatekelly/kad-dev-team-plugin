@@ -135,8 +135,13 @@ graders:
     criteria: |
       Judge substance only. The second `'works'` test wraps `notices.build` in `mock.fn` with a replacement implementation and asserts the mock was called once, so it never runs the real code. Judging whether a test is over-mocked or proves nothing belongs to a test-quality review, not a readability review.
 
-      PASS if the review either doesn't judge that test's mocking, or names it as something for a test-quality review (or `test-quality-review`) to look at, outside its own ranked findings.
+      PASS if the review does not make that judgment in a ranked finding of its own. These all pass: not mentioning the mocking; naming it as something for a test-quality review (or `test-quality-review`) to look at, in a hand-off or out-of-scope section or in one deferring sentence inside a finding; describing what the second test does (it calls a mock and asserts the call) as context inside the finding about the duplicate test names, as long as that finding's complaint, in its heading, its "why it matters" and its fix, is the names.
 
-      FAIL if the mocking problem appears as one of the review's own ranked readability findings.
+      FAIL if a ranked finding's own complaint is that the test is over-mocked, proves nothing, never runs the real code or covers nothing: in its heading (for example "...and the second doesn't exercise real code"), its severity reasoning or its suggested fix, whether or not the review also hands the point off elsewhere.
 
       An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
+  - type: tool_used
+    name: consults-why-comments
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:why-comments"'
+    min: 1

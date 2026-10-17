@@ -1,0 +1,80 @@
+schema_version: "1.0"
+name: design-system-payfine-review
+description: "An existing member-portal design system reviewed before the second screen is composed on it: two planted problems (a muted text colour at about 2.5:1 with the document still claiming 6.01:1; no focus state anywhere) and the system's deliberate choices as traps (teal brand, system-ui, 6/8px radii, top nav, no shadow, paper background). Findings saved to a file; the system and its sample untouched."
+tags: [design-system, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for the pay-a-fine feature are in `docs/pay-fine/`, and the member portal's design system is `docs/pay-fine/visual-ux/design-system-001.md`, with its sample page at `docs/pay-fine/visual-ux/design-system.html`. We're about to compose the second portal screen on it; review the design system first. Don't change it or the sample. Save your findings as `docs/pay-fine/visual-ux/design-system-review.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:design-system"'
+    min: 1
+  - type: file_exists
+    name: review-written
+    path: docs/pay-fine/visual-ux/design-system-review.md
+  - type: regex
+    name: leaves-the-system-alone
+    target: trace
+    # Review mode presents findings and applies only what the user approves:
+    # the only file written is the findings file.
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*visual-ux/design-system-review\.md")[^"]*"'
+    match: not_contains
+  - type: llm
+    name: finds-muted-contrast
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-review.md
+    weight: 1
+    criteria: |
+      Judge substance only. The system's `--muted` is `#9AA3AA`, used for 14px secondary text and field help on `--paper` (`#FAF7F2`) and on `--surface` (white): about 2.4:1 on paper and 2.6:1 on white, well below the 4.5:1 threshold for text that size. The document still states 6.01:1 for it, a figure from an earlier value.
+
+      PASS if the review reports the muted text colour as failing contrast on its backgrounds (a computed ratio in the 2 to 3 range, or "fails 4.5:1", or the mismatch between the value and the document's stated figure: any of these) and proposes a darker value or an equivalent fix.
+
+      FAIL if it is missed, or the document's 6.01:1 is repeated as if verified.
+  - type: llm
+    name: finds-no-focus-state
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-review.md
+    weight: 1
+    criteria: |
+      Judge substance only. Neither the document nor the sample defines a focus state: there is no focus token, no `:focus-visible` (or `:focus`) rule, and the accessibility section says nothing about focus, so keyboard users get whatever the browser draws, if anything, on buttons, inputs, nav links and the choosable cards.
+
+      PASS if the review reports the missing focus state as a problem and proposes a fix (a visible focus ring with a stated colour and offset, or equivalent).
+
+      FAIL if it is missed, or treated as a preference.
+  - type: llm
+    name: leaves-preferences-alone
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-review.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise false alarms. The skill's rule: preferences (a palette, a legible font family, a border-radius value, a top nav rather than a sidebar, a light theme) are not problems and are not to be changed. Here the teal brand (`#1F5F5B`), the `system-ui` stack, the 6px and 8px radii, the top navigation, "shadow: none, deliberately" and the warm paper background are all such choices.
+
+      PASS if the review does not present any of those as a problem to fix. Listing them as preferences left alone, or saying nothing about them, passes; so does a defect in how one of them is applied (a contrast pair involving the brand colour, for instance), as long as the choice itself is not what it asks to change.
+
+      FAIL if it recommends changing the brand colour, the font family, the radii, the navigation layout, the no-shadow choice or the background as a finding.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real problem of its own (something it asks to be fixed). FAIL if it reports none.
+  - type: llm
+    name: separates-problems-from-preferences
+    focus:
+      source: file
+      path: docs/pay-fine/visual-ux/design-system-review.md
+    weight: 1
+    criteria: |
+      The skill's rule for reviewing an existing system: the first job is telling preferences apart from problems, and the findings are presented with the problems separated from the preferences left alone.
+
+      PASS if the review names at least one choice it judged and deliberately left alone as a preference (the palette, the font, the radii, the nav, the no-shadow choice, or similar), distinct from the problems it asks to be fixed.
+
+      FAIL if it lists only problems with no acknowledgement of what it left alone, or presents preferences and problems as one undifferentiated list.

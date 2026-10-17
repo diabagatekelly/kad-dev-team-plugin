@@ -168,3 +168,13 @@ graders:
     name: final-review-runs
     target: trace
     pattern: '^(?=[\s\S]*"skill": ?"kad-dev-team:architecture-review")(?=[\s\S]*"skill": ?"kad-dev-team:code-review")(?=[\s\S]*"skill": ?"kad-dev-team:security-review")(?=[\s\S]*"skill": ?"kad-dev-team:reliability-review")'
+  - type: regex
+    name: final-run-is-the-whole-suite
+    target: trace
+    # The skill's rule: after GREEN run the whole suite, and the last test
+    # run before the report is the full suite, green. `npm test` runs
+    # test/*.test.ts; a run naming one .test.ts file is a filtered run. So
+    # the last Bash test command in the trace has to be an `npm test` (any
+    # prefix such as `cd ...;` or suffix such as `| grep` is fine) that
+    # names no .test.ts file, with no test command after it.
+    pattern: '"name":"Bash","input":\{"command":"(?:(?!\.test\.ts)(?:[^"\\]|\\.))*npm (?:run )?test(?:(?!\.test\.ts)(?:[^"\\]|\\.))*"(?![\s\S]*"name":"Bash","input":\{"command":"(?:[^"\\]|\\.)*(?:npm (?:run )?test|--test))'

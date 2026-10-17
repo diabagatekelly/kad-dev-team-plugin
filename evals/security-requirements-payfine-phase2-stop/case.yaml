@@ -1,0 +1,56 @@
+schema_version: "1.0"
+name: security-requirements-payfine-phase2-stop
+description: "Pay-a-fine slice, phase 2 with a stop: the answers to the frozen questions carry an obligation (the merchant agreement requires an online receipt) that nothing scoped can satisfy. The skill must report the gap and stop: no forks presented, no criteria written, no menu of ways the slice could grow, no receipt designed. Same frozen history as phase 2. No baseline arm: the history is a with-plugin transcript."
+tags: [security-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Members are individuals: no shared or family accounts, and a member should only ever see their own fines; staff can see anyone's. About 3,000 members. Card payments go through Stripe, and staff keep paying and waiving at the desk as today. One obligation does apply: our merchant agreement, which I checked with the finance officer this morning, requires that a cardholder paying online receives a receipt showing the amount, the date and the library's name, and that the library keeps a copy. Desk payments get a till receipt. Go ahead.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: reports-the-gap-and-stops
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user's answer adds an obligation: the merchant agreement requires that a member paying online receives a receipt (amount, date, library name) and that the library keeps a copy. The slice as scoped (see their fines, pay one, the fine shows as paid) gives the member no record of a portal payment and keeps none, and no planning document provides one. The skill's rule: if the slice can't be made safe without a capability nobody scoped, report that and stop; say what the gap is and what it forces, and recommend if you have a view.
+
+      PASS if the response says the slice cannot satisfy the obligation as scoped because a receipt is a capability nobody scoped, says what that forces (a scope decision that is not this skill's, so the slice or the slice set has to change before the security criteria can be finished), and stops there: in this response it neither asks the user to approve the forks (the engineer's shared-route proposal) nor writes acceptance criteria. Recommending one way forward, as a view, is fine. Listing the decisions it is holding back until scope is settled, even with the recommendation it expects to make on each, is a deferral and passes: what fails is asking for their approval now. Observations about the code alongside (the unauthenticated refund route, the waive action under `/fines`) are fine.
+
+      FAIL if it asks the user to approve the forks now or writes criteria, as though the slice could proceed with the receipt noted as out of scope, a later addition or an open item; if it writes a receipt criterion itself as the way to close the gap; or if it treats the receipt as merely another data exit to write a criterion for.
+  - type: llm
+    name: does-not-lay-out-scope-options
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule, in its own words: don't lay out the ways the slice could grow for the user to pick from; choosing among them is a scope decision, and it isn't this skill's. A hand-back carries one recommendation; the owner decides whether the gap goes into this slice or out of it.
+
+      FAIL only if the response does one of these two things: (1) lists two or more ways to fill the gap or re-cut the slice as options (bullets, numbers, or "one of these: add it to slice 1, cut a receipt slice, narrow slice 1"; or email versus PDF versus on-screen) without recommending exactly one of them; (2) asks the user to choose among named options.
+
+      Everything else passes: one recommendation with its reason, including the alternatives it rejects and why ("in this slice rather than a later one, because a later one would ship a non-compliant payment path"); the in-or-out question, or its two-sided consequence ("either the receipt belongs in this slice, or online payment can't ship until a slice provides one"); naming the owner (product-slicer, the slice set's owner, the user as the owner of scope); naming the missing capability in a phrase.
+  - type: llm
+    name: no-criteria-written
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: a slice that can't be made safe without an unscoped capability gets a report and a stop, not criteria.
+
+      PASS if the response contains no acceptance-criteria document: no "Acceptance criteria" section and fewer than three Given/When/Then criteria. A summary of what was found in the code, and a single illustrative criterion, are fine.
+
+      FAIL if it writes the criteria now (an acceptance-criteria section, or three or more Given/When/Then criteria), whether or not it also reports the gap.
+  - type: llm
+    name: does-not-design-the-receipt
+    focus: last_message
+    weight: 1
+    criteria: |
+      The receipt is the capability nobody scoped. How one would work is the scope owner's call and then the architect's: which channel (email, SMS, on-screen, PDF), what it contains beyond what the agreement requires, where the library's copy lives, how long it is kept.
+
+      PASS if the response does not write requirements for the receipt or settle its design. These all pass: restating the agreement's own obligation (amount, date, library name, a copy the library keeps) to state the gap, in any paraphrase; saying the receipt has to ship with the slice or before online payment goes live; a scope recommendation that names the capability it favours ("add the receipt, delivered to the member with a retained copy, to this slice") and points at a means the code already has as evidence it is buildable (the existing mailer, the member's email on file); noting what the code lacks (nothing stores the library's name); listing the receipt's contents, storage and retention, and who may read the copy, among the decisions held until scope is settled; and noting, as a security observation, that a receipt would be another route for payment data to leave the system.
+
+      FAIL only if it writes requirements or criteria for the receipt now (Given/When/Then, or "must" statements about its channel, contents or retention), or settles its internals as decided rather than held (a retention period, a template, a `receipts` table, a storage location).

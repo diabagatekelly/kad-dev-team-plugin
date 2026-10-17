@@ -1,0 +1,57 @@
+schema_version: "1.0"
+name: design-system-payfine-reference
+description: "Pay-a-fine slice, first screen and no design system, with a reference given: the library's public-site stylesheet. The skill must take the reference path: one mock carrying the reference's own values, confirmation asked before the system is settled, no candidates generated, no reference-or-generate question, no claim of having viewed anything, and the system document not written before the user confirms the match."
+tags: [design-system, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for the pay-a-fine feature are in `docs/pay-fine/`. Slice 1 (`docs/pay-fine/slice-001.md`) is the first thing in this project with a screen members use, and there's no design system yet. Set one up for the member portal. It should match the library's public website: its stylesheet, as served, is at `docs/pay-fine/visual-ux/reference/riverside-site.css` (I can't get you a screenshot). Save the design system itself as `docs/pay-fine/visual-ux/design-system-001.md` once it's settled.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:design-system"'
+    min: 1
+  - type: llm
+    name: one-mock-and-a-confirmation
+    focus: last_message
+    weight: 1
+    criteria: |
+      A concrete reference was given (the public site's stylesheet), so the skill's reference path applies: extract the values driving the reference, render one mock applying them to this project's own screen, and confirm with the user that it reads as a faithful match before treating the direction as settled. There is nothing to choose between, so no candidates are generated.
+
+      PASS if the response presents one mock made from the reference (a file path the user can open) and asks the user to confirm it matches the site before the system is settled. Describing the values it extracted is fine.
+
+      FAIL if it asks whether the user wants a reference matched or candidates generated (that was answered), presents two or more candidate directions to choose between, or settles the system without asking whether the mock matches.
+  - type: regex
+    name: mock-carries-reference-brand
+    target: trace
+    # The mock has to be a real render styled from the reference, not prose:
+    # one Write of an .html or .css file whose content holds the site's
+    # plum (#5B2A86, `--rl-plum`) is the proof. Same form as the screen-design
+    # brand grader; the HTML is a JSON string in the trace, so its content
+    # is matched as one, in either key order.
+    pattern: '"name":"Write","input":\{(?:"(?:file_path|path)":"[^"]*\.(?:html|css)","content":"(?:[^"\\]|\\.)*#5[Bb]2[Aa]86|"content":"(?:[^"\\]|\\.)*#5[Bb]2[Aa]86(?:[^"\\]|\\.)*","(?:file_path|path)":"[^"]*\.(?:html|css)")'
+  - type: regex
+    name: system-not-settled-before-confirmation
+    target: trace
+    # The reference path confirms the match with the user before the
+    # direction is settled; the system document comes after that
+    # confirmation, which this first turn cannot have.
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*design-system-001\.md"'
+    match: not_contains
+  - type: llm
+    name: honest-about-viewing
+    focus: last_message
+    weight: 1
+    criteria: |
+      This session has no browser or screenshot tool, so the mock can be written as HTML but not opened or looked at.
+
+      PASS if the response gives the user the mock's path to open, and either says it could not view it itself or makes no claim about how it looks when rendered.
+
+      FAIL if it claims to have opened, viewed or screenshotted it, or describes it in prose with no file to open.
