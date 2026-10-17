@@ -8,40 +8,31 @@ asks a judge which review is better in both presentation orders (to cancel
 position bias), and writes every verdict with its reasoning to
 <results-dir>/pairwise.json.
 
+The judge itself (the `claude -p` call, both orders, the verdict) lives in
+`skills/orchestrator/scripts/pairwise_judge.py`, where the orchestrator's
+Combine step runs it on two implementation candidates; this file only
+supplies the review rubric and the results-dir plumbing.
+
 Usage: python3 -I evals/tools/pairwise_judge.py evals/results/<timestamp> [--model sonnet]
 """
 import argparse
 import json
-import subprocess
+import os
 import sys
-import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-JUDGE_PROMPT = """You are judging two code reviews of the same code. You do not know who wrote either one.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skills" / "orchestrator" / "scripts"))
+from pairwise_judge import compare  # noqa: E402
 
-The request and the code under review:
-<request>
-{request}
-</request>
-
-<review_1>
-{first}
-</review_1>
-
-<review_2>
-{second}
-</review_2>
+REVIEW_RUBRIC = """You are judging two code reviews of the same code. You do not know who wrote either one.
 
 Decide which review would serve the developer better. Weigh, in order:
 1. Correctness: does it identify the real problems in this code, and does it avoid claims that are false about the code shown?
 2. Judgment: are the most important problems clearly separated from minor or optional ones, with sensible priorities?
 3. Actionability: would its fixes actually solve the problems?
 
-Ignore length, formatting, tone, and whether it uses any particular named rule or vocabulary. A longer review is not better unless the extra content is correct and useful.
-
-You have no tools and nothing to look up; both reviews and the code are above. Respond with only a JSON object, no code fence:
-{{"reasoning": "<3-6 sentences>", "winner": "1" | "2" | "tie"}}"""
+Ignore length, formatting, tone, and whether it uses any particular named rule or vocabulary. A longer review is not better unless the extra content is correct and useful."""
 
 
 def last_message(run):
@@ -52,45 +43,16 @@ def last_message(run):
     return None
 
 
-def ask_judge(prompt, model):
-    with tempfile.TemporaryDirectory() as cwd:
-        proc = subprocess.run(
-            ["claude", "-p", "--model", model, "--tools", "",
-             "--disable-slash-commands", "--strict-mcp-config",
-             "--no-session-persistence", "--output-format", "json"],
-            input=prompt, capture_output=True, text=True, cwd=cwd, timeout=300,
-        )
-    envelope = json.loads(proc.stdout)
-    text = envelope["result"]
-    # The judge sometimes wraps or prefixes the JSON; take the outermost object.
-    start, end = text.find("{"), text.rfind("}")
-    if start < 0 or end < 0:
-        raise ValueError(f"judge returned no JSON object: {text[:200]!r}")
-    verdict = json.loads(text[start:end + 1])
-    if verdict.get("winner") not in ("1", "2", "tie"):
-        raise ValueError(f"judge returned an unexpected winner: {verdict!r}")
-    return verdict, envelope.get("total_cost_usd", 0.0)
-
-
 def judge_pair(job):
     case, index, with_review, without_review, request, model = job
-    orders = {"with_first": (with_review, without_review),
-              "without_first": (without_review, with_review)}
-    result = {"case": case, "run": index, "orders": {}, "cost_usd": 0.0}
-    for order, (first, second) in orders.items():
-        prompt = JUDGE_PROMPT.format(request=request, first=first, second=second)
-        try:
-            verdict, cost = ask_judge(prompt, model)
-        except ValueError:
-            # One retry: the judge occasionally emits a tool-call-shaped reply.
-            verdict, cost = ask_judge(prompt, model)
-        winner_arm = {"1": order.split("_")[0], "2": "without" if order == "with_first" else "with",
-                      "tie": "tie"}[verdict["winner"]]
-        result["orders"][order] = {"winner": winner_arm, "reasoning": verdict["reasoning"]}
-        result["cost_usd"] += cost
-    winners = {o["winner"] for o in result["orders"].values()}
-    result["verdict"] = winners.pop() if len(winners) == 1 else "split"
-    return result
+    result = compare(request, {"with": with_review, "without": without_review},
+                     REVIEW_RUBRIC, model, tag="review")
+    # The shape earlier runs' pairwise.json files have: orders keyed by who
+    # was shown first, winners named by arm.
+    return {"case": case, "run": index,
+            "orders": {f"{o['first']}_first": {"winner": o["winner"], "reasoning": o["reasoning"]}
+                       for o in result["orders"]},
+            "verdict": result["verdict"], "cost_usd": result["cost_usd"]}
 
 
 def main():

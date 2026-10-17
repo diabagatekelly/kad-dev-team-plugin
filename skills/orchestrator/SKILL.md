@@ -364,15 +364,54 @@ if the slice isn't UI-touching or a candidate was dropped at the gate) —
 `map-update`'s two inline runs aren't part of that count. Wait for all of
 them before continuing.
 
-**C. Combine — inline, yours alone, not spawned.** Read both candidates'
-actual code from their worktree paths (not just their own self-reports)
-and both full sets of graded findings from Grade. This read is explicitly
+**C. Combine — inline, yours alone, not spawned.** Judge first, blind;
+then read; then decide with the verdict in hand. Before you read either
+candidate, run the pairwise judge inline with Bash:
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/scripts/pairwise_judge.py" --candidate "<worktree 1>" --candidate "<worktree 2>" --baseline "<project root>/.git/kad-gate-baseline.json" --task "<design doc>" --task "<slice file>" --task "<each criteria document given in A>" --exclude "<report path>"
+```
+
+It shows a judge with no tools the brief (the `--task` files: the same
+documents both candidates were given) and each candidate's changes since
+the baseline — the change set the gate computed, with the report left out,
+since a candidate's description of its work is not its work — labelled
+only "implementation 1" and "implementation 2", with no path, branch or
+finding that could say which is which, in both presentation orders so a
+preference weaker than position bias shows up as a disagreement, and it
+keeps each order's reasoning next to the baseline in
+`.git/kad-pairwise.json`. The last line is `pairwise judge: candidate 1`,
+`candidate 2`, `tie`, or `split` (the two orders disagreed). Run it even
+when a candidate failed the gate: what that candidate got right is still
+information, and the judge does not know which one failed. Blind here
+describes the judge, not you; you are about to read everything. If the
+judge cannot run (`pairwise judge: NO VERDICT`, exit 2: `claude` not on
+PATH, a timeout), try once more, then make the call without it and say
+so in the log; don't stage a "blind" comparison of your own in its place.
+
+Then read both candidates'
+actual code from their worktree paths (not just their own self-reports),
+both full sets of graded findings from Grade, and both orders' reasoning
+from the judge. This read is explicitly
 in-scope even though it reaches outside the target directory — the "stay
 inside your lane" constraint from earlier is about inspection in step 2,
 not about executing the routed step itself. Decide, and state your
 reasoning: which candidate to build from, or which pieces of each, and
 exactly what needs fixing or reconsidering. Not joint authorship of the
-two, not an average of them — one accountable call. Write the decision as
+two, not an average of them — one accountable call, made with the
+judge's verdict in hand, not instead of it: the judge is one more reader
+whose reasons you hold, with the standing of a reviewer's finding — not a
+vote that settles the question, and not a formality to overrule in
+silence. Where your call follows the verdict, the brief says so in a
+line. Where it departs — you build from the candidate the judge did not
+prefer, or from pieces of both when it picked one, or a gate failure or a
+reviewer's Critical outweighs what the judge saw — the brief names which
+of the judge's reasons you are setting aside and why. A `tie` or `split` is a fact about
+the candidates (nothing the judge could see separates them) and leaves the
+call to you with the same obligation to state its grounds. A gate failure
+outranks the judge: a candidate that failed the gate is not the basis,
+whatever the verdict, though its approach can still inform the brief.
+Write the decision as
 a concrete brief describing the target implementation — informed by both
 candidates' approaches and every finding raised against either one — not
 a shorthand like "use candidate A's version."
@@ -418,7 +457,8 @@ finalized implementation. Pass/fail per finding, not a fresh grading pass
 across every category from step B.
 
 **Reporting this procedure.** Step 5's report names what happened at each
-of the five steps above, not just the final outcome. The two candidate
+of the five steps above, not just the final outcome — for Combine, the
+judge's verdict and whether your call followed it. The two candidate
 worktrees and branches from Quarantine still exist once this completes —
 name both so the user can inspect either directly if they want to, but
 don't merge or delete them yourself; discarding a candidate's branch is
@@ -436,7 +476,7 @@ exists to catch:
 **Routed to:** quarantine flow
 - **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`; candidate 2 — `<worktree path>` / `<branch>`
 - **B. Grade:** validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
-- **C. Combine:** chosen basis — `<candidate 1 | candidate 2 | pieces of both>`; brief — `<one line>`
+- **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<path to kad-pairwise.json>`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; brief — `<one line>`
 - **D. Finalize:** `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
 - **E. Re-grade:** findings addressed — `<count>` pass, `<count>` fail
 ```
