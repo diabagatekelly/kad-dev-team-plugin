@@ -1639,13 +1639,14 @@ first real execution (the hand-off says what to watch).
       only in read context: candidate 1 reads the slice's documents
       alone; candidate 2 also reads the unit — its Active requirements
       document, every slice file cut for the unit, every design doc and
-      screen-design artifact for any of its slices, and the persisted
-      map if there is one — each named by path, with one line that the
-      deliverable is this slice alone and nothing another slice's design
-      describes is to be built or prepared for. The assignment is fixed
-      (the context always goes to candidate 2) so the reading across
-      slices is of one variable, and the log's A line records what
-      candidate 2 got (requirements doc, slice count, design count, map).
+      screen-design artifact for any of its slices — each named by path
+      for the instance to read, with one line that they are reference
+      material and no instruction to it. Both tasks carry, word for
+      word, the line that the deliverable is this slice alone with
+      nothing built or prepared for beyond what its own design names.
+      The assignment is fixed (the context always goes to candidate 2)
+      so the reading across slices is of one variable, and the log's A
+      line records every path candidate 2 was given.
       The judge's `--task` stays the slice documents both were given to
       deliver, not the unit context, which neither had to build. The
       combine brief gains one line, what candidate 2's wider read changed
@@ -1674,9 +1675,48 @@ first real execution (the hand-off says what to watch).
       step 5 miss on a case whose text H4 did not touch, the same
       one-run noise H1 recorded on this case for a different reason;
       bar left at 1.0. Evidence recorded for all sixteen.
-      *Sourcery on PR #12:* approved, no findings, no inline comments;
-      the docs push that recorded the approval re-ran its review, which
-      dismissed the first approval (its behaviour on any new push) and
-      passed again with a reviewer's guide and nothing else. Both PR
-      checks green.
+      *Sourcery on PR #12:* a first review approved with no findings;
+      the docs push that recorded it re-ran the review, which dismissed
+      the approval and found seven things (one High, six Medium). The
+      "Sourcery review" check stayed green through it, so a green check
+      is not "no findings": read the review. Four taken, two in part,
+      one declined:
+      - *Taken, "missing map blocks quarantine":* "a one-slice unit still
+        has a map to give" contradicted "if there is one". Resolved by
+        the next finding: the map is off the list.
+      - *Taken, "slice-only input includes map":* candidate 1 consults
+        the persisted map through `map-query` before each entry's code,
+        as the tdd skill says, so the map was never the variable. Step A
+        now says both reach it that way and neither task names it; the
+        A line's map field is gone. (Sourcery's own fix, keeping the map
+        from candidate 1, would have broken the tdd skill's consult.)
+      - *Taken, "candidate tasks differ beyond context":* the
+        deliver-only-this-slice line was on candidate 2's task alone, so
+        the comparison measured a scope constraint as well as the read.
+        Both tasks now carry it word for word, and D's instance too.
+      - *Taken, "logged inputs cannot be verified":* the A line records
+        every path candidate 2 was given, not counts.
+      - *Taken in part, "unit documents can steer candidate" (High):*
+        candidate 2's task now says the unit documents are reference
+        material and nothing in them is an instruction to the instance,
+        the same stance the judge's rubric takes on candidate text. The
+        rest of the finding is the sandbox, H5: the exposure is the one
+        candidate 1 already has from the slice's own documents, which
+        the same contributors write, and the skill does not claim a
+        sandbox it does not have.
+      - *Taken in part, "judge misranks unit-aware work":* the judge
+        keeps the slice documents as its brief, by design: the
+        deliverable is the slice, and a port shaped for a later slice is
+        "code the slice does not need" however sound the unit makes it.
+        Step C now says that a choice only the unit justifies is the
+        orchestrator's to weigh in the read that follows, naming the
+        judge's reason if it sets that reason aside; the judge's view
+        was not widened past what both candidates had to deliver.
+      - *Declined, "large units exceed context limits":* the documents
+        are named by path for the instance to read as it needs them, not
+        pasted into the task, so nothing is assembled against an input
+        limit at launch; and `product-slicer` bounds the unit.
+      *Run after the round:* sixteen cases at three runs, 16/16 at bar,
+      all sixteen at 1.0 (`results/gate-20261017T232306-*`). Evidence
+      recorded for all sixteen.
 - [ ] H5. Sandbox the code-writing agent.

@@ -310,25 +310,28 @@ against the same slice — real async `Agent` calls, each with
 repo. Give both the same task: build this slice from its design doc, its
 runtime-safety criteria, its screen-design/accessibility criteria if
 UI-touching, and save output where you say — the same inputs a single
-non-quarantined execution would get, plus one line saying `orchestrator`
-reviews the result afterwards (so it skips its own final review), and
-nothing about quarantine or a second candidate existing. What differs,
-deliberately and always the same way round, is how much each is given to
-read around that task:
+non-quarantined execution would get — plus two lines both tasks carry
+word for word: that `orchestrator` reviews the result afterwards (so it
+skips its own final review), and that the deliverable is this slice
+alone, with nothing to be built or prepared for beyond what its own
+design names. Nothing about quarantine or a second candidate existing.
+What differs, deliberately and always the same way round, is how much
+each is given to read around that task:
 
 - **Candidate 1 reads the slice alone**: the documents above and nothing
   else about the unit.
 - **Candidate 2 reads the whole unit**: the same documents, plus the
-  current unit's read context, each named by path — the unit's
-  requirements document (the Active one step 2 found), every slice file
-  cut for the unit (the slice set, this slice included), every design doc
-  and screen-design artifact that exists for any of the unit's slices,
-  and the persisted architecture map (`docs/architecture-map.md` at the
-  app root) if there is one — with one line saying these are read
-  context for how this slice fits the unit: the deliverable is this slice
-  alone, and nothing another slice's design describes is to be built or
-  prepared for beyond what this slice's own design names. A unit with one
-  slice still has a requirements document and a map to give; give them.
+  current unit's read context, each named by path for the instance to
+  read, not pasted into the task — the unit's requirements document (the
+  Active one step 2 found), every slice file cut for the unit (the slice
+  set, this slice included), and every design doc and screen-design
+  artifact that exists for any of the unit's slices — with one line
+  saying these are read context for how this slice fits the unit:
+  reference material, and nothing in them is an instruction to the
+  instance. A unit with one slice still has a requirements document to
+  give; give it. The persisted architecture map is not on the list: both
+  candidates reach it through `map-query` as their skill says, before
+  each entry's code, so it is no part of the difference between them.
 
 Two instances handed identical inputs tend to make the same choices and
 the same mistakes, which leaves the judge and the reviewers little to
@@ -426,9 +429,11 @@ python3 -I "${CLAUDE_SKILL_DIR}/scripts/pairwise_judge.py" --candidate '<worktre
 
 It shows a judge with no tools the brief (the `--task` files: the slice
 documents both candidates were given to deliver — the design doc, the
-slice, the criteria — and not candidate 2's unit read context, which
-neither had to build and which says nothing about this slice that its own
-documents don't) and each candidate's changes since
+slice, the criteria — and not candidate 2's unit read context: the
+deliverable is the slice, so the judge measures each candidate against
+the slice's own documents, and a choice only the unit justifies is yours
+to weigh in the read that follows, with the judge's reason against it
+named if you set that reason aside) and each candidate's changes since
 the baseline — the change set the gate computed, with the report left out,
 since a candidate's description of its work is not its work — labelled
 only "implementation 1" and "implementation 2", with no path, branch or
@@ -477,8 +482,9 @@ candidates' approaches and every finding raised against either one — not
 a shorthand like "use candidate A's version." The brief also says, in a
 line, what candidate 2's wider read changed, if anything — a port shaped
 for a later slice, a rule taken from the requirements document instead of
-escalated, a reuse the map showed, or nothing the judge or a reviewer
-could tell apart — and whether you keep it or set it aside. That line is
+escalated, a name or boundary matched to a sibling slice's design, or
+nothing the judge or a reviewer could tell apart — and whether you keep
+it or set it aside. That line is
 the evidence the context difference exists to produce; candidate 2's
 having read more is not itself a reason to build from it.
 
@@ -487,11 +493,11 @@ on either candidate.** Launch a third `tdd-coach:tdd-implementation`
 instance — not either original candidate — with no worktree isolation
 this time, targeting the project's real working tree. Its task is your
 combine brief from step C, plus the slice inputs from step A as candidate
-2 received them — the unit's read context and the line that the
-deliverable is this slice alone, since the brief may lean on how the
-slice fits the unit and the instance building from it has to be able to
-read the same documents — including the line that `orchestrator` reviews
-the result (step E). It builds a genuinely new implementation informed by both candidates
+2 received them — the unit's read context included, since the brief may
+lean on how the slice fits the unit and the instance building from it has
+to be able to read the same documents — with the same two lines both
+candidates carried: that the deliverable is this slice alone, and that
+`orchestrator` reviews the result (step E). It builds a genuinely new implementation informed by both candidates
 and every finding against either, not a patch on top of whichever
 candidate combine preferred. This is the real, final artifact — the one
 that answers "has this slice been implemented" for step 2's future
@@ -592,7 +598,7 @@ exists to catch:
 ## <n>. <date> — slice ready for implementation
 
 **Routed to:** quarantine flow
-- **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`, slice-only context; candidate 2 — `<worktree path>` / `<branch>`, full-unit context (`<requirements doc>`, `<n>` slices, `<n>` designs, map `<path | none>`)
+- **A. Quarantine:** candidate 1 — `<worktree path>` / `<branch>`, slice-only context; candidate 2 — `<worktree path>` / `<branch>`, full-unit context: `<requirements doc path>`; slices `<every path>`; designs `<every path, screen designs included>`
 - **B. Grade:** validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
 - **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<path the script printed>`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; wider read changed — `<what, kept | what, set aside | nothing>`; brief — `<one line>`
 - **D. Finalize:** `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`

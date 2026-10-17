@@ -133,10 +133,11 @@ execute inline — the quarantine/grade/combine/finalize flow, wired in and
 running by default, not deferred.** Two isolated `tdd-coach:tdd-implementation`
 instances (real async `Agent` calls, `isolation: "worktree"`) build the
 same slice blind to each other — one reading the slice's own documents
-alone, the other the whole unit (requirements, slice set, every design,
-the map) as read context, always that way round, so the two aren't
-correlated copies and the judge's reasons across slices say what the
-wider read is worth; a mechanical validation gate
+alone, the other the whole unit (requirements, slice set, every design;
+the map both reach through `map-query`) as read context, always that way
+round and with the same deliver-only-this-slice line on both, so the two
+aren't correlated copies and the judge's reasons across slices say what
+the wider read is worth; a mechanical validation gate
 (`skills/orchestrator/scripts/validation_gate.py`: full suite green, every
 changed file inside the slice's allowed paths, the design and other
 stages' documents untouched, per-file coverage on Node) runs on each
