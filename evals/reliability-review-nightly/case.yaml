@@ -120,11 +120,11 @@ graders:
     criteria: |
       Judge substance only. This checks that the review does NOT raise a false alarm.
 
-      `AssessOverdueFine` (`fines/assess-overdue-fine.ts`) checks `alreadyAssessed` (an outstanding fine for the same loan id) before recording a new fine, so running the nightly job twice does not fine a loan twice.
+      `AssessOverdueFine` (`fines/assess-overdue-fine.ts`) checks `alreadyAssessed` (an outstanding fine for the same loan id, through `outstandingFor`) before recording a new fine, so running the nightly job again after a finished or crashed run does not fine a loan twice while its fine is outstanding.
 
-      PASS if the review does not claim that running the nightly job again, after a previous run finished or crashed, creates duplicate fines. Not mentioning it, noting the guard, or reporting that two *overlapping* runs could both pass the check before either inserts (a check-then-insert race) all pass, at any severity: that race is real.
+      PASS if the review does not claim that a sequential re-run of the nightly job double-fines a loan whose fine is still outstanding. These all pass, at any severity: not mentioning it; noting the guard; a check-then-insert race between two overlapping runs or instances (both pass the check before either inserts), even when the finding also says "repeated runs", "retry" or "re-run" and even when the random fine id or a missing unique constraint is part of the argument; and the observation that `outstandingFor` excludes settled and waived fines, so a loan still open after its fine was paid or waived is fined again on a later night. The race and the settled-fine gap are both real.
 
-      FAIL if it reports that a sequential re-run or retry of the nightly job double-fines members, ignoring the `alreadyAssessed` check.
+      FAIL only if the review's mechanism for duplicate fines is that a run started after the previous one finished re-fines a loan whose fine is still outstanding, with no mention of the `alreadyAssessed` check, of overlapping runs, or of settled or waived fines.
 
       An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
   - type: llm

@@ -1,0 +1,56 @@
+schema_version: "1.0"
+name: reliability-requirements-payfine-phase2-stop
+description: "Pay-a-fine slice, phase 2 with a stop: the answers to the frozen questions set a target (a member blocked for fines clears the block the same day from home, through outages that have run most of a day) that the slice's single Stripe path cannot meet. The skill must report the gap and stop: no forks presented, no criteria written, no menu of ways the slice could grow, no fallback designed. Same frozen history as phase 2. No baseline arm: the history is a with-plugin transcript."
+tags: [reliability-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    If card payment is down for an hour, most members just try later or pay at the desk. One case matters, though: a member whose borrowing is blocked for unpaid fines has to be able to clear the block the same day without coming in. About a third of our members are rural, the board promised them the portal is enough, and Stripe's last two outages each ran most of a day, so "try again tomorrow" is not acceptable for them. Beyond that, no numeric target; failures for reasons other than a decline should just be rare, say one in a few hundred. The 10 seconds was a default, nobody chose it. We'd hear about breakage from members or the desk, and a member charged while the fine still shows outstanding would be fixed by hand, with a Stripe refund or by marking the fine settled. Go ahead.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: reports-the-gap-and-stops
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user's answer sets a target the slice cannot meet as scoped: a member blocked for unpaid fines must be able to clear the block the same day without coming in, and Stripe outages have run most of a day. The slice has one way to clear a fine from home, a Stripe card payment; when Stripe is down for a day there is no path to that target, and no retry, timeout or error message changes it. The skill's rule: if the slice can't meet its target without a capability nobody scoped, report that and stop; say what the gap is and what it forces, and recommend if you have a view.
+
+      PASS if the response says the target cannot be met by the slice as scoped because meeting it needs a capability nobody scoped (some way to pay, or to clear a block, that does not depend on Stripe being up), says what that forces (a scope decision that is not this skill's, before the reliability criteria can be finished), and stops there: in this response it neither asks the user to approve the forks (the 10-second give-up, how a double charge is handled) nor writes acceptance criteria. Recommending one way forward, as a view, is fine. Listing the decisions it is holding back until scope is settled, even with the recommendation it expects to make on each, is a deferral and passes: what fails is asking for their approval now. Observations about the code alongside (the retry of declines, the missing timeout, the 402 for every error) are fine, and so is questioning the user's premise (for example that no borrowing block exists in the code).
+
+      FAIL if it asks the user to approve the forks now or writes criteria, as though the slice could proceed with the outage case noted as a limitation, a later addition or an accepted risk; if it writes a criterion that covers the gap itself (for example "when Stripe is unavailable the block is lifted provisionally"); or if it treats the target as met by retries, timeouts, a status page or a clearer error message.
+  - type: llm
+    name: does-not-lay-out-scope-options
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule, in its own words: don't lay out the ways the slice could grow for the user to pick from; choosing among them is a scope decision, and it isn't this skill's. A hand-back carries one recommendation; the owner decides whether the gap goes into this slice or out of it.
+
+      FAIL only if the response does one of these two things: (1) lays out two or more mechanisms that could fill the outage gap as alternatives, in a list or in prose ("one of these: a second processor, paying by phone, lifting the block"; "a second payment route or a change to how the block is lifted"; a "rejected alternatives" list), whether or not it recommends one of them; (2) asks the user to choose among such mechanisms. The "Held until scope is settled" list is not that: it names the forks the skill is deferring (the timeout and its message, double-charge protection, retries of declines, faults versus declines, visibility of charged-but-outstanding fines), which are not ways to fill the outage gap, and a fork named there with its two sides is still one deferred fork.
+
+      Everything else passes: one recommendation with its reason, including a contrast to what it is not, inside the recommendation's own sentence ("a provisional lift rather than a second processor, because..."); the in-or-out question, or its two-sided consequence ("either the slice grows a Stripe-independent way to clear the block, or the promise is knowingly not met during outages"); naming the owner (product-slicer, the slice set's owner, the user as the owner of scope); naming the missing capability in a phrase.
+  - type: llm
+    name: no-criteria-written
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: a slice that can't meet its target without an unscoped capability gets a report and a stop, not criteria.
+
+      PASS if the response writes no acceptance criteria: no "Acceptance criteria" section, and at most one Given/When/Then criterion, quoted as an illustration of what would have been written. A summary of what was found in the code is fine.
+
+      FAIL if it writes criteria now, with or without a heading: an acceptance-criteria section, or two or more Given/When/Then criteria anywhere in the response, whether or not it also reports the gap.
+  - type: llm
+    name: does-not-design-the-fallback
+    focus: last_message
+    weight: 1
+    criteria: |
+      How a member clears a block while card payment is down is the capability nobody scoped. Deciding it is the scope owner's call and then the architect's: a second payment provider, paying by phone or bank transfer, lifting the block provisionally against a promise to pay, a grace rule.
+
+      PASS if the response does not write requirements for such a mechanism or settle its design. These pass: naming the kind of capability that is missing, in a sentence, to state the gap ("some way to pay or to clear a block that doesn't depend on Stripe"); a scope recommendation that names the one capability it favours and why ("lift the block while the fine stays outstanding, cheaper than a second processor", or "a second processor") and the policy sign-off it would need; listing the fallback's behaviour among the decisions held until scope is settled.
+
+      FAIL only if it writes requirements or criteria for the fallback now (Given/When/Then, or "must" statements about how it behaves), or works out its internals as decided rather than held (which adapter sits behind which port, how decline codes map, what state the fine takes, when the block is restored).

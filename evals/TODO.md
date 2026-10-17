@@ -952,20 +952,125 @@ case). Every one has a gate-mode three-run bar and current evidence.
 
 ## G. Only after A–F
 
+Started 2026-10-16 on branch `eval-phase-g`, in the order G5, G4, G3
+(the two carried-over findings first, because their evidence was already
+in hand; the coverage work needs runs of its own). G1 and G2 stay open.
+
 - [ ] G1. Harder plants and rejecting answers so scores leave the 1.0
       ceiling.
+      *One harder plant landed with G3's review-mode case: the design
+      system's `--muted` value was changed under a document that still
+      claims the old contrast figure, so the reviewer has to compute
+      rather than trust the text.*
 - [ ] G2. A lite variant of `tdd-implementation` as a second plugin dir,
       run through the same cases as a third arm.
-- [ ] G3. Coverage items from the audit's section 8 that no case checks
+- [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
-- [ ] G4. From F: `orchestrator-backward-route` 0.95. One run in three
+      *Taken against the section 8 list, item by item:*
+      - *Both requirements skills' stop-and-report path:*
+        `security-requirements-payfine-phase2-stop` and
+        `reliability-requirements-payfine-phase2-stop`, each a phase-2
+        chain on the same frozen phase-1 history as its sibling, whose
+        answer carries what the slice cannot satisfy as scoped (the
+        merchant agreement requires an online receipt; a member blocked
+        for fines must clear the block the same day from home through
+        outages that have run most of a day). Four `last_message`
+        graders each: reports the gap and stops (no forks, no criteria),
+        lays out no scope menu, writes no criteria, does not design the
+        missing capability. The hand-back fixture under
+        `planning/pay-fine-handback/` is what a correct stop produces
+        once saved; these two cases grade the turn that produces it.
+        *First run (3 runs each, old skill text):* every run stopped,
+        named the gap and hands it to product-slicer, but the reliability
+        case listed the capabilities that could fill the gap in two runs
+        of three ("it would be one of these: a second way to settle a
+        fine...; a way to lift or defer the block") and once said, in
+        the same breath, that it was not listing them; the security case
+        did not. The rule ("don't lay out the ways the slice could grow")
+        lived only in the instructions, with no shape for the stop
+        report, so F's first lesson applies: both skills' output format
+        now carries a stop-report template ("## Handed back to
+        product-slicer — blocking": the gap, what it forces, one
+        recommendation, the forks held by name) with "one
+        recommendation, not a list" under it. *Second run, with the
+        template:* six of six responses took the shape exactly, no forks
+        presented, no criteria, no menu. The skill edit staled six
+        frozen histories (both phase 2s, both phase 3s, both stops);
+        re-frozen in the D1 loop: phase 1 at three runs with
+        `--keep-scaffold` (3/3 each; security run 2 and reliability run
+        1 chosen, the ones whose questions the phase-2 prompts answer
+        most directly), phase 2 at three runs (3/3 each) and phase 3
+        frozen from the resumed transcripts beside the clone's
+        histories. The stop graders were then reworded against the
+        judge's explanations (`rejudge.py --explain`, and
+        `--criteria-from` to re-judge the recorded outputs under the new
+        text): a preview of the decisions held back is a deferral, not
+        the forks presented; stating the hand-back's two sides ("in this
+        slice, or it can't ship until a slice provides it") is the
+        hand-back, not a menu; a recommendation may name the capability
+        it favours and a means the code already has, and a contrast
+        that supports it names no second option; FAIL stays for a list
+        of alternative mechanisms, for criteria written now, and for
+        internals settled rather than held (the one reliability run that
+        designed "an alternative adapter behind the `FinePayments` port
+        with provider-neutral decline codes" still fails, rightly).
+        `rejudge.py --criteria-from` parsed the case file with `ruby`,
+        absent from the WSL clone; it now uses PyYAML when present.
+      - *`code-review`'s mandated `why-comments` consult:*
+        `consults-why-comments` on `code-review-catalog`,
+        `code-review-fine-notices-pr` (a `tool_used` grader) and the
+        via-agent twin (a trace regex, the form the tdd via-agent case
+        proved for calls made inside a delegated agent). Not on
+        `code-review-days-left-pr` or `-fines-report-pr`: their plants
+        carry no comments, and the two latest runs that skipped the
+        consult were exactly those two (15 runs read; the three
+        comment-bearing cases consulted in 9 of 9).
+      - *`design-system`'s reference path and review/evolve mode:*
+        `design-system-payfine-reference` (the public site's stylesheet
+        under `ui-plants/design-system-reference/` as the reference; one
+        mock carrying its plum `#5B2A86` in its own markup, a
+        confirmation asked, the system document not written before it,
+        no candidates, no reference-or-generate question) and
+        `design-system-payfine-review` (the fixture system copied to
+        `ui-plants/design-system-review/` with two planted problems,
+        `--muted` at `#9AA3AA` under a stale 6.01:1 claim and no focus
+        state anywhere; its deliberate choices as traps; findings to a
+        file, the system and sample untouched by a trace guard).
+      - *`tdd-implementation`'s full suite after GREEN:* the proxy that
+        is gradable from the trace, `final-run-is-the-whole-suite` on
+        all three tdd cases: the last Bash test command is an `npm test`
+        naming no `.test.ts` file, with no test command after it.
+        Checked against the 69 recorded tdd traces: every run that ran
+        at all passes; the twelve that fail are the 7.5 KB traces of
+        runs the session limit emptied. Right-reason RED, REFACTOR, the
+        Critical/High fix loop and the revert of a design edit stay
+        ungraded: none has a trace signature that does not need a
+        plant of its own.
+      - *Already covered since the audit:* the orchestrator's log entry
+        and save location (F1), not answering the routed skill's
+        questions (every route case's final-message grader ends on
+        those questions), `vertical-slicing`'s consult and sections
+        (F), the `adr` worthiness test (F). *Left uncovered, with
+        reason:* the requirements skills' ADR hand-off (no fork in the
+        pay-fine fixture clears the ADR bar, so a grader would have
+        nothing true to require); all five data exits (phase 3 grades
+        two; the other three are not in the slice's path); the
+        quarantine flow (G2's ground).
+- [x] G4. From F: `orchestrator-backward-route` 0.95. One run in three
       routes correctly, cuts the slice, then narrates the whole round
       trip (requirements-002, design, security) and opens with
       requirements-refinement as what's next; the skill's step 3 forbids
       that narration in so many words. Decide whether the skill needs
       the rule restated where the backward step reports, or whether
       one run in three is the noise floor for a long inline routing.
-- [ ] G5. From F: three long-file review traps lose a run to the judge
+      *Restated where the report is written.* Step 5's first bullet says
+      "name what that next step would be", and for a backward route the
+      model obeyed it by guessing the row re-inspection would land on;
+      the prohibition sat forty lines earlier under step 3. Phase F's
+      first lesson applied: step 5 now says that after a backward route
+      the next step is always "return to step 2 and re-inspect", named
+      and nothing past it. Reaches every orchestrator case (17).
+- [x] G5. From F: three long-file review traps lose a run to the judge
       each pass with the explained judge passing the run
       (`reliability-review-alerts` burn-rate, 11k characters;
       `reliability-review-nightly` duplicate-fines, 16k;
@@ -973,3 +1078,166 @@ case). Every one has a gate-mode three-run bar and current evidence.
       wording). The CLI's own note says to prefer a regex on large
       artifacts; a findings-only excerpt file, or a shorter review
       format, would take the judge off the long text.
+      *Read from the three failed runs' review text, each a different
+      cause, none of them length alone:*
+      - *alerts:* the run reported "Burn-rate alerts have no guard
+        against low traffic or a confirmation window" at **Low**, a
+        refinement that keeps both alerts; the rubric's PASS clause
+        ("not noisy, duplicated, arbitrary or non-actionable") read
+        against its own words ("noisy at low volume"). Reworded: a
+        refinement that keeps both and adds to them passes at any
+        severity; FAIL only for removing, demoting or replacing either.
+      - *nightly:* the run's finding was the check-then-insert race
+        plus an accurate second mechanism: `outstandingFor` excludes
+        settled and waived fines, so a loan still open after its fine
+        is paid is fined again (verified in
+        `fines/assess-overdue-fine.ts` and the ledger query). The old
+        rubric allowed the race and forbade "re-run double-fines",
+        with nothing said about the settled-fine gap. Reworded: both
+        mechanisms pass; FAIL only for a sequential re-run double-fining
+        an outstanding fine with no mention of the check, overlap, or
+        settled fines. Twin grader in `-via-agent` reworded alike.
+      - *fine-notices:* two runs lost. One put "and the second doesn't
+        exercise real code" in the heading of a ranked finding, a real
+        boundary slip the rubric is right to fail; the other described
+        the mock inside the duplicate-names finding and deferred the
+        judgment to `test-quality-review` in the same breath, which the
+        judge read as a ranked finding. Reworded: context inside the
+        names finding and a deferring sentence pass; FAIL only when the
+        finding's own complaint (heading, severity reasoning, fix) is
+        the mocking. Twin grader in `-via-agent` reworded alike.
+      So: rubrics, not excerpt files. All three were lesson 2 from F
+      (the judge tripping on the rubric's wording), with the twist that
+      in two of the three the rubric was also wrong about what a correct
+      review may say.
+- [x] G6. Runs and bars for G3–G5: every affected case at three runs,
+      failures read, bars recorded, evidence current, hand-off updated.
+      *2026-10-16/17, seven WSL batches, about 190 runs in all.*
+      *Batch 1 (29 cases, 87 runs): 29/29 passed.* G5's three traps lost
+      no run to their old cause: `reliability-review-alerts` 1.0 (bar was
+      0.94), `-nightly` 0.97 (one run missed the fine-loop isolation
+      finding, a real miss, not the trap), `code-review-fine-notices-pr`
+      0.97 (one run again put "the second doesn't test the code under
+      review" in a ranked finding's heading, the boundary slip the
+      rubric is right to fail; recorded at 0.667 for that grader). G4:
+      `orchestrator-backward-route` 3/3, bar back to 1.0; the sixteen
+      other orchestrator cases 1.0 except `-route-scope-decision` 0.95
+      (its log entry named the row and the artifact path; the judge
+      failed it once, noise, bar left at 1.0). The consult grader passed
+      9/9 on the three comment-bearing code-review cases; the tdd
+      whole-suite grader 9/9. The design-system cases passed 3/3 each on
+      their first run: the reference case wrote one mock carrying the
+      plum, asked for confirmation and wrote no system document; the
+      review case found the muted contrast (computing 2.4:1 against the
+      document's 6.01:1) and the missing focus state, left the teal,
+      the font, the radii and the no-shadow choice alone, and wrote
+      nothing but the findings file. The two stop cases scored 0.58 and
+      0.83, which led to the template change and the re-freeze recorded
+      under G3, then 0.67 and 0.58 under the first rubric rewording,
+      0.58 and 0.92 under the second, and 3/3 each under the terse
+      scope rubric. *Lesson, paid for in four rounds:* on a one-word
+      judge, a rubric that grows a clause per false failure gets noisier,
+      not stricter; the version that held is the short one that says the
+      two things that fail and lists what passes afterwards. Phase 3
+      lost 3/3 on `decisions-all-approved` after the re-freeze because
+      its pinned forks were the old history's (the grader's own note
+      said to re-pin; the re-frozen phase 2 presents declines-and-abuse
+      and error-monitoring forks where the old one had at-most-once
+      charging and an attempt limit); re-pinned on both chains, 3/3.
+      tdd bars moved to 0.99 and 0.97: `escalates-queue-question` lost a
+      run in each cancel-hold case to reports that named both owning
+      skills (judge noise, recorded honestly). Recording bars on the
+      twenty changed or new cases staled six orchestrator cases whose
+      runs invoke the requirements skills (the batch-1 runs predate the
+      template edit); re-run last, 6/6 at 1.0. Final state:
+      `eval_evidence.py --base origin/main` 39/39 affected cases ok,
+      `history_stale.py` every chain current, 114 cases with bars.
+      *Sourcery on PR #7, nine findings, six taken, two folded into those,
+      one declined:*
+      - *Taken, the tdd whole-suite grader (three findings):* the
+        pattern matched command text only, so a final run that ended red
+        passed (the separate `last-test-run-green` caught it, but the
+        grader itself did not); `echo npm test` would have passed; a
+        `--test-name-pattern` filter passed as the whole suite; and the
+        fixture's own direct `node ... --test ... test/*.test.ts` form
+        failed as "filtered" because the glob ends in `.test.ts`. The
+        grader now requires a test command as a command word (start of
+        the command or after `;`, `&&`, `||`), no named `.test.ts` file
+        and no filter flag, that command's own output reaching `ℹ fail
+        0` before any later test command, and no test command after it.
+        Checked against eleven synthetic traces and the 78 recorded tdd
+        traces: every modern run passes; the fails are the fifteen
+        empty traces plus the four 2026-10-13 runs that predate phase B,
+        three of which ended red ("green again" narrated without a run,
+        the miss B fixed) and one that wrote tests through Bash heredocs
+        inside the same command as its test run.
+      - *Taken, `no-criteria-written` (both stop cases):* one or two
+        Given/When/Then criteria without a heading passed; now at most
+        one, quoted as an illustration, and two or more fail with or
+        without a heading.
+      - *Taken in part, the scope-menu grader (both stop cases):* a
+        "rejected alternatives" list beside the recommendation was
+        allowed; now a list of two or more mechanisms fails whether or
+        not one is recommended, and only a contrast inside the
+        recommendation's own sentence passes. `rejudge.py
+        --criteria-from --votes 3` on the six recorded outputs: 17 of 18
+        votes unchanged, one output (naming "a second payment route or a
+        change to how the block is lifted" before recommending one) now
+        fails two votes in three, which the skill's template ("naming
+        two ways the gap could be filled is the menu") says it should.
+      - *Taken, the reference-mock grader:* one brand colour was the
+        whole proof of a matched reference; `mock-carries-reference-
+        typeface` now also requires the stylesheet's serif face
+        ("Source Serif 4" or Georgia) in the mock's markup. The three
+        recorded runs all carry it.
+      - *Taken, the orchestrator's two backward-route sentences:* step 3
+        said "state only the single routed destination and why" while
+        step 5 asked for what the owner produced and the offer to
+        re-inspect; step 3 now lists the same four things.
+      - *The re-run after those fixes (22 stale cases, 66 runs) found two
+        more things.* (a) The tightened scope-menu rubric failed every
+        security stop run because the judge read the "Held until scope
+        is settled" bullets (the route fork "versus" its alternative) as
+        a menu; the rubric now says that list names deferred forks, not
+        gap options. Under that text the six recorded outputs re-judge
+        9/9 on the security side; on the reliability side two outputs
+        that say "a payment route that doesn't depend on Stripe, or a
+        different rule for what a blocked member can do" fail 3/3, which
+        the skill's template ("naming two ways the gap could be filled
+        is the menu") says they should. So the template's "What it
+        forces" line now says the missing capability is named by what it
+        has to achieve, not by the ways it could be built; that edit
+        staled both chains again, re-frozen once more. (b)
+        `orchestrator-route-tech-bootstrap` fell to 0.76 with two runs
+        of three stopping to ask whether the design's "existing port"
+        and `PlaceHold` exist, since the repo is empty apart from
+        `docs/`; the shared cancel-hold plant was written for the
+        library app, where they do. Its scaffold now rewrites those
+        words for the empty repo (new port, new adapter, the design's own
+        constructor convention) and fails loudly if "existing" survives.
+        The other two cases that copy the plant scaffold the app too, so
+        the plant itself is unchanged.
+      - *The second re-freeze surfaced the phase-1
+        `does-not-ask-what-the-code-answers` graders again* (reliability
+        3/3 lost, security 2/3), both explained PASS by the judge:
+        reliability's runs asked who watches the error reporter's alerts
+        (people, not code; the reporter named by path); security's asked
+        how the browser collects the card, which the repository cannot
+        answer because the portal's browser code is not in it, while the
+        rubric's own FAIL example read "do card details reach our
+        server?". Both rubrics now say so, the contradicting example is
+        gone, and each names the people-and-process questions that pass.
+        Re-judged under the new text: reliability 3/3, security 8/9 (the
+        one dissent explained PASS). The tech-bootstrap case went 3/3
+        with the patched plant. Final stale-set run: 13/14 at or above
+        bar, with the security phase-1 case re-run after its rubric fix;
+        one-flip losses on `orchestrator-route-design-system` (log
+        grader) and `reliability-requirements-payfine-phase3`
+        (double-submit criterion), noise, bars left at 1.0.
+      - *Declined, "mock check misses actual file":* the brand regex
+        accepts the plum in any written .html or .css rather than the
+        file the reply names. A regex cannot read the reply's path, and
+        the skill lets the pre-confirmation mock live anywhere; the
+        typeface grader narrows the gap, and a mock styled from a linked
+        stylesheet (the form one screen-design run used) must stay
+        legal.

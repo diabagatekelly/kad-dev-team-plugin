@@ -125,8 +125,9 @@ move the forward position by more than one row.
 
 That "return to step 2" instruction governs your own next invocation once
 the backward step actually completes — it is not something to narrate now.
-When reporting a backward route (step 5), state only the single routed
-destination and why; don't add what re-inspection will find or where the
+When reporting a backward route (step 5), state the single routed
+destination, why it was routed there, what the owner produced, and the
+offer to re-inspect; don't add what re-inspection will find or where the
 forward position might land once it resolves. Describing that round trip is
 the same chaining step 5 already forbids, just spelled backward instead of
 forward.
@@ -383,6 +384,13 @@ Then:
   unit): name what that next step would be and ask whether to continue to
   it now, in this same conversation. If yes, loop back to step 2 for the
   now-current state — don't re-run step 1. If no, stop and wait.
+  After a backward route the next step is always the same one: return to
+  step 2 and re-inspect, now that the owner's revision is in place. Name
+  that and nothing past it — not the row the re-inspection might land on,
+  not the artifacts it might call for, not the stages the unit will pass
+  through again. The report of a backward route is the one routed
+  destination, why it was routed there, what the owner produced, and the
+  offer to re-inspect.
 - **If the current unit just reached the terminal row** (its slice is
   designed, its runtime-safety criteria are filled, its screen is designed
   and its accessibility criteria filled if it's UI-touching, the project
