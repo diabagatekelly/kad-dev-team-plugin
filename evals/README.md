@@ -53,7 +53,10 @@ that is what this design avoids. `tools/pairwise_judge.py` adds what the
 CLI lacks: a blind side-by-side judge that sees the with-plugin and
 no-plugin reviews unlabelled in both orders and records its reasoning in
 `pairwise.json` (the CLI's judges answer PASS/FAIL in one word and keep no
-reasons).
+reasons). The judge itself lives in the plugin
+(`skills/orchestrator/scripts/pairwise_judge.py`, where the orchestrator's
+Combine step runs it on two implementation candidates); this tool imports
+it and adds the review rubric and the results-dir plumbing.
 
 Run it:
 

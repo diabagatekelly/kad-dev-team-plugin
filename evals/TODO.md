@@ -1357,11 +1357,66 @@ first real execution (the hand-off says what to watch).
       a step 2 wording question (the inspection says to take the user's
       word, which the orchestrator can read as an invitation to ask),
       not a quarantine-flow one. Evidence current for all sixteen.
-- [ ] H2. Promote `tools/pairwise_judge.py` to the arbiter inside
+- [x] H2. Promote `tools/pairwise_judge.py` to the arbiter inside
       Combine: blind, both orders, reasons kept, the orchestrator's own
       call made with the judge's verdict in hand rather than instead of
       it. The script lives under `evals/tools/`; like H1, it has to move
       into the plugin to be reachable from the skill.
+      *2026-10-17, branch `plugin-fix-combine-judge`.* The judge now
+      lives at `skills/orchestrator/scripts/pairwise_judge.py`, reached
+      from the skill body as `${CLAUDE_SKILL_DIR}/scripts/pairwise_judge.py`.
+      What it does: takes the two candidate worktrees, the gate's
+      baseline file and the brief (`--task`: the design doc, the slice,
+      each criteria document the candidates were given); computes each
+      candidate's change set exactly as the gate does (it imports the
+      gate's helpers, so the two can never disagree about what a
+      candidate changed), leaves out `--exclude` paths (the candidate's
+      own report: a self-description is not the code) and binary files,
+      sorts lock files last and caps each view at `--max-bytes` so a
+      dependency lock is what gets truncated first (the judge is told
+      what was cut); shows a tool-less `claude -p` judge the brief and
+      both views labelled only "implementation 1/2" (no path, branch,
+      gate verdict or finding), in both presentation orders; keeps each
+      order's reasoning in `.git/kad-pairwise.json` next to the
+      baseline; prints both reasonings and one last line, `pairwise
+      judge: candidate 1 | candidate 2 | tie | split`, exit 2 and `NO
+      VERDICT` when `claude` is missing, times out, answers twice with
+      no verdict, or a change set cannot be computed. The rubric weighs,
+      in order: behaviour against the brief and nothing the brief did
+      not ask for; tests that exercise the criteria through the public
+      interface and could fail; module boundaries and dependency
+      direction as the brief states them; clarity, not brevity. The
+      judge runs even when a candidate failed the gate (what it got
+      right is information; the judge does not know which failed).
+      *Skill text:* Combine is now "judge first, blind; then read; then
+      decide with the verdict in hand". The call follows the verdict in
+      a line or names which of the judge's reasons it sets aside and
+      why; a tie or split leaves the call to the orchestrator with the
+      same obligation; a gate failure outranks the judge; no verdict
+      means one retry, then the call without it, said in the log; the
+      orchestrator may not stage a "blind" comparison of its own in its
+      place. The log template's C line carries the verdict, the reasons
+      path and "follows / departs from the judge: why"; step 5's report
+      names both. `PERSONAS.md` and both READMEs say so.
+      *The eval tool stays:* `evals/tools/pairwise_judge.py` keeps its
+      with/without results-dir mode (G2 needs it) as a wrapper that
+      imports `compare()` from the plugin script and supplies the review
+      rubric; `pairwise.json` keeps its shape (`with_first` /
+      `without_first`, winners by arm).
+      *Proven by running, not by an eval:* on a throwaway Node repo
+      (committed `placeHold`, an uncommitted design doc for `cancelHold`,
+      baseline recorded, two worktrees: one honest implementation with
+      three behaviour tests, one that skips the ownership check, adds an
+      unasked notification and asserts only truthiness) the judge picked
+      the honest candidate in both orders with reasons that named each
+      miss, at $0.04 on Sonnet; the uncommitted design doc appeared in
+      neither view (the baseline excluded it); `--exclude` dropped the
+      report, a binary file was listed but not shown, a 150-byte cap
+      truncated and said so; one candidate, no task, no `--out` without
+      a baseline, `claude` off PATH and an unknown base each failed with
+      their own message and no output file. The eval wrapper ran on a
+      hand-made two-arm results file and wrote the old `pairwise.json`
+      shape. The quarantine flow itself still has no eval case.
 - [ ] H3. Full reviewer pass on the finalized build, not only the
       targeted re-grade of the combine brief's findings.
 - [ ] H4. Diversify the two candidates' inputs (today both get the
