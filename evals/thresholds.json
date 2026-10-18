@@ -866,6 +866,25 @@
       "orchestrator"
     ]
   },
+  "orchestrator-route-implementation-prenamed": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.296",
+    "source": "results/gate-20261018T161403-orchestrator-route-implementation-prenamed.json",
+    "graders": {
+      "log-written": 1.0,
+      "not-tdd-implementation-inline": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-tdd-implementation": 1.0,
+      "stops-after-the-routed-step": 1.0
+    },
+    "skills_invoked": [
+      "map-query",
+      "orchestrator",
+      "tdd-implementation"
+    ]
+  },
   "orchestrator-route-problem-framing": {
     "score": 1.0,
     "runs": 3,
@@ -1126,6 +1145,19 @@
       "reliability-requirements"
     ]
   },
+  "reliability-requirements-payfine-phase2-proceed": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.296",
+    "source": "results/gate-20261018T162629-reliability-requirements-payfine-phase2-proceed.json",
+    "graders": {
+      "does-not-invent-a-scope-gap": 1.0,
+      "no-criteria-before-approval": 1.0,
+      "presents-the-forks-not-a-hand-back": 1.0,
+      "presents-timeout-proposal-as-a-decision": 1.0
+    }
+  },
   "reliability-requirements-payfine-phase2-stop": {
     "score": 0.917,
     "runs": 3,
@@ -1303,6 +1335,25 @@
       "reliability-review"
     ]
   },
+  "reliability-review-portal-pay-pr": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.296",
+    "source": "results/gate-20261018T160908-reliability-review-portal-pay-pr.json",
+    "graders": {
+      "finds-idempotency-key-never-reaches-stripe": 1.0,
+      "finds-timed-out-charge-dropped-unrecorded": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "no-false-alarm-bounded-wait": 1.0,
+      "no-false-alarm-same-answer-for-another-members-fine": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "reliability-review"
+    ]
+  },
   "requirements-refinement-payfine-phase1": {
     "score": 0.867,
     "runs": 3,
@@ -1419,6 +1470,19 @@
       "no-criteria-before-approval": 1.0,
       "no-false-alarm-publishable-key": 1.0,
       "presents-shared-route-as-a-decision": 1.0
+    }
+  },
+  "security-requirements-payfine-phase2-proceed": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.296",
+    "source": "results/gate-20261018T160908-security-requirements-payfine-phase2-proceed.json",
+    "graders": {
+      "no-criteria-before-approval": 1.0,
+      "obligation-placed-without-stopping": 1.0,
+      "presents-shared-route-as-a-decision": 1.0,
+      "presents-the-forks-not-a-hand-back": 1.0
     }
   },
   "security-requirements-payfine-phase2-stop": {

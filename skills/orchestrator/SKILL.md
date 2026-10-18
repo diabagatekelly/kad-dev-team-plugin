@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Route a problem to whichever kad-dev-team persona/skill applies next, by inspecting what already exists (problem doc, scope map, requirements, slices) rather than the user having to name the right persona each time. Use when the user wants to move a problem forward and hasn't said which persona/skill to use, or says "what's next" / "keep going" on a problem already in progress.
+description: Route a problem to whichever kad-dev-team persona/skill applies next, by inspecting what already exists (problem doc, scope map, requirements, slices) rather than the user having to name the right persona each time. Use when the user wants to move a problem forward and hasn't said which persona/skill to use, or says "what's next" / "keep going" on a problem already in progress — including when they guess at the next stage in passing or conditionally ("if the next step is the implementation, go ahead", "probably the security pass next"). A stage guessed at is not a skill named, and the implementation stage in particular reaches tdd-implementation only through this skill's sandbox check and quarantine flow, never by invoking it directly.
 ---
 
 # Orchestrator
@@ -21,7 +21,13 @@ real async `Agent` calls, the only place in this skill that does.
 **Skip this skill** when the user already named what they want directly
 ("write an ADR for X," "audit the docs for staleness") — routing only
 earns its keep when the user hasn't said which persona/skill applies and
-you'd otherwise have to guess or ask them to pick.
+you'd otherwise have to guess or ask them to pick. A stage the user
+guesses at while asking to move forward ("if the next step is the
+implementation and its quarantine flow, go ahead") is not that: they
+named what they expect, not a skill, and the routing table decides. This
+matters most for implementation, which `tdd-implementation` invoked
+directly would do inline in the real tree with no sandbox check and no
+quarantine.
 
 **Stay inside your lane while inspecting.** Every read you do — in step 2,
 and while running the routed skill in step 4 — is confined to (a) what

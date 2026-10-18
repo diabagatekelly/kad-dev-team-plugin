@@ -25,15 +25,15 @@ graders:
 
       FAIL if it stops with a hand-back (a "Handed back to product-slicer" or "blocking" report, or words to that effect), or says the criteria cannot be finished until scope changes (a second payment route, a way to clear fines without Stripe, or the like).
   - type: llm
-    name: outage-is-a-failure-mode-not-a-gap
+    name: does-not-invent-a-scope-gap
     focus: last_message
     weight: 1
     criteria: |
-      The user's answer names a real failure mode, the payment provider being down for most of a day, and says how it is handled outside the application: the desk takes payment by phone. The right handling treats the outage as a failure mode this slice's criteria will specify (the member learns that card payment is unavailable rather than seeing a decline, and can pay at the desk or by phone; a provider fault is told apart from a decline and is visible to the developer), or notes the desk's phone path as the fallback outside the slice.
+      The user's answer names a day-long provider outage and says the desk takes payment by phone for a member who can't wait. That is a failure mode with a fallback outside the slice, not a scope gap.
 
-      PASS if the response treats the outage that way, as a failure mode to specify or a fallback already provided outside the slice, in a fork, an assumption or a line about what will be written. Saying the portal degrades to "pay at the desk" during an outage passes.
+      FAIL only if the response says the slice cannot meet its target without a capability nobody scoped, or says this slice itself must gain a second way to pay or to clear a fine (a second processor, phone payment through the portal, lifting a borrowing block) before the criteria can be written.
 
-      FAIL if it says the slice cannot meet its target without a capability nobody scoped, proposes that the slice itself needs a second way to pay or to clear a fine, or says nothing at all about the outage.
+      Everything else passes: naming the phone fallback; specifying what the member is told during an outage; folding the outage into the timeout fork; rejecting a new capability as out of scope; or not mentioning the outage at all, since the forks turn need not list every failure mode (the document does).
   - type: llm
     name: presents-timeout-proposal-as-a-decision
     focus: last_message

@@ -61,6 +61,13 @@ for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/cod
   cp -R "$tdd"/. "$dir"/
   cp -R "$overlay"/. "$dir"/
   (cd "$dir" && "$out/deps/node_modules/.bin/tsc" -p tsconfig.json --noEmit --typeRoots "$out/deps/node_modules/@types")
+  if [ "$(basename "$overlay")" = days-left ]; then
+    # Its test builds `Loan` objects, and lending/loan.ts is the planted
+    # runtime cycle (V2) that check 2 proves cannot load; the case reads the
+    # test, nothing runs it.
+    echo "ok: days-left: type-checks (its test needs lending/loan, the planted runtime cycle, so it cannot run)"
+    continue
+  fi
   (cd "$dir" && node --experimental-transform-types --no-warnings --import ./test/ts-resolve.mjs --test test/*.test.ts >"$dir.log" 2>&1) \
     || { echo "FAIL: tests in overlay $(basename "$overlay")"; cat "$dir.log"; exit 1; }
   echo "ok: $(basename "$overlay"): $(grep -m1 '^ℹ pass' "$dir.log")"
