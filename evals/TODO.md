@@ -1875,30 +1875,93 @@ first real execution (the hand-off says what to watch).
       *Run after the round:* sixteen orchestrator cases at three runs,
       16/16 at bar, all sixteen at 1.0 (`results/gate-20261018T001132-*`).
       Evidence recorded for all sixteen.
-      *Second Sourcery review on PR #14, 2026-10-18, seventeen findings,
-      IN PROGRESS when the session's usage limit hit.* The script and the
-      skill text are rewritten for sixteen of them (committed, unproven by
-      an eval run yet): Read rules matched with `*` that never crosses a
-      slash so `/*` does not count as recursive; `--secret` directory
-      intent by a trailing `/` (defaults carry it); exact env exemptions
-      (`CLAUDE_CODE_MESSAGING_TOKEN`, `CLOUDSDK_PROXY_PASSWORD`) and
-      `ACCESS_KEY`/`PRIVATE_KEY` added; three network probes (two IPv4,
-      one IPv6) passing only on ENETUNREACH/EPERM/EACCES, EHOSTUNREACH no
-      longer counts; gitignore `**/` semantics and a wider credential-name
-      and credential-directory list for `.worktreeinclude`; `--write-settings`
-      with no path writes `settings.json` under `CLAUDE_CONFIG_DIR`,
-      through a symlink, keeping the mode, with a private temp name,
-      handling malformed JSON, and when the sandbox refuses the write it
-      prints the intended content for the orchestrator's Write tool (step
-      A says so); FIFOs and devices never opened. Declined, to be written
-      up: "sandbox check goes stale before launch" — the check cannot lock
-      settings, and Claude Code applies the sandbox to each command from
-      the settings at that moment. Unit checks of the pure functions pass
-      on Windows (`scratchpad/unit_sc.py`, 32 cases). **Left to do:** read
-      the WSL proof run's output (it was running: write mode, sandboxed
-      8/8, the Read refusal, the write-refused case, the negative), re-run
-      the sixteen orchestrator cases, record the round finding by finding
-      here, reply to and resolve the seventeen threads on PR #14, push.
+      *Second Sourcery review on PR #14 (2026-10-18), seventeen findings
+      (five Critical, nine High, three Medium): sixteen taken, one
+      declined. The first proof run of the fixes lost every `claude -p`
+      call to the session limit, which is why the branch sat one night
+      with an unproven commit; proven and re-run on 2026-10-18.*
+      - *Taken, "nested secrets pass Read check" and "narrow rules pass
+        directory check" (Critical, High):* the Read-rule matcher is now a
+        glob-to-regex in which `*` and `?` never cross a slash and only
+        `**` does; a directory is covered when the rule reaches both
+        `dir/x` and `dir/x/y/z`, so `Read(~/.ssh/*)` and `Read(~/.ssh)`
+        no longer count and `Read(~/.ssh/**)` or an ancestor's `/**` does.
+      - *Taken, "future directory files remain readable" (High):*
+        directory intent is explicit: a `--secret` that ends in `/` is a
+        directory whether or not it exists yet; the defaults carry the
+        slash; `--write-settings` writes the `/**` rule for them.
+      - *Taken, "readable secrets go undetected" (High):* a directory that
+        will not list is probed by its usual files and by a generic set
+        (`config`, `credentials`, `token`, `key`, `id_rsa`, `.env`, ...)
+        that applies to custom directories too.
+      - *Taken, "copied credentials evade detection" and "root secrets
+        evade recursive include patterns" (Critical, Critical):*
+        `.worktreeinclude` matching follows gitignore (`**/x` at any depth
+        including the root, a slash anchors, no slash matches any
+        component, `x/` copies everything below, `!` copies nothing), and
+        a copied file counts as a credential by name (`.envrc`, `*.ppk`,
+        `*.gpg`, `*.asc`, `.htpasswd`, `id_dsa*`, ... added) or by living
+        under `.ssh`, `.aws`, `.kube`, `.gnupg`, `.docker`, `.azure`,
+        `gcloud` or `gh`.
+      - *Taken, "AWS access key goes undetected" and "credential variables
+        bypass the check" (High, High):* `ACCESS_KEY` and `PRIVATE_KEY`
+        join the name pattern; the exemption is two exact names,
+        `CLAUDE_CODE_MESSAGING_TOKEN` and `CLOUDSDK_PROXY_PASSWORD`, so a
+        `CLAUDE_CODE_GITHUB_TOKEN` fails the check.
+      - *Taken, "network probes falsely pass" (Critical):* three probes
+        (two IPv4, one IPv6), each passing only on ENETUNREACH, EPERM or
+        EACCES; EHOSTUNREACH and EAFNOSUPPORT no longer count on IPv4, and
+        a missing IPv6 stack skips that probe with a note.
+      - *Taken, "settings repair targets wrong file" (High):*
+        `--write-settings` takes no path by default and writes
+        `settings.json` under `CLAUDE_CONFIG_DIR` (or `~/.claude`), the
+        file `settings_files` reads first; step A and the README say so.
+      - *Taken, "sandbox blocks settings repair" (High):* a session whose
+        sandbox is already on cannot write a file outside the project from
+        Bash, so a refused write is caught, reported as `settings not
+        written`, and the complete intended content is printed between
+        marker lines; step A says to write exactly that content to the
+        named path with the Write tool, which runs outside the sandbox,
+        under the yes the user already gave, then re-run the check.
+      - *Taken, symlink, mode, concurrency, malformed settings (Medium,
+        High, High, Medium):* the target is resolved through a symlink;
+        the temporary file is created with the original's mode (0600 for a
+        new file) under a UUID name in the same directory; malformed JSON,
+        a non-object top level and a non-object `sandbox` or `permissions`
+        are reported as `settings not written: ... fix the file by hand`
+        with the checks still run. Taken in part on concurrency: two
+        sessions writing one user settings file at the same instant is
+        the same unsupported shape H2 declined for the baseline.
+      - *Taken, "special files can hang preflight" (Medium):* only
+        regular files are opened, non-blocking; a FIFO, socket or device
+        is never read.
+      - *Declined, "sandbox check goes stale before launch" (Critical):*
+        the check cannot lock the settings between its PASS and the next
+        `Agent` call, and nothing in Claude Code offers a lock. What it
+        can do is already done: the check runs before every launch, and
+        Claude Code applies the sandbox to each command from the settings
+        at that moment, so the fence at execution time is Claude Code's,
+        not the preflight's; the docstring says which is which. The one
+        thing that closes the gap is the block in managed settings, where
+        no session can loosen it, which the README names.
+      Unit checks of the pure functions (`scratchpad/unit_sc.py`, 32
+      cases: the matcher on `/**`, `/*` and bare rules, directory intent,
+      gitignore `**/`, anchored and bare patterns, the credential names,
+      the env names, write-through-symlink, mode kept, idempotence,
+      malformed and null-section settings) pass on Windows and in WSL.
+      *Proven by running, 2026-10-18, in WSL2:* write mode on a scratch
+      file produced the block; a headless sandboxed session ran the
+      script: 8/8 PASS, all three probe addresses "Network is
+      unreachable", the write "Read-only file system"; the Read tool
+      refused on the credentials file; `--write-settings` on a path
+      outside the project inside the sandbox printed `settings not
+      written: ... (Read-only file system)` and the intended content; the
+      negative run failed exactly `shell-secrets` and `read-secrets`.
+      *Run after the second round:* sixteen orchestrator cases at three
+      runs, 16/16 at bar, all sixteen at 1.0
+      (`results/gate-20261018T110737-*`). Evidence recorded for all
+      sixteen. Every thread on PR #14 answered and resolved on the fix
+      commit `2bb8e6d`.
 - [ ] H6. The first real execution of the quarantine flow (added
       2026-10-17). No eval exercises the flow, so H1 to H4 have been
       proven by reading only; this is their real test, and it runs
