@@ -376,15 +376,23 @@ reviewers" — and what you do next depends on which lines failed:
 - `settings`, `shell-secrets` (the "not in denyRead" half) or
   `read-secrets`: the fence is a settings file away. Ask the user once,
   with `AskUserQuestion`, whether to write the block into this session's
-  user settings (`~/.claude/settings.json`); on yes, run the same command
-  with `--write-settings '~/.claude/settings.json'` added. It merges only
-  the sandbox and deny entries it needs, keeps everything else in the
-  file, prints what changed, and runs the checks again in the same call.
-  A `PASS` there is a pass: continue. If the probe lines (`write`,
+  user settings file; on yes, run the same command with `--write-settings`
+  added, no path (the script writes `settings.json` under
+  `CLAUDE_CONFIG_DIR`, or `~/.claude`, the file the session reads). It
+  merges only the sandbox and deny entries it needs, keeps everything else
+  in the file, prints what changed, and runs the checks again in the same
+  call. A `PASS` there is a pass: continue. If the probe lines (`write`,
   `network`, the "readable now" half of `shell-secrets`) still fail after
   the write, the live session predates the setting: report that the user
-  restarts the session and says "what's next" again, and stop. Never
-  write without the question, never into a project's `.claude/`, and the
+  restarts the session and says "what's next" again, and stop. If the
+  script prints `settings not written: the write ... was refused`, the
+  session's sandbox is already on and will not let Bash write a file
+  outside the project; the script then prints the complete intended
+  content between two marker lines. Write exactly that content to the
+  path it names with the `Write` tool, which runs outside the sandbox —
+  the user's yes covered this write — then run the check again without
+  `--write-settings`. Never write without the question, never into a
+  project's `.claude/`, never anything but the printed content, and the
   user settings file is the only target.
 - `platform`: nothing a settings file can fix. Report that the flow runs
   in a WSL2 session (the README's "Running the quarantine flow" section),

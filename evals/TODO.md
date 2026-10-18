@@ -1875,6 +1875,30 @@ first real execution (the hand-off says what to watch).
       *Run after the round:* sixteen orchestrator cases at three runs,
       16/16 at bar, all sixteen at 1.0 (`results/gate-20261018T001132-*`).
       Evidence recorded for all sixteen.
+      *Second Sourcery review on PR #14, 2026-10-18, seventeen findings,
+      IN PROGRESS when the session's usage limit hit.* The script and the
+      skill text are rewritten for sixteen of them (committed, unproven by
+      an eval run yet): Read rules matched with `*` that never crosses a
+      slash so `/*` does not count as recursive; `--secret` directory
+      intent by a trailing `/` (defaults carry it); exact env exemptions
+      (`CLAUDE_CODE_MESSAGING_TOKEN`, `CLOUDSDK_PROXY_PASSWORD`) and
+      `ACCESS_KEY`/`PRIVATE_KEY` added; three network probes (two IPv4,
+      one IPv6) passing only on ENETUNREACH/EPERM/EACCES, EHOSTUNREACH no
+      longer counts; gitignore `**/` semantics and a wider credential-name
+      and credential-directory list for `.worktreeinclude`; `--write-settings`
+      with no path writes `settings.json` under `CLAUDE_CONFIG_DIR`,
+      through a symlink, keeping the mode, with a private temp name,
+      handling malformed JSON, and when the sandbox refuses the write it
+      prints the intended content for the orchestrator's Write tool (step
+      A says so); FIFOs and devices never opened. Declined, to be written
+      up: "sandbox check goes stale before launch" — the check cannot lock
+      settings, and Claude Code applies the sandbox to each command from
+      the settings at that moment. Unit checks of the pure functions pass
+      on Windows (`scratchpad/unit_sc.py`, 32 cases). **Left to do:** read
+      the WSL proof run's output (it was running: write mode, sandboxed
+      8/8, the Read refusal, the write-refused case, the negative), re-run
+      the sixteen orchestrator cases, record the round finding by finding
+      here, reply to and resolve the seventeen threads on PR #14, push.
 - [ ] H6. The first real execution of the quarantine flow (added
       2026-10-17). No eval exercises the flow, so H1 to H4 have been
       proven by reading only; this is their real test, and it runs

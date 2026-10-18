@@ -8,11 +8,11 @@ settings, a plugin-shipped agent's `permissionMode` and `hooks` are ignored,
 and the sandbox covers only what the Bash tool runs (the Read tool reads
 past it). So the orchestrator runs this script inline, from its own Bash
 tool, before every step that launches agents, and refuses to launch when it
-fails. `--write-settings FILE` merges the settings that make it pass into a
-settings file (the session's user settings, `~/.claude/settings.json`),
-keeping everything else in the file; the orchestrator offers that on a
-failed check. The README's "Running the quarantine flow" section shows the
-block it writes.
+fails. `--write-settings [FILE]` merges the settings that make it pass into
+the session's user settings file (`settings.json` under `CLAUDE_CONFIG_DIR`,
+or `~/.claude`; a FILE overrides), keeping everything else in the file; the
+orchestrator offers that on a failed check. The README's "Running the
+quarantine flow" section shows the block it writes.
 
 Because the script itself runs inside the session's Bash sandbox, the
 checks probe the real fence wherever a probe is possible, and read the
@@ -26,31 +26,38 @@ settings files only for what no probe can see:
    this command ran unsandboxed; an unrelated error proves nothing. Also,
    `sandbox.filesystem.allowWrite` names nothing outside the project and
    the temp directory.
-3. network: a direct TCP connection to each of two public addresses fails
-   with "network unreachable" (or "operation not permitted" under
-   Seatbelt): the sandbox leaves no route, and allowed domains go through
-   its proxy. A connection that succeeds, times out or is refused fails
-   the check: a firewall blocking one address is not a sandbox.
+3. network: a direct TCP connection to each of two public IPv4 addresses
+   and one IPv6 address fails with "network unreachable" (or "operation
+   not permitted" under Seatbelt): the sandbox leaves no route, and allowed
+   domains go through its proxy. A connection that succeeds, times out, is
+   refused or fails with "host unreachable" fails the check: a firewall
+   blocking an address is not a sandbox. A machine with no IPv6 stack
+   skips the IPv6 probe.
 4. env: no credential-shaped variable (a name containing SECRET, TOKEN,
-   PASSWORD, CREDENTIAL, API_KEY or ending in _KEY) reaches the shell. The
-   sandbox's `credentials.envVars` can deny or mask them; a candidate's
-   shell inherits whatever is left. Variables the session sets for itself
-   (`CLAUDE_CODE_*`) and the sandbox sets for its proxy (`CLOUDSDK_PROXY_*`)
-   are listed but do not fail the check: the user cannot unset them.
+   PASSWORD, PASSWD, CREDENTIAL, API_KEY, ACCESS_KEY, PRIVATE_KEY, or
+   ending in _KEY) reaches the shell. The sandbox's `credentials.envVars`
+   can deny or mask them; a candidate's shell inherits whatever is left.
+   Exactly two names are exempt because the session sets them itself and
+   the user cannot unset them: `CLAUDE_CODE_MESSAGING_TOKEN` and the
+   sandbox proxy's `CLOUDSDK_PROXY_PASSWORD`.
 5. shell-secrets: every secret path (`~/.ssh`, `~/.aws`, `~/.gnupg`,
    `~/.kube`, `~/.config/gcloud`, `~/.azure`, `~/.config/gh`, `~/.npmrc`,
    `~/.netrc`, `~/.git-credentials`, `~/.pypirc`, `~/.docker/config.json`,
    `~/.terraform.d/credentials.tfrc.json`, the Claude credentials file
    under `~/.claude` and under `CLAUDE_CONFIG_DIR` if set; `--secret` adds
-   more) is named by `sandbox.filesystem.denyRead` (or a deny entry in
+   more, with a trailing `/` for a directory that may not exist yet) is
+   named by `sandbox.filesystem.denyRead` (or a deny entry in
    `sandbox.credentials.files`), present on disk or not, since a login can
    create one later; and each that is present is unreadable from the shell
-   now: a directory can be neither listed nor have its usual files opened.
+   now: a directory can be neither listed nor have its usual files opened,
+   a file cannot be opened. Only regular files are opened, never a FIFO or
+   a device, so the probe cannot hang.
 6. read-secrets: every secret path, present or not, is covered by a
    `Read(...)` rule in `permissions.deny` of the merged settings, because
    the Read tool runs outside the sandbox and a candidate holds it. A
-   directory needs a rule that reaches its files (`Read(~/.ssh/**)`); a
-   rule naming the directory alone does not.
+   directory needs a recursive rule (`Read(~/.ssh/**)`): in the matcher
+   here `*` never crosses a slash, so `Read(~/.ssh/*)` reaches one level
+   and does not count, and a rule naming the directory alone does not.
 7. settings: `sandbox.enabled` true; `allowUnsandboxedCommands` false (a
    retry with `dangerouslyDisableSandbox` is then ignored);
    `failIfUnavailable` true (no sandbox backend means no session, not an
@@ -58,25 +65,42 @@ settings files only for what no probe can see:
    with no sandbox); `autoAllowBashIfSandboxed` not false (an unattended
    agent cannot answer a Bash approval prompt).
 8. worktreeinclude: the project's `.worktreeinclude`, if any, matches no
-   gitignored file with a credential-shaped name (`.env*`, `*.pem`,
-   `*.key`, `*credential*`, `*secret*`, `*token*`, `.npmrc`, `.netrc`, ...),
-   since whatever it matches is copied into every candidate's worktree.
+   gitignored file that looks like a credential: by name (`.env*`,
+   `.envrc`, `*.pem`, `*.key`, `*.ppk`, `*.p12`, `*.pfx`, `*.jks`,
+   `*.keystore`, `*.gpg`, `*.asc`, `*credential*`, `*secret*`, `*token*`,
+   `.npmrc`, `.netrc`, `.pypirc`, `.htpasswd`, `id_rsa*`, `id_dsa*`,
+   `id_ed25519*`, `id_ecdsa*`, `*kubeconfig*`) or by living under a
+   credential directory (`.ssh`, `.aws`, `.kube`, `.gnupg`, `.docker`,
+   `.azure`, `gcloud`, `gh`). Patterns are matched with gitignore's rules
+   (`**/` at any depth including the root, a slash anchors, no slash
+   matches any component). Whatever matches is copied into every
+   candidate's worktree.
 
 Settings are merged the way Claude Code merges its files: user, project,
 local, then managed on top. A `--settings` flag given on the command line
 of the session is not a file and is not visible here; the probes above
 still measure the live sandbox, but the escape hatches in check 7 are only
 as reliable as the files, so start the session without `--settings`, or
-put the block in managed settings where nothing can loosen it.
+put the block in managed settings where nothing can loosen it. Claude Code
+applies the sandbox to each command as it runs, from the settings at that
+moment; this script is the preflight that says whether the next launch is
+fenced, not the fence itself.
+
+`--write-settings` writes through a symlink to its target, keeps the file's
+mode, uses a private temporary name, and when the sandbox itself refuses
+the write (the user settings file is outside the project, so a session
+whose sandbox is already on but incomplete cannot write it from Bash)
+prints the complete intended content between marker lines, for the
+orchestrator to write with its Write tool, which runs outside the sandbox.
 
 One line per check, PASS or FAIL, then information lines (the network
 allowlist, which settings files were read), then `sandbox check: PASS` or
 `FAIL`. Exit 0 on PASS, 1 on FAIL.
 
 Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/sandbox_check.py --project DIR
-           [--secret ~/.config/private-tool ...]
-       python3 -I .../sandbox_check.py --project DIR --write-settings ~/.claude/settings.json
-           [--secret ...]   (writes, prints what changed, then runs the checks)
+           [--secret ~/.config/private-tool/ ...]
+       python3 -I .../sandbox_check.py --project DIR --write-settings [FILE] [--secret ...]
+           (writes, prints what changed, then runs the checks)
 """
 import argparse
 import errno
@@ -85,19 +109,22 @@ import json
 import os
 import re
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
 import uuid
 
+# Directories end with "/": a directory that does not exist yet still gets a
+# recursive rule.
 DEFAULT_SECRETS = [
-    "~/.ssh",
-    "~/.aws",
-    "~/.gnupg",
-    "~/.kube",
-    "~/.config/gcloud",
-    "~/.azure",
-    "~/.config/gh",
+    "~/.ssh/",
+    "~/.aws/",
+    "~/.gnupg/",
+    "~/.kube/",
+    "~/.config/gcloud/",
+    "~/.azure/",
+    "~/.config/gh/",
     "~/.npmrc",
     "~/.netrc",
     "~/.git-credentials",
@@ -107,31 +134,39 @@ DEFAULT_SECRETS = [
     "~/.claude/.credentials.json",
 ]
 
-# Files a secret directory usually holds: opened one by one when the
+# Files a secret directory usually holds, opened one by one when the
 # directory cannot be listed, since a sandbox that denies listing but not
-# traversal would otherwise look closed.
+# traversal would otherwise look closed. GENERIC_FILES are tried in every
+# secret directory, the custom ones included.
 KNOWN_FILES = {
-    "~/.ssh": ["id_rsa", "id_ed25519", "id_ecdsa", "config", "known_hosts"],
-    "~/.aws": ["credentials", "config"],
-    "~/.gnupg": ["pubring.kbx", "trustdb.gpg", "private-keys-v1.d"],
-    "~/.kube": ["config"],
-    "~/.config/gcloud": ["credentials.db", "application_default_credentials.json", "access_tokens.db"],
-    "~/.azure": ["accessTokens.json", "azureProfile.json", "msal_token_cache.json"],
-    "~/.config/gh": ["hosts.yml"],
+    "~/.ssh/": ["id_rsa", "id_ed25519", "id_ecdsa", "id_dsa", "config", "known_hosts", "authorized_keys"],
+    "~/.aws/": ["credentials", "config", "sso"],
+    "~/.gnupg/": ["pubring.kbx", "trustdb.gpg", "private-keys-v1.d", "secring.gpg"],
+    "~/.kube/": ["config"],
+    "~/.config/gcloud/": ["credentials.db", "application_default_credentials.json", "access_tokens.db", "configurations"],
+    "~/.azure/": ["accessTokens.json", "azureProfile.json", "msal_token_cache.json", "msal_token_cache.bin"],
+    "~/.config/gh/": ["hosts.yml", "config.yml"],
 }
+GENERIC_FILES = ["config", "credentials", "credentials.json", "token", "token.json", "key", "key.pem",
+                 "id_rsa", "private.key", "secret", "secrets.json", ".env"]
 
-PROBE_HOSTS = [("1.1.1.1", 443), ("8.8.8.8", 443)]
+PROBE_HOSTS = [("1.1.1.1", 443), ("8.8.8.8", 443), ("2606:4700:4700::1111", 443)]
 
 # errno values the sandbox itself produces. Bubblewrap mounts the host
 # read-only (EROFS) and has no network route (ENETUNREACH); Seatbelt
-# answers EPERM or EACCES to both.
+# answers EPERM or EACCES to both. "Host unreachable" is a firewall or a
+# routing fault and does not count.
 WRITE_DENIED = {errno.EROFS, errno.EACCES, errno.EPERM}
-NET_DENIED = {errno.ENETUNREACH, errno.EHOSTUNREACH, errno.EPERM, errno.EACCES, errno.EAFNOSUPPORT}
+NET_DENIED = {errno.ENETUNREACH, errno.EPERM, errno.EACCES}
 
-ENV_SECRET = re.compile(r"(SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL|API_?KEY|_KEY$)", re.I)
-CREDENTIAL_NAMES = [".env", ".env.*", "*.pem", "*.key", "*.p12", "*.pfx", "*.jks", "*.keystore",
-                    "*credential*", "*secret*", "*token*", ".npmrc", ".netrc", ".pypirc",
-                    "id_rsa*", "id_ed25519*", "id_ecdsa*", "*.kubeconfig", "kubeconfig"]
+ENV_SECRET = re.compile(r"(SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL|API_?KEY|ACCESS_?KEY|PRIVATE_?KEY|_KEY$)", re.I)
+ENV_EXEMPT = {"CLAUDE_CODE_MESSAGING_TOKEN", "CLOUDSDK_PROXY_PASSWORD"}
+
+CREDENTIAL_NAMES = [".env", ".env.*", ".envrc", "*.pem", "*.key", "*.ppk", "*.p12", "*.pfx", "*.jks",
+                    "*.keystore", "*.gpg", "*.asc", "*credential*", "*secret*", "*token*", ".npmrc",
+                    ".netrc", ".pypirc", ".htpasswd", "id_rsa*", "id_dsa*", "id_ed25519*", "id_ecdsa*",
+                    "*kubeconfig*", ".git-credentials"]
+CREDENTIAL_DIRS = {".ssh", ".aws", ".kube", ".gnupg", ".docker", ".azure", "gcloud", "gh"}
 
 REQUIRED_SETTINGS = {
     "enabled": True,
@@ -150,24 +185,34 @@ def config_dir():
     return os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join(os.path.expanduser("~"), ".claude")
 
 
-def expand(pattern):
+def user_settings_path():
+    return os.path.join(config_dir(), "settings.json")
+
+
+def expand(path):
     """A settings path to an absolute path: `~/x`, `//abs/x` or a plain one."""
-    if pattern.startswith("//"):
-        pattern = pattern[1:]
-    return os.path.realpath(os.path.expanduser(pattern))
+    if path.startswith("//"):
+        path = path[1:]
+    return os.path.realpath(os.path.expanduser(path.rstrip("/") or path))
+
+
+def is_dir_secret(spec):
+    """Directory intent: a trailing slash, a known directory, or an
+    existing directory on disk."""
+    return spec.endswith("/") or spec in KNOWN_FILES or os.path.isdir(expand(spec))
 
 
 def secret_list(extra):
-    paths = list(DEFAULT_SECRETS)
+    specs = list(DEFAULT_SECRETS)
     cfg = os.path.join(config_dir(), ".credentials.json")
     if expand(cfg) != expand("~/.claude/.credentials.json"):
-        paths.append(cfg)
-    paths += extra
+        specs.append(cfg)
+    specs += extra
     seen, out = set(), []
-    for p in paths:
-        if expand(p) not in seen:
-            seen.add(expand(p))
-            out.append(p)
+    for s in specs:
+        if expand(s) not in seen:
+            seen.add(expand(s))
+            out.append(s)
     return out
 
 
@@ -176,7 +221,7 @@ def secret_list(extra):
 def settings_files(project):
     """The settings files Claude Code merges, lowest precedence first."""
     files = [
-        os.path.join(config_dir(), "settings.json"),
+        user_settings_path(),
         os.path.join(project, ".claude", "settings.json"),
         os.path.join(project, ".claude", "settings.local.json"),
         "/etc/claude-code/managed-settings.json",
@@ -240,13 +285,44 @@ def prefix_covers(entry, secret):
     return secret == e or secret.startswith(e + os.sep)
 
 
-def read_rule_covers(rule_path, secret, is_dir):
-    """Does a `Read(...)` deny pattern reach this secret (and, for a
-    directory, the files inside it)?"""
-    raw = expand(rule_path)
+def glob_regex(pattern):
+    """A path glob as a regex: `**` crosses slashes, `*` and `?` do not."""
+    out, i = "", 0
+    while i < len(pattern):
+        if pattern.startswith("**", i):
+            out += ".*"
+            i += 2
+        elif pattern[i] == "*":
+            out += "[^/]*"
+            i += 1
+        elif pattern[i] == "?":
+            out += "[^/]"
+            i += 1
+        else:
+            out += re.escape(pattern[i])
+            i += 1
+    return re.compile("^" + out + "$")
+
+
+def rule_path(rule):
+    """A `Read(...)` rule's path made absolute, the glob part untouched."""
+    if rule.startswith("//"):
+        rule = rule[1:]
+    rule = os.path.expanduser(rule)
+    m = re.search(r"[*?\[]", rule)
+    head, tail = (rule[:m.start()], rule[m.start():]) if m else (rule, "")
+    head_dir, head_base = os.path.split(head) if tail else (head, "")
+    base = os.path.realpath(head_dir) if head_dir else ""
+    return (os.path.join(base, head_base) if head_base else base) + tail
+
+
+def read_rule_covers(rule, secret, is_dir):
+    """Does a `Read(...)` deny pattern reach this secret and, for a
+    directory, every file below it?"""
+    rx = glob_regex(rule_path(rule))
     if is_dir:
-        return fnmatch.fnmatch(os.path.join(secret, "x", "y"), raw)
-    return secret == raw or fnmatch.fnmatch(secret, raw)
+        return bool(rx.match(secret + "/x") and rx.match(secret + "/x/y/z"))
+    return bool(rx.match(secret))
 
 
 def read_rules(settings):
@@ -257,50 +333,75 @@ def read_rules(settings):
     return rules
 
 
+def rule_for(spec):
+    return f"Read({spec.rstrip('/')}/**)" if is_dir_secret(spec) else f"Read({spec})"
+
+
 def write_settings(path, secrets):
     """Merge the required block into the settings file at `path`, keeping
-    everything else. Returns the lines describing what changed."""
-    path = os.path.expanduser(path)
+    everything else. Returns (changed lines, error, intended content):
+    on an error nothing was written and the intended content is printed by
+    the caller for the orchestrator to write another way."""
+    path = os.path.realpath(os.path.expanduser(path))
     try:
         with open(path, encoding="utf-8") as fh:
             data = json.load(fh)
+        mode = stat.S_IMODE(os.stat(path).st_mode)
     except FileNotFoundError:
-        data = {}
+        data, mode = {}, 0o600
+    except (OSError, ValueError) as e:
+        return [], f"{path} could not be read as JSON ({e}); fix the file by hand", None
     if not isinstance(data, dict):
-        raise SystemExit(f"FAIL  write-settings: {path} does not hold a JSON object\nsandbox check: FAIL")
+        return [], f"{path} does not hold a JSON object; fix the file by hand", None
+    for key in ("sandbox", "permissions"):
+        if key in data and not isinstance(data[key], dict):
+            return [], f"{path}: {key} is not an object; fix the file by hand", None
     changed = []
     sb = data.setdefault("sandbox", {})
     for key, want in REQUIRED_SETTINGS.items():
         if sb.get(key) != want:
             changed.append(f"sandbox.{key}: {json.dumps(sb.get(key))} -> {json.dumps(want)}")
             sb[key] = want
-    sb.setdefault("network", {}).setdefault("allowedDomains", [])
-    fs = sb.setdefault("filesystem", {})
-    deny = [p for p in fs.get("denyRead", []) if isinstance(p, str)]
+    net = sb.get("network")
+    if not isinstance(net, dict):
+        sb["network"] = net = {}
+    net.setdefault("allowedDomains", [])
+    fs = sb.get("filesystem")
+    if not isinstance(fs, dict):
+        sb["filesystem"] = fs = {}
+    deny = [p for p in (fs.get("denyRead") or []) if isinstance(p, str)]
     for s in secrets:
         if not any(prefix_covers(e, expand(s)) for e in deny):
-            deny.append(s)
-            changed.append(f"sandbox.filesystem.denyRead += {s}")
+            deny.append(s.rstrip("/"))
+            changed.append(f"sandbox.filesystem.denyRead += {s.rstrip('/')}")
     fs["denyRead"] = deny
     perms = data.setdefault("permissions", {})
-    rules = [r for r in perms.get("deny", []) if isinstance(r, str)]
+    rules = [r for r in (perms.get("deny") or []) if isinstance(r, str)]
     existing = read_rules({"permissions": {"deny": rules}})
     for s in secrets:
-        is_dir = s in KNOWN_FILES or os.path.isdir(expand(s))
-        if not any(read_rule_covers(r, expand(s), is_dir) for r in existing):
-            rule = f"Read({s.rstrip('/')}/**)" if is_dir else f"Read({s})"
+        if not any(read_rule_covers(r, expand(s), is_dir_secret(s)) for r in existing):
+            rule = rule_for(s)
             rules.append(rule)
             existing.append(rule[5:-1])
             changed.append(f"permissions.deny += {rule}")
     perms["deny"] = rules
-    if changed:
+    content = json.dumps(data, indent=2) + "\n"
+    if not changed:
+        return [], None, content
+    tmp = os.path.join(os.path.dirname(path) or ".", f".settings-{uuid.uuid4().hex}.kad-tmp")
+    try:
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        tmp = path + ".kad-tmp"
-        with open(tmp, "w", encoding="utf-8") as fh:
-            json.dump(data, fh, indent=2)
-            fh.write("\n")
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(content)
         os.replace(tmp, path)
-    return changed
+    except OSError as e:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        return changed, f"the write to {path} was refused ({e.strerror or e})", content
+    return changed, None, content
 
 
 # ---- checks -----------------------------------------------------------------
@@ -327,14 +428,14 @@ def check_write(project, settings):
         return False, f"the project ({project}) contains the home directory, so a write there proves nothing; run the flow from a project below it"
     probe = os.path.join(h, f".kad-sandbox-probe-{uuid.uuid4().hex}")
     try:
-        with open(probe, "x", encoding="utf-8") as fh:
-            fh.write("probe\n")
+        fd = os.open(probe, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     except OSError as e:
         if e.errno in WRITE_DENIED:
             denied = f"a write outside the project was refused ({e.strerror})"
         else:
             return False, f"the write probe failed for a reason that is not the sandbox ({e.strerror or e}); cannot tell whether writes are fenced"
     else:
+        os.close(fd)
         try:
             os.remove(probe)
         except OSError:
@@ -346,8 +447,7 @@ def check_write(project, settings):
         if not isinstance(entry, str):
             continue
         e = expand(entry)
-        inside = any(e == root or e.startswith(root + os.sep) for root in (project, tmp))
-        if not inside:
+        if not any(e == root or e.startswith(root + os.sep) for root in (project, tmp)):
             outside.append(entry)
     if outside:
         return False, denied + "; but sandbox.filesystem.allowWrite opens paths outside the project and temp: " + ", ".join(outside)
@@ -356,57 +456,79 @@ def check_write(project, settings):
 
 def check_network():
     reasons = []
-    for host in PROBE_HOSTS:
+    for host, port in PROBE_HOSTS:
+        v6 = ":" in host
         try:
-            with socket.create_connection(host, timeout=3):
+            with socket.create_connection((host, port), timeout=3):
                 pass
         except socket.timeout:
-            return False, f"the connection to {host[0]}:{host[1]} timed out: a firewall, not the sandbox, which leaves no route at all"
+            return False, f"the connection to {host}:{port} timed out: a firewall, not the sandbox, which leaves no route at all"
         except OSError as e:
             if e.errno in NET_DENIED:
-                reasons.append(f"{host[0]} {e.strerror}")
+                reasons.append(f"{host} {e.strerror}")
                 continue
-            return False, f"the connection to {host[0]}:{host[1]} failed with {e.strerror or type(e).__name__}, not the sandbox's refusal; cannot tell whether the network is fenced"
+            if v6 and e.errno in (errno.EAFNOSUPPORT, errno.EADDRNOTAVAIL):
+                reasons.append(f"{host} no IPv6 stack, skipped")
+                continue
+            return False, f"the connection to {host}:{port} failed with {e.strerror or type(e).__name__}, not the sandbox's refusal; cannot tell whether the network is fenced"
         else:
-            return False, f"a direct connection to {host[0]}:{host[1]} succeeded: the network is open to commands"
+            return False, f"a direct connection to {host}:{port} succeeded: the network is open to commands"
     return True, "no direct route (" + "; ".join(reasons) + ")"
 
 
 def check_env():
     names = sorted(n for n in os.environ if ENV_SECRET.search(n))
-    own = [n for n in names if n.startswith(("CLAUDE_CODE_", "CLOUDSDK_PROXY_"))]
-    names = [n for n in names if n not in own]
-    note = ("; set by the session or its sandbox, exempt: " + ", ".join(own)) if own else ""
+    exempt = [n for n in names if n in ENV_EXEMPT]
+    names = [n for n in names if n not in ENV_EXEMPT]
+    note = ("; set by the session or its sandbox, exempt: " + ", ".join(exempt)) if exempt else ""
     if names:
         return False, "credential-shaped variables reach the shell: " + ", ".join(names) + " (unset them, or deny them in sandbox.credentials.envVars)" + note
     return True, "no credential-shaped variable in the environment" + note
 
 
+def opens(path):
+    """Can a regular file be opened and read? Never blocks: FIFOs, sockets
+    and devices are not opened."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return False
+    if not stat.S_ISREG(st.st_mode):
+        return False
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+    except OSError:
+        return False
+    try:
+        os.read(fd, 1)
+        return True
+    except OSError:
+        return False
+    finally:
+        os.close(fd)
+
+
 def readable(path, known):
     """Can the shell read this path? A directory counts as readable when it
     lists, or when any of its usual files opens."""
-    try:
-        if os.path.isdir(path):
+    if os.path.isdir(path):
+        try:
             os.listdir(path)
             return True
-        with open(path, "rb") as fh:
-            fh.read(1)
-        return True
-    except OSError:
-        pass
-    if os.path.isdir(path):
+        except OSError:
+            pass
         for name in known:
-            try:
-                child = os.path.join(path, name)
-                if os.path.isdir(child):
+            child = os.path.join(path, name)
+            if os.path.isdir(child):
+                try:
                     os.listdir(child)
-                else:
-                    with open(child, "rb") as fh:
-                        fh.read(1)
+                    return True
+                except OSError:
+                    continue
+            if opens(child):
                 return True
-            except OSError:
-                continue
-    return False
+        return False
+    return opens(path)
 
 
 def check_shell_secrets(secrets, settings):
@@ -415,7 +537,7 @@ def check_shell_secrets(secrets, settings):
     open_ = []
     for s in secrets:
         p = expand(s)
-        if os.path.exists(p) and readable(p, KNOWN_FILES.get(s, [])):
+        if os.path.exists(p) and readable(p, KNOWN_FILES.get(s, []) + GENERIC_FILES):
             open_.append(s)
     problems = []
     if open_:
@@ -432,11 +554,11 @@ def check_read_rules(secrets, settings):
     rules = read_rules(settings)
     uncovered = []
     for s in secrets:
-        is_dir = s in KNOWN_FILES or os.path.isdir(expand(s))
+        is_dir = is_dir_secret(s)
         if not any(read_rule_covers(r, expand(s), is_dir) for r in rules):
-            uncovered.append(s + ("/**" if is_dir else ""))
+            uncovered.append(rule_for(s))
     if uncovered:
-        return False, "no Read(...) deny rule reaches: " + ", ".join(uncovered) + " (permissions.deny)"
+        return False, "no Read(...) deny rule reaches: " + ", ".join(uncovered) + " (permissions.deny; a directory needs the /** form)"
     return True, f"{len(secrets)} paths each covered by a Read(...) deny rule"
 
 
@@ -454,18 +576,32 @@ def check_settings(settings):
 
 
 def gitignore_match(pattern, path):
-    """Roughly gitignore: a pattern with a slash matches the path from the
-    root, one without matches any component or basename; `**` and `*` as
-    fnmatch has them."""
-    pattern = pattern.strip().rstrip("/")
-    if not pattern or pattern.startswith("#"):
-        return False
+    """Gitignore's matching, as far as include patterns need it: `**/x`
+    matches x at any depth including the root; `x/**` everything under x;
+    a pattern with a slash is anchored at the root; one without matches
+    any single component; `*` and `?` stay inside a component."""
+    pattern = pattern.strip()
+    if not pattern or pattern.startswith("#") or pattern.startswith("!"):
+        return False  # a comment, or an exclusion, copies nothing
+    pattern = pattern.rstrip("/")
+    anchored = "/" in pattern
     if pattern.startswith("/"):
         pattern = pattern[1:]
-    if "/" in pattern:
-        return fnmatch.fnmatch(path, pattern) or fnmatch.fnmatch(path, pattern + "/*")
+    if pattern.startswith("**/"):
+        tail = pattern[3:]
+        candidates = [path] + [path.split("/", i)[-1] for i in range(1, path.count("/") + 1)]
+        return any(gitignore_match(tail, c) for c in candidates)
+    if anchored:
+        return bool(glob_regex(pattern).match(path)) or bool(glob_regex(pattern + "/**").match(path))
+    rx = glob_regex(pattern)
+    return any(rx.match(part) for part in path.split("/"))
+
+
+def looks_like_credential(path):
     parts = path.split("/")
-    return any(fnmatch.fnmatch(part, pattern) for part in parts)
+    if any(p in CREDENTIAL_DIRS for p in parts[:-1]):
+        return True
+    return any(fnmatch.fnmatch(parts[-1], n) for n in CREDENTIAL_NAMES)
 
 
 def check_worktreeinclude(project):
@@ -483,7 +619,7 @@ def check_worktreeinclude(project):
         return False, f"cannot list the project's ignored files to see what .worktreeinclude copies: {proc.stderr.strip()}"
     ignored = [l for l in proc.stdout.splitlines() if l]
     copied = [f for f in ignored if any(gitignore_match(p, f) for p in patterns)]
-    secret = [f for f in copied if any(fnmatch.fnmatch(os.path.basename(f), n) for n in CREDENTIAL_NAMES)]
+    secret = [f for f in copied if looks_like_credential(f)]
     if secret:
         return False, ".worktreeinclude copies credential-shaped files into every worktree: " + ", ".join(secret)
     return True, f".worktreeinclude copies {len(copied)} ignored file(s), none credential-shaped"
@@ -493,9 +629,9 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--project", required=True, help="the project root (the real tree, not a worktree)")
     p.add_argument("--secret", action="append", default=[],
-                   help="another path that must be unreadable (repeatable; `~` allowed)")
-    p.add_argument("--write-settings", metavar="FILE",
-                   help="merge the required sandbox and deny settings into this settings file first")
+                   help="another path that must be unreadable (repeatable; `~` allowed; end a directory with `/`)")
+    p.add_argument("--write-settings", nargs="?", const="", metavar="FILE",
+                   help="merge the required sandbox and deny settings into the session's user settings file first (FILE overrides the path)")
     a = p.parse_args()
     project = os.path.realpath(a.project)
     if not os.path.isdir(project):
@@ -503,15 +639,24 @@ def main():
         return 1
     secrets = secret_list(a.secret)
 
-    if a.write_settings:
-        changed = write_settings(a.write_settings, secrets)
-        if changed:
-            print(f"settings written: {os.path.expanduser(a.write_settings)}")
+    if a.write_settings is not None:
+        target = a.write_settings or user_settings_path()
+        changed, error, content = write_settings(target, secrets)
+        shown = os.path.realpath(os.path.expanduser(target))
+        if error and content is None:
+            print(f"settings not written: {error}")
+        elif error:
+            print(f"settings not written: {error}")
+            print(f"--- intended content of {shown}, for the Write tool (it runs outside the sandbox) ---")
+            print(content, end="")
+            print("--- end of intended content ---")
+        elif changed:
+            print(f"settings written: {shown}")
             for c in changed:
                 print("  " + c)
             print("  (a sandbox setting takes effect in the session's next Bash command; if the probes below still fail, restart the session)")
         else:
-            print(f"settings already complete: {os.path.expanduser(a.write_settings)}")
+            print(f"settings already complete: {shown}")
 
     settings, read, broken = load_settings(project)
     results = [

@@ -107,10 +107,14 @@ flow checks the session it is about to run in, before every step that
 launches agents, and refuses to launch when the check fails. You don't
 have to write the settings by hand: on a failed check the orchestrator
 asks once whether to write them into the session's user settings
-(`~/.claude/settings.json`), runs
+(`settings.json` under `CLAUDE_CONFIG_DIR`, or `~/.claude`), runs
 `sandbox_check.py --write-settings` on a yes, and continues if the
-re-check passes. The script merges only what it needs and keeps the rest
-of the file. What it writes:
+re-check passes. The script merges only what it needs, keeps the rest of
+the file and its mode, and writes through a symlink. When the session's
+sandbox is already on but incomplete, Bash cannot write a file outside
+the project, so the script prints the intended content and the
+orchestrator writes it with its Write tool, which runs outside the
+sandbox. What it writes:
 
 ```json
 {
@@ -175,11 +179,15 @@ sandbox), no credential-shaped environment variable may reach the shell
 (Claude Code's own `CLAUDE_CODE_*` are listed and exempt), each
 credential path must be unreadable from the shell if it exists and named
 in `denyRead` whether or not it exists (a login can create one later),
-and each must be covered by a `Read(...)` rule; the settings above it
+and each must be covered by a `Read(...)` rule, recursive for a directory
+(`*` does not cross a slash in the matcher, so `Read(~/.ssh/*)` does not
+count); the settings above it
 reads from the merged settings files, since an escape hatch leaves no
 trace until it is used; and the project's `.worktreeinclude`, which
 copies gitignored files into every worktree, may match no
-credential-shaped file. `--secret <path>` adds a path to the list. The
+credential-shaped file, by name or by living under a credential
+directory, with gitignore's `**/` rules. `--secret <path>` adds a path to
+the list, with a trailing `/` for a directory that may not exist yet. The
 last line is `sandbox check: PASS` or `FAIL`; nothing is launched on
 `FAIL`, and the orchestrator reports what to change rather than working
 around it.
