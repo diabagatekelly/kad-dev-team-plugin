@@ -277,8 +277,10 @@ Skip the question only when the user's own message already named a
 policy by one of these words; a plain "go ahead" names none. Where
 `AskUserQuestion` is not available, ask in text and stop, the way any
 routed skill's question waits for a later turn. The policy chosen opens
-the entry's A line; "not now" stops here and gets its own entry later, as
-below.
+the entry's A line, written when step A runs, the way every sub-entry of
+this row is written as the flow reaches it (the entry itself carries only
+the route and "see sub-entries below" until then); "not now" stops here
+and gets its own entry later, as below.
 
 **Append one entry to `orchestrator-log.md`, in the target directory,
 every time this step runs — as soon as you've routed, before invoking the

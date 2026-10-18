@@ -22,16 +22,17 @@ execution:
   allowed_tools: [Task, Agent, Skill, Read, Grep, Glob, Bash, Write, Edit]
 runs: 3
 graders:
-  # Floor (the contract any variant keeps; a miss is a defect): report-written,
-  # agent-delegated-display, lite-skill-in-trace, not-heavy-skill,
-  # runs-the-tests, last-test-run-green, a-green-run-happened,
+  # Floor (what the lite skill tells the model; a miss is a defect):
+  # report-written, agent-delegated-display, lite-skill-in-trace,
+  # not-heavy-skill, runs-the-tests, queue-test-before-queue-code and
+  # use-case-test-before-use-case (lite says test-first; only the how is
+  # left to the model), last-test-run-green, a-green-run-happened,
   # design-doc-unchanged, stays-inside-the-slice, no-bash-writes,
   # map-query-before-implementation, escalates-queue-question,
   # no-queue-behaviour-built, decides-reason-wording-visibly,
   # inside-the-design-boundaries, reports-verification, final-review-runs.
   # Measurement (what tdd-implementation prescribes and this skill leaves to
-  # the model; the rate is the finding): queue-test-before-queue-code,
-  # use-case-test-before-use-case, test-run-after-each-test-edit,
+  # the model; the rate is the finding): test-run-after-each-test-edit,
   # red-then-green-seen, can-fail-check-in-trace, green-stays-minimal,
   # tests-check-behaviour, final-run-is-the-whole-suite.
   - type: file_exists

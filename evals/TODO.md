@@ -1140,12 +1140,16 @@ to do next" says where each would start.
       inside tolerance; the other two 1.00). The lite cases: named-fix
       1.00 (15/15 in every run); cancel-hold 0.92 and the via-agent twin
       0.91, every floor grader 3/3 in both, the score lost entirely to
-      the measurement graders. What the model did unprompted, read from
-      the traces (`seq.py` in the session's scratch, the edit/run/skill
-      sequence per run): every lite run invoked the skill first, consulted
-      `map-query`, wrote the test file before any code (8 of 9 runs saw
-      it fail before the code existed; the ninth wrote test and code
-      together), ran the real runner, finished on the whole suite green,
+      the measurement graders. What the model did, read from the traces
+      (`seq.py` in the session's scratch, the edit/run/skill sequence per
+      run), with the one thing lite does tell it about the loop said
+      first: told to build test-first and run for real, every lite run
+      invoked the skill first, consulted `map-query`, wrote the test file
+      before any code (8 of 9 runs saw it fail before the code existed;
+      the ninth wrote test and code together; test-first is in the lite
+      text, so the two test-before-code graders are floor, not
+      measurement, as Sourcery pointed out), and then, unprompted,
+      ran the real runner, finished on the whole suite green,
       kept GREEN to the design, tested behaviour through the public
       interface, escalated the queue question to `acceptance-criteria`
       and `architecture-design`, decided the wording visibly, and ran the
@@ -1241,6 +1245,67 @@ to do next" says where each would start.
       recorded from this run; evidence current for every case the branch
       reaches. Over three runs of three, the lite per-test cycle is 0/9
       and the can-it-fail check 1/9: the finding is stable.
+      *Sourcery on PR #17, thirteen findings, nine taken, one in part,
+      three declined:*
+      - *Taken, `compare_arms.py` (two High, five Medium):* a result file
+        is data and chose what ran and what was read — the case
+        directory now has to be `evals/<name>/` in this repository and a
+        kept run a `claude-eval-*` directory under the temp root the gate
+        used, holding its trace; symlinks are listed as links and never
+        read (the plugin judge's own rule); `--paired` matches run
+        indices and names the unmatched; the record's default name
+        carries a UTC stamp and an existing file is never overwritten;
+        the record is written whole-or-nothing through a temp file and
+        after every judged pair, so an interruption keeps what was
+        judged; and the two results must be two arms of one slice
+        (byte-identical `scaffold.sh`, identical prompts once the lite
+        clause and the case's own name are removed), which the first
+        version did not check and which the test of the check found
+        wanting at once: the report path in each prompt names its case,
+        so the brief now carries `<case>` for both. Re-run on the kept
+        trees, paired: lite 3/3, the same verdict with a neutral brief.
+      - *Taken in part, "the judge can identify each arm":* the brief
+        half, above. The label half declined: the case names key the
+        sides so the winner comes back by name, and the judge's prompt
+        labels them `implementation_1` and `implementation_2`
+        (`pairwise_judge.py`'s template); said so in the tool's docstring.
+      - *Taken, "lite prompts test-first behaviour":* right. Lite says
+        "write the tests first and the code to pass them", so test-first
+        is told, not unprompted; the two test-before-code graders moved
+        from measurement to floor in both cancel-hold lite cases, and
+        the account above, the hand-off and the PR say "told only to
+        build test-first and run for real". What stays unprompted is
+        everything about how.
+      - *Taken, "the policy choice is missing from the log":* the text
+        now says the A line is written when step A runs, as every
+        sub-entry of this row is, and the entry carries only the route
+        until then; the mechanics were already that, the sentence read
+        otherwise.
+      - *Declined, "lite omits architecture constraints":* the three
+        per-change checks (dependency direction, plain data across a
+        boundary, the design's names) are craft the measurement exists
+        to observe; the contract is "the design's boundaries, interface
+        ownership and names are the structure you build inside", which
+        lite keeps, and `inside-the-design-boundaries` held 9/9 with the
+        Grade step's `architecture-review` behind it in real use.
+      - *Declined, "mutation checks accept unrelated failures":* the
+        regexes are the heavy cases' own, the fixture's suite is
+        deterministic, and binding a fail count to an implementation
+        edit from a trace needs a plant (G3 recorded right-reason RED as
+        ungraded for that reason).
+      - *Declined, "floor grader misses can pass the gate":* true of the
+        gate's arithmetic (A5: one flip at three runs is over the
+        tolerance, absorbed by the re-run), and a per-run hard floor
+        would fail the gate on judge noise the suite records honestly
+        (one `escalates-queue-question` vote in nine this round). The
+        label says what a miss means, and reading the misses is what
+        found the two agent-path text fixes; the gate's always-passing
+        rule catches a floor that goes to 0/3.
+      *Re-run after the round (the orchestrator wording and the two
+      case comments):* nineteen cases 19/19 at bar, the seventeen
+      orchestrator cases all at 1.0, lite cancel-hold 0.92 and its
+      via-agent twin 0.92 (the per-test cycle and the can-it-fail check
+      0/6 once more: 0/15 and 1/15 over the five runs of three now).
 - [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
       *Taken against the section 8 list, item by item:*
