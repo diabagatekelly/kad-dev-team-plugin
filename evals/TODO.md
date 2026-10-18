@@ -1789,6 +1789,8 @@ first real execution (the hand-off says what to watch).
       sixteen at 1.0 on the first run
       (`results/gate-20261017T235049-*`). Evidence recorded for all
       sixteen.
+      *Sourcery on PR #13:* the reviewer's guide and no findings; the
+      evidence check green.
 - [ ] H6. The first real execution of the quarantine flow (added
       2026-10-17). No eval exercises the flow, so H1 to H4 have been
       proven by reading only; this is their real test, and it runs
