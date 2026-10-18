@@ -103,28 +103,41 @@ code-writing instances and up to eighteen reviewers that run unattended
 with Bash in hand. A plugin cannot ship the settings that fence them (a
 plugin's settings carry no `sandbox` or `permissions` keys, and a
 plugin-shipped agent's `permissionMode` and `hooks` are ignored), so the
-flow checks the session it is about to run in and refuses to start when
-the check fails. Put this in the user settings of the session that runs
-the flow (`~/.claude/settings.json`), not in a project's `.claude/`:
+flow checks the session it is about to run in, before every step that
+launches agents, and refuses to launch when the check fails. You don't
+have to write the settings by hand: on a failed check the orchestrator
+asks once whether to write them into the session's user settings
+(`settings.json` under `CLAUDE_CONFIG_DIR`, or `~/.claude`), runs
+`sandbox_check.py --write-settings` on a yes, and continues if the
+re-check passes. The script merges only what it needs, keeps the rest of
+the file and its mode, and writes through a symlink. When the session's
+sandbox is already on but incomplete, Bash cannot write a file outside
+the project, so the script prints the intended content and the
+orchestrator writes it with its Write tool, which runs outside the
+sandbox. What it writes:
 
 ```json
 {
   "sandbox": {
     "enabled": true,
-    "failIfUnavailable": true,
     "allowUnsandboxedCommands": false,
+    "failIfUnavailable": true,
     "excludedCommands": [],
     "autoAllowBashIfSandboxed": true,
     "network": { "allowedDomains": [] },
     "filesystem": {
-      "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "~/.config/gh", "~/.npmrc", "~/.netrc",
-                   "~/.git-credentials", "~/.docker/config.json", "~/.claude/.credentials.json"]
+      "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "~/.kube", "~/.config/gcloud", "~/.azure",
+                   "~/.config/gh", "~/.npmrc", "~/.netrc", "~/.git-credentials", "~/.pypirc",
+                   "~/.docker/config.json", "~/.terraform.d/credentials.tfrc.json",
+                   "~/.claude/.credentials.json"]
     }
   },
   "permissions": {
-    "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.gnupg/**)", "Read(~/.config/gh/**)",
-             "Read(~/.npmrc)", "Read(~/.netrc)", "Read(~/.git-credentials)",
-             "Read(~/.docker/config.json)", "Read(~/.claude/.credentials.json)"]
+    "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.gnupg/**)", "Read(~/.kube/**)",
+             "Read(~/.config/gcloud/**)", "Read(~/.azure/**)", "Read(~/.config/gh/**)",
+             "Read(~/.npmrc)", "Read(~/.netrc)", "Read(~/.git-credentials)", "Read(~/.pypirc)",
+             "Read(~/.docker/config.json)", "Read(~/.terraform.d/credentials.tfrc.json)",
+             "Read(~/.claude/.credentials.json)"]
   }
 }
 ```
@@ -135,29 +148,49 @@ project and the temp directory, network only through its proxy to
 `allowedDomains` — but lets a command read the whole machine unless
 `denyRead` names the path; the `permissions.deny` rules repeat the list
 for the Read tool, which runs outside the sandbox and which every
-`tdd-implementation` instance holds; `allowUnsandboxedCommands: false`
-makes a retry with `dangerouslyDisableSandbox` a no-op;
-`failIfUnavailable: true` makes a session with no sandbox backend refuse
-to start instead of running every command unsandboxed; an empty
-`excludedCommands` leaves no command outside the sandbox. Don't deny
-`~/.claude` wholesale: the plugin's own scripts live under
+`tdd-implementation` instance holds (a directory needs the `/**` form, or
+the rule covers the directory and not its files);
+`allowUnsandboxedCommands: false` makes a retry with
+`dangerouslyDisableSandbox` a no-op; `failIfUnavailable: true` makes a
+session with no sandbox backend refuse to start instead of running every
+command unsandboxed; an empty `excludedCommands` leaves no command
+outside the sandbox; `autoAllowBashIfSandboxed` lets sandboxed commands
+run without an approval prompt no unattended agent could answer. Don't
+deny `~/.claude` wholesale: the plugin's own scripts live under
 `~/.claude/plugins/`. `allowedDomains` is the project's call (a test run
 that needs a registry names it); the orchestrator records the list in
 the log. On native Windows there is no sandbox at all — Claude Code runs
-commands unsandboxed — so the flow runs in a WSL2 session there.
+commands unsandboxed — so the flow runs in a WSL2 session there, and a
+settings file is the one thing the script cannot write for you: start
+Claude inside Ubuntu, from the project, and say "what's next". The
+settings live in that session's user file; a `--settings` flag on the
+session's command line is not a file and the check cannot see it, so
+start the session without one, or put the block in managed settings,
+where nothing can loosen it.
 
 `skills/orchestrator/scripts/sandbox_check.py --project <root>` is what
-the orchestrator runs, inline, before anything is launched (and again
-before the finalize instance writes into the real tree). Because it runs
-inside the session's own Bash sandbox, it probes the fence instead of
-trusting the file: a write to the home directory must be refused, a
-direct TCP connection out must fail, each credential path that exists
-must be unreadable from the shell and covered by a `Read(...)` deny rule;
-the four settings above it reads from the merged settings files, since an
-escape hatch leaves no trace until it is used. `--secret <path>` adds a
-path to the list. The last line is `sandbox check: PASS` or `FAIL`; the
-flow does not start on `FAIL`, and the orchestrator reports what to
-change rather than working around it.
+the orchestrator runs, inline, before each launch (the candidates, each
+round of reviewers, the finalize instance). Because it runs inside the
+session's own Bash sandbox, it probes the fence instead of trusting the
+file: a write to the home directory must fail with the sandbox's own
+error, a direct TCP connection to each of two public addresses must fail
+with "network unreachable" (a timeout or a refusal is a firewall, not a
+sandbox), no credential-shaped environment variable may reach the shell
+(Claude Code's own `CLAUDE_CODE_*` are listed and exempt), each
+credential path must be unreadable from the shell if it exists and named
+in `denyRead` whether or not it exists (a login can create one later),
+and each must be covered by a `Read(...)` rule, recursive for a directory
+(`*` does not cross a slash in the matcher, so `Read(~/.ssh/*)` does not
+count); the settings above it
+reads from the merged settings files, since an escape hatch leaves no
+trace until it is used; and the project's `.worktreeinclude`, which
+copies gitignored files into every worktree, may match no
+credential-shaped file, by name or by living under a credential
+directory, with gitignore's `**/` rules. `--secret <path>` adds a path to
+the list, with a trailing `/` for a directory that may not exist yet. The
+last line is `sandbox check: PASS` or `FAIL`; nothing is launched on
+`FAIL`, and the orchestrator reports what to change rather than working
+around it.
 
 ## Installing for real (once pushed to a repo)
 

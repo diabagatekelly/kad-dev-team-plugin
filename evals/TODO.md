@@ -1789,8 +1789,179 @@ first real execution (the hand-off says what to watch).
       sixteen at 1.0 on the first run
       (`results/gate-20261017T235049-*`). Evidence recorded for all
       sixteen.
-      *Sourcery on PR #13:* the reviewer's guide and no findings; the
-      evidence check green.
+      *Sourcery on PR #13:* the reviewer's guide came first and the
+      review with sixteen findings (four Critical, ten High, one Medium,
+      one Low) minutes after the user had merged on the guide alone, so
+      the round is PR #14, branch `plugin-fix-sandbox-review`. Eleven taken, three
+      in part, two declined; and one thing the user asked for in the same
+      breath, that the setup be wired in so it works without hand-editing
+      a settings file:
+      - *Taken, the user's ask:* `--write-settings FILE` merges the
+        required sandbox and deny entries into a settings file (the
+        session's `~/.claude/settings.json`), keeps everything else, prints
+        each change, and runs the checks again in the same call. Step A
+        says: on a `FAIL` of the settings-shaped lines, ask the user once
+        with `AskUserQuestion`, run with `--write-settings` on yes, continue
+        on `PASS`; if the probe lines still fail, the live session predates
+        the setting, so report a restart and stop. Never without the
+        question, never into a project's `.claude/`.
+      - *Taken, "agents run after sandbox changes" (Critical):* the check
+        runs before every launch — A, B's reviewers, D, E's reviewers — and
+        a later `FAIL` ends the procedure like a second gate failure, with
+        no settings written after A. The B and E template lines carry it.
+      - *Taken, "new credentials escape the preflight" (Critical):* every
+        secret path, present or not, must be in `denyRead` and covered by a
+        `Read(...)` rule; the shell probe still runs on the present ones.
+      - *Taken, "secrets enter candidate worktrees" (Critical):*
+        `.worktreeinclude` patterns are now matched, gitignore-style,
+        against `git ls-files -oi --exclude-standard`, and the check fails
+        on any copied file with a credential-shaped name (`.env*`, `*.pem`,
+        `*.key`, `*credential*`, `*secret*`, `*token*`, `.npmrc`, ...).
+        Proven: a scratch repo with an ignored `.env` and a
+        `.worktreeinclude` naming it fails with the file named.
+      - *Taken, env (High):* a new `env` check fails on credential-shaped
+        variable names reaching the shell (SECRET, TOKEN, PASSWORD,
+        CREDENTIAL, API_KEY, `_KEY`), names only. Found on the way: the
+        session sets `CLAUDE_CODE_MESSAGING_TOKEN` and the sandbox sets
+        `CLOUDSDK_PROXY_PASSWORD` for its proxy, neither of which the user
+        can unset, so those two families are listed and exempt.
+      - *Taken, the default list (High) and `CLAUDE_CONFIG_DIR` (High):*
+        `~/.kube`, `~/.config/gcloud`, `~/.azure`, `~/.pypirc` and
+        `~/.terraform.d/credentials.tfrc.json` added; the credentials file
+        under `CLAUDE_CONFIG_DIR` is on the list when that is set.
+      - *Taken, directory rules (High):* a directory secret needs a rule
+        that reaches its files (`Read(~/.ssh/**)`), tested by matching a
+        deep child path; `Read(~/.ssh)` alone no longer counts.
+      - *Taken, `allowWrite` (High):* an `allowWrite` entry outside the
+        project and the temp directory fails the write check.
+      - *Taken, the three probe-error findings (High):* the write probe uses
+        a fresh UUID name and passes only on the sandbox's own errno (EROFS,
+        EACCES, EPERM); any other error fails as "cannot tell"; the network
+        probe tries two addresses and passes only on ENETUNREACH-class
+        errors; a timeout or a refusal fails as a firewall, not a sandbox.
+      - *Taken, directory readability (High):* a directory that will not
+        list is also probed by opening its usual files (`id_rsa`,
+        `credentials`, `config`, ...), so denied listing with allowed
+        traversal still reads as readable.
+      - *Taken, `autoAllowBashIfSandboxed` (Medium):* checked; absent
+        counts as the default, true. Written by `--write-settings`.
+      - *Taken, the D line's allowlist (Low).*
+      - *Taken in part, "active settings bypass preflight" (Critical):* a
+        `--settings` flag on the session's command line is not a file, and
+        nothing exposes the effective settings to a script; the probes
+        measure the live sandbox regardless, and the four escape-hatch
+        keys are the only readings that trust the files. The docstring and
+        README say so and say to start the session without `--settings` or
+        put the block in managed settings, where nothing can loosen it.
+      - *Taken in part, "project path enables shell injection" (High):* the
+        command is text the orchestrator writes, so there is no encoded
+        argument to pass; the quoting rule in step B now says a path that
+        itself contains a single quote is written with `'\''`, the
+        shell's own spelling, which closes the hole the finding describes.
+      - *Declined, nothing:* every finding reached the script or the text.
+      *Not done, deliberately:* no probe of the effective settings from
+      inside the session (none exists), and no second mechanism for the
+      Read tool (a PreToolUse hook) — the deny rules are what the docs
+      offer, and H6 is where to learn whether more is needed.
+      *Proven again by running:* in WSL2, write mode on a file holding
+      `{"theme": "dark", "sandbox": {"excludedCommands": ["docker"]}}`
+      produced the README block around the theme and cleared the excluded
+      list, printing each change; a headless sandboxed session then ran the
+      script: 8/8 PASS (both probe addresses "Network is unreachable", the
+      write "Read-only file system", fourteen paths denied, one present and
+      unreadable); the Read tool refused on the credentials file; the
+      negative run with the credentials entries removed failed exactly
+      `shell-secrets` and `read-secrets`.
+      *Run after the round:* sixteen orchestrator cases at three runs,
+      16/16 at bar, all sixteen at 1.0 (`results/gate-20261018T001132-*`).
+      Evidence recorded for all sixteen.
+      *Second Sourcery review on PR #14 (2026-10-18), seventeen findings
+      (five Critical, nine High, three Medium): sixteen taken, one
+      declined. The first proof run of the fixes lost every `claude -p`
+      call to the session limit, which is why the branch sat one night
+      with an unproven commit; proven and re-run on 2026-10-18.*
+      - *Taken, "nested secrets pass Read check" and "narrow rules pass
+        directory check" (Critical, High):* the Read-rule matcher is now a
+        glob-to-regex in which `*` and `?` never cross a slash and only
+        `**` does; a directory is covered when the rule reaches both
+        `dir/x` and `dir/x/y/z`, so `Read(~/.ssh/*)` and `Read(~/.ssh)`
+        no longer count and `Read(~/.ssh/**)` or an ancestor's `/**` does.
+      - *Taken, "future directory files remain readable" (High):*
+        directory intent is explicit: a `--secret` that ends in `/` is a
+        directory whether or not it exists yet; the defaults carry the
+        slash; `--write-settings` writes the `/**` rule for them.
+      - *Taken, "readable secrets go undetected" (High):* a directory that
+        will not list is probed by its usual files and by a generic set
+        (`config`, `credentials`, `token`, `key`, `id_rsa`, `.env`, ...)
+        that applies to custom directories too.
+      - *Taken, "copied credentials evade detection" and "root secrets
+        evade recursive include patterns" (Critical, Critical):*
+        `.worktreeinclude` matching follows gitignore (`**/x` at any depth
+        including the root, a slash anchors, no slash matches any
+        component, `x/` copies everything below, `!` copies nothing), and
+        a copied file counts as a credential by name (`.envrc`, `*.ppk`,
+        `*.gpg`, `*.asc`, `.htpasswd`, `id_dsa*`, ... added) or by living
+        under `.ssh`, `.aws`, `.kube`, `.gnupg`, `.docker`, `.azure`,
+        `gcloud` or `gh`.
+      - *Taken, "AWS access key goes undetected" and "credential variables
+        bypass the check" (High, High):* `ACCESS_KEY` and `PRIVATE_KEY`
+        join the name pattern; the exemption is two exact names,
+        `CLAUDE_CODE_MESSAGING_TOKEN` and `CLOUDSDK_PROXY_PASSWORD`, so a
+        `CLAUDE_CODE_GITHUB_TOKEN` fails the check.
+      - *Taken, "network probes falsely pass" (Critical):* three probes
+        (two IPv4, one IPv6), each passing only on ENETUNREACH, EPERM or
+        EACCES; EHOSTUNREACH and EAFNOSUPPORT no longer count on IPv4, and
+        a missing IPv6 stack skips that probe with a note.
+      - *Taken, "settings repair targets wrong file" (High):*
+        `--write-settings` takes no path by default and writes
+        `settings.json` under `CLAUDE_CONFIG_DIR` (or `~/.claude`), the
+        file `settings_files` reads first; step A and the README say so.
+      - *Taken, "sandbox blocks settings repair" (High):* a session whose
+        sandbox is already on cannot write a file outside the project from
+        Bash, so a refused write is caught, reported as `settings not
+        written`, and the complete intended content is printed between
+        marker lines; step A says to write exactly that content to the
+        named path with the Write tool, which runs outside the sandbox,
+        under the yes the user already gave, then re-run the check.
+      - *Taken, symlink, mode, concurrency, malformed settings (Medium,
+        High, High, Medium):* the target is resolved through a symlink;
+        the temporary file is created with the original's mode (0600 for a
+        new file) under a UUID name in the same directory; malformed JSON,
+        a non-object top level and a non-object `sandbox` or `permissions`
+        are reported as `settings not written: ... fix the file by hand`
+        with the checks still run. Taken in part on concurrency: two
+        sessions writing one user settings file at the same instant is
+        the same unsupported shape H2 declined for the baseline.
+      - *Taken, "special files can hang preflight" (Medium):* only
+        regular files are opened, non-blocking; a FIFO, socket or device
+        is never read.
+      - *Declined, "sandbox check goes stale before launch" (Critical):*
+        the check cannot lock the settings between its PASS and the next
+        `Agent` call, and nothing in Claude Code offers a lock. What it
+        can do is already done: the check runs before every launch, and
+        Claude Code applies the sandbox to each command from the settings
+        at that moment, so the fence at execution time is Claude Code's,
+        not the preflight's; the docstring says which is which. The one
+        thing that closes the gap is the block in managed settings, where
+        no session can loosen it, which the README names.
+      Unit checks of the pure functions (`scratchpad/unit_sc.py`, 32
+      cases: the matcher on `/**`, `/*` and bare rules, directory intent,
+      gitignore `**/`, anchored and bare patterns, the credential names,
+      the env names, write-through-symlink, mode kept, idempotence,
+      malformed and null-section settings) pass on Windows and in WSL.
+      *Proven by running, 2026-10-18, in WSL2:* write mode on a scratch
+      file produced the block; a headless sandboxed session ran the
+      script: 8/8 PASS, all three probe addresses "Network is
+      unreachable", the write "Read-only file system"; the Read tool
+      refused on the credentials file; `--write-settings` on a path
+      outside the project inside the sandbox printed `settings not
+      written: ... (Read-only file system)` and the intended content; the
+      negative run failed exactly `shell-secrets` and `read-secrets`.
+      *Run after the second round:* sixteen orchestrator cases at three
+      runs, 16/16 at bar, all sixteen at 1.0
+      (`results/gate-20261018T110737-*`). Evidence recorded for all
+      sixteen. Every thread on PR #14 answered and resolved on the fix
+      commit `2bb8e6d`.
 - [ ] H6. The first real execution of the quarantine flow (added
       2026-10-17). No eval exercises the flow, so H1 to H4 have been
       proven by reading only; this is their real test, and it runs

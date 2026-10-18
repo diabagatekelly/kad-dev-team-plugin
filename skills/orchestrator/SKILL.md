@@ -357,24 +357,69 @@ can fence them: the sandbox that keeps a command off the machine's keys
 and off the network is a setting of the session they run in, which a
 plugin cannot ship. The script runs inside that sandbox itself, so it
 probes the fence rather than trusting a file: a write outside the project
-is refused; no direct network route exists; the machine's credential files
-(`~/.ssh`, `~/.aws`, the list in its docstring) cannot be read from the
-shell and are each covered by a `Read(...)` deny rule, because the Read
-tool runs outside the sandbox and a candidate holds it. From the settings
-it reads the escape hatches no probe can see before they are used: the
-sandbox enabled, `allowUnsandboxedCommands` off, `failIfUnavailable` on,
-no excluded commands. Its last line is `sandbox check: PASS` or `FAIL`,
-with one line per check above it. On `FAIL` the flow does not start:
-nothing is launched — not candidate 1 alone, not "just the reviewers".
-Write this row's entry with the A line carrying the failing checks and no
-worktrees, report in step 5 what has to change (the README's "Running the
-quarantine flow" section has the settings block; on native Windows the
-answer is a WSL2 session, since Claude Code runs every command unsandboxed
-there), and stop. Don't work around it: no `dangerouslyDisableSandbox`, no
-narrowing the secret list, no editing the settings yourself. The fence is
-the user's to set, and the check runs again the next time this row is
-reached. Second, record the validation gate's baseline in the real
-project, once:
+is refused with the sandbox's own error; no direct network route exists;
+no credential-shaped variable reaches the shell; the machine's credential
+files and directories (`~/.ssh`, `~/.aws`, the list in its docstring)
+cannot be read from the shell and are each named in the sandbox's deny
+list and covered by a `Read(...)` deny rule, present on disk or not,
+because the Read tool runs outside the sandbox and a candidate holds it.
+From the settings it reads the escape hatches no probe can see before
+they are used: the sandbox enabled, `allowUnsandboxedCommands` off,
+`failIfUnavailable` on, no excluded commands, Bash auto-allowed when
+sandboxed; and that the project's `.worktreeinclude` copies no credential
+into the worktrees. Its last line is `sandbox check: PASS` or `FAIL`, with
+one line per check above it.
+
+On `FAIL` nothing is launched — not candidate 1 alone, not "just the
+reviewers" — and what you do next depends on which lines failed:
+
+- `settings`, `shell-secrets` (the "not in denyRead" half) or
+  `read-secrets`: the fence is a settings file away. Ask the user once,
+  with `AskUserQuestion`, whether to write the block into this session's
+  user settings file; on yes, run the same command with `--write-settings`
+  added, no path (the script writes `settings.json` under
+  `CLAUDE_CONFIG_DIR`, or `~/.claude`, the file the session reads). It
+  merges only the sandbox and deny entries it needs, keeps everything else
+  in the file, prints what changed, and runs the checks again in the same
+  call. A `PASS` there is a pass: continue. If the probe lines (`write`,
+  `network`, the "readable now" half of `shell-secrets`) still fail after
+  the write, the live session predates the setting: report that the user
+  restarts the session and says "what's next" again, and stop. If the
+  script prints `settings not written: the write ... was refused`, the
+  session's sandbox is already on and will not let Bash write a file
+  outside the project; the script then prints the complete intended
+  content between two marker lines. Write exactly that content to the
+  path it names with the `Write` tool, which runs outside the sandbox —
+  the user's yes covered this write — then run the check again without
+  `--write-settings`. Never write without the question, never into a
+  project's `.claude/`, never anything but the printed content, and the
+  user settings file is the only target.
+- `platform`: nothing a settings file can fix. Report that the flow runs
+  in a WSL2 session (the README's "Running the quarantine flow" section),
+  and stop.
+- `env` or `worktreeinclude`: name the variables or files; unsetting the
+  one and removing the pattern are the user's. Stop.
+- `write` or `network` failing with the settings already in place: the
+  session is not sandboxed or something is open; report the line as
+  printed, and stop.
+
+Write this row's entry with the A line carrying the result (the failing
+checks and, if the settings were written, that they were and what the
+re-check said) and no worktrees; report in step 5; stop. Don't work
+around it: no `dangerouslyDisableSandbox`, no narrowed `--secret` list,
+no settings edit of your own beyond the `--write-settings` call the user
+agreed to.
+
+The check is not once per flow but once per launch: run the same command
+again before Grade's reviewers (B), before the finalize instance (D) and
+before Re-grade's reviewers (E) — a session's sandbox can be switched off
+between steps, and each of those launches agents that nobody watches. A
+`FAIL` at any later step ends the procedure the way a second gate failure
+does: record it on that step's line, skip what remains, and report in
+step 5 that the slice is not implemented and why; no settings are written
+after A, since a fence that was there and is gone is for the user to look
+at. Second, record the validation gate's baseline in the real project,
+once:
 
 ```
 python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --record-baseline '<project root>/.git/kad-gate-baseline.json'
@@ -401,7 +446,9 @@ python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<worktree
 in single quotes, here and in every command of this procedure: a worktree
 path can carry spaces, and a file a project contributor named with `$(`
 or a backtick stays a filename inside single quotes where double quotes
-would run it. Only the skill's own directory stays in double quotes.) It
+would run it; a path that itself contains a single quote is written with
+that quote as `'\''`, the shell's own spelling. Only the skill's own
+directory stays in double quotes.) It
 answers five
 questions no reviewer should spend judgment on: the full suite exits green
 with a clean summary, within the gate's timeout; the candidate changed
@@ -436,9 +483,10 @@ worktree, diffed against the real project's last persisted map. This run
 is throwaway: it never overwrites the persisted map, and it exists only to
 hand that candidate's reviewers a precomputed diff — new/removed edges,
 duplication candidates, wrong-direction candidates — instead of each of
-them re-deriving the graph independently. Then, for each candidate
-independently, run every applicable reviewer in parallel against that
-candidate's own worktree, as real async `Agent` calls:
+them re-deriving the graph independently. Then — the sandbox
+check first, same command as A, its result on the B line — for each
+candidate independently, run every applicable reviewer in parallel
+against that candidate's own worktree, as real async `Agent` calls:
 `tdd-coach:test-quality-review`, `architecture-review`, `code-reviewer`,
 `devsecops-engineer:security-review`, and
 `devsecops-engineer:reliability-review` always apply;
@@ -520,12 +568,9 @@ the evidence the context difference exists to produce; candidate 2's
 having read more is not itself a reason to build from it.
 
 **D. Finalize — a fresh instance, regenerated independently, not layered
-on either candidate.** Run the sandbox check again first, the same command
-as A: this instance writes into the real tree, half an hour or more has
-passed, and a session's sandbox can be switched off in between. A `FAIL`
-here ends the procedure the way a second gate failure below does — record
-it under D, skip E, and report in step 5 that the slice is not implemented
-and why. Then launch a third `tdd-coach:tdd-implementation`
+on either candidate.** Sandbox check first, same command as A, its result
+on the D line: this instance writes into the real tree. Then launch a
+third `tdd-coach:tdd-implementation`
 instance — not either original candidate — with no worktree isolation
 this time, targeting the project's real working tree. Its task is your
 combine brief from step C, plus the slice inputs from step A as candidate
@@ -573,7 +618,8 @@ applies by Grade's rule — the five that always apply, plus
 `accessibility-engineer:accessibility-review` if the slice is UI-touching
 — whether or not Grade got as far as running them (it ran none if both
 candidates failed the gate; the finalized build is reviewed in full
-either way), in parallel as real async `Agent` calls against the real
+either way) — the sandbox check first, same command as A, its result on
+the E line — in parallel as real async `Agent` calls against the real
 working tree (up to six more review agents, after D, not part of Grade's
 count). Hand each the files the build changed, as the gate's `changes`
 line lists them, minus this log and the persisted map: those two are the
@@ -634,11 +680,11 @@ exists to catch:
 ## <n>. <date> — slice ready for implementation
 
 **Routed to:** quarantine flow
-- **A. Quarantine:** sandbox check — `<PASS (<platform>; network allowlist <none | domains>) | FAIL: <failing checks>; flow not started>`; candidate 1 — `<worktree path>` / `<branch>`, slice-only context; candidate 2 — `<worktree path>` / `<branch>`, full-unit context: `<requirements doc path>`; slices `<every path>`; designs `<every path, screen designs included>`
-- **B. Grade:** validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
+- **A. Quarantine:** sandbox check — `<PASS (<platform>; network allowlist <none | domains>) | FAIL: <failing checks>; settings written, re-check <PASS | FAIL: <checks>> | FAIL: <failing checks>; flow not started>`; candidate 1 — `<worktree path>` / `<branch>`, slice-only context; candidate 2 — `<worktree path>` / `<branch>`, full-unit context: `<requirements doc path>`; slices `<every path>`; designs `<every path, screen designs included>`
+- **B. Grade:** sandbox check — `<PASS | FAIL: <failing checks>; procedure ended>`; validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
 - **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<path the script printed>`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; wider read changed — `<what, kept | what, set aside | nothing>`; brief — `<one line>`
-- **D. Finalize:** sandbox check — `<PASS | FAIL: <failing checks>; procedure ended>`; `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
-- **E. Re-grade:** reviewers run on the finalized build — `<list>`; findings — `<Critical/High counts>`; combine-brief findings addressed — `<count>` pass, `<count>` fail; handed back — `<none | <count> Critical/High: gate <PASS | FAIL: <failing checks>>; map re-run; re-review on the fix's files <clean | <what still stands>>; brief re-check <count> pass, <count> fail>`
+- **D. Finalize:** sandbox check — `<PASS (network allowlist <none | domains>) | FAIL: <failing checks>; procedure ended>`; `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
+- **E. Re-grade:** sandbox check — `<PASS | FAIL: <failing checks>; procedure ended>`; reviewers run on the finalized build — `<list>`; findings — `<Critical/High counts>`; combine-brief findings addressed — `<count>` pass, `<count>` fail; handed back — `<none | <count> Critical/High: gate <PASS | FAIL: <failing checks>>; map re-run; re-review on the fix's files <clean | <what still stands>>; brief re-check <count> pass, <count> fail>`
 ```
 
 **5. Report, then ask whether to continue — never chain silently.** State
