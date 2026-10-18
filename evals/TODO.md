@@ -958,12 +958,123 @@ findings first, because their evidence was already in hand; the coverage
 work needed runs of its own). G1 and G2 stay open; the hand-off's "What
 to do next" says where each would start.
 
-- [ ] G1. Harder plants and rejecting answers so scores leave the 1.0
+- [x] G1. Harder plants and rejecting answers so scores leave the 1.0
       ceiling.
       *One harder plant landed with G3's review-mode case: the design
       system's `--muted` value was changed under a document that still
       claims the old contrast figure, so the reviewer has to compute
       rather than trust the text.*
+      *Done 2026-10-18 on branch `eval-g1-harder-plants`, PR #16.* The hand-off's
+      first candidate, a phase-3 answer that overrules a safety
+      recommendation, was already covered: the security chain's phase 3
+      keeps the shared staff route and the reliability chain's keeps
+      "failed, try again" with duplicates refunded by hand. Four new cases
+      for the other three candidates and H6's observation:
+      - *The stop rule tested against its own restraint* (the hand-off's
+        "arguable gap"): `security-requirements-payfine-phase2-proceed` and
+        `reliability-requirements-payfine-phase2-proceed`, each on the same
+        frozen phase-1 history as its phase 2 and stop case, with an answer
+        that reads like the stop case's but carries no gap. Security: the
+        merchant agreement requires that any online charge can be matched
+        to the fine it paid and that disputes are answered within 14 days,
+        which finance does by hand from Stripe's dashboard; the ledger
+        already records the charge id on settlement (`settle(id, chargeId,
+        on)`, migration 0012), so matching is a criterion on the slice's
+        own data and disputes are a process outside it. Reliability: the
+        day-long Stripe outages from the stop case, but a member who can't
+        wait phones the desk and pays over the phone, so the target needs
+        nothing unscoped. Graders: presents the forks, not a hand-back; the
+        obligation or outage placed without stopping; the phase-2 fork
+        grader and `no-criteria-before-approval` reused verbatim. *Runs:*
+        security 3/3 at 1.0 on the first run (every run put matching in the
+        criteria and disputes out of scope, and presented the route fork).
+        Reliability 0.75 on the first run, the outage grader lost 3/3
+        (`rejudge.py --explain` passed two of the three: the judge's own
+        reading of "says nothing at all about the outage" was stricter than
+        the one-word vote, and the third run really did fold the outage
+        into the timeout fork without naming it). That clause was wrong
+        about what a correct forks turn may omit: the skill says the forks
+        response is the forks, and a provider outage with a fallback is a
+        rule application the document covers, not a fork. Reworded as
+        `does-not-invent-a-scope-gap`, two FAIL conditions and a list of
+        what passes (G6's lesson, the short form): 9/9 on the recorded
+        outputs under `--criteria-from`, then 3/3 at 1.0 on the re-run.
+      - *A review plant whose defect only shows across files:*
+        `reliability-review-portal-pay-pr`, overlay
+        `code-plants/reliability-review/portal-pay/` (answer key R14, R15,
+        RT10, RT11; verify.sh loops over it). A PR adds pay-a-fine to the
+        portal: `PayOwnFine` charges with `{ idempotencyKey: fine.id }`, the
+        port's comment promises a repeat is not charged again, the test
+        asserts the key reaches the port; the Stripe adapter puts it in
+        `metadata`, which the overlay's `types/vendor.d.ts` describes as
+        labels Stripe never reads, and never passes the request option that
+        deduplicates. The route answers "Payment failed, please try again"
+        at the use case's 10-second timeout, so the retry double-charges
+        (R14); the charge still in flight at the timeout is abandoned
+        unrecorded (R15). Traps: the bounded wait itself (RT10) and the
+        shared 404 for a missing fine and another member's (RT11, told apart
+        server-side). *Run:* 3/3 at 1.0 on the first run: every run read
+        the use case, the adapter and the vendor types, said the key as sent
+        does not deduplicate, found the abandoned charge, and flagged
+        neither trap. Hard for a human skim; not hard for a reviewer that
+        reads the boundary, which is the behaviour the skill asks for.
+      - *The pre-named stage from H6's second session:*
+        `orchestrator-route-implementation-prenamed`, the cancel-hold
+        scaffold with "if the next step is the implementation and its
+        quarantine flow, go ahead with it", graded for the orchestrator
+        invoked, no direct `tdd-implementation` call, the log entry, and a
+        stop with nothing built. *First run:* 0/3, each run invoking
+        `tdd-implementation` straight away, inline, with no orchestrator,
+        no log and no sandbox check, and stopping only because the session
+        has no shell: H6's miss reproduced exactly. The choice is made from
+        skill descriptions before any body loads, so the fix is in both:
+        the orchestrator's description and its "skip this skill" paragraph
+        now say a stage guessed at in passing or conditionally is not a
+        skill named, and that implementation reaches `tdd-implementation`
+        only through the sandbox check and the quarantine flow;
+        `tdd-implementation`'s description says the same from its side.
+        *After the fix:* 3/3 at 1.0, every run routing through the
+        orchestrator, writing the log, and stopping at the sandbox check
+        (Bash disabled) with no code written; the sixteen other
+        orchestrator cases and the three tdd cases re-ran at three runs,
+        19/19 at 1.0.
+      *On the ceiling:* the four cases sit at 1.0 after one rubric
+      rewording. The two-file plant was found three times in three and
+      the arguable gaps were not stopped on, so Sonnet with the skill is at
+      the bar these cases set, and the headroom G1 was meant to open has
+      not opened; what the round did produce is one real plugin defect
+      found and fixed by a case (the pre-named stage) and the rubric lesson
+      restated. A lite-versus-heavy comparison (G2) should therefore lean
+      on the pairwise judge over bars.
+      *Also:* `verify.sh` had been red since 2026-10-11 on the
+      `code-review/days-left` overlay, whose test builds `Loan` objects from
+      the planted runtime cycle and so cannot run; it now type-checks that
+      overlay and says why it skips its tests. Bars recorded for the four
+      new cases (118 cases with bars), evidence current for every case the
+      branch reaches, every frozen chain current.
+      *Sourcery on PR #16, five findings, two taken, three declined:*
+      - *Declined, "staff and member payments can overlap" (High), "waived
+        fine can still be charged" (Medium):* both review the planted PR as
+        production code. The overlap of `PayOwnFine`, `CollectFine` and a
+        staff waiver on one fine with no atomic claim is RR2's race across
+        two routes; it is not planted, a review that raises it is right,
+        and no grader fails it. Recorded in the answer key's
+        not-false-alarms note for the overlay rather than "fixed" in the
+        code under review.
+      - *Declined, "successful charges remain outstanding" (High):* the
+        late completion is R15, the plant; `ledger.settle` failing after a
+        successful charge is R6 newly routed through. Both in the same note.
+      - *Taken in part, "retries after a day can recharge" (Medium):* the
+        request option covers only Stripe's window (24 hours in the SDK's
+        contract), so a retry on a fine still outstanding a day later can
+        charge again. The grader's PASS already accepted "or otherwise
+        making a repeat attempt safe"; it now also says a review that names
+        the window and asks for the attempt to be recorded is right, and
+        R14's fix column says the same. Not made a requirement: the planted
+        defect is the key sent to the wrong place, and the request option
+        is its fix. Re-run 3/3 at 1.0.
+      - *Taken, "overlay test coverage is overstated" (Low):* verify.sh's
+        header now says the days-left overlay is only type-checked, and why.
 - [ ] G2. A lite variant of `tdd-implementation` as a second plugin dir,
       run through the same cases as a third arm.
 - [x] G3. Coverage items from the audit's section 8 that no case checks

@@ -27,7 +27,7 @@ app/
   Dockerfile, package-lock.json, audit-ci.jsonc   image, lockfile, accepted advisories   SC1, SC2, SC3, SC6, SC7, SC8, SCT1, SCT4, SCT5
   types/          ambient declarations for the fictional third-party packages
 docs-plants/      case-only overlays for docs-writer cases (D, DT)
-code-plants/      case-only overlays for the code personas: tdd/ (an in-place test runner and an approved design), test-quality/ (Q, QT), code-review/ (C, CT), map/ (generated architecture maps)
+code-plants/      case-only overlays for the code personas: tdd/ (an in-place test runner and an approved design), test-quality/ (Q, QT), code-review/ (C, CT), map/ (generated architecture maps), reliability-review/ (R14, R15, RT10, RT11: a PR whose defect only shows across files)
 answer-key.md     every V (planted violation) and T (trap), with the principle each exercises
 verify.sh         type-checks, proves the runtime cycle crashes and the type-only one doesn't, runs test/
 scaffold.sh       copies app/ into an eval run's working directory; each case has a stub that execs it

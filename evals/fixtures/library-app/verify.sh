@@ -7,7 +7,9 @@
 #   4. the clean catalog module loads,
 #   5. the test suite under test/ passes,
 #   6. each case-only code overlay (code-plants/) type-checks on top of the
-#      app, and its tests pass when run in place (`npm test`'s command).
+#      app, and its tests pass when run in place (`npm test`'s command),
+#      except code-review/days-left, whose test needs the planted runtime
+#      cycle and is only type-checked.
 # Run from anywhere: bash evals/fixtures/library-app/verify.sh
 set -euo pipefail
 
@@ -54,13 +56,20 @@ echo "ok: $(grep -m1 '^ℹ pass' "$out/test.log")"
 
 echo "== code overlays type-check and their tests pass"
 tdd="$(cd "$(dirname "${BASH_SOURCE[0]}")/code-plants/tdd" && pwd)"
-for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/*; do
+for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/* "$(dirname "$tdd")"/reliability-review/*; do
   dir="$out/overlay-$(basename "$overlay")"
   mkdir -p "$dir"
   cp -R "$app"/. "$dir"/
   cp -R "$tdd"/. "$dir"/
   cp -R "$overlay"/. "$dir"/
   (cd "$dir" && "$out/deps/node_modules/.bin/tsc" -p tsconfig.json --noEmit --typeRoots "$out/deps/node_modules/@types")
+  if [ "$(basename "$overlay")" = days-left ]; then
+    # Its test builds `Loan` objects, and lending/loan.ts is the planted
+    # runtime cycle (V2) that check 2 proves cannot load; the case reads the
+    # test, nothing runs it.
+    echo "ok: days-left: type-checks (its test needs lending/loan, the planted runtime cycle, so it cannot run)"
+    continue
+  fi
   (cd "$dir" && node --experimental-transform-types --no-warnings --import ./test/ts-resolve.mjs --test test/*.test.ts >"$dir.log" 2>&1) \
     || { echo "FAIL: tests in overlay $(basename "$overlay")"; cat "$dir.log"; exit 1; }
   echo "ok: $(basename "$overlay"): $(grep -m1 '^ℹ pass' "$dir.log")"

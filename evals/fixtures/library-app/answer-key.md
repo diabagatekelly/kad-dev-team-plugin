@@ -142,6 +142,8 @@ rejection terminates the process.
 | R11 | `infra/memory/in-memory-hold-queue.ts` (wired as a singleton in `main/wiring.ts`) | Resource lifecycle; state that must survive | Holds exist only in process memory: every deploy, restart or crash (R1) silently drops every hold, and nothing ever removes one, so the map only grows. | High. Fix: persist holds behind the existing `HoldQueue` port. |
 | R12 | `ops/alerts.yml` `request-errors` | Alert fatigue | Pages on any error event in five minutes; since `respond.ts` reports every refusal (R9), routine validation failures page on-call. | High/Medium. Fix: alert on the rate of unexpected errors against a target; ticket rather than page below it. |
 | R13 | `ops/alerts.yml` `high-cpu` | Actionable alerts | Pages on CPU above 70% with no objective, no user-facing symptom and no runbook: nobody can say what to do when it fires. | Medium. Fix: drop it, or tie it to a symptom and make it a ticket. |
+| R14 | overlay `code-plants/reliability-review/portal-pay/`: `fines/pay-own-fine.ts` + `infra/payments/stripe-fine-payments.ts` + `types/vendor.d.ts` (case `reliability-review-portal-pay-pr`) | A guarantee claimed on one side of a boundary and not delivered on the other (the same thing happens twice) | The defect only shows across files. The use case charges with `{ idempotencyKey: fine.id }` and the port's comment promises a repeat is not charged again; the adapter puts the key into the charge's `metadata`, which the SDK types describe as labels Stripe never reads, and never passes the request option (`charges.create(params, { idempotencyKey })`) that deduplicates. The use case's own test asserts the key reaches the port, not Stripe. With the route telling the member "Payment failed, please try again" on a timeout, the retry creates a second charge when the first went through. | Critical/High. Fix: pass the key as the request option (and keep metadata if wanted). That covers Stripe's window only (24 hours in the SDK's contract); a retry after it is R15's territory, the attempt recorded against the fine, and a review that says so is right. A reviewer that only worries about a duplicate on retry without finding the key ineffective has the right worry for the wrong reason. |
+| R15 | same overlay: `PayOwnFine.chargeWithin`, `POST /portal/fines/:id/pay` | Partial completion leaves defined state; how would anyone know | The charge is raced against a 10-second timer; when the timer wins, the charge promise is abandoned, so a success at second 12 is never settled, nothing records the attempt, and the route answers "Payment failed" without logging or reporting the timeout. Paid, still outstanding, invisible. | High. Fix: record the attempt before charging and reconcile late outcomes, or handle the promise's late resolution, or at least report the timeout with the fine id. |
 
 ### Traps
 
@@ -156,9 +158,19 @@ rejection terminates the process.
 | RT7 | `ops/alerts.yml` catalog-search burn alerts | Two alerts for one route. | Multi-window error-budget burn against the stated 99.5% objective, page for the fast burn and ticket for the slow one, both with a runbook. |
 | RT9 | `main/wiring.ts` `publicSearchClient()`, `rateLimit` on `/books` in `main/server.ts` | A second connection pool, and an unauthenticated route. | The bulkhead done right: public search gets its own memoized 4-connection pool with a 2 s timeout, connecting as a separate `catalog_reader` role, so a slow database or a search burst exhausts only search, never the 20-connection pool that session checks, checkout and fines share; search is also rate-limited per client. Contrast R3, where a pool is created per call and never closed. |
 | RT8 | Every `PgClient` | Database calls with no visible timeout. | `pgOptions()` sets `queryTimeoutMs: 10_000` (client-side, covering the wait for a connection), and every client, including the member directory's, is built from it. |
+| RT10 | overlay `code-plants/reliability-review/portal-pay/`: the 10-second bound in `PayOwnFine.chargeWithin` | A hand-rolled timeout around a provider call. | The SDK offers no timeout option and the existing `CollectFine` waits indefinitely (R4's pattern); bounding the wait is right. What happens after it fires is R14 and R15; the bound itself is not a finding. |
+| RT11 | same overlay: `POST /portal/fines/:id/pay` answers 404 "fine not found" for a missing fine and for another member's | Two refusals indistinguishable to the caller. | Both are expected refusals, told apart server-side (`log.info('portal payment refused', { fineId, reason })`) and from faults (error reporter, 500). The shared answer is the security-correct one; a Low note on the status code is the most a reliability review should say. |
 
 `catalog/` remains the clean module for reliability (RT5, RT6, RT8): a
 review of it should report nothing above Low.
+
+In the portal-pay overlay, ungraded but not false alarms: the portal and
+desk payment paths (`PayOwnFine`, `CollectFine`) and a staff waiver can
+overlap on one fine with no atomic claim, so two charges, or a waiver and
+a charge, can both land (RR2's race, now across two routes); and
+`ledger.settle` failing after a successful charge leaves a paid fine
+outstanding (R6, newly routed through). Neither is planted; a review that
+raises either is right, and no grader fails it.
 
 Ungraded but not false alarms: the nightly loops issue a query per loan
 (`outstandingFor`, `findByCard`); `findOpen()` loads every open loan;

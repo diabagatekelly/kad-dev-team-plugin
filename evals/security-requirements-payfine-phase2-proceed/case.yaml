@@ -1,0 +1,56 @@
+schema_version: "1.0"
+name: security-requirements-payfine-phase2-proceed
+description: "Pay-a-fine slice, phase 2 with an arguable gap: the answers carry an obligation (any online charge must be matchable to the fine it paid; disputes answered within 14 days, which finance handles by hand from Stripe's dashboard) that looks like the stop rule's territory but is not: matching is a criterion on data the ledger already records, and disputes are a process outside the slice. The skill must proceed to the forks with the obligation placed, not hand the slice back. Same frozen history as phase 2 and the stop case. No baseline arm."
+tags: [security-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Members are individuals: no shared or family accounts, and a member should only ever see their own fines; staff can see anyone's. About 3,000 members. Card payments go through Stripe, and staff keep paying and waiving at the desk as today. One obligation does apply: our merchant agreement, which I checked with the finance officer this morning, requires that any online charge can be matched to what it paid for, and that a cardholder who disputes a charge gets an answer within 14 days. Finance answers disputes by hand from the Stripe dashboard and will keep doing so; what they need from us is to be able to tell, for any charge, which fine it paid. Go ahead.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: presents-the-forks-not-a-hand-back
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user's answer adds an obligation: an online charge must be matchable to the fine it paid, and a disputed charge gets an answer within 14 days, which finance handles by hand from Stripe's dashboard. Neither needs a capability nobody scoped. The ledger already records the provider's charge id when a fine is settled (`settle(id, chargeId, on)` in `fines/fine-ledger.port.ts`, the `charge_id` column in the Postgres adapter), so matching is a criterion on this slice's own data; disputes are finance's process outside the application. The skill's stop rule (report and stop when the slice can't be made safe without a capability nobody scoped) does not apply here, and the skill's next step after the answers is to present the forks for approval.
+
+      PASS if the response proceeds: it presents the forks for the user to approve (the engineer's shared-route proposal among them) and does not hand the slice back.
+
+      FAIL if it stops with a hand-back (a "Handed back to product-slicer" or "blocking" report, or words to that effect), or says the criteria cannot be finished until the slice or the slice set changes.
+  - type: llm
+    name: obligation-placed-without-stopping
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user raised one obligation in this answer: a charge must be matchable to the fine it paid, and disputes (answered by finance, by hand, from Stripe's dashboard) get an answer within 14 days. The right handling places it: matching is covered inside the slice (the charge reference recorded against the fine, stated as a criterion to come or as a rule that will be applied), and dispute handling is finance's process outside the slice (out of scope, an assumption stated, or a note of where it belongs).
+
+      PASS if the response says where the obligation lands, in either or both of those ways, without treating it as a reason to stop. Saying the charge reference is already recorded, or will be a criterion, or that disputes stay with finance, each passes.
+
+      FAIL if the response says the slice cannot meet the obligation as scoped, treats dispute handling or charge matching as a capability the slice must gain before the criteria can be written, or says nothing at all about the obligation.
+  - type: llm
+    name: presents-shared-route-as-a-decision
+    focus: last_message
+    weight: 1
+    criteria: |
+      The engineer proposed letting members onto the existing staff `/fines` routes. `main/server.ts` puts `requireRole('staff')` on the whole `/fines` prefix, which also holds `POST /fines/:id/waive`; allowing members there would let them reach staff-only actions, and the existing pay route has no ownership check. The skill's rule is that a real fork with more than one defensible answer is presented with a recommendation and the rejected alternatives, and approved before it is written in.
+
+      PASS if the response presents the shared-route proposal as a decision for the user, with a recommendation, at least one alternative, and the reason (at minimum, that it would expose staff-only fine actions or skip the ownership check), and asks the user to approve or change it.
+
+      FAIL if it silently adopts the proposal, silently rejects it and designs around it without asking, or does not mention it.
+  - type: llm
+    name: no-criteria-before-approval
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: once the questions are answered, the next response is the forks, presented for approval, and the acceptance-criteria document is written only after the approvals, complete. This checks that the response stopped at the forks.
+
+      PASS if the response contains no acceptance-criteria document: no "Acceptance criteria" section and no set of Given/When/Then criteria. Describing a fork's options, what each would have to guarantee (for example "members could not reach the waive action"), a summary of what was found in the code, and a single illustrative criterion are all fine.
+
+      FAIL if it writes the criteria now (an acceptance-criteria section, or three or more Given/When/Then criteria), whether or not it also asks for approval.
