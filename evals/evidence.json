@@ -908,6 +908,51 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T17:14:10Z"
   },
+  "tdd-implementation-cancel-hold": {
+    "inputs": "7696570728fe664353516fa31a0b4d036ac63c617703bb322c8bb5c62dd38d45",
+    "score": 1.0,
+    "bar": 0.987,
+    "runs": 3,
+    "source": "results/gate-20261018T210559-tdd-implementation-cancel-hold.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-18T21:11:39Z"
+  },
+  "tdd-implementation-cancel-hold-via-agent": {
+    "inputs": "dc9d4a065911c393f57da45be13be748f4d76fd7f169c442bf0f604b642b6888",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261018T210559-tdd-implementation-cancel-hold-via-agent.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-18T21:11:39Z"
+  },
+  "tdd-implementation-lite-cancel-hold": {
+    "inputs": "ebdae3e198acfb9e993b38f41790eddcc0c11d86b85cd9dc66cc5490e2a1996c",
+    "score": 0.91,
+    "bar": 0.923,
+    "runs": 3,
+    "source": "results/gate-20261018T210559-tdd-implementation-lite-cancel-hold.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-18T21:11:39Z"
+  },
+  "tdd-implementation-lite-cancel-hold-via-agent": {
+    "inputs": "d41c6a2bf8145899d2ec2418301ae0859a139021496ccfcefb9c9d21fddefd1f",
+    "score": 0.92,
+    "bar": 0.907,
+    "runs": 3,
+    "source": "results/gate-20261018T210559-tdd-implementation-lite-cancel-hold-via-agent.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-18T21:11:39Z"
+  },
+  "tdd-implementation-lite-named-fix": {
+    "inputs": "194a0077340d4835309653e948fd3c87d1407f1e63620b069a9c8b8a1d3147d1",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261018T210559-tdd-implementation-lite-named-fix.json",
+    "claude_version": "2.1.296",
+    "recorded": "2026-10-18T21:11:39Z"
+  },
   "tdd-implementation-named-fix": {
     "inputs": "8fa28dc3d5e2cc26e71c90758bbcd19f184ce873cbadaa1b55082e55410e9a9e",
     "score": 1.0,

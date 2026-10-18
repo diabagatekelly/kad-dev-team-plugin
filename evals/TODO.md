@@ -1231,6 +1231,16 @@ to do next" says where each would start.
       the route whether or not the entry names the skill; 3/3 at 1.0 on
       the re-run. Every orchestrator run asked the policy question in
       text (heavy recommended, lite, compare, not now) and stopped.
+      *Third run (the evidence run after the text and rubric edits; the
+      one before it was voided by the session limit):* heavy cancel-hold
+      1.00 and 1.00, lite cancel-hold 0.91, the via-agent twin 0.92,
+      lite named-fix 1.00; the agent-path reviewers and the consult held
+      3/3 after the text fix, the two measurement graders lost 0/6
+      again, and one judge vote on `escalates-queue-question` was lost
+      (2/3) under the reworded rubric. Bars for the three lite cases
+      recorded from this run; evidence current for every case the branch
+      reaches. Over three runs of three, the lite per-test cycle is 0/9
+      and the can-it-fail check 1/9: the finding is stable.
 - [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
       *Taken against the section 8 list, item by item:*
