@@ -1,0 +1,92 @@
+schema_version: "1.0"
+name: reliability-review-portal-pay-pr
+description: "PR adding pay-a-fine to the member portal (a use case, an idempotency option on the payments port and its Stripe adapter, two portal routes, the wiring): a defect that only shows across files, the key the use case relies on is sent as a Stripe metadata label and never as the request's idempotency option, so the retry the member is told to make charges again; a charge still in flight at the 10-second timeout is dropped unrecorded; traps for the bounded wait itself and for the shared answer to another member's fine. Overlay code-plants/reliability-review/portal-pay/."
+tags: [reliability-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
+
+    Review this pull request for how it behaves when things go wrong. It lets a member pay a fine from the portal: it adds `fines/pay-own-fine.ts` and `test/pay-own-fine.test.ts`, adds an options parameter to `FinePayments.charge` in `fines/fine-payments.port.ts` and to the Stripe adapter in `infra/payments/stripe-fine-payments.ts`, adds `GET /portal/fines` and `POST /portal/fines/:id/pay` to `infra/http/portal-routes.ts`, and wires them in `main/server.ts`. Everything else already existed before this PR.
+
+    Save the review as `docs/reviews/reliability-review-portal-pay-pr.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
+runs: 3
+graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/reliability-review-portal-pay-pr.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/reliability-review-portal-pay-pr\.md")[^"]*"'
+    match: not_contains
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-review"'
+    min: 1
+  - type: llm
+    name: finds-idempotency-key-never-reaches-stripe
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-portal-pay-pr.md
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `PayOwnFine` (`fines/pay-own-fine.ts`) charges with `{ idempotencyKey: fine.id }`, and the port's comment says the key stops a repeated request from charging again. The Stripe adapter (`infra/payments/stripe-fine-payments.ts`) puts that key into the charge's `metadata`, which `types/vendor.d.ts` describes as free-form labels Stripe never reads; the SDK's deduplication is the `idempotencyKey` field of the second argument to `charges.create`, which the adapter never passes. So nothing deduplicates: when the 10-second timeout fires and the route tells the member "Payment failed, please try again", the retry creates a second charge if the first one went through.
+
+      PASS if the review identifies that the key as sent does not deduplicate charges (it is a metadata label, not the request's idempotency option), connects that to a duplicate charge on retry after a timeout, and proposes passing the key as the request option (or otherwise making a repeat attempt safe). Rating it Critical or High (or the top two tiers of whatever scale it uses) is expected but the rating is not graded.
+
+      FAIL if it is missed, or if the review treats the charge as idempotent, or if it says duplicates are possible without finding that the key sent is ineffective (a finding that the retry after a timeout risks a duplicate, with no mention of the key going to metadata or of the request option, is the right worry for the wrong reason and does not pass).
+  - type: llm
+    name: finds-timed-out-charge-dropped-unrecorded
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-portal-pay-pr.md
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `PayOwnFine.chargeWithin` races the charge against a 10-second timer and returns `'timeout'` when the timer wins; the charge promise is then abandoned, so a charge that succeeds at second 12 is never settled against the fine, nothing records that an attempt was made, and the route answers the member "Payment failed" without logging or reporting the timeout. The member has paid, the fine stays outstanding, and nobody can tell from the system that it happened.
+
+      PASS if the review identifies that a charge still in flight when the timeout fires is dropped with its outcome unrecorded (a late success leaves the fine outstanding or the attempt invisible), and proposes something that would address it: record the attempt before charging and reconcile late outcomes, handle the charge promise's late resolution, report or log the timeout with the fine id so the case can be found, or an equivalent.
+
+      FAIL if it is missed, or if the review's only concern with the timeout path is the member message's wording.
+  - type: llm
+    name: no-false-alarm-bounded-wait
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-portal-pay-pr.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `PayOwnFine` bounds the wait for the payment provider at 10 seconds (the Stripe SDK in `types/vendor.d.ts` offers no timeout option, and the existing `CollectFine` waits indefinitely). Having a bound is right: an unbounded wait is the failure mode the rest of the app's adapters are criticised for.
+
+      PASS if the review does not ask for the timeout to be removed or for the request to wait indefinitely. Criticising what happens after the timeout fires (the dropped charge, the retry, the message), proposing a different length, or proposing to move the bound into the adapter all pass.
+
+      FAIL if it presents bounding the wait as itself a defect, or asks for the wait to be unbounded.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
+  - type: llm
+    name: no-false-alarm-same-answer-for-another-members-fine
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-portal-pay-pr.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      `POST /portal/fines/:id/pay` answers 404 "fine not found" both for a fine that does not exist and for a fine that belongs to another member; the handler logs the real reason (`missing` or `not-owner`) server-side with the fine id. Both are expected refusals, told apart from each other in the log and from faults (which reach the error reporter and answer 500), and giving the caller the same answer for both is deliberate.
+
+      PASS if the review does not present the shared 404 as a reliability defect: not mentioning it, noting it as correct, or a Low observation that the status code could differ all pass.
+
+      FAIL if it reports the shared answer as a defect at Medium or above, or asks for the member to be told that the fine belongs to someone else.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.

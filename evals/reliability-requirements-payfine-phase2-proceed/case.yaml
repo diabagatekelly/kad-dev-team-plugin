@@ -1,0 +1,56 @@
+schema_version: "1.0"
+name: reliability-requirements-payfine-phase2-proceed
+description: "Pay-a-fine slice, phase 2 with an arguable gap: the answers name day-long provider outages, which the stop case treats as a gap, but here the desk takes payment by phone for a member who can't wait, so the slice's target needs no capability nobody scoped. The skill must proceed to the forks with the outage treated as a failure mode to specify, not hand the slice back. Same frozen history as phase 2 and the stop case. No baseline arm."
+tags: [reliability-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    If card payment is down for an hour, most members just try later or pay at the desk. Stripe's last two outages each ran most of a day; a member who can't wait that long phones the desk and pays over the phone, which the desk already does and will keep doing. Beyond that, no numeric target; failures for reasons other than a decline should just be rare, say one in a few hundred. The 10 seconds was a default, nobody chose it. We'd hear about breakage from members or the desk, and a member charged while the fine still shows outstanding would be fixed by hand, with a Stripe refund or by marking the fine settled. Go ahead.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob]
+runs: 3
+graders:
+  - type: llm
+    name: presents-the-forks-not-a-hand-back
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user's answer sets no target the slice cannot meet as scoped: a provider outage, even a day-long one, is covered outside the application (a member who can't wait phones the desk and pays over the phone, which the desk already does), so the slice needs no capability nobody scoped. The skill's stop rule (report and stop when the slice can't meet its target without a capability nobody scoped) does not apply here, and the skill's next step after the answers is to present the forks for approval.
+
+      PASS if the response proceeds: it presents the forks for the user to approve (the engineer's 10-second timeout proposal among them) and does not hand the slice back.
+
+      FAIL if it stops with a hand-back (a "Handed back to product-slicer" or "blocking" report, or words to that effect), or says the criteria cannot be finished until scope changes (a second payment route, a way to clear fines without Stripe, or the like).
+  - type: llm
+    name: outage-is-a-failure-mode-not-a-gap
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user's answer names a real failure mode, the payment provider being down for most of a day, and says how it is handled outside the application: the desk takes payment by phone. The right handling treats the outage as a failure mode this slice's criteria will specify (the member learns that card payment is unavailable rather than seeing a decline, and can pay at the desk or by phone; a provider fault is told apart from a decline and is visible to the developer), or notes the desk's phone path as the fallback outside the slice.
+
+      PASS if the response treats the outage that way, as a failure mode to specify or a fallback already provided outside the slice, in a fork, an assumption or a line about what will be written. Saying the portal degrades to "pay at the desk" during an outage passes.
+
+      FAIL if it says the slice cannot meet its target without a capability nobody scoped, proposes that the slice itself needs a second way to pay or to clear a fine, or says nothing at all about the outage.
+  - type: llm
+    name: presents-timeout-proposal-as-a-decision
+    focus: last_message
+    weight: 1
+    criteria: |
+      The engineer proposed showing "payment failed, please try again" when Stripe takes longer than 10 seconds. After a timeout the charge may in fact have succeeded, so a retry can charge the member twice. There is more than one defensible way to handle that: change what the member is told (pending / could not confirm, and no new attempt until confirmed), make a retry safe (one charge per fine however many attempts, for example with an idempotency key), or accept occasional duplicates and refund them by hand. The skill's rule is that such a fork is presented with a recommendation and the rejected alternative, and left for the user to approve.
+
+      PASS if the response points out that a timed-out charge may have gone through so a retry risks a duplicate charge, and leaves how to handle that as a decision for the user (recommendation plus at least one alternative, not yet approved), whichever of those framings it uses.
+
+      FAIL if it adopts "payment failed, please try again" without addressing the duplicate-charge risk, or settles how to handle the risk itself without leaving it for approval.
+  - type: llm
+    name: no-criteria-before-approval
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: once the questions are answered, the next response is the forks, presented for approval, and the acceptance-criteria document is written only after the approvals, complete. This checks that the response stopped at the forks.
+
+      PASS if the response contains no acceptance-criteria document: no "Acceptance criteria" section and no set of Given/When/Then criteria. Describing a fork's options, what each would have to guarantee (for example "the member is never charged twice"), a list of failure modes found in the code, and a single illustrative criterion are all fine.
+
+      FAIL if it writes the criteria now (an acceptance-criteria section, or three or more Given/When/Then criteria), whether or not it also asks for approval.

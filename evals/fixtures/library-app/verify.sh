@@ -54,7 +54,7 @@ echo "ok: $(grep -m1 '^ℹ pass' "$out/test.log")"
 
 echo "== code overlays type-check and their tests pass"
 tdd="$(cd "$(dirname "${BASH_SOURCE[0]}")/code-plants/tdd" && pwd)"
-for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/*; do
+for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/* "$(dirname "$tdd")"/reliability-review/*; do
   dir="$out/overlay-$(basename "$overlay")"
   mkdir -p "$dir"
   cp -R "$app"/. "$dir"/
