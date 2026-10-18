@@ -1962,26 +1962,219 @@ first real execution (the hand-off says what to watch).
       (`results/gate-20261018T110737-*`). Evidence recorded for all
       sixteen. Every thread on PR #14 answered and resolved on the fix
       commit `2bb8e6d`.
-- [ ] H6. The first real execution of the quarantine flow (added
-      2026-10-17). No eval exercises the flow, so H1 to H4 have been
-      proven by reading only; this is their real test, and it runs
-      after H5 so the three code-writing instances it launches
-      unattended are sandboxed first, and before G1, which is eval
-      polish. Project: the library app behind
-      `evals/orchestrator-route-implementation/scaffold.sh`, a fully
-      specified slice with a stack (cancel-hold: design approved,
-      criteria filled, not UI-touching), copied out of the evals into a
-      scratch directory, never run inside this repo. Run the
-      orchestrator interactively with the `Agent` tool available, under
-      `KAD_AUDIT=1`, and let the flow go end to end: baseline, two
-      candidates, gate, map diffs, reviewers, judge, combine, finalize,
-      re-grade, report. Then read the session with `audit-review`
-      against the hand-off's "what the first real execution should
-      watch" list (one paragraph per fix, H1 to H4). Cost: three tdd
-      instances at ten to fifteen minutes each plus up to eighteen
-      reviewer agents, roughly one subscription window. What it
-      produces: one entry per miss, each a skill-text fix with its eval
-      case where a case can reach it, and the first C line of the
-      batching evidence H4 set up. A miss that needs the flow to
-      reproduce is recorded here with the session path, since no case
-      can carry it.
+- [x] H6. The first real execution of the quarantine flow (added
+      2026-10-17). *2026-10-18, branch `plugin-h6-dogfood`.* The flow ran
+      end to end for the first time, in WSL2, headless (`claude -p
+      --plugin-dir ~/kad-dev-team-plugin`, sonnet, `KAD_AUDIT=1`, audit dir
+      `~/kad-h6/audit`), on a scratch project (`~/kad-h6/library-app`: the
+      fixture app, the tdd plant's `package.json` and `test/ts-resolve.mjs`,
+      the cancel-hold route plant under `docs/cancel-hold/`, one commit).
+      Three sessions, read against the hand-off's watch list from the
+      stream-json logs and the subagent transcripts (the `audit-review`
+      reading, by hand; `audit_report.py --dir ~/kad-h6/audit` lists them):
+      - `c0d0b60a-3580-43d4-bbf4-602e6b92f637`: started without the
+        settings block. The check ran first, from the skill's own directory
+        (`${CLAUDE_SKILL_DIR}` resolved), failed on write, network,
+        shell-secrets, read-secrets and settings; the log entry was written
+        first, one question asked (in text: `-p` has no `AskUserQuestion`),
+        nothing launched, no `dangerouslyDisableSandbox`. The yes led to one
+        `--write-settings` call on `~/.claude/settings.json`, whose own
+        re-check still failed the probes; the orchestrator logged "restart",
+        then ran the check once more and it PASSED: Claude Code reads the
+        settings again between commands. The flow then ran to C in the same
+        session: baseline before launch, both candidates in worktrees under
+        `.claude/worktrees/`, both failing the gate, the judge twice
+        `NO VERDICT`, and a stop before Finalize with a diagnosis of the gate.
+      - `86cdfb3e-49c6-4547-9eda-235a58b36444`: a prompt that pre-named the
+        step ("if the next step is the implementation and its quarantine
+        flow, go ahead") made the main agent invoke `tdd-implementation`
+        directly, inline, in the real tree: no orchestrator, no quarantine,
+        no sandbox check. Killed after a minute; the tree reset. The skill's
+        "skip this skill when the user already named what they want" rule
+        read "implementation" as the named skill. Recorded here; a case for
+        G1 if the user wants the wording tightened.
+      - `020a4df0-815d-4a99-bdd1-014cb8c72f63`: the bare prompt (the
+        eval's, plus the stack and not-implemented facts). Turn 1 routed,
+        wrote the entry, and asked for the go-ahead; turn 2 ran A to D;
+        turn 3 (after the gate fix below) re-ran D's gate and ran E. Every
+        watch-list item held: check before baseline before launch, `--allow`
+        = the design's module dirs + `test/` + the report path (the log
+        added only at D, never widened), `--protect` = the five documents;
+        candidate 1's task named the slice documents, candidate 2's named
+        `requirements-001`, `slice-001` and `design-001` by path as reference
+        material with user-story and problem explicitly off the list, both
+        carried the two lines, the A line listed every path; the judge ran
+        before either worktree was read, `--task` = design + slice only, the
+        report excluded; the C line said what the wider read changed
+        (nothing a judge or reviewer could tell apart: the candidates were
+        near-identical and escalated the same position-renumbering question,
+        the first batching datum); the finalize instance got candidate 2's
+        inputs plus the brief; D's check ran before it; E ran all five
+        reviewers (not UI-touching) as `Agent` calls after D's gate and the
+        real `map-update`, each handed the gate's changed files minus the
+        log, the map as the diff; 0 Critical/High, so no handed-back round
+        (E's fix path stays proven by reading only); the step 5 report named
+        both branches unmerged, the Medium findings, the typecheck gap and
+        the open question, and proposed nothing past the terminal row. The
+        candidates never reached the network (`npm run typecheck` failed on
+        the uninstalled `@types/node` and both reported it, not touched).
+      Both candidates failed the gate for a real reason there too: branch
+      coverage of `infra/memory/in-memory-hold-queue.ts` (78.57% and 72.73%
+      against 80: the pre-existing `?? []` fallbacks untested); Combine ran
+      with the gate reports as the findings, the brief told Finalize to
+      cover them, and the final build reached 100/100. Cost: about $1.4 for
+      A to D and $2.9 for turn 3 by the CLI's estimate, under ten minutes
+      of wall clock for the whole flow; the "one subscription window"
+      estimate was pessimistic by an order of magnitude.
+      *Misses, each fixed and proven:*
+      - *Gate, coverage table parsed wrong:* `parse_coverage` counted the
+        reporter's own `ℹ ` separator space as a nesting level, so a
+        top-level directory after a nested one was nested under it
+        (`lending` read as `infra/lending`) and `lending/cancel-hold.ts` was
+        "not in the coverage table" although the table listed it. H1's
+        scratch scenarios had one source directory each. The regex now
+        consumes the prefix.
+      - *Gate, type-only TypeScript:* a module with no runtime code
+        (`lending/hold-queue.ts`, the port interface) is never loaded and
+        never appears in the table, so it failed every time; and under
+        `--experimental-transform-types` Node counts the lines of an erased
+        type alias as uncovered (`cancel-hold.ts` lines 3-5: 82.35% against
+        90). New `skills/orchestrator/scripts/ts_runtime_lines.mjs` asks Node
+        (`module.stripTypeScriptTypes`, strip mode, or transform mode and
+        its source map when strip refuses a parameter property or an enum)
+        which lines keep runtime code; a changed file with none is exempt
+        and named, and erased uncovered lines are discounted from a loaded
+        file's percentage using the table's own count (`uncovered / (1 -
+        line%)`), printed as `82.35 -> 100`. Without `node` every line
+        counts as before. Checked on Node 24 (WSL) and 22 (Windows).
+      - *Judge, cannot run inside the sandbox:* the nested `claude -p` was
+        denied `api.anthropic.com` by the session sandbox (its
+        `sandbox_violations` say so) and the credentials file is in
+        `denyRead`, so the judge H2 built can never run where H5 requires
+        the flow to run. `pairwise_judge.py` gained `--render` (both
+        prompts and a manifest into `.git/kad-pairwise-<stamp>/`, the
+        manifest alone saying which candidate each order showed first) and
+        `--collect DIR` (validates the two answer files, settles the
+        verdict, writes `verdict.json`, prints the same lines as before);
+        a new `agents/pairwise-judge/AGENT.md` (Read and Write, sonnet,
+        background) answers one order each, launched by the orchestrator
+        with its prompt path and answer path and nothing else; step C and
+        the log template say so; the `claude -p` mode stays for the eval
+        wrapper, which still imports `compare()`. First real run of the
+        agents: both answered in text and wrote no file, since the prompt's
+        own last line ("respond with only a JSON object") outranked the
+        agent definition; `--render` now ends each prompt with the Write
+        instruction and the answer path, and C says to save a replied JSON
+        to the answer file before relaunching, and to collect only once both
+        agents have returned (the orchestrator collected once too early).
+      - *Gate, Claude Code's own paths in the real tree:* D's gate failed
+        scope on `.claude/worktrees/<agent>/` (the `Agent` tool keeps the
+        candidates' worktrees inside the project; git lists each as an
+        untracked directory) and, inside the sandbox, on the empty
+        placeholder settings it mounts into every directory a command runs
+        from (`docs/.mcp.json`, `docs/cancel-hold/.claude/{hooks,
+        launch.json, settings.json, ...}`, `docs/cancel-hold/.mcp.json`:
+        device nodes outside, listed as untracked inside). The gate, and so
+        the judge's views, now leave every `.claude/` directory and
+        `.mcp.json` out of the change set; a settings edit there is the
+        sandbox check's to catch before every launch.
+      - *Skill, step A:* after `--write-settings`, run the plain check once
+        more as its own command before concluding that the session predates
+        the setting; the settings take effect on the next command.
+      - *Skill, step B:* the verdict stands even when the orchestrator
+        doubts the gate, with the one exception it took in the first session,
+        now written down narrowly: both candidates fail a check the gate's
+        own printout contradicts on its face; then stop before Finalize,
+        record the output under C and report a plugin defect; report what
+        the gate printed, don't read or patch the plugin's scripts (it had
+        read `validation_gate.py` to diagnose, outside its lane, correctly).
+      *Facts worth keeping:* a `-p` session has no `AskUserQuestion` (the
+      orchestrator asks in text and the next `claude -p --resume` answers);
+      a background agent's hand-back starts a new turn, so the stream holds
+      one `result` per turn and a monitor must not stop at the first; the
+      sandbox masks `.bashrc`, `.gitconfig`, `.idea`, `.vscode` and friends
+      in the working directory as device nodes, which `git status` shows
+      and `git ls-files -o` does not; plugin agents' `tools:` did not stop
+      the cartographer agent calling `Skill` (the orchestrator ran
+      `architecture-review` on it), so the reviewer list needs no persona
+      change; `--plugin-dir` hooks fired in `-p` (the audit dir has all three
+      sessions' logs and transcripts, subagents included).
+      *Scratch checks of the fixes* (`scratchpad/h6-test-fixes.sh`, on the
+      first session's worktrees): the parsed table has both directories;
+      candidate 1 fails only the real branch shortfall with the exemption
+      and the discount printed; candidate 2 passes; the real tree passes
+      with the log allowed and no worktree in its change set; `--render`
+      leaks no worktree path into either prompt and refuses a non-empty
+      directory; `--collect` with no answers names both orders and exits 2,
+      with two consistent answers prints the candidate, with a malformed
+      answer names the order; the eval wrapper still runs.
+      *Run:* sixteen orchestrator cases at three runs, 16/16 at bar, all
+      sixteen at 1.0 (`results/gate-20261018T124007-*`). Evidence recorded for all
+      sixteen. Bars left at 1.0.
+      *Sourcery on PR #15 (2026-10-18), two passes over the same diff,
+      twelve threads, seven distinct findings:*
+      - *Taken, "configuration changes bypass review" (High):* the gate
+        dropped every `.claude/` path and `.mcp.json` from the change set,
+        so a candidate writing a project `.claude/settings.json`, or an
+        application file named `.mcp.json`, would have been invisible to
+        scope and to the judge. Now only an *untracked* such path that is
+        not a regular file with content is dropped (`claude_code_placeholder`):
+        the nested worktree directories and the sandbox's mounted
+        placeholders are exactly that, and a file a candidate wrote has
+        content and stays; tracked changes always stay.
+      - *Taken in part, "judge can write outside its answer" / "can access
+        unrelated files" (High):* the judge agent lost its `Write` tool: its
+        reply is the answer, the orchestrator saves it verbatim to the
+        order's answer file and collects; the rendered prompt's closing
+        note says so and tells the judge to read nothing else. `Read` stays:
+        the prompt is a file because a rendered view can run to 200 KB per
+        candidate, more than belongs in an `Agent` call's own text, and the
+        session's deny rules (which H5 requires) cover the Read tool for
+        every secret path; a judge that read some other project file could
+        only taint its own reasoning, which `verdict.json` keeps for the
+        orchestrator to read.
+      - *Taken, "uncovered runtime code is discounted" (High) and
+        "template code is discounted" (Medium):* `ts_runtime_lines.mjs`
+        found comments with two regexes, so `//` or `/*` inside a string or
+        a template literal blanked code lines. It now walks the text with a
+        state machine (strings, template literals and their `${}`
+        interpolations, regex literals, line and block comments); checked
+        on a crafted file with each case (`--text FILE` runs the walk alone).
+      - *Taken, "concurrent judges share run files" (Medium):* the default
+        render directory comes from `mkdtemp` next to the baseline
+        (`kad-pairwise-<stamp>-<random>/`), an explicit `--out` is claimed
+        with `os.mkdir` and refused when it exists with content.
+      - *Taken in part, "a stalled judge blocks the flow" (Medium):* the
+        skill has no clock, so no timeout; step C now says a judge that has
+        not returned long after the other (minutes, not tens of minutes) is
+        a missing answer: stop it, collect, and the one relaunch applies.
+      - *Taken, "truncated coverage causes false failures" (Medium), and
+        declined, "truncated coverage crashes the gate" (Medium):* no
+        crash: `None` was already guarded. But Node truncates the table's
+        `uncovered lines` column with `…`, which silently lost the discount.
+        The gate now adds Node's `lcov` reporter next to the script's own
+        reporter when the test command is a `node` script (every reporter
+        gets a destination, since Node demands one each; the script's flags
+        that take a value keep it) and reads exact per-line and per-branch
+        data from it (`parse_lcov`), so the discount never depends on the
+        column; when only the table exists and the column is cut, the
+        output says `uncovered-lines column truncated, no discount
+        possible`. The lcov line count differs from the table's by one on
+        `cancel-hold.ts` (81.25 vs 82.35); the discount still reaches 100.
+      - *Declined, "TSX type lines still fail coverage" (Medium):* Node's
+        type stripping takes no JSX in either mode (checked), so a `.tsx`
+        file is counted as it was before this PR; a project whose tests
+        load `.tsx` is not running on Node's own test runner with type
+        stripping anyway, and its table comes from another toolchain. Said
+        in the helper's header and the gate's docstring.
+      *Checks after the round* (`scratchpad/h6-test-round2.sh`): the comment
+      walk's expected line set; the candidate files' answers unchanged;
+      three test-script shapes get the right reporters; candidate 1 and 2
+      of the third session fail only the real branch shortfall, exact data
+      in use; the real tree keeps a non-empty `docs/x/.mcp.json` in the
+      change set and drops an empty `docs/x/.claude/settings.json`; two
+      renders in the same second get two directories; the reply-only note
+      ends each prompt; a non-empty `--out` is refused; collect settles.
+      *Run after the round:* sixteen orchestrator cases at three runs,
+      16/16 at bar, all sixteen at 1.0 (`results/gate-20261018T130441-*`).
+      Evidence recorded for all sixteen.
