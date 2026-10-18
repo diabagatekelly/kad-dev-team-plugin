@@ -1872,6 +1872,9 @@ first real execution (the hand-off says what to watch).
       unreadable); the Read tool refused on the credentials file; the
       negative run with the credentials entries removed failed exactly
       `shell-secrets` and `read-secrets`.
+      *Run after the round:* sixteen orchestrator cases at three runs,
+      16/16 at bar, all sixteen at 1.0 (`results/gate-20261018T001132-*`).
+      Evidence recorded for all sixteen.
 - [ ] H6. The first real execution of the quarantine flow (added
       2026-10-17). No eval exercises the flow, so H1 to H4 have been
       proven by reading only; this is their real test, and it runs
