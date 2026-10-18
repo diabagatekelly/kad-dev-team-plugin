@@ -160,7 +160,10 @@ candidate independently in parallel (`tdd-coach:test-quality-review`,
 `devsecops-engineer:reliability-review`, and `accessibility-engineer:accessibility-review`
 if UI-touching); a blind pairwise judge
 (`skills/orchestrator/scripts/pairwise_judge.py`: both candidates' change
-sets unlabelled, both presentation orders, every reason kept) gives its
+sets unlabelled, both presentation orders, every reason kept; the script
+renders the two prompts and two `pairwise-judge` agents answer them, one
+per order, because the session sandbox the flow requires blocks a nested
+`claude -p` from the API, which the first real run found) gives its
 verdict before `orchestrator` reads either candidate; `orchestrator` itself
 then makes the one accountable combine call, inline, with that verdict in
 hand rather than instead of it — following it in a line or naming which of
