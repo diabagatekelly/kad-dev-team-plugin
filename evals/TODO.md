@@ -1792,7 +1792,7 @@ first real execution (the hand-off says what to watch).
       *Sourcery on PR #13:* the reviewer's guide came first and the
       review with sixteen findings (four Critical, ten High, one Medium,
       one Low) minutes after the user had merged on the guide alone, so
-      the round is branch `plugin-fix-sandbox-review`. Eleven taken, three
+      the round is PR #14, branch `plugin-fix-sandbox-review`. Eleven taken, three
       in part, two declined; and one thing the user asked for in the same
       breath, that the setup be wired in so it works without hand-editing
       a settings file:
