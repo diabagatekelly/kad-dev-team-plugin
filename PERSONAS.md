@@ -131,13 +131,17 @@ because every persona it invokes requires it.
 **`tdd-coach:tdd-implementation` is the one row that genuinely doesn't
 execute inline — the quarantine/grade/combine/finalize flow, wired in and
 running by default, not deferred.** A sandbox check
-(`skills/orchestrator/scripts/sandbox_check.py`) runs first, and the flow
-refuses to start without its `PASS`: the plugin cannot ship the settings
-that fence an unattended code writer, so the script probes the session's
-own Bash sandbox from inside it (a write outside the project refused, no
-direct network route, the machine's credential files unreadable from the
-shell and denied to the Read tool) and reads the escape hatches off in
-the settings. Then two isolated `tdd-coach:tdd-implementation`
+(`skills/orchestrator/scripts/sandbox_check.py`) runs before every step
+that launches agents, and nothing launches without its `PASS`: the plugin
+cannot ship the settings that fence an unattended code writer, so the
+script probes the session's own Bash sandbox from inside it (a write
+outside the project refused with the sandbox's own error, no direct
+network route, no credential in the environment, the machine's credential
+files unreadable from the shell, named in the deny list and denied to the
+Read tool whether or not they exist yet) and reads the escape hatches off
+in the settings; on a failed check the orchestrator asks once and writes
+the block into the session's user settings with `--write-settings`, then
+re-checks. Then two isolated `tdd-coach:tdd-implementation`
 instances (real async `Agent` calls, `isolation: "worktree"`) build the
 same slice blind to each other — one reading the slice's own documents
 alone, the other the whole unit (requirements, slice set, every design;
