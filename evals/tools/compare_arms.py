@@ -164,8 +164,12 @@ def main():
     for task in args.task:
         brief += f"\n\n### {task}\n" + (base / task).read_text(encoding="utf-8")
 
-    views_a = {i: render(change_set(cwd, base), args.max_bytes) for i, cwd in runs_a}
-    views_b = {j: render(change_set(cwd, base), args.max_bytes) for j, cwd in runs_b}
+    changes_a = {i: change_set(cwd, base) for i, cwd in runs_a}
+    changes_b = {j: change_set(cwd, base) for j, cwd in runs_b}
+    views_a = {i: render(changed, args.max_bytes) for i, changed in changes_a.items()}
+    views_b = {j: render(changed, args.max_bytes) for j, changed in changes_b.items()}
+    files = lambda changes: {i: [p + (" (deleted)" if t is None else "") for p, t in changed]  # noqa: E731
+                             for i, changed in changes.items()}
     pairs = list(zip(views_a, views_b)) if args.paired else list(itertools.product(views_a, views_b))
     if not pairs:
         sys.exit("no pair to judge: both results need kept, clean runs")
@@ -176,8 +180,8 @@ def main():
     tally = {name_a: 0, name_b: 0, "tie": 0, "split": 0, "no verdict": 0}
     for r in results:
         tally[r["verdict"]] = tally.get(r["verdict"], 0) + 1
-    record = {"a": {"case": name_a, "source": str(args.result_a), "runs": sorted(views_a)},
-              "b": {"case": name_b, "source": str(args.result_b), "runs": sorted(views_b)},
+    record = {"a": {"case": name_a, "source": str(args.result_a), "runs": sorted(views_a), "files": files(changes_a)},
+              "b": {"case": name_b, "source": str(args.result_b), "runs": sorted(views_b), "files": files(changes_b)},
               "tasks": args.task, "model": args.model, "paired": args.paired,
               "pairs": results, "tally": tally,
               "cost_usd": round(sum(r["cost_usd"] for r in results), 4)}

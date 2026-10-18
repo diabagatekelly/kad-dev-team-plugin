@@ -1133,7 +1133,104 @@ to do next" says where each would start.
       nothing naming the arm, judges every pair of runs in both orders
       with the plugin's implementation rubric, and keeps every reason in a
       `*.pairwise.json` next to the first result.
-      *Runs:* pending.
+      *Runs (2026-10-18, `gate-20261018T181429-*`, six tdd cases at three
+      runs, kept):* the three heavy cases held their bars (cancel-hold
+      0.97 against 0.99: one run collapsed the loop into a single cycle
+      and lost `test-run-after-each-test-edit` and `reviews-each-cycle`,
+      inside tolerance; the other two 1.00). The lite cases: named-fix
+      1.00 (15/15 in every run); cancel-hold 0.92 and the via-agent twin
+      0.91, every floor grader 3/3 in both, the score lost entirely to
+      the measurement graders. What the model did unprompted, read from
+      the traces (`seq.py` in the session's scratch, the edit/run/skill
+      sequence per run): every lite run invoked the skill first, consulted
+      `map-query`, wrote the test file before any code (8 of 9 runs saw
+      it fail before the code existed; the ninth wrote test and code
+      together), ran the real runner, finished on the whole suite green,
+      kept GREEN to the design, tested behaviour through the public
+      interface, escalated the queue question to `acceptance-criteria`
+      and `architecture-design`, decided the wording visibly, and ran the
+      four reviewers. What it never did unprompted: the per-test cycle.
+      Every lite cancel-hold run wrote all its tests in one file, saw one
+      RED, wrote all three code files, saw one GREEN
+      (`test-run-after-each-test-edit` 0/6), where heavy ran four or five
+      cycles; and only one run in six broke the implementation on purpose
+      to see a test fail (`can-fail-check-in-trace` 0/6: the one run that
+      did, the via-agent twin's run 2, "changed `remove` to match any
+      hold, two tests failed, restored", then edited the test file again
+      after the reviewers, which is the shape the grader cannot see; left
+      as it is, the heavy case has the same grader). So the heavy skill's
+      instructions the model still needs are exactly two: one test at a
+      time with a run between, and the can-it-fail check. Everything else
+      in the 292 lines, the model does on its own at Sonnet.
+      *The blind judge (`compare_arms.py`, every pair, both orders,
+      $0.55 a case):* cancel-hold **lite 9/9**, via-agent **lite 9/9**,
+      named-fix lite 3, heavy 1, tie 3, split 2 (the code identical to
+      the line, one extra assertion deciding the non-ties). Eighteen of
+      eighteen on the slice case in both orders is not noise, and the
+      reasons are the same every time: lite's tests cover more of the
+      slice's behaviour through the public interface (cancelling the
+      head so the next member becomes head, a title with no queue,
+      cancelling twice, a hold on another title untouched: five or six
+      tests to heavy's two or three for `CancelHold`, read from the kept
+      trees), and heavy's adapter writes an empty array back for an
+      unknown title and removes every hold of that member where lite's
+      `findIndex`/`splice` removes one and leaves a miss untouched; one
+      heavy run tested `CancelHold` against a hand-rolled fake whose
+      `remove` returned a canned boolean, so its use-case test checked
+      delegation. Heavy's one credit, a separate adapter test file, did
+      not outweigh that. The cause is in the heavy text, not the judge:
+      "list every scenario the current goal actually needs ... no
+      defensive case nobody asked for" and "the minimum that passes"
+      read, at Sonnet, as two or three scenarios and a filter, where the
+      model's own judgment writes five and a splice. The per-cycle
+      `test-quality-review` call did not catch the thinness, because it
+      reviews the test just written, not the scenarios not written.
+      *What this says for the plugin (recorded, not acted on; the user's
+      call):* the two instructions worth keeping could move into the lite
+      contract as two lines, and the Test List's "only what's needed now"
+      clause is costing coverage the model would otherwise write; a
+      heavy-vs-lite compare in a real quarantine run would say whether the
+      reviewers in Grade see the same difference. One case, one model, one
+      slice: the via-agent twin repeating it 9/9 is the only replication
+      so far.
+      *Second run (`gate-20261018T183555-*`, the evidence run with the
+      bars in place):* lite cancel-hold 0.88 against 0.92, the via-agent
+      twin 0.87 against 0.91, both inside tolerance, named-fix 1.00
+      again; the measurement graders lost exactly as before (the
+      per-test cycle 0/6, the can-it-fail check 0/6), and this time two
+      floor graders lost runs under the agent path, which the first run
+      had not shown: `final-review-runs` 1/3 (two delegated agents
+      skipped the four reviewers and said so: "this was a small change
+      and I only self-checked it, so that step is skipped, not passed";
+      the same miss the heavy skill took on 2026-10-13, when it was
+      fixed with the line about the one-line refactor that shipped a
+      missed null check) and `map-query-before-implementation` 2/3 (one
+      agent went straight to the test). Both are contract, so both are
+      lite-skill text: the final-review section now carries the heavy
+      skill's reason and says "small change, self-checked, reviewers
+      skipped" is the step skipped however honestly reported, and the
+      consult section says the `Skill` call comes before the first
+      implementation file and a grep is not the consult. Two judge
+      losses were the rubric being narrower than a correct output, G5's
+      lesson again: `escalates-queue-question` failed "out of scope
+      until it is specified" with `acceptance-criteria` named (the FAIL
+      example "out of scope" was written for a decision, not a deferral;
+      now says so, and a second owner named beside the skill does not
+      fail), and `tests-check-behaviour` failed a file whose last test
+      exercised the adapter's `remove` directly, true/false, through its
+      public interface (now passes by name). Both rewordings applied to
+      the heavy twins as well, `rejudge.py --criteria-from` 3/3 on each
+      lost output, and the four cancel-hold cases re-run. Also from the
+      orchestrator re-run: `orchestrator-route-implementation-prenamed`
+      0.93, one judge loss on a log entry headed with the row's own
+      words ("slice has a design doc, runtime-safety criteria filled,
+      project has a stack, not yet implemented") instead of the
+      template's "slice ready for implementation", the same shape the
+      judge had passed in run 0; both route-implementation graders now
+      say either heading is correct and "Routed to: quarantine flow" is
+      the route whether or not the entry names the skill; 3/3 at 1.0 on
+      the re-run. Every orchestrator run asked the policy question in
+      text (heavy recommended, lite, compare, not now) and stopped.
 - [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
       *Taken against the section 8 list, item by item:*

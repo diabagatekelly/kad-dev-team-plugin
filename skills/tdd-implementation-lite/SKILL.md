@@ -72,10 +72,11 @@ isn't yours to answer; escalate it to `architecture-design` by name.
 Before writing implementation code, consult `map-query` (the
 `kad-dev-team:map-query` skill, owned by `architecture-cartographer`) at
 the implementation level: does a comparable function, class or helper
-already exist. Invoke it with the `Skill` tool, under that name; the
-consult returns an answer, not the turn, so carry on with this skill in
-the same response. If it reports that no map exists yet, say so once in
-your report and carry on. A candidate it returns is a fact, not a verdict:
+already exist. Invoke it with the `Skill` tool, under that name, before
+the first implementation file is written; reading the map file or
+grepping the code yourself is not the consult. It returns an answer, not
+the turn, so carry on with this skill in the same response. If it reports
+that no map exists yet, say so once in your report and carry on. A candidate it returns is a fact, not a verdict:
 reuse it yourself if there's no real alternative to weigh; escalate to
 `architecture-design` if there's a genuine fork (reuse this vs. build new,
 one interface vs. two).
@@ -127,7 +128,11 @@ plus `accessibility-review` if the slice is UI-touching, each with the
 turn. Fix what's Critical or High and re-run only the reviewer that raised
 it; report Medium and Low without acting on them; a finding that asks for
 something outside the slice is an escalation, not a fix. All of them,
-however small the change.
+however small the change, and each as its own `Skill` call: a one-line
+refactor has shipped a missed null check before, and reading the files
+yourself against a reviewer's checklist is not that reviewer. "Small
+change, self-checked, reviewers skipped" is the step skipped, however
+honestly reported.
 
 ## Applying a fix handed back from review
 
