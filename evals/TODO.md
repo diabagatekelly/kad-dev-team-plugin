@@ -964,7 +964,7 @@ to do next" says where each would start.
       system's `--muted` value was changed under a document that still
       claims the old contrast figure, so the reviewer has to compute
       rather than trust the text.*
-      *Done 2026-10-18 on branch `eval-g1-harder-plants`.* The hand-off's
+      *Done 2026-10-18 on branch `eval-g1-harder-plants`, PR #16.* The hand-off's
       first candidate, a phase-3 answer that overrules a safety
       recommendation, was already covered: the security chain's phase 3
       keeps the shared staff route and the reliability chain's keeps
