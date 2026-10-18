@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Route a problem to whichever kad-dev-team persona/skill applies next, by inspecting what already exists (problem doc, scope map, requirements, slices) rather than the user having to name the right persona each time. Use when the user wants to move a problem forward and hasn't said which persona/skill to use, or says "what's next" / "keep going" on a problem already in progress — including when they guess at the next stage in passing or conditionally ("if the next step is the implementation, go ahead", "probably the security pass next"). A stage guessed at is not a skill named, and the implementation stage in particular reaches tdd-implementation only through this skill's sandbox check and quarantine flow, never by invoking it directly.
+description: Route a problem to whichever kad-dev-team persona/skill applies next, by inspecting what already exists (problem doc, scope map, requirements, slices) rather than the user having to name the right persona each time. Use when the user wants to move a problem forward and hasn't said which persona/skill to use, or says "what's next" / "keep going" on a problem already in progress — including when they guess at the next stage in passing or conditionally ("if the next step is the implementation, go ahead", "probably the security pass next"). A stage guessed at is not a skill named, and the implementation stage in particular reaches tdd-implementation (or tdd-implementation-lite) only through this skill's sandbox check and quarantine flow, under the implementation policy the user picks there, never by invoking either directly.
 ---
 
 # Orchestrator
@@ -252,6 +252,34 @@ something small, not a large unit of work. If the user explicitly wants a
 specific slice built without it, that's their call to make by saying so
 directly; this skill doesn't offer a way to opt out on its own judgment.
 
+**Which skill the candidates build with is the user's call, asked once
+per slice, before anything is launched.** Once this row's entry is
+written (below), ask with `AskUserQuestion`, in one question, which
+implementation policy to run — each option with its one-line distinction,
+heavy first as the recommended default, and "not now" as the fourth:
+
+- **heavy** (default): both candidates build with
+  `tdd-coach:tdd-implementation`, the full discipline — a Test List, one
+  test at a time, RED seen failing, a `test-quality-review` call every
+  cycle, the can-it-fail check. The read context stays the one variable
+  between them (step A).
+- **lite**: both candidates build with `tdd-coach:tdd-implementation-lite`
+  — the same contract (what it owns, where things go, gaps escalated, the
+  report) with the TDD discipline left to the model's own judgment. The
+  read context stays the one variable.
+- **compare**: candidate 1 builds with `tdd-implementation`, candidate 2
+  with `tdd-implementation-lite`, both given the whole unit's read
+  context, so the discipline is the one variable; the judge's reasons and
+  your combine call then say what the prescribed discipline bought on
+  this slice.
+
+Skip the question only when the user's own message already named a
+policy by one of these words; a plain "go ahead" names none. Where
+`AskUserQuestion` is not available, ask in text and stop, the way any
+routed skill's question waits for a later turn. The policy chosen opens
+the entry's A line; "not now" stops here and gets its own entry later, as
+below.
+
 **Append one entry to `orchestrator-log.md`, in the target directory,
 every time this step runs — as soon as you've routed, before invoking the
 routed skill.** A routed skill often stops partway to ask the user
@@ -310,10 +338,15 @@ forward destination.
 Five steps, replacing the normal single inline execution for this one
 row only. Every other row in the table is unaffected.
 
-**A. Quarantine.** Launch two `tdd-coach:tdd-implementation` instances
-against the same slice — real async `Agent` calls, each with
+**A. Quarantine.** Launch two `tdd-coach` implementer instances against
+the same slice — real async `Agent` calls, each with
 `isolation: "worktree"` so each works in its own isolated copy of the
-repo. Give both the same task: build this slice from its design doc, its
+repo. Each task names the skill the policy gives that candidate, and
+names it as the skill to invoke first: under heavy both invoke
+`tdd-coach:tdd-implementation`; under lite both invoke
+`tdd-coach:tdd-implementation-lite`; under compare candidate 1 invokes
+`tdd-implementation` and candidate 2 `tdd-implementation-lite`, always
+that way round. Give both the same task: build this slice from its design doc, its
 runtime-safety criteria, its screen-design/accessibility criteria if
 UI-touching, and save output where you say — the same inputs a single
 non-quarantined execution would get — plus two lines both tasks carry
@@ -321,8 +354,8 @@ word for word: that `orchestrator` reviews the result afterwards (so it
 skips its own final review), and that the deliverable is this slice
 alone, with nothing to be built or prepared for beyond what its own
 design names. Nothing about quarantine or a second candidate existing.
-What differs, deliberately and always the same way round, is how much
-each is given to read around that task:
+What differs under heavy and lite, deliberately and always the same way
+round, is how much each is given to read around that task:
 
 - **Candidate 1 reads the slice alone**: the documents above and nothing
   else about the unit.
@@ -346,7 +379,12 @@ variable between them, so it goes to the same candidate number every
 time and the log's A line records it; over several slices, the judge's
 reasons and your combine calls then say whether the wider read helped,
 hurt or changed nothing — the roster's own evidence on how much context
-an implementer should get. Blindness here is structural,
+an implementer should get. Under compare the skill is that variable
+instead, and two variables at once would leave the judge's reasons
+attributable to neither: so both candidates get candidate 2's full-unit
+read context, the A line says so, and what the judge and your combine
+call separate is the prescribed discipline from what the model does
+unprompted. Blindness here is structural,
 not something to enforce by instruction: two fresh spawns with no shared
 context already can't see each other.
 
@@ -618,13 +656,22 @@ escalated, a name or boundary matched to a sibling slice's design, or
 nothing the judge or a reviewer could tell apart — and whether you keep
 it or set it aside. That line is
 the evidence the context difference exists to produce; candidate 2's
-having read more is not itself a reason to build from it.
+having read more is not itself a reason to build from it. Under the
+compare policy the variable is the discipline, not the context, so the
+line says instead what the prescribed loop changed, if anything — tests
+that would fail if the behaviour broke where the other candidate's would
+not, a gap escalated where the other decided it, scope kept where the
+other grew it, or nothing the judge or a reviewer could tell apart — and
+candidate 1's having followed the fuller skill is not itself a reason to
+build from it.
 
 **D. Finalize — a fresh instance, regenerated independently, not layered
 on either candidate.** Sandbox check first, same command as A, its result
 on the D line: this instance writes into the real tree. Then launch a
-third `tdd-coach:tdd-implementation`
-instance — not either original candidate — with no worktree isolation
+third implementer instance — `tdd-coach:tdd-implementation-lite` under
+the lite policy, `tdd-coach:tdd-implementation` under heavy and compare
+(the build that ships gets the full discipline unless the user chose
+otherwise for the slice) — not either original candidate — with no worktree isolation
 this time, targeting the project's real working tree. Its task is your
 combine brief from step C, plus the slice inputs from step A as candidate
 2 received them — the unit's read context included, since the brief may
@@ -715,7 +762,8 @@ with that finding outstanding, named in step 5, for the user to decide.
 **Reporting this procedure.** Step 5's report names what happened at each
 of the five steps above, not just the final outcome — for Combine, the
 judge's verdict, whether your call followed it, and what candidate 2's
-wider read changed, if anything; for Re-grade, each
+wider read changed, if anything (under compare, what the prescribed
+discipline changed); for Re-grade, each
 reviewer's result on the finalized build, what was handed back, and any
 Critical or High still standing. The two candidate
 worktrees and branches from Quarantine still exist once this completes —
@@ -733,9 +781,9 @@ exists to catch:
 ## <n>. <date> — slice ready for implementation
 
 **Routed to:** quarantine flow
-- **A. Quarantine:** sandbox check — `<PASS (<platform>; network allowlist <none | domains>) | FAIL: <failing checks>; settings written, re-check <PASS | FAIL: <checks>> | FAIL: <failing checks>; flow not started>`; candidate 1 — `<worktree path>` / `<branch>`, slice-only context; candidate 2 — `<worktree path>` / `<branch>`, full-unit context: `<requirements doc path>`; slices `<every path>`; designs `<every path, screen designs included>`
+- **A. Quarantine:** policy — `<heavy | lite | compare>`; sandbox check — `<PASS (<platform>; network allowlist <none | domains>) | FAIL: <failing checks>; settings written, re-check <PASS | FAIL: <checks>> | FAIL: <failing checks>; flow not started>`; candidate 1 — `<worktree path>` / `<branch>`, `<tdd-implementation | tdd-implementation-lite>`, `<slice-only | full-unit (compare)>` context; candidate 2 — `<worktree path>` / `<branch>`, `<tdd-implementation | tdd-implementation-lite>`, full-unit context: `<requirements doc path>`; slices `<every path>`; designs `<every path, screen designs included>`
 - **B. Grade:** sandbox check — `<PASS | FAIL: <failing checks>; procedure ended>`; validation gate per candidate — `<PASS | FAIL: <failing checks>>`; map diffs per candidate — `<duplication/wrong-direction candidate counts>`; reviewers run per candidate — `<list>`; findings summary — `<Critical/High counts per candidate>`
-- **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<render directory>/verdict.json`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; wider read changed — `<what, kept | what, set aside | nothing>`; brief — `<one line>`
+- **C. Combine:** pairwise judge — `<candidate 1 | candidate 2 | tie | split | no verdict>` (reasons in `<render directory>/verdict.json`); chosen basis — `<candidate 1 | candidate 2 | pieces of both>`, `<follows the judge | departs from the judge: <one line why>>`; `<wider read | discipline (compare)>` changed — `<what, kept | what, set aside | nothing>`; brief — `<one line>`
 - **D. Finalize:** sandbox check — `<PASS (network allowlist <none | domains>) | FAIL: <failing checks>; procedure ended>`; `<path to final artifact>`; validation gate — `<PASS | PASS after one handed-back fix | FAIL: <failing checks>>`; persistent map updated — `<path>`
 - **E. Re-grade:** sandbox check — `<PASS | FAIL: <failing checks>; procedure ended>`; reviewers run on the finalized build — `<list>`; findings — `<Critical/High counts>`; combine-brief findings addressed — `<count>` pass, `<count>` fail; handed back — `<none | <count> Critical/High: gate <PASS | FAIL: <failing checks>>; map re-run; re-review on the fix's files <clean | <what still stands>>; brief re-check <count> pass, <count> fail>`
 ```

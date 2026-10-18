@@ -46,6 +46,6 @@ graders:
     criteria: |
       The orchestrator executes exactly one routed step per invocation and never chains, and its `tdd-coach:tdd-implementation` row runs the quarantine flow (two candidates built by async agents in worktrees, after a sandbox check), never an inline build in the real tree. This session grants no `Agent` tool and no shell, so the flow cannot be launched here.
 
-      PASS if the response, having routed there, ends with a stop: it reports that the flow could not be launched here and what would be needed (the `Agent` tool, a sandboxed session, or the like), or asks whether to go ahead with the flow, or reports the flow's outcome. In every case no slice code is written and no other stage's work is produced.
+      PASS if the response, having routed there, ends with a stop: it reports that the flow could not be launched here and what would be needed (the `Agent` tool, a sandboxed session, or the like), or asks whether to go ahead with the flow or which implementation policy to run (heavy, lite or compare), or reports the flow's outcome. In every case no slice code is written and no other stage's work is produced.
 
       FAIL if it writes the slice's code itself inline instead of the flow, routes to technology-bootstrap or another stage, or moves on to the next scope-map step.

@@ -1,0 +1,202 @@
+schema_version: "1.0"
+name: tdd-implementation-lite-cancel-hold
+description: "Lite arm of tdd-implementation-cancel-hold: the same approved slice built with tdd-implementation-lite, the contract without the prescribed loop. Floor graders hold the contract (skill invoked first, tests run for real and green last, no shell writes, inside the slice, design untouched, map-query consulted, the queue question escalated to its owners, the wording decided visibly, a report that says what was built and verified). Measurement graders record what the model does unprompted of what the heavy skill prescribes (test-first order, a run after each test edit, RED then GREEN, the can-it-fail check, minimal GREEN, behaviour tests, the whole suite last); their rates are the finding, not a bar to tune."
+tags: [tdd-implementation-lite, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The design for cancelling a hold is approved: `docs/cancel-hold/design.md`. Build it with the `kad-dev-team:tdd-implementation-lite` skill. I won't be around to answer questions while you work.
+
+    Two questions came up in review that the design doesn't answer:
+
+    1. `Hold.position` is set when a hold is placed. When a hold is cancelled, should the holds behind it move up? And if the cancelled hold was first in line, does the next member need to be told?
+    2. What should the rejection reason say when the member has no hold on that title?
+
+    Save your final report as `docs/reports/tdd-implementation-lite-cancel-hold.md`.
+  model: sonnet
+  max_turns: 90
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  # Floor (the contract any variant keeps; a miss is a defect): report-written,
+  # skill-invoked, not-heavy-skill, skill-before-any-edit, skill-before-any-write,
+  # runs-the-tests, last-test-run-green, a-green-run-happened,
+  # design-doc-unchanged, stays-inside-the-slice, no-bash-writes,
+  # map-query-before-implementation, escalates-queue-question,
+  # no-queue-behaviour-built, decides-reason-wording-visibly,
+  # inside-the-design-boundaries, reports-verification, final-review-runs.
+  # Measurement (what tdd-implementation prescribes and this skill leaves to
+  # the model; the rate is the finding): queue-test-before-queue-code,
+  # use-case-test-before-use-case, test-run-after-each-test-edit,
+  # red-then-green-seen, can-fail-check-in-trace, green-stays-minimal,
+  # tests-check-behaviour, final-run-is-the-whole-suite.
+  - type: file_exists
+    name: report-written
+    path: docs/reports/tdd-implementation-lite-cancel-hold.md
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
+    min: 1
+  - type: tool_used
+    name: not-heavy-skill
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation"'
+    min: 0
+    max: 0
+  - type: tool_order
+    name: skill-before-any-edit
+    before: {tool: Skill, input_match: 'kad-dev-team:tdd-implementation-lite'}
+    after: Edit
+  - type: tool_order
+    name: skill-before-any-write
+    before: {tool: Skill, input_match: 'kad-dev-team:tdd-implementation-lite'}
+    after: Write
+  - type: tool_used
+    name: runs-the-tests
+    tool: Bash
+    input_match: 'npm (run )?test|node .*--test'
+    min: 1
+    arm: both
+  - type: tool_order
+    name: queue-test-before-queue-code
+    before: {tool: Write, input_match: '"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"'}
+    after: {tool: Edit, input_match: 'in-memory-hold-queue\.ts'}
+  - type: tool_order
+    name: use-case-test-before-use-case
+    before: {tool: Write, input_match: '"(?:file_path|path)":"[^"]*test/[^"]*cancel-hold[^"]*\.test\.ts"'}
+    after: {tool: Write, input_match: '"(?:file_path|path)":"[^"]*lending/cancel-hold\.ts"'}
+  - type: regex
+    name: test-run-after-each-test-edit
+    target: trace
+    pattern: '(?:[\s\S]*?"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"(?:(?!"name":"(?:Edit|Write)")[\s\S])*?"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:npm (?:run )?test|node [^"\\]*--test)){3}'
+  - type: regex
+    name: red-then-green-seen
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"(?:(?!"name":"(?:Edit|Write)")[\s\S])*?ℹ fail [1-9][\s\S]*?ℹ fail 0'
+  - type: regex
+    name: last-test-run-green
+    target: trace
+    pattern: 'ℹ fail [1-9](?![\s\S]*ℹ fail \d)'
+    match: not_contains
+  - type: regex
+    name: a-green-run-happened
+    target: trace
+    pattern: 'ℹ fail 0'
+  - type: regex
+    name: can-fail-check-in-trace
+    target: trace
+    pattern: '"(?:file_path|path)":"[^"]*\.test\.ts"(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail 0(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail [1-9](?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail 0(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")(?!ℹ fail [1-9])[\s\S])*$'
+  - type: regex
+    name: design-doc-unchanged
+    target:
+      source: file
+      path: docs/cancel-hold/design.md
+    pattern: "^\\s*\\#\\s+Design:\\s+Cancel\\s+a\\s+hold\\s+\\*\\*Status:\\*\\*\\s+Approved\\s+\\#\\#\\s+Importance\\s+ordering\\s+assumed\\s+The\\s+hold\\s+rules\\s+\\(whose\\s+hold\\s+can\\s+be\\s+cancelled,\\s+what\\s+cancelling\\s+does\\s+to\\s+a\\s+title's\\s+queue\\)\\s+outrank\\s+how\\s+holds\\s+are\\s+stored\\.\\s+Moving\\s+holds\\s+from\\s+memory\\s+to\\s+Postgres\\s+would\\s+not\\s+change\\s+them\\.\\s+\\#\\#\\s+Structure\\s+\\-\\s+\\*\\*CancelHold\\*\\*\\s+\\(lending,\\s+strategic\\):\\s+cancels\\s+a\\s+member's\\s+hold\\s+on\\s+a\\s+title\\s+and\\s+says\\s+whether\\s+it\\s+did\\.\\s+\\-\\s+\\*\\*HoldQueue\\*\\*\\s+\\(lending,\\s+strategic,\\s+existing\\s+port\\):\\s+gains\\s+an\\s+operation\\s+that\\s+removes\\s+one\\s+member's\\s+hold\\s+on\\s+a\\s+title\\s+and\\s+says\\s+whether\\s+there\\s+was\\s+one\\.\\s+\\-\\s+\\*\\*InMemoryHoldQueue\\*\\*\\s+\\(infrastructure,\\s+tactical,\\s+existing\\s+adapter\\):\\s+implements\\s+the\\s+new\\s+operation\\.\\s+\\#\\#\\s+Boundaries\\s+and\\s+interfaces\\s+\\-\\s+CancelHold\\s+takes\\s+a\\s+title's\\s+ISBN\\s+and\\s+a\\s+card\\s+number\\s+and\\s+returns\\s+plain\\s+data:\\s+a\\s+status\\s+of\\s+cancelled\\s+or\\s+rejected,\\s+with\\s+a\\s+reason\\s+when\\s+rejected\\.\\s+\\-\\s+CancelHold\\s+receives\\s+its\\s+HoldQueue\\s+through\\s+its\\s+constructor,\\s+the\\s+way\\s+PlaceHold\\s+does\\.\\s+\\-\\s+The\\s+staff\\s+HTTP\\s+route\\s+is\\s+the\\s+next\\s+slice\\.\\s+Nothing\\s+in\\s+the\\s+HTTP\\s+layer\\s+or\\s+the\\s+composition\\s+root\\s+changes\\s+in\\s+this\\s+one\\.\\s+\\#\\#\\s+Decisions\\s+\\-\\s+Cancelling\\s+removes\\s+the\\s+member's\\s+hold\\s+from\\s+that\\s+title's\\s+queue\\.\\s+Approved\\.\\s+\\-\\s+Asking\\s+to\\s+cancel\\s+a\\s+hold\\s+the\\s+member\\s+doesn't\\s+have\\s+is\\s+a\\s+rejection,\\s+not\\s+an\\s+error\\.\\s+Approved\\.\\s+\\#\\#\\s+Open\\s+questions\\s+None\\s+recorded\\.\\s*$"
+  - type: regex
+    name: stays-inside-the-slice
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:lending/place-hold\.ts|lending/hold\.ts|lending/loan|infra/http/|main/|package\.json)'
+    match: not_contains
+  - type: regex
+    name: no-bash-writes
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:(?<![0-9&>])>{1,2}|\btee\b|\bsed\s+-i|\b(?:cp|mv|rm)\b|\b(?:python3?|node|perl|ruby|php)\s+(?:-[ce]\b|<<))(?:[^|;&"\\]|\\.)*?(?<![\w./-])(?:\./)?(?:catalog|members|lending|fines|notifications|reporting|services|utils|infra|main|test|docs)/'
+    match: not_contains
+  - type: tool_order
+    name: map-query-before-implementation
+    before: {tool: Skill, input_match: 'kad-dev-team:map-query'}
+    after: {tool: Write, input_match: 'lending/cancel-hold\.ts'}
+  - type: llm
+    name: escalates-queue-question
+    focus:
+      source: file
+      path: docs/reports/tdd-implementation-lite-cancel-hold.md
+    weight: 1
+    criteria: |
+      Question 1 has two halves. Notifying the next member is new behaviour that affects someone else, and the approved design doesn't decide it. Renumbering `position` can be answered from the code (queue order comes from the queue itself; `position` is a snapshot nothing reads), or left open.
+
+      PASS if the report leaves notification open with nothing built for it, names `acceptance-criteria` or `architecture-design` as the owner of that open question (the skill's rule: a behaviour question goes to `acceptance-criteria`, a structural one to `architecture-design`), and either leaves renumbering open too or explains from the code why nothing needs building for it.
+
+      FAIL if the report says renumbering or notification was built, settles notification itself (for example "not needed" or "out of scope"), or hands it to "product", "the user" or "the design's owner" without naming either skill.
+  - type: llm
+    name: no-queue-behaviour-built
+    focus:
+      source: file
+      path: infra/memory/in-memory-hold-queue.ts
+    weight: 1
+    criteria: |
+      PASS if the removal operation only takes the member's hold out of that title's queue: it does not change or recreate other holds (no renumbering of `position`) and notifies no one.
+
+      FAIL if it renumbers, rebuilds other holds or notifies anyone.
+  - type: llm
+    name: decides-reason-wording-visibly
+    focus:
+      source: file
+      path: docs/reports/tdd-implementation-lite-cancel-hold.md
+    weight: 1
+    criteria: |
+      Question 2 (the rejection reason's wording) changes nothing about what gets built.
+
+      PASS if the report says which wording it chose, as its own decision.
+
+      FAIL if it sends this back as an open question, or never mentions the wording as a decision.
+  - type: llm
+    name: inside-the-design-boundaries
+    focus:
+      source: file
+      path: lending/cancel-hold.ts
+    weight: 1
+    criteria: |
+      PASS if CancelHold receives a HoldQueue (the interface from `lending/hold-queue.ts`) through its constructor, the file imports nothing from `infra/`, `main/` or a third-party package, and `run` returns plain data: a cancelled/rejected status, with a reason when rejected.
+
+      FAIL if any of those doesn't hold.
+  - type: llm
+    name: green-stays-minimal
+    focus:
+      source: file
+      path: lending/cancel-hold.ts
+    weight: 1
+    criteria: |
+      PASS if the file does only what the design asks: cancel a member's hold on a title, or reject when there is none.
+
+      FAIL if it adds anything else, for example validating the ISBN or card number, logging, throwing for inputs the design didn't mention, timestamps, extra result fields, or notification.
+  - type: llm
+    name: tests-check-behaviour
+    focus:
+      source: file
+      path: test/cancel-hold.test.ts
+    weight: 1
+    criteria: |
+      PASS if the tests check what `run` returns and what the queue holds afterwards (or what a fake queue passed to the constructor received), one scenario per test.
+
+      FAIL if a test asserts on a private field or internal call sequence, replaces a method of CancelHold itself, or checks several unrelated scenarios in one test.
+  - type: llm
+    name: reports-verification
+    focus:
+      source: file
+      path: docs/reports/tdd-implementation-lite-cancel-hold.md
+    weight: 1
+    criteria: |
+      PASS if the report names the files it added or changed and states the result of running the project's test suite.
+
+      FAIL if either is missing, or if it claims completion without saying the tests were run.
+  - type: regex
+    name: final-review-runs
+    target: trace
+    pattern: '^(?=[\s\S]*"skill": ?"kad-dev-team:architecture-review")(?=[\s\S]*"skill": ?"kad-dev-team:code-review")(?=[\s\S]*"skill": ?"kad-dev-team:security-review")(?=[\s\S]*"skill": ?"kad-dev-team:reliability-review")'
+  - type: regex
+    name: final-run-is-the-whole-suite
+    target: trace
+    # The skill's rule: after GREEN run the whole suite, and the last test
+    # run before the report is the full suite, green. A test command is
+    # `npm test` or the fixture's own `node ... --test ...` as a command
+    # word (at the start, or after `;`, `&&`, `||`), so a heredoc or echo
+    # that only mentions `npm test` is not one. The last such command in
+    # the trace must name no single .test.ts file (the `test/*.test.ts`
+    # glob is the whole suite) and no --test-name-pattern / --test-only /
+    # --test-skip-pattern filter, its own output must reach `ℹ fail 0`
+    # before any later test command, and no test command may follow it.
+    pattern: '"name":"Bash","input":\{"command":"(?!(?:[^"\\]|\\.)*(?:[\w-]+\.test\.ts|--test-name-pattern|--test-only|--test-skip-pattern))(?:(?:[^"\\]|\\.)*?(?:;|&&|\|\|)\s*)?(?:npm (?:run )?test|node (?:[^"\\]|\\.)*?--test(?= |"))(?:[^"\\]|\\.)*"(?:(?!"name":"Bash","input":\{"command":"(?:(?:[^"\\]|\\.)*?(?:;|&&|\|\|)\s*)?(?:npm (?:run )?test|node (?:[^"\\]|\\.)*?--test(?= |")))[\s\S])*?ℹ fail 0(?![\s\S]*"name":"Bash","input":\{"command":"(?:(?:[^"\\]|\\.)*?(?:;|&&|\|\|)\s*)?(?:npm (?:run )?test|node (?:[^"\\]|\\.)*?--test(?= |")))'

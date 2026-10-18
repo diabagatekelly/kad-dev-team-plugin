@@ -1077,6 +1077,63 @@ to do next" says where each would start.
         header now says the days-left overlay is only type-checked, and why.
 - [ ] G2. A lite variant of `tdd-implementation` as a second plugin dir,
       run through the same cases as a third arm.
+      *Reframed 2026-10-18, branch `eval-g2-lite-tdd`.* Not a second plugin
+      directory. The user's question was how a plugin user would choose
+      between the two implementations for a slice, or run both to compare,
+      so the variant is a sibling skill in the one plugin
+      (`skills/tdd-implementation-lite/SKILL.md`) and the choice is the
+      orchestrator's to offer. What lite is for, in the user's words: the
+      default may dictate things a current model does on its own, so lite
+      keeps only what the model cannot know — the contract (what it owns
+      and does not, where things go, `Write`/`Edit` not the shell, the
+      `map-query` consult, gaps decided visibly or escalated to a named
+      owner, no edits to other stages' documents, the final reviewers
+      unless the orchestrator grades, the report's shape) — and says
+      nothing about how to run the loop: no Test List, no one test at a
+      time, no RED seen failing, no `test-quality-review` per cycle, no
+      can-it-fail check, no refactor rules. The comparison then says which
+      of those instructions the model still needs.
+      *The policy question.* The orchestrator's `tdd-implementation` row
+      asks once per slice, after writing the entry and before the sandbox
+      check, with three options and "not now": heavy (both candidates on
+      `tdd-implementation`, the recommended default), lite (both on the
+      lite skill), compare (candidate 1 heavy, candidate 2 lite). Under
+      heavy and lite the read context stays the one variable between the
+      candidates (H4); under compare the skill is the variable, so both
+      get candidate 2's full-unit context and the C line's "wider read
+      changed" clause becomes "discipline changed". Finalize builds with
+      lite under lite and with the full skill under heavy and compare.
+      The A line records the policy and each candidate's skill. The
+      question is skipped only when the user's own message named a policy;
+      a plain "go ahead" names none. The lite skill's description, the
+      orchestrator's and the `tdd-coach` agent all say lite is reached
+      only when a task names it (G1's pre-named-stage lesson, applied
+      before it bites); `not-heavy-skill` graders check the other
+      direction on the lite cases.
+      *Cases.* Three lite twins of the tdd cases
+      (`tdd-implementation-lite-cancel-hold`, `-named-fix`,
+      `-cancel-hold-via-agent`), the prompt naming the lite skill, each
+      grader marked floor or measurement in a comment at the top of the
+      case's grader list. Floor is the contract: skill invoked first, the
+      heavy skill not invoked, tests run for real and green last, no shell
+      writes, inside the slice, design untouched, `map-query` consulted,
+      the queue question escalated to its owners, the wording decided
+      visibly, a report naming what was built and what the suite showed,
+      the final reviewers run. Measurement is what heavy prescribes and
+      lite leaves to the model: test-first order, a run after each test
+      edit, RED then GREEN, the can-it-fail check, minimal GREEN,
+      behaviour tests, the whole suite last; their rates are the finding,
+      recorded in the bar like any other grader's. `reviews-each-cycle`
+      is dropped (a plugin ritual nothing native would do) and the heavy
+      report-shape grader is replaced by `reports-verification`.
+      *The measurement.* G1 left the bars at the ceiling, so the
+      comparison is the blind judge: `evals/tools/compare_arms.py` takes a
+      heavy and a lite gate result kept with `--keep-scaffold`, renders
+      each run's change set against the case's pristine scaffold with
+      nothing naming the arm, judges every pair of runs in both orders
+      with the plugin's implementation rubric, and keeps every reason in a
+      `*.pairwise.json` next to the first result.
+      *Runs:* pending.
 - [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
       *Taken against the section 8 list, item by item:*

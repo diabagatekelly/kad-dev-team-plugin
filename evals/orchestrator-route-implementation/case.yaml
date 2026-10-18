@@ -52,6 +52,6 @@ graders:
     criteria: |
       The orchestrator executes exactly one routed step per invocation and never chains. Here the row is `tdd-coach:tdd-implementation`, whose procedure is the quarantine flow (two candidates built by async agents in worktrees, then graded and combined). This session grants no `Agent` tool, so the flow may not be launchable.
 
-      PASS if the response, having routed there, ends with a stop: it asks whether to go ahead with the quarantine flow (its cost, or whether the slice is already built), or reports that the flow could not be launched here and what would be needed, or reports the flow's outcome and asks whether to continue. In every case no other stage's work is produced.
+      PASS if the response, having routed there, ends with a stop: it asks whether to go ahead with the quarantine flow (its cost, or whether the slice is already built, or which implementation policy to run: heavy, lite or compare), or reports that the flow could not be launched here and what would be needed, or reports the flow's outcome and asks whether to continue. In every case no other stage's work is produced.
 
       FAIL if it writes the slice's code itself inline instead of the flow, routes to technology-bootstrap or another stage, or moves on to the next scope-map step.
