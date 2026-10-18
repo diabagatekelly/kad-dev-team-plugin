@@ -1722,7 +1722,75 @@ first real execution (the hand-off says what to watch).
       six on the fix commit `1ddff20` (the declined one included) and
       posted no further review; the High sandbox thread was resolved by
       hand with its reason. Both PR checks green.
-- [ ] H5. Sandbox the code-writing agent.
+- [x] H5. Sandbox the code-writing agent. *2026-10-17, branch
+      `plugin-fix-sandbox`, PR #13.* What the docs settle first (checked
+      2026-10-17): the sandbox is a session setting, not an agent's — it
+      covers what the Bash tool runs (Seatbelt on macOS, bubblewrap and
+      socat on Linux and WSL2; native Windows runs every command
+      unsandboxed), it lets a command read the whole machine unless
+      `sandbox.filesystem.denyRead` names the path, and the Read tool runs
+      outside it; a plugin cannot ship `sandbox` or `permissions` settings
+      (a plugin's settings carry two unrelated keys), and a plugin-shipped
+      agent's `permissionMode` and `hooks` are ignored, its `tools` and
+      `isolation` honoured; `isolation: "worktree"` blocks edits and
+      commands aimed at the main checkout but not reads or network. So the
+      plugin can check and refuse, not enforce. The shape, like H1 to H3:
+      `skills/orchestrator/scripts/sandbox_check.py --project <root>`, run
+      inline by the orchestrator before anything is launched. It runs
+      inside the session's own Bash sandbox, so five of its seven checks
+      probe the fence instead of reading a file: not native Windows; a
+      write to the home directory refused; a direct TCP connection out
+      refused (the sandbox leaves no route; allowed domains go through its
+      proxy); each credential path that exists on the machine (`~/.ssh`,
+      `~/.aws`, `~/.gnupg`, `~/.config/gh`, `~/.npmrc`, `~/.netrc`,
+      `~/.git-credentials`, `~/.docker/config.json`,
+      `~/.claude/.credentials.json`; `--secret` adds) unreadable from the
+      shell; each covered by a `Read(...)` rule in `permissions.deny` of
+      the merged settings files (user, project, local, managed), for the
+      Read tool every candidate holds. The two it has to read from the
+      settings are the escape hatches no probe sees before they are used
+      — `sandbox.enabled`, `allowUnsandboxedCommands: false`,
+      `failIfUnavailable: true`, `excludedCommands: []` — and the
+      project's `.worktreeinclude`, which would copy a gitignored `.env`
+      into every candidate's worktree. Last line `sandbox check: PASS |
+      FAIL`, exit 0/1.
+      *Skill text:* step A runs it before the baseline; on `FAIL` nothing
+      is launched, the row's entry carries the failing checks on its A
+      line, step 5 reports what to change (the README's new "Running the
+      quarantine flow" section has the settings block) and the flow stops;
+      no `dangerouslyDisableSandbox`, no narrowing the list, no editing
+      settings. Step D runs it again before the finalize instance writes
+      into the real tree, a `FAIL` ending the procedure like a second
+      gate failure. The log template's A and D lines carry the result and
+      the network allowlist. `PERSONAS.md` and the README say so.
+      *Not touched, deliberately:* `agents/tdd-coach/AGENT.md` — its
+      `tools` list is already an allowlist (no WebFetch, WebSearch or
+      Agent), `permissionMode` would be ignored on a plugin agent, and an
+      edit there re-runs the tdd cases at ten to fifteen minutes a run;
+      and no PreToolUse hook in `hooks/hooks.json` fencing the Read tool
+      by `agent_type`: it would be a second mechanism for what the deny
+      rules already cover, unprovable by any eval (plugin hooks do not
+      load in the eval sandbox), and H6 is the place to find out whether
+      it is needed.
+      *Proven by running, not by an eval:* in WSL2, a headless `claude -p`
+      with the README's settings block ran the script through its Bash
+      tool: all seven checks PASS (write "Read-only file system", network
+      "Network is unreachable", the credentials file unreadable from the
+      shell), and a second session asked to `Read` the credentials file
+      was refused by the deny rule. The same script unsandboxed, on
+      Windows and in WSL, fails platform (Windows), write, network and
+      shell-secrets with the paths named; with the credentials entries
+      removed from the settings the sandboxed run fails shell-secrets and
+      read-secrets and nothing else, so the shell probe measures the
+      `denyRead` entry and not the sandbox itself. `claude -p` needs its
+      prompt on stdin (`< prompt.txt`) when `--allowedTools` is on the
+      line, since that flag is variadic and swallows a trailing prompt.
+      *Run:* sixteen orchestrator cases at three runs, 16/16 at bar, all
+      sixteen at 1.0 on the first run
+      (`results/gate-20261017T235049-*`). Evidence recorded for all
+      sixteen.
+      *Sourcery on PR #13:* the reviewer's guide and no findings; the
+      evidence check green.
 - [ ] H6. The first real execution of the quarantine flow (added
       2026-10-17). No eval exercises the flow, so H1 to H4 have been
       proven by reading only; this is their real test, and it runs

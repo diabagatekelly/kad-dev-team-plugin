@@ -29,6 +29,8 @@ skills/
                        # and on the finalized build before it is reviewed in full
   orchestrator/scripts/pairwise_judge.py   # the flow's blind pairwise judge: both candidates' changes,
                        # unlabelled, both orders, reasons kept; run in Combine before the orchestrator's call
+  orchestrator/scripts/sandbox_check.py    # the flow's precondition: the session's Bash sandbox probed from
+                       # inside, secrets unreadable, no direct network, escape hatches off (see below)
 hooks/
   hooks.json, audit.sh # audit mode: off unless KAD_AUDIT=1 (see below)
 evals/
@@ -93,6 +95,69 @@ plugin aren't kept. In this repo, ask Claude to "review the audit logs"
 (the `audit-review` skill): it reads the flagged sessions against the
 skills' own rules and proposes fixes and eval cases.
 `evals/tools/audit_report.py` gives the raw overview.
+
+## Running the quarantine flow: the sandbox
+
+The orchestrator's `tdd-coach:tdd-implementation` row launches three
+code-writing instances and up to eighteen reviewers that run unattended
+with Bash in hand. A plugin cannot ship the settings that fence them (a
+plugin's settings carry no `sandbox` or `permissions` keys, and a
+plugin-shipped agent's `permissionMode` and `hooks` are ignored), so the
+flow checks the session it is about to run in and refuses to start when
+the check fails. Put this in the user settings of the session that runs
+the flow (`~/.claude/settings.json`), not in a project's `.claude/`:
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false,
+    "excludedCommands": [],
+    "autoAllowBashIfSandboxed": true,
+    "network": { "allowedDomains": [] },
+    "filesystem": {
+      "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "~/.config/gh", "~/.npmrc", "~/.netrc",
+                   "~/.git-credentials", "~/.docker/config.json", "~/.claude/.credentials.json"]
+    }
+  },
+  "permissions": {
+    "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.gnupg/**)", "Read(~/.config/gh/**)",
+             "Read(~/.npmrc)", "Read(~/.netrc)", "Read(~/.git-credentials)",
+             "Read(~/.docker/config.json)", "Read(~/.claude/.credentials.json)"]
+  }
+}
+```
+
+What each part is for: the sandbox (macOS Seatbelt; bubblewrap and socat
+on Linux and WSL2) confines what the Bash tool runs — writes to the
+project and the temp directory, network only through its proxy to
+`allowedDomains` — but lets a command read the whole machine unless
+`denyRead` names the path; the `permissions.deny` rules repeat the list
+for the Read tool, which runs outside the sandbox and which every
+`tdd-implementation` instance holds; `allowUnsandboxedCommands: false`
+makes a retry with `dangerouslyDisableSandbox` a no-op;
+`failIfUnavailable: true` makes a session with no sandbox backend refuse
+to start instead of running every command unsandboxed; an empty
+`excludedCommands` leaves no command outside the sandbox. Don't deny
+`~/.claude` wholesale: the plugin's own scripts live under
+`~/.claude/plugins/`. `allowedDomains` is the project's call (a test run
+that needs a registry names it); the orchestrator records the list in
+the log. On native Windows there is no sandbox at all — Claude Code runs
+commands unsandboxed — so the flow runs in a WSL2 session there.
+
+`skills/orchestrator/scripts/sandbox_check.py --project <root>` is what
+the orchestrator runs, inline, before anything is launched (and again
+before the finalize instance writes into the real tree). Because it runs
+inside the session's own Bash sandbox, it probes the fence instead of
+trusting the file: a write to the home directory must be refused, a
+direct TCP connection out must fail, each credential path that exists
+must be unreadable from the shell and covered by a `Read(...)` deny rule;
+the four settings above it reads from the merged settings files, since an
+escape hatch leaves no trace until it is used. `--secret <path>` adds a
+path to the list. The last line is `sandbox check: PASS` or `FAIL`; the
+flow does not start on `FAIL`, and the orchestrator reports what to
+change rather than working around it.
 
 ## Installing for real (once pushed to a repo)
 
