@@ -20,18 +20,26 @@ combine" section says when it runs and with which arguments):
    hold only erased type declarations are discounted from a loaded file's
    line percentage, since under `--experimental-transform-types` Node
    counts them against it. Without `node`, or when Node cannot parse the
-   file, every line counts as it did before.
+   file (JSX: Node's type stripping takes no `.tsx`), every line counts as
+   it did before. The per-line data comes from Node's `lcov` reporter,
+   added next to the project's own reporter when the test script is a
+   `node` command, so the discount never depends on the table's
+   `uncovered lines` column, which Node truncates with `…` when it is
+   long; with another test command the table is all there is, and a
+   truncated column means no discount, which the output says.
 3. changes: the change set is not empty. A build that changed nothing is
    not an implementation, whatever the suite says.
 4. scope: every file changed since the baseline is inside one of the
    `--allow` entries: an entry ending in `/` allows everything under that
    directory, any other entry allows exactly that file. Untracked files
-   count as changed; so do both sides of a rename. Claude Code's own files
-   are never part of the change set: a `.claude/` directory at any depth
-   (the `Agent` tool keeps the quarantine candidates' worktrees under
+   count as changed; so do both sides of a rename. Claude Code's own
+   placeholders are not: an untracked path under a `.claude/` directory,
+   or named `.mcp.json`, that is not a regular file with content (the
+   `Agent` tool keeps the quarantine candidates' worktrees under
    `.claude/worktrees/` inside the real project, and the session's sandbox
    mounts empty placeholder settings into every directory a command runs
-   from, both of which git lists as untracked) and `.mcp.json`.
+   from, both of which git lists as untracked). A settings file a
+   candidate actually wrote there has content and stays in the set.
 5. protected: every `--protect` file is byte-identical to the baseline.
 
 The change set is computed after the test command has run, so a test that
@@ -70,8 +78,10 @@ import os
 import re
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
+import tempfile
 
 
 def git(project, *args):
@@ -89,26 +99,36 @@ def file_hash(project, path):
         return hashlib.sha256(f.read()).hexdigest()
 
 
-def claude_code_path(path):
-    """Claude Code's own files inside the project, never a candidate's
-    change: a `.claude/` directory at any depth (the `Agent` tool's
-    worktrees under `.claude/worktrees/`, session scratch, and the empty
-    placeholder settings the session's sandbox mounts into every directory
-    a command runs from, which git lists as untracked from inside it) and
-    `.mcp.json` beside it. A settings edit there is the sandbox check's to
-    catch before every launch, not the gate's."""
+def claude_code_placeholder(project, path):
+    """An untracked path under a `.claude/` directory, or named `.mcp.json`,
+    that nothing wrote: Claude Code's own presence in the project, never a
+    candidate's change. The `Agent` tool keeps the quarantine candidates'
+    worktrees under `.claude/worktrees/` (git lists each as an untracked
+    directory of the real tree), and the session's sandbox mounts empty
+    placeholder settings into every directory a command runs from (device
+    nodes or empty files, listed as untracked from inside it). What stays
+    in the change set: a regular file with content, wherever it is, so a
+    candidate that writes a `.claude/settings.json` or an `.mcp.json` is
+    seen by scope and by the judge; and every tracked change."""
     parts = path.split("/")
-    return ".claude" in parts or parts[-1] == ".mcp.json"
+    if ".claude" not in parts and parts[-1] != ".mcp.json":
+        return False
+    try:
+        st = os.lstat(os.path.join(project, path))
+    except OSError:
+        return True  # listed but gone or unreachable: nothing a candidate left
+    return not stat.S_ISREG(st.st_mode) or st.st_size == 0
 
 
 def working_tree_changes(project, base):
     """Files that differ from `base`: tracked changes (both sides of a
     rename, so a file moved out of scope or into it is seen) plus untracked
     files git does not ignore. Ignored files are build output and stay out,
-    and so does everything `claude_code_path` names."""
+    and so do Claude Code's own placeholders (`claude_code_placeholder`)."""
     tracked = git(project, "diff", "--name-only", "--no-renames", base).stdout.splitlines()
     untracked = git(project, "ls-files", "--others", "--exclude-standard").stdout.splitlines()
-    return sorted({f for f in tracked + untracked if f and not claude_code_path(f)})
+    untracked = [f for f in untracked if f and not claude_code_placeholder(project, f)]
+    return sorted({f for f in tracked + untracked if f})
 
 
 def record_baseline(project, path):
@@ -151,25 +171,68 @@ def check_protected(project, protect, changed_files):
     return {"passed": not changed, "changed": changed}
 
 
-def coverage_command(project, cmd):
+def with_lcov_reporter(script, lcov_path):
+    """The node test script with Node's `lcov` reporter writing to
+    `lcov_path` beside the script's own reporter(s). Node requires one
+    destination per reporter, so each reporter the script names without a
+    destination gets `stdout`, and a script that names none gets the
+    default `spec` on `stdout` explicitly (adding `lcov` alone would replace
+    the default and take the summary with it)."""
+    args = shlex.split(script)
+    reporters = sum(1 for a in args if a == "--test-reporter" or a.startswith("--test-reporter="))
+    destinations = sum(1 for a in args if a == "--test-reporter-destination" or a.startswith("--test-reporter-destination="))
+    extra = []
+    if reporters == 0:
+        extra += ["--test-reporter=spec", "--test-reporter-destination=stdout"]
+    else:
+        extra += ["--test-reporter-destination=stdout"] * max(0, reporters - destinations)
+    extra += ["--test-reporter=lcov", "--test-reporter-destination=" + lcov_path]
+    # Before the test file list: node ignores test-runner flags after it. A
+    # flag that takes its value as the next argument keeps it.
+    head, tail = [], []
+    rest = args[1:]
+    i = 0
+    while i < len(rest):
+        a = rest[i]
+        if tail or not a.startswith("-"):
+            tail.append(a)
+        else:
+            head.append(a)
+            if a in VALUE_FLAGS and i + 1 < len(rest):
+                head.append(rest[i + 1])
+                i += 1
+        i += 1
+    return " ".join(shlex.quote(a) for a in ["node", "--experimental-test-coverage", *head, *extra, *tail])
+
+
+# Node flags whose value is the next argument when written without `=`.
+VALUE_FLAGS = {"--import", "--require", "-r", "--loader", "--experimental-loader", "--conditions", "-C",
+               "--env-file", "--input-type", "--test-reporter", "--test-reporter-destination",
+               "--test-name-pattern", "--test-skip-pattern", "--test-concurrency", "--test-timeout",
+               "--test-shard", "--test-coverage-include", "--test-coverage-exclude", "--max-old-space-size"}
+
+
+def coverage_command(project, cmd, lcov_path):
     """`npm test` with coverage: run the package's test script through node
     directly with `--experimental-test-coverage` inserted, since npm's
     Windows shim rejects NODE_OPTIONS and node ignores the flag after the
-    test file list. Any other command is run as given with NODE_OPTIONS."""
+    test file list; the `lcov` reporter is added for exact per-line data.
+    Any other command is run as given with NODE_OPTIONS, and only the
+    table is available."""
     if cmd.strip() in ("npm test", "npm run test"):
         try:
             script = json.load(open(os.path.join(project, "package.json"), encoding="utf-8"))["scripts"]["test"]
         except (OSError, ValueError, KeyError):
             script = None
         if script and script.startswith("node "):
-            return "node --experimental-test-coverage " + script[len("node "):], None
+            return with_lcov_reporter(script, lcov_path), None
     return cmd, (os.environ.get("NODE_OPTIONS", "") + " --experimental-test-coverage").strip()
 
 
-def run_tests(project, cmd, coverage, timeout):
+def run_tests(project, cmd, coverage, timeout, lcov_path=None):
     env = dict(os.environ)
     if coverage:
-        cmd, node_options = coverage_command(project, cmd)
+        cmd, node_options = coverage_command(project, cmd, lcov_path)
         if node_options:
             env["NODE_OPTIONS"] = node_options
     argv = shlex.split(cmd)
@@ -233,6 +296,40 @@ def parse_coverage(output):
     return rows
 
 
+def parse_lcov(path, project):
+    """Node's lcov report as {project-relative file: {"line": %, "branch": %,
+    "uncovered": set of lines, "exact": True}}: `DA:line,hits` gives every
+    instrumented line, `BRDA:line,block,branch,taken` every branch (`-` is
+    never reached). {} when the file is missing or empty."""
+    rows = {}
+    try:
+        text = open(path, encoding="utf-8", errors="replace").read()
+    except OSError:
+        return rows
+    for record in text.split("end_of_record"):
+        lines, uncovered, branches, taken = 0, set(), 0, 0
+        name = None
+        for entry in record.splitlines():
+            if entry.startswith("SF:"):
+                name = entry[3:].strip()
+            elif entry.startswith("DA:"):
+                ln, hits = entry[3:].split(",")[:2]
+                lines += 1
+                if hits.strip() in ("0", "-"):
+                    uncovered.add(int(ln))
+            elif entry.startswith("BRDA:"):
+                branches += 1
+                if entry.split(",")[-1].strip() not in ("0", "-"):
+                    taken += 1
+        if not name or not lines:
+            continue
+        rel = os.path.relpath(name, project).replace(os.sep, "/") if os.path.isabs(name) else name.replace(os.sep, "/")
+        rows[rel] = {"line": round(100.0 * (lines - len(uncovered)) / lines, 2),
+                     "branch": round(100.0 * taken / branches, 2) if branches else 100.0,
+                     "uncovered": uncovered, "exact": True}
+    return rows
+
+
 SOURCE = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs")
 TEST_DIRS = {"test", "tests", "__tests__", "spec"}
 TEST_NAME = re.compile(r"\.(test|spec)\.[cm]?[jt]sx?$")
@@ -265,21 +362,25 @@ def runtime_lines(project, files):
     return {a["file"]: set(a["lines"]) for a in answers if isinstance(a, dict) and "lines" in a}
 
 
-def check_coverage(output, files, min_line, min_branch, project):
+def check_coverage(output, files, min_line, min_branch, project, lcov_path=None):
     """`files`: the changed files that exist. Node lists every file the tests
     loaded, so a changed source file with no row was never loaded: that is
     zero coverage, not nothing to check. Except a file with no runtime code
     (types only), which nothing can load: exempt, and named as such. For a
     loaded file, uncovered lines that hold no runtime code (erased type
     declarations, counted against the file under transform mode) are taken
-    out of both sides of the line percentage: the table's own numbers give
-    the lines it counted (`uncovered / (1 - line%)`), and the discount
-    recomputes against the rest."""
+    out of both sides of the line percentage. With the lcov report the
+    counted lines are known exactly; from the table alone, its own numbers
+    give them (`uncovered / (1 - line%)`), unless the `uncovered lines`
+    column was truncated, in which case there is no discount and the
+    result says so."""
     rows = parse_coverage(output)
     if not rows:
         return {"passed": False, "reason": "no coverage table in the test output", "files": {}}
+    for f, exact in (parse_lcov(lcov_path, project) if lcov_path else {}).items():
+        rows[f] = exact  # the same files, with every line listed
     runtime = runtime_lines(project, [f for f in files if not is_test_file(f)])
-    checked, low, unmeasured, type_only = {}, [], [], []
+    checked, low, unmeasured, type_only, undiscounted = {}, [], [], [], []
     for f in files:
         if is_test_file(f) or not f.endswith(SOURCE):
             continue
@@ -291,19 +392,23 @@ def check_coverage(output, files, min_line, min_branch, project):
             continue
         line, branch, uncovered = rows[f]["line"], rows[f]["branch"], rows[f]["uncovered"]
         checked[f] = {"line": line, "branch": branch}
-        if f in runtime and uncovered and line < 100:
-            erased = uncovered - runtime[f]
-            if erased:
-                counted = round(len(uncovered) / (1 - line / 100))
-                covered = counted - len(uncovered)
-                remaining = counted - len(erased)
-                line = 100.0 if remaining <= 0 else round(100.0 * covered / remaining, 2)
-                checked[f].update({"line": line, "reported_line": rows[f]["line"],
-                                   "type_only_lines_discounted": sorted(erased)})
+        if f in runtime and line < 100:
+            if uncovered is None:
+                undiscounted.append(f)  # the table's column was cut short
+            else:
+                erased = uncovered - runtime[f]
+                if erased:
+                    counted = round(len(uncovered) / (1 - line / 100))
+                    covered = counted - len(uncovered)
+                    remaining = counted - len(erased)
+                    line = 100.0 if remaining <= 0 else round(100.0 * covered / remaining, 2)
+                    checked[f].update({"line": line, "reported_line": rows[f]["line"],
+                                       "type_only_lines_discounted": sorted(erased)})
         if line < min_line or branch < min_branch:
             low.append(f)
     return {"passed": not low and not unmeasured, "files": checked, "below_minimum": low,
-            "not_measured": unmeasured, "type_only": type_only,
+            "not_measured": unmeasured, "type_only": type_only, "undiscounted": undiscounted,
+            "exact": bool(lcov_path) and any(r.get("exact") for r in rows.values()),
             "min_line": min_line, "min_branch": min_branch}
 
 
@@ -337,12 +442,20 @@ def main():
     git(project, "rev-parse", "--verify", "--quiet", base + "^{commit}")
 
     report = {"base": base, "baseline": a.baseline, "checks": {}}
-    report["checks"]["suite"], output = run_tests(project, a.test_cmd, a.coverage, a.timeout)
-    # After the tests, so a test command that edits the tree is seen.
-    files = changed_files(project, base, baseline)
-    if a.coverage:
-        present = [f for f in files if os.path.isfile(os.path.join(project, f))]
-        report["checks"]["coverage"] = check_coverage(output, present, a.min_line, a.min_branch, project)
+    # The lcov report goes to the temp directory, never into the tree.
+    lcov_dir = tempfile.mkdtemp(prefix="kad-gate-") if a.coverage else None
+    lcov_path = os.path.join(lcov_dir, "coverage.lcov") if lcov_dir else None
+    try:
+        report["checks"]["suite"], output = run_tests(project, a.test_cmd, a.coverage, a.timeout, lcov_path)
+        # After the tests, so a test command that edits the tree is seen.
+        files = changed_files(project, base, baseline)
+        if a.coverage:
+            present = [f for f in files if os.path.isfile(os.path.join(project, f))]
+            report["checks"]["coverage"] = check_coverage(output, present, a.min_line, a.min_branch,
+                                                          project, lcov_path)
+    finally:
+        if lcov_dir:
+            shutil.rmtree(lcov_dir, ignore_errors=True)
     report["checks"]["changes"] = {"passed": bool(files), "count": len(files),
                                    "files": sorted(files)}
     if a.allow:
@@ -376,6 +489,9 @@ def main():
             if discounted:
                 detail += " (erased type lines discounted: " + ", ".join(
                     f"{f} {c['files'][f]['reported_line']:g} -> {c['files'][f]['line']:g}" for f in discounted) + ")"
+            if c.get("undiscounted"):
+                detail += (" (uncovered-lines column truncated, no discount possible: "
+                           + ", ".join(c["undiscounted"]) + ")")
         elif name == "suite" and not c["passed"]:
             detail = (f" timed out after {c['timeout']:g}s" if c["timed_out"]
                       else f" exit {c['exit_code']}, summary fail count {c['summary_fail_count']}")

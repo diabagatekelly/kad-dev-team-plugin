@@ -9,30 +9,92 @@
 // Usage: node --no-warnings ts_runtime_lines.mjs <file> [<file> ...]
 // Prints one JSON array: per file {"file", "mode": "strip" | "transform",
 // "lines": [1-based line numbers with runtime code]}, or {"file", "error"}
-// when Node cannot parse it (the gate then counts every line).
+// when Node cannot parse it (the gate then counts every line). JSX is one
+// such case: Node's type stripping takes no `.tsx`, in either mode, so a
+// `.tsx` file is counted as it was before this helper existed.
 //
-// Strip mode keeps every line in place, so a runtime line is one that is
-// not blank once types and comments are gone. Strip mode refuses a few
-// constructs (parameter properties, enums, namespaces); transform mode
-// takes those, and its source map says which original lines produced any
-// output at all.
+// Strip mode keeps every line in place, so a runtime line is one that holds
+// something other than whitespace and comments. Comments are found by
+// walking the text with a small state machine (string, template literal
+// with its `${}` interpolations, regular expression, line comment, block
+// comment), not by a regular expression: `//` or `/*` inside a string or a
+// template literal is code, and a comment marker inside a regex literal is
+// code too. Strip mode refuses a few constructs (parameter properties,
+// enums, namespaces); transform mode takes those, and its source map says
+// which original lines produced any output at all.
 import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 
-function withoutComments(text) {
-  // Block comments become the same number of newlines so lines keep their numbers.
-  return text
-    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
-    .replace(/(^|[^:])\/\/.*$/gm, '$1');
-}
+// Characters after which a `/` starts a regular expression rather than a
+// division: the end of an expression is a word, a number, `)`, `]` or `}`.
+const BEFORE_DIVISION = /[\w$)\]}]/;
 
-function runtimeLinesFromText(stripped) {
+function runtimeLinesFromText(text) {
+  const hasCode = [];
+  let line = 0;
+  let state = 'code';            // code | line-comment | block-comment | single | double | template | regex
+  let templateDepth = [];        // one entry per open template literal: its `${}` nesting depth
+  let lastSignificant = '';      // last non-space character seen in code, for the regex/division call
+  let regexInClass = false;
+  const mark = () => { hasCode[line] = true; };
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (ch === '\n') {
+      line++;
+      if (state === 'line-comment' || state === 'single' || state === 'double' || state === 'regex') {
+        state = 'code';          // an unterminated string, regex or line comment ends with its line
+      }
+      continue;
+    }
+    switch (state) {
+      case 'code':
+        if (ch === '/' && next === '/') { state = 'line-comment'; i++; break; }
+        if (ch === '/' && next === '*') { state = 'block-comment'; i++; break; }
+        if (/\s/.test(ch)) break;
+        mark();
+        if (ch === "'") { state = 'single'; }
+        else if (ch === '"') { state = 'double'; }
+        else if (ch === '`') { state = 'template'; templateDepth.push(0); }
+        else if (ch === '/' && !BEFORE_DIVISION.test(lastSignificant)) { state = 'regex'; regexInClass = false; }
+        else if (ch === '}' && templateDepth.length && templateDepth[templateDepth.length - 1] > 0) {
+          // closing a `${ ... }` interpolation: back into the template text
+          templateDepth[templateDepth.length - 1]--;
+          if (templateDepth[templateDepth.length - 1] === 0) state = 'template';
+        }
+        lastSignificant = ch;
+        break;
+      case 'line-comment':
+        break;
+      case 'block-comment':
+        if (ch === '*' && next === '/') { state = 'code'; i++; }
+        break;
+      case 'single':
+      case 'double':
+        mark();
+        if (ch === '\\') { i++; if (text[i] === '\n') line++; break; }
+        if ((state === 'single' && ch === "'") || (state === 'double' && ch === '"')) state = 'code';
+        break;
+      case 'template':
+        mark();
+        if (ch === '\\') { i++; if (text[i] === '\n') line++; break; }
+        if (ch === '`') { state = 'code'; templateDepth.pop(); lastSignificant = '`'; break; }
+        if (ch === '$' && next === '{') { templateDepth[templateDepth.length - 1]++; state = 'code'; i++; lastSignificant = '{'; }
+        break;
+      case 'regex':
+        mark();
+        if (ch === '\\') { i++; break; }
+        if (ch === '[') regexInClass = true;
+        else if (ch === ']') regexInClass = false;
+        else if (ch === '/' && !regexInClass) { state = 'code'; lastSignificant = '/'; }
+        break;
+      default:
+        break;
+    }
+  }
   const lines = [];
-  withoutComments(stripped).split('\n').forEach((line, i) => {
-    const code = line.trim();
-    if (code && !/^export\s*\{\s*\}\s*;?$/.test(code)) lines.push(i + 1);
-  });
-  return lines;
+  hasCode.forEach((v, idx) => { if (v) lines.push(idx + 1); });
+  return lines.filter((n) => !/^\s*export\s*\{\s*\}\s*;?\s*$/.test(text.split('\n')[n - 1] || ''));
 }
 
 const VLQ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -74,23 +136,33 @@ function runtimeLinesFromMap(transformed) {
   return [...lines].sort((a, b) => a - b);
 }
 
+// `--text FILE`: report the runtime lines of a file that is already plain
+// JavaScript or stripped TypeScript, without stripping (for checking the
+// comment walk on its own).
+const args = process.argv.slice(2);
 const results = [];
-for (const file of process.argv.slice(2)) {
-  let source;
-  try {
-    source = readFileSync(file, 'utf8');
-  } catch (e) {
-    results.push({ file, error: e.message });
-    continue;
+if (args[0] === '--text') {
+  for (const file of args.slice(1)) {
+    results.push({ file, mode: 'text', lines: runtimeLinesFromText(readFileSync(file, 'utf8')) });
   }
-  try {
-    results.push({ file, mode: 'strip', lines: runtimeLinesFromText(stripTypeScriptTypes(source, { mode: 'strip' })) });
-  } catch (stripError) {
+} else {
+  for (const file of args) {
+    let source;
     try {
-      const transformed = stripTypeScriptTypes(source, { mode: 'transform', sourceMap: true, sourceUrl: file });
-      results.push({ file, mode: 'transform', lines: runtimeLinesFromMap(transformed) });
+      source = readFileSync(file, 'utf8');
     } catch (e) {
-      results.push({ file, error: `${stripError.message}; ${e.message}` });
+      results.push({ file, error: e.message });
+      continue;
+    }
+    try {
+      results.push({ file, mode: 'strip', lines: runtimeLinesFromText(stripTypeScriptTypes(source, { mode: 'strip' })) });
+    } catch (stripError) {
+      try {
+        const transformed = stripTypeScriptTypes(source, { mode: 'transform', sourceMap: true, sourceUrl: file });
+        results.push({ file, mode: 'transform', lines: runtimeLinesFromMap(transformed) });
+      } catch (e) {
+        results.push({ file, error: `${stripError.message}; ${e.message}` });
+      }
     }
   }
 }

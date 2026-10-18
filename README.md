@@ -31,7 +31,7 @@ skills/
                        # and on the finalized build before it is reviewed in full
   orchestrator/scripts/pairwise_judge.py   # the flow's blind pairwise judge: both candidates' changes,
                        # unlabelled, both orders, reasons kept; rendered to prompt files in Combine, answered
-                       # by two pairwise-judge agents and collected, before the orchestrator's call
+                       # by two read-only pairwise-judge agents, saved and collected, before the orchestrator's call
   orchestrator/scripts/ts_runtime_lines.mjs # which lines of a TypeScript file keep runtime code, for the
                        # gate's coverage check (type-only modules exempt, erased type lines discounted)
   orchestrator/scripts/sandbox_check.py    # the flow's precondition: the session's Bash sandbox probed from
@@ -164,8 +164,8 @@ run without an approval prompt no unattended agent could answer. Don't
 deny `~/.claude` wholesale: the plugin's own scripts live under
 `~/.claude/plugins/`. The same fence blocks a nested `claude -p` from the
 API and from the credentials file, which is why the flow's pairwise judge
-runs as two `pairwise-judge` agents on prompts the script renders, never
-as a command. `allowedDomains` is the project's call (a test run
+runs as two read-only `pairwise-judge` agents on prompts the script
+renders, their replies saved by the orchestrator, never as a command. `allowedDomains` is the project's call (a test run
 that needs a registry names it); the orchestrator records the list in
 the log. On native Windows there is no sandbox at all — Claude Code runs
 commands unsandboxed — so the flow runs in a WSL2 session there, and a

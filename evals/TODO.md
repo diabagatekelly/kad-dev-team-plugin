@@ -2111,3 +2111,70 @@ first real execution (the hand-off says what to watch).
       *Run:* sixteen orchestrator cases at three runs, 16/16 at bar, all
       sixteen at 1.0 (`results/gate-20261018T124007-*`). Evidence recorded for all
       sixteen. Bars left at 1.0.
+      *Sourcery on PR #15 (2026-10-18), two passes over the same diff,
+      twelve threads, seven distinct findings:*
+      - *Taken, "configuration changes bypass review" (High):* the gate
+        dropped every `.claude/` path and `.mcp.json` from the change set,
+        so a candidate writing a project `.claude/settings.json`, or an
+        application file named `.mcp.json`, would have been invisible to
+        scope and to the judge. Now only an *untracked* such path that is
+        not a regular file with content is dropped (`claude_code_placeholder`):
+        the nested worktree directories and the sandbox's mounted
+        placeholders are exactly that, and a file a candidate wrote has
+        content and stays; tracked changes always stay.
+      - *Taken in part, "judge can write outside its answer" / "can access
+        unrelated files" (High):* the judge agent lost its `Write` tool: its
+        reply is the answer, the orchestrator saves it verbatim to the
+        order's answer file and collects; the rendered prompt's closing
+        note says so and tells the judge to read nothing else. `Read` stays:
+        the prompt is a file because a rendered view can run to 200 KB per
+        candidate, more than belongs in an `Agent` call's own text, and the
+        session's deny rules (which H5 requires) cover the Read tool for
+        every secret path; a judge that read some other project file could
+        only taint its own reasoning, which `verdict.json` keeps for the
+        orchestrator to read.
+      - *Taken, "uncovered runtime code is discounted" (High) and
+        "template code is discounted" (Medium):* `ts_runtime_lines.mjs`
+        found comments with two regexes, so `//` or `/*` inside a string or
+        a template literal blanked code lines. It now walks the text with a
+        state machine (strings, template literals and their `${}`
+        interpolations, regex literals, line and block comments); checked
+        on a crafted file with each case (`--text FILE` runs the walk alone).
+      - *Taken, "concurrent judges share run files" (Medium):* the default
+        render directory comes from `mkdtemp` next to the baseline
+        (`kad-pairwise-<stamp>-<random>/`), an explicit `--out` is claimed
+        with `os.mkdir` and refused when it exists with content.
+      - *Taken in part, "a stalled judge blocks the flow" (Medium):* the
+        skill has no clock, so no timeout; step C now says a judge that has
+        not returned long after the other (minutes, not tens of minutes) is
+        a missing answer: stop it, collect, and the one relaunch applies.
+      - *Taken, "truncated coverage causes false failures" (Medium), and
+        declined, "truncated coverage crashes the gate" (Medium):* no
+        crash: `None` was already guarded. But Node truncates the table's
+        `uncovered lines` column with `…`, which silently lost the discount.
+        The gate now adds Node's `lcov` reporter next to the script's own
+        reporter when the test command is a `node` script (every reporter
+        gets a destination, since Node demands one each; the script's flags
+        that take a value keep it) and reads exact per-line and per-branch
+        data from it (`parse_lcov`), so the discount never depends on the
+        column; when only the table exists and the column is cut, the
+        output says `uncovered-lines column truncated, no discount
+        possible`. The lcov line count differs from the table's by one on
+        `cancel-hold.ts` (81.25 vs 82.35); the discount still reaches 100.
+      - *Declined, "TSX type lines still fail coverage" (Medium):* Node's
+        type stripping takes no JSX in either mode (checked), so a `.tsx`
+        file is counted as it was before this PR; a project whose tests
+        load `.tsx` is not running on Node's own test runner with type
+        stripping anyway, and its table comes from another toolchain. Said
+        in the helper's header and the gate's docstring.
+      *Checks after the round* (`scratchpad/h6-test-round2.sh`): the comment
+      walk's expected line set; the candidate files' answers unchanged;
+      three test-script shapes get the right reporters; candidate 1 and 2
+      of the third session fail only the real branch shortfall, exact data
+      in use; the real tree keeps a non-empty `docs/x/.mcp.json` in the
+      change set and drops an empty `docs/x/.claude/settings.json`; two
+      renders in the same second get two directories; the reply-only note
+      ends each prompt; a non-empty `--out` is refused; collect settles.
+      *Run after the round:* sixteen orchestrator cases at three runs,
+      16/16 at bar, all sixteen at 1.0 (`results/gate-20261018T130441-*`).
+      Evidence recorded for all sixteen.

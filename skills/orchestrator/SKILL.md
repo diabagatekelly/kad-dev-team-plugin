@@ -523,21 +523,30 @@ python3 -I "${CLAUDE_SKILL_DIR}/scripts/pairwise_judge.py" --render --candidate 
 ```
 
 It writes two prompt files into a new directory next to the baseline
-(`.git/kad-pairwise-<timestamp>/`; it prints the directory, both prompt
-paths and the answer path that goes with each) and nothing is judged yet.
-Then launch two `kad-dev-team:pairwise-judge` agents as real async `Agent`
-calls, in parallel, each told exactly two things — its prompt path and its
-answer path — and nothing else: no candidate, worktree, branch, finding or
-gate result, nothing the prompt file does not already hold. (The judge
-used to run as a nested `claude -p` inside this Bash tool; the session
-sandbox the flow requires blocks that from the API and from the
-credentials file, as the first real run found, and an agent runs through
-the session's own connection.) Wait for both, then settle the verdict
-inline:
+(`.git/kad-pairwise-<timestamp>-<random>/`; it prints the directory, both
+prompt paths and the answer path that goes with each) and nothing is
+judged yet. Then launch two `kad-dev-team:pairwise-judge` agents as real
+async `Agent` calls, in parallel, each told exactly one thing — its prompt
+path — and nothing else: no candidate, worktree, branch, finding or gate
+result, nothing the prompt file does not already hold. (The judge used to
+run as a nested `claude -p` inside this Bash tool; the session sandbox the
+flow requires blocks that from the API and from the credentials file, as
+the first real run found, and an agent runs through the session's own
+connection. The agent holds a Read tool and nothing else, so candidate
+text that asks a judge to write or run something has nothing to act
+with.) Each agent's reply is its answer: when both have returned, save
+each reply, verbatim and whole, to that order's answer path with the Write
+tool — the file the render step named for that prompt, nothing
+reformatted, nothing added — then settle the verdict inline:
 
 ```
 python3 -I "${CLAUDE_SKILL_DIR}/scripts/pairwise_judge.py" --collect '<that directory>'
 ```
+
+A judge that has not returned long after the other has (each reads one
+file and answers; minutes, not tens of minutes) is a missing answer, not a
+reason to wait indefinitely: stop it, leave its answer file unwritten, and
+collect; the one relaunch below applies to it.
 
 What each judge sees is the brief (the `--task` files: the slice
 documents both candidates were given to deliver — the design doc, the
@@ -563,17 +572,13 @@ since the verdict is one reader's and the gate and the reviewers do not
 depend on it. Run it even when a candidate failed the gate: what that
 candidate got right is still information, and the judge does not know
 which one failed. Blind here describes the judge, not you; you are about
-to read everything. Run `--collect` only once both agents have returned,
-never while one is still running. If it prints `pairwise judge: NO
+to read everything. Run `--collect` only once both replies are saved,
+never while an agent is still running. If it prints `pairwise judge: NO
 VERDICT` (exit 2), its lines above say which order has no answer, or an
-answer that is not a verdict. An agent that returned the JSON object in
-its reply and wrote no file is the first thing to check (the first real
-run's judges did exactly that): write that reply, verbatim, to the
-order's answer path with the Write tool and collect again. Otherwise
-relaunch that order's judge agent once, with the same two paths, and
-collect again; if there is still no verdict, make the call without it and
-say so in the log; don't stage a "blind" comparison of your own in its
-place.
+answer that is not a verdict: relaunch that order's judge agent once, with
+the same prompt path, save its reply the same way, and collect again; if
+there is still no verdict, make the call without it and say so in the log;
+don't stage a "blind" comparison of your own in its place.
 
 Then read both candidates'
 actual code from their worktree paths (not just their own self-reports),

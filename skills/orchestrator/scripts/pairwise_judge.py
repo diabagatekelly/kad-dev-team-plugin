@@ -17,14 +17,17 @@ inside a candidate counts against that candidate.
 Two ways to run the judge:
 
 - `--render`: write the two prompts (one per order) and a manifest into a
-  directory, and stop. The orchestrator then launches two
-  `kad-dev-team:pairwise-judge` agents, each told only its prompt path and
-  its answer path, and runs `--collect DIR` once both have written their
-  answers: the answers are validated, the verdict computed and the record
-  written, exactly as below. This is how the quarantine flow runs it: the
-  flow requires the session's Bash sandbox, which blocks a nested
-  `claude -p` from the API and from the credentials file, and an agent
-  runs through the session's own connection, outside that sandbox.
+  fresh directory, and stop. The orchestrator then launches two
+  `kad-dev-team:pairwise-judge` agents (Read only), each told its prompt
+  path and nothing else; each replies with the JSON verdict, the
+  orchestrator saves each reply verbatim as that order's answer file, and
+  runs `--collect DIR`: the answers are validated, the verdict computed and
+  the record written, exactly as below. This is how the quarantine flow
+  runs it: the flow requires the session's Bash sandbox, which blocks a
+  nested `claude -p` from the API and from the credentials file, and an
+  agent runs through the session's own connection, outside that sandbox.
+  The judge holds no Write tool, so candidate text that asks it to write
+  somewhere has nothing to act with.
 - neither flag: run the judge here, through `claude -p`, both orders in a
   row. For a caller outside a sandbox: the eval suite's
   `evals/tools/pairwise_judge.py` imports `compare()` from here to judge
@@ -112,7 +115,7 @@ You have no tools and nothing to look up; everything is above. Respond with only
 
 AGENT_ANSWER_NOTE = """
 
-You are running as an agent with a Write tool: write exactly that JSON object, and nothing else, to the file {answer} with the Write tool, then reply with the same object."""
+You are running as an agent: your whole reply is that one JSON object and nothing else (the orchestrator saves it as {answer}). Do not read, write or open anything beyond the prompt file you were given."""
 
 NO_VERDICT = "no verdict"
 MANIFEST = "manifest.json"
@@ -336,16 +339,22 @@ def print_record(record, out):
 def render(out_dir, request, sides, record):
     """Write both orders' prompts and the manifest the collect step reads.
     The manifest, not the prompts, says which candidate each order showed
-    first; the judge agents are given the prompt paths only."""
-    os.makedirs(out_dir, exist_ok=True)
-    if os.listdir(out_dir):
-        sys.exit(f"--out {out_dir} is not empty; render into a fresh directory")
+    first; the judge agents are given the prompt paths only. `out_dir` is
+    created here and must not exist yet (`os.mkdir` is the atomic claim;
+    the default name comes from `mkdtemp`, so two renders in the same
+    second never share a directory)."""
+    try:
+        os.mkdir(out_dir)
+    except FileExistsError:
+        if os.listdir(out_dir):
+            sys.exit(f"--out {out_dir} already exists and is not empty; render into a fresh directory")
     orders = []
     for i, (first, second, prompt) in enumerate(order_prompts(request, sides, IMPLEMENTATION_RUBRIC), 1):
         prompt_file, answer_file = f"order-{i}.md", f"answer-{i}.json"
         # The prompt's own last instruction is what the judge follows; the
-        # first real run's agents answered in text and wrote nothing when the
-        # file-writing instruction lived only in the agent definition.
+        # first real run's agents answered in text when the instruction
+        # lived only in the agent definition. The reply is the answer; the
+        # orchestrator saves it, so the judge needs no Write tool.
         prompt += AGENT_ANSWER_NOTE.format(answer=os.path.join(out_dir, answer_file))
         with open(os.path.join(out_dir, prompt_file), "w", encoding="utf-8") as f:
             f.write(prompt)
@@ -357,9 +366,9 @@ def render(out_dir, request, sides, record):
         print(f"candidate {i + 1}: {len(c['files'])} changed file(s)"
               + (" (view truncated)" if c["truncated"] else ""))
     print(f"judge prompts rendered in {out_dir}: one kad-dev-team:pairwise-judge agent per order,"
-          " each given its prompt path and its answer path and nothing else")
+          " each given its prompt path and nothing else; save each agent's reply, verbatim, as its answer file")
     for o in orders:
-        print(f"  prompt {os.path.join(out_dir, o['prompt'])} -> answer {os.path.join(out_dir, o['answer'])}")
+        print(f"  prompt {os.path.join(out_dir, o['prompt'])} -> reply saved as {os.path.join(out_dir, o['answer'])}")
     print(f"then: --collect '{out_dir}'")
     print("pairwise judge: RENDERED")
     return 0
@@ -437,8 +446,13 @@ def main():
         if not a.baseline:
             p.error("--out is needed when there is no --baseline to put the verdicts next to")
         stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-        out = os.path.join(os.path.dirname(os.path.abspath(a.baseline)),
-                           f"kad-pairwise-{stamp}" + ("" if a.render else ".json"))
+        beside = os.path.dirname(os.path.abspath(a.baseline))
+        if a.render:
+            # Created here, atomically and uniquely: two renders in the same
+            # second (two flows in one repository) never share a directory.
+            out = tempfile.mkdtemp(prefix=f"kad-pairwise-{stamp}-", dir=beside)
+        else:
+            out = os.path.join(beside, f"kad-pairwise-{stamp}.json")
 
     baseline, base = None, a.base
     if a.baseline:
