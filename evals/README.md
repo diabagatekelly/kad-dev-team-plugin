@@ -57,6 +57,14 @@ reasons). The judge itself lives in the plugin
 (`skills/orchestrator/scripts/pairwise_judge.py`, where the orchestrator's
 Combine step runs it on two implementation candidates); this tool imports
 it and adds the review rubric and the results-dir plumbing.
+`tools/compare_arms.py` does the same between two arms of one tdd case:
+the slice built by `tdd-implementation` against the same slice built by
+`tdd-implementation-lite` (G2's measurement, since G1 left the bars at the
+ceiling). It takes two gate results whose runs were kept with
+`--keep-scaffold`, renders each run's change set against the case's
+pristine scaffold with nothing that names the arm, judges every pair of
+runs in both orders with the plugin's implementation rubric, and writes
+every reason to a `*.pairwise.json` next to the first result.
 
 Run it:
 
@@ -67,6 +75,9 @@ claude plugin eval . --case 'library-app-*' --ablation with-without --scaffold \
 claude plugin eval . --case 'security-review-*' --ablation with-without --scaffold \
   --judge-model sonnet --max-cost-usd 10 --no-publish --trust-plugin
 python3 -I evals/tools/pairwise_judge.py evals/results/<timestamp>
+# heavy against lite, from two kept gate runs of the same slice:
+python3 -I evals/tools/compare_arms.py evals/results/gate-<ts>-tdd-implementation-cancel-hold.json \
+  evals/results/gate-<ts>-tdd-implementation-lite-cancel-hold.json --task docs/cancel-hold/design.md
 ```
 
 `library-app-*` does not match the security cases and `security-review-*`

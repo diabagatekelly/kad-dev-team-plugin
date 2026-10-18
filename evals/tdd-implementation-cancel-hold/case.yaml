@@ -104,9 +104,9 @@ graders:
     criteria: |
       Question 1 has two halves. Notifying the next member is new behaviour that affects someone else, and the approved design doesn't decide it. Renumbering `position` can be answered from the code (queue order comes from the queue itself; `position` is a snapshot nothing reads), or left open.
 
-      PASS if the report leaves notification open with nothing built for it, names `acceptance-criteria` or `architecture-design` as the owner of that open question (the skill's rule: a behaviour question goes to `acceptance-criteria`, a structural one to `architecture-design`), and either leaves renumbering open too or explains from the code why nothing needs building for it.
+      PASS if the report leaves notification open with nothing built for it, names `acceptance-criteria` or `architecture-design` as the owner of that open question (the skill's rule: a behaviour question goes to `acceptance-criteria`, a structural one to `architecture-design`), and either leaves renumbering open too or explains from the code why nothing needs building for it. Saying notification is out of scope for this slice until its owner decides, with one of those skills named, is leaving it open; naming a second owner besides one of them does not fail.
 
-      FAIL if the report says renumbering or notification was built, settles notification itself (for example "not needed" or "out of scope"), or hands it to "product", "the user" or "the design's owner" without naming either skill.
+      FAIL if the report says renumbering or notification was built, settles notification itself as a decision ("not needed", "won't be built", "out of scope" with no owner to decide it), or hands it to "product", "the user" or "the design's owner" without naming either skill.
   - type: llm
     name: no-queue-behaviour-built
     focus:
@@ -156,7 +156,7 @@ graders:
       path: test/cancel-hold.test.ts
     weight: 1
     criteria: |
-      PASS if the tests check what `run` returns and what the queue holds afterwards (or what a fake queue passed to the constructor received), one scenario per test.
+      PASS if the tests check what `run` returns and what the queue holds afterwards (or what a fake queue passed to the constructor received), one scenario per test. A test in this file that exercises the queue's new operation directly through its public interface (for example that `remove` reports whether a hold existed) passes too.
 
       FAIL if a test asserts on a private field or internal call sequence, replaces a method of CancelHold itself, or checks several unrelated scenarios in one test.
   - type: llm

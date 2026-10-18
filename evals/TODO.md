@@ -1077,6 +1077,235 @@ to do next" says where each would start.
         header now says the days-left overlay is only type-checked, and why.
 - [ ] G2. A lite variant of `tdd-implementation` as a second plugin dir,
       run through the same cases as a third arm.
+      *Reframed 2026-10-18, branch `eval-g2-lite-tdd`.* Not a second plugin
+      directory. The user's question was how a plugin user would choose
+      between the two implementations for a slice, or run both to compare,
+      so the variant is a sibling skill in the one plugin
+      (`skills/tdd-implementation-lite/SKILL.md`) and the choice is the
+      orchestrator's to offer. What lite is for, in the user's words: the
+      default may dictate things a current model does on its own, so lite
+      keeps only what the model cannot know — the contract (what it owns
+      and does not, where things go, `Write`/`Edit` not the shell, the
+      `map-query` consult, gaps decided visibly or escalated to a named
+      owner, no edits to other stages' documents, the final reviewers
+      unless the orchestrator grades, the report's shape) — and says
+      nothing about how to run the loop: no Test List, no one test at a
+      time, no RED seen failing, no `test-quality-review` per cycle, no
+      can-it-fail check, no refactor rules. The comparison then says which
+      of those instructions the model still needs.
+      *The policy question.* The orchestrator's `tdd-implementation` row
+      asks once per slice, after writing the entry and before the sandbox
+      check, with three options and "not now": heavy (both candidates on
+      `tdd-implementation`, the recommended default), lite (both on the
+      lite skill), compare (candidate 1 heavy, candidate 2 lite). Under
+      heavy and lite the read context stays the one variable between the
+      candidates (H4); under compare the skill is the variable, so both
+      get candidate 2's full-unit context and the C line's "wider read
+      changed" clause becomes "discipline changed". Finalize builds with
+      lite under lite and with the full skill under heavy and compare.
+      The A line records the policy and each candidate's skill. The
+      question is skipped only when the user's own message named a policy;
+      a plain "go ahead" names none. The lite skill's description, the
+      orchestrator's and the `tdd-coach` agent all say lite is reached
+      only when a task names it (G1's pre-named-stage lesson, applied
+      before it bites); `not-heavy-skill` graders check the other
+      direction on the lite cases.
+      *Cases.* Three lite twins of the tdd cases
+      (`tdd-implementation-lite-cancel-hold`, `-named-fix`,
+      `-cancel-hold-via-agent`), the prompt naming the lite skill, each
+      grader marked floor or measurement in a comment at the top of the
+      case's grader list. Floor is the contract: skill invoked first, the
+      heavy skill not invoked, tests run for real and green last, no shell
+      writes, inside the slice, design untouched, `map-query` consulted,
+      the queue question escalated to its owners, the wording decided
+      visibly, a report naming what was built and what the suite showed,
+      the final reviewers run. Measurement is what heavy prescribes and
+      lite leaves to the model: test-first order, a run after each test
+      edit, RED then GREEN, the can-it-fail check, minimal GREEN,
+      behaviour tests, the whole suite last; their rates are the finding,
+      recorded in the bar like any other grader's. `reviews-each-cycle`
+      is dropped (a plugin ritual nothing native would do) and the heavy
+      report-shape grader is replaced by `reports-verification`.
+      *The measurement.* G1 left the bars at the ceiling, so the
+      comparison is the blind judge: `evals/tools/compare_arms.py` takes a
+      heavy and a lite gate result kept with `--keep-scaffold`, renders
+      each run's change set against the case's pristine scaffold with
+      nothing naming the arm, judges every pair of runs in both orders
+      with the plugin's implementation rubric, and keeps every reason in a
+      `*.pairwise.json` next to the first result.
+      *Runs (2026-10-18, `gate-20261018T181429-*`, six tdd cases at three
+      runs, kept):* the three heavy cases held their bars (cancel-hold
+      0.97 against 0.99: one run collapsed the loop into a single cycle
+      and lost `test-run-after-each-test-edit` and `reviews-each-cycle`,
+      inside tolerance; the other two 1.00). The lite cases: named-fix
+      1.00 (15/15 in every run); cancel-hold 0.92 and the via-agent twin
+      0.91, every floor grader 3/3 in both, the score lost entirely to
+      the measurement graders. What the model did, read from the traces
+      (`seq.py` in the session's scratch, the edit/run/skill sequence per
+      run), with the one thing lite does tell it about the loop said
+      first: told to build test-first and run for real, every lite run
+      invoked the skill first, consulted `map-query`, wrote the test file
+      before any code (8 of 9 runs saw it fail before the code existed;
+      the ninth wrote test and code together; test-first is in the lite
+      text, so the two test-before-code graders are floor, not
+      measurement, as Sourcery pointed out), and then, unprompted,
+      ran the real runner, finished on the whole suite green,
+      kept GREEN to the design, tested behaviour through the public
+      interface, escalated the queue question to `acceptance-criteria`
+      and `architecture-design`, decided the wording visibly, and ran the
+      four reviewers. What it never did unprompted: the per-test cycle.
+      Every lite cancel-hold run wrote all its tests in one file, saw one
+      RED, wrote all three code files, saw one GREEN
+      (`test-run-after-each-test-edit` 0/6), where heavy ran four or five
+      cycles; and only one run in six broke the implementation on purpose
+      to see a test fail (`can-fail-check-in-trace` 0/6: the one run that
+      did, the via-agent twin's run 2, "changed `remove` to match any
+      hold, two tests failed, restored", then edited the test file again
+      after the reviewers, which is the shape the grader cannot see; left
+      as it is, the heavy case has the same grader). So the heavy skill's
+      instructions the model still needs are exactly two: one test at a
+      time with a run between, and the can-it-fail check. Everything else
+      in the 292 lines, the model does on its own at Sonnet.
+      *The blind judge (`compare_arms.py`, every pair, both orders,
+      $0.55 a case):* cancel-hold **lite 9/9**, via-agent **lite 9/9**,
+      named-fix lite 3, heavy 1, tie 3, split 2 (the code identical to
+      the line, one extra assertion deciding the non-ties). Eighteen of
+      eighteen on the slice case in both orders is not noise, and the
+      reasons are the same every time: lite's tests cover more of the
+      slice's behaviour through the public interface (cancelling the
+      head so the next member becomes head, a title with no queue,
+      cancelling twice, a hold on another title untouched: five or six
+      tests to heavy's two or three for `CancelHold`, read from the kept
+      trees), and heavy's adapter writes an empty array back for an
+      unknown title and removes every hold of that member where lite's
+      `findIndex`/`splice` removes one and leaves a miss untouched; one
+      heavy run tested `CancelHold` against a hand-rolled fake whose
+      `remove` returned a canned boolean, so its use-case test checked
+      delegation. Heavy's one credit, a separate adapter test file, did
+      not outweigh that. The cause is in the heavy text, not the judge:
+      "list every scenario the current goal actually needs ... no
+      defensive case nobody asked for" and "the minimum that passes"
+      read, at Sonnet, as two or three scenarios and a filter, where the
+      model's own judgment writes five and a splice. The per-cycle
+      `test-quality-review` call did not catch the thinness, because it
+      reviews the test just written, not the scenarios not written.
+      *What this says for the plugin (recorded, not acted on; the user's
+      call):* the two instructions worth keeping could move into the lite
+      contract as two lines, and the Test List's "only what's needed now"
+      clause is costing coverage the model would otherwise write; a
+      heavy-vs-lite compare in a real quarantine run would say whether the
+      reviewers in Grade see the same difference. One case, one model, one
+      slice: the via-agent twin repeating it 9/9 is the only replication
+      so far.
+      *Second run (`gate-20261018T183555-*`, the evidence run with the
+      bars in place):* lite cancel-hold 0.88 against 0.92, the via-agent
+      twin 0.87 against 0.91, both inside tolerance, named-fix 1.00
+      again; the measurement graders lost exactly as before (the
+      per-test cycle 0/6, the can-it-fail check 0/6), and this time two
+      floor graders lost runs under the agent path, which the first run
+      had not shown: `final-review-runs` 1/3 (two delegated agents
+      skipped the four reviewers and said so: "this was a small change
+      and I only self-checked it, so that step is skipped, not passed";
+      the same miss the heavy skill took on 2026-10-13, when it was
+      fixed with the line about the one-line refactor that shipped a
+      missed null check) and `map-query-before-implementation` 2/3 (one
+      agent went straight to the test). Both are contract, so both are
+      lite-skill text: the final-review section now carries the heavy
+      skill's reason and says "small change, self-checked, reviewers
+      skipped" is the step skipped however honestly reported, and the
+      consult section says the `Skill` call comes before the first
+      implementation file and a grep is not the consult. Two judge
+      losses were the rubric being narrower than a correct output, G5's
+      lesson again: `escalates-queue-question` failed "out of scope
+      until it is specified" with `acceptance-criteria` named (the FAIL
+      example "out of scope" was written for a decision, not a deferral;
+      now says so, and a second owner named beside the skill does not
+      fail), and `tests-check-behaviour` failed a file whose last test
+      exercised the adapter's `remove` directly, true/false, through its
+      public interface (now passes by name). Both rewordings applied to
+      the heavy twins as well, `rejudge.py --criteria-from` 3/3 on each
+      lost output, and the four cancel-hold cases re-run. Also from the
+      orchestrator re-run: `orchestrator-route-implementation-prenamed`
+      0.93, one judge loss on a log entry headed with the row's own
+      words ("slice has a design doc, runtime-safety criteria filled,
+      project has a stack, not yet implemented") instead of the
+      template's "slice ready for implementation", the same shape the
+      judge had passed in run 0; both route-implementation graders now
+      say either heading is correct and "Routed to: quarantine flow" is
+      the route whether or not the entry names the skill; 3/3 at 1.0 on
+      the re-run. Every orchestrator run asked the policy question in
+      text (heavy recommended, lite, compare, not now) and stopped.
+      *Third run (the evidence run after the text and rubric edits; the
+      one before it was voided by the session limit):* heavy cancel-hold
+      1.00 and 1.00, lite cancel-hold 0.91, the via-agent twin 0.92,
+      lite named-fix 1.00; the agent-path reviewers and the consult held
+      3/3 after the text fix, the two measurement graders lost 0/6
+      again, and one judge vote on `escalates-queue-question` was lost
+      (2/3) under the reworded rubric. Bars for the three lite cases
+      recorded from this run; evidence current for every case the branch
+      reaches. Over three runs of three, the lite per-test cycle is 0/9
+      and the can-it-fail check 1/9: the finding is stable.
+      *Sourcery on PR #17, thirteen findings, nine taken, one in part,
+      three declined:*
+      - *Taken, `compare_arms.py` (two High, five Medium):* a result file
+        is data and chose what ran and what was read — the case
+        directory now has to be `evals/<name>/` in this repository and a
+        kept run a `claude-eval-*` directory under the temp root the gate
+        used, holding its trace; symlinks are listed as links and never
+        read (the plugin judge's own rule); `--paired` matches run
+        indices and names the unmatched; the record's default name
+        carries a UTC stamp and an existing file is never overwritten;
+        the record is written whole-or-nothing through a temp file and
+        after every judged pair, so an interruption keeps what was
+        judged; and the two results must be two arms of one slice
+        (byte-identical `scaffold.sh`, identical prompts once the lite
+        clause and the case's own name are removed), which the first
+        version did not check and which the test of the check found
+        wanting at once: the report path in each prompt names its case,
+        so the brief now carries `<case>` for both. Re-run on the kept
+        trees, paired: lite 3/3, the same verdict with a neutral brief.
+      - *Taken in part, "the judge can identify each arm":* the brief
+        half, above. The label half declined: the case names key the
+        sides so the winner comes back by name, and the judge's prompt
+        labels them `implementation_1` and `implementation_2`
+        (`pairwise_judge.py`'s template); said so in the tool's docstring.
+      - *Taken, "lite prompts test-first behaviour":* right. Lite says
+        "write the tests first and the code to pass them", so test-first
+        is told, not unprompted; the two test-before-code graders moved
+        from measurement to floor in both cancel-hold lite cases, and
+        the account above, the hand-off and the PR say "told only to
+        build test-first and run for real". What stays unprompted is
+        everything about how.
+      - *Taken, "the policy choice is missing from the log":* the text
+        now says the A line is written when step A runs, as every
+        sub-entry of this row is, and the entry carries only the route
+        until then; the mechanics were already that, the sentence read
+        otherwise.
+      - *Declined, "lite omits architecture constraints":* the three
+        per-change checks (dependency direction, plain data across a
+        boundary, the design's names) are craft the measurement exists
+        to observe; the contract is "the design's boundaries, interface
+        ownership and names are the structure you build inside", which
+        lite keeps, and `inside-the-design-boundaries` held 9/9 with the
+        Grade step's `architecture-review` behind it in real use.
+      - *Declined, "mutation checks accept unrelated failures":* the
+        regexes are the heavy cases' own, the fixture's suite is
+        deterministic, and binding a fail count to an implementation
+        edit from a trace needs a plant (G3 recorded right-reason RED as
+        ungraded for that reason).
+      - *Declined, "floor grader misses can pass the gate":* true of the
+        gate's arithmetic (A5: one flip at three runs is over the
+        tolerance, absorbed by the re-run), and a per-run hard floor
+        would fail the gate on judge noise the suite records honestly
+        (one `escalates-queue-question` vote in nine this round). The
+        label says what a miss means, and reading the misses is what
+        found the two agent-path text fixes; the gate's always-passing
+        rule catches a floor that goes to 0/3.
+      *Re-run after the round (the orchestrator wording and the two
+      case comments):* nineteen cases 19/19 at bar, the seventeen
+      orchestrator cases all at 1.0, lite cancel-hold 0.92 and its
+      via-agent twin 0.92 (the per-test cycle and the can-it-fail check
+      0/6 once more: 0/15 and 1/15 over the five runs of three now).
 - [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
       *Taken against the section 8 list, item by item:*

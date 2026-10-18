@@ -44,7 +44,8 @@ evals/
   thresholds.json      # each case's bar for the eval gate
   tools/               # eval_gate.py, affected_cases.py, record_thresholds.py, rejudge.py,
                        # freeze-history.sh, audit_report.py, pairwise_judge.py (with/without arms,
-                       # a wrapper over the plugin's judge above), new-case.sh,
+                       # a wrapper over the plugin's judge above), compare_arms.py (heavy against
+                       # lite tdd builds from kept runs, the same judge), new-case.sh,
                        # summarize_results.py and report_evidence.py (read a results dir or CI artifact),
                        # eval_evidence.py (the PR check: a passing gate run recorded against these exact files),
                        # wsl-setup.sh and wsl-gate.sh (set up, then run the gate under WSL2 in one command)
@@ -100,6 +101,25 @@ plugin aren't kept. In this repo, ask Claude to "review the audit logs"
 (the `audit-review` skill): it reads the flagged sessions against the
 skills' own rules and proposes fixes and eval cases.
 `evals/tools/audit_report.py` gives the raw overview.
+
+## Implementation policy: heavy, lite, compare
+
+Before the quarantine flow launches anything, the orchestrator asks once
+per slice which skill the two candidates build with:
+
+- **heavy** (default): both on `tdd-implementation`, the full prescribed
+  loop (Test List, one test at a time, RED seen failing, a
+  `test-quality-review` call every cycle, the can-it-fail check).
+- **lite**: both on `tdd-implementation-lite`, the same contract (what
+  the implementer owns, where things go, how a gap is escalated, what the
+  report holds) with the TDD discipline left to the model's own judgment.
+- **compare**: one of each, with the read context held equal so the
+  discipline is the only difference; the blind judge's reasons and the
+  combine call then say, slice by slice, what the prescribed loop buys
+  over what the model does unprompted.
+
+The policy is recorded on the log's A line. `tdd-implementation-lite` is
+never chosen from a plain "build it": it runs only when a task names it.
 
 ## Running the quarantine flow: the sandbox
 
