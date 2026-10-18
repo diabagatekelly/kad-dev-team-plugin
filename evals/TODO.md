@@ -1052,6 +1052,29 @@ to do next" says where each would start.
       overlay and says why it skips its tests. Bars recorded for the four
       new cases (118 cases with bars), evidence current for every case the
       branch reaches, every frozen chain current.
+      *Sourcery on PR #16, five findings, two taken, three declined:*
+      - *Declined, "staff and member payments can overlap" (High), "waived
+        fine can still be charged" (Medium):* both review the planted PR as
+        production code. The overlap of `PayOwnFine`, `CollectFine` and a
+        staff waiver on one fine with no atomic claim is RR2's race across
+        two routes; it is not planted, a review that raises it is right,
+        and no grader fails it. Recorded in the answer key's
+        not-false-alarms note for the overlay rather than "fixed" in the
+        code under review.
+      - *Declined, "successful charges remain outstanding" (High):* the
+        late completion is R15, the plant; `ledger.settle` failing after a
+        successful charge is R6 newly routed through. Both in the same note.
+      - *Taken in part, "retries after a day can recharge" (Medium):* the
+        request option covers only Stripe's window (24 hours in the SDK's
+        contract), so a retry on a fine still outstanding a day later can
+        charge again. The grader's PASS already accepted "or otherwise
+        making a repeat attempt safe"; it now also says a review that names
+        the window and asks for the attempt to be recorded is right, and
+        R14's fix column says the same. Not made a requirement: the planted
+        defect is the key sent to the wrong place, and the request option
+        is its fix. Re-run 3/3 at 1.0.
+      - *Taken, "overlay test coverage is overstated" (Low):* verify.sh's
+        header now says the days-left overlay is only type-checked, and why.
 - [ ] G2. A lite variant of `tdd-implementation` as a second plugin dir,
       run through the same cases as a third arm.
 - [x] G3. Coverage items from the audit's section 8 that no case checks

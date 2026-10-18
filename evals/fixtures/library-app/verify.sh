@@ -7,7 +7,9 @@
 #   4. the clean catalog module loads,
 #   5. the test suite under test/ passes,
 #   6. each case-only code overlay (code-plants/) type-checks on top of the
-#      app, and its tests pass when run in place (`npm test`'s command).
+#      app, and its tests pass when run in place (`npm test`'s command),
+#      except code-review/days-left, whose test needs the planted runtime
+#      cycle and is only type-checked.
 # Run from anywhere: bash evals/fixtures/library-app/verify.sh
 set -euo pipefail
 

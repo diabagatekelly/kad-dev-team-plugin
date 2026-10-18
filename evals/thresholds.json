@@ -1340,7 +1340,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261018T160908-reliability-review-portal-pay-pr.json",
+    "source": "results/gate-20261018T164528-reliability-review-portal-pay-pr.json",
     "graders": {
       "finds-idempotency-key-never-reaches-stripe": 1.0,
       "finds-timed-out-charge-dropped-unrecorded": 1.0,

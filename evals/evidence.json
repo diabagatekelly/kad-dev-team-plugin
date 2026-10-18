@@ -666,13 +666,13 @@
     "recorded": "2026-10-17T01:15:27Z"
   },
   "reliability-review-portal-pay-pr": {
-    "inputs": "c507022575451b51d5ee6e01c4a41153f685ee5373d51b6574f3378f2e1ea407",
+    "inputs": "5581029b51384e8d5c10b090bfdaff90ccafda402b5abf14279a178f535fa59a",
     "score": 1.0,
-    "bar": null,
+    "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261018T160908-reliability-review-portal-pay-pr.json",
+    "source": "results/gate-20261018T164528-reliability-review-portal-pay-pr.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-18T16:12:27Z"
+    "recorded": "2026-10-18T16:46:58Z"
   },
   "requirements-refinement-payfine-phase1": {
     "inputs": "8a1eb6e3899e53d1d0d153634adaf97c943f48b3a16f4fbe5713db64569a96dc",
