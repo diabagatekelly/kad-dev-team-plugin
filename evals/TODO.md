@@ -955,8 +955,8 @@ case). Every one has a gate-mode three-run bar and current evidence.
 G3, G4 and G5 done 2026-10-16/17 on branch `eval-phase-g` (PR #7, merged
 2026-10-17, `c6b9e19`), in the order G5, G4, G3 (the two carried-over
 findings first, because their evidence was already in hand; the coverage
-work needed runs of its own). G1 and G2 stay open; the hand-off's "What
-to do next" says where each would start.
+work needed runs of its own). G1 done 2026-10-18 (PR #16) and G2 done
+2026-10-19 (PRs #17 and #18); nothing in this section is open.
 
 - [x] G1. Harder plants and rejecting answers so scores leave the 1.0
       ceiling.
@@ -1075,9 +1075,10 @@ to do next" says where each would start.
         is its fix. Re-run 3/3 at 1.0.
       - *Taken, "overlay test coverage is overstated" (Low):* verify.sh's
         header now says the days-left overlay is only type-checked, and why.
-- [ ] G2. A lite variant of `tdd-implementation` as a second plugin dir,
+- [x] G2. A lite variant of `tdd-implementation` as a second plugin dir,
       run through the same cases as a third arm.
-      *Reframed 2026-10-18, branch `eval-g2-lite-tdd`.* Not a second plugin
+      *Done 2026-10-18/19: PR #17 (merged `5e3e133`) and PR #18 (the
+      augmented lite). Reframed 2026-10-18, branch `eval-g2-lite-tdd`.* Not a second plugin
       directory. The user's question was how a plugin user would choose
       between the two implementations for a slice, or run both to compare,
       so the variant is a sibling skill in the one plugin
