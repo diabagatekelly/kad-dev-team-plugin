@@ -279,9 +279,12 @@ What the gate does:
    tdd case is two to three minutes, a review case one to two. Every run
    shares the subscription's one rate limit, so the cap is on runs in
    flight, not cases. It re-runs at full `runs:` any case that is
-   suspect: its score lands more than 0.1 below its bar in
-   `thresholds.json`, or a grader the bar recorded as passing every run
-   fails (the judge is noisy; one run proves little).
+   suspect: its score lands more than the tolerance below its bar in
+   `thresholds.json` (0.1, or the width of one grader flip in one run,
+   1/(graders × runs), when that is wider: three graders at three runs
+   move 0.111 on one flip, so a flat 0.1 failed such a case as often as
+   not), or a grader the bar recorded as passing every run fails (the
+   judge is noisy; one run proves little).
 3. It fails if a case is still below its bar, or if an always-passing
    grader failed in every re-run. The aggregate tolerance absorbs judge
    noise; the per-grader check is what stops one grader regressing for
@@ -521,11 +524,18 @@ real cases and deleted (the table is in git history).
   `architecture-cartographer`, `ux-designer` and `accessibility-engineer`
   have had that pass, so every persona has. Keep it that way: a new
   persona rule goes in the skill, not only the `AGENT.md`.
-- **The `tdd-implementation` quarantine flow is uncovered.** The real cases
+- **The `tdd-implementation` quarantine flow has no case.** The real cases
   invoke the skill directly and through the `tdd-coach` agent; the
   orchestrator's quarantine/grade/combine/finalize flow (two worktree
-  candidates, parallel reviewers) has no case. Worktree isolation inside
-  the eval sandbox is unproven.
+  candidates, parallel reviewers) needs the `Agent` tool and up to
+  eighteen reviewers, which no eval case can run. It is proven by real
+  execution instead: twice so far, both in a sandboxed WSL2 session
+  (H6, 2026-10-18, heavy; I, 2026-10-19, compare, with the handed-back
+  round in E exercised end to end), each read against the hand-off's
+  watch list from the stream-json logs and the audit transcripts, each
+  producing skill-text and script fixes that the orchestrator cases then
+  regression-check. The accounts are under H6 and I in `TODO.md`; the
+  recipe for the next run is in the hand-off.
 - ~~**The main agent acts before `tdd-implementation` loads.**~~ **Closed
   for the parent.** It used to write its own answers to a design's open
   questions into the design doc before invoking the skill or delegating

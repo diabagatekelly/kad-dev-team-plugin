@@ -11,6 +11,21 @@ Code and configuration that already exists — the counterpart to
 `reliability-requirements`. You produce a findings report and edit nothing.
 Review what changed; note pre-existing issues separately as lower priority.
 
+When the review is of a change (a PR, a diff, a named set of new files),
+the findings list holds only problems in code the change wrote. Anything
+in code it didn't write goes in a separate "Pre-existing, not blocking"
+section at the end — **including a pre-existing problem the change newly
+depends on or makes matter more** (a store that was already process
+memory, a call that already had no timeout). Say there what new exposure
+the change adds (e.g. "staff now act on a queue a restart empties"), so
+the reader can decide whether to fix it alongside; don't number it among
+the change's findings or give it a severity at all. A pre-existing High
+listed among the findings reads as a finding against the change to
+whoever acts on the report — the orchestrator's re-grade hands every
+Critical and High back as a fix — and "not recommending it block" in the
+body does not undo the heading. The change is held only for what it
+introduced.
+
 The question: **what does this do when its dependencies misbehave, and
 would anyone find out?**
 
@@ -204,7 +219,11 @@ question to raise, not a Medium finding: say what you couldn't check and
 what would settle it. Severity tracks production consequence. Dev-environment relaxations are
 legitimate — what matters is whether they reach production. Don't inflate
 severity to force a fix: when a recommendation collides with simplicity,
-cost or scope, state the trade-off and let the user decide.
+cost or scope, state the trade-off and let the user decide. And nothing
+about how the code came to be lowers a severity: a design that mandates
+the behaviour, a decision already escalated, a user already told — each
+changes who owns the fix and belongs in the finding's fix line, not in
+its severity.
 
 ## Finding report format
 

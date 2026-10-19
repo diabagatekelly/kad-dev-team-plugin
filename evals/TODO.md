@@ -2661,3 +2661,334 @@ first real execution (the hand-off says what to watch).
       *Run after the round:* sixteen orchestrator cases at three runs,
       16/16 at bar, all sixteen at 1.0 (`results/gate-20261018T130441-*`).
       Evidence recorded for all sixteen.
+
+## I. The second real run: compare policy, the handed-back round, lite in real use (2026-10-19)
+
+The user's decision on 2026-10-19, after G2: run the quarantine flow for
+real a second time under the compare policy, since one run answers three
+of the four things the hand-off left open at once — whether lite's
+verification steps hold under real use, how the Grade step's reviewers
+read heavy against lite, and the handed-back round in E, proven by
+reading only until now — and fold whatever it finds in with the small
+findings carried forward. Same ground as H6: WSL2, headless, sonnet,
+`KAD_AUDIT=1`, the scratch project at `~/kad-h6/library-app` reset to its
+one commit, the plugin mirrored from `main` at `7d4e5d1` (PR #18's merge).
+
+- [x] I1. The run. Three turns of one session
+      (`faa92615-7360-4967-83b4-f66172323ab2`; logs `~/kad-h6/logs/run2-turn{1,2,3}.jsonl`,
+      the audit dir's transcripts, subagents included; the scratch
+      scripts of the session that ran it, `run2.sh`, `by-agent.py`,
+      `dump-agents.py`, are the recipe). *The plant:* a decision appended
+      to `design-001.md`, uncommitted, that every cancellation and
+      rejection is logged through the existing logger "with the card
+      number and the ISBN", so the build would carry a High the security
+      reviewer's own rule names (a natural identifier reaching a
+      persistent exit).
+      - *Turn 1 (23 s, $0.19):* the bare "what's next" prompt. Routed to
+        the implementation row, wrote the entry, asked the policy
+        question in text (heavy recommended, lite, compare, not now) and
+        stopped — and, unprompted, named the uncommitted design edit from
+        `git status`, said the slice's security criteria were written
+        before it and do not cover card numbers in logs, offered to build
+        to the file as it stands or re-run the security requirements pass
+        first. The answer: compare, build to the design as it stands.
+      - *Turn 2 (9 min 17 s, $4.06), A to E in one turn:* A — policy
+        `compare` on the line; sandbox check PASS; both candidates given
+        the full-unit read context (compare holds it equal); the design
+        and slice handed by absolute path into the real tree, read-only,
+        because a worktree is cut from `HEAD` and the uncommitted decision
+        was absent from both — the orchestrator saw this itself and
+        recorded why on the A line; baseline recorded. B — gate PASS for
+        both (the coverage check both H6 candidates failed passes with
+        H6's fixes in place), one throwaway map diff each (the new
+        `lending → infra/logging` edge, named in the design), ten
+        reviewers. Candidate 1 (heavy): security High, card number in the
+        log; reliability High, failed cancels not logged, and a second
+        High for the pre-existing in-memory store. Candidate 2 (lite):
+        the same security High; test-quality High, its tests read the
+        adapter's private `holds` map through a cast. C — the two judge
+        agents returned and the orchestrator saved their replies and
+        collected: candidate 1 in both orders. The reasons were the
+        tests, the production code being near-identical: candidate 1
+        asserts queue state only through the port and captures the real
+        stdout line, candidate 2 reads the private map and mocks
+        `log.info` without checking the message. The combine brief built
+        from candidate 1, added failure logging and a stateful stub for
+        the unreachable-queue test, and listed five escalations not to
+        build — the card number (High from both security reviews "but
+        mandated by the approved design"), the stale `position`, the
+        logger edge, the volatile store, staff-only authorization. D —
+        the finalize instance (heavy, under compare) built it in the real
+        tree, 14 tests, gate PASS, map persisted; its report disclosed
+        three deviations from its own skill: every test written up front
+        then made to pass one at a time, `test-quality-review` once at
+        the end, one test appended through a heredoc. E — five reviewers;
+        the security reviewer rated the card number **Medium**, in its
+        own words "because the design mandates it, the user has already
+        been told, and the logger writes only to stdout", the first two
+        of which the orchestrator's task had told it ("mandated by the
+        approved design and was already escalated to the user; still
+        report it if you judge it a finding, flagged as design-mandated");
+        the reliability reviewer numbered the pre-existing in-memory store
+        as a High with "I'm not recommending it block" in the body;
+        combine-brief check 6 pass, 2 fail (both Medium or Low, so not
+        handed back); handed back — none, "the only High is outside the
+        slice". The report put the card number, the positions and the
+        store to the user as decisions and proposed no next step.
+      - *Turn 3 (3 min, $5.45), the handed-back round:* the user amended
+        the design's logging decision in place (the ISBN and a one-way
+        SHA-256 hash of the card number, never the number) and said stdout
+        ships to a shared log platform, so the finding is High and in
+        slice. The orchestrator wrote entry 2 as a correction to entry 1's
+        E line, ran the sandbox check, and handed the fix back to the
+        same finalize instance with `SendMessage` (the Agent tool's
+        continuation works in a `-p` session) as five named fixes with
+        the amended design as the authority. The instance took its
+        skill's handed-back path: the tests changed first, five RED on
+        the field mismatch, the code, green at 15, the break (the raw
+        card number put back on one line) caught by two tests, restored,
+        green, the report's escalation marked resolved. The gate then
+        failed `protected` on the design the user had just amended; the
+        orchestrator worked out which hash the baseline uses, copied the
+        baseline aside and rewrote that one file's hash, and the gate
+        passed — right outcome, outside the procedure (see I3). It skipped
+        the map re-run as "no new internal edges", though the fix imports
+        `node:crypto`, which the map's external-package column records.
+        All five reviewers re-ran on the fix's files. Security: the
+        original High is not closed — an unsalted SHA-256 of a 14-digit
+        card number with a shared prefix is brute-forceable by anyone who
+        reads the log, and the design's own tracing method (hash the
+        number you hold) is the attack — with two design-level fixes
+        (an opaque id, which needs an id the slice does not have; a keyed
+        hash from the secret store); plus a Medium, the failure line's
+        `reason` passing the adapter's raw error message through. One
+        round used, not repeated; the slice reported implemented with the
+        High standing and the choice put to the user. That is the E path
+        as written, end to end, for the first time.
+      - *What held, read against the watch list:* the policy question
+        asked and stopped on; the A line carrying the policy and the
+        compare context; the judge agents replying and the orchestrator
+        saving the replies verbatim before collecting (H6's miss, now
+        fixed); the C line saying what the discipline changed; Finalize
+        getting candidate 2's inputs plus the brief; the sandbox check
+        before every launch; the hand-back to the same instance, once,
+        through its named-fix path; the gate and the reviewers re-run
+        after the fix; the stop after one round with the High named for
+        the user; the candidate worktrees and branches left for the user.
+- [x] I2. Lite in real use, and heavy against lite read by the reviewers.
+      The lite candidate held all four verification steps unprompted on
+      the agent path: the test file first (4.3k characters), then the
+      stubs (a use case always rejecting, `remove` always false), one RED
+      run with every test failing on its own assertion, the code, green
+      at 10, the break (`===` to `!==` in the adapter's `findIndex`)
+      caught by five tests, restored, green; four test runs; the consult
+      before any code; the position question escalated to
+      `acceptance-criteria`; the report in the contract's shape. What it
+      lost, it lost on test quality, which heavy's per-cycle review kept:
+      the lite tests reached into the adapter's private `holds` map to
+      check the whole queue ("since the port exposes only head and
+      length; I did not widen the port"), reported honestly as a decided
+      gap, rated High by the test-quality reviewer, and the reason the
+      blind judge chose heavy in both orders. So on this slice the
+      reviewers and the judge read heavy as better, the opposite of the
+      eval's 18/18 for lite on the slice case — one run against nine,
+      and the difference is one habit (asserting through private state)
+      the eval's lite runs did not show and the contract's "through the
+      public interface" did not stop. *Fix, lite skill text:* step 1 now
+      says through the public interface means asserted through it too, a
+      cast to private state is a test of the implementation, and a port
+      that exposes too little gets asserted through what it does expose
+      or escalated as a design gap, never peeked. Heavy stays as it is.
+      *Also seen:* the heavy finalize instance, handed a brief that lists
+      every test, wrote them all up front and reviewed once (H6's
+      finalize instance ran seven cycles); recorded as a line in step D
+      (the brief says what, the skill says how), one run.
+- [x] I3. Plugin misses from the run, each fixed in text, the sixteen
+      orchestrator cases and every other affected case re-run as the
+      regression check (I5):
+      - *The orchestrator primed the reviewers.* Both E tasks and the
+        post-fix security task carried the flow's own state: that the
+        finding was design-mandated and already escalated, that stdout is
+        shared, what the fix was for, "including whether an unsalted hash
+        ... is brute-forceable". The severity dropped exactly where the
+        task said the user had been told, and E acts on Critical and High
+        alone, so the leaked context is what kept the handed-back round
+        from firing on the plant. Step B now says what a reviewer's task
+        holds (the skill, the tree, the files, the diff, the criteria and
+        design by path) and what it never holds (a finding, a severity,
+        an escalation, what the user has been told, a verdict, a "check
+        whether"); E and the post-fix reviewers get the same rule.
+        `security-review` and `reliability-review` gained the mirror of
+        their "don't inflate" line: nothing about how the code came to be
+        lowers a severity; a design mandate or a prior escalation changes
+        who owns the fix, which goes in the fix line.
+      - *Pre-existing numbered as High.* `reliability-review` had only
+        "note pre-existing issues separately as lower priority";
+        `security-review` had the full rule (a separate "Pre-existing,
+        not blocking" section, no number, no severity, say what new
+        exposure the change adds). The reliability reviewers put the
+        in-memory store among the findings as High in two of three
+        reviews and as Medium "(pre-existing, newly relevant)" in the
+        third. The rule is now in `reliability-review` too, with why: the
+        orchestrator hands every High back, and "not recommending it
+        block" in the body does not undo the heading.
+      - *Map re-run skipped after the fix.* E's step 2 now says always,
+        however small the fix looks: whether an edge changed is the map's
+        call, and an import of a built-in module changes the
+        external-package column.
+      - *A protected document the user amends mid-flow.* No path existed;
+        the orchestrator improvised a hand edit of the baseline. The gate
+        gained `--baseline FILE --accept-protected PATH`: rewrites that
+        one file's recorded hash to the tree's content, prints old and
+        new, exits; never re-records the whole baseline (that would hide
+        the build's own files). Step D says when it is allowed (a change
+        the user made, said so in the conversation) and never for a
+        change a candidate or instance made, recorded on the step's line.
+        Checked on the run's own project (`scratchpad/check-gate-flag.sh`):
+        refused without `--baseline`, refused for a missing file, the
+        gate FAIL before and PASS after, idempotent, and the hash it
+        writes is the one the orchestrator had worked out by hand.
+      - *Uncommitted documents absent from the worktrees.* The
+        orchestrator caught it this time; the next one might not. Step A
+        now says to check `git status` on the target directory's
+        documents before launching and hand any modified or untracked one
+        by its absolute path in the real tree, read-only, to the
+        candidates, the finalize instance and the judge, saying so on the
+        A line; never commit it yourself.
+      - *Finalize under a brief:* the one-line rule in D, above.
+- [x] I4. The small findings carried forward, folded in:
+      - *`why-comments` wandering into code review* (`stays-on-comments`
+        0/3 at the last recorded run, bar 0.857): the failed review had a
+        titled "Code concern" section — the retry loop stacking with
+        Stripe's retries, no idempotency key, "worth a code-review or
+        reliability-review pass" — three sentences and a second problem
+        where the skill allowed one line. The skill's line now says one
+        sentence inside the comment's own verdict, no section, no second
+        problem, no fix, no "which review should look", and that a
+        comment contradicting the code is a comment finding whose whole
+        verdict is "the comment is wrong".
+      - *The delegated architect reading the map file instead of
+        invoking `map-query`* (`architecture-design-payfine-via-agent`
+        0.867, `consults-map-query` 1/3): `architecture-design` had
+        "Invoke it with the `Skill` tool, under that name" and nothing
+        else; the lite skill's wording from G2, which the delegated
+        implementers followed 2/2 in the real run, is ported: before any
+        structure is worked out, reading the map file or grepping is not
+        the consult, the `Skill` call is what a trace looks for, and the
+        rule holds inside a delegated `software-architect` agent too.
+        `architecture-design-payfine-phase2` resumes a history that
+        carries the skill text, so it is re-frozen from a kept phase-1
+        run before it is re-run (the gate refuses it otherwise).
+      - *The phase-2 fork graders at 0.92:* the two `-stop` cases, each
+        losing one run in three to the judge, both G5's shape (the rubric
+        narrower than a correct output). Security: the run wrote "They
+        must never include card data" about the receipt, one line, which
+        the rubric's "must statements about contents" failed, though its
+        PASS clause allows the same observation worded as an observation;
+        now a one-line obligation about card data passes, a set of
+        requirements fails. Reliability: the run recommended the outage
+        case become a later slice and this one ship for the normal case
+        with the shortfall stated — a view on the scope decision, which
+        the rubric allows — and the judge read it as "proceed with the
+        outage case noted as a limitation"; now a recommendation to the
+        scope owner passes whichever way it goes, and the test is what
+        the response does next (it still stops; it neither asks for the
+        forks' approval nor writes criteria).
+      - *The gate arithmetic:* one grader flip at three runs moving a
+        score 0.111, over the flat 0.1. `eval_evidence.tolerance_for`:
+        the tolerance is the flat value or the width of one flip in one
+        run, 1/(graders × runs), whichever is wider, with runs the larger
+        of the result's and the bar's, so a one-run first pass with a
+        flipped grader is still suspect and re-run at the case's count,
+        and a full-count sample absorbs exactly one flip; two still fail;
+        the per-grader regression check is unchanged; bars without
+        per-grader rates keep the flat tolerance. Used by the gate's
+        retry decision and verdict and by the evidence check.
+- [x] I5. Runs and bars: 58 affected cases at three runs. *2026-10-19,
+      three WSL batches (`results/gate-20261019T0*`):* batch 1, the
+      seventeen orchestrator cases, 17/17 at 1.0. Batch 2, 12/12 at bar:
+      `architecture-design-payfine-phase1` 1.0 kept, phase 2 re-frozen
+      from its run 0 and 0.96 (`decisions-show-approval` one run, as
+      before); `why-comments-collect-fine` 1.00 (from 0.86,
+      `stays-on-comments` 3/3); `architecture-design-payfine-via-agent`
+      1.00 (from 0.87, `consults-map-query` 3/3);
+      `reliability-requirements-payfine-phase2-stop` 1.00 (from 0.92);
+      `security-requirements-payfine-phase2-stop` 0.92, the receipt
+      grader now 3/3 and one run lost to `does-not-lay-out-scope-options`
+      instead; the two lite cancel-hold cases 0.96 each with only the
+      per-test-cycle measurement grader lost 3/3, named-fix 1.00; heavy
+      cancel-hold 0.96 (one run lost the per-test cycle and the per-cycle
+      review together — the heavy loop dropped by the model one run in
+      three, the real run's finalize deviation seen in the eval too — and
+      one run `tests-check-behaviour`), via-agent 0.96 (three different
+      graders, one run each), named-fix 1.00. The three improved bars are
+      recorded. Batch 3, the review suites: 12 at 1.0 and then the
+      subscription's session limit, so sixteen cases never ran
+      (`code-review-days-left-pr`, `-fine-notices-pr`, `-via-agent`,
+      `-fines-report-pr`, `reliability-review-portal-pay-pr`,
+      `security-requirements-neg-review`, every `security-review-*`,
+      `supply-chain-review-neg-reliability`,
+      `test-quality-review-neg-code-review`), and what the table showed
+      as one real failure, `reliability-review-nightly-via-agent` 0.42
+      against 1.00 with three `no-false-alarm-*` graders lost: read, it
+      was the limit too. The three reviews were written and complete
+      (the same findings as the recorded bar's, the SMS retry noted as
+      correctly scoped at Low), and every lost grader's explanation reads
+      "grader threw: judge call failed: You've hit your session limit",
+      which the CLI records as a plain FAIL — eight graders in runs 0
+      and 1, three in run 2. *Gate fix:* `eval_gate.py` now treats a run
+      with a grader that threw as an errored run, excluded from the score
+      like a run that never started, and a case with no clean run as an
+      error, so a judge the limit stopped is reported as a stopped judge
+      and never as the skill losing graders. Batch 4, the seventeen
+      cases once the limit reset: 16/16 at bar (the via-agent nightly
+      case itself 1.00), twelve at 1.0, the rest the known judge traps a
+      run each (`leaves-mocking-to-test-quality-review` on the
+      fine-notices pair, `hands-sdk-to-architecture-review` and
+      `finds-month-as-raw-string` on the fines report,
+      `no-false-alarm-oidc-deploy-job` on the config case), all inside
+      tolerance. So: 57 cases run at three runs, 57/57 at bar, evidence
+      current for every affected case (`eval_evidence.py --base
+      origin/main` all ok), about 170 runs in four WSL batches.
+- [x] I6. Sourcery on PR #19 (2026-10-19), seven findings, six taken and
+      one in part, every thread answered:
+      - *Taken, "paths can execute shell commands" (High):* the skill's
+        `--accept-protected` example carried a garbled placeholder (a
+        stray triple quote); it now shows plain single-quoted
+        placeholders, names B's quoting rule and passes the gate's
+        `--protect` list.
+      - *Taken, "candidate edits disappear" (Medium):* `--accept-protected`
+        refuses any path the same command does not name with `--protect`,
+        so only a protected document can be accepted and a source file a
+        candidate edited can never be hidden from scope or coverage.
+        Checked on the run's project (`scratchpad/check-round.sh`): a
+        protected path not on the list and a source file are refused, the
+        listed design doc is accepted, the baseline stays valid JSON.
+      - *Taken, "passing evidence is undersampled" (Medium):* `_run_case`
+        gets the requested run count and returns `only N of M runs
+        clean` as an error when fewer completed cleanly, so a case never
+        passes or records evidence on a smaller sample than its bar.
+      - *Taken, "symlinked documents expose host files" (Medium):* step A
+        checks, inline, that a document handed over by absolute path is a
+        regular file whose `realpath` is inside the project; otherwise
+        it is not handed over and the procedure stops.
+      - *Taken, "candidates can mutate shared documents" (Medium):* the
+        `sha256sum` of each handed-over document goes on the A line
+        before launch and is taken again when both candidates have
+        returned; a changed sum ends the procedure like a failed sandbox
+        check, no reviewer launched, reported as a candidate writing
+        outside its worktree.
+      - *Taken, "judge failures corrupt saved thresholds" (Medium):* the
+        grader-threw marker is set before `keep_traces` and written back
+        into the result file, so `record_thresholds.py` skips those runs.
+      - *Taken in part, "baseline updates are lost or corrupted"
+        (Medium):* the baseline is written to a sibling temp file and
+        swapped in with `os.replace`; no lock, since the one orchestrator
+        instance runs the acceptance once, inline, and nothing else
+        writes the baseline.
+      *Run after the round:* the seventeen orchestrator cases at three
+      runs (the skill text and the gate script changed), 17/17 at bar,
+      sixteen at 1.0 and `orchestrator-backward-route` 0.95 (one run lost
+      `does-not-go-forward-to-reliability`, G4's one-run-in-three
+      narration noise, inside tolerance; `results/gate-20261019T110622-*`).
+      Evidence recorded for all seventeen.

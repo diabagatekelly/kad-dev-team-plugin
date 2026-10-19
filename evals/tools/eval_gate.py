@@ -6,10 +6,13 @@
    gets them as concurrent children of one CLI process, `-j`, so a
    three-run case takes about the time of one run).
 3. A case is suspect when its score lands below its bar in
-   `thresholds.json` (minus `--tolerance`), or when any grader the bar
-   recorded as passing in every run fails. A suspect case is re-run at its
-   own `runs:` count, since one run of a noisy judge proves little; the
-   re-run is what counts.
+   `thresholds.json` (minus the tolerance: `--tolerance`, or the width of
+   one grader flip in one run, 1/(graders × runs), when that is wider, so
+   a single judge flip never fails a case on its own; see
+   `eval_evidence.tolerance_for`), or when any grader the bar recorded as
+   passing in every run fails. A suspect case is re-run at its own `runs:`
+   count, since one run of a noisy judge proves little; the re-run is
+   what counts.
 4. Prints a markdown table (also to `$GITHUB_STEP_SUMMARY` when set) and
    exits 1 if any case is still below its bar, or any always-passing
    grader failed in every re-run. The aggregate tolerance absorbs judge
@@ -96,7 +99,7 @@ def run_case(case, runs, tag, slots):
     want = runs or case_runs(case)
     j = slots.take(want)
     try:
-        return _run_case(case, runs, tag, j)
+        return _run_case(case, runs, want, tag, j)
     finally:
         slots.give(j)
 
@@ -119,7 +122,7 @@ def case_tool_grant(case):
     return [t for t in GATED_TOOLS if t in named]
 
 
-def _run_case(case, runs, tag, j):
+def _run_case(case, runs, want, tag, j):
     # The CLI names its HTML report folder by the second a run starts, and
     # refuses to reuse one, so keep launches at least a second apart.
     with _start_lock:
@@ -147,7 +150,27 @@ def _run_case(case, runs, tag, j):
         c = data["cases"][0]
         result["version"] = data.get("claudeVersion")
         runs = c["arms"]["with"]
+        # A grader that could not run ("grader threw: judge call failed: You've
+        # hit your session limit", 2026-10-19) is recorded by the CLI as a
+        # plain FAIL, which read as the skill losing eight graders in two runs.
+        # Such a run says nothing about the skill either: it is an error here,
+        # excluded from the score like a run that never started. The marker is
+        # written back into the result file, so `record_thresholds.py`, which
+        # reads the file and skips errored runs, never turns a stopped judge
+        # into a bar.
+        marked = False
+        for r in runs:
+            threw = [g["name"] for g in r.get("graders", [])
+                     if str(g.get("explanation", "")).startswith("grader threw")]
+            if threw and not r.get("error"):
+                first = next(g for g in r["graders"] if g["name"] == threw[0])
+                r["error"] = f"{len(threw)} grader(s) threw: {' '.join(str(first.get('explanation')).split())[:120]}"
+                marked = True
         keep_traces(c, out)
+        if marked:
+            data = json.load(open(out, encoding="utf-8"))
+            data["cases"][0] = c
+            json.dump(data, open(out, "w", encoding="utf-8"), indent=2)
         clean = [r for r in runs if not r.get("error")]
         if runs and not clean:
             # The CLI still scores a run that never started: every grader
@@ -158,6 +181,14 @@ def _run_case(case, runs, tag, j):
             return {**result, "runs": len(runs), "error": f"every run errored: {first}"}
         # Errored runs (timeouts, refused starts) say nothing about the skill;
         # the score and the per-grader rates come from the clean runs only.
+        # But a sample short of the runs asked for is not the result asked
+        # for: two clean runs of three would pass and record evidence on a
+        # smaller sample than the bar was set on. Such a case is an error,
+        # and is run again.
+        if len(clean) < want:
+            first = " ".join(str(next(r["error"] for r in runs if r.get("error"))).split())[:120]
+            return {**result, "runs": len(clean),
+                    "error": f"only {len(clean)} of {want} runs clean: {first}"}
         score = sum(r["score"] for r in clean) / len(clean)
         return {**result, "score": score, "runs": len(clean), "rates": grader_rates(clean)}
     except (OSError, ValueError, KeyError, IndexError, ZeroDivisionError):
@@ -308,7 +339,8 @@ def main():
                           "rerun": False, "lost": lost, "source": r["source"]}
             # A first pass already at several runs is its own re-run.
             if a.runs == 1 and r["score"] is not None and bar is not None and (
-                    r["score"] < bar - a.tolerance or lost):
+                    r["score"] < bar - eval_evidence.tolerance_for(bars.get(case, {}), r["runs"], a.tolerance)
+                    or lost):
                 retry[pool.submit(run_case, case, None, tag + "-rerun", slots)] = case
         for f in concurrent.futures.as_completed(retry):
             case = retry[f]
@@ -330,7 +362,7 @@ def main():
             failed.append(case)
         elif r["bar"] is None:
             verdict = "new (no bar yet)"
-        elif r["score"] < r["bar"] - a.tolerance:
+        elif r["score"] < r["bar"] - eval_evidence.tolerance_for(bars.get(case, {}), r["runs"], a.tolerance):
             verdict = "**below bar**"
             failed.append(case)
         elif r["lost"]:
