@@ -63,18 +63,21 @@ runtime version for real candidates.
 
 A protected document the user amends while the flow is running (a design
 reopened after an escalation) would fail the protected check for a reason
-that is not the build's: `--baseline FILE --accept-protected PATH`
-rewrites that one file's recorded hash to its current content, prints
-the old and new hash, and exits, so the next gate run accepts the user's
-amendment and still catches any other change to it. It never re-records
-the whole baseline, which would hide the build's own files.
+that is not the build's: `--baseline FILE --accept-protected PATH`, with
+the same `--protect` list as the gate (the path must be on it), rewrites
+that one file's recorded hash to its current content, prints the old and
+new hash, and exits, so the next gate run accepts the user's amendment
+and still catches any other change to it. It never re-records the whole
+baseline, which would hide the build's own files, and it refuses a path
+that is not a protected document, since accepting a source file would
+hide a candidate's edit the same way.
 
 Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/validation_gate.py [--project DIR]
            [--base HEAD | --baseline FILE] [--allow lending/ --allow test/ ...]
            [--protect docs/x/design.md ...] [--test-cmd "npm test"] [--timeout 600]
            [--coverage] [--min-line 90] [--min-branch 80] [--json out.json]
        python3 -I .../validation_gate.py [--project DIR] --record-baseline FILE
-       python3 -I .../validation_gate.py [--project DIR] --baseline FILE --accept-protected PATH
+       python3 -I .../validation_gate.py [--project DIR] --baseline FILE --protect PATH ... --accept-protected PATH
        (from this repository: python3 -I skills/orchestrator/scripts/validation_gate.py ...)
 The test command is split the way a shell would and run without one (so
 no pipes or `&&`); its program is resolved on PATH, which is how `npm`
@@ -148,10 +151,18 @@ def record_baseline(project, path):
     print(f"baseline recorded: commit {base[:12]}, {len(files)} pre-existing change(s)")
 
 
-def accept_protected(project, path, rel):
+def accept_protected(project, path, rel, protect):
     """Rewrite one file's recorded hash in the baseline to its current
     content: the user's own amendment of a protected document, accepted
-    without re-recording anything else."""
+    without re-recording anything else. Only a path the same command names
+    with `--protect` can be accepted: a source file a candidate edited is
+    never a protected document, and accepting it would hide the edit from
+    the scope and coverage checks (`changed_files` drops a recorded file
+    whose hash still matches)."""
+    if rel not in protect:
+        print(f"baseline not updated: {rel} is not among this command's --protect files; "
+              "only a protected document can be accepted")
+        return 1
     with open(path, encoding="utf-8") as f:
         baseline = json.load(f)
     old = baseline["files"].get(rel)
@@ -160,8 +171,12 @@ def accept_protected(project, path, rel):
         print(f"baseline not updated: {rel} does not exist in {project}")
         return 1
     baseline["files"][rel] = new
-    with open(path, "w", encoding="utf-8") as f:
+    # Written whole into a sibling file and swapped in, so an interrupted
+    # write never leaves the baseline truncated.
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(baseline, f, indent=2)
+    os.replace(tmp, path)
     print(f"baseline updated: {rel} {(old or 'unrecorded')[:12]} -> {new[:12]}")
     return 0
 
@@ -467,7 +482,8 @@ def main():
         if not a.baseline:
             print("--accept-protected needs --baseline")
             return 1
-        return accept_protected(project, a.baseline, a.accept_protected.replace("\\", "/"))
+        return accept_protected(project, a.baseline, a.accept_protected.replace("\\", "/"),
+                                [p.replace("\\", "/") for p in a.protect])
 
     baseline, base = None, a.base
     if a.baseline:

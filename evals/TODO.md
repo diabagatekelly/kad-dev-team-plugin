@@ -2950,3 +2950,41 @@ one commit, the plugin mirrored from `main` at `7d4e5d1` (PR #18's merge).
       tolerance. So: 57 cases run at three runs, 57/57 at bar, evidence
       current for every affected case (`eval_evidence.py --base
       origin/main` all ok), about 170 runs in four WSL batches.
+- [x] I6. Sourcery on PR #19 (2026-10-19), seven findings, six taken and
+      one in part, every thread answered:
+      - *Taken, "paths can execute shell commands" (High):* the skill's
+        `--accept-protected` example carried a garbled placeholder (a
+        stray triple quote); it now shows plain single-quoted
+        placeholders, names B's quoting rule and passes the gate's
+        `--protect` list.
+      - *Taken, "candidate edits disappear" (Medium):* `--accept-protected`
+        refuses any path the same command does not name with `--protect`,
+        so only a protected document can be accepted and a source file a
+        candidate edited can never be hidden from scope or coverage.
+        Checked on the run's project (`scratchpad/check-round.sh`): a
+        protected path not on the list and a source file are refused, the
+        listed design doc is accepted, the baseline stays valid JSON.
+      - *Taken, "passing evidence is undersampled" (Medium):* `_run_case`
+        gets the requested run count and returns `only N of M runs
+        clean` as an error when fewer completed cleanly, so a case never
+        passes or records evidence on a smaller sample than its bar.
+      - *Taken, "symlinked documents expose host files" (Medium):* step A
+        checks, inline, that a document handed over by absolute path is a
+        regular file whose `realpath` is inside the project; otherwise
+        it is not handed over and the procedure stops.
+      - *Taken, "candidates can mutate shared documents" (Medium):* the
+        `sha256sum` of each handed-over document goes on the A line
+        before launch and is taken again when both candidates have
+        returned; a changed sum ends the procedure like a failed sandbox
+        check, no reviewer launched, reported as a candidate writing
+        outside its worktree.
+      - *Taken, "judge failures corrupt saved thresholds" (Medium):* the
+        grader-threw marker is set before `keep_traces` and written back
+        into the result file, so `record_thresholds.py` skips those runs.
+      - *Taken in part, "baseline updates are lost or corrupted"
+        (Medium):* the baseline is written to a sibling temp file and
+        swapped in with `os.replace`; no lock, since the one orchestrator
+        instance runs the acceptance once, inline, and nothing else
+        writes the baseline.
+      *Run after the round:* the seventeen orchestrator cases at three
+      runs (the skill text and the gate script changed).

@@ -404,7 +404,18 @@ did this, and its A line said which document and why), and name the
 document the same way for the finalize instance and the judge's `--task`
 files. The gate's `--protect` still names the worktree's own path, which
 the baseline recorded. Never commit the document yourself to get it into
-the worktrees: a commit is the user's.
+the worktrees: a commit is the user's. Two checks before handing a path
+over, both inline with Bash: the document is a regular file whose
+resolved path (`realpath`) is inside the project — a symlink, or a path
+that resolves outside, is not handed over; say so and stop, since a
+candidate's Read follows the link — and its `sha256sum`, noted on the A
+line. When both candidates have returned, before Grade, take the sums
+again: the instructions said read-only, but a candidate holds Bash and
+the real tree is outside its worktree, so its own gate would not see a
+write there. A changed sum ends the procedure the way a failed sandbox
+check does: record it on the B line, launch no reviewer, and report in
+step 5 that a candidate wrote outside its worktree (which one cannot be
+told from the sums alone; both worktrees are there to read).
 
 Before launching, two things, in this order. First, check the session's
 sandbox, inline with Bash:
@@ -747,17 +758,21 @@ escalation, say). The baseline recorded the document as it was, so the
 gate now sees it as changed. Don't re-record the baseline (that would
 record the build's own files as pre-existing and the gate would then see
 no change at all), don't edit the baseline file by hand, and don't drop
-the `--protect`. Run, once, inline:
+the `--protect`. Run, once, inline, with every `--protect` entry the gate
+gets and the amended document's path (B's quoting rule applies: single
+quotes, a quote inside the path as `'\''`):
 
 ```
-python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --baseline '<project root>/.git/kad-gate-baseline.json' --accept-protected '<the document'''s path>'
+python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --baseline '<project root>/.git/kad-gate-baseline.json' --protect '<design doc>' --protect '<slice file>' --accept-protected '<the amended document>'
 ```
 
 It rewrites that one document's recorded hash to the content now in the
-tree, prints the old and new hash, and exits; then run the gate as
-before. Record on the step's line that the document was accepted and
-why. This is for a change the user made, never for one a candidate or
-an instance made: that is what the check exists to catch.
+tree, prints the old and new hash, and exits; it refuses a path that is
+not on the `--protect` list, so a source file can never be accepted this
+way. Then run the gate as before. Record on the step's line that the
+document was accepted and why. This is for a change the user made, never
+for one a candidate or an instance made: that is what the check exists
+to catch.
 
 Then run `architecture-cartographer:map-update`
 for real — inline, not an async `Agent` call, for the same reason as
