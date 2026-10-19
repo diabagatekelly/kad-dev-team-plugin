@@ -2987,4 +2987,8 @@ one commit, the plugin mirrored from `main` at `7d4e5d1` (PR #18's merge).
         instance runs the acceptance once, inline, and nothing else
         writes the baseline.
       *Run after the round:* the seventeen orchestrator cases at three
-      runs (the skill text and the gate script changed).
+      runs (the skill text and the gate script changed), 17/17 at bar,
+      sixteen at 1.0 and `orchestrator-backward-route` 0.95 (one run lost
+      `does-not-go-forward-to-reliability`, G4's one-run-in-three
+      narration noise, inside tolerance; `results/gate-20261019T110622-*`).
+      Evidence recorded for all seventeen.
