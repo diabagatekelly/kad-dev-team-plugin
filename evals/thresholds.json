@@ -1871,17 +1871,17 @@
     ]
   },
   "tdd-implementation-lite-cancel-hold": {
-    "score": 0.91,
+    "score": 0.962,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261018T210559-tdd-implementation-lite-cancel-hold.json",
+    "source": "results/gate-20261018T235959-tdd-implementation-lite-cancel-hold.json",
     "graders": {
       "a-green-run-happened": 1.0,
-      "can-fail-check-in-trace": 0.0,
+      "can-fail-check-in-trace": 1.0,
       "decides-reason-wording-visibly": 1.0,
       "design-doc-unchanged": 1.0,
-      "escalates-queue-question": 0.667,
+      "escalates-queue-question": 1.0,
       "final-review-runs": 1.0,
       "final-run-is-the-whole-suite": 1.0,
       "green-stays-minimal": 1.0,
@@ -1892,7 +1892,7 @@
       "no-queue-behaviour-built": 1.0,
       "not-heavy-skill": 1.0,
       "queue-test-before-queue-code": 1.0,
-      "red-then-green-seen": 1.0,
+      "red-on-assertions": 1.0,
       "report-written": 1.0,
       "reports-verification": 1.0,
       "runs-the-tests": 1.0,
@@ -1914,15 +1914,15 @@
     ]
   },
   "tdd-implementation-lite-cancel-hold-via-agent": {
-    "score": 0.92,
+    "score": 0.96,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261018T210559-tdd-implementation-lite-cancel-hold-via-agent.json",
+    "source": "results/gate-20261018T235959-tdd-implementation-lite-cancel-hold-via-agent.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "agent-delegated-display": 1.0,
-      "can-fail-check-in-trace": 0.0,
+      "can-fail-check-in-trace": 1.0,
       "decides-reason-wording-visibly": 1.0,
       "design-doc-unchanged": 1.0,
       "escalates-queue-question": 1.0,
@@ -1937,7 +1937,7 @@
       "no-queue-behaviour-built": 1.0,
       "not-heavy-skill": 1.0,
       "queue-test-before-queue-code": 1.0,
-      "red-then-green-seen": 1.0,
+      "red-on-assertions": 1.0,
       "report-written": 1.0,
       "reports-verification": 1.0,
       "runs-the-tests": 1.0,
@@ -1952,7 +1952,8 @@
       "map-query",
       "reliability-review",
       "security-review",
-      "tdd-implementation-lite"
+      "tdd-implementation-lite",
+      "why-comments"
     ]
   },
   "tdd-implementation-lite-named-fix": {
@@ -1960,7 +1961,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261018T210559-tdd-implementation-lite-named-fix.json",
+    "source": "results/gate-20261018T235959-tdd-implementation-lite-named-fix.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "behaviour-unchanged": 1.0,

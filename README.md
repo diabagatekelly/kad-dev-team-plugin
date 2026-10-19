@@ -112,7 +112,10 @@ per slice which skill the two candidates build with:
   `test-quality-review` call every cycle, the can-it-fail check).
 - **lite**: both on `tdd-implementation-lite`, the same contract (what
   the implementer owns, where things go, how a gap is escalated, what the
-  report holds) with the TDD discipline left to the model's own judgment.
+  report holds) as test-first with verification rather than TDD: the
+  tests before the code, seen failing on their own assertions against a
+  stub, then shown to catch a deliberate break, with the loop between
+  left to the model. About four test runs to heavy's two per test.
 - **compare**: one of each, with the read context held equal so the
   discipline is the only difference; the blind judge's reasons and the
   combine call then say, slice by slice, what the prescribed loop buys

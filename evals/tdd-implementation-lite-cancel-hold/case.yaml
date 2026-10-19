@@ -28,14 +28,29 @@ graders:
   # design-doc-unchanged, stays-inside-the-slice, no-bash-writes,
   # map-query-before-implementation, escalates-queue-question,
   # no-queue-behaviour-built, decides-reason-wording-visibly,
-  # inside-the-design-boundaries, reports-verification, final-review-runs.
-  # Measurement (what tdd-implementation prescribes and this skill leaves to
-  # the model; the rate is the finding): test-run-after-each-test-edit,
-  # red-then-green-seen, can-fail-check-in-trace, green-stays-minimal,
-  # tests-check-behaviour, final-run-is-the-whole-suite.
+  # inside-the-design-boundaries, reports-verification, final-review-runs,
+  # and the two verification steps lite asks for: red-on-assertions (a RED
+  # run whose failures are the tests' own assertions, before any green run)
+  # and can-fail-check-in-trace.
+  # Measurement (what only tdd-implementation prescribes; the rate is the
+  # finding): test-run-after-each-test-edit (the per-test cycle),
+  # green-stays-minimal, tests-check-behaviour, final-run-is-the-whole-suite.
+  # (The heavy case's red-then-green-seen wants a RED run with no edit
+  # between the test edit and the run; lite's stub step puts the stub
+  # writes there by design, and red-on-assertions is the RED check here.)
   - type: file_exists
     name: report-written
     path: docs/reports/tdd-implementation-lite-cancel-hold.md
+  - type: regex
+    name: red-on-assertions
+    target: trace
+    # Before the first green run, a failing test named by the runner (a
+    # "✖ <test name> (<n>ms)" line whose item is a test, not a .test.ts
+    # file): the tests failed on what they assert, against a stub. A run
+    # that fails because the module does not exist names the file as the
+    # failing item, and the trace keeps the runner's summary lines but not
+    # always the error text, so the item line is what is checked.
+    pattern: '\A(?:(?!ℹ fail 0)[\s\S])*✖ (?![^\n\\]*\.test\.ts)[^\n\\]*?\(\d+(?:\.\d+)?ms\)'
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -73,10 +88,6 @@ graders:
     name: test-run-after-each-test-edit
     target: trace
     pattern: '(?:[\s\S]*?"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"(?:(?!"name":"(?:Edit|Write)")[\s\S])*?"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:npm (?:run )?test|node [^"\\]*--test)){3}'
-  - type: regex
-    name: red-then-green-seen
-    target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"(?:(?!"name":"(?:Edit|Write)")[\s\S])*?ℹ fail [1-9][\s\S]*?ℹ fail 0'
   - type: regex
     name: last-test-run-green
     target: trace

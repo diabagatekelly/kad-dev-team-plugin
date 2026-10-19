@@ -265,8 +265,10 @@ heavy first as the recommended default, and "not now" as the fourth:
   between them (step A).
 - **lite**: both candidates build with `tdd-coach:tdd-implementation-lite`
   — the same contract (what it owns, where things go, gaps escalated, the
-  report) with the TDD discipline left to the model's own judgment. The
-  read context stays the one variable.
+  report) as test-first with verification rather than TDD: the tests
+  before the code, seen failing on their assertions, shown to catch a
+  break, and the loop between left to the model (about four test runs
+  to heavy's two per test). The read context stays the one variable.
 - **compare**: candidate 1 builds with `tdd-implementation`, candidate 2
   with `tdd-implementation-lite`, both given the whole unit's read
   context, so the discipline is the one variable; the judge's reasons and

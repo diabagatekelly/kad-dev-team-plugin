@@ -68,7 +68,7 @@ SKIP_DIRS = {".git", "node_modules", "coverage", ".nyc_output", ".claude", "dist
 SKIP_PREFIXES = ("docs/reports/",)
 LOCK_FILES = {"package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "Cargo.lock",
               "poetry.lock", "uv.lock", "Gemfile.lock", "composer.lock"}
-LITE_CLAUSE = re.compile(r"\s*with the `kad-dev-team:tdd-implementation-lite` skill")
+LITE_CLAUSE = re.compile(r"(?:,\s*telling it to build)?\s*with the `kad-dev-team:tdd-implementation-lite` skill")
 CHANGED, DELETED, SYMLINK = "changed", "deleted", "symlink"
 
 
