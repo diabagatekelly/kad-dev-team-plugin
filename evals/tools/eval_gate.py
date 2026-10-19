@@ -6,10 +6,13 @@
    gets them as concurrent children of one CLI process, `-j`, so a
    three-run case takes about the time of one run).
 3. A case is suspect when its score lands below its bar in
-   `thresholds.json` (minus `--tolerance`), or when any grader the bar
-   recorded as passing in every run fails. A suspect case is re-run at its
-   own `runs:` count, since one run of a noisy judge proves little; the
-   re-run is what counts.
+   `thresholds.json` (minus the tolerance: `--tolerance`, or the width of
+   one grader flip in one run, 1/(graders × runs), when that is wider, so
+   a single judge flip never fails a case on its own; see
+   `eval_evidence.tolerance_for`), or when any grader the bar recorded as
+   passing in every run fails. A suspect case is re-run at its own `runs:`
+   count, since one run of a noisy judge proves little; the re-run is
+   what counts.
 4. Prints a markdown table (also to `$GITHUB_STEP_SUMMARY` when set) and
    exits 1 if any case is still below its bar, or any always-passing
    grader failed in every re-run. The aggregate tolerance absorbs judge
@@ -308,7 +311,8 @@ def main():
                           "rerun": False, "lost": lost, "source": r["source"]}
             # A first pass already at several runs is its own re-run.
             if a.runs == 1 and r["score"] is not None and bar is not None and (
-                    r["score"] < bar - a.tolerance or lost):
+                    r["score"] < bar - eval_evidence.tolerance_for(bars.get(case, {}), r["runs"], a.tolerance)
+                    or lost):
                 retry[pool.submit(run_case, case, None, tag + "-rerun", slots)] = case
         for f in concurrent.futures.as_completed(retry):
             case = retry[f]
@@ -330,7 +334,7 @@ def main():
             failed.append(case)
         elif r["bar"] is None:
             verdict = "new (no bar yet)"
-        elif r["score"] < r["bar"] - a.tolerance:
+        elif r["score"] < r["bar"] - eval_evidence.tolerance_for(bars.get(case, {}), r["runs"], a.tolerance):
             verdict = "**below bar**"
             failed.append(case)
         elif r["lost"]:

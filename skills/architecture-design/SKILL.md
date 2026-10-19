@@ -27,12 +27,19 @@ structural decision stays true regardless of exact syntax.
 Before working out this slice's structure, consult `map-query` (the
 `kad-dev-team:map-query` skill, owned by `architecture-cartographer`) at
 the structural level — does a comparable module, interface, or boundary
-already exist. Invoke it with the `Skill` tool, under that name, and ask
-inline, in this same conversation, the same
-in-conversation consult this skill already uses below for a
-runtime-safety question; it's `background: true` but carries no
-`AskUserQuestion` of its own, so there's nothing to launch and nothing to
-wait on. The consult returns an answer, not the turn: carry on with this skill in the same response.
+already exist. Invoke it with the `Skill` tool, under that name, before
+any structure is worked out or written down; reading the map file
+(`docs/architecture-map.md`) or grepping the code yourself is not the
+consult, however complete the map looks — the consult is the `Skill`
+call, and it is what a reviewer or a trace looks for. Ask inline, in this
+same conversation, the same in-conversation consult this skill already
+uses below for a runtime-safety question; it's `background: true` but
+carries no `AskUserQuestion` of its own, so there's nothing to launch and
+nothing to wait on. The consult returns an answer, not the turn: carry on
+with this skill in the same response. If it reports that no map exists
+yet, say so once and carry on. This holds whether this skill runs in the
+main conversation or inside a delegated `software-architect` agent: the
+agent invokes `map-query` the same way.
 
 A candidate it returns is a fact, not a verdict — whether it's close
 enough to reuse instead of introducing something new is this skill's own

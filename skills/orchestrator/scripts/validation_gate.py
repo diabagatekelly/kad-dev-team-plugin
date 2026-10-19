@@ -61,11 +61,20 @@ The same checks are what the
 `tdd-implementation-*` eval cases prove with trace regexes; this is the
 runtime version for real candidates.
 
+A protected document the user amends while the flow is running (a design
+reopened after an escalation) would fail the protected check for a reason
+that is not the build's: `--baseline FILE --accept-protected PATH`
+rewrites that one file's recorded hash to its current content, prints
+the old and new hash, and exits, so the next gate run accepts the user's
+amendment and still catches any other change to it. It never re-records
+the whole baseline, which would hide the build's own files.
+
 Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/validation_gate.py [--project DIR]
            [--base HEAD | --baseline FILE] [--allow lending/ --allow test/ ...]
            [--protect docs/x/design.md ...] [--test-cmd "npm test"] [--timeout 600]
            [--coverage] [--min-line 90] [--min-branch 80] [--json out.json]
        python3 -I .../validation_gate.py [--project DIR] --record-baseline FILE
+       python3 -I .../validation_gate.py [--project DIR] --baseline FILE --accept-protected PATH
        (from this repository: python3 -I skills/orchestrator/scripts/validation_gate.py ...)
 The test command is split the way a shell would and run without one (so
 no pipes or `&&`); its program is resolved on PATH, which is how `npm`
@@ -137,6 +146,24 @@ def record_baseline(project, path):
     with open(path, "w", encoding="utf-8") as f:
         json.dump({"base": base, "project": os.path.abspath(project), "files": files}, f, indent=2)
     print(f"baseline recorded: commit {base[:12]}, {len(files)} pre-existing change(s)")
+
+
+def accept_protected(project, path, rel):
+    """Rewrite one file's recorded hash in the baseline to its current
+    content: the user's own amendment of a protected document, accepted
+    without re-recording anything else."""
+    with open(path, encoding="utf-8") as f:
+        baseline = json.load(f)
+    old = baseline["files"].get(rel)
+    new = file_hash(project, rel)
+    if new is None:
+        print(f"baseline not updated: {rel} does not exist in {project}")
+        return 1
+    baseline["files"][rel] = new
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(baseline, f, indent=2)
+    print(f"baseline updated: {rel} {(old or 'unrecorded')[:12]} -> {new[:12]}")
+    return 0
 
 
 def changed_files(project, base, baseline):
@@ -418,6 +445,9 @@ def main():
     p.add_argument("--base", default="HEAD")
     p.add_argument("--baseline", help="baseline file written by --record-baseline (overrides --base)")
     p.add_argument("--record-baseline", metavar="FILE", help="write the baseline for later runs and exit")
+    p.add_argument("--accept-protected", metavar="PATH",
+                   help="with --baseline: record this file's current content as the baseline's and exit "
+                        "(a protected document the user amended mid-flow)")
     p.add_argument("--allow", action="append", default=[], help="path the change may touch: dir/ or exact file (repeatable)")
     p.add_argument("--protect", action="append", default=[], help="file that must be unchanged (repeatable)")
     p.add_argument("--test-cmd", default="npm test")
@@ -433,6 +463,11 @@ def main():
     if a.record_baseline:
         record_baseline(project, a.record_baseline)
         return 0
+    if a.accept_protected:
+        if not a.baseline:
+            print("--accept-protected needs --baseline")
+            return 1
+        return accept_protected(project, a.baseline, a.accept_protected.replace("\\", "/"))
 
     baseline, base = None, a.base
     if a.baseline:

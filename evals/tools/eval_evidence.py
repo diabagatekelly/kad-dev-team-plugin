@@ -93,6 +93,24 @@ def record(passed, failed, version=None, before=None):
     return moved
 
 
+def tolerance_for(bar_entry, runs, tolerance):
+    """The tolerance one case's score is judged with: the flat `--tolerance`,
+    or the width of one grader flip in one run when that is wider. A score
+    is the mean over runs of the share of graders passed, so with G scored
+    graders over R runs one judge flip moves it by 1/(G*R): 0.111 for three
+    graders at three runs, over a flat 0.1, which failed a case recorded
+    from one three-run sample as often as not. The floor absorbs exactly
+    one flip; two still fail. R is the larger of the runs behind the score
+    and the runs the bar was recorded at, so a one-run first pass with a
+    flipped grader is still suspect and re-run at the case's own count.
+    Bars recorded before per-grader rates existed keep the flat tolerance."""
+    graders = len(bar_entry.get("graders") or {})
+    runs = max(runs or 0, bar_entry.get("runs") or 0)
+    if graders and runs:
+        return max(tolerance, 1.0 / (graders * runs))
+    return tolerance
+
+
 def check(cases, tolerance):
     """For each case: (verdict, detail). Verdict is 'ok' or a reason."""
     table = load()
@@ -109,7 +127,7 @@ def check(cases, tolerance):
             out[case] = ("stale", "a file it loads changed since " + str(e.get("recorded", "?"))[:10])
         elif bar is None:
             out[case] = ("no bar", "no entry in thresholds.json; record one with record_thresholds.py")
-        elif e["score"] is None or e["score"] < bar - tolerance:
+        elif e["score"] is None or e["score"] < bar - tolerance_for(bars.get(case, {}), e.get("runs"), tolerance):
             out[case] = ("below bar", f"evidence {e['score']} against a bar of {bar}")
         else:
             out[case] = ("ok", f"{e['score']} on {str(e.get('recorded', '?'))[:10]}")

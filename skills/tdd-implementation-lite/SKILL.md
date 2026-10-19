@@ -40,7 +40,14 @@ things are not:
 1. **Write the tests before any code, stubs included.** As many as the
    slice's behaviour needs, through the public interface the design
    names. The tests fix the interface; nothing is written for them to
-   import until they exist.
+   import until they exist. Through the public interface means asserted
+   through it too: a test that reads an adapter's private store (a cast
+   to reach a `holds` map, say) to check what a port operation did is a
+   test of the implementation, and it breaks on the next adapter, however
+   honestly the shortcut is reported. If the port exposes too little to
+   show the state a criterion names, assert through what it does expose
+   (the operation's return value, a head, a length, a second call that
+   now fails) or escalate the port gap as a design gap below; never peek.
 2. **See them fail on their own assertions, not on a missing module.**
    After the tests and before the real code, give the tests what they
    import — the use case, the port operation, whatever they name — as a

@@ -176,6 +176,15 @@ story, note it as Low at most.
 
 Severity tracks the reachable consequence, not the category. Don't inflate
 severity to force a fix — state the trade-off and let the user decide.
+The same rule the other way: nothing about how the code came to be
+lowers a severity. A design that mandates the finding, a note that the
+user has already been told, a decision already escalated — each changes
+who owns the fix and says so in the finding's fix line, and none of them
+changes what an attacker reaches. A card number reaching a persistent
+log is High whether an approved design asked for it or not; "Medium
+because the design mandates it" is a severity set by process, and the
+report's reader, who may be a procedure that acts on Critical and High
+alone, then never sees the High.
 
 ## Finding report format
 

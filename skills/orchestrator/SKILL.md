@@ -392,6 +392,20 @@ unprompted. Blindness here is structural,
 not something to enforce by instruction: two fresh spawns with no shared
 context already can't see each other.
 
+The documents the candidates read must be the documents as they are now.
+A worktree is cut from `HEAD`, so an edit to the design, the slice or a
+criteria document that nobody has committed is absent from both
+worktrees, and a candidate reading its own worktree's copy builds to the
+old text without anyone noticing. Before launching, check `git status`
+on the target directory's documents; for any that is modified or
+untracked, give the candidates that document by its absolute path in the
+real project, read-only, with one line saying so (the second real run
+did this, and its A line said which document and why), and name the
+document the same way for the finalize instance and the judge's `--task`
+files. The gate's `--protect` still names the worktree's own path, which
+the baseline recorded. Never commit the document yourself to get it into
+the worktrees: a commit is the user's.
+
 Before launching, two things, in this order. First, check the session's
 sandbox, inline with Bash:
 
@@ -562,6 +576,24 @@ if the slice isn't UI-touching or a candidate was dropped at the gate) —
 `map-update`'s two inline runs aren't part of that count. Wait for all of
 them before continuing.
 
+**What a reviewer's task holds, here and in E:** the skill to invoke
+first, the worktree or tree to read, the files the candidate changed, the
+map diff, and the slice's criteria and design by path — and nothing of
+the flow's own state. No finding another reviewer raised, no severity
+anyone gave it, no note that a decision is design-mandated or has
+already been escalated or that the user has been told, no verdict, no
+"check whether X", no hint of what to look for. A reviewer that knows a
+finding was escalated rates it lower: the second real run's final
+security review rated a card number in a shared log Medium "because the
+design mandates it and the user has already been told", after the task
+had said exactly that, where the same reviewer on the candidates, told
+nothing, had rated it High — and the hand-back below acts on Critical
+and High alone, so the context the task leaked is what kept the fix from
+happening. Severity is the reviewer's to set from what the code reaches;
+who owns the fix is yours to decide afterwards, with the report in hand.
+The design's own text reaches the reviewer through the design doc, which
+is on the list; a note from you about it is not the design.
+
 **C. Combine — inline, yours alone, not spawned.** Judge first, blind;
 then read; then decide with the verdict in hand. Before you read either
 candidate, render the judge's prompts inline with Bash:
@@ -684,7 +716,11 @@ to be able to read the same documents — with the same two lines both
 candidates carried: that the deliverable is this slice alone, and that
 `orchestrator` reviews the result (step E). It builds a genuinely new implementation informed by both candidates
 and every finding against either, not a patch on top of whichever
-candidate combine preferred. This is the real, final artifact — the one
+candidate combine preferred. The brief says what to build; the skill the
+instance invokes says how, and a brief that lists every test the build
+needs is not a reason to write them all at once or to review once at the
+end — say so in the task, in one line, because the second real run's
+finalize instance did both and reported it as a deviation. This is the real, final artifact — the one
 that answers "has this slice been implemented" for step 2's future
 inspection.
 
@@ -703,6 +739,25 @@ which checks it failed. Leave the failed build in the working tree as it
 is and name its files in the report: reverting it is the user's call,
 the same rule that keeps the candidate branches below. The persisted map
 below is updated only once the finalized build has cleared the gate.
+
+One failure of the `protected` check is not the build's: a protected
+document the user amended between steps (the user said so in this
+conversation, or the amendment is theirs — a design reopened after an
+escalation, say). The baseline recorded the document as it was, so the
+gate now sees it as changed. Don't re-record the baseline (that would
+record the build's own files as pre-existing and the gate would then see
+no change at all), don't edit the baseline file by hand, and don't drop
+the `--protect`. Run, once, inline:
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --baseline '<project root>/.git/kad-gate-baseline.json' --accept-protected '<the document'''s path>'
+```
+
+It rewrites that one document's recorded hash to the content now in the
+tree, prints the old and new hash, and exits; then run the gate as
+before. Record on the step's line that the document was accepted and
+why. This is for a change the user made, never for one a candidate or
+an instance made: that is what the check exists to catch.
 
 Then run `architecture-cartographer:map-update`
 for real — inline, not an async `Agent` call, for the same reason as
@@ -730,7 +785,11 @@ line lists them, minus this log and the persisted map: those two are the
 flow's own writes, not the build, and a reviewer handed a process record
 raises findings against it. The map reaches the reviewers as the diff
 D's real `map-update` produced, exactly as a candidate's reviewers were
-handed its throwaway diff. Then check the combine brief: each finding it
+handed its throwaway diff. The same rule as B on what the task holds:
+nothing of the flow's own state — no finding from Grade, no severity, no
+escalation, nothing the user has been told, nothing to look for. The
+post-fix reviewers below get the same: the files the fix touched and the
+refreshed diff, not what the fix was for. Then check the combine brief: each finding it
 asked the build to address, pass or fail against the finalized
 implementation, from the reviewers' reports and your own read of the
 code. Both go in the log's E line.
@@ -751,7 +810,11 @@ After the fix, in this order:
    second failure does: the build has had its one handed-back round.
 2. Run `architecture-cartographer:map-update` for real once more, so the
    persisted map is the map of the build that ships and the reviewers
-   below read the fix's own diff, not the pre-fix one.
+   below read the fix's own diff, not the pre-fix one. Always, however
+   small the fix looks: whether an edge changed is the map's call, not
+   yours, and a fix that imports a built-in module (`node:crypto`, say)
+   changes the map's external-package column, which the second real run
+   left stale by skipping this step as "no new internal edges".
 3. Re-run every applicable reviewer on the files the fix touched — all
    of them, not only the ones that raised the findings handed back, the
    same rule the tdd skill's own handed-back path has (a one-line fix has
