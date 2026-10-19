@@ -936,13 +936,13 @@
     "recorded": "2026-10-19T00:02:59Z"
   },
   "tdd-implementation-lite-cancel-hold-via-agent": {
-    "inputs": "fa79a4542b6d7db86e315989aa3acb9f3b2aa0aba3a17f71a66c20e7504166cf",
+    "inputs": "ff7a94dc37a64b4518f394eb99e457023c72ae499c0e10f315c3a755129e2ecd",
     "score": 0.96,
-    "bar": 0.92,
+    "bar": 0.96,
     "runs": 3,
-    "source": "results/gate-20261018T235959-tdd-implementation-lite-cancel-hold-via-agent.json",
+    "source": "results/gate-20261019T000731-tdd-implementation-lite-cancel-hold-via-agent.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-19T00:02:59Z"
+    "recorded": "2026-10-19T00:09:51Z"
   },
   "tdd-implementation-lite-named-fix": {
     "inputs": "15073d79ad3ef801909977906062da62d5625d6731fdde05f53c94d7c23a0038",
