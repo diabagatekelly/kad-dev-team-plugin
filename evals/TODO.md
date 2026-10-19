@@ -955,8 +955,8 @@ case). Every one has a gate-mode three-run bar and current evidence.
 G3, G4 and G5 done 2026-10-16/17 on branch `eval-phase-g` (PR #7, merged
 2026-10-17, `c6b9e19`), in the order G5, G4, G3 (the two carried-over
 findings first, because their evidence was already in hand; the coverage
-work needed runs of its own). G1 and G2 stay open; the hand-off's "What
-to do next" says where each would start.
+work needed runs of its own). G1 done 2026-10-18 (PR #16) and G2 done
+2026-10-19 (PRs #17 and #18); nothing in this section is open.
 
 - [x] G1. Harder plants and rejecting answers so scores leave the 1.0
       ceiling.
@@ -1075,9 +1075,10 @@ to do next" says where each would start.
         is its fix. Re-run 3/3 at 1.0.
       - *Taken, "overlay test coverage is overstated" (Low):* verify.sh's
         header now says the days-left overlay is only type-checked, and why.
-- [ ] G2. A lite variant of `tdd-implementation` as a second plugin dir,
+- [x] G2. A lite variant of `tdd-implementation` as a second plugin dir,
       run through the same cases as a third arm.
-      *Reframed 2026-10-18, branch `eval-g2-lite-tdd`.* Not a second plugin
+      *Done 2026-10-18/19: PR #17 (merged `5e3e133`) and PR #18 (the
+      augmented lite). Reframed 2026-10-18, branch `eval-g2-lite-tdd`.* Not a second plugin
       directory. The user's question was how a plugin user would choose
       between the two implementations for a slice, or run both to compare,
       so the variant is a sibling skill in the one plugin
@@ -1306,6 +1307,148 @@ to do next" says where each would start.
       orchestrator cases all at 1.0, lite cancel-hold 0.92 and its
       via-agent twin 0.92 (the per-test cycle and the can-it-fail check
       0/6 once more: 0/15 and 1/15 over the five runs of three now).
+      *Augmented lite (2026-10-18 night, the user's decision after the
+      finding).* The lite runs were test-first, not TDD, and not even
+      verified test-first: every RED was the whole test file failing to
+      import a module that did not exist yet, so no assertion ever ran
+      red, and the can-fail check was skipped, so the broader tests the
+      judge preferred had never been seen to catch anything. The user
+      asked whether the verification could be had without heavy's two
+      runs per test, and chose this: lite now asks for four things and
+      leaves the loop alone — tests before the code; a stub so the RED
+      run fails on the tests' own assertions, read for a test failing
+      for the wrong reason; implement and run the whole suite green;
+      break the implementation on purpose, see a test fail, restore,
+      re-run. About four test runs to heavy's two per test. The skill's
+      description, the orchestrator's option line, the README and
+      PERSONAS now say "test-first with verification rather than TDD":
+      the model cannot be made to do TDD proper at Sonnet without being
+      told one test at a time, which is heavy's instruction and heavy's
+      cost, and the user chose not to change heavy. The experiment this
+      sets up is the one the user named: whether verified test-first is
+      as good as TDD on the shipped code, heavy against augmented lite,
+      judged blind. Two floor graders carry the verification on both
+      cancel-hold lite cases: `red-on-assertions` (before the first green
+      run, a "✖ <test name> (<n>ms)" item that is a test, not a
+      `.test.ts` file; the trace keeps the runner's summary lines but not
+      always the error text, so the item line is what is checked; tested
+      against the twelve recorded cancel-hold traces, matching the heavy
+      runs whose first RED was an assertion and none of the old lite
+      runs) and `can-fail-check-in-trace`, moved from measurement.
+      *First run (`gate-20261018T234559-*`):* the protocol held in every
+      run. All six cancel-hold runs wrote stubs, then the tests, saw the
+      tests fail on their assertions (five or six failures named by the
+      runner), implemented, went green, broke the adapter on purpose
+      (four to six failures), restored and went green again;
+      `red-on-assertions` 6/6, `can-fail-check-in-trace` 6/6, and the
+      named-fix runs did the break-and-restore too. The one miss was the
+      order: every run wrote the three stub files before the test file,
+      so the two test-before-code graders failed (0.88 and 0.87, flagged
+      as regressed) — the text said "before the real code, give the
+      tests something to import" and the model read it as stubs first.
+      Step 1 now says tests before any code, stubs included, and step 2
+      says after the tests. The seventeen orchestrator cases re-ran
+      17/17 at 1.0 with the new option line.
+      *Second run (`gate-20261018T235548-*`):* the order held in all six
+      runs (test file, then the three stubs, then the RED on four to six
+      assertions, implement, green, break, restore, green), both
+      test-before-code graders back to 3/3, `red-on-assertions` and
+      `can-fail-check-in-trace` 6/6 again. Two things left: the heavy
+      case's `red-then-green-seen` went 0/6 and the gate flagged it as
+      an always-passing grader lost, because it wants no edit between
+      the test edit and the RED run and lite's stub step puts the stub
+      writes exactly there by design — dropped from the two lite cases,
+      with `red-on-assertions` as the RED check (the comment in each
+      case says why); and `map-query-before-implementation` lost one run
+      that consulted after the stubs, so the consult sentence now says
+      "before the first file of code, stubs included".
+      *Third run (`gate-20261018T235959-*`, kept; the bars and evidence
+      come from it):* lite cancel-hold 0.96, the via-agent twin 0.96,
+      named-fix 1.00; the only grader lost in any run is the per-test
+      cycle, 0/6, which lite does not ask for. Every floor grader 3/3 in
+      every case, the consult before the first stub in all six runs, the
+      RED on assertions and the break-and-restore in all six, six or
+      seven tests per run (the first lite wrote five or six, heavy two
+      to four).
+      *The experiment the user named, heavy against augmented lite,
+      judged blind (`compare_arms.py`, every pair, both orders):*
+      cancel-hold **augmented lite 9/9**, via-agent **9/9**, named-fix
+      lite 2, tie 1, split 6, heavy 0 (identical code; one extra
+      assertion on the error path deciding the non-ties either way).
+      The reasons are the first comparison's reasons again: more of the
+      slice's behaviour covered through the public interface (the head
+      cancel, no queue, another title untouched, a double cancel, only
+      the target removed from a queue of three) and the adapter that
+      removes one hold and leaves a miss untouched, against heavy's two
+      cases per layer and a `filter` that writes an empty array back.
+      What the judge cannot see is the verification, which is the
+      point of the augmentation: it reads the tests as written, and the
+      two floor graders are what say the tests were seen red on their
+      assertions and seen to catch a break. So on this slice, verified
+      test-first at four runs is at least as good as TDD at twelve on
+      everything the judge weighs, and better on tests; what TDD would
+      still buy, the incremental shaping of the code by each test, this
+      slice is too small to show. The `compare_arms.py` lite-clause
+      regex also strips the via-agent prompt's "telling it to build
+      with the lite skill" form, which the first form of the check
+      refused (found when the via-agent pair returned no tally).
+      *PR #17 was merged (`5e3e133`) before these commits were pushed,
+      so the augmented lite is PR #18, branch `eval-g2b-augmented-lite`.*
+      *Sourcery on PR #18, seven findings, six taken, one in part:*
+      - *Taken, the three graders made exact (two lite cancel-hold
+        cases):* `tests-before-any-code` is new (no `lending/` or
+        `infra/` file written or edited before the first test file is
+        written, so a stub before a test fails, which the two pair
+        graders could not see); `map-query-before-any-code` replaces the
+        tool-order grader (the consult before the first code file,
+        stubs included, as the skill now says); `break-and-restore-in-
+        trace` replaces the heavy case's `can-fail-check-in-trace` (a
+        green run, a code edit with no failing run between, a failing
+        run with no green between, a code edit with no green between,
+        a green run with nothing failing after: an unrelated failure
+        between two greens with no edit around it no longer passes).
+      - *Taken, "a valid baseline run is rejected":* `red-on-assertions`
+        now starts its span at the first test-file write instead of the
+        start of the trace, so a green run of the existing suite before
+        the tests are written is allowed.
+      - *Taken in part, "assertion failures go unverified":* the
+        grader cannot prove every new test failed on its assertion from
+        a trace that keeps the runner's summary lines but not reliably
+        the error text; what it can prove is that the failing item the
+        runner names is a test, not a file, which is the module-not-
+        found case the step exists to exclude. A test that passes
+        against the stub is for the model to notice (step 2 says to read
+        the output) and for the break check to catch. Left as the
+        item-line check; the grader's comment says exactly what it
+        proves and what it does not.
+      - *Taken, "the agent still prescribes TDD":* right, and a real
+        conflict for a lite build through `tdd-coach`: the agent's
+        "follow it as written" summary named the Test List, each RED,
+        minimal GREEN and the per-cycle review for every build. It now
+        says what heavy is and what lite is, and that the skill wins.
+      - *Taken, "an interrupted check leaves broken code":* as text, not
+        isolation: whatever the broken run shows, the restore comes
+        first and the report never follows an unrestored break. An
+        isolated copy for a two-line break is more machinery than the
+        step, and the heavy skill's same step has run without it.
+      - *Found on the way, by the user's question "is this proper
+        TDD":* no, and the first `red-on-assertions` pattern began with
+        `\A`, which Node's engine (the eval's) reads as a literal `A`,
+        so its 6/6 was for the wrong reason; every regex here is now
+        tested under Node (`regexjs.sh` in the session's scratch),
+        where the four graders pass the six final runs, fail the
+        stub-first run on ordering and the first lite's runs on the RED
+        and the break, and pass the one old run that did break and
+        restore. Lesson for the suite: `^` and `$`, never `\A` or `\z`.
+      *Re-run after the round (2026-10-19; the first attempt hit the
+      session limit part way and was void):* eight cases 8/8 at bar —
+      lite cancel-hold 0.95 and the via-agent twin 0.96 with the four
+      exact graders 6/6 (the only losses the per-test cycle, 0/6 as
+      ever, and one judge vote on `tests-check-behaviour`), lite
+      named-fix 1.00, heavy cancel-hold 0.97 and its via-agent twin
+      0.99 with the agent's new per-skill summary, the three
+      test-quality-review cases at bar. Bars for the two lite
+      cancel-hold cases re-recorded from this run; evidence current.
 - [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
       *Taken against the section 8 list, item by item:*

@@ -1,21 +1,21 @@
 ---
 name: tdd-implementation-lite
-description: The implementation contract of tdd-implementation with the TDD discipline left to the model's own judgment — what it owns and what it doesn't, where things go, how a gap in the design is handled, what the report holds — and nothing about how to run the loop. Invoke it only when a task names it by this name — the orchestrator's quarantine flow under its lite or compare policy, or a user asking for "tdd-implementation-lite" in so many words. A plain "build it", "implement this" or "apply this fix" is tdd-implementation's, and a stage guessed at in passing ("if the next step is the implementation, go ahead") is orchestrator's.
+description: The implementation contract of tdd-implementation as test-first with verification rather than TDD — tests before the code, seen failing on their own assertions, then shown to catch a break, with the loop between left to the model — plus what it owns and what it doesn't, where things go, how a gap in the design is handled, what the report holds. Invoke it only when a task names it by this name — the orchestrator's quarantine flow under its lite or compare policy, or a user asking for "tdd-implementation-lite" in so many words. A plain "build it", "implement this" or "apply this fix" is tdd-implementation's, and a stage guessed at in passing ("if the next step is the implementation, go ahead") is orchestrator's.
 ---
 
 # TDD Implementation, lite
 
 The same job as `tdd-implementation`, with less said about how to do it.
-That skill prescribes the loop in full: a Test List, one test at a time,
-RED seen failing for the right reason, the minimum GREEN, a refactor step,
-a `test-quality-review` call every cycle, a can-it-fail check before the
-report. This one leaves all of that to you. You write the code test-first,
-in the order and at the grain you judge right, and you check your own work
-the way you would check it unprompted. What it does not leave to you is
-the contract below: what is yours to decide and what is not, where things
-go, how a gap in the design is handled, and what the orchestrator and the
-reviewers need to find afterwards. Those are this roster's rules, not
-craft, and nothing you already know tells you them.
+That skill is TDD proper: a Test List, one test at a time, RED seen
+failing for the right reason, the minimum GREEN, a refactor step, a
+`test-quality-review` call every cycle, a can-it-fail check before the
+report. This one is test-first with verification: the tests before the
+code, seen failing on their assertions, then shown to catch a break, and
+the loop between those points left to you. What it does not leave to you
+is the contract below: what is yours to decide and what is not, where
+things go, how a gap in the design is handled, and what the orchestrator
+and the reviewers need to find afterwards. Those are this roster's
+rules, not craft, and nothing you already know tells you them.
 
 ## What you're doing, and what you're not
 
@@ -30,11 +30,40 @@ You don't decide what capability gets built (`product-manager` /
 `product-slicer`), how the slice is structured (`architecture-design`), or
 what a screen looks like (`ux-designer`). You implement.
 
-## Build it test-first, for real
+## Build it test-first, verified, for real
 
-Write the tests first and the code to pass them; how you sequence that,
-how small each step is, and how you satisfy yourself the tests would catch
-a break are your call. Two things are not:
+This is test-first, not TDD: the tests come before the code, and nothing
+here asks you to grow the code one test at a time. How many tests you
+write, in what order, and how small your steps are, is your call. Four
+things are not:
+
+1. **Write the tests before any code, stubs included.** As many as the
+   slice's behaviour needs, through the public interface the design
+   names. The tests fix the interface; nothing is written for them to
+   import until they exist.
+2. **See them fail on their own assertions, not on a missing module.**
+   After the tests and before the real code, give the tests what they
+   import — the use case, the port operation, whatever they name — as a
+   stub that does nothing useful. One run: every test fails, each on what it
+   asserts, and the runner's output names each failure. Read that output
+   for a test failing for the wrong reason (a typo, a bad import, a
+   setup error) and fix that test before going on. A run that fails
+   because the module does not exist proves nothing about any test.
+3. **Implement, and run the whole suite green.** The code the tests ask
+   for and nothing the slice does not need. The last run before you
+   report is the full suite, green.
+4. **Prove the tests can fail.** Break the implementation on purpose (a
+   flipped condition, a wrong comparison, an off-by-one in the place the
+   slice's main rule lives), run, confirm a test fails, restore the code,
+   run the suite again and see it green. A restore you did not re-run is
+   not confirmed, however obvious the revert. Whatever the broken run
+   shows — a crash, a hang, a test failing for a reason you did not
+   intend — the restore comes first, before anything else is done or
+   reported: a break left in place is a broken build, and the report
+   never follows an unrestored break. This applies to a handed-back fix
+   as much as to a slice.
+
+Two more things that hold throughout:
 
 - **Every test run is real.** "Run the tests" means invoking the project's
   test runner and reading its actual output, never narrating what you
@@ -73,8 +102,8 @@ Before writing implementation code, consult `map-query` (the
 `kad-dev-team:map-query` skill, owned by `architecture-cartographer`) at
 the implementation level: does a comparable function, class or helper
 already exist. Invoke it with the `Skill` tool, under that name, before
-the first implementation file is written; reading the map file or
-grepping the code yourself is not the consult. It returns an answer, not
+the first file of code is written, stubs included; reading the map file
+or grepping the code yourself is not the consult. It returns an answer, not
 the turn, so carry on with this skill in the same response. If it reports
 that no map exists yet, say so once in your report and carry on. A candidate it returns is a fact, not a verdict:
 reuse it yourself if there's no real alternative to weigh; escalate to
@@ -151,8 +180,10 @@ State, in this shape:
 
 - **Starting point** — tests and coverage before this work, if any.
 - **Built** — the files added or changed, and what each is for.
-- **Verified** — the runner's last result on the full suite, and whatever
-  else you did to satisfy yourself the tests earn their keep.
+- **Verified** — the RED run (every test failed on its own assertion, or
+  which one didn't and what you fixed), the runner's last result on the
+  full suite, and the break you made on purpose: what you broke, which
+  test caught it, and that the suite was green again after the restore.
 - **Decided gaps** — each small gap you filled and what you chose.
 - **Escalated** — each load-bearing gap or structural fork, and who owns it.
 - **Noticed, not touched** — problems outside the slice, one line each.

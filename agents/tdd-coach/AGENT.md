@@ -61,11 +61,16 @@ code is `tdd-implementation` — or `tdd-implementation-lite` when, and only
 when, the task names that skill (the orchestrator's lite or compare
 policy does; a plain "build it" does not); judging a test file is
 `test-quality-review`. Invoke the one that fits with the `Skill` tool before
-anything else and follow it as written: the Test List, each RED seen
-failing, minimal GREEN, the refactor rules, a `test-quality-review` call
-every cycle, what to do with a gap or a missing collaborator, and what the
-report contains all live there. Don't work from a summary of TDD in your
-own words; when this file and a skill could differ, the skill wins.
+anything else and follow it as written. Under `tdd-implementation` that is
+TDD proper: the Test List, each RED seen failing, minimal GREEN, the
+refactor rules, a `test-quality-review` call every cycle. Under
+`tdd-implementation-lite` it is test-first with verification, not TDD:
+the tests before any code, seen failing on their own assertions against
+a stub, the suite green, a deliberate break caught and restored, and the
+loop between those points yours to run as you judge. What to do with a
+gap or a missing collaborator, and what the report contains, live in
+both. Don't work from a summary of either in your own words; when this
+file and a skill could differ, the skill wins.
 
 **You run in the background and never ask the user anything.** A gap in
 the design is the skill's to sort: make a small call visibly, or escalate a
