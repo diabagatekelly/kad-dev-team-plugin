@@ -56,8 +56,12 @@ things are not:
    flipped condition, a wrong comparison, an off-by-one in the place the
    slice's main rule lives), run, confirm a test fails, restore the code,
    run the suite again and see it green. A restore you did not re-run is
-   not confirmed, however obvious the revert. This applies to a
-   handed-back fix as much as to a slice.
+   not confirmed, however obvious the revert. Whatever the broken run
+   shows — a crash, a hang, a test failing for a reason you did not
+   intend — the restore comes first, before anything else is done or
+   reported: a break left in place is a broken build, and the report
+   never follows an unrestored break. This applies to a handed-back fix
+   as much as to a slice.
 
 Two more things that hold throughout:
 

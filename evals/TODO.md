@@ -1391,6 +1391,65 @@ to do next" says where each would start.
       regex also strips the via-agent prompt's "telling it to build
       with the lite skill" form, which the first form of the check
       refused (found when the via-agent pair returned no tally).
+      *PR #17 was merged (`5e3e133`) before these commits were pushed,
+      so the augmented lite is PR #18, branch `eval-g2b-augmented-lite`.*
+      *Sourcery on PR #18, seven findings, six taken, one in part:*
+      - *Taken, the three graders made exact (two lite cancel-hold
+        cases):* `tests-before-any-code` is new (no `lending/` or
+        `infra/` file written or edited before the first test file is
+        written, so a stub before a test fails, which the two pair
+        graders could not see); `map-query-before-any-code` replaces the
+        tool-order grader (the consult before the first code file,
+        stubs included, as the skill now says); `break-and-restore-in-
+        trace` replaces the heavy case's `can-fail-check-in-trace` (a
+        green run, a code edit with no failing run between, a failing
+        run with no green between, a code edit with no green between,
+        a green run with nothing failing after: an unrelated failure
+        between two greens with no edit around it no longer passes).
+      - *Taken, "a valid baseline run is rejected":* `red-on-assertions`
+        now starts its span at the first test-file write instead of the
+        start of the trace, so a green run of the existing suite before
+        the tests are written is allowed.
+      - *Taken in part, "assertion failures go unverified":* the
+        grader cannot prove every new test failed on its assertion from
+        a trace that keeps the runner's summary lines but not reliably
+        the error text; what it can prove is that the failing item the
+        runner names is a test, not a file, which is the module-not-
+        found case the step exists to exclude. A test that passes
+        against the stub is for the model to notice (step 2 says to read
+        the output) and for the break check to catch. Left as the
+        item-line check; the grader's comment says exactly what it
+        proves and what it does not.
+      - *Taken, "the agent still prescribes TDD":* right, and a real
+        conflict for a lite build through `tdd-coach`: the agent's
+        "follow it as written" summary named the Test List, each RED,
+        minimal GREEN and the per-cycle review for every build. It now
+        says what heavy is and what lite is, and that the skill wins.
+      - *Taken, "an interrupted check leaves broken code":* as text, not
+        isolation: whatever the broken run shows, the restore comes
+        first and the report never follows an unrestored break. An
+        isolated copy for a two-line break is more machinery than the
+        step, and the heavy skill's same step has run without it.
+      - *Found on the way, by the user's question "is this proper
+        TDD":* no, and the first `red-on-assertions` pattern began with
+        `\A`, which Node's engine (the eval's) reads as a literal `A`,
+        so its 6/6 was for the wrong reason; every regex here is now
+        tested under Node (`regexjs.sh` in the session's scratch),
+        where the four graders pass the six final runs, fail the
+        stub-first run on ordering and the first lite's runs on the RED
+        and the break, and pass the one old run that did break and
+        restore. Lesson for the suite: `^` and `$`, never `\A` or `\z`.
+      *Re-run after the round:* the first attempt hit the subscription's
+      session limit (resets 10pm New York) part way: eight of the ten
+      affected cases errored every run and `tdd-implementation-cancel-
+      hold` scored 0.73 on runs the limit cut short, so that run is
+      void and its evidence dropped. To finish: `wsl-gate.sh --stale
+      --runs 3` (the four cancel-hold tdd cases, both named-fix cases,
+      the three test-quality-review cases), then
+      `record_thresholds.py --gate-only` for the two lite cancel-hold
+      cases (their grader set changed), commit evidence and thresholds,
+      push, and answer the seven PR #18 threads with the dispositions
+      above.
 - [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
       *Taken against the section 8 list, item by item:*

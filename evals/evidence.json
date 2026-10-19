@@ -99,13 +99,13 @@
     "recorded": "2026-10-14T05:32:26Z"
   },
   "architecture-review-neg-test-quality-review": {
-    "inputs": "1f98d2b8a1f36d0ff1620d6ae0691fadaa7c6549e4b8565cc51886b68a9ccc95",
+    "inputs": "e16d3bcf184bf3b0b03f2ca13207570c2cef451cbe754c5427ed62b6d6a21cc4",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261018T182508-architecture-review-neg-test-quality-review.json",
+    "source": "results/gate-20261019T002256-architecture-review-neg-test-quality-review.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-18T18:33:18Z"
+    "recorded": "2026-10-19T00:25:20Z"
   },
   "code-review-catalog": {
     "inputs": "3d533ec37f9d87f9fdc05f2da7d6efd312d7ca64c0147a78f4e8c254cb39acea",
@@ -908,59 +908,14 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T17:14:10Z"
   },
-  "tdd-implementation-cancel-hold": {
-    "inputs": "7696570728fe664353516fa31a0b4d036ac63c617703bb322c8bb5c62dd38d45",
-    "score": 1.0,
-    "bar": 0.987,
-    "runs": 3,
-    "source": "results/gate-20261018T210559-tdd-implementation-cancel-hold.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-18T21:11:39Z"
-  },
-  "tdd-implementation-cancel-hold-via-agent": {
-    "inputs": "dc9d4a065911c393f57da45be13be748f4d76fd7f169c442bf0f604b642b6888",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261018T210559-tdd-implementation-cancel-hold-via-agent.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-18T21:11:39Z"
-  },
-  "tdd-implementation-lite-cancel-hold": {
-    "inputs": "befe0d6b67f8c9bfb540ce73b16ae6679073a432468dc0ad9624a60167bb2511",
-    "score": 0.962,
-    "bar": 0.91,
-    "runs": 3,
-    "source": "results/gate-20261018T235959-tdd-implementation-lite-cancel-hold.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-19T00:02:59Z"
-  },
-  "tdd-implementation-lite-cancel-hold-via-agent": {
-    "inputs": "ff7a94dc37a64b4518f394eb99e457023c72ae499c0e10f315c3a755129e2ecd",
-    "score": 0.96,
-    "bar": 0.96,
-    "runs": 3,
-    "source": "results/gate-20261019T000731-tdd-implementation-lite-cancel-hold-via-agent.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-19T00:09:51Z"
-  },
-  "tdd-implementation-lite-named-fix": {
-    "inputs": "15073d79ad3ef801909977906062da62d5625d6731fdde05f53c94d7c23a0038",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261018T235959-tdd-implementation-lite-named-fix.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-19T00:02:59Z"
-  },
   "tdd-implementation-named-fix": {
-    "inputs": "8fa28dc3d5e2cc26e71c90758bbcd19f184ce873cbadaa1b55082e55410e9a9e",
-    "score": 1.0,
+    "inputs": "35cb73dd5a56abb6a88e46e1384534c3221b9075a98ccb813f0bd2cea9b5af44",
+    "score": 0.952,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261018T181429-tdd-implementation-named-fix.json",
+    "source": "results/gate-20261019T002256-tdd-implementation-named-fix.json",
     "claude_version": "2.1.296",
-    "recorded": "2026-10-18T18:24:17Z"
+    "recorded": "2026-10-19T00:25:20Z"
   },
   "technology-bootstrap-phase1": {
     "inputs": "09ec3e06cb45f29b2297d61af175b3e3b5e19a029e062637533827c4d4150003",
@@ -997,33 +952,6 @@
     "source": "results/gate-20261014T200632-technology-bootstrap-phase3-reject.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-14T20:07:51Z"
-  },
-  "test-quality-review-fines": {
-    "inputs": "d80c20f1b97ae48607c6c3c19e398867cdd19ff96b9c77b3b79f97ee87e5aba4",
-    "score": 0.967,
-    "bar": 0.967,
-    "runs": 3,
-    "source": "results/gate-20261018T182508-test-quality-review-fines.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-18T18:33:18Z"
-  },
-  "test-quality-review-neg-code-review": {
-    "inputs": "d26e6845296fce952afac1f9527ba18526f432af415fd74e4ec16a3afb612a70",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261018T182508-test-quality-review-neg-code-review.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-18T18:33:18Z"
-  },
-  "test-quality-review-reminders": {
-    "inputs": "551cdbdda9e741012e527cd505db760d8be43a8e7e74e2782c1daf079cb99b75",
-    "score": 1.0,
-    "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261018T182508-test-quality-review-reminders.json",
-    "claude_version": "2.1.296",
-    "recorded": "2026-10-18T18:33:18Z"
   },
   "user-facing-docs-renewals": {
     "inputs": "8d19b1c208fe548f5164095955df0266688659e51f9b7dc5bce06c6e00fe9e67",

@@ -28,12 +28,15 @@ graders:
   # use-case-test-before-use-case (lite says test-first; only the how is
   # left to the model), last-test-run-green, a-green-run-happened,
   # design-doc-unchanged, stays-inside-the-slice, no-bash-writes,
-  # map-query-before-implementation, escalates-queue-question,
+  # tests-before-any-code (no code or stub before the first test file),
+  # map-query-before-any-code, escalates-queue-question,
   # no-queue-behaviour-built, decides-reason-wording-visibly,
   # inside-the-design-boundaries, reports-verification, final-review-runs,
-  # and the two verification steps lite asks for: red-on-assertions (a RED
-  # run whose failures are the tests' own assertions, before any green run)
-  # and can-fail-check-in-trace.
+  # and the two verification steps lite asks for: red-on-assertions (after
+  # the test file is written and before any green run, a failure the
+  # runner names as a test, not a file) and break-and-restore-in-trace (a
+  # code edit between a green and a failing run, and another before the
+  # final green).
   # Measurement (what only tdd-implementation prescribes; the rate is the
   # finding): test-run-after-each-test-edit (the per-test cycle),
   # green-stays-minimal, tests-check-behaviour, final-run-is-the-whole-suite.
@@ -46,13 +49,22 @@ graders:
   - type: regex
     name: red-on-assertions
     target: trace
-    # Before the first green run, a failing test named by the runner (a
-    # "✖ <test name> (<n>ms)" line whose item is a test, not a .test.ts
-    # file): the tests failed on what they assert, against a stub. A run
-    # that fails because the module does not exist names the file as the
-    # failing item, and the trace keeps the runner's summary lines but not
-    # always the error text, so the item line is what is checked.
-    pattern: '\A(?:(?!ℹ fail 0)[\s\S])*✖ (?![^\n\\]*\.test\.ts)[^\n\\]*?\(\d+(?:\.\d+)?ms\)'
+    # After a test file is written and before any green run, a failing
+    # test named by the runner (a "✖ <test name> (<n>ms)" line whose item
+    # is a test, not a .test.ts file): the tests failed on what they
+    # assert, against a stub. A run that fails because the module does not
+    # exist names the file as the failing item, and the trace keeps the
+    # runner's summary lines but not always the error text, so the item
+    # line is what is checked. A green run of the existing suite before
+    # the tests are written is allowed (the span starts at the test write).
+    pattern: '"name":"Write","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"(?:(?!ℹ fail 0)[\s\S])*✖ (?![^\n\\]*\.test\.ts)[^\n\\]*?\(\d+(?:\.\d+)?ms\)'
+  - type: regex
+    name: tests-before-any-code
+    target: trace
+    # No code file (lending/, infra/) written or edited before the first
+    # test file is written: lite's step 1, stubs included.
+    pattern: '^(?:(?!"name":"Write","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts")[\s\S])*"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:lending|infra)/'
+    match: not_contains
   - type: tool_used
     name: agent-delegated-display
     tool: Agent
@@ -96,9 +108,15 @@ graders:
     target: trace
     pattern: 'ℹ fail 0'
   - type: regex
-    name: can-fail-check-in-trace
+    name: break-and-restore-in-trace
     target: trace
-    pattern: '"(?:file_path|path)":"[^"]*\.test\.ts"(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail 0(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail [1-9](?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")[\s\S])*ℹ fail 0(?:(?!"(?:file_path|path)":"[^"]*\.test\.ts")(?!ℹ fail [1-9])[\s\S])*$'
+    # Lite's step 4 as the trace shows it: a green run, then an edit of a
+    # code file (lending/, infra/) with no failing run in between, then a
+    # failing run with no green run in between (the edit caused it), then
+    # an edit of a code file with no green run in between (the restore),
+    # then a green run with no failing run after it. An unrelated failure
+    # between two green runs, with no edit around it, does not match.
+    pattern: 'ℹ fail 0(?:(?!ℹ fail [1-9])[\s\S])*?"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:lending|infra)/[^"]*\.ts"(?:(?!ℹ fail 0)[\s\S])*?ℹ fail [1-9](?:(?!ℹ fail 0)[\s\S])*?"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:lending|infra)/[^"]*\.ts"(?:(?!ℹ fail [1-9])[\s\S])*?ℹ fail 0(?:(?!ℹ fail [1-9])[\s\S])*$'
   - type: regex
     name: design-doc-unchanged
     target:
@@ -115,10 +133,12 @@ graders:
     target: trace
     pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:(?<![0-9&>])>{1,2}|\btee\b|\bsed\s+-i|\b(?:cp|mv|rm)\b|\b(?:python3?|node|perl|ruby|php)\s+(?:-[ce]\b|<<))(?:[^|;&"\\]|\\.)*?(?<![\w./-])(?:\./)?(?:catalog|members|lending|fines|notifications|reporting|services|utils|infra|main|test|docs)/'
     match: not_contains
-  - type: tool_order
-    name: map-query-before-implementation
-    before: {tool: Skill, input_match: 'kad-dev-team:map-query'}
-    after: {tool: Write, input_match: 'lending/cancel-hold\.ts'}
+  - type: regex
+    name: map-query-before-any-code
+    target: trace
+    # The consult before the first code file is written or edited, stubs
+    # included (lending/, infra/).
+    pattern: '^(?:(?!"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:lending|infra)/)[\s\S])*"skill": ?"kad-dev-team:map-query"'
   - type: llm
     name: escalates-queue-question
     focus:
