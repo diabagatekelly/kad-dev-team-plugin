@@ -1871,14 +1871,14 @@
     ]
   },
   "tdd-implementation-lite-cancel-hold": {
-    "score": 0.962,
+    "score": 0.951,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261018T235959-tdd-implementation-lite-cancel-hold.json",
+    "source": "results/gate-20261019T054115-tdd-implementation-lite-cancel-hold.json",
     "graders": {
       "a-green-run-happened": 1.0,
-      "can-fail-check-in-trace": 1.0,
+      "break-and-restore-in-trace": 1.0,
       "decides-reason-wording-visibly": 1.0,
       "design-doc-unchanged": 1.0,
       "escalates-queue-question": 1.0,
@@ -1887,7 +1887,7 @@
       "green-stays-minimal": 1.0,
       "inside-the-design-boundaries": 1.0,
       "last-test-run-green": 1.0,
-      "map-query-before-implementation": 1.0,
+      "map-query-before-any-code": 1.0,
       "no-bash-writes": 1.0,
       "no-queue-behaviour-built": 1.0,
       "not-heavy-skill": 1.0,
@@ -1901,7 +1901,8 @@
       "skill-invoked": 1.0,
       "stays-inside-the-slice": 1.0,
       "test-run-after-each-test-edit": 0.0,
-      "tests-check-behaviour": 1.0,
+      "tests-before-any-code": 1.0,
+      "tests-check-behaviour": 0.667,
       "use-case-test-before-use-case": 1.0
     },
     "skills_invoked": [
@@ -1914,15 +1915,15 @@
     ]
   },
   "tdd-implementation-lite-cancel-hold-via-agent": {
-    "score": 0.96,
+    "score": 0.962,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261018T235959-tdd-implementation-lite-cancel-hold-via-agent.json",
+    "source": "results/gate-20261019T054115-tdd-implementation-lite-cancel-hold-via-agent.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "agent-delegated-display": 1.0,
-      "can-fail-check-in-trace": 1.0,
+      "break-and-restore-in-trace": 1.0,
       "decides-reason-wording-visibly": 1.0,
       "design-doc-unchanged": 1.0,
       "escalates-queue-question": 1.0,
@@ -1932,7 +1933,7 @@
       "inside-the-design-boundaries": 1.0,
       "last-test-run-green": 1.0,
       "lite-skill-in-trace": 1.0,
-      "map-query-before-implementation": 1.0,
+      "map-query-before-any-code": 1.0,
       "no-bash-writes": 1.0,
       "no-queue-behaviour-built": 1.0,
       "not-heavy-skill": 1.0,
@@ -1943,6 +1944,7 @@
       "runs-the-tests": 1.0,
       "stays-inside-the-slice": 1.0,
       "test-run-after-each-test-edit": 0.0,
+      "tests-before-any-code": 1.0,
       "tests-check-behaviour": 1.0,
       "use-case-test-before-use-case": 1.0
     },

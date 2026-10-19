@@ -1439,17 +1439,15 @@ to do next" says where each would start.
         stub-first run on ordering and the first lite's runs on the RED
         and the break, and pass the one old run that did break and
         restore. Lesson for the suite: `^` and `$`, never `\A` or `\z`.
-      *Re-run after the round:* the first attempt hit the subscription's
-      session limit (resets 10pm New York) part way: eight of the ten
-      affected cases errored every run and `tdd-implementation-cancel-
-      hold` scored 0.73 on runs the limit cut short, so that run is
-      void and its evidence dropped. To finish: `wsl-gate.sh --stale
-      --runs 3` (the four cancel-hold tdd cases, both named-fix cases,
-      the three test-quality-review cases), then
-      `record_thresholds.py --gate-only` for the two lite cancel-hold
-      cases (their grader set changed), commit evidence and thresholds,
-      push, and answer the seven PR #18 threads with the dispositions
-      above.
+      *Re-run after the round (2026-10-19; the first attempt hit the
+      session limit part way and was void):* eight cases 8/8 at bar —
+      lite cancel-hold 0.95 and the via-agent twin 0.96 with the four
+      exact graders 6/6 (the only losses the per-test cycle, 0/6 as
+      ever, and one judge vote on `tests-check-behaviour`), lite
+      named-fix 1.00, heavy cancel-hold 0.97 and its via-agent twin
+      0.99 with the agent's new per-skill summary, the three
+      test-quality-review cases at bar. Bars for the two lite
+      cancel-hold cases re-recorded from this run; evidence current.
 - [x] G3. Coverage items from the audit's section 8 that no case checks
       (stop-and-report paths, ADR hand-offs, consult calls).
       *Taken against the section 8 list, item by item:*
