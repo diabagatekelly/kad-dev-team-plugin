@@ -151,6 +151,17 @@ def _run_case(case, runs, tag, j):
         result["version"] = data.get("claudeVersion")
         runs = c["arms"]["with"]
         keep_traces(c, out)
+        # A grader that could not run ("grader threw: judge call failed: You've
+        # hit your session limit", 2026-10-19) is recorded by the CLI as a
+        # plain FAIL, which read as the skill losing eight graders in two runs.
+        # Such a run says nothing about the skill either: it is an error here,
+        # excluded from the score like a run that never started.
+        for r in runs:
+            threw = [g["name"] for g in r.get("graders", [])
+                     if str(g.get("explanation", "")).startswith("grader threw")]
+            if threw and not r.get("error"):
+                first = next(g for g in r["graders"] if g["name"] == threw[0])
+                r["error"] = f"{len(threw)} grader(s) threw: {' '.join(str(first.get('explanation')).split())[:120]}"
         clean = [r for r in runs if not r.get("error")]
         if runs and not clean:
             # The CLI still scores a run that never started: every grader

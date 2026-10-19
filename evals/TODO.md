@@ -2904,7 +2904,7 @@ one commit, the plugin mirrored from `main` at `7d4e5d1` (PR #18's merge).
         the per-grader regression check is unchanged; bars without
         per-grader rates keep the flat tolerance. Used by the gate's
         retry decision and verdict and by the evidence check.
-- [ ] I5. Runs and bars: 58 affected cases at three runs. *2026-10-19,
+- [x] I5. Runs and bars: 58 affected cases at three runs. *2026-10-19,
       three WSL batches (`results/gate-20261019T0*`):* batch 1, the
       seventeen orchestrator cases, 17/17 at 1.0. Batch 2, 12/12 at bar:
       `architecture-design-payfine-phase1` 1.0 kept, phase 2 re-frozen
@@ -2928,17 +2928,25 @@ one commit, the plugin mirrored from `main` at `7d4e5d1` (PR #18's merge).
       `-fines-report-pr`, `reliability-review-portal-pay-pr`,
       `security-requirements-neg-review`, every `security-review-*`,
       `supply-chain-review-neg-reliability`,
-      `test-quality-review-neg-code-review`), and **one real failure**:
-      `reliability-review-nightly-via-agent` 0.42 against 1.00, losing
-      `no-false-alarm-duplicate-fines-on-rerun`,
-      `no-false-alarm-reminder-loop-catch` and `no-false-alarm-sms-retry`
-      — the delegated reliability reviewer raising findings the rubric
-      forbids, on the first run after the reliability-review text gained
-      the "Pre-existing, not blocking" section and the severity line. Not
-      yet read: whether the new section is pulling pre-existing code into
-      numbered findings on this case, or the severity line is keeping
-      demotions from happening. *Still to do, next session:* read that
-      case's three runs (`rates.py` in the session's scratchpad prints the
-      lost graders), fix the reliability-review text if it is the cause,
-      re-run it and the sixteen unrun cases (`batch3.sh` lists them) after
-      the limit resets, record, and update the hand-off.
+      `test-quality-review-neg-code-review`), and what the table showed
+      as one real failure, `reliability-review-nightly-via-agent` 0.42
+      against 1.00 with three `no-false-alarm-*` graders lost: read, it
+      was the limit too. The three reviews were written and complete
+      (the same findings as the recorded bar's, the SMS retry noted as
+      correctly scoped at Low), and every lost grader's explanation reads
+      "grader threw: judge call failed: You've hit your session limit",
+      which the CLI records as a plain FAIL — eight graders in runs 0
+      and 1, three in run 2. *Gate fix:* `eval_gate.py` now treats a run
+      with a grader that threw as an errored run, excluded from the score
+      like a run that never started, and a case with no clean run as an
+      error, so a judge the limit stopped is reported as a stopped judge
+      and never as the skill losing graders. Batch 4, the seventeen
+      cases once the limit reset: 16/16 at bar (the via-agent nightly
+      case itself 1.00), twelve at 1.0, the rest the known judge traps a
+      run each (`leaves-mocking-to-test-quality-review` on the
+      fine-notices pair, `hands-sdk-to-architecture-review` and
+      `finds-month-as-raw-string` on the fines report,
+      `no-false-alarm-oidc-deploy-job` on the config case), all inside
+      tolerance. So: 57 cases run at three runs, 57/57 at bar, evidence
+      current for every affected case (`eval_evidence.py --base
+      origin/main` all ok), about 170 runs in four WSL batches.
