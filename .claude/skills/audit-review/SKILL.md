@@ -22,11 +22,24 @@ wrong thing and the user fixed it later by hand.
 
 ## 2. Read each one against the rules that applied
 
-For each `kad-dev-team` call in a session, read the skill's current
-`skills/<name>/SKILL.md`, then the transcript from that call to the next
-user prompt (subagent transcripts are in `transcripts/<session>/`). If the
-project has an `orchestrator-log.md`, check the steps it records against
-the routing table. Ask of each call:
+Judge each session by the plugin version that ran it, not the current
+one: the install's `gitCommitSha` is in
+`~/.claude/plugins/installed_plugins.json`, and `git show
+<sha>:skills/<name>/SKILL.md` gives that version's rules. A miss that
+version made and the current one already fixes is a finding to record,
+not a fix to propose.
+
+For each `kad-dev-team` call in a session, read the skill's
+`skills/<name>/SKILL.md` at that version, then the transcript from that
+call to the next user prompt (subagent transcripts are in
+`transcripts/<session>/`). If the project has an `orchestrator-log.md`,
+run `python3 -I evals/tools/orchestrator_log_check.py <project dir>`
+(with `--skill` pointing at that version's orchestrator SKILL.md, saved
+to a scratch file). It checks the log's format, its route order against
+the state table, append-only from git and the transcripts, every entry
+against the skill call that followed it, and which files each stage
+actually wrote. Its errors are leads to read in the transcript, not
+findings yet. Ask of each call:
 
 - Should it have fired here, and did anything fire that shouldn't have?
 - Did it ask when its skill says to ask, and not ask what the documents

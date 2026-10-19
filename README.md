@@ -101,7 +101,10 @@ plugin. Nothing leaves your machine, and sessions that never used the
 plugin aren't kept. In this repo, ask Claude to "review the audit logs"
 (the `audit-review` skill): it reads the flagged sessions against the
 skills' own rules and proposes fixes and eval cases.
-`evals/tools/audit_report.py` gives the raw overview.
+`evals/tools/audit_report.py` gives the raw overview, and
+`evals/tools/orchestrator_log_check.py <project dir>` checks a project's
+`orchestrator-log.md` against the orchestrator's rules and the kept
+transcripts.
 
 ## Implementation policy: heavy, lite, compare
 
