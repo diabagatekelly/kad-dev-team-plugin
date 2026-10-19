@@ -160,14 +160,14 @@
     ]
   },
   "architecture-design-payfine-via-agent": {
-    "score": 0.867,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-architecture-design-payfine-via-agent.json",
+    "source": "results/gate-20261019T065259-architecture-design-payfine-via-agent.json",
     "graders": {
       "agent-delegated-display": 1.0,
-      "consults-map-query": 0.333,
+      "consults-map-query": 1.0,
       "design-skill-runs": 1.0,
       "presents-decisions-and-waits": 1.0,
       "uses-what-the-map-found": 1.0
@@ -1159,16 +1159,16 @@
     }
   },
   "reliability-requirements-payfine-phase2-stop": {
-    "score": 0.917,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261017T121501-reliability-requirements-payfine-phase2-stop.json",
+    "source": "results/gate-20261019T065259-reliability-requirements-payfine-phase2-stop.json",
     "graders": {
       "does-not-design-the-fallback": 1.0,
       "does-not-lay-out-scope-options": 1.0,
       "no-criteria-written": 1.0,
-      "reports-the-gap-and-stops": 0.667
+      "reports-the-gap-and-stops": 1.0
     }
   },
   "reliability-requirements-payfine-phase3": {
@@ -2246,11 +2246,11 @@
     ]
   },
   "why-comments-collect-fine": {
-    "score": 0.857,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.296",
-    "source": "results/gate-20261014T104758-why-comments-collect-fine.json",
+    "source": "results/gate-20261019T065259-why-comments-collect-fine.json",
     "graders": {
       "deletes-what-comments": 1.0,
       "flags-the-wrong-comment": 1.0,
@@ -2258,7 +2258,7 @@
       "leaves-the-code-alone": 1.0,
       "review-written": 1.0,
       "skill-invoked": 1.0,
-      "stays-on-comments": 0.0
+      "stays-on-comments": 1.0
     },
     "skills_invoked": [
       "why-comments"

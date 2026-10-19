@@ -2904,8 +2904,41 @@ one commit, the plugin mirrored from `main` at `7d4e5d1` (PR #18's merge).
         the per-grader regression check is unchanged; bars without
         per-grader rates keep the flat tolerance. Used by the gate's
         retry decision and verdict and by the evidence check.
-- [ ] I5. Runs and bars: 58 affected cases at three runs (the seventeen
-      orchestrator cases, the six tdd cases, the review suites the two
-      review skills reach, the architecture-design chain re-frozen, the
-      two `-stop` cases, `why-comments-collect-fine`), failures read,
-      bars recorded, evidence current, hand-off updated.
+- [ ] I5. Runs and bars: 58 affected cases at three runs. *2026-10-19,
+      three WSL batches (`results/gate-20261019T0*`):* batch 1, the
+      seventeen orchestrator cases, 17/17 at 1.0. Batch 2, 12/12 at bar:
+      `architecture-design-payfine-phase1` 1.0 kept, phase 2 re-frozen
+      from its run 0 and 0.96 (`decisions-show-approval` one run, as
+      before); `why-comments-collect-fine` 1.00 (from 0.86,
+      `stays-on-comments` 3/3); `architecture-design-payfine-via-agent`
+      1.00 (from 0.87, `consults-map-query` 3/3);
+      `reliability-requirements-payfine-phase2-stop` 1.00 (from 0.92);
+      `security-requirements-payfine-phase2-stop` 0.92, the receipt
+      grader now 3/3 and one run lost to `does-not-lay-out-scope-options`
+      instead; the two lite cancel-hold cases 0.96 each with only the
+      per-test-cycle measurement grader lost 3/3, named-fix 1.00; heavy
+      cancel-hold 0.96 (one run lost the per-test cycle and the per-cycle
+      review together — the heavy loop dropped by the model one run in
+      three, the real run's finalize deviation seen in the eval too — and
+      one run `tests-check-behaviour`), via-agent 0.96 (three different
+      graders, one run each), named-fix 1.00. The three improved bars are
+      recorded. Batch 3, the review suites: 12 at 1.0 and then the
+      subscription's session limit, so sixteen cases never ran
+      (`code-review-days-left-pr`, `-fine-notices-pr`, `-via-agent`,
+      `-fines-report-pr`, `reliability-review-portal-pay-pr`,
+      `security-requirements-neg-review`, every `security-review-*`,
+      `supply-chain-review-neg-reliability`,
+      `test-quality-review-neg-code-review`), and **one real failure**:
+      `reliability-review-nightly-via-agent` 0.42 against 1.00, losing
+      `no-false-alarm-duplicate-fines-on-rerun`,
+      `no-false-alarm-reminder-loop-catch` and `no-false-alarm-sms-retry`
+      — the delegated reliability reviewer raising findings the rubric
+      forbids, on the first run after the reliability-review text gained
+      the "Pre-existing, not blocking" section and the severity line. Not
+      yet read: whether the new section is pulling pre-existing code into
+      numbered findings on this case, or the severity line is keeping
+      demotions from happening. *Still to do, next session:* read that
+      case's three runs (`rates.py` in the session's scratchpad prints the
+      lost graders), fix the reliability-review text if it is the cause,
+      re-run it and the sixteen unrun cases (`batch3.sh` lists them) after
+      the limit resets, record, and update the hand-off.
