@@ -144,7 +144,7 @@ orchestrator then asks once per slice which skill builds every chunk, heavy
 cuts a slice branch and records the base commit. One implementer
 (launched with `model: sonnet`, since a plugin agent's own `model:` line
 is not applied in practice) writes the chunk plan into the implementation
-report, three to eight vertical chunks, each with its criteria, files, done
+report, two to eight vertical chunks, each with its criteria, files, done
 check and reviewer territories; then for each chunk a fresh implementer
 builds it on a short context and commits it under the chunk's title, the
 mechanical gate (`validation_gate.py`: suite green, scope against the

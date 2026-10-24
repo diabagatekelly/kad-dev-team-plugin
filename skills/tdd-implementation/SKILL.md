@@ -72,8 +72,9 @@ criteria name, delivered end to end with its tests, buildable in one short
 agent session. The plan is the ordered list of them, written under a
 `## Chunk plan` heading in the implementation report (the path the task
 gives) before any code exists. One chunk per behaviour, usually three to
-eight: a chunk that would not fit one short session is split, and a count
-padded to reach a number is not a plan.
+eight: a chunk that would not fit one short session is split, a count
+padded to reach a number is not a plan, and a small slice may honestly
+need two.
 
 Each chunk is a `### Chunk <k>` heading (the number alone; the section the
 builder appends later is `### Chunk <k>: <title>`) followed by exactly
@@ -100,9 +101,10 @@ Rules:
   is three layers, not three chunks; each chunk crosses every layer its
   behaviour needs. A chunk whose Files are tests alone is a layer. A
   criterion that already holds once an earlier chunk is built (a second
-  cancel being a rejection follows from a missing hold being one) is not a
-  chunk of its own: its test goes in that earlier chunk's Done when and the
-  criterion in its Delivers.
+  cancel being a rejection follows from a missing hold being one), needing
+  no production change of its own and depending on no open gap, is not a
+  chunk of its own: its test goes in that earlier chunk's Done when and
+  the criterion in its Delivers.
 - The first chunk is the thin path's smallest observable step, and it
   carries the project's wiring (runner, config, entry point) when none
   exists yet.
@@ -111,8 +113,9 @@ Rules:
 - A chunk fits one short session: under about forty test runs under this
   skill. Split one that would not.
 - A gap in the design is not planned around. Escalate it as "Gaps in the
-  design" says, put the chunk that depends on it last, and name the gap in
-  that chunk's entry.
+  design" says, keep the criterion that depends on it as a chunk of its
+  own, put that chunk last, and name the gap at the end of its Delivers
+  line (the entry stays five lines; no sixth).
 - Consult `map-query` before planning, at the implementation level, so a
   chunk reuses what exists instead of planning a duplicate.
 

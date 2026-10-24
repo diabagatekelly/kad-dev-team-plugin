@@ -525,18 +525,19 @@ real cases and deleted (the table is in git history).
   `architecture-cartographer`, `ux-designer` and `accessibility-engineer`
   have had that pass, so every persona has. Keep it that way: a new
   persona rule goes in the skill, not only the `AGENT.md`.
-- **The `tdd-implementation` quarantine flow has no case.** The real cases
-  invoke the skill directly and through the `tdd-coach` agent; the
-  orchestrator's quarantine/grade/combine/finalize flow (two worktree
-  candidates, parallel reviewers) needs the `Agent` tool and up to
-  eighteen reviewers, which no eval case can run. It is proven by real
-  execution instead: twice so far, both in a sandboxed WSL2 session
-  (H6, 2026-10-18, heavy; I, 2026-10-19, compare, with the handed-back
-  round in E exercised end to end), each read against the hand-off's
-  watch list from the stream-json logs and the audit transcripts, each
-  producing skill-text and script fixes that the orchestrator cases then
-  regression-check. The accounts are under H6 and I in `TODO.md`; the
-  recipe for the next run is in the hand-off.
+- **The orchestrator's chunk loop has no end-to-end case.** The implementer
+  steps it launches are cases (`tdd-implementation-chunk-plan`,
+  `tdd-implementation-lite-chunk-plan`, `tdd-implementation-one-chunk`),
+  and so is the external-comment triage (`external-review-triage-cancel-hold`);
+  the loop itself (the gate on a chunk, validator selection, fix rounds
+  with the regression/pre-existing split and the cap, delivery, the stall
+  rule, the log entry) needs the orchestrator launching real agents with
+  the `Agent` tool, which no eval case can run. It is proven by real
+  execution instead, the way the quarantine flow it replaced was (H6,
+  2026-10-18; I, 2026-10-19, both in `TODO.md`): read the real run's
+  `orchestrator-log.md` with `tools/orchestrator_log_check.py`, which knows
+  the v3 entry and the rounds sidecar, and the audit repository's copies.
+  J4 in `TODO.md` lists what each real run must show.
 - ~~**The main agent acts before `tdd-implementation` loads.**~~ **Closed
   for the parent.** It used to write its own answers to a design's open
   questions into the design doc before invoking the skill or delegating

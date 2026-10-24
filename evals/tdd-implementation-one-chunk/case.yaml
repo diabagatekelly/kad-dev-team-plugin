@@ -55,8 +55,10 @@ graders:
     target: trace
     # Source and docs are written with Edit/Write, never through the shell.
     # The one exception is the report section the skill appends, which a
-    # heredoc append reaches legitimately.
-    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:(?<![0-9&>])>{1,2}|\btee\b|\bsed\s+-i|\b(?:cp|mv|rm)\b|\b(?:python3?|node|perl|ruby|php)\s+(?:-[ce]\b|<<))(?:[^|;&"\\]|\\.)*?(?<![\w./-])(?:\./)?(?:(?:catalog|members|lending|fines|notifications|reporting|services|utils|infra|main|test)/|docs/(?!cancel-hold/implementation-report-slice-001\.md))'
+    # heredoc append reaches legitimately. The scan after the operator stops
+    # at a newline (`\n` in the trace), so a path quoted inside a heredoc
+    # body is not a write to it.
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:(?<![0-9&>])>{1,2}|\btee\b|\bsed\s+-i|\b(?:cp|mv|rm)\b|\b(?:python3?|node|perl|ruby|php)\s+(?:-[ce]\b|<<))(?:[^|;&"\\]|\\[^n])*?(?<![\w./-])(?:\./)?(?:(?:catalog|members|lending|fines|notifications|reporting|services|utils|infra|main|test)/|docs/(?!cancel-hold/implementation-report-slice-001\.md))'
     match: not_contains
   - type: tool_used
     name: commits

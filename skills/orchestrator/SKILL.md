@@ -438,7 +438,7 @@ line saying the orchestrator reviews the result. Nothing about chunks
 being committed yet: this agent commits nothing. Wait for it.
 
 When it returns, check the plan mechanically and nothing else: the file
-has a `## Chunk plan` heading with three to eight chunks; every chunk has a
+has a `## Chunk plan` heading with two to eight chunks; every chunk has a
 Title, Delivers, Files, Done when and Touches line; every Delivers names
 at least one criterion (an identifier, or the criterion's text quoted when
 the document numbers nothing) and every Files at least one path; no
