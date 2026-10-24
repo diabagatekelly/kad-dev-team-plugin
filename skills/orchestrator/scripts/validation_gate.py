@@ -1,10 +1,11 @@
-"""Mechanical checks on an implementation candidate, before any reviewer reads it.
+"""Mechanical checks on an implementation change, before any reviewer reads it.
 
-Run inside a project (or a candidate's worktree) after an implementation
-lands. It answers five questions that need no judgment, and prints a JSON
-verdict so the orchestrator's Grade step can drop a candidate that fails
-them without spending reviewers on it (the skill's "Quarantine, grade,
-combine" section says when it runs and with which arguments):
+Run inside a project after a chunk (or a fix) has been committed. It
+answers five questions that need no judgment, and prints a JSON verdict so
+the orchestrator's chunk loop can send a failing chunk back to a fixer
+without spending reviewers on it (the skill's "The chunk loop" section says
+when it runs and with which arguments: `--base` is the commit before the
+chunk, `--allow` the chunk's planned files):
 
 1. suite: the project's test runner exits 0 within `--timeout` seconds and
    prints a summary with no failures (Node's spec reporter: `ℹ fail 0`;
@@ -35,31 +36,30 @@ combine" section says when it runs and with which arguments):
    count as changed; so do both sides of a rename. Claude Code's own
    placeholders are not: an untracked path under a `.claude/` directory,
    or named `.mcp.json`, that is not a regular file with content (the
-   `Agent` tool keeps the quarantine candidates' worktrees under
+   `Agent` tool keeps worktree-isolated agents' trees under
    `.claude/worktrees/` inside the real project, and the session's sandbox
    mounts empty placeholder settings into every directory a command runs
    from, both of which git lists as untracked). A settings file a
-   candidate actually wrote there has content and stays in the set.
+   change that actually wrote one there has content and stays in the set.
 5. protected: every `--protect` file is byte-identical to the baseline.
 
 The change set is computed after the test command has run, so a test that
 edits the tree is caught too.
 
-The baseline is `--base` (a commit, default `HEAD`), or better a baseline
-file: `--record-baseline FILE` writes the current commit plus a hash of
-every file already modified or untracked in the working tree, and
-`--baseline FILE` later diffs against that commit while ignoring those
-files as long as their content is still what was recorded. That is how a
-real project with uncommitted planning documents is gated without the
-documents counting as the candidate's changes. Record it in the real
-project before the candidates are launched; keep the file outside the
-working tree (`.git/` is a good place) so it is never a change itself.
+The baseline is `--base` (a commit, default `HEAD`): the chunk loop
+commits the planning documents and each chunk, so the previous commit is
+always the right base. For a tree with uncommitted documents that must not
+count as the change, a baseline file still works: `--record-baseline FILE`
+writes the current commit plus a hash of every file already modified or
+untracked, and `--baseline FILE` later diffs against that commit while
+ignoring those files as long as their content is unchanged; keep the file
+outside the working tree (`.git/` is a good place).
 
 Exit 0 when every check passes, 1 otherwise (also when git cannot compute
 the change set: an unknown base must not read as "nothing changed").
 The same checks are what the
 `tdd-implementation-*` eval cases prove with trace regexes; this is the
-runtime version for real candidates.
+runtime version for real changes.
 
 A protected document the user amends while the flow is running (a design
 reopened after an escalation) would fail the protected check for a reason

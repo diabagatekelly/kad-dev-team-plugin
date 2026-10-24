@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Blind pairwise judge for the orchestrator's Combine step.
+"""Blind pairwise judge of two implementations of one slice.
+
+Until 2026-10-24 this was the orchestrator's Combine-step judge
+(`skills/orchestrator/scripts/pairwise_judge.py`): the first real run showed
+it to be pure position bias (each order preferred the implementation shown
+first), and the chunk loop that replaced the two-candidate flow has no pair
+to judge. The eval suite keeps it: `pairwise_judge.py` (with-plugin against
+without) and `compare_arms.py` (heavy against lite) import `compare` and
+the rubric from here, and the text below describes the judge as it was.
 
 Two `tdd-implementation` candidates built the same slice in two worktrees.
 Before the orchestrator reads them and makes its combine call, this script
@@ -81,6 +89,9 @@ import time
 # `python -I` leaves the script's own directory off sys.path; the gate's
 # change-set helpers live next to this file.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sys as _sys  # noqa: E402
+from pathlib import Path as _Path  # noqa: E402
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[2] / "skills" / "orchestrator" / "scripts"))
 import validation_gate  # noqa: E402
 
 IMPLEMENTATION_RUBRIC = """You are judging two implementations of the same slice of work, each with its tests. You do not know who wrote either one, and you cannot run anything: judge the code and tests as written against the brief as written.

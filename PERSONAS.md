@@ -93,11 +93,12 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 3 | `product-slicer` | Vertical slicing & scenario-driven delivery — smallest end-to-end shippable unit for a confirmed requirement, acceptance-criteria quality, feature-shape YAGNI, scope-creep pushback | Core strength | Done — both skills have real cases (`evals/vertical-slicing-payfine-phase1` 18/18, `acceptance-criteria-payfine` 9/9); `vertical-slicing` gained the persona's save, hand-back-without-requirements, confirmed-scope-only and scope-map-step-in-title rules, and invokes `acceptance-criteria` before writing criteria; `acceptance-criteria` no longer settles an undecided outcome inside a rewrite. With no requirements doc it now stops before anything else, even when told to skip the conversation (`evals/vertical-slicing-no-requirements`, 12/12; before the fix it cut the slice with a note that the scope was its own call). Its hand-back path has a real case (`evals/vertical-slicing-handback`, 15/15): it had grown the slice and rewritten other stages' documents; it now decides the scope, sends any added capability to `requirements-refinement`, and edits nothing it doesn't own. The agent now lists `Skill`, which `vertical-slicing` needs to consult `acceptance-criteria` |
 | 4 | `software-architect` | Option-Enabling/Clean Architecture watchdog — dependency direction, module boundaries, screaming architecture, catching both premature *and* missing abstraction; also owns technology selection, recommending rather than deciding — the starting set a first test forces, and what sits behind each boundary once one forces it | Core strength | Done — `architecture-review` is the first skill with a real `claude plugin eval` suite (`evals/library-app-*`, a shared 60-file fixture app other personas can plant defects in). Two skill-text fixes came out of it: the composition-root exemption now covers `main/` knowing both sides, not business code importing `main/` (both skills); and the shared foundation (importance test, four rules, state-the-ordering) now lives in each skill rather than only in `AGENT.md`, which the eval never loads and which a direct or inline skill invocation never loads either. `architecture-design` and `technology-bootstrap` followed (`evals/architecture-design-*`, `evals/technology-bootstrap-*`), so all three skills are on the real suite. From those: the persona rules a routed step needs (where to save, vocabulary) moved into the skills; consults invoke the consulted skill with the `Skill` tool and carry on after its answer; a delegation covers only what it names; and every design decision records its recommendation, rejected alternatives and how it was approved, fix-now-or-defer included. The agent now lists `Skill`, and its design path has a real case (`evals/architecture-design-payfine-via-agent`, 3/3 clean after a `map-query` fix). `technology-bootstrap`'s inline consult of `supply-chain-review` is now graded from the trace (18/18 kept runs). Its chain gained a rejecting ending (`evals/technology-bootstrap-phase3-reject`, 16/18: "npm and Jest", recorded as the user's choices with the recommendations declined and the pinning posture restated for npm), and the skill now defers the UI framework when the first test is domain-level, which the chain's phase 3 approves |
 | 5 | `tdd-coach` | Turns a designed slice into working code via genuine Red-Green-Refactor, and applies specifically-named fixes handed back from review — both through the same disciplined loop. Three skills: `tdd-implementation` (write/fix), `tdd-implementation-lite` (the same contract — ownership, scope, gaps, report — as test-first with verification rather than TDD: tests before the code, seen failing on their assertions against a stub, shown to catch a deliberate break, the loop between left to the model; reached only when the orchestrator's lite or compare policy names it, the G2 experiment arm: 2026-10-18, the first lite, with nothing said about verification, cleared every contract grader, did everything the full skill prescribes unprompted except one-test-at-a-time and the can-it-fail check, and was preferred by the blind judge 18/18 on the slice case for its broader tests; the verification steps were then added because a batch RED on a missing module proves nothing about any test, see G2 in `evals/TODO.md`) and `test-quality-review` (critique existing tests — over-mocking, false positives, coverage-as-theater). Follows Clean Architecture/OeA principles as a writing constraint (informed by `software-architect`'s already-decided boundaries plus its own lightweight synthesis of the same sources); doesn't decide or verify architecture itself — `architecture-design`/`architecture-review` still own that | Core strength | Done — first persona that actually writes/edits application code, needing real execution tools (`Bash`) for it; the roster's second `background: true` persona, wired into `orchestrator` as the new terminal row. `tdd-implementation` 10/10 (three real fixes across the fill-vs-escalate rule for missing collaborators), `test-quality-review` 10/10 (a coverage-sweep fix); orchestrator's terminal row now runs the quarantine/grade/combine flow by default rather than a single inline build; not yet dogfooded against `evals/example/`. Real cases (2026-10-11): persona rules moved into both skills, `tdd-implementation-cancel-hold` 53/54 graded mechanically on the trace, `-named-fix` 3/3 clean, `test-quality-review-fines` 3/3 clean. The main agent used to write answers into the design before the skill loaded; the skill's and agent's descriptions now leave open questions to the skill (0/3 direct, 0/2 via the agent). `AGENT.md` is now the persona plus a pointer to its skills (the old TDD paraphrase predated every skill fix). Run directly, `tdd-implementation` ends with the same reviewers the orchestrator's grading step runs (architecture, code, security, reliability, accessibility for UI); under the orchestrator it skips them. Known gaps: through the agent, the subagent settles a design question the direct path leaves to its owner (`-via-agent` 48/60, the rest of its process comparable), and the quarantine flow has no case (it is proven by real runs: two so far, see H6 and I in `evals/TODO.md`). In the second real run (2026-10-19, compare policy) the lite candidate held all four verification steps unprompted on the agent path, but its tests read the adapter's private store to check the queue, which the test-quality reviewer rated High and the blind judge named as its reason for preferring heavy in both orders — the opposite of the eval's 18/18 for lite, one run against nine; the lite contract now says asserted through the public interface too, never through private state |
-| 6 | `code-reviewer` | Local code-level readability/DRY/naming/comments triage — not scope-YAGNI (`product-slicer`'s territory) and not structural abstraction (`architecture-review`'s), a severity taxonomy for findings | Core strength | Done — one skill, `code-review`, review-only like `accessibility-review`; the roster's third `background: true` persona; also uses the existing `why-comments` skill directly for its comment check rather than re-deriving it. Eval 17/17 (fixture expanded twice to cover the full checklist; one real fix, a duplication finding folding an exempt guard clause into "what's identical," caught, fixed, recurred on a larger fixture, then fixed for real with a concrete phrasing template). Real cases (2026-10-11): `code-review-fine-notices-pr` and `-catalog` clean, `-fines-report-pr` 13/15 after a sweep-every-function step; consults `why-comments` via `Skill`. It also flags code the change doesn't need (unused options, flags nothing sets, impossible-case checks, ceremony; `code-review-days-left-pr` 27/30), and fires on a general "review this PR" now that its description leads with the trigger |
+| 6 | `code-reviewer` | Local code-level readability/DRY/naming/comments triage — not scope-YAGNI (`product-slicer`'s territory) and not structural abstraction (`architecture-review`'s), a severity taxonomy for findings; since 2026-10-24 also `external-review-triage`, one verdict per comment an external reviewer leaves on a pull request the chunk loop opened (fix, decline with the reason, defer, resolved), judged against the code as it stands, the slice's documents and this roster's own reports | Core strength | Done — one skill, `code-review`, review-only like `accessibility-review`; the roster's third `background: true` persona; also uses the existing `why-comments` skill directly for its comment check rather than re-deriving it. Eval 17/17 (fixture expanded twice to cover the full checklist; one real fix, a duplication finding folding an exempt guard clause into "what's identical," caught, fixed, recurred on a larger fixture, then fixed for real with a concrete phrasing template). Real cases (2026-10-11): `code-review-fine-notices-pr` and `-catalog` clean, `-fines-report-pr` 13/15 after a sweep-every-function step; consults `why-comments` via `Skill`. It also flags code the change doesn't need (unused options, flags nothing sets, impossible-case checks, ceremony; `code-review-days-left-pr` 27/30), and fires on a general "review this PR" now that its description leads with the trigger |
 | 7 | `devsecops-engineer` | A system's runtime safety properties — whether it can be attacked, and whether it can stay up. Threat-aware requirements & review, secrets/PII hygiene, least privilege, dependency & supply-chain risk, observability, resilience & failure handling, safe rollout/rollback | Borrowed/synthesized (weak area) | Done — all six skills are on the real `claude plugin eval` suite (`evals/security-review-*`, `evals/reliability-review-*`, `evals/supply-chain-review-*`, `evals/operational-readiness-*`, `evals/security-requirements-*`, `evals/reliability-requirements-*`, on the shared library-app fixture). Three skill-text fixes came out of it: pre-existing problems a change newly routes through still go in a separate non-blocking section; availability is a security finding only when one request costs out of proportion to its size (volume/capacity is `reliability-review`'s); an "opaque" log identifier is a surrogate id, never a card/account number or email. From `operational-readiness`: the first response is the situation questions, not a review; "how to check" steps that list everything that runs (a run that never starts needs a missing-completion alert) and every configuration variable's behaviour when absent; the output template requires a **Rehearsed** and a **Written down** line, each a finding when the answer is no. From the requirements skills: questions first, never what the code answers; decisions stay pending until approved, and a proposal already on the table is a decision whenever you'd change it; retry only transient faults; an accepted risk with a manual remedy needs its cases findable. Since 2026-10-14 approval comes before the document: after the questions, the next response is the forks (through `AskUserQuestion`, or all in one plain-text turn without it) and the document is written once, after, complete; every phase-2 run had written the whole document with its decisions pending (`evals/security-requirements-payfine-phase2` 11/12, `-phase3` 27/27 on the saved file; the reliability chain the same). A missing retry is a finding only when a transient failure loses something a retry would save; a read that fails cleanly is Low at most (`reliability-review-catalog` 2/3 vs 0/3 without the plugin, from no uplift) |
 | 8 | `accessibility-engineer` *(optional)* | WCAG-minded UI review — keyboard nav, semantic HTML, screen-reader correctness. One skill, `accessibility-review`, verifying what `ux-designer` already rendered rather than designing anything itself | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; the roster's first `background: true` persona, since its one skill never blocks on `AskUserQuestion`. Real cases (2026-10-11): `accessibility-review-payfine` 35/36 over 3 runs on a planted declined-state mockup (a regression guard: the baseline finds the plants too), `accessibility-review-payfine-subtle` 25/27 on defects only the cascade, a state or an id shows (the `:hover` contrast failure is found 2/3 with the plugin, 0/2 without, after the skill learned to check every state rule as its own pair), and a negative trigger; the persona's save, boundary and markup-only-fallback rules now live in the skill |
 | 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself. Real cases (2026-10-11): `design-system-payfine-phase1`–`3` (9/9, 12/12, 19/21) and `screen-design-payfine` (33/33; the baseline writes no mockups). The persona's save location, hand-backs and no-browser handling now live in both skills; calibration added a ratio for every text colour and kept scratch candidates out of `visual-ux/` |
 | 10 | `architecture-cartographer` | Maintains a mechanically-derived map of the codebase's actual structure — real dependency graph, public exports, external packages, each module's importance tier as already decided by `architecture-design` — and answers "does something like this already exist" queries against it. Doesn't decide architecture, doesn't judge whether a flagged similarity is a real duplicate or coincidental, doesn't grade anything itself; supplies facts and mechanical flags, not verdicts. Two skills: `map-query` (read-only, consulted pre-write) and `map-update` (regenerate + diff against the prior map, post-write) | Infrastructure for the rest of the roster | Done — the roster's tenth and last planned persona, and its third `background: true` one; consulted inline by `architecture-design` and `tdd-implementation` the same way `software-architect` already consults `devsecops-engineer`, and wired into the quarantine flow's Grade/Finalize steps. Real cases (2026-10-11): the map has a fixed home, `docs/architecture-map.md` at the app root; `map-update-cancel-hold` 27/27, `map-query-consults` 3/3 clean, `map-query-no-map` 2/3 (3/3 after the consult fix: a consulted `map-query` hands its report back and the caller carries on, where through the architect agent the report had ended the turn) |
+| 11 | `release-engineer` | Getting finished, reviewed work off the machine — push the slice branch, open the pull request with `pr-writeup`'s body, file the leftover findings as tracker issues, act on `external-review-triage`'s verdicts (push the fixes, reply to the declines, file the deferrals), and write the CI configuration a repository is missing, hardened (pinned action SHAs, least privilege). Owns git and hosting mechanics only; never decides what to build, never edits application code, never pushes to the default branch. Two skills today: `delivery` and `ci-pipeline`; `repo-bootstrap` and `deployment` are phase 2 | Borrowed/synthesized (weak area) | Building (2026-10-24) — added with implementation flow v3 (`.synthesis/implementation-flow-v3.md` §4c, §4.E) to close the roster's post-implementation gaps; `devsecops-engineer` keeps its "never writes pipeline config" boundary and reviews the result through `operational-readiness` once a deployment path exists. Both skills run inline in the orchestrator's session (step E of the chunk loop) because the push and the `gh` calls use the session's credentials. No eval cases yet; the first real delivery is the first test |
 
 **Rows 7 and 8 were merged.** The roster originally planned
 `security-engineer` (threat-aware review) and `reliability-engineer`
@@ -129,63 +130,60 @@ every other row, since v1's routing is sequential by construction, not
 because every persona it invokes requires it.
 
 **`tdd-coach:tdd-implementation` is the one row that genuinely doesn't
-execute inline — the quarantine/grade/combine/finalize flow, wired in and
-running by default, not deferred.** A sandbox check
-(`skills/orchestrator/scripts/sandbox_check.py`) runs before every step
-that launches agents, and nothing launches without its `PASS`: the plugin
-cannot ship the settings that fence an unattended code writer, so the
-script probes the session's own Bash sandbox from inside it (a write
-outside the project refused with the sandbox's own error, no direct
-network route, no credential in the environment, the machine's credential
-files unreadable from the shell, named in the deny list and denied to the
-Read tool whether or not they exist yet) and reads the escape hatches off
-in the settings; on a failed check the orchestrator asks once and writes
-the block into the session's user settings with `--write-settings`, then
-re-checks. The orchestrator asks once per slice which implementation
-policy to run — heavy (both candidates on `tdd-implementation`, the
-default), lite (both on `tdd-implementation-lite`) or compare (one each,
-with the read context held equal so the discipline is the one variable)
-— and records it on the log's A line. Then two isolated implementer
-instances (real async `Agent` calls, `isolation: "worktree"`) build the
-same slice blind to each other — under heavy and lite, one reading the
-slice's own documents alone, the other the whole unit (requirements,
-slice set, every design; the map both reach through `map-query`) as read
-context, always that way round and with the same deliver-only-this-slice
-line on both, so the two aren't correlated copies and the judge's reasons
-across slices say what the wider read is worth (under compare, what the
-prescribed discipline is worth); a mechanical validation gate
-(`skills/orchestrator/scripts/validation_gate.py`: full suite green, every
-changed file inside the slice's allowed paths, the design and other
-stages' documents untouched, per-file coverage on Node) runs on each
-candidate first and drops one that fails it before any reviewer is spent
-on it, and again on the finalized build before the map is persisted;
-every applicable reviewer then grades each surviving
-candidate independently in parallel (`tdd-coach:test-quality-review`,
-`architecture-review`, `devsecops-engineer:security-review`,
-`devsecops-engineer:reliability-review`, and `accessibility-engineer:accessibility-review`
-if UI-touching); a blind pairwise judge
-(`skills/orchestrator/scripts/pairwise_judge.py`: both candidates' change
-sets unlabelled, both presentation orders, every reason kept; the script
-renders the two prompts and two read-only `pairwise-judge` agents answer
-them, one per order, their replies saved by `orchestrator`, because the
-session sandbox the flow requires blocks a nested `claude -p` from the
-API, which the first real run found) gives its
-verdict before `orchestrator` reads either candidate; `orchestrator` itself
-then makes the one accountable combine call, inline, with that verdict in
-hand rather than instead of it — following it in a line or naming which of
-the judge's reasons it sets aside; a third, fresh instance regenerates the implementation
-independently from that call rather than patching either candidate; the
-same reviewers then grade that finalized build in full — new code no
-reviewer has read, whose instance skipped its own final review for exactly
-this — with Critical and High handed back once as named fixes, the gate
-re-run after, and the combine brief's findings checked pass/fail alongside.
-Full procedure in `skills/orchestrator/SKILL.md`'s own "Quarantine, grade,
-combine" section. **Runs on every slice, no opt-in/opt-out judgment
-call** — no signal in this roster's pipeline reliably predicts
-implementation risk, and `product-slicer` already bounds the cost by
-keeping each unit at the smallest shippable slice; a user who wants a
-specific slice built without it says so directly, that's not a call this
-skill makes on its own.
+execute inline — it runs the chunk loop (v3, 2026-10-24), wired in and
+running by default.** The sandbox check
+(`skills/orchestrator/scripts/sandbox_check.py`) runs first, before any
+question, and before every launch after that: the plugin cannot ship the
+settings that fence an unattended code writer, so the script probes the
+session's own Bash sandbox from inside it and reads the escape hatches off
+in the settings; a fixable failure gets the `--write-settings` offer, and a
+platform with no sandbox at all (native Windows) gets one question,
+continue unsandboxed or stop, whose answer the log's A line carries. The
+orchestrator then asks once per slice which skill builds every chunk, heavy
+(`tdd-implementation`, the default) or lite (`tdd-implementation-lite`),
+cuts a slice branch and records the base commit. One implementer
+(launched with `model: sonnet`, since a plugin agent's own `model:` line
+is not applied in practice) writes the chunk plan into the implementation
+report, two to eight vertical chunks, each with its criteria, files, done
+check and reviewer territories; then for each chunk a fresh implementer
+builds it on a short context and commits it under the chunk's title, the
+mechanical gate (`validation_gate.py`: suite green, scope against the
+chunk's planned files, protected documents, coverage) runs on the commit
+range, and the chunk's reviewers (`model: opus`; test-quality, code and
+architecture always, security, reliability and accessibility by territory)
+read the diff and write their reports to files, handing back counts. Every
+Critical, High and Medium goes to a fresh fixer, the gate and the chunk's
+reviewers run again on the fix, until a round is clean, capped at five
+rounds; each new finding is classified regression or pre-existing and every
+round is recorded in a sidecar for the audit; a standing Critical or High
+after the cap stops the loop for the user, Lows are listed. At the end the
+map is regenerated and all six reviewers read the whole slice diff with the
+same fix rounds; then `release-engineer:delivery` pushes the branch, opens
+the pull request (body by `pr-writeup`) without asking, files Lows and
+standing Mediums as issues in the recorded tracker, has
+`code-reviewer:external-review-triage` judge the external reviewer's
+comments (fix, decline with a reply, defer to an issue, up to five rounds),
+writes CI on the first delivery that finds none (`ci-pipeline`), and syncs
+the audit material to the audit repository when one is configured. Full
+procedure in `skills/orchestrator/SKILL.md`'s own "The chunk loop" section;
+the design and the evidence behind it in `.synthesis/implementation-flow-v3.md`.
+**Runs on every slice, no opt-in/opt-out judgment call** — no signal in
+this roster's pipeline reliably predicts implementation risk, and
+`product-slicer` already bounds the cost by keeping each unit at the
+smallest shippable slice; a user who wants a specific slice built without
+it says so directly, that's not a call this skill makes on its own.
+
+**Why v2 (two candidates in worktrees, a blind pairwise judge, a combine
+brief, a fresh finalize instance, a full re-grade) was retired.** The first
+real run (personal-finance-tracker slice 1, 2026-10-19/20, reviewed
+2026-10-24) showed the token sink was two heavy-loop instances whose
+context grew to 788k tokens, not the reviewers; the judge was pure position
+bias, each order preferring the implementation shown first; the second,
+lite candidate was cheap and useful as an idea source but not worth a
+judge; the one 79-file commit followed from the no-commit rule plus the
+HEAD-based gate baseline; and the orchestrator's own briefs and digests
+produced four of its errors. The chunk is the unit of build, validate,
+commit and context reset; that one change answers all of them.
 
 **v1 scope**: sequential stage routing across the full spine as it stands
 today (problem-framing-doc → scope-map → requirements-refinement → slicing
@@ -195,15 +193,16 @@ accessibility-review → technology-bootstrap → tdd-coach:tdd-implementation),
 one step at a time, human checkpoint after each — and a hard stop once a
 slice is designed, its runtime-safety criteria are filled, its screen
 designed and accessibility criteria filled if UI-touching, the project has
-a stack to build on, and the slice has been implemented and graded (via the
-quarantine flow above, `code-reviewer` now included in its Grade step
-alongside every other applicable reviewer).
+a stack to build on, and the slice has been implemented, reviewed chunk by
+chunk and whole, and delivered as a pull request (via the chunk loop above,
+`code-reviewer` among its reviewers).
 `devsecops-engineer`'s four review/posture skills, `code-reviewer`, and
 `tdd-coach:test-quality-review` sit outside this spine entirely: they run
 against code, a test file, or a repo that already exists, which most of
 the spine never reaches (`test-quality-review` also runs inline inside
-`tdd-implementation`'s own loop, and again — alongside `code-reviewer` —
-inside the quarantine flow's Grade step, none of which is a spine stage).
+`tdd-implementation`'s own loop as a self-check, and again — alongside
+`code-reviewer` — as one of the chunk loop's reviewers, none of which is a
+spine stage).
 Never cascades to the next scope-map step
 automatically — each unit of work needs design/implementation before the
 next one's shape gets decided, the same reason CAMS's own per-slice
@@ -269,13 +268,16 @@ All four of `devsecops-engineer`'s review skills also sit outside the
 orchestrator spine regardless of the above (event-triggered, hand off
 only if the user asks) — so even the partial coverage that does exist
 (operational-readiness's review of an *existing* path, once one's been
-set up some other way) doesn't run automatically today. Whether these
-become new roster surface, an extension of an existing persona's
-now-explicit boundary, or a deliberately-left-out gap is not decided.
-Holding until after a real end-to-end dogfood run, now that `code-reviewer`
-is built — the actual shape of what's missing will be clearer once a real
-slice has gone all the way through the spine and someone has to answer
-"now what" for real, instead of reasoning about it in the abstract.
+set up some other way) doesn't run automatically today. Decided after the first real end-to-end run (2026-10-24): gaps 1 to 3
+become a new persona, `release-engineer`, because `devsecops-engineer`'s
+"never writes pipeline config" boundary is held on purpose. Committing (1)
+is the chunk loop's own mechanics (one commit per chunk, by the
+implementer); pushing, the pull request, issue filing and external-review
+triage are `release-engineer:delivery`; CI configuration (3) is
+`release-engineer:ci-pipeline`, written inside the first delivery that
+finds none; repository creation (2) and deployment are phase 2
+(`repo-bootstrap`, `deployment`). Gap 4, infrastructure security, stays
+open until a deployment exists to review.
 
 ## Deferred / phase-2 ideas
 

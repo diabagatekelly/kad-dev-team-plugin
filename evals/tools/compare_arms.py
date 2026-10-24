@@ -8,10 +8,10 @@ with `eval_gate.py --keep-scaffold` so the run's working tree is still on
 disk under its `scaffoldDir`, and asks the plugin's pairwise judge which
 build is the better basis for the slice: every run of one arm against
 every run of the other (or run i against run i with `--paired`), in both
-presentation orders, every reason kept. The judge is the one the
-orchestrator's Combine step uses (`skills/orchestrator/scripts/
-pairwise_judge.py`, its implementation rubric, through `claude -p`); this
-file supplies the change sets and the brief. The CLI's own graders score
+presentation orders, every reason kept. The judge is
+`implementation_judge.py` next to this file (the orchestrator's former
+Combine-step judge, kept for the evals; its implementation rubric, through
+`claude -p`); this file supplies the change sets and the brief. The CLI's own graders score
 each arm against fixed criteria and never compare the two, and G1 showed
 the bars sit at the ceiling, so this comparison is G2's measurement.
 
@@ -61,8 +61,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 EVALS = (ROOT / "evals").resolve()
-sys.path.insert(0, str(ROOT / "skills" / "orchestrator" / "scripts"))
-from pairwise_judge import IMPLEMENTATION_RUBRIC, compare  # noqa: E402
+sys.path.insert(0, str(EVALS / "tools"))
+from implementation_judge import IMPLEMENTATION_RUBRIC, compare  # noqa: E402
 
 SKIP_DIRS = {".git", "node_modules", "coverage", ".nyc_output", ".claude", "dist"}
 SKIP_PREFIXES = ("docs/reports/",)

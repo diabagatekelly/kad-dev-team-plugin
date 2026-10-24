@@ -18,8 +18,12 @@ Because the script itself runs inside the session's Bash sandbox, the
 checks probe the real fence wherever a probe is possible, and read the
 settings files only for what no probe can see:
 
-1. platform: not native Windows. Claude Code runs commands unsandboxed
-   there; a WSL2 session has the sandbox.
+1. platform: the platform has a sandbox backend (Seatbelt on macOS,
+   bubblewrap on Linux and WSL2). Native Windows has none and Claude Code
+   runs commands unsandboxed there; that failure is not a settings
+   problem, so the script exits 2 for it and the orchestrator offers the
+   user the choice to continue unsandboxed, logged, or to run the session
+   in WSL2.
 2. write: a write to a fresh file in the home directory fails with the
    sandbox's own error (read-only file system, or permission denied under
    Seatbelt). Any other outcome fails the check: a successful write means
@@ -95,7 +99,8 @@ orchestrator to write with its Write tool, which runs outside the sandbox.
 
 One line per check, PASS or FAIL, then information lines (the network
 allowlist, which settings files were read), then `sandbox check: PASS` or
-`FAIL`. Exit 0 on PASS, 1 on FAIL.
+`FAIL`. Exit 0 on PASS, 1 on FAIL, 2 when the FAIL is the platform's
+(no sandbox backend exists here, whatever the settings say).
 
 Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/sandbox_check.py --project DIR
            [--secret ~/.config/private-tool/ ...]
@@ -406,19 +411,25 @@ def write_settings(path, secrets):
 
 # ---- checks -----------------------------------------------------------------
 
+NO_SANDBOX = 2  # exit code: this platform has no sandbox backend; not a settings problem
+
+
 def check_platform():
+    """Which sandbox this platform has. Native Windows has none: Claude Code runs every
+    command unsandboxed there, and no settings file changes that; the orchestrator then
+    offers to continue unsandboxed and logs the choice, or the user runs the session in WSL2."""
     if sys.platform == "win32":
-        return False, "native Windows: Claude Code runs commands unsandboxed here; run the session in WSL2"
+        return False, "native Windows has no sandbox backend (bubblewrap and Seatbelt are Linux, WSL2 and macOS); commands run unsandboxed"
     if sys.platform.startswith("linux"):
         try:
             with open("/proc/version", encoding="utf-8", errors="replace") as fh:
                 if "microsoft" in fh.read().lower():
-                    return True, "WSL2"
+                    return True, "WSL2 (bubblewrap)"
         except OSError:
             pass
-        return True, "Linux"
+        return True, "Linux (bubblewrap)"
     if sys.platform == "darwin":
-        return True, "macOS"
+        return True, "macOS (Seatbelt)"
     return True, sys.platform
 
 
@@ -678,7 +689,9 @@ def main():
         print("settings skipped:", b)
     passed = all(ok for _, ok, _ in results)
     print("sandbox check:", "PASS" if passed else "FAIL")
-    return 0 if passed else 1
+    if passed:
+        return 0
+    return NO_SANDBOX if not results[0][1] else 1
 
 
 if __name__ == "__main__":

@@ -53,10 +53,11 @@ that is what this design avoids. `tools/pairwise_judge.py` adds what the
 CLI lacks: a blind side-by-side judge that sees the with-plugin and
 no-plugin reviews unlabelled in both orders and records its reasoning in
 `pairwise.json` (the CLI's judges answer PASS/FAIL in one word and keep no
-reasons). The judge itself lives in the plugin
-(`skills/orchestrator/scripts/pairwise_judge.py`, where the orchestrator's
-Combine step runs it on two implementation candidates); this tool imports
-it and adds the review rubric and the results-dir plumbing.
+reasons). The judge itself is
+`tools/implementation_judge.py` (the orchestrator's Combine-step judge
+until the chunk loop replaced that flow on 2026-10-24; kept here because
+these tools and the heavy-against-lite comparison still use it); this tool
+imports it and adds the review rubric and the results-dir plumbing.
 `tools/compare_arms.py` does the same between two arms of one tdd case:
 the slice built by `tdd-implementation` against the same slice built by
 `tdd-implementation-lite` (G2's measurement, since G1 left the bars at the
@@ -175,6 +176,10 @@ nine-case suite with the pairwise judge) before trusting anything.
 6. **Record the bar.** Once a case's result is accepted, run
    `tools/record_thresholds.py <case>` and commit the `thresholds.json`
    change with the case, so the eval gate has something to hold it to.
+   Then run the gate on the case once more: recording the bar also records
+   the skills its runs consulted (`skills_invoked`), which widens the set
+   of files the case's evidence fingerprints, so evidence recorded before
+   the bar existed reads as stale on the first push.
 7. **Keep run output out of git.** `results/` is ignored; the coverage
    table carries the numbers and the results directory name, nothing else.
 
@@ -422,6 +427,9 @@ score is history, not a claim about today.
 | `tdd-implementation-cancel-hold-via-agent` | real, Sonnet: 48/60 over 4 runs (`results/k1-*`, after `tdd-coach`'s `AGENT.md` was cut to the persona and a pointer to its skills; 23/30 before, so no measurable change), delegation to `tdd-coach` confirmed. The parent no longer touches the design doc before delegating. `red-runs-seen` fails every agent run, but it counts failing runs (four or more), not tests: the agent saw 4–6 distinct tests fail before passing, the same as the direct path, and runs fewer repeat runs while red. The real agent-path miss is judgment: in 3/4 runs the subagent settles the notification question itself ("no notification is sent", reasoned from the code) instead of leaving it to the design's owner, which the direct path does 3/3. Also once each: a skipped review in a cycle, open questions written into the design doc | yes |
 | `tdd-implementation-lite-cancel-hold` | real, Sonnet, G2 (2026-10-18/19): the same slice built with `tdd-implementation-lite`, test-first with verification rather than TDD. Graders marked floor (what lite tells the model) or measurement (what only heavy prescribes). First lite, nothing said about verification: 0.92, every floor grader 3/3, every RED a missing-module import, the can-fail check 0/6; the blind judge (`tools/compare_arms.py`) preferred it over heavy 9/9 for broader tests. Augmented lite (tests, then stubs so the RED fails on assertions, implement, green, deliberate break caught and restored): 0.95–0.96 over three runs of three, `red-on-assertions`, `break-and-restore-in-trace`, `tests-before-any-code` and `map-query-before-any-code` 6/6 under Node's regex engine, six or seven tests per run; preferred over heavy 9/9 again. The only grader lost in any run is the per-test cycle lite does not ask for | no (bars below 1.0 by design: the measurement graders) |
 | `tdd-implementation-lite-named-fix` | real, Sonnet, G2: the V15 fix with `tdd-implementation-lite`; 15/15 in every run of every pass (the fix, behaviour pinned by tests that run for real, honest about the order, nothing else touched, the final reviewers, and the break-and-restore once lite asked for it); against heavy the blind judge called it a wash (identical code, one extra assertion deciding the non-ties either way) | yes |
+| `tdd-implementation-one-chunk` | real, Sonnet, J2 (2026-10-24): the chunk loop's build step, chunk 1 of a planted three-chunk plan in a git repository on the slice branch, the orchestrator's two task lines carried ("the orchestrator reviews the result", "chunks are committed"). First run 0.90 (`results/gate-20261024T202213`): the scaffold lacked the in-place runner the other tdd cases plant, so every implementer invented one in a temp directory and `runs-the-tests` could not see it; the `no-bash-writes` grader flagged the heredoc append of the report section the skill asks for, then the source paths quoted inside that heredoc's body. Runner planted, the scan stops at a newline: 1.00 in 3/3 (`results/gate-20261024T204248`), then 0.97 (`gate-20261024T215121`, the bar): 35 to 43 turns, RED then GREEN seen, one commit titled as the chunk with the report section in it, chunk 2's failing-queue behaviour left unbuilt, no push, amend or `add -A`. The one grader lost since is `no-bash-writes` on a `cp` + `sed -i` break-and-restore of the adapter for the can-it-fail check: a real shell write to source, where the other tdd cases see the break as an Edit, so it stays a miss | yes |
+| `tdd-implementation-chunk-plan` | real, Sonnet, J1 (2026-10-24): the chunk loop's B step through the heavy implementer, the cancel-hold slice's documents and "write the chunk plan, build nothing". Five calibration runs (`results/gate-20261024T202213` to `-205121`), each read: the "four to eight" floor made every planner pad a five-chunk plan with a test-only chunk it said "may pass as soon as it is written" (the skills now say one chunk per behaviour, usually three to eight, a small slice may need two); the title lived in the `### Chunk n: title` heading rather than a Title line (the layout is pinned); Done when described tests instead of naming them (named and quoted now); a sixth "Gap" line answered the skill's own gap rule (named at the end of Delivers now). The graders learned that planning prose around the entries and the gap note do not count, that the unreachable-queue criterion may be its own last chunk or folded into an earlier one, and that Touches may name two territories. After all that every run writes the same two to four chunks (cancel, reject, sometimes the named-hold security criterion, the queue failure), `map-query` consulted, nothing built, and the Sonnet judge still fails `plan-is-vertical-and-inside-the-slice` 3/3 on plans it passes 3/3 in the next run; `tools/rejudge.py --explain` corrected itself to PASS twice. 1.00 then 0.95 then 0.86 in 3/3 (`gate-20261024T215121`, the bar); the judge noise is the measurement | no (bar 0.86: judge noise on a file-focused grader, see the row) |
+| `tdd-implementation-lite-chunk-plan` | real, Sonnet, J1: the same B step through `tdd-implementation-lite`; same graders with the lite skill checked. Moved with the heavy case through the same five runs (0.81, 0.90, 0.81, 0.90, 0.86, then 0.86 for the bar in `gate-20261024T215121`); the misses are the same two judge-flipped graders on two- or three-chunk plans that read like the passing ones, plus one `stops-after-the-plan` loss early on where the final message was judged to ask the user a question (it escalated a gap to its owner; the grader now says that is part of the plan) | no (as above) |
 | `tdd-implementation-lite-cancel-hold-via-agent` | real, Sonnet, G2: the lite build delegated to `tdd-coach`, told to build with the lite skill; same graders as the direct case with the skill checked in the delegated agent's trace. The agent path is where the contract misses showed: reviewers skipped as "small change, self-checked" in two runs and the consult skipped in one, fixed in the lite text (and the agent's workflow summary, which prescribed the TDD loop to every build, now describes heavy and lite separately); 0.96 after, the four exact graders 6/6; preferred over heavy 9/9 by the blind judge | no (as above) |
 | `test-quality-review-fines` | real, Sonnet: 3/3 runs clean; baseline misses the call-order test (calls it "correct") and the untested `percentOf` — the planted `test/fines.test.ts` (Q1–Q5): subject's own method mocked, unwired mock, weak cap assertion, call-order assertion, untested export; traps: a designated fake stubbed per test, exact assertions. The skill didn't fire until its description named "are these tests actually testing anything?". Phase E (2026-10-15): the prompt no longer quotes the description ("I'm not confident it would catch a real bug"); the skill fired in 6/6 runs. `no-false-alarm-exact-tests` then lost 3/3 to reviews that called the sound tests thin and suggested boundary cases; the criterion now fails only a genuine false alarm, 29/30 after | yes |
 | `test-quality-review-reminders` | real, Sonnet: 2/3 runs clean, the third a last-message artifact (the review was complete; the final message is a postscript about a stopped background task); the baseline passed in calibration, a regression guard — the app's own reminder tests: the untested email channel, no false alarm on constructor-injected fakes, "sound but incomplete" | yes |
@@ -431,6 +439,7 @@ score is history, not a claim about today.
 | `code-review-days-left-pr` | real, Sonnet: 27/30 over 3 runs (`results/m5-*`); in calibration the baseline missed two or three of the four plants on each pass — a days-left PR reviewed with no hint about size: an options parameter nothing passes or reads, a flag nothing sets, a null check the type rules out, a catch that only rethrows (answer key `CB1`–`CB4`); traps: two branches the tests pin and reuse of `daysBetween` (`CBT1`–`CBT3`). Before the description put "invoke first" and the general-review trigger at its start, `code-review` never fired on "review it before I merge"; it now fires 2/3. Misses: the impossible-null check in two runs | yes |
 | `code-review-catalog` | real, Sonnet: 3/3; the baseline passed in calibration, a regression guard — the clean module, nothing above Low | yes |
 | `code-review-neg-architecture` | real, Sonnet: never invokes `code-review` (a dependency-direction question) | yes |
+| `external-review-triage-cancel-hold` | real, Opus, J3 (2026-10-24): the chunk loop's external-comment triage, five comments of the four verdict kinds on a planted delivered slice with our own reviewers' reports and the rounds sidecar beside them. 1.00 in 3/3 on the first two runs (`results/gate-20261024T202213`, `gate-20261024T203629`), 0.90 on the bar run (`gate-20261024T215121`: one run handed back the verdicts and reasons instead of the counts and the path the skill asks for, a real miss; one lost `defers-out-of-slice-and-resolves-the-fixed` on a report whose table defers 2203 to `product-slicer` and resolves 2204 at `4f2a9c1`, judge noise): the wrong comment (claims the port's arguments are swapped) declined with the port's real parameter order, the cosmetic rename declined on the project's `run` convention, the real defect our reviewers called a not-finding (a queue failure swallowed as a rejection) marked fix and listed under "missed by this flow's reviewers", the out-of-slice one deferred, only the report written | yes |
 | `code-review-fine-notices-pr-via-agent` | real, Sonnet: 2/2 runs clean, delegation to `code-reviewer` confirmed | yes |
 | `map-update-cancel-hold` | real, Sonnet: 27/27 over 3 runs (one run's scratch script in the sandbox's temp dir was counted against it until the grader limited itself to project files); baseline attaches severity in calibration — after the cancel-hold slice lands, regenerates `docs/architecture-map.md` with no path given: new rows faithful, tiers carried forward, `utils/` untiered, the new tier-1 → tier-3 edge and the untiered edge flagged without verdicts, the shared `roundHalfUpCents` flagged, pre-existing candidates not reported as new, no app code touched. Before the template fix one run called the duplicate "fresh rather than intentional" | yes |
 | `map-query-consults` | real, Sonnet: 3/3 runs clean, again after the consult-hand-back line (`results/sa2-*`); baseline misses the structural candidate and the shape match and greps the source — three does-it-exist questions answered from the map at its fixed home: `MemberDirectory`, `daysBetween` for `diffInDays`, nothing for a PDF, the stale map caveated. Phase E (2026-10-15): the prompt no longer says the map is stale, only that cancel-hold merged this morning; every run caveated it from the map's own date. One run grepped the docs folder (the map's home) to confirm no cancel-hold entry; `answers-from-the-map` now allows that, 18/18 after | yes |
@@ -524,18 +533,19 @@ real cases and deleted (the table is in git history).
   `architecture-cartographer`, `ux-designer` and `accessibility-engineer`
   have had that pass, so every persona has. Keep it that way: a new
   persona rule goes in the skill, not only the `AGENT.md`.
-- **The `tdd-implementation` quarantine flow has no case.** The real cases
-  invoke the skill directly and through the `tdd-coach` agent; the
-  orchestrator's quarantine/grade/combine/finalize flow (two worktree
-  candidates, parallel reviewers) needs the `Agent` tool and up to
-  eighteen reviewers, which no eval case can run. It is proven by real
-  execution instead: twice so far, both in a sandboxed WSL2 session
-  (H6, 2026-10-18, heavy; I, 2026-10-19, compare, with the handed-back
-  round in E exercised end to end), each read against the hand-off's
-  watch list from the stream-json logs and the audit transcripts, each
-  producing skill-text and script fixes that the orchestrator cases then
-  regression-check. The accounts are under H6 and I in `TODO.md`; the
-  recipe for the next run is in the hand-off.
+- **The orchestrator's chunk loop has no end-to-end case.** The implementer
+  steps it launches are cases (`tdd-implementation-chunk-plan`,
+  `tdd-implementation-lite-chunk-plan`, `tdd-implementation-one-chunk`),
+  and so is the external-comment triage (`external-review-triage-cancel-hold`);
+  the loop itself (the gate on a chunk, validator selection, fix rounds
+  with the regression/pre-existing split and the cap, delivery, the stall
+  rule, the log entry) needs the orchestrator launching real agents with
+  the `Agent` tool, which no eval case can run. It is proven by real
+  execution instead, the way the quarantine flow it replaced was (H6,
+  2026-10-18; I, 2026-10-19, both in `TODO.md`): read the real run's
+  `orchestrator-log.md` with `tools/orchestrator_log_check.py`, which knows
+  the v3 entry and the rounds sidecar, and the audit repository's copies.
+  J4 in `TODO.md` lists what each real run must show.
 - ~~**The main agent acts before `tdd-implementation` loads.**~~ **Closed
   for the parent.** It used to write its own answers to a design's open
   questions into the design doc before invoking the skill or delegating

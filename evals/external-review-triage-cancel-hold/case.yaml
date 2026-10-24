@@ -1,0 +1,74 @@
+schema_version: "1.0"
+name: external-review-triage-cancel-hold
+description: "The chunk loop's E.4 step: five external comments on the delivered cancel-hold slice's pull request, one of each kind. A wrong one (claims the port's arguments are swapped) and a cosmetic one (rename run to execute) are declined with checkable reasons; a real reliability defect our reviewers missed (a queue failure swallowed as a rejection) is a fix and is named as missed; an out-of-slice ask (notify the next member) is deferred naming product-slicer; a comment a fix round already made moot (the full card number) is resolved naming the fix commit. Nothing edited, nothing posted, the hand-back is two lines."
+tags: [external-review-triage, code-reviewer, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:external-review-triage` first. The library-lending app is in your current working directory. Pull request #7 delivers slice 001 (staff cancel a member's hold on a title); the external reviewer's comments on it are in `docs/cancel-hold/reviews/slice-001/pr-r1-comments.json`. The slice's documents are in `docs/cancel-hold/` (`slice-001.md`, `design-001.md`, `requirements-001.md`, `implementation-report-slice-001.md`), and our own reviewers' reports on the same files, with the rounds sidecar, are in `docs/cancel-hold/reviews/slice-001/`. Write your report to `docs/cancel-hold/reviews/slice-001/pr-r1-triage.md` and hand back the counts and the path.
+  model: opus
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:external-review-triage"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/reviews/slice-001/pr-r1-triage.md
+  - type: regex
+    name: writes-only-the-report
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/cancel-hold/reviews/slice-001/pr-r1-triage\.md")'
+    match: not_contains
+  - type: llm
+    name: declines-the-wrong-and-the-cosmetic
+    focus:
+      source: file
+      path: docs/cancel-hold/reviews/slice-001/pr-r1-triage.md
+    weight: 1
+    criteria: |
+      Comment 2201 claims `HoldQueue.remove` takes the card number first; the port in lending/hold-queue.ts declares `remove(isbn: string, cardNumber: string)` and the use case passes `(isbn, cardNumber)`, so the comment misreads the code. Comment 2205 asks to rename `run` to `execute`; every use case in the project (`PlaceHold`, `RenewLoan`, `ReturnBook`, `CheckoutBook`) exposes `run`, and the project has no rule preferring `execute`.
+
+      PASS if the report's table gives 2201 the verdict decline with a reason that states the port's actual parameter order (or that the call matches the declaration), and gives 2205 the verdict decline (or defer) with a reason naming the project's existing `run` convention.
+
+      FAIL if either is marked fix, if 2201's reason does not say what the code actually declares, or if 2205 is declined only because "our reviewers didn't flag it".
+  - type: llm
+    name: fixes-the-missed-defect
+    focus:
+      source: file
+      path: docs/cancel-hold/reviews/slice-001/pr-r1-triage.md
+    weight: 1
+    criteria: |
+      Comment 2202 is right: `CancelHold.run` catches every error from the queue and returns `{status: 'rejected', reason: 'hold could not be cancelled'}`, and the test `a queue that cannot be reached is a rejection` pins that. The slice's reliability criterion says an unreachable queue is "a failure the caller sees"; the "never an error" clause applies to a second cancel of the same hold, not to a queue failure. None of the plugin's own reports (chunk-2-r0-re.md calls the catch a not-finding) raised it.
+
+      PASS if 2202 has the verdict fix, the report's "Fixes" section describes the change for `tdd-coach` (let the queue failure propagate or return a distinct failure, and change or drop the test that pins the rejection), and the "Missed by this flow's reviewers" section lists it (naming the reliability review, or the reports generally).
+
+      FAIL if 2202 is declined or deferred, if the fix is described as keeping the rejection, if the missed section is absent or empty, or if the report edits code itself.
+  - type: llm
+    name: defers-out-of-slice-and-resolves-the-fixed
+    focus:
+      source: file
+      path: docs/cancel-hold/reviews/slice-001/pr-r1-triage.md
+    weight: 1
+    criteria: |
+      Comment 2203 asks to notify the next member in line when a hold is cancelled. No criterion of slice-001 asks for notification; the requirements confirm only cancelling and the rejection, and growing a slice is product-slicer's call. Comment 2204 was left on commit c81e3d7 about the full card number in the rejection reason; the implementation report's chunk 1 records "Fix r1: 4f2a9c1; Mask the card number", the code now shows `card ending <last four>`, and a test pins it.
+
+      PASS if 2203 has the verdict defer with a reason that it is outside this slice (naming product-slicer or the slicing stage as the owner of growing it), and 2204 has the verdict resolved naming the fix commit 4f2a9c1 or the chunk-1 fix round.
+
+      FAIL if 2203 is marked fix (growing the slice) or declined as wrong, if 2204 is marked fix or decline, or if 2204's reason does not point at the commit or round that made it moot.
+  - type: llm
+    name: hands-back-counts-and-path
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's response is the hand-back only: one line with the counts by verdict (fix, decline, defer, resolved) and one line with the report's path. The orchestrator reads the report file itself.
+
+      PASS if the final response is short (a few lines), gives the counts (1 fix, 2 declines, 1 defer, 1 resolved, or whatever the report's table holds, consistent with it) and the path `docs/cancel-hold/reviews/slice-001/pr-r1-triage.md`, and asks the user nothing.
+
+      FAIL if it reproduces the verdict table or the reasons in the response, omits the counts or the path, or asks a question.

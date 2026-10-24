@@ -8,10 +8,11 @@ asks a judge which review is better in both presentation orders (to cancel
 position bias), and writes every verdict with its reasoning to
 <results-dir>/pairwise.json.
 
-The judge itself (the `claude -p` call, both orders, the verdict) lives in
-`skills/orchestrator/scripts/pairwise_judge.py`, where the orchestrator's
-Combine step runs it on two implementation candidates; this file only
-supplies the review rubric and the results-dir plumbing.
+The judge itself (the `claude -p` call, both orders, the verdict) is
+`implementation_judge.py` next to this file (it was the orchestrator's
+Combine-step judge until the chunk loop replaced that flow on 2026-10-24;
+the evals keep it); this file only supplies the review rubric and the
+results-dir plumbing.
 
 Usage: python3 -I evals/tools/pairwise_judge.py evals/results/<timestamp> [--model sonnet]
 """
@@ -22,8 +23,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skills" / "orchestrator" / "scripts"))
-from pairwise_judge import compare  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from implementation_judge import compare  # noqa: E402
 
 REVIEW_RUBRIC = """You are judging two code reviews of the same code. You do not know who wrote either one.
 

@@ -1,0 +1,71 @@
+schema_version: "1.0"
+name: tdd-implementation-lite-chunk-plan
+description: "The chunk loop's B step through the lite implementer: handed the cancel-hold slice's documents and told to write the chunk plan and build nothing, it consults map-query, writes a vertical plan (three to eight chunks, each with Title, Delivers, Files, Done when and Touches, every Delivers a criterion of the slice, every Files inside the design's modules) into the implementation report, writes no code and no test, and stops."
+tags: [tdd-implementation-lite, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:tdd-implementation-lite` first. The library-lending app is in your current working directory. Write the chunk plan for slice 001 (staff cancel a member's hold on a title) into `docs/cancel-hold/implementation-report-slice-001.md`, creating the file with the report's heading, and build nothing. The slice's documents are in `docs/cancel-hold/`: `slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md`. The orchestrator reviews the result. I won't be around to answer questions while you work.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
+    min: 1
+  - type: tool_used
+    name: consults-map-query
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:map-query"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/implementation-report-slice-001.md
+  - type: regex
+    name: writes-only-the-report
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/cancel-hold/implementation-report-slice-001\.md")'
+    match: not_contains
+  - type: llm
+    name: plan-has-the-shape
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation-report-slice-001.md
+    weight: 1
+    criteria: |
+      The skill's chunk plan is an ordered list under a `## Chunk plan` heading, two to eight chunks (one per behaviour; a slice this small may honestly need two or three), each with exactly these five lines: **Title** (an imperative commit subject under 60 characters), **Delivers** (the slice's criteria it makes pass), **Files** (every file it creates or changes, tests included), **Done when** (test names, plus anything runnable that shows the behaviour), **Touches** (one or more of adapter or secret, HTTP, storage, error handling, UI; or none).
+
+      Only the chunk entries are judged. Planning notes between the heading and the first chunk or after the last one (the map-query result, where tests run, open gaps for other owners) are not chunks and do not count against the plan. A note after the criterion on a Delivers line (an open gap the chunk depends on, "the thin path") is still a Delivers line that names a criterion.
+
+      PASS if the report has a `## Chunk plan` heading with two to eight chunk entries and every entry has all five lines with content: a Delivers that names at least one criterion, a Files with at least one path, a Done when that quotes at least one test by name (a short quoted phrase a test runner would print, not only a description of behaviour), a Touches naming one or more of the listed words (two, such as "error handling, storage", is fine).
+
+      FAIL if the heading is missing, there is one chunk entry or more than eight, any entry lacks one of the five lines or carries a sixth bullet, any Files or Delivers line is empty or says "TBD", or any Done when names no test.
+  - type: llm
+    name: plan-is-vertical-and-inside-the-slice
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation-report-slice-001.md
+    weight: 1
+    criteria: |
+      The slice (docs/cancel-hold/slice-001.md) has two acceptance criteria (a hold is cancelled and gone from the queue; cancelling a hold the member doesn't have is a rejection with a reason and the queue is unchanged), a security criterion (only the named hold is removed) and a reliability criterion (a second cancel is a rejection, never an error; an unreachable queue is a failure the caller sees with nothing half-removed). It explicitly defers the staff HTTP route and member self-service. The design names three units: CancelHold (lending/), the HoldQueue port (lending/) gaining a removal operation, and InMemoryHoldQueue (infra/memory/) implementing it; nothing in the HTTP layer or the composition root changes.
+
+      PASS if every chunk is vertical (each delivers a behaviour end to end, with its tests, across the port, adapter and use case as its behaviour needs; no chunk is "the types", "the interface" or "the tests" alone, and no chunk's criterion is one an earlier chunk already made pass with only a test left to add; a chunk whose production change sits in one layer is still vertical when it delivers a criterion of its own observable through the use case, such as the security criterion living in the adapter's matching rule; and the unreachable-queue criterion is planned either way the skill allows: as a chunk of its own placed last, naming the open result-shape gap, or, when the planner judges that the queue's error already reaches the caller with no production change, folded into an earlier chunk with its test named in that chunk's Done when), the first chunk's own behaviour is the thin path's smallest observable step (a member's hold is cancelled and the result says cancelled; a criterion that holds by construction once that is built, such as only the named hold being removed, may ride along in its Delivers), every Delivers line names criteria from the slice (quoted or clearly identified; the slice has no identifiers, so the text or an unambiguous paraphrase counts), no chunk delivers something the slice deferred or never asked for (no HTTP route, no self-service, no notification, no queue renumbering), and every path on every Files line is under `lending/`, `infra/memory/`, `test/` or is the report itself.
+
+      A note after the criterion on a Delivers line (an open gap the chunk waits on, "the thin path") and planning notes outside the chunk entries do not count against the plan.
+
+      FAIL if any chunk is a layer rather than a behaviour, the unreachable-queue criterion appears in no chunk's Delivers and no chunk's Done when, the first chunk is not the thin path, any chunk delivers an HTTP route, self-service, notification or renumbering, any Delivers line names no criterion of the slice, or any Files line names a path in `main/`, `notifications/`, `fines/`, `members/`, `reporting/`, `catalog/`, `services/` or `utils/`.
+  - type: llm
+    name: stops-after-the-plan
+    focus: last_message
+    weight: 1
+    criteria: |
+      The task was the chunk plan only: write it, build nothing, stop. The orchestrator reviews the result, and the user said they would not answer questions.
+
+      PASS if the response reports the plan written (the file, the chunks) and nothing built, and ends there, with no code or test described as written and no question put to the user that the slice's documents already answer. Gaps escalated to their owning skill (a question the documents do not answer, such as whether holds behind a cancelled one are renumbered) are part of the plan, not a question to the user.
+
+      FAIL if it reports writing code, a test or a stub, says it started on the first chunk, asks the user to approve the plan before anything happens, or asks a question the documents answer (what the rejection reason is for, which modules change).
