@@ -34,8 +34,13 @@ skills/
                        # inside, secrets unreadable, no direct network, escape hatches off; exit 2 when
                        # the platform has no sandbox at all, which the orchestrator turns into a logged
                        # choice, not a stop (see below)
+  orchestrator/scripts/audit_sync.py       # the loop's last step when KAD_AUDIT_REPO is set: a slice's planning
+                       # documents, log, report, map, reviewer reports and fix-round sidecar copied into
+                       # the audit repository's clone, refused on a credential-shaped string, committed
+                       # and pushed
 hooks/
-  hooks.json, audit.sh # audit mode: off unless KAD_AUDIT=1 (see below)
+  hooks.json, audit.sh # audit mode: off unless KAD_AUDIT=1 (see below); with KAD_AUDIT_REPO set, the
+                       # SessionStart hook clones the audit repository into the project's audit-docs/
 evals/
   <case>/case.yaml     # a `claude plugin eval` case (negative trigger cases use prompt.md + graders/)
   fixtures/library-app # shared fixture app with an answer key; personas plant defects in overlays
@@ -92,12 +97,26 @@ sessions you want recorded:
 ```bash
 export KAD_AUDIT=1                   # or "env": {"KAD_AUDIT": "1"} in settings.json
 export KAD_AUDIT_DIR=~/kad-audit     # optional; defaults to ~/.claude/kad-audit
+export KAD_AUDIT_REPO=https://github.com/<you>/audit-docs  # optional; see below
 ```
 
 The plugin's hooks then log each prompt and every `kad-dev-team` skill and
 agent call, and keep the full transcript of any session that used the
 plugin. Nothing leaves your machine, and sessions that never used the
-plugin aren't kept. In this repo, ask Claude to "review the audit logs"
+plugin aren't kept.
+
+With `KAD_AUDIT_REPO` set as well, the audit material gets a home you
+choose: a separate repository, cloned at session start into the project's
+`audit-docs/` and listed in the project's `.git/info/exclude`, so the
+project's own `.gitignore` and history never mention it. At the end of
+each delivered slice the orchestrator runs `audit_sync.py`, which copies
+that slice's planning documents, orchestrator log, implementation report,
+architecture map, reviewer reports and fix-round sidecar into
+`audit-docs/<project>-slice-<n>/`, refuses if anything it would copy looks
+like a credential, and commits and pushes in the clone. Run it by hand
+with `python3 -I skills/orchestrator/scripts/audit_sync.py --project
+<root> --slice <n>` (add `--transcripts` to include the kept session
+transcripts, `--no-push` to only commit). In this repo, ask Claude to "review the audit logs"
 (the `audit-review` skill): it reads the flagged sessions against the
 skills' own rules and proposes fixes and eval cases.
 `evals/tools/audit_report.py` gives the raw overview, and

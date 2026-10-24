@@ -1,6 +1,9 @@
 {
-  "description": "Audit mode: off unless KAD_AUDIT=1. Logs prompts and kad-dev-team skill and agent calls, and keeps the transcript of any session that used the plugin. See hooks/audit.sh.",
+  "description": "Audit mode: off unless KAD_AUDIT=1. Logs prompts and kad-dev-team skill and agent calls, keeps the transcript of any session that used the plugin, and with KAD_AUDIT_REPO set clones the audit repository into the project's audit-docs/ (excluded from the project's git). See hooks/audit.sh.",
   "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/audit.sh\"" } ] }
+    ],
     "UserPromptSubmit": [
       { "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/audit.sh\"" } ] }
     ],
