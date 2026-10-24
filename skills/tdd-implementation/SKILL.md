@@ -90,8 +90,10 @@ these five lines, each a bullet, the Title among them:
 - **Files**: every file it creates or changes, tests included. This is the
   gate's allowed list for the chunk; a file not named here is a plan
   deviation the gate flags.
-- **Done when**: the test names that must be green, plus anything runnable
-  that shows the behaviour (a route answers, a screen renders).
+- **Done when**: the tests that must be green, each by the name it will
+  have in the runner's output, quoted ("rejects a cancel when the member
+  has no hold"), not a description of what they check; plus anything
+  runnable that shows the behaviour (a route answers, a screen renders).
 - **Touches**: which of adapter or secret, HTTP, storage, error handling,
   UI, or none. The orchestrator picks the chunk's reviewers from this.
 

@@ -936,13 +936,13 @@
     "recorded": "2026-10-19T07:17:37Z"
   },
   "tdd-implementation-chunk-plan": {
-    "inputs": "fc4c4b1f6792eb18a0dc88369a757d1e9323e4b75f0b0f7768ebd9f520bd5dbe",
+    "inputs": "90b0feae0117f65c59613c3a331d5f92942b41bb726930f5d75563b55f3a7855",
     "score": 0.81,
     "bar": null,
     "runs": 3,
-    "source": "results/gate-20261024T203629-tdd-implementation-chunk-plan.json",
+    "source": "results/gate-20261024T204248-tdd-implementation-chunk-plan.json",
     "claude_version": "2.1.304",
-    "recorded": "2026-10-24T20:38:49Z"
+    "recorded": "2026-10-24T20:45:01Z"
   },
   "tdd-implementation-lite-cancel-hold": {
     "inputs": "b29b54e7ba1aeb978387f60fc90156c1c385ec72dd9c40433cf365c03824770d",
@@ -963,13 +963,13 @@
     "recorded": "2026-10-19T07:17:37Z"
   },
   "tdd-implementation-lite-chunk-plan": {
-    "inputs": "b3f2708024982ccc2b173871a461506ac81d610905861be360bcfd924ade1746",
-    "score": 0.905,
+    "inputs": "4bb34ba22ae0c51d040478e0bc1d98cc7ec5c2c38822fc24c7426ee4bd449914",
+    "score": 0.81,
     "bar": null,
     "runs": 3,
-    "source": "results/gate-20261024T203629-tdd-implementation-lite-chunk-plan.json",
+    "source": "results/gate-20261024T204248-tdd-implementation-lite-chunk-plan.json",
     "claude_version": "2.1.304",
-    "recorded": "2026-10-24T20:38:49Z"
+    "recorded": "2026-10-24T20:45:01Z"
   },
   "tdd-implementation-lite-named-fix": {
     "inputs": "6a146794649a3f6eeabe0a6a0dfebf2d0895fe7627e5702669762a815872ce93",
@@ -990,13 +990,13 @@
     "recorded": "2026-10-19T07:17:37Z"
   },
   "tdd-implementation-one-chunk": {
-    "inputs": "914a186f488d6fe1ec985621c252dcd1b8b0cd9ef8d934fbce9debf72f9ea772",
-    "score": 0.974,
+    "inputs": "a383cff96aa9d56363cf0ef823a0f46ea067a192df85f2fd68682edd8a08ca5d",
+    "score": 1.0,
     "bar": null,
     "runs": 3,
-    "source": "results/gate-20261024T203629-tdd-implementation-one-chunk.json",
+    "source": "results/gate-20261024T204248-tdd-implementation-one-chunk.json",
     "claude_version": "2.1.304",
-    "recorded": "2026-10-24T20:38:49Z"
+    "recorded": "2026-10-24T20:45:01Z"
   },
   "technology-bootstrap-phase1": {
     "inputs": "09ec3e06cb45f29b2297d61af175b3e3b5e19a029e062637533827c4d4150003",
