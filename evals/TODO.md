@@ -2992,3 +2992,38 @@ one commit, the plugin mirrored from `main` at `7d4e5d1` (PR #18's merge).
       `does-not-go-forward-to-reliability`, G4's one-run-in-three
       narration noise, inside tolerance; `results/gate-20261019T110622-*`).
       Evidence recorded for all seventeen.
+
+## J. Implementation flow v3, the chunk loop (2026-10-24)
+
+The quarantine flow was retired for the chunk loop
+(`.synthesis/implementation-flow-v3.md`). Its §8 lists ten cases; four run
+without the orchestrator's real launches and were built, the rest are
+proven by real runs the way the quarantine flow was (H6, I).
+
+- [ ] J1. `tdd-implementation-chunk-plan` and `tdd-implementation-lite-chunk-plan`
+      (§8.1): the B step through the implementer, three to eight vertical
+      chunks with the five lines, `map-query` consulted, nothing built.
+      Run, record bars.
+- [ ] J2. `tdd-implementation-one-chunk` (§8.2): chunk 1 of a planted
+      three-chunk plan in a git repository on the slice branch; one commit
+      titled as the chunk with the report section in it, chunk 2 (a
+      failing queue) left unbuilt, no `git add -A`, no push, no amend. Run,
+      record bars.
+- [ ] J3. `external-review-triage-cancel-hold` (§8.8): five comments of
+      the four verdict kinds on a planted delivered slice; the real defect
+      is one our own reviewer reports called a not-finding, so the "missed
+      by this flow's reviewers" section is exercised. Run, record bars.
+- [ ] J4. Not cases, by decision: §8.3 gate on a chunk, §8.4 validator
+      selection, §8.5 fix rounds (regression/pre-existing split, the cap),
+      §8.7 delivery (needs `gh` and a remote), §8.9 stall, §8.10 the log
+      entry end to end. Each needs the orchestrator launching real agents
+      inside the eval sandbox; read them from the first real v3 run's
+      `orchestrator-log.md` (`orchestrator_log_check.py` knows the format
+      and the sidecar) and the audit repository. §8.6 (sandbox opt-out)
+      has no way to force `sandbox_check.py` to exit 2 inside the Linux
+      eval sandbox; the Windows real runs exercise it.
+- [ ] J5. Re-record the 34 cases the v3 edits reach (the orchestrator's,
+      the tdd skills', `code-reviewer`'s through its third skill, and
+      `test-quality-review`'s consults); the two routing cases
+      `orchestrator-route-implementation(-prenamed)` were rewritten for
+      the A step and may move. Run.
