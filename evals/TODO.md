@@ -3004,15 +3004,24 @@ proven by real runs the way the quarantine flow was (H6, I).
       (§8.1): the B step through the implementer, three to eight vertical
       chunks with the five lines, `map-query` consulted, nothing built.
       Run, record bars.
-- [ ] J2. `tdd-implementation-one-chunk` (§8.2): chunk 1 of a planted
+- [x] J2. `tdd-implementation-one-chunk` (§8.2): chunk 1 of a planted
       three-chunk plan in a git repository on the slice branch; one commit
       titled as the chunk with the report section in it, chunk 2 (a
-      failing queue) left unbuilt, no `git add -A`, no push, no amend. Run,
-      record bars.
-- [ ] J3. `external-review-triage-cancel-hold` (§8.8): five comments of
+      failing queue) left unbuilt, no `git add -A`, no push, no amend.
+      Done 2026-10-24: 0.90 on the first run (the scaffold had no in-place
+      test runner, so the implementers built one in `$TMPDIR` and the
+      `runs-the-tests` grader could not see it; `no-bash-writes` flagged
+      the heredoc append of the report section, then the source paths
+      quoted in its body). Runner planted from `code-plants/tdd`, the
+      Bash-write scan stops at a newline, the reflog grader describes the
+      file as it is: 1.00 in 3/3 (`results/gate-20261024T204248`). Bar
+      recorded.
+- [x] J3. `external-review-triage-cancel-hold` (§8.8): five comments of
       the four verdict kinds on a planted delivered slice; the real defect
       is one our own reviewer reports called a not-finding, so the "missed
-      by this flow's reviewers" section is exercised. Run, record bars.
+      by this flow's reviewers" section is exercised. Done 2026-10-24:
+      1.00 in 3/3 twice (`results/gate-20261024T202213`, `-203629`). Bar
+      recorded.
 - [ ] J4. Not cases, by decision: §8.3 gate on a chunk, §8.4 validator
       selection, §8.5 fix rounds (regression/pre-existing split, the cap),
       §8.7 delivery (needs `gh` and a remote), §8.9 stall, §8.10 the log

@@ -936,13 +936,13 @@
     "recorded": "2026-10-19T07:17:37Z"
   },
   "tdd-implementation-chunk-plan": {
-    "inputs": "f43a79c1509e89f645bd86f54814d13e13e9dd0089d27e7644bdd1705e5be6ef",
-    "score": 0.857,
+    "inputs": "6eedaf18524f4b412b1fb40d1c26909c54b1c42690a2ddd296fc3973ee6f151a",
+    "score": 1.0,
     "bar": null,
     "runs": 3,
-    "source": "results/gate-20261024T204814-tdd-implementation-chunk-plan.json",
+    "source": "results/gate-20261024T205121-tdd-implementation-chunk-plan.json",
     "claude_version": "2.1.304",
-    "recorded": "2026-10-24T20:49:08Z"
+    "recorded": "2026-10-24T20:52:16Z"
   },
   "tdd-implementation-lite-cancel-hold": {
     "inputs": "b29b54e7ba1aeb978387f60fc90156c1c385ec72dd9c40433cf365c03824770d",
@@ -963,13 +963,13 @@
     "recorded": "2026-10-19T07:17:37Z"
   },
   "tdd-implementation-lite-chunk-plan": {
-    "inputs": "8edb2fd88400cc54ad11eb0d0f50910a0a7a56fa6b2390d7304c8f282287ec8b",
-    "score": 0.905,
+    "inputs": "f5b61f66f095455f6160f6af61e329d02e4c90a6c31e1566383fd9931dba34bc",
+    "score": 0.857,
     "bar": null,
     "runs": 3,
-    "source": "results/gate-20261024T204814-tdd-implementation-lite-chunk-plan.json",
+    "source": "results/gate-20261024T205121-tdd-implementation-lite-chunk-plan.json",
     "claude_version": "2.1.304",
-    "recorded": "2026-10-24T20:49:08Z"
+    "recorded": "2026-10-24T20:52:16Z"
   },
   "tdd-implementation-lite-named-fix": {
     "inputs": "6a146794649a3f6eeabe0a6a0dfebf2d0895fe7627e5702669762a815872ce93",
