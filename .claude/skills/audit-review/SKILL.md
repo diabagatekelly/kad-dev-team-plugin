@@ -23,9 +23,14 @@ wrong thing and the user fixed it later by hand.
 ## 2. Read each one against the rules that applied
 
 Judge each session by the plugin version that ran it, not the current
-one: the install's `gitCommitSha` is in
-`~/.claude/plugins/installed_plugins.json`, and `git show
-<sha>:skills/<name>/SKILL.md` gives that version's rules. A miss that
+one. The transcript names it: every Skill result begins with `Base
+directory for this skill: .../kad-dev-team/<version>/skills/<name>`, and
+a session that spans a `/reload-plugins` can carry two versions. `git log
+-S'"version": "<version>"' -- .claude-plugin/plugin.json` names that
+version's bump commit, and `git show <commit>:skills/<name>/SKILL.md`
+gives that version's rules. The install record's `gitCommitSha` in
+`~/.claude/plugins/installed_plugins.json` is the version installed now,
+which is only the one that ran if nothing was updated since. A miss that
 version made and the current one already fixes is a finding to record,
 not a fix to propose.
 

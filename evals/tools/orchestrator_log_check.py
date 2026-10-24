@@ -3,29 +3,36 @@
 Reads the log in a project that used kad-dev-team, and (when given) the
 transcripts audit mode kept for it, and prints a markdown report of:
 
-- format: sequence numbers in order with no gaps, a Routed to and an
-  Artifact line in every entry, the Artifact one path (no bare directory,
-  no "if"/"otherwise"/"or" outside a parenthetical), quarantine entries
-  with their A-E sub-entries in order;
-- artifacts: each entry's path exists, or else which files the transcripts
-  show that stage writing instead;
+- format: sequence numbers in order with no gaps, every `## ` heading a
+  numbered entry, exactly one Routed to and one Artifact line in every
+  entry, the Artifact one path inside the project (no bare directory, no
+  "if"/"otherwise"/"or" outside a parenthetical), quarantine entries with
+  their A-E sub-entries in order;
+- artifacts: each entry's path exists (relative to the log's directory, or
+  the project), or else which files the transcripts show that stage
+  writing instead;
 - order: each route against the state table in skills/orchestrator/SKILL.md
   (read from the file, so the table and this check can't drift apart): a
   stage skipped that the table never skips, or a step backwards that
   doesn't say it's a backward route;
 - append-only: every committed version of the log, and the working copy,
-  starts with the one before it; with transcripts, every write to the log
-  (Write, Edit, or a Bash redirect) only adds to it;
+  starts with the one before it; with transcripts, every successful write
+  to the log (Write, Edit, or a shell redirect) only adds to its end;
 - log vs. calls (transcripts only): every spine skill called has an entry
-  written before it, and every entry was followed by its routed skill.
+  written before it in that session, each entry is followed by exactly one
+  call to its routed skill (a quarantine entry by any number of
+  implementer launches), and every entry was followed by its routed skill.
 
 Read-only; nothing in the project is changed. Findings are marked ERROR
 (the rule is broken), WARN (worth reading) or INFO. Check a session
-against the rules of the plugin version that ran it: pass that version's
-SKILL.md with --skill (gitCommitSha in ~/.claude/plugins/installed_plugins.json).
---skill only sets the state table: the Artifact-line rules are the current
-ones, so a log written under 0.4.0, which predates them, fails them as
-expected.
+against the rules of the plugin version that ran it: every Skill result in
+a transcript begins with `Base directory for this skill:
+.../kad-dev-team/<version>/skills/<name>`, `git log -S'"version":
+"<version>"' -- .claude-plugin/plugin.json` names that version's bump
+commit, and `git show <commit>:skills/orchestrator/SKILL.md > /tmp/x.md`
+gives the file to pass with --skill. --skill only sets the state table:
+the Artifact-line rules are the current ones, so a log written under
+0.4.0, which predates them, fails them as expected.
 
 Usage: python3 -I evals/tools/orchestrator_log_check.py <project dir>
            [--log planning/orchestrator-log.md] [--skill path/to/SKILL.md]
@@ -52,10 +59,26 @@ UI_ONLY = {"design-system", "screen-design", "accessibility-review"}
 # After a slice is implemented, the next unit starts again at requirements.
 RESTARTS = {"requirements-refinement"}
 QUARANTINE_STEPS = "ABCDE"
+# The persona that implements; its launches under a quarantine entry are many.
+IMPLEMENTERS = {"tdd-implementation", "tdd-implementation-lite", "tdd-coach"}
+CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 
 
 def norm(path):
     return os.path.normcase(os.path.normpath(path)) if path else ""
+
+
+def inside(path, root):
+    """True when `path` is `root` or a file or directory under it (path-aware, not a string prefix)."""
+    try:
+        return os.path.commonpath([norm(os.path.abspath(path)), norm(os.path.abspath(root))]) == norm(os.path.abspath(root))
+    except ValueError:  # different drives
+        return False
+
+
+def safe(text):
+    """Untrusted log or transcript text, with terminal control characters removed."""
+    return CONTROL.sub("?", str(text))
 
 
 def load_table(skill_path):
@@ -71,7 +94,7 @@ def load_table(skill_path):
         for tok in re.findall(r"`([^`]+)`", cells[1]):
             names.add(tok.split(":")[-1].strip())
         if "tdd-implementation" in names:
-            names |= {"tdd-implementation-lite", "tdd-coach"}
+            names |= IMPLEMENTERS
         if names:
             rows.append((cells[0], names))
     if not rows:
@@ -88,36 +111,62 @@ def stage_key(names):
 
 
 def parse_log(text):
-    entries = []
+    """(entries, malformed headings). A heading is `## <n>. <title>`; any other `## ` line is malformed."""
+    entries, malformed = [], []
+    for m in re.finditer(r"^## (.*)$", text, re.M):
+        if not re.match(r"\d+\.\s", m.group(1) + " "):
+            malformed.append(m.group(1).strip())
     for m in re.finditer(r"^## (\d+)\.\s*(.*)$", text, re.M):
         end = text.find("\n## ", m.end())
         body = text[m.end(): end if end != -1 else len(text)]
-        routed = re.search(r"^\*\*Routed to:\*\*\s*(.+)$", body, re.M)
-        artifact = re.search(r"^\*\*Artifact:\*\*\s*(.+)$", body, re.M)
+        routed = re.findall(r"^\*\*Routed to:\*\*\s*(.+)$", body, re.M)
+        artifact = re.findall(r"^\*\*Artifact:\*\*\s*(.+)$", body, re.M)
         subs = re.findall(r"^- \*\*([A-E])\.", body, re.M)
         entries.append({
             "n": int(m.group(1)), "heading": m.group(2).strip(), "body": body,
-            "routed": routed.group(1).strip() if routed else None,
-            "artifact": artifact.group(1).strip() if artifact else None, "subs": subs,
+            "routed": routed[0].strip() if routed else None, "routed_lines": len(routed),
+            "artifact": artifact[0].strip() if artifact else None, "artifact_lines": len(artifact),
+            "subs": subs,
         })
-    return entries
+    return entries, malformed
+
+
+def is_quarantine(entry):
+    return bool(entry and entry["routed"] and "quarantine" in entry["routed"].lower())
+
+
+NONE = "none"  # an entry routed outside the spine ("none (user-directed)")
+
+
+def routed_names(routed):
+    """The names an entry's Routed to line puts in backticks, in order: skill and persona halves of each."""
+    out = []
+    for t in re.findall(r"`([^`]+)`", routed or ""):
+        for part in (t.split(":")[-1].strip(), t.split(":")[0].strip()):
+            if part and part not in out:
+                out.append(part)
+    return out
 
 
 def route_rank(routed, table):
-    """Index of the table row an entry routed to, or None if it names nothing in the table."""
-    if routed and "quarantine" in routed.lower():
+    """Index of the table row an entry routed to; NONE for an entry routed outside the spine;
+    None if it names nothing in the table. The first skill named decides the row."""
+    low = (routed or "").lower().strip()
+    if "quarantine" in low:
         return next(i for i, (_, names) in enumerate(table) if "tdd-implementation" in names)
-    toks = {t.split(":")[-1].strip() for t in re.findall(r"`([^`]+)`", routed or "")}
-    toks |= {t.split(":")[0].strip() for t in re.findall(r"`([^`]+)`", routed or "")}
-    best = None
-    for i, (_, names) in enumerate(table):
-        hit = toks & names
-        # docs-writer appears in several rows; prefer a row named by its skill.
-        if hit and (best is None or any("-" in h and h != "docs-writer" for h in hit)):
-            best = i
-            if any("-" in h and h != "docs-writer" for h in hit):
-                break
-    return best
+    if low.startswith(NONE):
+        return NONE
+    toks = routed_names(routed)
+    specific = [t for t in toks if "-" in t and t != "docs-writer"]
+    if not specific and "scope" in low:
+        # docs-writer routes to several rows; a plain docs-writer route that names the
+        # scope decision is the scope-map row, not the problem-framing one.
+        specific = ["scope-map"]
+    for t in specific + [t for t in toks if t not in specific]:
+        for i, (_, names) in enumerate(table):
+            if t in names:
+                return i
+    return None
 
 
 def outside_parens(text):
@@ -130,19 +179,34 @@ def outside_parens(text):
     return "".join(out)
 
 
-def check_format(entries, findings):
+def artifact_paths(entry):
+    return re.findall(r"`([^`]+)`", outside_parens(entry["artifact"] or ""))
+
+
+def escapes(path):
+    """An Artifact path that is absolute or climbs out of the directory it is relative to."""
+    return os.path.isabs(path) or re.match(r"^[A-Za-z]:", path) is not None or ".." in path.replace("\\", "/").split("/")
+
+
+def check_format(text, entries, malformed, findings):
+    if not text.strip():
+        findings.append(("ERROR", "log", "the log is empty: no routing history at all"))
+    elif not entries:
+        findings.append(("ERROR", "log", "the log has content but no `## <n>. <title>` entry could be parsed"))
+    for h in malformed:
+        findings.append(("ERROR", "log", f"heading is not a numbered entry (`## <n>. <title>`): ## {h}"))
     for i, e in enumerate(entries):
         tag = f"entry {e['n']}"
         if e["n"] != i + 1:
             findings.append(("ERROR", tag, f"sequence number {e['n']} where {i + 1} was expected"))
-        if not e["routed"]:
-            findings.append(("ERROR", tag, "no **Routed to:** line"))
+        if e["routed_lines"] != 1:
+            findings.append(("ERROR", tag, f"{e['routed_lines']} **Routed to:** lines, not one"))
+        if e["artifact_lines"] != 1:
+            findings.append(("ERROR", tag, f"{e['artifact_lines']} **Artifact:** lines, not one"))
         if not e["artifact"]:
-            findings.append(("ERROR", tag, "no **Artifact:** line"))
             continue
-        quarantine = e["routed"] and "quarantine" in e["routed"].lower()
         art = e["artifact"]
-        if quarantine:
+        if is_quarantine(e):
             if "see sub-entries below" not in art:
                 findings.append(("ERROR", tag, "quarantine entry's Artifact isn't `see sub-entries below`"))
             continue
@@ -152,13 +216,15 @@ def check_format(entries, findings):
             findings.append(("ERROR", tag, f"Artifact names {len(paths)} paths outside its parenthetical, not one: {art}"))
         elif paths[0].endswith(("/", "\\")):
             findings.append(("ERROR", tag, f"Artifact is a bare directory: {art}"))
+        elif escapes(paths[0]):
+            findings.append(("ERROR", tag, f"Artifact path is absolute or leaves the project: {art}"))
         if re.search(r"\b(if|otherwise|unless|or)\b", re.sub(r"`[^`]*`", "", bare)):
             findings.append(("ERROR", tag, f"Artifact is conditional or offers alternatives: {art}"))
 
 
 def check_quarantine(entries, findings):
     for e in entries:
-        if not (e["routed"] and "quarantine" in e["routed"].lower()):
+        if not is_quarantine(e):
             continue
         tag = f"entry {e['n']}"
         subs = e["subs"]
@@ -187,6 +253,9 @@ def check_order(entries, table, findings):
         if rank is None:
             findings.append(("ERROR", tag, f"routes to something not in the state table: {e['routed']}"))
             continue
+        if rank == NONE:
+            findings.append(("INFO", tag, "routed outside the spine (user-directed); not ranked"))
+            continue
         key = stage_key(table[rank][1])
         backward = re.search(r"(?i)backward|supersed", e["heading"] + e["body"])
         if prev is None:
@@ -206,7 +275,8 @@ def check_order(entries, table, findings):
             findings.append(("ERROR", tag, f"goes back to `{key}` without saying it's a backward route or what it supersedes"))
         elif rank < prev and backward and not re.search(r"(?i)supersed", e["body"] + e["heading"]):
             findings.append(("WARN", tag, "backward route doesn't name the artifact it supersedes"))
-        prev = rank
+        if not (backward and prev is not None and rank < prev):
+            prev = rank  # a backward route is a detour: the unit's position stays where it was
 
 
 def git(project, *args):
@@ -228,30 +298,40 @@ def check_git_append_only(project, log_rel, current, findings):
     for (a, old), (b, new) in zip(versions, versions[1:]):
         if not clean(new).startswith(clean(old)):
             findings.append(("ERROR", "git", f"log changed in place between {a} and {b}, not only appended to"))
-    uncommitted = len(parse_log(current)) - len(parse_log(versions[-2][1])) if len(versions) > 1 else len(parse_log(current))
+    count = lambda t: len(parse_log(t)[0])
+    uncommitted = count(current) - count(versions[-2][1]) if len(versions) > 1 else count(current)
     if uncommitted > 0:
         findings.append(("INFO", "git", f"{uncommitted} entr{'y' if uncommitted == 1 else 'ies'} not committed yet"))
 
 
 def transcript_files(audit_dir, project):
-    """Kept transcripts (and their subagents') whose session ran in this project."""
+    """Kept transcripts (and their subagents') whose session ran in this project or a directory under it."""
     out = []
     for path in glob.glob(os.path.join(audit_dir, "transcripts", "*.jsonl")):
         with open(path, encoding="utf-8", errors="replace") as f:
             for line in f:
                 m = re.search(r'"cwd"\s*:\s*"((?:[^"\\]|\\.)*)"', line)
                 if m:
-                    if norm(json.loads('"' + m.group(1) + '"')) == norm(project):
+                    if inside(json.loads('"' + m.group(1) + '"'), project):
                         out.append(path)
                         out += glob.glob(os.path.join(path[:-6], "**", "*.jsonl"), recursive=True)
                     break
     return out
 
 
+def session_of(path, paths):
+    """The top-level transcript a file belongs to: itself, or the session whose directory holds it."""
+    for p in paths:
+        if p != path and inside(path, p[:-6]):
+            return p
+    return path
+
+
 def tool_calls(paths):
-    """Every tool_use across the transcripts, once each, in time order."""
-    seen, calls = {}, []
+    """Every tool_use across the transcripts, once each, in time order, with whether its result was an error."""
+    seen, calls, errored = {}, [], set()
     for path in paths:
+        session = session_of(path, paths)
         last_ts = ""
         for i, line in enumerate(open(path, encoding="utf-8", errors="replace")):
             try:
@@ -264,92 +344,172 @@ def tool_calls(paths):
             if not isinstance(content, list):
                 continue
             for b in content:
-                if not (isinstance(b, dict) and b.get("type") == "tool_use"):
+                if not isinstance(b, dict):
+                    continue
+                if b.get("type") == "tool_result":
+                    if b.get("is_error") and b.get("tool_use_id"):
+                        errored.add(b["tool_use_id"])
+                    continue
+                if b.get("type") != "tool_use":
                     continue
                 key = b.get("id") or (path, i, b.get("name"))
                 call = {"ts": last_ts, "name": b.get("name"), "input": b.get("input") or {},
-                        "order": (path, i)}
+                        "order": (path, i), "session": session, "id": b.get("id")}
                 if key not in seen:
                     seen[key] = call
                     calls.append(call)
+    for c in calls:
+        c["error"] = c["id"] in errored
     calls.sort(key=lambda c: (c["ts"], c["order"]))
     return calls
 
 
+SHELL_WRITE = (r"(?<![-=<>])(>>|>|\btee\s+(?:-a\s+)?|\bOut-File\s+(?:-FilePath\s+)?|\bAdd-Content\s+(?:-Path\s+)?"
+               r"|\bSet-Content\s+(?:-Path\s+)?)\s*[\"']?([^\s\"'|;&<>()]+)")
+PATHLIKE = re.compile(r"^[\w$~./\\:-]*[\w-]\.[A-Za-z0-9]+$")  # has a name and an extension
+IN_PLACE = re.compile(r"\b(sed\s+-i|perl\s+-p?i)[^\n]*" + re.escape(LOG_NAME))
+HEREDOC = re.compile(r"<<-?\s*[\"']?(\w+)[\"']?\s*\n.*?\n\1\s*$", re.S | re.M)
+
+
+def shell_body(cmd):
+    """The text a shell command appends, when it can be read from the command: a heredoc or a quoted echo."""
+    m = re.search(r"<<-?\s*[\"']?(\w+)[\"']?\s*\n(.*?)\n\1\s*$", cmd, re.S | re.M)
+    if m:
+        return m.group(2)
+    m = re.search(r"\b(?:echo|printf)\s+(['\"])(.*?)\1\s*>>", cmd, re.S)
+    if m:
+        return m.group(2)
+    return None
+
+
 def log_write(call, log_abs):
-    """(kind, added text, ok-to-append) for a call that writes the log, else None."""
+    """A call that writes the log, as a dict (kind, and what it changes), else None."""
     name, ti = call["name"], call["input"]
     if name in ("Write", "Edit") and norm(ti.get("file_path")) == norm(log_abs):
         if name == "Write":
-            return ("Write", ti.get("content", ""), None)
-        old, new = ti.get("old_string", ""), ti.get("new_string", "")
-        return ("Edit", new[len(old):] if new.startswith(old) else new, new.startswith(old))
+            return {"kind": "Write", "content": ti.get("content", "")}
+        return {"kind": "Edit", "old": ti.get("old_string", ""), "new": ti.get("new_string", "")}
     if name in ("Bash", "PowerShell") and LOG_NAME in (ti.get("command") or ""):
         cmd = ti["command"]
-        if not re.search(r"(>>?|Out-File|Add-Content|Set-Content|tee)[^\n]*" + re.escape(LOG_NAME), cmd):
-            return None
-        appends = re.search(r"(>>|Add-Content|tee -a|-Append)[^\n]*" + re.escape(LOG_NAME), cmd)
-        return (name, cmd, bool(appends))
+        target = None
+        for m in re.finditer(SHELL_WRITE, HEREDOC.sub("", cmd)):
+            if m.group(2).replace("\\", "/").endswith(LOG_NAME):
+                target = m
+                break
+        if target is None:
+            if IN_PLACE.search(cmd):
+                return {"kind": name, "cmd": cmd, "append": False, "body": None}
+            return None  # the log is read, listed or named, not written
+        op = target.group(1)
+        append = op.startswith(">>") or "tee -a" in op or "Add-Content" in op or re.search(r"-Append\b", cmd) is not None
+        return {"kind": name, "cmd": cmd, "append": append, "body": shell_body(cmd) if append else None}
     return None
 
 
 def called_skill(call):
     ti = call["input"]
-    name = ti.get("skill") if call["name"] == "Skill" else ti.get("subagent_type") if call["name"] in ("Agent", "Task") else None
+    if call["name"] == "Skill":
+        name = ti.get("skill")
+    elif call["name"] in ("Agent", "Task"):
+        name = ti.get("subagent_type")
+    else:
+        return None
     if not name or "kad-dev-team" not in name:
         return None
-    return name.split(":")[-1]
+    parts = name.split(":")
+    if len(parts) >= 3 and parts[-1] == "AGENT":
+        # kad-dev-team:<persona>:AGENT names the persona; the task names the skill it runs
+        # ("Invoke the skill `kad-dev-team:test-quality-review` first"), which is what the log routes to.
+        for m in re.findall(r"kad-dev-team:([A-Za-z0-9_-]+)(?!:AGENT)", ti.get("prompt") or ""):
+            if m != parts[-2] and m != "AGENT":
+                return m
+        return parts[-2]
+    return parts[-1]
 
 
-def written_path(call, project):
+def written_paths(call, project):
+    """Files a call writes: Write/Edit targets, and every shell redirect or file-writing cmdlet target."""
     ti = call["input"]
     if call["name"] in ("Write", "Edit", "NotebookEdit") and ti.get("file_path"):
-        return ti["file_path"]
+        return [ti["file_path"]]
     if call["name"] in ("Bash", "PowerShell"):
-        m = re.search(r"(?:cat|tee)\s*>\s*['\"]?([^\s'\"<]+)", ti.get("command") or "")
-        if m:
-            return os.path.join(project, m.group(1))
-    return None
+        out = []
+        for m in re.finditer(SHELL_WRITE, HEREDOC.sub("", ti.get("command") or "")):
+            p = m.group(2)
+            if p.startswith(("/dev/", "&", "#")) or p.lower() == "$null" or not PATHLIKE.match(p):
+                continue
+            out.append(p if os.path.isabs(p) else os.path.join(project, p))
+        return out
+    return []
 
 
 def check_transcripts(project, log_abs, entries, table, calls, findings):
     spine = set().union(*(names for _, names in table))
-    known_text = None
+    by_n = {e["n"]: e for e in entries}
+    known_text = None      # the log's text as the transcripts last showed it, None when unknown
     log_written = False
-    current = None  # the entry most recently written to the log
-    ran = {}        # entry number -> skill names called while it was current
-    writes = {}     # entry number -> files written while it was current
+    current = {}           # session -> the entry most recently written to the log in that session
+    ran = {}               # entry number -> skill names called while it was current
+    writes = {}            # entry number -> files written while it was current
     for call in calls:
+        s = call["session"]
         w = log_write(call, log_abs)
         if w:
-            kind, added, ok = w
-            if kind == "Write" and known_text is not None and not clean(added).startswith(clean(known_text)):
-                findings.append(("ERROR", "transcript", f"{call['ts']}: Write replaced the log instead of appending to it"))
-            elif ok is False and log_written:
-                findings.append(("ERROR", "transcript", f"{call['ts']}: {kind} to the log does more than append"))
-            if kind == "Write":
-                known_text = added
+            if call["error"]:
+                findings.append(("INFO", "transcript", f"{call['ts']}: a {w['kind']} to the log failed; not counted as written"))
+                continue
+            added = ""
+            if w["kind"] == "Write":
+                if known_text is not None and not clean(w["content"]).startswith(clean(known_text)):
+                    findings.append(("ERROR", "transcript", f"{call['ts']}: Write replaced the log instead of appending to it"))
+                added = w["content"][len(known_text):] if known_text is not None and w["content"].startswith(known_text) else w["content"]
+                known_text = w["content"]
+            elif w["kind"] == "Edit":
+                old, new = w["old"], w["new"]
+                if known_text is not None:
+                    at_end = old != "" and clean(known_text).endswith(clean(old))
+                    if not (at_end and new.startswith(old)):
+                        findings.append(("ERROR", "transcript", f"{call['ts']}: Edit changed the log in place, not at its end"))
+                    known_text = known_text.replace(old, new, 1) if old and old in known_text else None
+                elif log_written and not new.startswith(old):
+                    findings.append(("ERROR", "transcript", f"{call['ts']}: Edit to the log does more than append"))
+                added = new[len(old):] if new.startswith(old) else new
+            else:
+                if not w["append"] and log_written:
+                    findings.append(("ERROR", "transcript", f"{call['ts']}: {w['kind']} to the log does more than append"))
+                added = w["body"] if w["body"] is not None else w["cmd"]
+                known_text = (known_text + "\n" + w["body"]) if (known_text is not None and w["body"] is not None and w["append"]) else None
             log_written = True
             nums = [int(n) for n in re.findall(r"^## (\d+)\.", added, re.M)]
             if nums:
-                current = max(nums)
-                ran.setdefault(current, [])
-                writes.setdefault(current, [])
+                current[s] = max(nums)
+                ran.setdefault(current[s], [])
+                writes.setdefault(current[s], [])
             continue
         skill = called_skill(call)
         if skill and skill in spine:
-            entry = next((e for e in entries if e["n"] == current), None)
+            cur = current.get(s)
+            entry = by_n.get(cur)
             rank = route_rank(entry["routed"], table) if entry else None
+            row = table[rank][1] if isinstance(rank, int) else set()
+            named = row | set(routed_names(entry["routed"]) if entry else [])
+            if is_quarantine(entry) and skill.endswith("-review"):
+                named.add(skill)  # the quarantine flow's own reviewers, accessibility-review among them
+            primary = stage_key(row) if row else None
             if entry is None:
-                findings.append(("ERROR", "transcript", f"{call['ts']}: `{skill}` called with no log entry written before it"))
-            elif rank is None or skill not in table[rank][1]:
-                findings.append(("ERROR", "transcript", f"{call['ts']}: `{skill}` called while the latest entry ({current}) routes to {entry['routed']}: a stage that ran unlogged"))
+                findings.append(("ERROR", "transcript", f"{call['ts']}: `{skill}` called with no log entry written before it in this session"))
+            elif skill not in named:
+                findings.append(("ERROR", "transcript", f"{call['ts']}: `{skill}` called while the latest entry ({cur}) routes to {entry['routed']}: a stage that ran unlogged"))
+            elif skill == primary and primary in ran[cur] and not (is_quarantine(entry) and skill in IMPLEMENTERS):
+                findings.append(("ERROR", "transcript", f"{call['ts']}: `{skill}` called again under entry {cur} with no new entry written: a stage that ran unlogged"))
             else:
-                ran[current].append(skill)
+                ran[cur].append(skill)
             continue
-        path = written_path(call, project)
-        if path and current is not None and norm(path) != norm(log_abs):
-            writes[current].append((path, call["name"] == "Edit"))
+        cur = current.get(s)
+        if cur is not None:
+            for path in written_paths(call, project):
+                if norm(os.path.abspath(path)) != norm(log_abs):
+                    writes[cur].append((path, call["name"] == "Edit"))
     for e in entries:
         if e["n"] in ran and not ran[e["n"]]:
             findings.append(("WARN", f"entry {e['n']}", f"no call to the routed skill follows it ({e['routed']}): routed but never run, or run in a session not kept"))
@@ -362,16 +522,17 @@ def rel(path, project):
     return os.path.relpath(path, project).replace(os.sep, "/")
 
 
-def check_artifacts(project, entries, writes, findings):
+def check_artifacts(project, log_dir, entries, writes, findings):
     for e in entries:
         art = e["artifact"]
-        if not art or (e["routed"] and "quarantine" in e["routed"].lower()):
+        if not art or is_quarantine(e):
             continue
         tag = f"entry {e['n']}"
-        paths = re.findall(r"`([^`]+)`", outside_parens(art))
-        made = {rel(p, project) for p, edit in writes.get(e["n"], []) if not edit and norm(p).startswith(norm(project))}
-        edited = {rel(p, project) for p, edit in writes.get(e["n"], []) if edit and norm(p).startswith(norm(project))} - made
-        exists = [p for p in paths if not p.endswith(("/", "\\")) and os.path.exists(os.path.join(project, p))]
+        paths = [p for p in artifact_paths(e) if not escapes(p)]  # escaping paths are format errors, never probed
+        made = {rel(p, project) for p, edit in writes.get(e["n"], []) if not edit and inside(p, project)}
+        edited = {rel(p, project) for p, edit in writes.get(e["n"], []) if edit and inside(p, project)} - made
+        exists = [p for p in paths if not p.endswith(("/", "\\"))
+                  and any(inside(c, project) and os.path.exists(c) for c in (os.path.join(log_dir, p), os.path.join(project, p)))]
         if exists:
             continue
         if made or edited:
@@ -403,12 +564,14 @@ def main():
             raise SystemExit(f"found {len(found)} {LOG_NAME} files under {project}; pass --log")
         log_rel = os.path.relpath(found[0], project)
     log_abs = os.path.join(project, log_rel)
+    if not inside(log_abs, project):
+        raise SystemExit(f"--log must point inside the project: {log_rel}")
     text = open(log_abs, encoding="utf-8").read()
     table = load_table(a.skill)
-    entries = parse_log(text)
+    entries, malformed = parse_log(text)
 
     findings = []
-    check_format(entries, findings)
+    check_format(text, entries, malformed, findings)
     check_quarantine(entries, findings)
     check_order(entries, table, findings)
     check_git_append_only(project, log_rel, text, findings)
@@ -419,12 +582,12 @@ def main():
             writes = check_transcripts(project, log_abs, entries, table, tool_calls(paths), findings)
         else:
             findings.append(("INFO", "transcript", f"no kept transcript for this project under {a.audit_dir}"))
-    check_artifacts(project, entries, writes, findings)
+    check_artifacts(project, os.path.dirname(log_abs), entries, writes, findings)
 
     order = {"ERROR": 0, "WARN": 1, "INFO": 2}
     counts = {k: sum(f[0] == k for f in findings) for k in order}
-    print(f"# Orchestrator log check: `{log_rel}`\n")
-    print(f"- Project: `{project}`")
+    print(f"# Orchestrator log check: `{safe(log_rel)}`\n")
+    print(f"- Project: `{safe(project)}`")
     print(f"- Rules: `{os.path.normpath(a.skill)}` ({len(table)} table rows)")
     print(f"- Entries: {len(entries)}; transcripts read: {sum(p.endswith('.jsonl') for p in paths)}")
     print(f"- Findings: {counts['ERROR']} error, {counts['WARN']} warn, {counts['INFO']} info\n")
@@ -433,7 +596,7 @@ def main():
         m = re.match(r"entry (\d+)", f[1])
         return (order[f[0]], int(m.group(1)) if m else -1)
     for level, tag, msg in sorted(findings, key=where):
-        print(f"- **{level}** {tag}: {msg}")
+        print(f"- **{level}** {safe(tag)}: {safe(msg)}")
     raise SystemExit(1 if counts["ERROR"] else 0)
 
 
