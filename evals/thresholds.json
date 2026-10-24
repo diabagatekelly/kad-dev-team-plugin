@@ -416,6 +416,25 @@
       "design-system"
     ]
   },
+  "external-review-triage-cancel-hold": {
+    "score": 0.905,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.304",
+    "source": "results/gate-20261024T215121-external-review-triage-cancel-hold.json",
+    "graders": {
+      "declines-the-wrong-and-the-cosmetic": 1.0,
+      "defers-out-of-slice-and-resolves-the-fixed": 0.667,
+      "fixes-the-missed-defect": 1.0,
+      "hands-back-counts-and-path": 0.667,
+      "report-written": 1.0,
+      "skill-invoked": 1.0,
+      "writes-only-the-report": 1.0
+    },
+    "skills_invoked": [
+      "external-review-triage"
+    ]
+  },
   "library-app-catalog-review": {
     "score": 1.0,
     "runs": 3,
@@ -1870,6 +1889,26 @@
       "test-quality-review"
     ]
   },
+  "tdd-implementation-chunk-plan": {
+    "score": 0.857,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.304",
+    "source": "results/gate-20261024T215121-tdd-implementation-chunk-plan.json",
+    "graders": {
+      "consults-map-query": 1.0,
+      "plan-has-the-shape": 0.667,
+      "plan-is-vertical-and-inside-the-slice": 0.333,
+      "report-written": 1.0,
+      "skill-invoked": 1.0,
+      "stops-after-the-plan": 1.0,
+      "writes-only-the-report": 1.0
+    },
+    "skills_invoked": [
+      "map-query",
+      "tdd-implementation"
+    ]
+  },
   "tdd-implementation-lite-cancel-hold": {
     "score": 0.951,
     "runs": 3,
@@ -1958,6 +1997,26 @@
       "why-comments"
     ]
   },
+  "tdd-implementation-lite-chunk-plan": {
+    "score": 0.857,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.304",
+    "source": "results/gate-20261024T215121-tdd-implementation-lite-chunk-plan.json",
+    "graders": {
+      "consults-map-query": 1.0,
+      "plan-has-the-shape": 0.667,
+      "plan-is-vertical-and-inside-the-slice": 0.333,
+      "report-written": 1.0,
+      "skill-invoked": 1.0,
+      "stops-after-the-plan": 1.0,
+      "writes-only-the-report": 1.0
+    },
+    "skills_invoked": [
+      "map-query",
+      "tdd-implementation-lite"
+    ]
+  },
   "tdd-implementation-lite-named-fix": {
     "score": 1.0,
     "runs": 3,
@@ -2018,6 +2077,33 @@
       "map-query",
       "reliability-review",
       "security-review",
+      "tdd-implementation",
+      "test-quality-review"
+    ]
+  },
+  "tdd-implementation-one-chunk": {
+    "score": 0.974,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.304",
+    "source": "results/gate-20261024T215121-tdd-implementation-one-chunk.json",
+    "graders": {
+      "builds-this-chunk-and-not-chunk-two": 1.0,
+      "commits": 1.0,
+      "last-test-run-green": 1.0,
+      "no-bash-writes": 0.667,
+      "no-push-amend-rebase-or-add-all": 1.0,
+      "one-commit-titled-as-the-chunk": 1.0,
+      "red-then-green-seen": 1.0,
+      "report-section-appended-plan-untouched": 1.0,
+      "runs-the-tests": 1.0,
+      "skill-before-any-edit": 1.0,
+      "skill-invoked": 1.0,
+      "tests-cover-this-chunk-only": 1.0,
+      "touches-only-the-chunk-files": 1.0
+    },
+    "skills_invoked": [
+      "map-query",
       "tdd-implementation",
       "test-quality-review"
     ]

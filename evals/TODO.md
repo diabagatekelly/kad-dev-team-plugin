@@ -3000,10 +3000,17 @@ The quarantine flow was retired for the chunk loop
 without the orchestrator's real launches and were built, the rest are
 proven by real runs the way the quarantine flow was (H6, I).
 
-- [ ] J1. `tdd-implementation-chunk-plan` and `tdd-implementation-lite-chunk-plan`
-      (§8.1): the B step through the implementer, three to eight vertical
-      chunks with the five lines, `map-query` consulted, nothing built.
-      Run, record bars.
+- [x] J1. `tdd-implementation-chunk-plan` and `tdd-implementation-lite-chunk-plan`
+      (§8.1): the B step through the implementer, vertical chunks with the
+      five lines, `map-query` consulted, nothing built. Done 2026-10-24
+      after five calibration runs (the README rows have the account): the
+      chunk floor, the Title line, named tests and the gap line were skill
+      fixes; prose around the entries, the folded or separate
+      unreachable-queue chunk and two-word Touches were grader fixes. Bars
+      recorded at 0.86 each from `results/gate-20261024T215121`; the
+      remaining losses are the Sonnet judge flipping on plans that read
+      like the passing ones (`rejudge.py --explain` passes them), so a bar
+      below 1.0 is the honest measurement.
 - [x] J2. `tdd-implementation-one-chunk` (§8.2): chunk 1 of a planted
       three-chunk plan in a git repository on the slice branch; one commit
       titled as the chunk with the report section in it, chunk 2 (a
@@ -3031,8 +3038,15 @@ proven by real runs the way the quarantine flow was (H6, I).
       and the sidecar) and the audit repository. §8.6 (sandbox opt-out)
       has no way to force `sandbox_check.py` to exit 2 inside the Linux
       eval sandbox; the Windows real runs exercise it.
-- [ ] J5. Re-record the 34 cases the v3 edits reach (the orchestrator's,
+- [x] J5. Re-record the 34 cases the v3 edits reach (the orchestrator's,
       the tdd skills', `code-reviewer`'s through its third skill, and
       `test-quality-review`'s consults); the two routing cases
       `orchestrator-route-implementation(-prenamed)` were rewritten for
-      the A step and may move. Run.
+      the A step and may move. Done 2026-10-24: `eval_gate.py --stale`
+      over the 38 affected cases, 33 at bar in one pass
+      (`results/gate-20261024T205716-*`), the two routing cases 1.00; five
+      errored on the subscription's session limit and passed when re-run
+      after it reset (`gate-20261024T21*`: `orchestrator-backward-route`,
+      `tdd-implementation-cancel-hold`, `tdd-implementation-named-fix`,
+      `why-comments-collect-fine` 1.00, `tdd-implementation-lite-named-fix`
+      0.96 over its three-run re-run, inside tolerance). No bar moved.
