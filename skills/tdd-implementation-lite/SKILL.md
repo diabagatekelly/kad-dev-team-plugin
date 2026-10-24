@@ -58,17 +58,21 @@ A chunk is one commit's worth of the slice: a behaviour the slice's
 criteria name, delivered end to end with its tests, buildable in one short
 agent session. The plan is the ordered list of them, written under a
 `## Chunk plan` heading in the implementation report (the path the task
-gives) before any code exists. Four to eight chunks: fewer means chunks too
-big to review in one sitting, more means they are not behaviours.
+gives) before any code exists. One chunk per behaviour, usually three to
+eight: a chunk that would not fit one short session is split, and a count
+padded to reach a number is not a plan.
 
-Each chunk has five lines:
+Each chunk is a `### Chunk <k>` heading (the number alone; the section the
+builder appends later is `### Chunk <k>: <title>`) followed by exactly
+these five lines, each a bullet, the Title among them:
 
 - **Title**: the commit subject, imperative, under 60 characters
   ("Record posted transactions only").
 - **Delivers**: the acceptance and runtime-safety criteria it makes pass,
-  by their identifiers in the slice and criteria documents, verbatim. A
-  chunk with no criterion is plumbing; it belongs inside the chunk whose
-  behaviour needs it.
+  by their identifiers in the slice and criteria documents, verbatim; when
+  a document numbers nothing, quote the criterion's text. A chunk with no
+  criterion is plumbing; it belongs inside the chunk whose behaviour needs
+  it.
 - **Files**: every file it creates or changes, tests included. This is the
   gate's allowed list for the chunk; a file not named here is a plan
   deviation the gate flags.
@@ -81,7 +85,11 @@ Rules:
 
 - Vertical, not layered. "All the types, then all the tests, then the UI"
   is three layers, not three chunks; each chunk crosses every layer its
-  behaviour needs.
+  behaviour needs. A chunk whose Files are tests alone is a layer. A
+  criterion that already holds once an earlier chunk is built (a second
+  cancel being a rejection follows from a missing hold being one) is not a
+  chunk of its own: its test goes in that earlier chunk's Done when and the
+  criterion in its Delivers.
 - The first chunk is the thin path's smallest observable step, and it
   carries the project's wiring (runner, config, entry point) when none
   exists yet.

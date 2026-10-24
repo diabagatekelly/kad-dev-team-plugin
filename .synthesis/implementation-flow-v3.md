@@ -107,8 +107,10 @@ Launch one implementer agent (`kad-dev-team:tdd-coach:AGENT`, `model:
 the design, the criteria documents, the screen design if UI-touching, and
 the unit's read context by path; consult `map-query`; write the **chunk
 plan** into `planning/implementation-report-slice-<nnn>.md` and stop,
-building nothing. The chunk plan is an ordered list of four to eight
-chunks, each with:
+building nothing. The chunk plan is an ordered list of three to eight
+chunks (four to eight until the first run on 2026-10-24, where the floor
+of four made every planner pad the plan with a test-only chunk), each
+with:
 
 - a title (the commit's subject line, imperative, under 60 characters);
 - the behaviour it delivers, as the acceptance or runtime-safety criteria
@@ -602,7 +604,7 @@ that found the Criticals last time.
 
 ## 8. Eval cases to build after the skills land
 
-1. Chunk plan: the plan is vertical, four to eight entries, each with
+1. Chunk plan: the plan is vertical, three to eight entries, each with
    criteria, files and a done check; a plan of "types, then tests, then
    UI" fails.
 2. One chunk only: an implementer handed chunk 2 does not build chunk 3's

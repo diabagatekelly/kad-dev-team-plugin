@@ -438,9 +438,10 @@ line saying the orchestrator reviews the result. Nothing about chunks
 being committed yet: this agent commits nothing. Wait for it.
 
 When it returns, check the plan mechanically and nothing else: the file
-has a `## Chunk plan` heading with four to eight chunks; every chunk has a
+has a `## Chunk plan` heading with three to eight chunks; every chunk has a
 Title, Delivers, Files, Done when and Touches line; every Delivers names
-at least one criterion identifier and every Files at least one path; no
+at least one criterion (an identifier, or the criterion's text quoted when
+the document numbers nothing) and every Files at least one path; no
 path is outside the slice's module directories as the design names them,
 the project's test directory, the root configuration files, or the report.
 A plan that fails a check goes back once to a fresh planner with the

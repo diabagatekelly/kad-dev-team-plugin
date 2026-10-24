@@ -8,6 +8,11 @@ bash "$here/../fixtures/library-app/scaffold.sh"
 mkdir -p docs/cancel-hold
 cp -R "$here/../fixtures/library-app/route-plants/cancel-hold/." docs/cancel-hold/
 cp -R "$here/../fixtures/library-app/code-plants/chunk/." .
+# The in-place test runner the tdd cases plant (`npm test` runs the .ts
+# tests without a build); without it every implementer spends its turns
+# inventing one, and the test-run graders cannot see those runs.
+cp "$here/../fixtures/library-app/code-plants/tdd/package.json" package.json
+cp "$here/../fixtures/library-app/code-plants/tdd/test/ts-resolve.mjs" test/ts-resolve.mjs
 git init -q
 git config user.name "library-app"
 git config user.email "library-app@example.test"
