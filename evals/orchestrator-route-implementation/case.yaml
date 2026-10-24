@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: orchestrator-route-implementation
-description: "Routing, one row of the orchestrator's table: the same slice in the library app, which has a stack: routes to tdd-implementation (directly or through the quarantine flow, which is not exercised here), not technology-bootstrap."
+description: "Routing, one row of the orchestrator's table: the same slice in the library app, which has a stack: routes to tdd-implementation (through the chunk loop, which is not exercised past its first question here), not technology-bootstrap."
 tags: [orchestrator, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -25,9 +25,9 @@ graders:
       path: docs/cancel-hold/orchestrator-log.md
     weight: 1
     criteria: |
-      The cancel-hold slice is fully specified (design approved, security and reliability criteria filled, not UI-touching) and the library app already has a stack, so the next step is `tdd-coach:tdd-implementation`. The orchestrator reaches it either directly or through its quarantine flow (candidates built in worktrees, then graded and combined).
+      The cancel-hold slice is fully specified (design approved, security and reliability criteria filled, not UI-touching) and the library app already has a stack, so the next step is `tdd-coach:tdd-implementation`. The orchestrator reaches it only through its chunk loop (a sandbox check, a policy question, a slice branch, then one implementer per chunk with a gate and reviewers per commit).
 
-      PASS if the log routes this slice to tdd-implementation, directly or through the quarantine flow, and the entry has an artifact line: a path under `docs/cancel-hold/` or the project's source, or the template's own "see sub-entries below". "Routed to: quarantine flow" is that route whether or not the entry names tdd-implementation, since the quarantine flow is the orchestrator's procedure for that one row; the entry's heading may be the template's "slice ready for implementation" or the row's own description in the orchestrator's words (a design doc, runtime-safety criteria filled, a stack, not yet implemented), and either heading is correct. The entry is written before the routed step runs, so when the run stops to ask whether to go ahead, the sub-entries are not there yet and "see sub-entries below" on its own is the correct line; if the flow did run, its sub-entries (quarantine, grade, combine, finalize, re-grade) follow. An entry with a heading and a destination but no artifact line at all fails.
+      PASS if the log routes this slice to tdd-implementation, directly or as "chunk loop", and the entry has an artifact line: a path under `docs/cancel-hold/` or the project's source, or the template's own "see sub-entries below". "Routed to: chunk loop" is that route whether or not the entry names tdd-implementation, since the chunk loop is the orchestrator's procedure for that one row; the entry's heading may be the template's "slice ready for implementation" or the row's own description in the orchestrator's words (a design doc, runtime-safety criteria filled, a stack, not yet implemented), and either heading is correct. The entry is written before the routed step runs, so when the run stops at the sandbox check or the policy question, the sub-entries are not there yet and "see sub-entries below" on its own is the correct line; if the loop got further, its A line (sandbox, policy, branch, base) follows. An entry with a heading and a destination but no artifact line at all fails.
 
       FAIL if it routes to technology-bootstrap or anything else, or the log has no routing entry.
   - type: tool_used
@@ -50,8 +50,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The orchestrator executes exactly one routed step per invocation and never chains. Here the row is `tdd-coach:tdd-implementation`, whose procedure is the quarantine flow (two candidates built by async agents in worktrees, then graded and combined). This session grants no `Agent` tool, so the flow may not be launchable.
+      The orchestrator executes exactly one routed step per invocation and never chains. Here the row is `tdd-coach:tdd-implementation`, whose procedure is the chunk loop: a sandbox check first, then one question about the implementation policy (heavy or lite), then a slice branch and one implementer agent per chunk. This session grants no `Agent` tool and no shell, so the loop may not be launchable.
 
-      PASS if the response, having routed there, ends with a stop: it asks whether to go ahead with the quarantine flow (its cost, or whether the slice is already built, or which implementation policy to run: heavy, lite or compare), or reports that the flow could not be launched here and what would be needed, or reports the flow's outcome and asks whether to continue. In every case no other stage's work is produced.
+      PASS if the response, having routed there, ends with a stop: it reports the sandbox check's result or that it could not be run here, or asks whether to continue unsandboxed, or asks which implementation policy to run (heavy or lite), or reports that the loop could not be launched here and what would be needed, or reports the loop's outcome and asks whether to continue. In every case no other stage's work is produced.
 
-      FAIL if it writes the slice's code itself inline instead of the flow, routes to technology-bootstrap or another stage, or moves on to the next scope-map step.
+      FAIL if it writes the slice's code itself inline instead of the loop, routes to technology-bootstrap or another stage, or moves on to the next scope-map step.

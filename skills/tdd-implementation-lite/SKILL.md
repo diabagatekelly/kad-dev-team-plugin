@@ -1,6 +1,6 @@
 ---
 name: tdd-implementation-lite
-description: The implementation contract of tdd-implementation as test-first with verification rather than TDD — tests before the code, seen failing on their own assertions, then shown to catch a break, with the loop between left to the model — plus what it owns and what it doesn't, where things go, how a gap in the design is handled, what the report holds. Invoke it only when a task names it by this name — the orchestrator's quarantine flow under its lite or compare policy, or a user asking for "tdd-implementation-lite" in so many words. A plain "build it", "implement this" or "apply this fix" is tdd-implementation's, and a stage guessed at in passing ("if the next step is the implementation, go ahead") is orchestrator's.
+description: The implementation contract of tdd-implementation as test-first with verification rather than TDD — tests before the code, seen failing on their own assertions, then shown to catch a break, with the loop between left to the model — plus what it owns and what it doesn't, where things go, how a gap in the design is handled, what the report holds. Invoke it only when a task names it by this name — the orchestrator's chunk loop under its lite policy (once to write a slice's chunk plan, then once per chunk to build and commit it), or a user asking for "tdd-implementation-lite" in so many words. A plain "build it", "implement this" or "apply this fix" is tdd-implementation's, and a stage guessed at in passing ("if the next step is the implementation, go ahead") is orchestrator's.
 ---
 
 # TDD Implementation, lite
@@ -29,6 +29,114 @@ instructions you were given are the design.
 You don't decide what capability gets built (`product-manager` /
 `product-slicer`), how the slice is structured (`architecture-design`), or
 what a screen looks like (`ux-designer`). You implement.
+
+## How you're invoked: a whole slice, a chunk plan, one chunk, or a fix
+
+The task tells you which of four things it wants; the sections below say
+which apply to each.
+
+- **A whole slice** ("build it", a design doc and criteria, no chunk
+  named): everything below, start to finish.
+- **The chunk plan** (the task says to write the chunk plan and build
+  nothing): read the documents, consult `map-query`, write the plan into
+  the implementation report as "The chunk plan" says, and stop. No test,
+  no code, no stub.
+- **One chunk** (the task names a chunk of an existing plan): build that
+  chunk alone as "Building one chunk" says, commit it as "Committing a
+  chunk" says, append its report section, and stop.
+- **A named fix** (a reviewer's finding handed back): "Applying a fix
+  handed back from review", committed the same way when the task says
+  chunks are committed.
+
+The orchestrator's chunk loop uses the middle two and the fix. Its task
+says that it reviews the result, so the final review is skipped, and that
+chunks are committed, so the commit step applies.
+
+## The chunk plan
+
+A chunk is one commit's worth of the slice: a behaviour the slice's
+criteria name, delivered end to end with its tests, buildable in one short
+agent session. The plan is the ordered list of them, written under a
+`## Chunk plan` heading in the implementation report (the path the task
+gives) before any code exists. Four to eight chunks: fewer means chunks too
+big to review in one sitting, more means they are not behaviours.
+
+Each chunk has five lines:
+
+- **Title**: the commit subject, imperative, under 60 characters
+  ("Record posted transactions only").
+- **Delivers**: the acceptance and runtime-safety criteria it makes pass,
+  by their identifiers in the slice and criteria documents, verbatim. A
+  chunk with no criterion is plumbing; it belongs inside the chunk whose
+  behaviour needs it.
+- **Files**: every file it creates or changes, tests included. This is the
+  gate's allowed list for the chunk; a file not named here is a plan
+  deviation the gate flags.
+- **Done when**: the test names that must be green, plus anything runnable
+  that shows the behaviour (a route answers, a screen renders).
+- **Touches**: which of adapter or secret, HTTP, storage, error handling,
+  UI, or none. The orchestrator picks the chunk's reviewers from this.
+
+Rules:
+
+- Vertical, not layered. "All the types, then all the tests, then the UI"
+  is three layers, not three chunks; each chunk crosses every layer its
+  behaviour needs.
+- The first chunk is the thin path's smallest observable step, and it
+  carries the project's wiring (runner, config, entry point) when none
+  exists yet.
+- Order by dependency, then by the design's importance ordering: the
+  highest-harm behaviour early, while the suite is small.
+- A chunk fits one short session: under about forty test runs under this
+  skill. Split one that would not.
+- A gap in the design is not planned around. Escalate it as "Gaps in the
+  design" says, put the chunk that depends on it last, and name the gap in
+  that chunk's entry.
+- Consult `map-query` before planning, at the implementation level, so a
+  chunk reuses what exists instead of planning a duplicate.
+
+Then stop. The orchestrator checks the plan mechanically (it exists, every
+chunk names a criterion and a file, no file is outside the slice's modules)
+and launches the first chunk's build as a new task; you will not be the one
+building it.
+
+## Building one chunk
+
+The task names the chunk and the report's path. Read the chunk's entry,
+the report's earlier chunk sections (the handover from whoever built them;
+their code is in the tree), the slice documents the task names, and
+nothing else about the unit.
+
+- The tests come from the chunk's **Delivers** criteria and nothing else.
+  The next chunk's behaviour waits for the next chunk, even when it is one
+  line and you can see it coming.
+- Stop when **Done when** holds and the full suite is green. Not before,
+  not after.
+- A file you needed that **Files** does not name: create it, and record it
+  in your report section as a deviation with one line of why. The gate
+  judges it; don't edit the plan.
+- A gap the plan did not foresee is escalated as always; the chunk ships
+  without the behaviour that depends on it, and the report says so.
+
+## Committing a chunk
+
+When the task says chunks are committed (the orchestrator's chunk loop
+does), the chunk ends with one commit on the current branch:
+
+1. Run the full suite once more. The last run before the commit is green.
+2. `git add` each file by name: the chunk's **Files**, any deviation, and
+   the implementation report. Never `git add -A`, `.`, or a directory.
+3. `git commit` with the chunk's title as the subject and a body of three
+   parts, one line per item: `Delivers:` the criteria made green;
+   `Decided:` each small gap you filled and your choice; `Deviation:` each
+   file outside the plan and why. No trailers of your own.
+4. Never push, amend, rebase, switch branches, or touch another chunk's
+   files. A fix handed back later is its own commit by whoever applies it.
+
+Invoked without that line (a direct "build it"), the old rule holds: commit
+only when the project already commits as part of this work or the task
+asks, and then the failing test and its implementation as separate, ordered
+commits. Don't invent a commit discipline the project hasn't asked for.
 
 ## Build it test-first, verified, for real
 
@@ -152,8 +260,9 @@ new one, one port or two, who owns it) is a fork escalated to
 
 When the goal is complete (and after a handed-back fix too), review the
 whole change once before reporting. Skip this only when your task says
-`orchestrator` will review the result: its quarantine flow runs the same
-reviewers on every candidate, and running them twice wastes the work.
+`orchestrator` will review the result: its chunk loop runs separate
+reviewers on every committed chunk and on the whole slice, and running them
+twice wastes the work.
 
 Otherwise: list the files you changed and confirm each is inside the slice
 (or the fix named), the design doc and other stages' documents are
@@ -182,6 +291,25 @@ diff. Then the final review above, unless your task says `orchestrator`
 grades it.
 
 ## Reporting
+
+**Under the chunk loop** the report is the slice's one report: the plan
+under `## Chunk plan`, then one section per chunk, appended by the agent
+that built it, five to ten lines:
+
+```markdown
+### Chunk <k>: <title>
+- **Built**: <files>, one line
+- **Decided**: <gap>: <choice>, one line each
+- **Escalated**: <gap>, who owns it, one line each (or "none")
+- **Deviation**: <file>: <why>, one line each (or "none")
+- **Commit**: <short sha>; <n> tests green
+```
+
+A fix applied under the loop appends one line to that chunk's section:
+`- **Fix r<i>**: <short sha>; <finding titles>`. Nothing else goes in the
+report: the rounds' detail is the orchestrator's own record, and a
+reviewer's findings live in the reviewer's file. Invoked for a whole slice,
+report in the shape below.
 
 State, in this shape:
 

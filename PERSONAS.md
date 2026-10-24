@@ -129,63 +129,60 @@ every other row, since v1's routing is sequential by construction, not
 because every persona it invokes requires it.
 
 **`tdd-coach:tdd-implementation` is the one row that genuinely doesn't
-execute inline — the quarantine/grade/combine/finalize flow, wired in and
-running by default, not deferred.** A sandbox check
-(`skills/orchestrator/scripts/sandbox_check.py`) runs before every step
-that launches agents, and nothing launches without its `PASS`: the plugin
-cannot ship the settings that fence an unattended code writer, so the
-script probes the session's own Bash sandbox from inside it (a write
-outside the project refused with the sandbox's own error, no direct
-network route, no credential in the environment, the machine's credential
-files unreadable from the shell, named in the deny list and denied to the
-Read tool whether or not they exist yet) and reads the escape hatches off
-in the settings; on a failed check the orchestrator asks once and writes
-the block into the session's user settings with `--write-settings`, then
-re-checks. The orchestrator asks once per slice which implementation
-policy to run — heavy (both candidates on `tdd-implementation`, the
-default), lite (both on `tdd-implementation-lite`) or compare (one each,
-with the read context held equal so the discipline is the one variable)
-— and records it on the log's A line. Then two isolated implementer
-instances (real async `Agent` calls, `isolation: "worktree"`) build the
-same slice blind to each other — under heavy and lite, one reading the
-slice's own documents alone, the other the whole unit (requirements,
-slice set, every design; the map both reach through `map-query`) as read
-context, always that way round and with the same deliver-only-this-slice
-line on both, so the two aren't correlated copies and the judge's reasons
-across slices say what the wider read is worth (under compare, what the
-prescribed discipline is worth); a mechanical validation gate
-(`skills/orchestrator/scripts/validation_gate.py`: full suite green, every
-changed file inside the slice's allowed paths, the design and other
-stages' documents untouched, per-file coverage on Node) runs on each
-candidate first and drops one that fails it before any reviewer is spent
-on it, and again on the finalized build before the map is persisted;
-every applicable reviewer then grades each surviving
-candidate independently in parallel (`tdd-coach:test-quality-review`,
-`architecture-review`, `devsecops-engineer:security-review`,
-`devsecops-engineer:reliability-review`, and `accessibility-engineer:accessibility-review`
-if UI-touching); a blind pairwise judge
-(`skills/orchestrator/scripts/pairwise_judge.py`: both candidates' change
-sets unlabelled, both presentation orders, every reason kept; the script
-renders the two prompts and two read-only `pairwise-judge` agents answer
-them, one per order, their replies saved by `orchestrator`, because the
-session sandbox the flow requires blocks a nested `claude -p` from the
-API, which the first real run found) gives its
-verdict before `orchestrator` reads either candidate; `orchestrator` itself
-then makes the one accountable combine call, inline, with that verdict in
-hand rather than instead of it — following it in a line or naming which of
-the judge's reasons it sets aside; a third, fresh instance regenerates the implementation
-independently from that call rather than patching either candidate; the
-same reviewers then grade that finalized build in full — new code no
-reviewer has read, whose instance skipped its own final review for exactly
-this — with Critical and High handed back once as named fixes, the gate
-re-run after, and the combine brief's findings checked pass/fail alongside.
-Full procedure in `skills/orchestrator/SKILL.md`'s own "Quarantine, grade,
-combine" section. **Runs on every slice, no opt-in/opt-out judgment
-call** — no signal in this roster's pipeline reliably predicts
-implementation risk, and `product-slicer` already bounds the cost by
-keeping each unit at the smallest shippable slice; a user who wants a
-specific slice built without it says so directly, that's not a call this
-skill makes on its own.
+execute inline — it runs the chunk loop (v3, 2026-10-24), wired in and
+running by default.** The sandbox check
+(`skills/orchestrator/scripts/sandbox_check.py`) runs first, before any
+question, and before every launch after that: the plugin cannot ship the
+settings that fence an unattended code writer, so the script probes the
+session's own Bash sandbox from inside it and reads the escape hatches off
+in the settings; a fixable failure gets the `--write-settings` offer, and a
+platform with no sandbox at all (native Windows) gets one question,
+continue unsandboxed or stop, whose answer the log's A line carries. The
+orchestrator then asks once per slice which skill builds every chunk, heavy
+(`tdd-implementation`, the default) or lite (`tdd-implementation-lite`),
+cuts a slice branch and records the base commit. One implementer
+(launched with `model: sonnet`, since a plugin agent's own `model:` line
+is not applied in practice) writes the chunk plan into the implementation
+report, four to eight vertical chunks, each with its criteria, files, done
+check and reviewer territories; then for each chunk a fresh implementer
+builds it on a short context and commits it under the chunk's title, the
+mechanical gate (`validation_gate.py`: suite green, scope against the
+chunk's planned files, protected documents, coverage) runs on the commit
+range, and the chunk's reviewers (`model: opus`; test-quality, code and
+architecture always, security, reliability and accessibility by territory)
+read the diff and write their reports to files, handing back counts. Every
+Critical, High and Medium goes to a fresh fixer, the gate and the chunk's
+reviewers run again on the fix, until a round is clean, capped at five
+rounds; each new finding is classified regression or pre-existing and every
+round is recorded in a sidecar for the audit; a standing Critical or High
+after the cap stops the loop for the user, Lows are listed. At the end the
+map is regenerated and all six reviewers read the whole slice diff with the
+same fix rounds; then `release-engineer:delivery` pushes the branch, opens
+the pull request (body by `pr-writeup`) without asking, files Lows and
+standing Mediums as issues in the recorded tracker, has
+`code-reviewer:external-review-triage` judge the external reviewer's
+comments (fix, decline with a reply, defer to an issue, up to five rounds),
+writes CI on the first delivery that finds none (`ci-pipeline`), and syncs
+the audit material to the audit repository when one is configured. Full
+procedure in `skills/orchestrator/SKILL.md`'s own "The chunk loop" section;
+the design and the evidence behind it in `.synthesis/implementation-flow-v3.md`.
+**Runs on every slice, no opt-in/opt-out judgment call** — no signal in
+this roster's pipeline reliably predicts implementation risk, and
+`product-slicer` already bounds the cost by keeping each unit at the
+smallest shippable slice; a user who wants a specific slice built without
+it says so directly, that's not a call this skill makes on its own.
+
+**Why v2 (two candidates in worktrees, a blind pairwise judge, a combine
+brief, a fresh finalize instance, a full re-grade) was retired.** The first
+real run (personal-finance-tracker slice 1, 2026-10-19/20, reviewed
+2026-10-24) showed the token sink was two heavy-loop instances whose
+context grew to 788k tokens, not the reviewers; the judge was pure position
+bias, each order preferring the implementation shown first; the second,
+lite candidate was cheap and useful as an idea source but not worth a
+judge; the one 79-file commit followed from the no-commit rule plus the
+HEAD-based gate baseline; and the orchestrator's own briefs and digests
+produced four of its errors. The chunk is the unit of build, validate,
+commit and context reset; that one change answers all of them.
 
 **v1 scope**: sequential stage routing across the full spine as it stands
 today (problem-framing-doc → scope-map → requirements-refinement → slicing
@@ -195,15 +192,16 @@ accessibility-review → technology-bootstrap → tdd-coach:tdd-implementation),
 one step at a time, human checkpoint after each — and a hard stop once a
 slice is designed, its runtime-safety criteria are filled, its screen
 designed and accessibility criteria filled if UI-touching, the project has
-a stack to build on, and the slice has been implemented and graded (via the
-quarantine flow above, `code-reviewer` now included in its Grade step
-alongside every other applicable reviewer).
+a stack to build on, and the slice has been implemented, reviewed chunk by
+chunk and whole, and delivered as a pull request (via the chunk loop above,
+`code-reviewer` among its reviewers).
 `devsecops-engineer`'s four review/posture skills, `code-reviewer`, and
 `tdd-coach:test-quality-review` sit outside this spine entirely: they run
 against code, a test file, or a repo that already exists, which most of
 the spine never reaches (`test-quality-review` also runs inline inside
-`tdd-implementation`'s own loop, and again — alongside `code-reviewer` —
-inside the quarantine flow's Grade step, none of which is a spine stage).
+`tdd-implementation`'s own loop as a self-check, and again — alongside
+`code-reviewer` — as one of the chunk loop's reviewers, none of which is a
+spine stage).
 Never cascades to the next scope-map step
 automatically — each unit of work needs design/implementation before the
 next one's shape gets decided, the same reason CAMS's own per-slice
@@ -269,13 +267,16 @@ All four of `devsecops-engineer`'s review skills also sit outside the
 orchestrator spine regardless of the above (event-triggered, hand off
 only if the user asks) — so even the partial coverage that does exist
 (operational-readiness's review of an *existing* path, once one's been
-set up some other way) doesn't run automatically today. Whether these
-become new roster surface, an extension of an existing persona's
-now-explicit boundary, or a deliberately-left-out gap is not decided.
-Holding until after a real end-to-end dogfood run, now that `code-reviewer`
-is built — the actual shape of what's missing will be clearer once a real
-slice has gone all the way through the spine and someone has to answer
-"now what" for real, instead of reasoning about it in the abstract.
+set up some other way) doesn't run automatically today. Decided after the first real end-to-end run (2026-10-24): gaps 1 to 3
+become a new persona, `release-engineer`, because `devsecops-engineer`'s
+"never writes pipeline config" boundary is held on purpose. Committing (1)
+is the chunk loop's own mechanics (one commit per chunk, by the
+implementer); pushing, the pull request, issue filing and external-review
+triage are `release-engineer:delivery`; CI configuration (3) is
+`release-engineer:ci-pipeline`, written inside the first delivery that
+finds none; repository creation (2) and deployment are phase 2
+(`repo-bootstrap`, `deployment`). Gap 4, infrastructure security, stays
+open until a deployment exists to review.
 
 ## Deferred / phase-2 ideas
 

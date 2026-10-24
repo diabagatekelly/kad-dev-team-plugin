@@ -53,10 +53,11 @@ that is what this design avoids. `tools/pairwise_judge.py` adds what the
 CLI lacks: a blind side-by-side judge that sees the with-plugin and
 no-plugin reviews unlabelled in both orders and records its reasoning in
 `pairwise.json` (the CLI's judges answer PASS/FAIL in one word and keep no
-reasons). The judge itself lives in the plugin
-(`skills/orchestrator/scripts/pairwise_judge.py`, where the orchestrator's
-Combine step runs it on two implementation candidates); this tool imports
-it and adds the review rubric and the results-dir plumbing.
+reasons). The judge itself is
+`tools/implementation_judge.py` (the orchestrator's Combine-step judge
+until the chunk loop replaced that flow on 2026-10-24; kept here because
+these tools and the heavy-against-lite comparison still use it); this tool
+imports it and adds the review rubric and the results-dir plumbing.
 `tools/compare_arms.py` does the same between two arms of one tdd case:
 the slice built by `tdd-implementation` against the same slice built by
 `tdd-implementation-lite` (G2's measurement, since G1 left the bars at the

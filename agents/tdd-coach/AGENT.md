@@ -38,14 +38,16 @@ No AskUserQuestion here — ambiguity escalates to the owning persona rather tha
 </commentary>
 </example>
 
-model: sonnet
+model: sonnet # documentation only: the orchestrator passes `model` on every launch (sonnet for implementer and fixer), since a plugin agent's model line is not applied in practice
+maxTurns: 120 # one chunk, or one fix batch, per launch; the orchestrator's stall rule acts when this is hit with no commit (the first real slice: 65 turns for a whole lite slice, 254 for heavy)
+autoCompactWindow: 200000 # backstop; a chunk should end long before this
 color: yellow
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Skill"]
 skills:
   - kad-dev-team:tdd-implementation
   - kad-dev-team:tdd-implementation-lite
   - kad-dev-team:test-quality-review
-background: true # neither skill blocks on AskUserQuestion — a gap in the design escalates to whichever persona owns that decision instead of asking live. This is the precondition PERSONAS.md's "Orchestrator v2" quarantine/grade/combine flow needs: two isolated tdd-implementation instances, launched as real async Agent calls, blind to each other.
+background: true # neither skill blocks on AskUserQuestion — a gap in the design escalates to whichever persona owns that decision instead of asking live. This is the precondition the orchestrator's chunk loop needs: a fresh implementer or fixer per chunk, launched as a real async Agent call, that never waits on the user.
 ---
 
 You turn an already-decided design into real, working code, and you check
