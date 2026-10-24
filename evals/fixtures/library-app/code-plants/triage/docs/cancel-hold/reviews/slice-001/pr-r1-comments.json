@@ -1,0 +1,42 @@
+[
+  {
+    "id": 2201,
+    "author": "sourcery-ai[bot]",
+    "path": "lending/cancel-hold.ts",
+    "line": 14,
+    "commit": "9b7e2c5",
+    "body": "**issue (bug_risk):** The arguments to `remove` are swapped. `HoldQueue.remove` takes the card number first and the ISBN second, so every cancel looks up the wrong hold and will always be rejected."
+  },
+  {
+    "id": 2202,
+    "author": "sourcery-ai[bot]",
+    "path": "lending/cancel-hold.ts",
+    "line": 15,
+    "commit": "9b7e2c5",
+    "body": "**issue (reliability):** Catching every error from the queue and returning `rejected` turns an unavailable queue into a member mistake. The caller cannot tell \"you have no hold\" from \"the queue is down\", and the second case is exactly what should reach the caller as a failure. Consider letting the error propagate (or returning a distinct failure status) and dropping the test that pins the current behaviour."
+  },
+  {
+    "id": 2203,
+    "author": "m-okafor",
+    "path": "lending/cancel-hold.ts",
+    "line": 22,
+    "commit": "9b7e2c5",
+    "body": "When the first hold in a title's queue is cancelled, the next member in line should be told their hold is now first. Can this reuse the reminder channels in notifications/? Otherwise staff will keep getting asked \"am I next yet\"."
+  },
+  {
+    "id": 2204,
+    "author": "sourcery-ai[bot]",
+    "path": "lending/cancel-hold.ts",
+    "line": 16,
+    "commit": "c81e3d7",
+    "body": "**suggestion (security):** The rejection reason interpolates the member's full card number into a message that will end up in logs and on screen. Mask it, for example to the last four digits."
+  },
+  {
+    "id": 2205,
+    "author": "sourcery-ai[bot]",
+    "path": "lending/cancel-hold.ts",
+    "line": 11,
+    "commit": "9b7e2c5",
+    "body": "**suggestion:** Consider renaming `run` to `execute`, which makes the use-case entry point clearer to readers coming from other codebases."
+  }
+]

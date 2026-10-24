@@ -6,8 +6,19 @@ transcripts audit mode kept for it, and prints a markdown report of:
 - format: sequence numbers in order with no gaps, every `## ` heading a
   numbered entry, exactly one Routed to and one Artifact line in every
   entry, the Artifact one path inside the project (no bare directory, no
-  "if"/"otherwise"/"or" outside a parenthetical), quarantine entries with
-  their A-E sub-entries in order;
+  "if"/"otherwise"/"or" outside a parenthetical), the implementation
+  entry (routed to the chunk loop, or to the quarantine flow in logs
+  written before 0.6.0) with its A-E sub-entries in order;
+- the chunk loop's own lines: the A line opens with the sandbox result and
+  names the policy, branch and base; one C line per chunk, numbered in
+  order and agreeing with B's count, each with commit hashes, a gate
+  result, the three reviewers that always run, a round 0 and one segment
+  per fix round (`r<i> fix <sha> → C/H/M/L (reg r, pre p)`), ending in
+  `clean r<i>` with a clean last round or `cap:` after five rounds; the
+  D and E lines the same way; and, when the A line's reviews directory
+  holds a `rounds-slice-<nnn>.jsonl` sidecar, its rounds per chunk against
+  the log's. One INFO per entry sums the rounds and the regression share,
+  the number the fix-rounds rule is to be judged on;
 - artifacts: each entry's path exists (relative to the log's directory, or
   the project), or else which files the transcripts show that stage
   writing instead;
@@ -20,8 +31,9 @@ transcripts audit mode kept for it, and prints a markdown report of:
   to the log (Write, Edit, or a shell redirect) only adds to its end;
 - log vs. calls (transcripts only): every spine skill called has an entry
   written before it in that session, each entry is followed by exactly one
-  call to its routed skill (a quarantine entry by any number of
-  implementer launches), and every entry was followed by its routed skill.
+  call to its routed skill (the implementation entry by any number of
+  implementer, reviewer, map, delivery and triage launches), and every
+  entry was followed by its routed skill.
 
 Read-only; nothing in the project is changed. Findings are marked ERROR
 (the rule is broken), WARN (worth reading) or INFO. Check a session
@@ -37,7 +49,7 @@ the Artifact-line rules are the current ones, so a log written under
 Usage: python3 -I evals/tools/orchestrator_log_check.py <project dir>
            [--log planning/orchestrator-log.md] [--skill path/to/SKILL.md]
            [--audit-dir ~/.claude/kad-audit | --transcript t.jsonl ...]
-           [--no-transcripts]
+           [--no-transcripts] [--sidecar path/to/rounds-slice-001.jsonl]
 Exits 1 when there is any ERROR.
 """
 import argparse
@@ -58,9 +70,16 @@ SKIPPABLE = {"scope-map", "design-system", "technology-bootstrap"}
 UI_ONLY = {"design-system", "screen-design", "accessibility-review"}
 # After a slice is implemented, the next unit starts again at requirements.
 RESTARTS = {"requirements-refinement"}
-QUARANTINE_STEPS = "ABCDE"
-# The persona that implements; its launches under a quarantine entry are many.
+LOOP_STEPS = "ABCDE"
+# The persona that implements; its launches under the implementation entry are many.
 IMPLEMENTERS = {"tdd-implementation", "tdd-implementation-lite", "tdd-coach"}
+# Skills the chunk loop calls under its one entry besides the implementers and the `*-review` skills.
+LOOP_SKILLS = {"map-update", "map-query", "pr-writeup", "delivery", "ci-pipeline", "external-review-triage"}
+REVIEWERS = {"tq": "test-quality", "co": "code", "ar": "architecture", "se": "security", "re": "reliability", "ac": "accessibility"}
+ALWAYS = {"tq", "co", "ar"}
+CAP = 5
+SHA = r"[0-9a-f]{7,40}"
+COUNTS = r"(\d+)/(\d+)/(\d+)/(\d+)"
 CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 
 
@@ -131,8 +150,17 @@ def parse_log(text):
     return entries, malformed
 
 
-def is_quarantine(entry):
-    return bool(entry and entry["routed"] and "quarantine" in entry["routed"].lower())
+def is_loop(entry):
+    """The implementation entry: routed to the chunk loop (0.6.0+) or the quarantine flow before it."""
+    low = (entry["routed"] or "").lower() if entry else ""
+    return "chunk loop" in low or "quarantine" in low
+
+
+def is_chunk_loop(entry):
+    return bool(entry and entry["routed"] and "chunk loop" in entry["routed"].lower())
+
+
+is_quarantine = is_loop  # the name the 0.5.0 checks used
 
 
 NONE = "none"  # an entry routed outside the spine ("none (user-directed)")
@@ -152,7 +180,7 @@ def route_rank(routed, table):
     """Index of the table row an entry routed to; NONE for an entry routed outside the spine;
     None if it names nothing in the table. The first skill named decides the row."""
     low = (routed or "").lower().strip()
-    if "quarantine" in low:
+    if "quarantine" in low or "chunk loop" in low:
         return next(i for i, (_, names) in enumerate(table) if "tdd-implementation" in names)
     if low.startswith(NONE):
         return NONE
@@ -206,9 +234,9 @@ def check_format(text, entries, malformed, findings):
         if not e["artifact"]:
             continue
         art = e["artifact"]
-        if is_quarantine(e):
+        if is_loop(e):
             if "see sub-entries below" not in art:
-                findings.append(("ERROR", tag, "quarantine entry's Artifact isn't `see sub-entries below`"))
+                findings.append(("ERROR", tag, "implementation entry's Artifact isn't `see sub-entries below`"))
             continue
         bare = outside_parens(art)
         paths = re.findall(r"`([^`]+)`", bare)
@@ -222,24 +250,234 @@ def check_format(text, entries, malformed, findings):
             findings.append(("ERROR", tag, f"Artifact is conditional or offers alternatives: {art}"))
 
 
-def check_quarantine(entries, findings):
+def rounds_of(text):
+    """The fix-round segments on a C, D or E line: [(round, sha, (C, H, M, L), reg, pre)]; reg/pre None when absent."""
+    out = []
+    for m in re.finditer(r"\br(\d+) fix\s+`?(" + SHA + r")`?\s*(?:→|->)\s*`?" + COUNTS + r"`?(?:\s*\(reg\s+`?(\d+)`?,\s*pre\s+`?(\d+)`?\))?", text):
+        out.append((int(m.group(1)), m.group(2), tuple(int(m.group(i)) for i in range(3, 7)),
+                    int(m.group(7)) if m.group(7) else None, int(m.group(8)) if m.group(8) else None))
+    return out
+
+
+def round0_of(text):
+    m = re.search(r"\br0\s+`?" + COUNTS + r"`?", text)
+    return tuple(int(m.group(i)) for i in range(1, 5)) if m else None
+
+
+def check_rounds(tag, what, text, findings):
+    """Round 0, the fix rounds and the ending on one line. Returns (rounds, regressions, pre-existing, cap hit)."""
+    r0 = round0_of(text)
+    rounds = rounds_of(text)
+    if r0 is None:
+        findings.append(("ERROR", tag, f"{what}: no `r0 C/H/M/L` round-0 counts"))
+    nums = [r[0] for r in rounds]
+    if nums != list(range(1, len(nums) + 1)):
+        findings.append(("ERROR", tag, f"{what}: fix rounds are not r1, r2, … in order: {', '.join('r%d' % n for n in nums) or 'none'}"))
+    if nums and max(nums) > CAP:
+        findings.append(("ERROR", tag, f"{what}: r{max(nums)} is past the cap of {CAP} rounds"))
+    reg = pre = 0
+    for n, _, counts, r, p in rounds:
+        if r is None:
+            findings.append(("WARN", tag, f"{what}: r{n} has no regression/pre-existing split"))
+        else:
+            reg, pre = reg + r, pre + p
+            if r + p != sum(counts[:3]):
+                findings.append(("WARN", tag, f"{what}: r{n} splits {r} + {p} but counts {sum(counts[:3])} Critical, High and Medium"))
+    ending = re.search(r"\b(clean r(\d+)|cap:)", text)
+    cap = False
+    if ending is None:
+        if r0 is not None and not re.search(r"gate\s+`?FAIL|stall:\s*`?ended", text):
+            findings.append(("ERROR", tag, f"{what}: doesn't say how the rounds ended (`clean r<i>` or `cap: <standing>`)"))
+    elif ending.group(1).startswith("clean"):
+        i = int(ending.group(2))
+        last = rounds[-1][2] if rounds else r0
+        if i != (nums[-1] if nums else 0):
+            findings.append(("ERROR", tag, f"{what}: says clean r{i} but the last round logged is r{nums[-1] if nums else 0}"))
+        elif last and sum(last[:3]) != 0:
+            findings.append(("ERROR", tag, f"{what}: says clean r{i} but that round logged {last[0]}/{last[1]}/{last[2]} Critical/High/Medium"))
+    else:
+        cap = True
+        if (nums[-1] if nums else 0) != CAP:
+            findings.append(("ERROR", tag, f"{what}: says cap but only {nums[-1] if nums else 0} fix rounds are logged, not {CAP}"))
+    return len(rounds), reg, pre, cap
+
+
+def reviewers_of(text):
+    m = re.search(r"reviewers\s+`?([a-z][a-z ]*)`?", text)
+    return m.group(1).split() if m else None
+
+
+def check_chunk_loop(e, findings):
+    """The chunk loop's A, B, C, D and E lines. Returns the sidecar path named on the A line, if any."""
+    tag, body = f"entry {e['n']}", e["body"]
+    a = re.search(r"^- \*\*A\. Start:\*\*(.*)$", body, re.M)
+    sidecar = None
+    steps = set(e["subs"])
+    if a:
+        text = a.group(1)
+        sb = re.search(r"sandbox\s*[—-]+\s*`?(PASS|none on|FAIL)", text)
+        if not sb:
+            findings.append(("ERROR", tag, "A line doesn't open with the sandbox result (PASS, none on <platform>, or FAIL)"))
+        elif sb.group(1) == "FAIL" and steps - {"A"}:
+            findings.append(("ERROR", tag, f"A line says the sandbox check failed, yet the flow went on to {', '.join(sorted(steps - {'A'}))}"))
+        elif sb.group(1) == "none on":
+            findings.append(("INFO", tag, "ran unsandboxed on a platform without a sandbox, by the owner's logged choice"))
+        if not re.search(r"policy\s*[—-]+\s*`?(heavy|lite)\b", text):
+            findings.append(("ERROR", tag, "A line doesn't name the policy (heavy or lite)"))
+        for part in ("branch", "base"):
+            if not re.search(part + r"\s*[—-]+\s*`?\S", text):
+                findings.append(("WARN", tag, f"A line has no {part}"))
+        m = re.search(r"reviews\s*[—-]+\s*`([^`]+)`", text)
+        sidecar = m.group(1) if m else None
+    b = re.search(r"^- \*\*B\. Plan:\*\*\s*`?(\d+)`? chunks", body, re.M)
+    planned = int(b.group(1)) if b else None
+    if "B" in steps and planned is None:
+        findings.append(("ERROR", tag, "B line doesn't open with the chunk count (`<k>` chunks)"))
+    c_lines = re.findall(r"^- \*\*C\. Chunk (\d+)/(\d+):\*\*(.*)$", body, re.M)
+    if "C" in steps and not c_lines:
+        findings.append(("ERROR", tag, "C lines are not in the `C. Chunk <k>/<n>:` form"))
+    ks = [int(k) for k, _, _ in c_lines]
+    if ks != list(range(1, len(ks) + 1)):
+        findings.append(("ERROR", tag, f"C lines are not chunk 1, 2, … in order: {', '.join(map(str, ks))}"))
+    ns = {int(n) for _, n, _ in c_lines}
+    if len(ns) > 1:
+        findings.append(("ERROR", tag, f"C lines disagree on the chunk count: {', '.join(map(str, sorted(ns)))}"))
+    elif ns and planned is not None and ns != {planned}:
+        findings.append(("ERROR", tag, f"C lines say {ns.pop()} chunks, B planned {planned}"))
+    total_rounds = reg = pre = caps = 0
+    chunks_logged = {}
+    for k, n, text in c_lines:
+        what = f"C chunk {k}"
+        if not re.search(r"commits\s+`?" + SHA, text):
+            findings.append(("ERROR", tag, f"{what}: no commit hash"))
+        gate = re.search(r"gate\s+`?(PASS|FAIL)", text)
+        if not gate:
+            findings.append(("ERROR", tag, f"{what}: no gate result"))
+        elif gate.group(1) == "FAIL":
+            findings.append(("INFO", tag, f"{what}: ended at the gate"))
+            continue
+        revs = reviewers_of(text)
+        if revs is None:
+            findings.append(("ERROR", tag, f"{what}: no reviewers"))
+        else:
+            unknown = [r for r in revs if r not in REVIEWERS]
+            if unknown:
+                findings.append(("ERROR", tag, f"{what}: unknown reviewer initials {', '.join(unknown)} (known: {', '.join(REVIEWERS)})"))
+            missing = sorted(ALWAYS - set(revs))
+            if missing:
+                findings.append(("ERROR", tag, f"{what}: {', '.join(missing)} always run on a chunk and are missing"))
+        r, g, p, cap = check_rounds(tag, what, text, findings)
+        total_rounds, reg, pre, caps = total_rounds + r, reg + g, pre + p, caps + cap
+        chunks_logged[int(k)] = r
+        if re.search(r"stall:\s*`?(relaunched|ended)", text):
+            findings.append(("INFO", tag, f"{what}: stall ({re.search(r'stall:\s*`?(relaunched|ended)', text).group(1)})"))
+    d = re.search(r"^- \*\*D\. Slice review:\*\*(.*)$", body, re.M)
+    if d:
+        text = d.group(1)
+        if not re.search(r"map\s+`[^`]+`", text):
+            findings.append(("WARN", tag, "D line names no map path"))
+        revs = reviewers_of(text)
+        if revs is None:
+            findings.append(("ERROR", tag, "D line: no reviewers"))
+        elif len(set(revs) & set(REVIEWERS)) < 5:
+            findings.append(("WARN", tag, f"D line: {len(revs)} reviewers; the slice review runs five, six for a UI slice"))
+        r, g, p, cap = check_rounds(tag, "D", text, findings)
+        total_rounds, reg, pre, caps = total_rounds + r, reg + g, pre + p, caps + cap
+    ev = re.search(r"^- \*\*E\. Delivery:\*\*(.*)$", body, re.M)
+    if ev:
+        text = ev.group(1)
+        if not re.search(r"PR\s+`?#?\d+", text):
+            findings.append(("WARN", tag, "E line names no pull request number"))
+        if not re.search(r"pushed\s+`?" + SHA, text):
+            findings.append(("WARN", tag, "E line names no pushed commit"))
+        if not re.search(r"audit\s+`?(" + SHA + r"|not configured|none)", text):
+            findings.append(("WARN", tag, "E line doesn't say what the audit sync did (a commit, `not configured` or `none`)"))
+        ext = [int(m.group(1)) for m in re.finditer(r"\bext r(\d+)\s+`?\d+`?c:", text)]
+        if ext != list(range(1, len(ext) + 1)):
+            findings.append(("ERROR", tag, f"E line: external rounds are not r1, r2, … in order: {', '.join('r%d' % n for n in ext)}"))
+        if ext and max(ext) > CAP:
+            findings.append(("ERROR", tag, f"E line: ext r{max(ext)} is past the cap of {CAP} rounds"))
+        if ext and not re.search(r"\b(clean r\d+|cap:)", text):
+            findings.append(("ERROR", tag, "E line: external rounds don't say how they ended (`clean r<i>` or `cap: <open>`)"))
+        total_rounds += len(ext)
+    if c_lines or d:
+        findings.append(("INFO", tag, f"{len(c_lines)} chunk{'s' if len(c_lines) != 1 else ''} logged, {total_rounds} fix round{'s' if total_rounds != 1 else ''} "
+                         f"({reg} regression{'s' if reg != 1 else ''}, {pre} pre-existing), {caps} cap hit{'s' if caps != 1 else ''}"))
+    return sidecar, chunks_logged
+
+
+def check_sidecar(project, log_dir, e, sidecar_path, chunks_logged, findings):
+    """The rounds-slice sidecar against the log's C lines: a chunk with m fix rounds has findings in rounds 0..m-1."""
+    tag = f"entry {e['n']}"
+    candidates = []
+    if sidecar_path:
+        if os.path.isfile(sidecar_path):
+            candidates = [sidecar_path]
+        else:
+            d = sidecar_path if os.path.isabs(sidecar_path) else None
+            for base in [d] if d else [os.path.join(log_dir, sidecar_path), os.path.join(project, sidecar_path)]:
+                if base and os.path.isdir(base):
+                    candidates = sorted(glob.glob(os.path.join(base, "rounds-slice-*.jsonl")))
+                    break
+    if not candidates:
+        if sidecar_path and chunks_logged:
+            findings.append(("INFO", tag, f"no rounds sidecar found at {sidecar_path} (the reviews directory may be on another machine)"))
+        return
+    by_chunk = {}
+    bad = 0
+    for path in candidates:
+        for line in open(path, encoding="utf-8", errors="replace"):
+            if not line.strip():
+                continue
+            try:
+                rec = json.loads(line)
+                k, i, sev = rec["chunk"], int(rec["round"]), str(rec.get("severity", ""))
+            except (ValueError, KeyError, TypeError):
+                bad += 1
+                continue
+            if sev[:1].upper() in "CHM":
+                by_chunk.setdefault(k, set()).add(i)
+    if bad:
+        findings.append(("WARN", tag, f"sidecar: {bad} line{'s' if bad != 1 else ''} not a rounds record"))
+    for k, m in sorted(chunks_logged.items()):
+        have = by_chunk.get(k, set())
+        need = set(range(m))
+        if m and not need <= have:
+            findings.append(("WARN", tag, f"sidecar: chunk {k} logs {m} fix round{'s' if m != 1 else ''} but has Critical/High/Medium records only for rounds {sorted(have) or 'none'}"))
+        if not m and have:
+            findings.append(("WARN", tag, f"sidecar: chunk {k} logs no fix round but has Critical/High/Medium records in rounds {sorted(have)}"))
+    extra = sorted(k for k in by_chunk if isinstance(k, int) and k not in chunks_logged)
+    if extra:
+        findings.append(("WARN", tag, f"sidecar: records for chunks {', '.join(map(str, extra))} that have no C line"))
+
+
+def check_loop(entries, findings, project=None, log_dir=None, sidecar_arg=None):
     for e in entries:
-        if not is_quarantine(e):
+        if not is_loop(e):
             continue
         tag = f"entry {e['n']}"
         subs = e["subs"]
-        if subs != sorted(subs) or len(set(subs)) != len(subs):
-            findings.append(("ERROR", tag, f"sub-entries out of order or repeated: {', '.join(subs)}"))
+        chunk_loop = is_chunk_loop(e)
+        if subs != sorted(subs):
+            findings.append(("ERROR", tag, f"sub-entries out of order: {', '.join(subs)}"))
+        repeated = sorted({s for s in subs if subs.count(s) > 1 and not (chunk_loop and s == "C")})
+        if repeated:
+            findings.append(("ERROR", tag, f"sub-entries repeated: {', '.join(repeated)}"))
         present = set(subs)
         if present:
             last = max(present)
-            missing = [s for s in QUARANTINE_STEPS if s < last and s not in present]
+            missing = [s for s in LOOP_STEPS if s < last and s not in present]
             if missing:
                 findings.append(("ERROR", tag, f"sub-entries {', '.join(missing)} missing before {last}"))
             if last != "E":
                 findings.append(("WARN", tag, f"sub-entries stop at {last}: the flow stopped there, or the rest was never logged"))
         else:
             findings.append(("WARN", tag, "no A-E sub-entries yet (fine only if the flow stopped before A)"))
+        if chunk_loop:
+            sidecar, chunks_logged = check_chunk_loop(e, findings)
+            if project is not None:
+                check_sidecar(project, log_dir, e, sidecar_arg or sidecar, chunks_logged, findings)
+            continue
         a = re.search(r"^- \*\*A\..*$", e["body"], re.M)
         if a and not re.search(r"policy\s*[—-]+\s*`?(heavy|lite|compare)", a.group(0)):
             findings.append(("ERROR", tag, "A line doesn't open with the policy (heavy, lite or compare)"))
@@ -493,14 +731,14 @@ def check_transcripts(project, log_abs, entries, table, calls, findings):
             rank = route_rank(entry["routed"], table) if entry else None
             row = table[rank][1] if isinstance(rank, int) else set()
             named = row | set(routed_names(entry["routed"]) if entry else [])
-            if is_quarantine(entry) and skill.endswith("-review"):
-                named.add(skill)  # the quarantine flow's own reviewers, accessibility-review among them
+            if is_loop(entry) and (skill.endswith("-review") or skill in LOOP_SKILLS):
+                named.add(skill)  # the loop's own reviewers, map, delivery and triage calls
             primary = stage_key(row) if row else None
             if entry is None:
                 findings.append(("ERROR", "transcript", f"{call['ts']}: `{skill}` called with no log entry written before it in this session"))
             elif skill not in named:
                 findings.append(("ERROR", "transcript", f"{call['ts']}: `{skill}` called while the latest entry ({cur}) routes to {entry['routed']}: a stage that ran unlogged"))
-            elif skill == primary and primary in ran[cur] and not (is_quarantine(entry) and skill in IMPLEMENTERS):
+            elif skill == primary and primary in ran[cur] and not (is_loop(entry) and skill in IMPLEMENTERS):
                 findings.append(("ERROR", "transcript", f"{call['ts']}: `{skill}` called again under entry {cur} with no new entry written: a stage that ran unlogged"))
             else:
                 ran[cur].append(skill)
@@ -525,7 +763,7 @@ def rel(path, project):
 def check_artifacts(project, log_dir, entries, writes, findings):
     for e in entries:
         art = e["artifact"]
-        if not art or is_quarantine(e):
+        if not art or is_loop(e):
             continue
         tag = f"entry {e['n']}"
         paths = [p for p in artifact_paths(e) if not escapes(p)]  # escaping paths are format errors, never probed
@@ -553,6 +791,7 @@ def main():
     ap.add_argument("--audit-dir", default=os.environ.get("KAD_AUDIT_DIR", os.path.expanduser("~/.claude/kad-audit")))
     ap.add_argument("--transcript", action="append", default=[], help="a transcript to read (repeatable); overrides --audit-dir")
     ap.add_argument("--no-transcripts", action="store_true")
+    ap.add_argument("--sidecar", help="the chunk loop's rounds-slice-<nnn>.jsonl (default: found in the A line's reviews directory)")
     a = ap.parse_args()
 
     project = os.path.abspath(a.project)
@@ -572,7 +811,7 @@ def main():
 
     findings = []
     check_format(text, entries, malformed, findings)
-    check_quarantine(entries, findings)
+    check_loop(entries, findings, project, os.path.dirname(log_abs), a.sidecar)
     check_order(entries, table, findings)
     check_git_append_only(project, log_rel, text, findings)
     writes, paths = {}, []

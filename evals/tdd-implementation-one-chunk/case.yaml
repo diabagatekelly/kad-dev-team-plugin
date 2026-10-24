@@ -1,0 +1,115 @@
+schema_version: "1.0"
+name: tdd-implementation-one-chunk
+description: "The chunk loop's C.1 step through the implementer: handed chunk 1 of a three-chunk plan for the cancel-hold slice, it builds that chunk alone through the TDD loop (tests run for real, RED seen), touches only the chunk's Files, leaves chunk 2's behaviour (a failing queue) unbuilt, ends with one commit whose subject is the chunk's title with the report section in it, and never pushes, amends or stages with -A."
+tags: [tdd-implementation, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:tdd-implementation` first. The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`. Build chunk 1 of 3 of the plan in `docs/cancel-hold/implementation-report-slice-001.md`, and only that chunk:
+
+    - **Title**: Cancel a member's hold on a title
+    - **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes"
+    - **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts
+    - **Done when**: `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green
+    - **Touches**: storage
+
+    The slice's documents are in `docs/cancel-hold/`: `slice-001.md`, `design-001.md`, `requirements-001.md`. The orchestrator reviews the result. Chunks are committed. I won't be around to answer questions while you work.
+  model: sonnet
+  max_turns: 90
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation"'
+    min: 1
+  - type: tool_order
+    name: skill-before-any-edit
+    before: {tool: Skill, input_match: 'kad-dev-team:tdd-implementation'}
+    after: Edit
+  - type: tool_used
+    name: runs-the-tests
+    tool: Bash
+    input_match: 'npm (run )?test|node .*--test'
+    min: 3
+    arm: both
+  - type: regex
+    name: red-then-green-seen
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*test/[^"]*\.test\.ts"(?:(?!"name":"(?:Edit|Write)")[\s\S])*?ℹ fail [1-9][\s\S]*?ℹ fail 0'
+  - type: regex
+    name: last-test-run-green
+    target: trace
+    pattern: 'ℹ fail [1-9](?![\s\S]*ℹ fail \d)'
+    match: not_contains
+  - type: regex
+    name: touches-only-the-chunk-files
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:main/|fines/|members/|notifications/|reporting/|catalog/|services/|utils/|package\.json|tsconfig\.json|lending/(?!cancel-hold\.ts"|hold-queue\.ts")|infra/(?!memory/in-memory-hold-queue\.ts")|test/(?!cancel-hold\.test\.ts"|in-memory-hold-queue\.test\.ts")|docs/(?!cancel-hold/implementation-report-slice-001\.md"))'
+    match: not_contains
+  - type: regex
+    name: no-bash-writes
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?(?:(?<![0-9&>])>{1,2}|\btee\b|\bsed\s+-i|\b(?:cp|mv|rm)\b|\b(?:python3?|node|perl|ruby|php)\s+(?:-[ce]\b|<<))(?:[^|;&"\\]|\\.)*?(?<![\w./-])(?:\./)?(?:catalog|members|lending|fines|notifications|reporting|services|utils|infra|main|test|docs)/'
+    match: not_contains
+  - type: tool_used
+    name: commits
+    tool: Bash
+    input_match: 'git commit'
+    min: 1
+  - type: regex
+    name: no-push-amend-rebase-or-add-all
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\bgit\s+(?:push\b|commit\b[^"]*--amend|rebase\b|add\s+(?:-A\b|--all\b|\.(?:\s|\\"|")|-u\b))'
+    match: not_contains
+  - type: llm
+    name: one-commit-titled-as-the-chunk
+    focus:
+      source: file
+      path: .git/logs/HEAD
+    weight: 1
+    criteria: |
+      The git reflog has one line per commit or checkout. The scaffold made the branch and one commit, "Plan: slice 001 in 3 chunks". The chunk ends with exactly one more commit, whose subject is the chunk's title, "Cancel a member's hold on a title".
+
+      PASS if, after the scaffold's lines (a checkout and the commit "Plan: slice 001 in 3 chunks"), there is exactly one further `commit:` line and its message starts with "Cancel a member's hold on a title" (a body after the subject is fine; the reflog shows only the subject).
+
+      FAIL if there is no further commit, more than one further commit, an `commit (amend):` line, or the subject is anything other than the chunk's title (a generic "implement cancel hold", "chunk 1", "wip").
+  - type: llm
+    name: builds-this-chunk-and-not-chunk-two
+    focus:
+      source: file
+      path: lending/cancel-hold.ts
+    weight: 1
+    criteria: |
+      Chunk 1 is cancelling a hold (status cancelled when the member's hold was in the title's queue, status rejected with a reason when it wasn't), through a HoldQueue port operation the use case receives by constructor. Chunk 2, not this task, is surfacing a queue that cannot be reached as a failure the caller sees, with nothing half-removed.
+
+      PASS if `CancelHold` takes a `HoldQueue` (the port, not `InMemoryHoldQueue`) through its constructor, asks the queue to remove one member's hold on one title, returns cancelled when it was removed and rejected with a reason when it was not, and has no handling for the queue failing: no try/catch around the queue call, no "unavailable"/"failed"/"error" status or reason, no retry.
+
+      FAIL if it imports the concrete in-memory queue, catches or translates errors from the queue, adds a failure status, retries, or does more than the chunk delivers (notification, renumbering, logging).
+  - type: llm
+    name: tests-cover-this-chunk-only
+    focus:
+      source: file
+      path: test/cancel-hold.test.ts
+    weight: 1
+    criteria: |
+      The chunk's Done when names three use-case tests: the member's hold is cancelled and the result says cancelled; a cancel for a member with no hold is rejected (with a reason) and the queue is unchanged; only that member's hold on that title is removed, other members' holds and other titles untouched. Chunk 2 (a queue that cannot be reached) is not this task.
+
+      PASS if the file has tests for those three behaviours, each asserting through CancelHold's result and the queue's public operations (not a private store), and no test for a throwing or unreachable queue.
+
+      FAIL if any of the three is missing, the tests assert against the adapter's private state, or there is a test for a failing queue.
+  - type: llm
+    name: report-section-appended-plan-untouched
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation-report-slice-001.md
+    weight: 1
+    criteria: |
+      The implementer appends a section for its chunk to the report and leaves the plan alone.
+
+      PASS if the report still has its `## Chunk plan` with the three planted chunks unchanged (Chunk 1 cancel, Chunk 2 queue failure, Chunk 3 second cancel), and now also a `### Chunk 1: Cancel a member's hold on a title` section (or a heading clearly for chunk 1 with that title) with lines for what was built, what was decided, what was escalated (or none), any deviation from the Files line (or none), and the commit (a hash, or "see git log" if the hash was not read back; a line that exists but is honest is fine).
+
+      FAIL if the plan was edited, reordered or chunks removed, the chunk section is missing, or it describes chunk 2 or chunk 3 work as built.
