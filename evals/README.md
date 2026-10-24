@@ -176,6 +176,10 @@ nine-case suite with the pairwise judge) before trusting anything.
 6. **Record the bar.** Once a case's result is accepted, run
    `tools/record_thresholds.py <case>` and commit the `thresholds.json`
    change with the case, so the eval gate has something to hold it to.
+   Then run the gate on the case once more: recording the bar also records
+   the skills its runs consulted (`skills_invoked`), which widens the set
+   of files the case's evidence fingerprints, so evidence recorded before
+   the bar existed reads as stale on the first push.
 7. **Keep run output out of git.** `results/` is ignored; the coverage
    table carries the numbers and the results directory name, nothing else.
 

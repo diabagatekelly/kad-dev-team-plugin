@@ -76,10 +76,13 @@ The fix verdicts none of the plugin's reports on that file raised, one line
 each; empty if none.
 ```
 
-Your response is the hand-back only: one line with the counts (fix,
-decline, defer, resolved) and one line with the report's path. The
-orchestrator records the verdicts in its sidecar, has `tdd-coach` apply the
-fixes, and has `delivery` post the replies and file the deferrals.
+Your response is the hand-back only, two lines: the counts (fix, decline,
+defer, resolved) and the report's path. Not the table, not a verdict per
+comment, not the reasons, not a summary of the fixes: all of that is in the
+report, and repeating it is the one thing the hand-back must not do. The
+orchestrator reads the report, records the verdicts in its sidecar, has
+`tdd-coach` apply the fixes, and has `delivery` post the replies and file
+the deferrals.
 
 ## What this skill never does
 
