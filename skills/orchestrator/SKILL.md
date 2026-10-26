@@ -123,20 +123,26 @@ the finder resolve it in place is how a scope decision gets made by a
 persona that doesn't own scope, and how a stage gets skipped without anyone
 choosing to skip it.
 
-Two rules for the backward step: upstream artifacts are revised by
-superseding, never by editing in place (`scope-map`, `requirements-refinement`,
-and `adr` all number sequentially for this reason), and once it completes,
-return to step 2 and re-inspect from scratch — a superseded scope map can
-move the forward position by more than one row.
+Three rules for the backward step. **The owner revises its document in
+place while the document is still its own, and supersedes it once a later
+stage has built on it**: `scope-map`, `requirements-refinement` and `adr`
+each state this rule and number sequentially for the superseding case; a
+slice file is revised in place, never copied to a `-v2`; the entry names
+which of the two it was. **A backward route is one routed step.** When the
+owner's revision invalidates the next artifact down (a slice cut from the
+old requirements, a story written from the old slice), that is the next
+backward route, with its own entry and its own `Skill` call, never a
+"follow-on" edit under this one. **Once a backward step completes, return
+to step 2 and re-inspect from scratch, without asking**: a revised scope
+map can move the forward position by more than one row.
 
 That "return to step 2" instruction governs your own next invocation once
 the backward step actually completes — it is not something to narrate now.
 When reporting a backward route (step 5), state the single routed
-destination, why it was routed there, what the owner produced, and the
-offer to re-inspect; don't add what re-inspection will find or where the
-forward position might land once it resolves. Describing that round trip is
-the same chaining step 5 already forbids, just spelled backward instead of
-forward.
+destination, why it was routed there and what the owner produced; don't
+add what re-inspection will find or where the forward position might land
+once it resolves. Describing that round trip is the same chaining step 5
+forbids, just spelled backward instead of forward.
 
 | Detected state | Route to |
 |---|---|
@@ -271,11 +277,10 @@ This is the only
 retrospective record that every stage actually ran rather than getting
 silently skipped; a graded final artifact says nothing about the path
 that produced it. Create the file if it doesn't exist yet. One entry per
-invocation, appended, never edited or reordered — a prior entry being
-wrong gets a new entry noting the correction, the same append-only
-discipline `scope-map`/`requirements-refinement`/`adr` already use for
-their own artifacts, applied here to a process record instead of a
-decision record. Each entry:
+invocation, appended, never reordered; a prior entry being wrong gets a
+new entry noting the correction. The log is a process record, so it is
+only ever added to, even on a project that revises its planning documents
+in place. Each entry:
 
 ```markdown
 ## <sequence number>. <date> — <the detected-state row that matched>
