@@ -23,7 +23,11 @@ settings files only for what no probe can see:
    runs commands unsandboxed there; that failure is not a settings
    problem, so the script exits 2 for it and the orchestrator offers the
    user the choice to continue unsandboxed, logged, or to run the session
-   in WSL2.
+   in WSL2. On such a platform `--write-settings` writes the deny rules
+   only (check 5's `denyRead` list and check 6's `Read(...)` rules), never
+   `sandbox.enabled` or `failIfUnavailable`: with no backend those two
+   make the session refuse every command, which is what happened on the
+   first real run.
 2. write: a write to a fresh file in the home directory fails with the
    sandbox's own error (read-only file system, or permission denied under
    Seatbelt). Any other outcome fails the check: a successful write means
@@ -91,7 +95,8 @@ moment; this script is the preflight that says whether the next launch is
 fenced, not the fence itself.
 
 `--write-settings` writes through a symlink to its target, keeps the file's
-mode, uses a private temporary name, and when the sandbox itself refuses
+mode, uses a private temporary name, writes only the two deny lists when
+the platform has no sandbox backend (and says so on its first line), and when the sandbox itself refuses
 the write (the user settings file is outside the project, so a session
 whose sandbox is already on but incomplete cannot write it from Bash)
 prints the complete intended content between marker lines, for the
@@ -342,9 +347,13 @@ def rule_for(spec):
     return f"Read({spec.rstrip('/')}/**)" if is_dir_secret(spec) else f"Read({spec})"
 
 
-def write_settings(path, secrets):
+def write_settings(path, secrets, deny_only=False):
     """Merge the required block into the settings file at `path`, keeping
-    everything else. Returns (changed lines, error, intended content):
+    everything else. With `deny_only` (a platform with no sandbox backend)
+    only `sandbox.filesystem.denyRead` and the `Read(...)` rules in
+    `permissions.deny` are written: `sandbox.enabled` and
+    `failIfUnavailable` would make such a session refuse every command.
+    Returns (changed lines, error, intended content):
     on an error nothing was written and the intended content is printed by
     the caller for the orchestrator to write another way."""
     path = os.path.realpath(os.path.expanduser(path))
@@ -363,14 +372,15 @@ def write_settings(path, secrets):
             return [], f"{path}: {key} is not an object; fix the file by hand", None
     changed = []
     sb = data.setdefault("sandbox", {})
-    for key, want in REQUIRED_SETTINGS.items():
-        if sb.get(key) != want:
-            changed.append(f"sandbox.{key}: {json.dumps(sb.get(key))} -> {json.dumps(want)}")
-            sb[key] = want
-    net = sb.get("network")
-    if not isinstance(net, dict):
-        sb["network"] = net = {}
-    net.setdefault("allowedDomains", [])
+    if not deny_only:
+        for key, want in REQUIRED_SETTINGS.items():
+            if sb.get(key) != want:
+                changed.append(f"sandbox.{key}: {json.dumps(sb.get(key))} -> {json.dumps(want)}")
+                sb[key] = want
+        net = sb.get("network")
+        if not isinstance(net, dict):
+            sb["network"] = net = {}
+        net.setdefault("allowedDomains", [])
     fs = sb.get("filesystem")
     if not isinstance(fs, dict):
         sb["filesystem"] = fs = {}
@@ -652,22 +662,26 @@ def main():
 
     if a.write_settings is not None:
         target = a.write_settings or user_settings_path()
-        changed, error, content = write_settings(target, secrets)
+        has_sandbox = check_platform()[0]
+        changed, error, content = write_settings(target, secrets, deny_only=not has_sandbox)
         shown = os.path.realpath(os.path.expanduser(target))
+        scope = ("" if has_sandbox else
+                 " (deny rules only: this platform has no sandbox backend, so sandbox.enabled and failIfUnavailable are left alone)")
         if error and content is None:
             print(f"settings not written: {error}")
         elif error:
-            print(f"settings not written: {error}")
+            print(f"settings not written{scope}: {error}")
             print(f"--- intended content of {shown}, for the Write tool (it runs outside the sandbox) ---")
             print(content, end="")
             print("--- end of intended content ---")
         elif changed:
-            print(f"settings written: {shown}")
+            print(f"settings written{scope}: {shown}")
             for c in changed:
                 print("  " + c)
-            print("  (a sandbox setting takes effect in the session's next Bash command; if the probes below still fail, restart the session)")
+            if has_sandbox:
+                print("  (a sandbox setting takes effect in the session's next Bash command; if the probes below still fail, restart the session)")
         else:
-            print(f"settings already complete: {shown}")
+            print(f"settings already complete{scope}: {shown}")
 
     settings, read, broken = load_settings(project)
     results = [
