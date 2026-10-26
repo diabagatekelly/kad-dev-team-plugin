@@ -356,6 +356,24 @@ rather than accumulating here.
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
 lives in `evals/example/`, which is tracked.)
 
+### Current: implementation flow v4, PR 1 built; PR 2 and PR 3 next
+
+The audit of the second real run (`audit-docs`,
+`personal-finance-tracker-2-slice-1/plugin-review/2026-10-25-*`) produced
+`.synthesis/implementation-flow-v4.md` and the work list `TODO.md` at the
+repo root. **PR 1, the loop, is built (2026-10-25, branch
+`implementation-flow-v4`)**: the orchestrator's v4 chunk loop, the seam
+test and comments rule in both tdd skills, the shared finding format and
+the combined review in the review skills, the five new or changed scripts,
+`repo-bootstrap`, `readme`, the agents, version 0.7.0; every PR 1 item in
+`TODO.md` is ticked. What is next, in order: **PR 2** (the planning-skill
+fixes from the two planning reviews and `orchestrator_log_check.py`),
+**PR 3** (eval cases 1 to 12 on the library-app fixture and
+`cost_by_role.py`; the eval gate's evidence for every case PR 1 touched is
+recorded there, which is why PR 1's push needs the hook bypassed or that
+evidence first), then slice 2 of `personal-finance-tracker-2` on 0.7.0
+with the budget line, audited the same way, which decides D9's phase 2.
+
 ### Where things stand
 
 Five personas done. `software-architect` also gained an unplanned third
