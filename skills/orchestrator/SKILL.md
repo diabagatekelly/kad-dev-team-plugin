@@ -244,9 +244,11 @@ actually ask via `AskUserQuestion`.
 
 **The arguments you pass say two things and nothing else about
 mechanics**: where to save (the location resolved in step 1, so the skill
-neither asks where nor invents a different location) and, for every
-routed skill without exception, that it asks the user via
-`AskUserQuestion`, one question per call. Say nothing about other
+neither asks where nor invents a different location) and that any
+question the skill's own procedure puts to the user goes through
+`AskUserQuestion`, one question per call. The second is said to every
+routed skill, including one that rarely asks: it changes how a question
+is asked, never whether. Say nothing about other
 stages' documents: never "then point the slice's placeholder at it",
 never "and sync the story", never which file another persona should
 update afterwards. What a skill may touch is in its own text, and a
