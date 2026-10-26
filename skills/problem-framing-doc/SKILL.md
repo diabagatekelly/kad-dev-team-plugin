@@ -15,6 +15,14 @@ A problem framing doc is not a spec and not an ADR — no solution or decision
 belongs in it. If you catch yourself designing, stop and move that content to
 an ADR once the decision is actually made.
 
+**Gathering the problem.** If the conversation doesn't state the problem,
+ask for it through `AskUserQuestion`, one question per template section
+(the problem, why now, the constraints, what's still open), waiting for
+each answer before the next; never a numbered list of questions as text,
+and never a problem inferred from the folder name, the repository or what
+a similar product usually does. When the tool isn't available, ask one
+question in plain text and end your turn there.
+
 **Template:**
 
 ```markdown

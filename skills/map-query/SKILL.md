@@ -90,7 +90,12 @@ conversation — this isn't a skill that produces its own saved artifact.
 When another skill consulted you mid-task (`architecture-design`,
 `tdd-implementation`), the report is that skill's input, not your final
 message: write it, then carry straight on with the calling skill's work in
-the same response. The report:
+the same response. Emit the report header as visible text every time,
+after actually checking the path: when the answer is "no map", the report
+is still the block below with `Map status: no map exists yet`, following
+a `Read` or listing of `docs/architecture-map.md` the trace can show. A
+thinking-only "no map found" is not the consult, and a consult from an
+earlier invocation isn't reused for a later one. The report:
 
 ```markdown
 ## Map query: <what was asked about>

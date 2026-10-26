@@ -240,14 +240,31 @@ target directory. Don't go looking for the persona's `AGENT.md`: it sits
 outside the project, a read of it may be refused, and everything a routed
 step needs from its persona is in that skill. Follow the skill directly —
 this is live use, not a dry run: if it would ask the user something,
-actually ask via `AskUserQuestion`. Tell it explicitly where to save its output — the
-location resolved in step 1. It should not ask where to save or invent a
-different location; you already resolved that. Produce the real artifact
-and save it there, using that persona's own filename/heading convention —
-once the skill's own procedure gets there. Routing doesn't hurry it: a
-skill whose first response is questions asks them and stops, even here,
-and the artifact comes in a later turn. Don't fill the skill's questions
-with answers inferred from the repository to reach the artifact sooner.
+actually ask via `AskUserQuestion`.
+
+**The arguments you pass say two things and nothing else about
+mechanics**: where to save (the location resolved in step 1, so the skill
+neither asks where nor invents a different location) and, for every
+routed skill without exception, that it asks the user via
+`AskUserQuestion`, one question per call. Say nothing about other
+stages' documents: never "then point the slice's placeholder at it",
+never "and sync the story", never which file another persona should
+update afterwards. What a skill may touch is in its own text, and a
+document it doesn't own is re-synced by that document's owner on the
+next re-inspection. Pass the skill's inputs by path and the question it
+is being asked (which check failed, which document to revise in place)
+when a backward route names one; pass no answer the owner hasn't given.
+
+Produce the real artifact and save it there, using that persona's own
+filename/heading convention — once the skill's own procedure gets there.
+Routing doesn't hurry it: a skill whose first response is questions asks
+them and stops, even here, and the artifact comes in a later turn. Don't
+fill the skill's questions with answers inferred from the repository to
+reach the artifact sooner. Re-invoking a skill whose text is already in
+context (a redo after a backward route, a stage resumed after a
+correction) still goes through the `Skill` tool: the call is what the log
+check and a reviewer look for, and a stage run from memory is a stage
+that ran unlogged.
 
 **The `tdd-coach:tdd-implementation` row doesn't execute inline — it runs
 the chunk loop below, every time, by default.** There is no separate "is
@@ -303,18 +320,33 @@ says where without saying what. Three cases need saying:
 - a routed skill that may decide nothing needs writing (`docs-writer`
   deciding whether a scope map is warranted): the path the artifact takes
   if it is written, stated flatly — not "`scope-map-001.md` if warranted,
-  otherwise none", and no outcome appended to the entry afterwards. If
-  the skill decides none is needed, it records that where its own
-  procedure says, and a later entry can say so;
+  otherwise none". If the skill decides none is needed, it records that
+  where its own procedure says, and an indented bullet under the entry
+  says so;
 - `user-story-writeup`, which asks where this project files stories: the
   path a locally filed story takes under the target directory, with a
   parenthetical that the skill may file it elsewhere. Where it then went
-  is a new correcting entry, never an edit of this one; "to be decided by
-  the skill" names no path.
+  is an indented bullet under the entry, never an edit of the Artifact
+  line; "to be decided by the skill" names no path.
+
+**An entry that records an owner direction or housekeeping rather than a
+route** (a consolidation the owner asked for, a correction to the process,
+a repository created at the owner's request) has `**Routed to:** none
+(<reason>)` and `**Artifact:**` the one file changed, in backticks, or
+`this log` when nothing but the log changed. What else changed goes in
+indented bullets below, never on the Artifact line.
+
+**What may be added to an entry after it is written, and what may not.**
+An entry may gain indented plain bullets once its step runs (its outcome,
+a correction, an owner direction, a resume), as the chunk-loop entry
+does; the bullets are added, never rewritten. Its heading, its Routed to
+line and its Artifact line are never edited, and no entry ever gets a
+second bold step line. A prior entry whose route or artifact turned out
+wrong gets a new entry noting the correction.
 
 For a backward route (the step 3 rule that supersedes the table), log it
-the same way, naming which artifact got superseded and why, not just the
-forward destination.
+the same way, naming which artifact is revised, whether in place or by
+superseding, and why, not just the forward destination.
 
 ### The chunk loop — the `tdd-coach:tdd-implementation` row's own procedure
 
@@ -884,20 +916,34 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
   - Resumed <date> at <step>
 ```
 
-**5. Report, then ask whether to continue — never chain silently.** State
+**5. Report as visible text after every step, then continue.** State
 what was detected, why it routed where it did, and what got produced.
-Then:
+The report is text in the reply, never only a thinking summary: a stage
+whose summary lives in a thinking block has reported nothing, and the
+owner sees a run of questions with no account of what they decided. When
+an owner's answer asks for an explanation before choosing ("explain the
+options first"), the next reply is that explanation as text, and the
+question comes after it, in its own turn. Then:
 - **If step 3 found a next row** (there's more to do for the current
-  unit): name what that next step would be and ask whether to continue to
-  it now, in this same conversation. If yes, loop back to step 2 for the
-  now-current state — don't re-run step 1. If no, stop and wait.
+  unit): name it in the report and continue to it in this same
+  conversation, looping back to step 2 for the now-current state (don't
+  re-run step 1). Ask whether to continue only when the next row needs an
+  owner decision to start (the implementation policy, a destination, a
+  sandbox stop) or the owner has asked to be asked; re-inspection is
+  free, and a question that buys nothing is the one the owner stops
+  answering.
   After a backward route the next step is always the same one: return to
-  step 2 and re-inspect, now that the owner's revision is in place. Name
-  that and nothing past it — not the row the re-inspection might land on,
-  not the artifacts it might call for, not the stages the unit will pass
-  through again. The report of a backward route is the one routed
-  destination, why it was routed there, what the owner produced, and the
-  offer to re-inspect.
+  step 2 and re-inspect, now that the owner's revision is in place,
+  without asking. Name that and nothing past it — not the row the
+  re-inspection might land on, not the artifacts it might call for, not
+  the stages the unit will pass through again. The report of a backward
+  route is the one routed destination, why it was routed there and what
+  the owner produced. When one invalidating fact leaves the same
+  mechanical repair in several documents (a changed limit that the
+  requirement, the slice and the story all quote), log one backward entry
+  per owner, run the owners in sequence, each through its own `Skill`
+  call, report once at the end, and prompt once if a prompt is due at
+  all.
 - **If the current unit just reached the terminal row** (its slice is
   designed, its runtime-safety criteria are filled, its screen is designed
   and its accessibility criteria filled if it's UI-touching, the project
