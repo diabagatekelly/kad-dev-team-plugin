@@ -11,7 +11,10 @@ only when absolutely needed, the code self-documenting (§8, D8); the tests
 fake too much and there are no integration tests (§6, D6, D13).
 
 Rules for working this list: one PR per phase; every skill change gets its
-eval case in PR 3 before the version bump is merged; keep the eval
+eval case in PR 3, and v4 is not done (0.7.0 not used for slice 2, this
+list not closed) until those cases and the evidence for every case the v4
+edits reach are recorded and the gate passes (the owner merged PR 1 with
+its eval-gate check red on purpose, 2026-10-26); keep the eval
 playbook's rule (read every failure before re-recording a bar); nothing
 here changes `evals/TODO.md`'s own items. Tick an item only when its
 "done when" holds. Questions in §13 of the design are answered by the
