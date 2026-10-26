@@ -13,13 +13,19 @@ Invoked directly ("deliver this", "open the PR"), the same procedure, the
 same silence.
 
 **What you are given.** The branch, the base commit it grew from, the
-implementation report's path, the directory of reviewer reports and the
-`rounds-slice-<nnn>.jsonl` sidecar, the tracker `user-story-writeup`
-recorded for this project (GitHub, Jira, Linear, something else, or none),
-and the default branch to target. If the orchestrator did not give one of
-these, take it from the repository (`git rev-parse --abbrev-ref HEAD`,
-`git remote get-url origin`, `gh repo view --json defaultBranchRef`), never
-from a guess about where things might be.
+implementation report's path, the records directory (the reviewer and
+smoke reports) and the `rounds-slice-<nnn>.jsonl` sidecar, the Definition
+of Done results, the tracker `user-story-writeup` recorded for this
+project (GitHub, Jira, Linear, something else, or none), and the default
+branch to target. If the orchestrator did not give one of these, take it
+from the repository (`git rev-parse --abbrev-ref HEAD`, `git remote
+get-url origin`, `gh repo view --json defaultBranchRef`), never from a
+guess about where things might be.
+
+**Nothing here runs in the background.** Every command is waited for, and
+the pull request body carries its issue links before this skill reports:
+the second real run filed its issues from a background script, the session
+ended, and the body kept its placeholder.
 
 ## 1. Preconditions, in this order
 
@@ -29,8 +35,8 @@ from a guess about where things might be.
 2. The branch is not the default branch. If it is, stop: nothing here goes
    to the default branch except through a pull request someone merges.
 3. A remote named `origin` exists. If not, stop and report that the
-   repository has no remote; creating one is `repo-bootstrap`'s job (phase
-   2), not something to improvise with a `gh repo create`.
+   repository has no remote; creating one is `repo-bootstrap`'s job, with
+   the owner's answers, not something to improvise with a `gh repo create`.
 4. The suite is green: the last gate run in the orchestrator's log says so,
    or, invoked directly, run the project's documented test command once and
    read the result. Never deliver a red branch.
@@ -46,11 +52,16 @@ else moved the branch; that is the user's to look at.
 ## 3. The pull request
 
 Invoke `kad-dev-team:pr-writeup` with the `Skill` tool for the body; it
-returns an answer, not the turn. Hand it the implementation report and tell
-it the body has these parts, in this order: what was built, one line per
-chunk with its commit hash; decided gaps; escalations and who owns them;
-the Lows and standing Mediums left, as a list that will carry issue links
-after step 4; a provenance line naming the models and their roles (the
+returns an answer, not the turn. Hand it the implementation report, the
+sidecar and the Definition of Done results, and tell it the body has these
+parts, in this order: what was built, one line per chunk with its commit
+hash; decided gaps and the mid-build decision commits (`Decision <n>`,
+with the persona); escalations and who owns them; a **Definition of Done**
+table, one row per check with its result; **Standing**, the Mediums left
+standing after the fix rounds, as a list that will carry issue links after
+step 4; **Known Lows**, the slice review's Lows grouped by theme (naming,
+comments, tests, structure, and so on), each with its file and line, not
+filed anywhere; a provenance line naming the models and their roles (the
 orchestrator session's model routing, Sonnet implementing and fixing, Opus
 reviewing) and this plugin; the trailing reference line the skill uses for
 ticket identifiers. Then:
@@ -63,16 +74,20 @@ If a pull request for this branch already exists (`gh pr list --head
 <branch>`), update its body with `gh pr edit` instead of opening a second
 one. Record the pull request number and URL.
 
-## 4. Issues for what is left
+## 4. Issues for what is left standing
 
-Every Low in the report's `### Lows` list and every Medium the log marks
-standing after the cap becomes one issue, in the tracker the project
-recorded:
+Every **standing Medium** (the sidecar's pre-existing Critical, High and
+Medium rows that no fix covered; `rounds_record.py --standing` lists them)
+becomes one issue, in the tracker the project recorded. **Lows are not
+filed**: the second real run turned 585 Lows into 205 issues nobody will
+groom; they stay in the pull request body under "Known Lows", where a
+human reads them once, and the owner can ask for any of them to be filed.
 
 - **GitHub:** `gh issue create --title '<the finding's title>' --body-file
   '<body>' --label tech-debt`, the body being the finding's text, file and
   line, the reviewer that raised it, and the pull request number. If the
   `tech-debt` label does not exist, create it once with `gh label create`.
+  Run the commands one after another in the foreground, waiting for each.
 - **Another tracker:** write each issue's title and body to a file next to
   the report (`<report>-issues.md`) and report them; the mechanics of
   filing in Jira, Linear or anything else are project-specific tooling,
@@ -81,9 +96,9 @@ recorded:
 - **None recorded:** the list stays in the pull request body, and the
   report says no tracker is recorded.
 
-Then edit the pull request body so each listed finding links its issue.
-One issue per finding, never one issue for all of them, never a finding
-dropped because it looks small.
+Then, in the same turn, edit the pull request body so each standing
+Medium links its issue. One issue per finding, never one issue for all of
+them, never a standing Medium dropped because it looks small.
 
 ## 5. The external reviewer's comments
 
@@ -125,7 +140,8 @@ State, in this shape:
 - **Pull request** — number and URL; whether it was created or updated.
 - **CI** — present already, or added by `ci-pipeline` in this delivery
   (its commit), or none and why.
-- **Issues** — each one: number, title, from which finding.
+- **Issues** — each one: number, title, from which standing finding; and
+  how many Lows stay in the body unfiled.
 - **External review** — per round: comments collected, and for each the
   verdict acted on and what was posted or filed.
 - **Refused** — anything this skill would not do (a dirty tree, a push to
@@ -136,8 +152,8 @@ State, in this shape:
 
 Push to, rebase onto or merge into the default branch; force-push or delete
 any remote branch; commit application code or tests; edit the planning
-documents or the implementation report (the Lows list and the chunk
-sections are the loop's; the issue links go in the pull request body);
-print or store a credential; ask the user a question; write deployment or
-infrastructure configuration (`ci-pipeline` writes CI, and deployment is
-phase 2).
+documents or the implementation report (the chunk sections are the loop's;
+the issue links go in the pull request body); file a Low; run anything in
+the background; print or store a credential; ask the user a question;
+write deployment or infrastructure configuration (`ci-pipeline` writes CI,
+and deployment is phase 2).

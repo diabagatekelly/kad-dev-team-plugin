@@ -1,6 +1,6 @@
 ---
 name: map-update
-description: Regenerate the architecture map from the real codebase — actual import edges, public exports, external packages — and diff it against whatever was recorded before, mechanically flagging duplication candidates and wrong-direction dependency edges. The only skill that writes the map (docs/architecture-map.md at the app root). Use when asked to update the architecture map, after code changes, once per implementation candidate (throwaway, worktree-scoped) inside a graded build, and once for real after a slice is finalized.
+description: Regenerate the architecture map from the real codebase — actual import edges, public exports, external packages — and diff it against whatever was recorded before, mechanically flagging duplication candidates and wrong-direction dependency edges. The only skill that writes the map (docs/architecture-map.md at the app root), with the shipped extractor (scripts/extract_map.py, TypeScript/JavaScript and Python). Use when asked to update the architecture map, after code changes, and once for real at the chunk loop's slice review (its D step) after the last chunk lands.
 ---
 
 # Map Update
@@ -21,10 +21,40 @@ The map is the only file this skill writes. Never edit application code,
 even to fix an edge or a duplicate you just flagged: name it in the
 report and leave the fix to whoever owns that call.
 
+## Run the shipped extractor; never write one
+
+The extraction below is done by the script this skill ships, inline with
+Bash, from the app root (the directory holding the manifest):
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/scripts/extract_map.py" --project '<app root>' --prior '<app root>/docs/architecture-map.md' --write
+```
+
+(`python -I` where that is the interpreter's name; leave out `--prior`
+when no map exists yet; leave out `--write` for a dry run that only
+prints.) It walks the source roots, extracts edges, externals and exports
+for TypeScript, JavaScript and Python, carries tiers forward from the
+prior map, diffs, flags the two candidate kinds, and writes the map in the
+output shape below; its last line says what it wrote and which languages
+it had no extractor for.
+
+**A language the script has no extractor for** (Go, Rust, Java, Ruby, C#,
+Kotlin, Swift, SQL, anything else it lists) still appears in the map's
+module list, with `no extractor` in its edges, externals and exports
+columns and a line in the changes section saying its edges are unknown.
+That is the whole answer: **never write a parser, a regex pass or a helper
+script to fill the gap**, however small the project. The first two real
+runs each produced a hand-written extractor in the orchestrator's own turn,
+which is why this one is shipped; a third language gets its extractor added
+to this script in the plugin, not improvised in a project. Say in your
+report which languages were not extracted so `architecture-review` reads
+the diff knowing what it does not show.
+
 ## Extraction: mechanical, from real source, no installed tooling required
 
-Walk the project's source files by extension, and for each recognized
-language, extract:
+What the script extracts, so a reader of the map knows what an edge or an
+export means. It walks the project's source files by extension, and for
+each recognized language extracts:
 
 - **Internal import edges** — parse each file's actual import/require
   statements and resolve them to other files in the project (not external
@@ -51,8 +81,8 @@ same "visible and honest, never guessed" handling untiered modules get.
 
 This is grep/parse-level work against real file text — no compiler, no
 language server, no project-specific build step, and no dependency on any
-tool not already part of this skill's own reasoning. That's what keeps the
-map portable across whatever language or stack a given project uses.
+tool but the script this skill ships. That's what keeps the map portable
+across whatever language or stack a given project uses.
 
 ## Tiers: carried forward, never invented here
 
@@ -136,15 +166,14 @@ slice, `architecture-review` — decides what any of it means.
 
 ## Two invocation modes
 
-**Throwaway, inside a graded build.** When run against one candidate's own
-isolated worktree, diff against the real project's last persisted map (not
-against the other candidate's worktree), and hand the result to that
-candidate's reviewers as precomputed context. This run never overwrites
-the real persisted map — it exists only to inform that candidate's grading
-pass, and is discarded once grading is done.
+**Dry run.** Without `--write` the script prints the map and the diff and
+writes nothing: for a question about what a change did to the graph, or
+to hand a reviewer precomputed context without touching the persisted map.
 
-**Real, after a slice is finalized.** Run once against the actual working
-tree once the slice's real implementation lands. This run's output
+**Real, at the chunk loop's slice review and after.** Run with `--write`
+against the actual working tree once the slice's last chunk lands (the
+orchestrator's D step, committed as `Map: slice <nnn>`), and again at
+delivery if the slice review's fixes changed anything. This run's output
 replaces the persisted map — it becomes the map the next slice's
 `map-query` reads and the next `map-update` diffs against.
 
@@ -153,14 +182,14 @@ replaces the persisted map — it becomes the map the next slice's
 The map is project-level infrastructure, not a per-slice artifact, and
 it always lives at `docs/architecture-map.md` at the root of the app — the directory that holds the app's manifest (`package.json`, `pyproject.toml`, `go.mod`, ...), wherever that sits in the repository. A real run reads the prior map there and
 overwrites it, creating `docs/` if it doesn't exist; with no prior map,
-everything is new. A throwaway run reads the real project's map from that
-path and writes nothing.
+everything is new. A dry run reads the map from that path and writes
+nothing.
 
 ## No AskUserQuestion
 
 Nothing here ever depends on information only a human can supply in the
 moment; the map's location is fixed (see above). Tiers are read from what's already decided; a module or edge this
 skill can't resolve renders as an explicit, honest unknown rather than a
-question. This skill runs to completion every time, including inside a
-worktree-isolated candidate build where no one is available to answer
-anything mid-run.
+question. This skill runs to completion every time, including inside the
+orchestrator's chunk loop where no one is available to answer anything
+mid-run.

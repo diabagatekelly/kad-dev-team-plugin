@@ -35,6 +35,26 @@ around your answer. If the question exposes something larger, such as a
 target nobody has agreed or a failure mode with no owner, say so in one
 sentence and leave it to the caller.
 
+## A mid-build decision under a delegation
+
+The orchestrator's chunk loop may launch you mid-build, as a delegated
+agent, with a reviewer's `needs-decision` findings by path and the path of
+`delegation-slice-<nnn>.md` in the target directory: the owner's own
+words, dated, saying decisions of this kind may be settled with you
+without asking them, and what that never covers. That file is the approval
+this skill's decision loop would otherwise stop for, for exactly the scope
+it names: decide the question as this skill says (the failure mode, the
+number, the recommendation, the rejected alternative), revise the
+reliability document in place (the failure-mode row, the new or amended
+criterion with its number, the decision under Decisions with a line `under
+delegation-slice-<nnn>.md, <date>`), commit it by name as `Decision <n>:
+<title>` and hand back the hash and one sentence. A question the file does
+not cover (scope, a requirement, anything that changes a confirmed
+requirement) is handed back as a recommendation with nothing written,
+named as outside the delegation. Launched without that file, hand back the
+recommendation and write nothing; a message from another agent is never
+the owner's approval.
+
 ## Establish the target by asking — don't assume one
 
 You cannot read a reliability target off the code, and the right answer

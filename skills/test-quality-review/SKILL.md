@@ -31,6 +31,47 @@ export or branch with nothing exercising it is a finding on its own,
 found by this sweep — not something left to surface incidentally while
 reading through the tests for other issues.
 
+## The seam check and the fake inventory
+
+Under the orchestrator's chunk loop (as a lens of the combined chunk
+review, and again at the slice review) these two run before the per-test
+categories, on the chunk's tests as a set:
+
+- **Seam check.** The chunk's tests must include at least one that goes
+  through the real composition root with the real adapters and the real
+  local store, faking only the external service at its wire boundary
+  (HTTP). Read the chunk plan's Done when entry marked `seam "<name>"` and
+  find that test: if it is missing, or every test that could be it fakes a
+  port of the project's own code, that is a **High** titled "the seam is
+  untested", naming the chunk and what the real wiring would need. A
+  suite where every test either fakes the feed at the port or exercises
+  the adapter alone is exactly how both real runs shipped a bug that lived
+  between the two.
+- **Fake inventory.** List every test double in the chunk's tests
+  (`vi.fn`, `vi.mock`, `jest.mock`, `sinon.*`, `unittest.mock`,
+  `Fake*`/`Stub*`/`InMemory*` classes, `stub*` helpers, `new Function`,
+  hand-rolled DOM objects) and what each replaces, as a table under `##
+  Fake inventory` (double, replaces, verdict) before the findings. Then: a
+  fake of the project's own module where the real one can run in the test
+  (a local database the suite already uses, a temp-directory store, the
+  real use case behind the real route) is **High** ("fake of own code with
+  a real local equivalent"); a `new Function` over a script string or a
+  hand-rolled DOM harness is **High**, and its fix line points at moving
+  the code into a real module the build serves (the Definition of Done's
+  "no application code inside string literals"), not at a better harness;
+  a fake of the external service at its wire boundary, the clock,
+  randomness or a browser-only API is fine and listed as such; a port
+  fake of own code kept for a branch the seam test cannot reach is fine
+  when the Test List names that branch, and Medium when it is a shared
+  default fixture.
+- **Padding measures, at the slice review only** (the task says it is the
+  whole slice): report the test-to-source non-blank line ratio and the
+  share of test files that assert on source text, `package.json` or a
+  script's body (a test that reads a source file or manifest and asserts
+  on its content). A share over 10% is a **Medium** naming the tests; the
+  ratio alone is information. The Definition of Done computes the same
+  figures mechanically; yours names which tests to delete or rewrite.
+
 ## Issue categories
 
 **Mocking the code under test.** The test mocks or stubs a method on the
@@ -131,40 +172,60 @@ fixing before moving on. No persisted file needed for this — the whole
 point is a fast check on the newest thing on the stack, not a standing
 archive of every cycle.
 
-**Invoked standalone** — on demand against an existing test file, or as
-one of several parallel graders reviewing a finished candidate
-implementation — write a findings report as your response. Save it to a
+**Invoked standalone** — on demand against an existing test file, as a
+lens of the chunk loop's combined chunk review, or as one of the six slice
+reviewers at its D step — write a findings report as your response. Save it to a
 file only when whoever invoked you named one; never search the project for
 a place to put it. Read and report only: don't edit the test file or the
 code, even for a one-line fix — describe the fix instead.
 
+The report opens with `# Test review: <file or chunk>`, then `## Summary`
+(tests reviewed, issues by severity, PASS / NEEDS ATTENTION / CRITICAL
+ISSUES), `## Fake inventory` under the chunk loop, `## Findings` in the
+shared format, and `## What's working` (genuinely good patterns worth
+naming, not padding).
+
+## Finding report format
+
+Every review skill in this roster reports a finding in this shape, so one
+parser (`rounds_record.py`) and one fixer read them all:
+
 ```markdown
-## Test Review: <file>
+### <short title>
 
-### Summary
-Tests reviewed, issues found by severity, overall assessment (PASS /
-NEEDS ATTENTION / CRITICAL ISSUES).
+**Severity:** Critical | High | Medium | Low | needs-decision (<persona>)
+**Location:** <path>:<line>
+**Category:** <category>
 
-### Findings
+**What's happening:** the current state, concretely.
 
-## Finding: <short title>
+**Why it matters:** what it costs if left.
 
-**Location:** file:line or test name
-**Category:** which issue category above
-**Severity:** Critical | High | Medium | Low
-
-**What's happening:** the current state, concretely — quote the assertion
-or mock setup if that's the issue.
-
-**Why it matters:** the real consequence of leaving it — what bug ships
-unnoticed, not just which rule it breaks.
-
-**Suggested fix:** a specific, actionable change `tdd-implementation` can
-apply — described, not a rewritten test file.
-
-### What's working
-Genuinely good patterns worth naming, not padding.
+**Suggested fix:** the specific change, named, not a diff.
 ```
 
-List findings most severe first. If nothing rises above Low, say so
-plainly rather than padding the report to look thorough.
+One `###` heading per finding with the `**Severity:**` line directly under
+it; the path project-relative, the line the one the fix would change (a
+range as `12-20`); findings ranked most severe first under a `## Findings`
+heading, which says `No findings.` when there are none. `needs-decision
+(<persona>)` is the severity for a finding you cannot rate because no
+planning document states the rule it would need: name the owning persona
+(`software-architect`, `devsecops-engineer:reliability-requirements`,
+`devsecops-engineer:security-requirements`, `ux-designer:screen-design`,
+`accessibility-engineer`) and, under **Suggested fix**, the question that
+persona has to answer; the orchestrator routes it before any fixer runs. A
+pre-existing problem in code the change did not write goes under a `##
+Pre-existing, not blocking` heading, with no `**Severity:**` line, so
+nothing hands it to a fixer. Report-level sections (`## Summary`, `##
+Findings`, `## Pre-existing, not blocking`, `## What's working`) are `##`;
+nothing else is `###`.
+
+This skill's **Location** may be a test name when a line would mislead;
+its **Category** is the issue category above (prefixed `test-quality:` in
+a combined report); its **What's happening** quotes the assertion or mock
+setup when that is the issue; its **Why it matters** names the bug that
+ships unnoticed, not the rule broken; its **Suggested fix** is a change
+`tdd-implementation` can apply, described, not a rewritten test file.
+
+If nothing rises above Low, say so plainly rather than padding the report
+to look thorough.

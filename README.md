@@ -24,20 +24,36 @@ agents/
   <persona>/AGENT.md  # persona definition: frontmatter + system prompt
 skills/
   <skill>/SKILL.md    # backing knowledge a persona (or you, directly) can invoke
-  orchestrator/scripts/validation_gate.py  # the chunk loop's mechanical gate: suite green, scope,
-                       # protected files, coverage; run on every chunk commit and every fix commit
-                       # before any reviewer; --accept-protected takes in a protected document the
-                       # user amended while the loop was running
+  orchestrator/scripts/validation_gate.py  # the chunk loop's mechanical gate: suite green, typecheck and
+                       # lint from the manifest, scope (the chunk's files plus the design's module
+                       # directories; an in-module file off the list is a reported deviation, an
+                       # out-of-module file a failure), protected files, coverage; report-only comment
+                       # density and size figures; run on every chunk commit and every fix commit before
+                       # any reviewer; --accept-protected takes in a protected document the user amended
+                       # while the loop was running
   orchestrator/scripts/ts_runtime_lines.mjs # which lines of a TypeScript file keep runtime code, for the
                        # gate's coverage check (type-only modules exempt, erased type lines discounted)
   orchestrator/scripts/sandbox_check.py    # the loop's first step: the session's Bash sandbox probed from
                        # inside, secrets unreadable, no direct network, escape hatches off; exit 2 when
                        # the platform has no sandbox at all, which the orchestrator turns into a logged
-                       # choice, not a stop (see below)
+                       # choice, not a stop (see below); --write-settings then writes the deny rules only
+  orchestrator/scripts/readiness_check.py  # the design-readiness gate before the first builder: eight
+                       # mechanical checks over the planning documents, each failure routed to the
+                       # persona that owns the document
+  orchestrator/scripts/rounds_record.py    # a review or smoke report in the shared finding format into the
+                       # fix-round sidecar, classified regression or pre-existing against the fix's
+                       # diff, and the counts for the log line; --standing lists what is carried
+  orchestrator/scripts/done_check.py       # the Definition of Done at the slice review: README, lint and
+                       # formatter, typecheck, no code in strings, no planning references, comment
+                       # density, persisted names, env defaults, test padding
   orchestrator/scripts/audit_sync.py       # the loop's last step when KAD_AUDIT_REPO is set: a slice's planning
                        # documents, log, report, map, reviewer reports and fix-round sidecar copied into
                        # the audit repository's clone, refused on a credential-shaped string, committed
                        # and pushed
+  map-update/scripts/extract_map.py        # the architecture map extractor (TypeScript, JavaScript, Python):
+                       # modules, import edges, externals, exports, tiers carried from the prior map,
+                       # the diff and the two candidate flags; a language without one is listed with
+                       # no edges and said so, never hand-parsed
 hooks/
   hooks.json, audit.sh # audit mode: off unless KAD_AUDIT=1 (see below); with KAD_AUDIT_REPO set, the
                        # SessionStart hook clones the audit repository into the project's audit-docs/
@@ -147,45 +163,97 @@ never chosen from a plain "build it": it runs only when a task names it.
 
 The orchestrator's `tdd-coach:tdd-implementation` row builds a slice as a
 series of small commits on a slice branch, each checked before the next
-starts, and delivers the branch as a pull request. In order:
+starts, and delivers the branch as a pull request. This is the v4 shape
+(`.synthesis/implementation-flow-v4.md`), redesigned after the second real
+run cost $346 and 14.5 hours for a slice that was not production-grade:
+the money moves upstream into design completeness and to the seam and the
+finish, and the review loop keeps only what the data said earned its
+place. In order:
 
-- **A. Start:** the sandbox check (below), the policy question, a
-  `slice-<nnn>-<slug>` branch (uncommitted planning documents are committed
-  on it first), the base commit recorded.
+- **A. Start:** a repository and an `origin` must exist (otherwise
+  `release-engineer:repo-bootstrap`, decided with the owner); the sandbox
+  check (below); then up to four questions, **one per `AskUserQuestion`
+  call**, in order: settings, sandbox, policy, delegation. On "yes" to the
+  delegation question the orchestrator writes
+  `planning/delegation-slice-<nnn>.md` (the owner's words, what it covers,
+  what it never covers), which is what lets a persona settle a mid-build
+  decision without the owner. The **budget line** is written: 5 h of loop
+  time, 2 reviewer launches per chunk, 1 fixer per scope plus 1 for
+  regressions, 8 consults; counted at every chunk boundary, and the flow
+  ends at the boundary that exceeds one. A `slice-<nnn>-<slug>` branch
+  (uncommitted planning documents are committed on it first), the base
+  commit recorded. Then the **design-readiness gate**
+  (`readiness_check.py`): every criterion homed in the design, every
+  failure path homed, a number on every retry, wait and give-up, security
+  and reliability agreeing, a mockup for every named state, no question
+  routed to "the implementer", a "Kept for later slices" line, a row for
+  an external provider's unusable reply. Each failure is a backward route
+  to the persona that owns the document before any builder launches.
 - **B. Plan:** one implementer (Sonnet) reads the slice, consults the map
-  and writes a **chunk plan** into the implementation report: four to
+  and writes a **chunk plan** into the implementation report: two to
   eight vertical chunks, each with a title, the criteria it delivers, its
-  files, its done check and the reviewer territories it touches. The
-  orchestrator checks the plan mechanically and commits it.
+  files, its done check (which names a **seam test**: through the real
+  composition root, the real adapters and the real local store, only the
+  external service faked at its wire boundary) and the territories it
+  touches. The orchestrator checks the plan mechanically and commits it.
 - **C. Chunks:** for each chunk a fresh implementer (Sonnet, short
-  context, a turn cap) builds it test-first and commits it with the
-  chunk's title. The gate runs on the commit range. Reviewers (Opus) read
-  the diff: test-quality, code and architecture always; security,
-  reliability and accessibility when the chunk's territories call for
-  them. Every Critical, High and Medium goes to a fresh fixer (Sonnet),
-  the gate and the chunk's reviewers run again on the fix, and so on
-  until a round is clean, capped at five rounds; new findings are
-  classified as regressions (inside the fix's diff) or pre-existing, and
-  every round is recorded in a sidecar the audit tools read. A standing
-  Critical or High after the cap stops the loop for the user; Lows are
-  listed, never fixed here.
-- **D. Slice review:** the map is regenerated, all six reviewers read the
-  whole slice diff, and the same fix rounds apply.
-- **E. Delivery:** CI is written if the repository has none
-  (`release-engineer:ci-pipeline`), the branch is pushed and a pull request
-  opened without asking (`release-engineer:delivery`, body by
-  `pr-writeup`), every Low and standing Medium is filed as an issue in the
-  project's recorded tracker, the external reviewer's comments are triaged
+  context, `maxTurns` 120) builds it test-first, the seam test first,
+  comments only where `why-comments` would keep one, and commits it with
+  the chunk's title. The gate runs on the commit range: suite, typecheck,
+  lint, scope (the chunk's files plus the design's module directories; a
+  file inside a module but off the list is a recorded deviation, not a
+  failure), protected documents, coverage, and report-only comment
+  density and size figures. Then **two launches, never more**: one
+  combined reviewer (`code-reviewer`, Opus: `code-review`,
+  `test-quality-review` and, when the chunk touches HTTP, storage or
+  error handling, `reliability-review`, one report, at most eight
+  findings, Critical/High/Medium only) and one **smoke run** (the app
+  started as the README says, the chunk's done check driven through the
+  real interface; `accessibility-engineer` in the browser when the chunk
+  touches UI, else `tdd-coach` over HTTP). Then **one fix round**: a
+  fresh fixer (Sonnet) for every finding, the gate, a regressions-only
+  re-review on the fix's diff, a second and last fixer for the
+  regressions, the gate, done. Pre-existing findings the re-review raises
+  stand: a standing Critical or High stops the loop for the owner, a
+  standing Medium goes to the pull request body. A finding no planning
+  document can settle is `needs-decision (<persona>)`: with the
+  delegation file the owning persona is launched once, writes its own
+  document, commits `Decision <n>`, and the orchestrator logs one line;
+  without it the flow stops for the owner. `rounds_record.py` is the only
+  thing that parses a report; it writes the sidecar and prints the C
+  line's counts. No Lows per chunk.
+- **D. Slice review:** the map is regenerated with the shipped extractor;
+  the **Definition of Done** runs (`done_check.py`: README, linter and
+  formatter clean, typecheck, no code in strings, no planning reference in
+  code, comment density at or under 5%, the next slice's names persisted,
+  env defaults not production, tests not padding), with
+  `docs-writer:readme` for the README and one Sonnet fixer for the batch;
+  then the six reviewers once on the whole slice diff (Lows allowed here),
+  one fix round as in C, and the **stranger test**: the smoke agent
+  follows the README on a fresh clone in the last round.
+- **E. Delivery, all in the foreground:** CI is written if the repository
+  has none (`release-engineer:ci-pipeline`), the branch is pushed and a
+  pull request opened without asking (`release-engineer:delivery`, body
+  by `pr-writeup`: what was built, the decisions, the Definition of Done
+  table, the standing Mediums, the Known Lows grouped by theme), **only
+  standing Mediums are filed as issues** (Lows stay in the body), the
+  external reviewer's comments are triaged
   (`code-reviewer:external-review-triage`: fix, decline with a reply, or
-  defer to an issue) for up to five rounds, and the audit material is
-  synced to the audit repository when one is configured.
+  defer to an issue) for up to five rounds, the cost is computed from the
+  transcripts (`cost_by_role.py`) and written on the E line, and the audit
+  material is synced to the audit repository when one is configured, in
+  the same turn as the last issue.
 
-Every launch passes `model` explicitly (an agent definition's `model:`
-line is not applied in practice); every reviewer writes its report to a
-file under the audit directory and hands back counts, so no report is
-carried in the orchestrator's context. The log entry for the row has one
-terse line per step and per chunk, with commit hashes and per-round
-counts; the detail lives in the reviewer files and the sidecar.
+Every launch passes `model` and `maxTurns` explicitly (an agent
+definition's lines are not applied in practice); every reviewer writes
+its report to a file in the records directory (`planning/implementation/`,
+committed as `Records: slice <nnn> chunk <k>` after each chunk) and hands
+back counts, so no report is carried in the orchestrator's context. The
+log entry for the row has one bold line per step and per chunk, with
+commit hashes and per-round counts, and indented plain bullets for
+decisions and corrections; the detail lives in the reviewer files and the
+sidecar. A context clear or a session end mid-loop writes a handoff file
+the next invocation resumes from.
 
 ## Running the chunk loop: the sandbox
 
@@ -254,7 +322,7 @@ Which sandbox a platform has:
 | macOS | Seatbelt | probes it; writes the settings on a yes |
 | Linux | bubblewrap and socat | probes it; writes the settings on a yes |
 | Windows, WSL2 session | bubblewrap and socat | probes it; writes the settings on a yes |
-| Windows, native session | none; Claude Code runs every command unsandboxed | exits 2; the orchestrator asks once whether to continue unsandboxed (the `Read(...)` deny rules are still written) or to stop and run the session in WSL2, and logs the choice |
+| Windows, native session | none; Claude Code runs every command unsandboxed | exits 2; the orchestrator asks once whether to continue unsandboxed (the `Read(...)` deny rules and `denyRead` are still written, but never `sandbox.enabled` or `failIfUnavailable`, which with no backend would make the session refuse every command) or to stop and run the session in WSL2, and logs the choice |
 
 So on native Windows the loop is a strong recommendation to use WSL2
 (start Claude inside Ubuntu, from the project, and say "what's next"),

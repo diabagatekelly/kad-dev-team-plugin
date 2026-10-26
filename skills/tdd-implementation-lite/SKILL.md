@@ -79,10 +79,29 @@ these five lines, each a bullet, the Title among them:
   deviation the gate flags.
 - **Done when**: the tests that must be green, each by the name it will
   have in the runner's output, quoted ("rejects a cancel when the member
-  has no hold"), not a description of what they check; plus anything
-  runnable that shows the behaviour (a route answers, a screen renders).
+  has no hold"), not a description of what they check. The first of them
+  is the chunk's **seam test**, written as `seam "<name>"` so the
+  orchestrator's plan check can find it; plus anything runnable that shows
+  the behaviour (a route answers, a screen renders), which the smoke agent
+  drives after the commit.
 - **Touches**: which of adapter or secret, HTTP, storage, error handling,
-  UI, or none. The orchestrator picks the chunk's reviewers from this.
+  UI, or none. The orchestrator selects the chunk's review lenses from
+  this (`reliability-review` joins the combined review when it names HTTP,
+  storage or error handling) and the smoke agent (UI means
+  `accessibility-engineer` drives the built screen).
+
+**The seam test.** Every chunk names at least one test that builds the app
+through its real composition root (the same function `index`/`main` uses),
+with the real adapters and the real local store, faking **only** the
+external service at its wire boundary (an HTTP server or fetch stub that
+speaks the provider's protocol, recorded or hand-written), and drives the
+chunk's behaviour through the app's own interface (an HTTP request to the
+route, a rendered page). A test that fakes a port of the project's own
+code is not the seam test, however end-to-end it looks from the use case
+down; a test of an adapter alone is not either. The seam is where the
+use case and the adapter each do the right thing alone and the wrong
+thing together, and it is where both real runs' worst bugs lived; one
+test per chunk through the real wiring is the cheapest check there is.
 
 Rules:
 
@@ -109,9 +128,9 @@ Rules:
   chunk reuses what exists instead of planning a duplicate.
 
 Then stop. The orchestrator checks the plan mechanically (it exists, every
-chunk names a criterion and a file, no file is outside the slice's modules)
-and launches the first chunk's build as a new task; you will not be the one
-building it.
+chunk names a criterion and a file, every Done when names a seam test, no
+file is outside the slice's modules) and launches the first chunk's build
+as a new task; you will not be the one building it.
 
 ## Building one chunk
 
@@ -123,11 +142,31 @@ nothing else about the unit.
 - The tests come from the chunk's **Delivers** criteria and nothing else.
   The next chunk's behaviour waits for the next chunk, even when it is one
   line and you can see it coming.
+- **The seam test is the first test you write**, for the chunk's main
+  path, so the composition root gets designed to be constructible in a
+  test (a function that takes its external endpoints and its store
+  location as arguments, and that `index`/`main` calls with the real
+  ones). It runs with the suite; the gate runs it like any other test.
+- **Fakes only at the system boundary.** A test may fake the external
+  service at its wire boundary (HTTP), the clock, randomness, and a
+  browser-only API. It never fakes the project's own modules when the real
+  one can run in the test: a local database the project already runs its
+  tests against, a file store under a temp directory, the real use case
+  behind the real route. A port fake of own code is allowed only for a
+  branch the seam test cannot reach (a store that fails mid-write, a
+  provider that times out), and each one is named in your report's
+  **Verified** line with the branch it exists for ("fake store: the second
+  insert fails"), never a default fixture every test shares. No test
+  harness built from source text: a `new Function` over a script string,
+  or a hand-rolled DOM, means the code under test has no module of its
+  own, and the fix is the module, not the harness.
 - Stop when **Done when** holds and the full suite is green. Not before,
   not after.
 - A file you needed that **Files** does not name: create it, and record it
   in your report section as a deviation with one line of why. The gate
-  judges it; don't edit the plan.
+  reports it as a deviation when it sits inside one of the design's module
+  directories and fails the chunk when it does not; either way, neither
+  you nor a fixer edits the plan entry.
 - A gap the plan did not foresee is escalated as always; the chunk ships
   without the behaviour that depends on it, and the report says so.
 
@@ -179,7 +218,16 @@ things are not:
    because the module does not exist proves nothing about any test.
 3. **Implement, and run the whole suite green.** The code the tests ask
    for and nothing the slice does not need. The last run before you
-   report is the full suite, green.
+   report is the full suite, green. **Write no comment unless
+   `why-comments` would keep it**: a non-local constraint, a workaround
+   for a named external bug, an invariant a future edit could break, a
+   rejected obvious alternative. A sentence that restates the next line,
+   a field or a function is deleted before the commit. Never cite a
+   planning document, a decision number or a criterion in code ("decision
+   7", "ADR-2", "criterion S3", a planning file's name): a reader of the
+   code cannot resolve it; put the WHY itself, in the code's own terms, or
+   nothing. The same holds for any tidying you do afterwards: a structure
+   that needs a comment to explain it wants a better name instead.
 4. **Prove the tests can fail.** Break the implementation on purpose (a
    flipped condition, a wrong comparison, an off-by-one in the place the
    slice's main rule lives), run, confirm a test fails, restore the code,
@@ -318,11 +366,14 @@ that built it, five to ten lines:
 - **Commit**: <short sha>; <n> tests green
 ```
 
-A fix applied under the loop appends one line to that chunk's section:
-`- **Fix r<i>**: <short sha>; <finding titles>`. Nothing else goes in the
-report: the rounds' detail is the orchestrator's own record, and a
-reviewer's findings live in the reviewer's file. Invoked for a whole slice,
-report in the shape below.
+A fix applied under the loop appends one line to that chunk's section,
+**directly after the `Commit` line** (or after the previous `Fix` line),
+never at the end of the file: `- **Fix r<i>**: <short sha>; <finding
+titles>`. A deviation a fix introduces is one more `Deviation` line in the
+same section. Nothing else goes in the report: there is no Lows list, the
+rounds' detail is the orchestrator's sidecar, and a reviewer's findings
+live in the reviewer's file. Invoked for a whole slice, report in the
+shape below.
 
 State, in this shape:
 
