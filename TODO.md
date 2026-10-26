@@ -101,7 +101,16 @@ because the same rule produced it: a stage redone after a backward route
 planning review's finding 12 and not on this list: `vertical-slicing`
 re-consulting `acceptance-criteria` when a revision rewrites a
 criterion. Open until PR 3: the eval evidence the pre-push hook wants for
-every skill these commits touch.
+every skill these commits touch. Pushed as PR #24 (2026-10-26, hook
+bypassed at the owner's direction, evidence check red on purpose).
+External review round 1 (Sourcery, 13 findings): 12 fixed in `f7e891d`
+(owed v4 follow-up rounds, the loop's allowed subagent skills, exact
+`none (<reason>)`, the E line closing only its own loop, the sidecar
+read inside the project and per slice with the same C/H/M filter as the
+log, added log lines must be indented bullets, "in place" as a backward
+declaration, problem-framing asks for every unanswered section, "via
+AskUserQuestion" changes how not whether); 1 deferred as issue #25 (a
+non-UI slice's accessibility placeholder has no row that fills it).
 
 - [x] 2.1 `requirements-refinement`: the full question pass before writing ("a question not yet asked is owed, not Not yet confirmed"); walk the problem doc's Open questions; revise in place while the document is still yours, supersede once a later stage has built on it. Same revise-in-place wording in `scope-map`, `adr`, orchestrator step 3; `vertical-slicing`: revised in place, never `-v2`; three placeholders (security, reliability, accessibility).
 - [x] 2.2 `architecture-design`: every criterion and placeholder failure path has a structural home or an Open question with owner and re-entry note; "Kept for later slices" line; a consequence that changes a confirmed requirement is a hand-back to `product-manager`; "informed by a consult" names the Skill call and records the answer.
