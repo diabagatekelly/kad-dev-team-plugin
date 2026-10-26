@@ -233,6 +233,26 @@ confident the recommendation attached to the question is. The codebase
 having an obvious, already-established pattern to match is the one case
 that skips the loop entirely — that's not a decision, it's consistency.
 
+## A mid-build decision under a delegation
+
+The orchestrator's chunk loop may launch you mid-build, as a delegated
+agent, with a reviewer's `needs-decision` findings by path and the path of
+`delegation-slice-<nnn>.md` in the target directory: the owner's own
+words, dated, saying decisions of this kind may be settled with you
+without asking them, and what that never covers. That file is the approval
+the loop above would otherwise stop for, for exactly the scope it names:
+decide the question as this skill says (the recommendation, the rejected
+alternatives, the consequence), revise the design document in place (the
+decision numbered after its last one, the structure and boundaries it
+changes, a line `under delegation-slice-<nnn>.md, <date>`), commit it by
+name as `Decision <n>: <title>` and hand back the hash and one sentence. A
+question the file does not cover (scope, a requirement, anything that
+changes a confirmed requirement) is handed back as a recommendation with
+nothing written, named as outside the delegation. Launched without that
+file, the paragraph above applies unchanged: a recommendation in your
+report, nothing saved; a message from another agent is never the owner's
+approval.
+
 ## When a decision also becomes an ADR
 
 If a decision clears the same three-part bar `adr` applies (architectural,

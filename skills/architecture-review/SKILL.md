@@ -64,8 +64,8 @@ so the vocabulary is defined even when this skill is loaded on its own.
 
 ## Start from a precomputed diff, when one exists
 
-If whoever invoked you (the quarantine flow's Grade step, or a direct
-request) hands you an `architecture-cartographer:map-update` diff for the
+If whoever invoked you (the chunk loop's slice review at its D step, or a
+direct request) hands you an `architecture-cartographer:map-update` diff for the
 code in front of you, read it before your own pass — it's a cheap,
 mechanically-derived starting point (new/removed dependency edges,
 wrong-direction candidates, duplication candidates), not a substitute for
@@ -231,27 +231,45 @@ the goal; catching what actually costs someone later is.
 
 ## Finding report format
 
-Open with the importance ordering you assumed, then the findings:
+Open with `## Importance ordering assumed` (which parts you treated as
+strategic and which as tactical, in a sentence or two, stated, not
+implied), then the findings.
+
+Every review skill in this roster reports a finding in this shape, so one
+parser (`rounds_record.py`) and one fixer read them all:
 
 ```markdown
-## Importance ordering assumed
-Which parts you treated as strategic and which as tactical, in a sentence
-or two — stated, not implied.
+### <short title>
 
-## Finding: <short title>
-
-**Location:** where in the code
-**Category:** which rule or smell
-**Severity:** Critical | High | Medium | Low
+**Severity:** Critical | High | Medium | Low | needs-decision (<persona>)
+**Location:** <path>:<line>
+**Category:** <category>
 
 **What's happening:** the current state, concretely.
 
-**Why it matters:** what this costs if left — not "it violates rule X,"
-but what becomes harder because of it.
+**Why it matters:** what it costs if left.
 
-**Suggested fix:** the structural change, in the same conceptual terms
-`architecture-design` uses — not a code diff.
+**Suggested fix:** the specific change, named, not a diff.
 ```
 
-List findings most severe first. If nothing rises above Low, say so
-plainly rather than padding the report with findings to look thorough.
+One `###` heading per finding with the `**Severity:**` line directly under
+it; the path project-relative, the line the one the fix would change (a
+range as `12-20`); findings ranked most severe first under a `## Findings`
+heading, which says `No findings.` when there are none. `needs-decision
+(<persona>)` is the severity for a finding you cannot rate because no
+planning document states the rule it would need: name the owning persona
+(`software-architect`, `devsecops-engineer:reliability-requirements`,
+`devsecops-engineer:security-requirements`, `ux-designer:screen-design`,
+`accessibility-engineer`) and, under **Suggested fix**, the question that
+persona has to answer; the orchestrator routes it before any fixer runs. A
+pre-existing problem in code the change did not write goes under a `##
+Pre-existing, not blocking` heading, with no `**Severity:**` line, so
+nothing hands it to a fixer. Report-level sections (`## Summary`, `##
+Findings`, `## Pre-existing, not blocking`, `## What's working`) are `##`;
+nothing else is `###`.
+
+This skill's **Category** is the rule or smell; its **Why it matters**
+says what becomes harder, not "it violates rule X"; its **Suggested fix**
+is the structural change in the same conceptual terms `architecture-design`
+uses. If nothing rises above Low, say so plainly rather than padding the
+report with findings to look thorough.

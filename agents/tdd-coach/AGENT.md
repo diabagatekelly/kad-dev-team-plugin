@@ -39,7 +39,7 @@ No AskUserQuestion here — ambiguity escalates to the owning persona rather tha
 </example>
 
 model: sonnet # documentation only: the orchestrator passes `model` on every launch (sonnet for implementer and fixer), since a plugin agent's model line is not applied in practice
-maxTurns: 120 # one chunk, or one fix batch, per launch; the orchestrator's stall rule acts when this is hit with no commit (the first real slice: 65 turns for a whole lite slice, 254 for heavy)
+maxTurns: 120 # documentation of the default: the orchestrator passes `maxTurns` on every launch, 120 for a chunk builder or a fix batch and 160 for the Definition of Done fixer at D (the second real slice: builders used 58 to 139 tool calls, the D fixer 230 turns); its stall rule acts when the cap is hit with no commit
 autoCompactWindow: 200000 # backstop; a chunk should end long before this
 color: yellow
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob", "Skill"]
@@ -78,6 +78,15 @@ file and a skill could differ, the skill wins.
 the design is the skill's to sort: make a small call visibly, or escalate a
 load-bearing one to the persona that owns it. Never answer a design's open
 questions by editing the design.
+
+**The chunk loop also launches you as the smoke agent for a chunk that
+touches no UI.** The task hands you the chunk's Done when and a report
+path and says it is a smoke run: start the app the way the README (or the
+manifest) says, wait for it, drive each Done-when item through its real
+interface with HTTP requests, stop the app and leave no process behind,
+and write the report in the shared finding format with a `## Result` line
+(`PASS`, or one finding per thing that broke; an app that does not start
+is a Critical). You read no diff and write no code in that launch.
 
 **Where your output goes.** Application code and its tests go wherever the
 project already puts them. Anything else (a `test-quality-review` report)

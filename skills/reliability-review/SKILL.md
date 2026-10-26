@@ -227,23 +227,45 @@ its severity.
 
 ## Finding report format
 
+Every review skill in this roster reports a finding in this shape, so one
+parser (`rounds_record.py`) and one fixer read them all:
+
 ```markdown
-## Finding: <short title>
+### <short title>
 
-**Location:** where in the code or config — the file(s) the fix would change, not every file that touches the symptom
-**Category:** what kind of issue
-**Severity:** Critical | High | Medium | Low
-
-**When this bites:** the conditions under which the problem actually
-manifests — the load, the failure, the sequence. A reliability finding
-without those conditions stated is speculation.
+**Severity:** Critical | High | Medium | Low | needs-decision (<persona>)
+**Location:** <path>:<line>
+**Category:** <category>
 
 **What's happening:** the current state, concretely.
 
-**Why it matters:** what breaks, for whom, and whether anyone would know.
+**Why it matters:** what it costs if left.
 
-**Suggested fix:** the specific change. Name the approach, not a diff.
+**Suggested fix:** the specific change, named, not a diff.
 ```
 
-Every finding carries all of these, Suggested fix included. List findings
-most severe first. If nothing rises above Low, say so.
+One `###` heading per finding with the `**Severity:**` line directly under
+it; the path project-relative, the line the one the fix would change (a
+range as `12-20`); findings ranked most severe first under a `## Findings`
+heading, which says `No findings.` when there are none. `needs-decision
+(<persona>)` is the severity for a finding you cannot rate because no
+planning document states the rule it would need: name the owning persona
+(`software-architect`, `devsecops-engineer:reliability-requirements`,
+`devsecops-engineer:security-requirements`, `ux-designer:screen-design`,
+`accessibility-engineer`) and, under **Suggested fix**, the question that
+persona has to answer; the orchestrator routes it before any fixer runs. A
+pre-existing problem in code the change did not write goes under a `##
+Pre-existing, not blocking` heading, with no `**Severity:**` line, so
+nothing hands it to a fixer. Report-level sections (`## Summary`, `##
+Findings`, `## Pre-existing, not blocking`, `## What's working`) are `##`;
+nothing else is `###`.
+
+This skill adds one line between **Category** and **What's happening**:
+`**When this bites:** the conditions under which the problem actually
+manifests, the load, the failure, the sequence`; a reliability finding
+without those conditions stated is speculation. Its **Location** is the
+file the fix would change, not every file that touches the symptom; its
+**Why it matters** says what breaks, for whom, and whether anyone would
+know; its **Category** is prefixed `reliability:` in a combined report.
+Every finding carries all of these, Suggested fix included. If nothing
+rises above Low, say so.

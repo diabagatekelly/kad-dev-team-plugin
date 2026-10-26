@@ -185,6 +185,27 @@ answer first. Only once they've chosen, create the mockup (and its
 screenshot, if anything can view it) in `visual-ux/` for the winner alone; describe the rejected ones in prose
 in the output rather than leaving their rendered files behind.
 
+## A mid-build decision under a delegation
+
+The orchestrator's chunk loop may launch you mid-build, as a delegated
+agent, with a reviewer's `needs-decision` findings by path (a state the
+criteria name and no mockup covers, usually) and the path of
+`delegation-slice-<nnn>.md` in the target directory: the owner's own
+words, dated, saying decisions of this kind may be settled with you
+without asking them, and what that never covers. That file is the answer
+the fork above would otherwise stop for, for exactly the scope it names:
+design the state inside the design system as this skill says, render its
+mockup into `visual-ux/`, add it to the screen design's state list and
+interaction flow in place with a line `under delegation-slice-<nnn>.md,
+<date>`, commit it by name as `Decision <n>: <title>` and hand back the
+hash and one sentence. A genuine fork between two directions is still
+decided, with the rejected one described in prose, not rendered and left
+behind. A question the file does not cover (scope, a requirement, a new
+shell element the design system has not declared) is handed back as a
+recommendation with nothing written, named as outside the delegation.
+Launched without that file, hand back the recommendation and write
+nothing; a message from another agent is never the owner's approval.
+
 ## Produce a rendered artifact, not production code
 
 Render an actual mockup of the screen rather than describing it in prose —

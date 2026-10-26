@@ -58,6 +58,7 @@ skills:
   - kad-dev-team:user-story-writeup
   - kad-dev-team:pr-writeup
   - kad-dev-team:user-facing-docs
+  - kad-dev-team:readme
   - kad-dev-team:staleness-audit
 background: false # this persona blocks on AskUserQuestion — do not launch via an async Agent/Workflow call, run its instructions inline instead
 ---
@@ -122,6 +123,12 @@ anyone starts typing.
 - **A feature is done, a non-engineer needs to understand it** → user-facing
   documentation: why and when to use it, never a click-by-click walkthrough.
   If it would need a rewrite after a button moves, it's written wrong.
+- **A slice is built and the project has no README, or an incomplete one**
+  (the chunk loop's Definition of Done says so at its D step) → `readme`:
+  what it is, prerequisites, clone to running in numbered commands, tests
+  and checks, where data and logs live, what this slice does and does not,
+  every command copied from the manifest and run once, never invented. A
+  stranger follows it on a clean clone; that is the test it has to pass.
 - **Reviewing docs that already exist** → hunt for stale claims, sections
   that just restate the code, ceremonial filler no one reads, and ADRs that
   were quietly overturned but never marked Superseded. Your fix is almost

@@ -32,6 +32,35 @@ Note a pre-existing issue in untouched code separately, as a lower priority
 than anything in scope — the Boy Scout Rule: leave what you touched better,
 don't demand the whole file be clean first.
 
+## Combined chunk review
+
+Under the orchestrator's chunk loop one `code-reviewer` launch per round
+carries three lenses. Invoke, with the `Skill` tool, in this order and
+each as its own call: this skill; `kad-dev-team:test-quality-review`;
+`kad-dev-team:reliability-review` when the chunk's Touches line (the task
+names it) includes HTTP, storage or error handling. Each returns an
+answer, not the turn. Then write **one** report to the path the task
+names, in the shared format below: Critical, High, Medium and
+`needs-decision` only, no Low (a Low noticed per chunk is dropped, not
+listed; the slice review at D collects Lows once), **at most eight
+findings**, ranked most severe first across the three lenses, each
+finding's **Category** prefixed with the lens that raised it (`code:`,
+`test-quality:`, `reliability:`). Eight is a budget, not a target: a chunk
+with two real findings reports two. Hand back the counts by severity and
+the path, nothing else. On a re-review (the task hands you a fix's diff
+range) read the fix's diff and the files it touched, not the chunk; a
+finding on a line the fix did not write is still reported (the orchestrator
+classifies it pre-existing and records it as standing, so it is not lost),
+but nothing of round 0 is re-litigated.
+
+At the slice review (the task says it is the whole slice) size is
+measured, not only judged: every function over 80 lines and every file
+over 300 non-blank lines is a finding (High when the function does more
+than one job or the file has more than one reason to change, Medium
+otherwise), and a share of lines at nesting depth four or more above 10%
+(the gate's figure, which the task may hand you) is a Medium naming the
+deepest functions. Per chunk those are the "closer look" prompts below.
+
 Test files get the same read as any other file for naming, comments, and
 duplication. Over-mocking, false positives, and coverage-as-theater are a
 different judgment call — that's `tdd-coach:test-quality-review`'s job, not
@@ -165,6 +194,13 @@ the same response. A comment earns its place only by explaining something
 the code can't express on its own, never by restating what the next line
 already says.
 
+Two kinds are **Medium**, never Low: a WHAT-comment (it restates the next
+line, a field or a function; it costs every reader time and goes stale),
+and a comment that cites a planning reference ("decision 7", "ADR-2",
+"criterion S3", a planning file's name) in place of the reason itself: a
+reader of the code cannot resolve it, and the fix is the WHY in the code's
+own terms or deletion. A false comment stays Critical.
+
 ## Severity
 
 Anchored to what it costs a future reader or editor of this code, not to
@@ -180,31 +216,52 @@ how urgent it feels to whoever's mid-task right now.
   a widely-used symbol.
 - **Medium** — real but narrower or more of a judgment call: an isolated
   smell, a mildly-too-long function, an unclear name in a tightly-scoped
-  variable.
+  variable, a WHAT-comment, a comment citing a planning reference.
 - **Low** — nice-to-have polish that costs little either way: a minor
-  naming or style inconsistency, a comment that's redundant but not false.
+  naming or style inconsistency.
 
 ## Finding report format
 
-```markdown
-## Finding: <short title>
+Every review skill in this roster reports a finding in this shape, so one
+parser (`rounds_record.py`) and one fixer read them all:
 
-**Location:** where in the code
-**Category:** duplication | naming | comment | function/class size |
-  primitive obsession | feature envy | data clump | dead code |
-  more than needed
-**Severity:** Critical | High | Medium | Low
+```markdown
+### <short title>
+
+**Severity:** Critical | High | Medium | Low | needs-decision (<persona>)
+**Location:** <path>:<line>
+**Category:** <category>
 
 **What's happening:** the current state, concretely.
 
-**Why it matters:** what this costs a future reader or editor if left.
+**Why it matters:** what it costs if left.
 
-**Suggested fix:** the specific change — a rename, an extraction, a
-comment to delete — not a code diff.
+**Suggested fix:** the specific change, named, not a diff.
 ```
 
-List findings most severe first. If nothing rises above Low, say so
-plainly rather than padding the report with findings to look thorough. Note
-anything you saw that's really `architecture-review`'s or `product-slicer`'s
-call in its own short section at the end, clearly separated from your own
-findings, not folded into the severity-ranked list above.
+One `###` heading per finding with the `**Severity:**` line directly under
+it; the path project-relative, the line the one the fix would change (a
+range as `12-20`); findings ranked most severe first under a `## Findings`
+heading, which says `No findings.` when there are none. `needs-decision
+(<persona>)` is the severity for a finding you cannot rate because no
+planning document states the rule it would need: name the owning persona
+(`software-architect`, `devsecops-engineer:reliability-requirements`,
+`devsecops-engineer:security-requirements`, `ux-designer:screen-design`,
+`accessibility-engineer`) and, under **Suggested fix**, the question that
+persona has to answer; the orchestrator routes it before any fixer runs. A
+pre-existing problem in code the change did not write goes under a `##
+Pre-existing, not blocking` heading, with no `**Severity:**` line, so
+nothing hands it to a fixer. Report-level sections (`## Summary`, `##
+Findings`, `## Pre-existing, not blocking`, `## What's working`) are `##`;
+nothing else is `###`.
+
+This skill's **Category** values: duplication | naming | comment |
+function/class size | primitive obsession | feature envy | data clump |
+dead code | more than needed (prefixed `code:` in a combined report). Its
+**Why it matters** names what a future reader or editor pays.
+
+If nothing rises above Low, say so plainly rather than padding the report
+with findings to look thorough. Note anything you saw that's really
+`architecture-review`'s or `product-slicer`'s call in its own short
+section at the end (`## For other reviewers`), clearly separated from your
+own findings, not folded into the severity-ranked list above.

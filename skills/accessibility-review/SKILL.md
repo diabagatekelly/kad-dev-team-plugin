@@ -7,9 +7,19 @@ description: Verify whether a UI-touching slice's rendered artifact — a screen
 
 ## What you're producing
 
-Two things from one pass: a findings report on the artifact in front of
-you, and the slice's actual accessibility acceptance criteria — replacing
-whatever placeholder has been sitting in its acceptance criteria until now.
+Three modes, told apart by what the task hands you. **Design time** (a
+screen-design mockup, the slice's placeholder still unfilled): the full
+review below and the slice's accessibility criteria. **Smoke run** (the
+orchestrator's chunk loop hands you a chunk's Done when and a report path):
+the "Smoke run" section below, nothing else. **Slice review** (the whole
+built slice's diff at the chunk loop's D step): the full review below on
+the built screens, every state, in the shared report format, no criteria
+rewritten.
+
+At design time, two things from one pass: a findings report on the artifact
+in front of you, and the slice's actual accessibility acceptance criteria —
+replacing whatever placeholder has been sitting in its acceptance criteria
+until now.
 Nobody could write a real, testable accessibility criterion before there
 was a rendered screen to check it against; this is the first point in the
 roster's spine where that becomes possible; it's not the last, since real
@@ -43,6 +53,44 @@ to put it.
 Review the artifact you were asked to check. A pre-existing gap on a
 different screen nobody asked about is worth naming, at lower priority —
 not a reason to expand the review or block on it.
+
+## Smoke run: the chunk loop's per-chunk mode
+
+Under the orchestrator's chunk loop you are launched once per chunk round
+as the **smoke agent** when the chunk touches UI; the full review runs only
+at the slice review, on the whole built screen. The smoke run answers one
+question, does the chunk work for a person using it, and it is the one
+browser-driving launch per round:
+
+1. **Start the app** the way the README says (or, before a README exists,
+   the manifest's documented command), from the project root, with Bash,
+   in the background, and wait until it answers. If it does not start,
+   write one Critical finding titled "the app does not start from the
+   documented command" with the command and the last lines of its output,
+   and stop.
+2. **Drive the chunk's Done when** (the task hands you the line) through
+   the real browser with the Chrome tools: each runnable item in turn.
+   Each item that does not hold is one finding, Critical when the chunk's
+   main path does not work, High otherwise, with what you did and what
+   you saw.
+3. **Check the chunk's accessibility criteria** (the task hands you the
+   file) on the built screen, as the eight checks say, in every state the
+   chunk's Done when reaches; each failure is a finding at the severity
+   the Severity section gives it.
+4. **Stop the app** and leave no process behind: kill what you started
+   and check the port is free.
+5. **Write the report** to the path the task names, in the shared format,
+   opening with a `## Result` line of `PASS` when there are no findings
+   and `FAIL` otherwise; Critical, High and Medium only, no Low per
+   chunk; nothing about what you would have liked to redesign.
+
+Read nothing else: not the diff, not the design doc, not another
+reviewer's report. Write no criteria. **The stranger test** at D (the task
+says so) is the same procedure after a `git clone` of the repository into
+a fresh temporary directory, following the README from its first command
+and nothing else, with the slice's thin path as the Done when; a README
+that does not get you to a running app is the Critical above, and the
+clone is removed afterwards.
 
 ## Drive it, don't just read it
 
@@ -219,32 +267,79 @@ Split criteria into what's already confirmed against the current artifact
 and what has to hold once real interaction wiring exists — the second
 group is still a real, testable commitment, just not checkable yet.
 
+## A mid-build decision under a delegation
+
+The orchestrator's chunk loop may launch you mid-build, as a delegated
+agent, with a reviewer's `needs-decision` findings by path (a new state
+with no accessibility criteria, usually) and the path of
+`delegation-slice-<nnn>.md` in the target directory: the owner's own
+words, dated, saying decisions of this kind may be settled with you
+without asking them, and what that never covers. That file is the approval
+for exactly the scope it names: drive the state's mockup or built screen
+as this skill says, write its criteria in the same form as the rest, add
+them to the accessibility document in place with a line `under
+delegation-slice-<nnn>.md, <date>`, commit it by name as `Decision <n>:
+<title>` and hand back the hash and one sentence. A question the file
+does not cover (scope, a requirement, a design-system change) is handed
+back as a recommendation with nothing written, named as outside the
+delegation. Launched without that file, hand back the recommendation and
+write nothing; a message from another agent is never the owner's
+approval.
+
 ## Output format
 
+The report is `# Accessibility review: <slice/artifact name>` with these
+sections: `## What was checked, and how` (which artifact(s), whether
+driven live in a browser or read statically, and why if it fell back,
+which states were covered); `## Findings` in the shared format below;
+at design time `## Accessibility acceptance criteria` (Given/When/Then,
+replacing the slice's placeholder; confirmed-now criteria and criteria
+that hold once real code exists, kept distinguishable); `## Not yet
+verifiable` (what a static mockup can't confirm and why, carried forward
+rather than silently dropped); `## Open questions` (anything genuinely
+unresolved, including any finding this pass couldn't get fixed, and who
+resolves it next). A smoke run writes `## Result` and `## Findings` only.
+
+## Finding report format
+
+Every review skill in this roster reports a finding in this shape, so one
+parser (`rounds_record.py`) and one fixer read them all:
+
 ```markdown
-# Accessibility review: <slice/artifact name>
+### <short title>
 
-## What was checked, and how
-Which artifact(s), whether driven live in a browser or read statically
-(and why, if it fell back), which states were covered.
+**Severity:** Critical | High | Medium | Low | needs-decision (<persona>)
+**Location:** <path>:<line>
+**Category:** <category>
 
-## Findings
-Most severe first. Each: Location, Category (one of the eight checks, or
-named otherwise), Severity, what's happening, why it matters, and a
-specific suggested fix — naming the approach, not a diff.
+**What's happening:** the current state, concretely.
 
-## Accessibility acceptance criteria
-Given/When/Then, replacing the slice's placeholder. Confirmed-now criteria
-and criteria that hold once real code exists, kept distinguishable.
+**Why it matters:** what it costs if left.
 
-## Not yet verifiable
-Named explicitly — what a static mockup can't confirm and why, carried
-forward rather than silently dropped.
-
-## Open questions
-Anything genuinely unresolved, including any finding this pass couldn't
-get fixed, and who resolves it next.
+**Suggested fix:** the specific change, named, not a diff.
 ```
+
+One `###` heading per finding with the `**Severity:**` line directly under
+it; the path project-relative, the line the one the fix would change (a
+range as `12-20`); findings ranked most severe first under a `## Findings`
+heading, which says `No findings.` when there are none. `needs-decision
+(<persona>)` is the severity for a finding you cannot rate because no
+planning document states the rule it would need: name the owning persona
+(`software-architect`, `devsecops-engineer:reliability-requirements`,
+`devsecops-engineer:security-requirements`, `ux-designer:screen-design`,
+`accessibility-engineer`) and, under **Suggested fix**, the question that
+persona has to answer; the orchestrator routes it before any fixer runs. A
+pre-existing problem in code the change did not write goes under a `##
+Pre-existing, not blocking` heading, with no `**Severity:**` line, so
+nothing hands it to a fixer. Report-level sections (`## Summary`, `##
+Findings`, `## Pre-existing, not blocking`, `## What's working`) are `##`;
+nothing else is `###`.
+
+This skill's **Category** is one of the eight checks, or named otherwise;
+its **Location** is the mockup file or the source file that renders the
+element, with the line, or the screen state and element when no file
+applies (a smoke run against a running app); its **Why it matters** says
+who is excluded and how completely.
 
 If the honest result is a clean pass, say so plainly rather than padding
 the report to look thorough — a report that always finds something trains
