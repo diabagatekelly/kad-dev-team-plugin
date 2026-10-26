@@ -19,6 +19,16 @@ owner, not guessed; until answered, the stated default applies.
 
 ## PR 1 — the loop (orchestrator, tdd skills, review skills, scripts)
 
+Status (2026-10-25): built and committed on `implementation-flow-v4`
+(`8033f43` scripts, `db17d28` skills and agents, `7fc4eab` docs and
+version). Two things went in beyond the list because the loop needs them:
+the five owning planning skills accept a delegation file as the owner's
+approval for a mid-build decision (1.10 cannot complete without it), and
+`release-engineer` is `background: false` since `repo-bootstrap` asks.
+Open until PR 3: `cost_by_role.py` (the E line says `cost not measured`
+until it exists) and the eval evidence the pre-push hook wants for every
+case these skills touch.
+
 ### Orchestrator `skills/orchestrator/SKILL.md`
 
 - [x] 1.1 A: one question per `AskUserQuestion`, in order settings → sandbox → policy → delegation (§3.A.2). Done when: the A step text names four separate calls and forbids bundling.
