@@ -84,14 +84,42 @@ case these skills touch.
 
 ## PR 2 — planning (from the two planning reviews, §9 "Planning skills", D12)
 
-- [ ] 2.1 `requirements-refinement`: the full question pass before writing ("a question not yet asked is owed, not Not yet confirmed"); walk the problem doc's Open questions; revise in place while the document is still yours, supersede once a later stage has built on it. Same revise-in-place wording in `scope-map`, `adr`, orchestrator step 3; `vertical-slicing`: revised in place, never `-v2`; three placeholders (security, reliability, accessibility).
-- [ ] 2.2 `architecture-design`: every criterion and placeholder failure path has a structural home or an Open question with owner and re-entry note; "Kept for later slices" line; a consequence that changes a confirmed requirement is a hand-back to `product-manager`; "informed by a consult" names the Skill call and records the answer.
-- [ ] 2.3 `reliability-requirements`: a number on every retry/wait/poll/give-up/stale or "unbounded, owner approved"; read the security file first, reconcile or escalate overlaps; the unusable-reply row; a routed question is answered or re-routed with a reason, never to the implementer.
-- [ ] 2.4 `screen-design`: every state the security, reliability and accessibility files name gets a mockup; omitting a declared shell element is a proposal to `design-system`.
-- [ ] 2.5 `security-requirements`, `reliability-requirements`, `accessibility-review`: replace the slice's placeholder line with a one-line pointer and edit nothing else; the story is `docs-writer`'s; a narrowed criterion is a finding for `product-slicer`; consult answers as visible text under `## Consult answer`.
-- [ ] 2.6 `problem-framing-doc`: gather through `AskUserQuestion`, one question per section. `map-query`: emit the header for "no map" after checking the path.
-- [ ] 2.7 Orchestrator steps 3–5: Skill arguments say where to save and nothing about other stages' documents; "via `AskUserQuestion`" passed to every routed skill; re-inspect without asking; reports as visible text; one entry per owner and one continue prompt for a fact that ripples requirement → slice → story; the outcome-bullet rule per §13's answer; non-routed entry shape (`Routed to: none (<reason>)`, one Artifact path).
-- [ ] 2.8 `evals/tools/orchestrator_log_check.py`: Agent launches under an open entry across sessions; sidecar for round counts; clean rounds without a split; `Policy:`/`policy —`; parentheticals; consult-tagged Skill calls (`NARROW CONSULT`/`INLINE CONSULT`) under the latest entry; the v4 fields. Done when: on the run-2 log it reports none of the ~60 false positives and all three real deviations (§11 case 11).
+Status (2026-10-26): built and committed on `implementation-flow-v4-pr2`
+(`8cfa1e0` 2.1, `ce099af` 2.2–2.7, `9743da6` 2.8). The §13 defaults were
+applied as stated (one question per `AskUserQuestion`; indented outcome
+bullets allowed under any entry; report after every step and ask only
+when the next row needs an owner decision). 2.8's done-when holds: the
+checker on the run-2 log with its three sessions and their 243 subagent
+transcripts reports 5 errors (entries 4 and 11's Artifact lines, and
+entry 28's three real deviations: repeated A/D/E lines, chunk 6 with no
+`commits` field, no E line) and none of the 76 "no log entry written
+before it in this session" false positives; the run-1 log reports the
+same 13 errors as before; a v4 entry written from the orchestrator's
+template parses with 0 errors. One fix outside the list, made with 2.8
+because the same rule produced it: a stage redone after a backward route
+(entry 22) is no longer "goes back without saying". Left out, from the
+planning review's finding 12 and not on this list: `vertical-slicing`
+re-consulting `acceptance-criteria` when a revision rewrites a
+criterion. Open until PR 3: the eval evidence the pre-push hook wants for
+every skill these commits touch. Pushed as PR #24 (2026-10-26, hook
+bypassed at the owner's direction, evidence check red on purpose).
+External review round 1 (Sourcery, 13 findings): 12 fixed in `f7e891d`
+(owed v4 follow-up rounds, the loop's allowed subagent skills, exact
+`none (<reason>)`, the E line closing only its own loop, the sidecar
+read inside the project and per slice with the same C/H/M filter as the
+log, added log lines must be indented bullets, "in place" as a backward
+declaration, problem-framing asks for every unanswered section, "via
+AskUserQuestion" changes how not whether); 1 deferred as issue #25 (a
+non-UI slice's accessibility placeholder has no row that fills it).
+
+- [x] 2.1 `requirements-refinement`: the full question pass before writing ("a question not yet asked is owed, not Not yet confirmed"); walk the problem doc's Open questions; revise in place while the document is still yours, supersede once a later stage has built on it. Same revise-in-place wording in `scope-map`, `adr`, orchestrator step 3; `vertical-slicing`: revised in place, never `-v2`; three placeholders (security, reliability, accessibility).
+- [x] 2.2 `architecture-design`: every criterion and placeholder failure path has a structural home or an Open question with owner and re-entry note; "Kept for later slices" line; a consequence that changes a confirmed requirement is a hand-back to `product-manager`; "informed by a consult" names the Skill call and records the answer.
+- [x] 2.3 `reliability-requirements`: a number on every retry/wait/poll/give-up/stale or "unbounded, owner approved"; read the security file first, reconcile or escalate overlaps; the unusable-reply row; a routed question is answered or re-routed with a reason, never to the implementer.
+- [x] 2.4 `screen-design`: every state the security, reliability and accessibility files name gets a mockup; omitting a declared shell element is a proposal to `design-system`.
+- [x] 2.5 `security-requirements`, `reliability-requirements`, `accessibility-review`: replace the slice's placeholder line with a one-line pointer and edit nothing else; the story is `docs-writer`'s; a narrowed criterion is a finding for `product-slicer`; consult answers as visible text under `## Consult answer`.
+- [x] 2.6 `problem-framing-doc`: gather through `AskUserQuestion`, one question per section. `map-query`: emit the header for "no map" after checking the path.
+- [x] 2.7 Orchestrator steps 3–5: Skill arguments say where to save and nothing about other stages' documents; "via `AskUserQuestion`" passed to every routed skill; re-inspect without asking; reports as visible text; one entry per owner and one continue prompt for a fact that ripples requirement → slice → story; the outcome-bullet rule per §13's answer; non-routed entry shape (`Routed to: none (<reason>)`, one Artifact path).
+- [x] 2.8 `evals/tools/orchestrator_log_check.py`: Agent launches under an open entry across sessions; sidecar for round counts; clean rounds without a split; `Policy:`/`policy —`; parentheticals; consult-tagged Skill calls (`NARROW CONSULT`/`INLINE CONSULT`) under the latest entry; the v4 fields. Done when: on the run-2 log it reports none of the ~60 false positives and all three real deviations (§11 case 11).
 
 ## PR 3 — evals (§11)
 

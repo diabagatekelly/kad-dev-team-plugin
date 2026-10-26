@@ -24,6 +24,14 @@ the user answers. Engineering heuristics (risk-avoidance, smallest-first)
 are `product-slicer`'s, not grounds for deciding the WHAT on the user's
 behalf.
 
+**The pass is complete only when every question on the list below that
+the documents don't answer has been put to the user.** A question you
+haven't asked yet is not "Not yet confirmed"; it is still owed, and the
+document isn't written until it has been asked. Writing the document
+around the holes and asking the rest afterwards turns each late answer
+into a revision of a document that didn't need to exist yet. Ask through
+`AskUserQuestion` when it is available, one question per call.
+
 **Ask, merged into one pass:**
 - Who specifically benefits from this piece? Reuse what the problem doc or
   scope map already narrowed down; only ask if it's still generic ("the
@@ -95,6 +103,16 @@ This is not deriving the WHAT from the problem doc — that rule above still
 holds. Checking a stated constraint against a decided scope is a different
 activity from inferring what someone wants.
 
+**Then walk the problem doc's Open questions the same way.** Each one this
+unit would have to assume an answer to is either asked here or listed
+under Not yet confirmed with what the answer would change. Half an answer
+is a skipped question: "where may the data live" answered while "from
+which devices" was never asked leaves the device question for whichever
+later stage trips over it, and a later stage that has to assume it is the
+backward route this pass exists to prevent. A question the problem doc
+leaves open and this unit doesn't touch is left where it is, with a line
+saying so.
+
 **Template:**
 
 ```markdown
@@ -127,9 +145,11 @@ from `product-slicer`'s own "Explicitly deferred," which covers
 slicing-technique deferrals decided later, once a thin path exists.
 
 ## Not yet confirmed
-Anything you asked that the user's answers didn't settle, one line each:
-the question and what the answer would change. Neither in nor out until
-they say. Omit the section when nothing is open.
+Anything you asked that the user's answers didn't settle, and any problem
+doc open question this unit bears on that they didn't settle, one line
+each: the question and what the answer would change. Neither in nor out
+until they say. Never a question you haven't asked yet. Omit the section
+when nothing is open.
 
 ## Constraints in force
 Every constraint from the problem doc, one line each: what it forces for
@@ -156,8 +176,14 @@ use the location the user gave or that the conversation plainly implies;
 if nothing says, ask before writing anything. Never search the project
 for a place to put it.
 
-**Revise by superseding, never by editing.** Number sequentially, same as
-`scope-map` and `adr`. If a later slice or a design conversation reveals
-the confirmed WHAT was wrong, write a new numbered version and mark the
-old one `Superseded by requirements-NNN` — don't edit an Active one in
-place.
+**Revise in place while the document is still yours; supersede once
+someone has built on it.** While this stage's conversation with the user
+is open, or while no later stage has cut, designed or written criteria
+from the document, answers and corrections edit the Active file in place
+and the orchestrator log records what changed. Supersede with a new
+number (`Superseded by requirements-NNN`, numbered sequentially, same as
+`scope-map` and `adr`) only when a later stage has already relied on the
+document and the change alters what that stage decided. A project that
+keeps its planning in git may choose in-place revision for every
+document; the orchestrator records that choice once in its log and every
+skill honours it.

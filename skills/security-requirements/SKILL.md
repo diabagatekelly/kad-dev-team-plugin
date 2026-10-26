@@ -31,6 +31,16 @@ boundaries exist is `software-architect`'s decision; what each one must
 enforce is yours. When the right check has no boundary to sit at, say that
 the boundary is missing and leave the structure alone.
 
+**Your file is the artifact, and the only document you edit.** It is
+`security-slice-<nnn>.md` in the target directory. You may replace the
+slice's security placeholder line with a one-line pointer to it and
+nothing more: not the story (`docs-writer`'s, re-synced by
+`user-story-writeup` on the next re-inspection), not another criterion,
+not any other section or document, whatever the invoking instructions
+say. A slice criterion your fork changes (a narrowing, a dropped case) is
+a finding for `product-slicer` under your Open questions, routed by the
+orchestrator, never an edit.
+
 ## When you're consulted inline
 
 Sometimes another persona, usually `software-architect` mid-design,
@@ -44,6 +54,12 @@ no criteria document, no redesign of the slice around your answer. If the
 question exposes something larger, such as a missing boundary or an
 obligation nobody has established, say so in one sentence and leave it to
 the caller.
+
+Write the answer as visible text under a `## Consult answer` heading: the
+question, the answer, its reasoning, and ADR-worthy yes or no, so the
+trace and the calling skill's document can carry it. A thinking-only
+answer is not an answer: the design then records "informed by a consult"
+with nothing behind it.
 
 ## A mid-build decision under a delegation
 
@@ -240,7 +256,9 @@ in. Note any flagged as ADR-worthy.
 Security concerns that are real but belong elsewhere, and where they go.
 
 ## Open questions
-Anything genuinely unresolved, and who resolves it.
+Anything genuinely unresolved, and who resolves it: a named persona and
+skill, never the implementer or "implementation time". A slice criterion
+your fork narrows goes here as a finding for `product-slicer`.
 ```
 
 When the stop rule applies instead (the slice can't be made safe without a

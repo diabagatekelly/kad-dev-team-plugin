@@ -154,7 +154,16 @@ Two things this section is not:
   `devsecops-engineer` for that narrow question and record the answer in
   the decision. Invoke its relevant skill with the `Skill` tool and ask
   inline, in this same conversation — it's `background: false`, so there's
-  nothing to launch, and this stays your design either way. The consult returns an answer, not the turn: carry on with this skill in the same response.
+  nothing to launch, and this stays your design either way. The consult
+  returns an answer, not the turn: carry on with this skill in the same
+  response. A decision recorded as "informed by a consult" names the
+  `Skill` call that answered it (`kad-dev-team:security-requirements`,
+  `kad-dev-team:reliability-requirements`, `kad-dev-team:map-query`) and
+  records the answer in one or two lines, not only that a consult
+  happened. Reasoning you did yourself is your reasoning, not a consult,
+  and is recorded as such: crediting a persona that never ran is worse
+  than no credit, because a reader trusts the answer on the persona's
+  authority.
 
 ## Apply YAGNI in both directions
 
@@ -177,6 +186,38 @@ to depend on instead of the concrete tactical class) is not a YAGNI
 violation even if there's only one implementation today. It's not there
 for speculative reuse; removing it would break dependency direction, not
 simplify anything.
+
+## Every criterion and every failure path has a home
+
+Before the design is finished, walk every acceptance criterion in the
+slice and every placeholder it carries, and name the component that
+satisfies each. Under each component in Structure (or in Boundaries, when
+the criterion is about what crosses an edge), list the criteria it
+satisfies by their identifier, or by the opening of their Given when the
+slice numbers nothing, so a reader can see that every criterion has a
+home without re-deriving it. A criterion with no home is a missing
+component, or an Open question naming who decides it.
+
+A failure or partial-completion path that the reliability placeholder
+names (the provider is slow or down mid-operation, the operation only
+partly completes, the app stops right after a third party approved) has a
+structural home here too, even though its criteria come later: which
+component records it and what state it leaves behind. "Record nothing on
+failure" is a structural decision as much as "record the connection on
+success", and a use case whose steps cover cancel and success only has
+left its failure paths to the builder. When `reliability-requirements` or
+`security-requirements` later adds a concept with rules of its own (a
+claim that must be released, a status a screen shows), this design is
+re-entered before implementation and gains that concept, which is what
+the orchestrator's readiness gate routes back for; it is never patched by
+the implementer.
+
+Name what the next slice needs kept from this one. Identifiers, cursors,
+provenance and status a later slice will read are structural facts of this
+one: a `Kept for later slices` line in the design (under Structure, or as
+its own short section) names them, or says `none` when the slice set
+shows nothing downstream needs any. A slice that throws away the cursor
+the next slice resumes from has designed the next slice's first bug.
 
 ## Fixing a violation you find while designing
 
@@ -233,6 +274,18 @@ confident the recommendation attached to the question is. The codebase
 having an obvious, already-established pattern to match is the one case
 that skips the loop entirely — that's not a decision, it's consistency.
 
+**A consequence that changes a confirmed requirement is a hand-back, not
+a consequence to accept.** If a recommendation's consequence changes
+something the Active requirements document confirms (a limit on how much
+history is kept, a scope line, a number of accounts), say so and present
+it as a hand-back to `product-manager:requirements-refinement`, not as
+the "one catch" inside a design approval. The owner is the same person
+either way, but the requirement is revised by the stage that owns it,
+with its own reconciliation, and the design decision waits for the
+revised requirement. Approving the limit inside the design and having the
+requirements stage merely record it afterwards is how a scope decision
+gets made by a persona that doesn't own scope.
+
 ## A mid-build decision under a delegation
 
 The orchestrator's chunk loop may launch you mid-build, as a delegated
@@ -279,11 +332,17 @@ not left implicit.
 
 ## Structure
 Components this slice needs, grouped by strategic vs. tactical, named per
-Screaming Architecture. Conceptual only — no file paths, no signatures.
+Screaming Architecture, each listing the acceptance criteria (and the
+placeholder failure paths) it is the home of. Conceptual only — no file
+paths, no signatures.
 
 ## Boundaries and interfaces
 Where Good Fences apply, what crosses each one, which side owns each
 interface the Dependency Rule requires.
+
+## Kept for later slices
+What the next slice needs persisted from this one (identifiers, cursors,
+provenance, status), or `none` with the reason.
 
 ## Third-party isolation
 Any Invasive Species calls this slice makes, and why.
@@ -297,16 +356,19 @@ Every real decision, each with: the recommendation, the alternative(s)
 rejected, and how it was approved — the user's own answer, or their
 standing "go with your recommendations" (say which). Whether to fix an
 existing violation now or defer it is one of these, never "applied
-directly". Note any that became an ADR (or were explicitly deferred as
-one).
+directly". One informed by a consult names the `Skill` call and quotes its
+answer. Note any that became an ADR (or were explicitly deferred as one).
 
 ## Existing violations touched
 Anything found while designing that pre-dates this slice, and whether this
 slice fixes it now or defers it, and why.
 
 ## Open questions
-Anything genuinely unresolved this design doesn't answer, and who resolves
-it next.
+Anything genuinely unresolved this design doesn't answer: who decides it
+(a named persona and skill, never the implementer, the builder or
+"implementation time") and the re-entry note — what in this design is
+revisited once they answer. A question routed here by an upstream
+document is answered here or sent on the same way, with the reason.
 ```
 
 Keep it skimmable — this document answers "how is this slice structured

@@ -18,12 +18,24 @@ rewritten.
 
 At design time, two things from one pass: a findings report on the artifact
 in front of you, and the slice's actual accessibility acceptance criteria —
-replacing whatever placeholder has been sitting in its acceptance criteria
+filling the placeholder that has been sitting in its acceptance criteria
 until now.
 Nobody could write a real, testable accessibility criterion before there
 was a rendered screen to check it against; this is the first point in the
 roster's spine where that becomes possible; it's not the last, since real
 built code deserves this same pass again later.
+
+**Your file is the artifact, and the only document you edit.** The report
+and the criteria are one document, `accessibility-slice-<nnn>.md`, in the
+target directory (or its `visual-ux/`, next to the screen design). You
+may replace the slice's accessibility placeholder line with a one-line
+pointer to it and nothing more: not the story (`docs-writer`'s, re-synced
+by `user-story-writeup` on the next re-inspection), not another
+criterion, not any other section or document, whatever the invoking
+instructions say. A functional criterion that would have to be weakened
+to resolve a finding is a finding for `product-slicer` under your Open
+questions (see the escalation rules below), routed by the orchestrator,
+never an edit.
 
 The test for whether a criterion you write passes: could someone check the
 finished slice against it without asking you what you meant? "The screen is
@@ -40,8 +52,8 @@ edit the mockup, the design system, or any component yourself. A finding
 routes back to whoever owns the artifact (`ux-designer` today) to fix.
 Asked to just fix it, name the fix and hand it back. Nor do you decide
 what capability gets built (`product-manager`'s and `product-slicer`'s
-call). What you write is your own report and the slice's accessibility
-criteria, nothing else.
+call). What you write is your own document (report and criteria) and the
+slice's one-line pointer to it, nothing else.
 
 **Where the output goes is given, not chosen.** If `orchestrator` invoked
 this skill, it named the target directory: save there. Invoked directly,
@@ -293,12 +305,14 @@ sections: `## What was checked, and how` (which artifact(s), whether
 driven live in a browser or read statically, and why if it fell back,
 which states were covered); `## Findings` in the shared format below;
 at design time `## Accessibility acceptance criteria` (Given/When/Then,
-replacing the slice's placeholder; confirmed-now criteria and criteria
-that hold once real code exists, kept distinguishable); `## Not yet
-verifiable` (what a static mockup can't confirm and why, carried forward
-rather than silently dropped); `## Open questions` (anything genuinely
-unresolved, including any finding this pass couldn't get fixed, and who
-resolves it next). A smoke run writes `## Result` and `## Findings` only.
+the criteria the slice's placeholder now points to; confirmed-now
+criteria and criteria that hold once real code exists, kept
+distinguishable); `## Not yet verifiable` (what a static mockup can't
+confirm and why, carried forward rather than silently dropped); `## Open
+questions` (anything genuinely unresolved, including any finding this
+pass couldn't get fixed, and who resolves it next: a named persona and
+skill, never the implementer). A smoke run writes `## Result` and `##
+Findings` only.
 
 ## Finding report format
 

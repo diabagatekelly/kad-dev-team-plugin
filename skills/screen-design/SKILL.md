@@ -52,10 +52,17 @@ Work out what the existing artifacts already answer before treating
 anything as an open question:
 
 - **Which states does this screen need to show?** The slice's acceptance
-  criteria already name them — success, empty, error, whatever applies.
-  Render one mockup per state that's meaningfully visually distinct rather
-  than compressing several into one image; a user encounters these one at
-  a time, and the mockups should match that.
+  criteria already name them — success, empty, error, whatever applies —
+  and so do the security, reliability and accessibility criteria the
+  slice's placeholders point to, which live in their own files. Every
+  failure path any of those files names (the exchange fails after the
+  bank step, the app stopped after the bank approved, the history arrived
+  only in part) is a state the person will see, and gets its own mockup;
+  a state those files name and this design doesn't render is a state the
+  builder designs alone mid-chunk. Render one mockup per state that's
+  meaningfully visually distinct rather than compressing several into one
+  image; a user encounters these one at a time, and the mockups should
+  match that.
 - **How much should this screen show, and how dense should it be?** If the
   design system's established patterns already answer this — a list
   pattern, a card pattern with a stated hierarchy — apply it. Don't turn
@@ -84,6 +91,14 @@ required, that's real information for `design-system` to absorb, not a
 one-off you build and forget — flag it rather than letting an ad-hoc
 pattern quietly become the second version of something that should be one
 thing.
+
+Leaving out a shell element the design system declares (a sidebar, a top
+bar, a navigation pattern) is a proposal to `design-system` like any
+other change to the shell, stated under "New patterns proposed" with the
+reason, even when this one screen plainly doesn't need it. "Nothing on
+screen that doesn't earn its place" decides what this screen shows;
+whether the shell changes is `design-system`'s to decide, and dropping it
+silently decides it for every later screen.
 
 ## Apply the design-quality heuristics
 

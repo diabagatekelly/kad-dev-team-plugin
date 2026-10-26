@@ -78,9 +78,15 @@ Be honest about the downsides — an ADR that only lists upsides wasn't
 reasoned through.
 ```
 
-Number ADRs sequentially and never edit one after it's Accepted — supersede
-it with a new one instead. The history of *changed minds* is itself useful
-information; don't destroy it.
+**Revise in place while the decision is still yours; supersede once
+someone has built on it.** Number ADRs sequentially. One still `Proposed`,
+or `Accepted` with nothing yet designed or built on it, is corrected in
+place, and the orchestrator log records what changed. Once a later stage
+has relied on it, never edit it: write a new numbered one and mark the old
+`Superseded by ADR-NNN`. The history of *changed minds* is itself useful
+information; don't destroy it. A project that keeps its planning in git
+may choose in-place revision for every document; the orchestrator records
+that choice once in its log and every skill honours it.
 
 **An ADR never answers "how."** No code, no file paths, no config values, no
 function names, no testing approach — those belong in the code or in a

@@ -544,7 +544,8 @@ real cases and deleted (the table is in git history).
   execution instead, the way the quarantine flow it replaced was (H6,
   2026-10-18; I, 2026-10-19, both in `TODO.md`): read the real run's
   `orchestrator-log.md` with `tools/orchestrator_log_check.py`, which knows
-  the v3 entry and the rounds sidecar, and the audit repository's copies.
+  the v3 and v4 entries, the rounds sidecar and the kept sessions'
+  subagent transcripts, and the audit repository's copies.
   J4 in `TODO.md` lists what each real run must show.
 - ~~**The main agent acts before `tdd-implementation` loads.**~~ **Closed
   for the parent.** It used to write its own answers to a design's open

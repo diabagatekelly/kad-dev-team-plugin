@@ -51,22 +51,27 @@ The first slice should:
   slice's shape; defer everything else rather than requiring every
   question answered up front. Deferring is a decision — write it down as a
   non-goal, don't just drop it silently.
-- **Defer risky capabilities, never defer the *need* for security/
-  accessibility review on what you do ship.** Prefer a slice that doesn't
-  yet need the highest-risk integration (bank credentials, an AI vendor,
-  infrastructure nobody's stood up) — there's nothing to secure in a
+- **Defer risky capabilities, never defer the *need* for security,
+  reliability and accessibility review on what you do ship.** Prefer a
+  slice that doesn't yet need the highest-risk integration (bank
+  credentials, an AI vendor, infrastructure nobody's stood up) when the
+  confirmed requirement allows it — there's nothing to secure in a
   capability that isn't built yet. But whatever the slice *does* touch gets
-  **two separate placeholder acceptance criteria — one for security, one
-  for accessibility, always both.** Never combine them into one line, and
-  never ship one without the other, even when only one seems obviously
-  relevant (a CSV upload control and a transaction list are both real UI
-  *and* both touch real data — that's two placeholders, not one). You
-  don't have either expertise — don't author either criterion yourself.
-  Delegate the security one to
-  `devsecops-engineer:security-requirements`, and the accessibility one to
-  `accessibility-engineer` once that persona exists; until then, the
-  placeholders keep both gaps visible instead of either going missing
-  silently. Shipping without both placeholders is a gap, not a deferral.
+  **three separate placeholder acceptance criteria — security,
+  reliability, accessibility, always all three.** Never combine them into
+  one line, and never ship one without the others, even when only one
+  seems obviously relevant (a CSV upload control and a transaction list
+  are real UI, touch real data *and* depend on something that can fail —
+  that's three placeholders, not one). You don't have any of the three
+  expertises — don't author any of the criteria yourself. Delegate the
+  security one to `devsecops-engineer:security-requirements`, the
+  reliability one to `devsecops-engineer:reliability-requirements`, and
+  the accessibility one to `accessibility-engineer:accessibility-review`;
+  each replaces its placeholder line with a one-line pointer to its own
+  document, and nothing else in the slice. Until they run, the
+  placeholders keep the gaps visible instead of any going missing
+  silently. Shipping without all three placeholders is a gap, not a
+  deferral.
 - **Still be genuinely end-to-end**, even if narrow. A slice that skips the
   "view the result" step to save time isn't a slice — it's half of one.
 - **Has a real user as its actor.** If the actor is "the system" or "a
@@ -95,7 +100,7 @@ Keep the split sharp:
 - **The set** is cheap, provisional, and one line per entry. No thin paths,
   no acceptance criteria, no ordering rationale beyond what's obvious.
 - **The first slice** gets the full write-up below — thin path, acceptance
-  criteria, both placeholders, deferrals.
+  criteria, the three placeholders, deferrals.
 - **Everything after it stays a line** until it's actually next. Writing
   acceptance criteria for slice 3 today prices in assumptions that building
   slice 1 is about to invalidate.
@@ -127,8 +132,9 @@ try one of these:
   capability entirely.
 - **Defer non-functional requirements** — performance targets, exhaustive
   audit logging, and the like can usually wait for a later slice; don't let
-  them block shipping the functional core (security and accessibility are
-  the exception — see above, those aren't "non-functional" in this sense).
+  them block shipping the functional core (security, reliability and
+  accessibility are the exception — see above, those aren't
+  "non-functional" in this sense).
 
 Infrastructure and setup work (a database connection, an auth mechanism)
 isn't its own slice — it rides along with the first slice that actually
@@ -208,10 +214,17 @@ unusual direction is exactly the gap this ordering exists to close.
 **Your output is the scope decision, not the repairs.** Record the choice,
 the options rejected and why, and for each document it invalidates
 (requirements, design, security or reliability criteria) which skill
-redoes it. Don't edit those documents: an Active one is superseded by the
-skill that owns it, never edited in place, and criteria for the new
+redoes it. Don't edit those documents: each is revised by the skill that
+owns it (in place while it is still that skill's, superseded once
+something has been built on it), never by you, and criteria for the new
 capability are that persona's to write. The hand-back section stays as it
 is until its owner revises the document.
+
+**A slice file is revised in place by this skill; it is never copied to a
+`-v2`.** A backward route that changes a criterion, a deferral or the set
+edits `slice-<nnn>.md` where it is, and the orchestrator log records what
+changed and why. The file has no supersede convention of its own and
+doesn't need one: the log is the history.
 
 ## Matching and detection criteria need a named key
 
@@ -258,7 +271,11 @@ The single end-to-end path this slice delivers, one or two sentences.
 
 ## Acceptance criteria
 Given/When/Then scenarios, as many as needed, no filler ones added to look
-thorough. See the `acceptance-criteria` skill for quality checks.
+thorough. See the `acceptance-criteria` skill for quality checks. Then the
+three placeholder criteria, one line each, naming the persona and skill
+that fills it: security (`devsecops-engineer:security-requirements`),
+reliability (`devsecops-engineer:reliability-requirements`), accessibility
+(`accessibility-engineer:accessibility-review`).
 
 ## Explicitly deferred
 Open questions from the problem doc (or earlier slices) that this slice

@@ -92,12 +92,17 @@ excluded is usually already implied by the steps that exist, the same
 reason the problem doc itself doesn't carry a dedicated Non-goals section.
 ```
 
-**Revise by superseding, never by editing.** Number scope maps sequentially,
-same as ADRs. Once a map is Active, don't edit it — write a new numbered
-version and mark the old one `Superseded by scope-map-NNN`. The diff between
-versions is itself useful information: it's the record of how understanding
-of the problem's shape changed as real work revealed things the first map
-guessed wrong.
+**Revise in place while the map is still yours; supersede once someone has
+built on it.** While no step has had its requirements refined from this
+map, a correction edits the Active file in place and the orchestrator log
+records what changed. Once a later stage has relied on it, don't edit it:
+write a new numbered version (sequential, same as `requirements-refinement`
+and `adr`) and mark the old one `Superseded by scope-map-NNN`. The diff
+between versions is itself useful information: it's the record of how
+understanding of the problem's shape changed as real work revealed things
+the first map guessed wrong. A project that keeps its planning in git may
+choose in-place revision for every document; the orchestrator records that
+choice once in its log and every skill honours it.
 
 **Revise when slicing proves a step boundary wrong** — a step turns out to
 be two separate problems, two steps turn out to be one, or work on one step

@@ -21,6 +21,16 @@ recommend if you have a view. Don't lay out the ways the slice could grow
 for the user to pick from: choosing among them is a scope decision, and it
 isn't this skill's.
 
+**Your file is the artifact, and the only document you edit.** It is
+`reliability-slice-<nnn>.md` in the target directory. You may replace the
+slice's reliability placeholder line with a one-line pointer to it and
+nothing more: not the story (`docs-writer`'s, re-synced by
+`user-story-writeup` on the next re-inspection), not another criterion,
+not any other section or document, whatever the invoking instructions
+say. A slice criterion your fork changes (a narrowing to "posted"
+transactions, a dropped case) is a finding for `product-slicer` under
+your Open questions, routed by the orchestrator, never an edit.
+
 ## When you're consulted inline
 
 Sometimes another persona, usually `software-architect` mid-design,
@@ -34,6 +44,12 @@ No full requirements pass, no criteria document, no redesign of the slice
 around your answer. If the question exposes something larger, such as a
 target nobody has agreed or a failure mode with no owner, say so in one
 sentence and leave it to the caller.
+
+Write the answer as visible text under a `## Consult answer` heading: the
+question, the answer, its reasoning, and ADR-worthy yes or no, so the
+trace and the calling skill's document can carry it. A thinking-only
+answer is not an answer: the design then records "informed by a consult"
+with nothing behind it.
 
 ## A mid-build decision under a delegation
 
@@ -85,6 +101,16 @@ is worse than none.
 
 ## Enumerate this slice's failure modes
 
+**Read the slice's security criteria first** (the file the slice's
+security placeholder points to). Where a failure mode's intended behaviour
+touches what security says must or must not be stored (a partial
+connection, an exchange that fails after a third party approved, a token
+that never arrived), state which wins and why, citing the security
+criterion by its identifier or its file, or hand the conflict to
+`software-architect` as an open question with both quotes. Two documents
+by the same persona that disagree on the same window is a mid-build
+decision waiting to happen, and the builder will settle it alone.
+
 Go through what the slice depends on and name what each can do to you.
 Concrete, slice-specific, not a taxonomy:
 
@@ -92,7 +118,11 @@ Concrete, slice-specific, not a taxonomy:
   one, because it doesn't look like failure until it exhausts something.
 - **A dependency is down** or returns an error.
 - **A dependency lies** — returns success with wrong, partial, or stale
-  data.
+  data. Including a reply the slice can't use at all: a missing or
+  malformed field, a page without a total, an amount that isn't a number.
+  Say whether that is treated as a failed call or as a bug, and when the
+  design names an adapter to an external service, give the unusable reply
+  its own failure-mode row.
 - **The operation is interrupted partway** — what state is left behind?
 - **The same thing happens twice** — a retry, a double submit, a redelivered
   message. Whether that's harmless is a design question this slice has to
@@ -179,6 +209,16 @@ The second prescribes a mechanism, which is `software-architect`'s and the
 implementer's territory, and it isn't checkable as a user-visible outcome.
 Name the behavior; let the implementation follow.
 
+**Every retry, wait, poll, give-up and stale window gets its number.** A
+criterion that says the app "retries a few times", "waits a while" or
+"gives up eventually" is the vague language `acceptance-criteria`
+rejects, and every number left out here is one the builder decides alone
+mid-chunk. Write how many times, how long, how often (as an outcome:
+"after five attempts over about a minute the user is told the bank didn't
+answer"), or write `unbounded, owner approved` with the owner's answer
+behind it. An owner who says "don't care" to a latency target has excused
+the target, not the retry bound.
+
 ## Decisions
 
 Real forks here — accepting a single point of failure, choosing to degrade
@@ -249,7 +289,14 @@ visible to whoever applies the remedy, or the remedy never happens.
 Real concerns belonging elsewhere, and where.
 
 ## Open questions
-Unresolved, and who resolves them.
+Unresolved, and who resolves them: a named persona and skill, never the
+implementer, the builder or "implementation time". A question an
+upstream document routed to this stage (a design doc asking whether a
+pull fits a per-request limit) is answered here, or sent on with the
+reason it isn't this stage's and to whom; a question that bounces from
+stage to stage until the builder meets it has no owner, which is the one
+state this section exists to prevent. A slice criterion your fork
+narrows goes here as a finding for `product-slicer`.
 ```
 
 When the stop rule applies instead (the slice can't meet its target
