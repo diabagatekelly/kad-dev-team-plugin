@@ -457,12 +457,13 @@ it at E.
      the platform having a sandbox: the session is not sandboxed or
      something is open; report the line as printed, and stop.
    - Under the sandbox runtime (`srt claude`; the `platform` line says
-     so), the whole session is fenced and the settings live in
-     `~/.srt-settings.json`, which nothing inside the session can write:
-     a `shell-secrets` or `read-secrets` failure names what to add to its
-     `filesystem.denyRead`; report it, ask nothing, and stop until the
-     owner restarts the session with it. `--write-settings` is not
-     offered there.
+     so), the whole session is fenced and the settings live in the
+     runtime's file, which nothing inside the session can write: a
+     `shell-secrets` or `read-secrets` failure names what to add to its
+     `filesystem.denyRead`. Report it and, unless the owner already opted
+     out of the sandbox at A (that choice covers every later check, as
+     information), stop until the owner restarts the session with it.
+     `--write-settings` is not offered there.
 
    The check is not once per flow but before every launch: before each
    chunk's build (C.1), its reviewer and smoke agent (C.3), its fixer

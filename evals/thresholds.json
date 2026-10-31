@@ -370,6 +370,25 @@
       "architecture-review"
     ]
   },
+  "delegation-consult-with-file": {
+    "score": 0.905,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T195445-delegation-consult-with-file.json",
+    "graders": {
+      "commits-the-decision-by-name": 1.0,
+      "decision-written-in-place-under-the-delegation": 0.667,
+      "hands-back-the-hash-and-one-sentence": 0.667,
+      "no-add-all": 1.0,
+      "revises-its-own-document": 1.0,
+      "skill-invoked": 1.0,
+      "writes-nothing-else": 1.0
+    },
+    "skills_invoked": [
+      "reliability-requirements"
+    ]
+  },
   "delegation-consult-without-file": {
     "score": 0.917,
     "runs": 3,
@@ -854,6 +873,60 @@
       "orchestrator"
     ]
   },
+  "orchestrator-chunk-review-round": {
+    "score": 0.967,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T195445-orchestrator-chunk-review-round.json",
+    "graders": {
+      "handoff-says-round-zero-is-recorded": 1.0,
+      "one-combined-reviewer": 1.0,
+      "one-smoke-agent": 1.0,
+      "orchestrator-invoked": 1.0,
+      "reports-counts-not-findings": 0.667,
+      "review-report-in-the-shared-shape": 1.0,
+      "review-report-written": 1.0,
+      "round-recorded-by-the-script": 1.0,
+      "smoke-report-written": 1.0,
+      "two-launches-never-more": 1.0
+    },
+    "skills_invoked": [
+      "code-review",
+      "orchestrator",
+      "reliability-review",
+      "test-quality-review"
+    ]
+  },
+  "orchestrator-definition-of-done": {
+    "score": 0.879,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T195445-orchestrator-definition-of-done.json",
+    "graders": {
+      "check-before-any-launch": 1.0,
+      "code-reviewer-only-for-the-comments": 1.0,
+      "definition-of-done-checked-twice": 1.0,
+      "gate-on-the-fix": 1.0,
+      "no-slice-reviewer-yet": 0.667,
+      "one-comments-review": 1.0,
+      "one-fixer-for-the-batch": 0.667,
+      "orchestrator-invoked": 1.0,
+      "readme-skill-invoked-inline": 1.0,
+      "readme-written": 1.0,
+      "three-named-fixes-in-one-batch": 0.333
+    },
+    "skills_invoked": [
+      "architecture-design",
+      "map-query",
+      "orchestrator",
+      "readme",
+      "tdd-implementation",
+      "test-quality-review",
+      "why-comments"
+    ]
+  },
   "orchestrator-gap-without-delegation": {
     "score": 1.0,
     "runs": 3,
@@ -892,6 +965,48 @@
     },
     "skills_invoked": [
       "orchestrator"
+    ]
+  },
+  "orchestrator-gate-outside": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T195445-orchestrator-gate-outside.json",
+    "graders": {
+      "allow-list-not-widened": 1.0,
+      "failure-handed-to-the-fixer-once": 1.0,
+      "first-gate-fails-on-scope": 1.0,
+      "gate-run-twice": 1.0,
+      "no-reviewer-before-the-gate-passes": 1.0,
+      "one-fixer": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "tdd-implementation"
+    ]
+  },
+  "orchestrator-one-fix-round": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T200107-orchestrator-one-fix-round.json",
+    "graders": {
+      "c-line-carries-the-split": 1.0,
+      "c-line-leaves-the-medium-standing": 1.0,
+      "gate-on-the-fix": 1.0,
+      "handoff-at-the-chunk-boundary": 1.0,
+      "no-third-review": 1.0,
+      "orchestrator-invoked": 1.0,
+      "round-one-recorded-with-the-range": 1.0,
+      "second-and-last-fixer": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "tdd-implementation",
+      "test-quality-review"
     ]
   },
   "orchestrator-plan-check-seam": {

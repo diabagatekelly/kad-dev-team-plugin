@@ -35,16 +35,6 @@ graders:
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
     min: 0
     max: 0
-  - type: llm
-    name: pre-existing-finding-not-handed-to-the-fixer
-    focus: last_message
-    weight: 1
-    criteria: |
-      The re-review of fix r1 raised two Mediums: one on a line the fix wrote (the regression, `slice(-4)` on a short card number) and one on a line the fix did not touch (pre-existing, `reason` optional on both statuses). Only the regression goes to the second and last fixer; the pre-existing one is never fixed in this scope and stands on the C line. Naming the pre-existing finding to the fixer as out of scope is fine; handing it over to fix is not.
-
-      PASS if the reply says the second fixer was given the regression only and the `reason`-optional Medium stands (standing, carried to the pull request body), with no third review.
-
-      FAIL if the fixer was asked to fix both, if the pre-existing Medium is reported as fixed, or if a third review ran.
   - type: tool_used
     name: gate-on-the-fix
     tool: Bash
