@@ -3090,7 +3090,7 @@ to end and the stall rule stay with the real runs.
       plugin: inside the Mac eval sandbox `git` by name fails (the README's
       gate section), so the loop, tdd and delegation-with-file cases
       cannot be measured there.
-- [ ] K3. Record the bars. From the Mac (`gate.sh --runs 3`): the six
+- [x] K3. Record the bars. From the Mac (`gate.sh --runs 3`): the six
       cases whose agent needs no git, `requirements-refinement-open-question`,
       `security-requirements-placeholder-pointer`,
       `architecture-design-scope-consequence`, `test-quality-review-seam-fake`,
@@ -3101,7 +3101,13 @@ to end and the stall rule stay with the real runs.
       `orchestrator-*` loop cases and `delegation-consult-with-file`, from
       the Mac once the `git` shim `gate.sh` asks for exists, or from WSL
       (`wsl-gate.sh --runs 3 --cases ...`), then `record_thresholds.py
-      --gate-only` for all seventeen. Run.
+      --gate-only` for all seventeen. Done 2026-10-31, all from the Mac
+      once the `git` shims existed: fourteen at 0.90 or above (eight at
+      1.00 in 3/3), `definition-of-done` 0.88, `budget-exceeded` 0.80 and
+      `architecture-design-scope-consequence` 0.67 recorded as measured
+      (judge losses on last-message graders, see the rows). Two more real
+      defects on the way (the gate command and the log; resuming from a
+      handoff that names E), both fixed.
 - [ ] K4. Re-record the cases the v4 skill edits reach (the
       orchestrator's routing cases, the three tdd chunk cases, the triage
       case): `gate.sh --stale` (or `wsl-gate.sh --stale`). Run.

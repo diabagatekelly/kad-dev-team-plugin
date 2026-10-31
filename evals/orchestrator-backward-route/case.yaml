@@ -42,7 +42,7 @@ graders:
     criteria: |
       `docs/pay-fine/security-requirements-001.md` ends with "Handed back to product-slicer — blocking": a member paying online gets no receipt, which the library's merchant agreement requires, a capability nobody scoped. The orchestrator's backward rule takes precedence over the forward table and routes to the persona that owns the invalidated artifact — `product-slicer` — not to the next forward row (reliability criteria) and not back to devsecops-engineer to resolve it.
 
-      PASS if the response routes to product-slicer (or is working as it: deciding whether a new slice is cut, slice 1 is narrowed, or slice 1 grows, and saying which and why) because of the hand-back. A scope decision that chooses one option and lists the others as rejected with reasons is product-slicer doing its job and passes.
+      PASS if the response routes to product-slicer (or is working as it: deciding whether a new slice is cut, slice 1 is narrowed, or slice 1 grows, and saying which and why) because of the hand-back. A scope decision that chooses one option and lists the others as rejected with reasons is product-slicer doing its job and passes; so does product-slicer stopping to put that scope choice to the owner with its recommendation and the rejected options, since the question tool is unavailable here and the owner's answer is what resumes the flow.
 
       FAIL if it continues forward (reliability criteria or later), resolves the receipt question itself as devsecops-engineer, or lays out scope options for the user to pick from without routing to product-slicer.
   - type: file_exists

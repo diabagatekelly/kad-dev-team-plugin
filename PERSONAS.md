@@ -381,12 +381,14 @@ of the loop is resumed from a handoff and graded on its own, and
 real defects the cases caught: `rounds_record.py` read a smoke report's
 bulleted Severity as no finding and said PASS, and the E step never
 committed the log, so `delivery`'s clean-tree rule stopped every
-delivery (E.1 now commits log and records). What is next: the bars (six
-planning and review cases recorded from the Mac; the loop, tdd and
-delegation-with-file cases next, from the Mac with the `git` shim
-`evals/tools/gate.sh` asks for, or from WSL; then the cases PR 1 and PR 2 touched re-recorded; the
-owner's rule is that v4 is done only once everything has been evaluated
-and shown to work), then slice 2 of `personal-finance-tracker-2` on 0.7.0 with the budget line,
+delivery (E.1 now commits log and records). All seventeen bars are recorded
+(2026-10-31, from the Mac once `evals/tools/gate.sh`'s `git` shims
+existed; the loop cases' second pass found two more defects, the gate
+command never allowing the loop's own log and a handoff resumed by
+invoking `delivery` directly, both fixed). What is next: the stale
+re-record of the cases PR 1 and PR 2 touched, the push, then (the owner's
+rule being that v4 is done only once everything has been evaluated and
+shown to work) slice 2 of `personal-finance-tracker-2` on 0.7.0 with the budget line,
 audited the same way, which decides D9's phase 2.
 
 ### Where things stand

@@ -160,10 +160,14 @@ is Apple's shim and fails (see the evals README's gate section), so the
 chunk-loop, delegation-with-file and tdd cases could not be measured
 until a `git` shim in Homebrew's `sbin` was found to be reachable there
 (`gate.sh` checks for it); the scripts gained a working-git fallback as
-well. Bars recorded from the Mac so far: the six planning and review
-cases (K3 in `evals/TODO.md`); the eleven others run next.
+well. All seventeen bars are recorded from the Mac (K3 in `evals/TODO.md`,
+2026-10-31); the second pass over the loop cases found and fixed two more
+defects (the gate command never allowed the loop's own uncommitted log;
+a handoff naming E was resumed by invoking `delivery` directly). What is
+left of PR 3 is K4, the stale re-record of the cases the skill edits
+reach, then the push.
 
-- [ ] 3.1 Cases 1–12 on `evals/fixtures/library-app/`, each with graders, per `evals/README.md`; bars recorded with `record_thresholds.py` after calibration.
+- [x] 3.1 Cases 1–12 on `evals/fixtures/library-app/`, each with graders, per `evals/README.md`; bars recorded with `record_thresholds.py` after calibration.
 - [x] 3.2 `evals/tools/cost_by_role.py` (copy from `audit-docs/personal-finance-tracker-2-slice-1/plugin-review/tools/cost_by_role.py`; per-model prices; prints the E-line total).
 - [x] 3.3 Rewrite or retire the v3 cases that assume six reviewers per chunk or "until clean" rounds; the two routing cases' A step gains the delegation question and the readiness gate.
 
