@@ -141,8 +141,8 @@ them on 2026-10-24); the two routing cases' graders gained the delegation
 question and the readiness gate. Found on the first local run (a Mac,
 after Windows and WSL): `sed -i` without a suffix in two scripts and a
 `slice-fixed` snapshot verify.sh type-checked without its base, fixed;
-Node 24 is needed for the fixture's test flag (`evals/tools/mac-gate.sh`
-puts Homebrew's on the path). The first calibration pass (2026-10-31, one
+Node 24 is needed for the fixture's test flag (`evals/tools/gate.sh`
+puts Homebrew's on the path on a Mac). The first calibration pass (2026-10-31, one
 run each, the Mac) found: the recorder read a smoke report whose
 `**Severity:**` sat in a list item as zero findings and printed `smoke
 PASS` (fixed: a list marker is tolerated, and a smoke report with no
@@ -157,10 +157,11 @@ holds to survive the restart); the readiness case ran the whole loop once
 the gate passed, as the skill says, so its prompt now hands off at the A
 line. What the Mac cannot measure: inside the eval sandbox `git` by name
 is Apple's shim and fails (see the evals README's gate section), so the
-chunk-loop, delegation-with-file and tdd cases are recorded from WSL; the
-scripts gained a working-git fallback so the gate and the recorder at
-least run there. Bars recorded from the Mac: the six planning and review
-cases (K2 in `evals/TODO.md`); the rest wait for the WSL run.
+chunk-loop, delegation-with-file and tdd cases could not be measured
+until a `git` shim in Homebrew's `sbin` was found to be reachable there
+(`gate.sh` checks for it); the scripts gained a working-git fallback as
+well. Bars recorded from the Mac so far: the six planning and review
+cases (K3 in `evals/TODO.md`); the eleven others run next.
 
 - [ ] 3.1 Cases 1–12 on `evals/fixtures/library-app/`, each with graders, per `evals/README.md`; bars recorded with `record_thresholds.py` after calibration.
 - [x] 3.2 `evals/tools/cost_by_role.py` (copy from `audit-docs/personal-finance-tracker-2-slice-1/plugin-review/tools/cost_by_role.py`; per-model prices; prints the E-line total).

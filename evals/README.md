@@ -266,24 +266,23 @@ wsl -d Ubuntu-22.04 -- bash evals/tools/wsl-gate.sh --all      # every case
 `tools/wsl-gate.sh` mirrors the checkout (uncommitted work included)
 into the WSL2 clone, runs `tools/eval_gate.py` there and copies the new
 results, `evidence.json` and `thresholds.json` back, so the next step
-is to commit. Inside Linux run `python3 -I evals/tools/eval_gate.py`
-directly. On macOS run `bash evals/tools/mac-gate.sh` (the same
-arguments): it puts Homebrew's Node 24 first on PATH, which the sandboxed
-runs inherit (the fixture's test script passes
-`--experimental-transform-types`, gone in Node 26, and nvm's install is
-under the home directory, which the eval's sandbox does not let a run
-read). What no wrapper fixes on a Mac: inside the sandbox `git` by name
-is Apple's `/usr/bin/git` shim, which needs `/Library/Developer` and a
-cache under `/var/folders`, both denied, and the shell skips Homebrew's
-git on PATH (only an absolute-path exec of it works). The plugin's
-scripts fall back to Homebrew's git themselves; the agent inside a run
-usually finds `/opt/homebrew/bin/git` after a few turns, but a case whose
-agent must commit, diff or run the gate is noisier there and some give
-up, so the chunk-loop, delegation-with-file and tdd cases are recorded
-from WSL, and only the planning and review cases from a Mac (the
-2026-10-31 calibration, in the coverage rows). Nothing documented for
-`claude plugin eval` widens its sandbox. Windows itself cannot run the
-gate (below).
+is to commit. Inside Linux, WSL2 or macOS run `bash evals/tools/gate.sh`
+with the same arguments: on Linux it is `eval_gate.py`; on macOS it first
+puts Homebrew's Node 24 on PATH, which the sandboxed runs inherit (the
+fixture's test script passes `--experimental-transform-types`, gone in
+Node 26, and nvm's install is under the home directory, which the eval's
+sandbox does not let a run read), and checks for a `git` shim at
+`$(brew --prefix)/sbin/git`. The shim is needed because inside the
+eval's sandbox `git` by name is Apple's `/usr/bin/git` shim, which needs
+`/Library/Developer` and a cache under `/var/folders`, both denied, and
+the shell skips Homebrew's git on PATH (its Cellar target cannot be
+stat'ed there), while `sbin` is readable and already on PATH after `bin`;
+a two-line script there that execs Homebrew's git is found by name inside
+a run and changes nothing outside one. `gate.sh` prints the command to
+create it and never writes into a system directory itself. Nothing
+documented for `claude plugin eval` widens its sandbox (2026-10-31). The
+plugin's own scripts fall back to a working git regardless. Windows
+itself cannot run the gate (below).
 What the gate does:
 
 1. `tools/affected_cases.py` picks the cases the diff can reach: a changed

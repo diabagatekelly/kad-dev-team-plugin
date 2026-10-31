@@ -383,8 +383,8 @@ bulleted Severity as no finding and said PASS, and the E step never
 committed the log, so `delivery`'s clean-tree rule stopped every
 delivery (E.1 now commits log and records). What is next: the bars (six
 planning and review cases recorded from the Mac; the loop, tdd and
-delegation-with-file cases from WSL, since the Mac eval sandbox cannot
-run `git` by name; then the cases PR 1 and PR 2 touched re-recorded; the
+delegation-with-file cases next, from the Mac with the `git` shim
+`evals/tools/gate.sh` asks for, or from WSL; then the cases PR 1 and PR 2 touched re-recorded; the
 owner's rule is that v4 is done only once everything has been evaluated
 and shown to work), then slice 2 of `personal-finance-tracker-2` on 0.7.0 with the budget line,
 audited the same way, which decides D9's phase 2.
