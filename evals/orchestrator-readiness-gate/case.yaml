@@ -1,0 +1,65 @@
+schema_version: "1.0"
+name: orchestrator-readiness-gate
+description: "The chunk loop's A step with its design-readiness gate (design §11 case 1): a fully planned UI slice whose reliability document says \"retries the cancel a few times\" and whose screen design has no mockup for the unreachable-queue state the reliability document names. The orchestrator reaches the chunk loop, runs readiness_check.py before any builder, logs one backward route per failed check (reliability-requirements, screen-design), runs the first routed skill inline with the check named, and launches no builder while the gate fails."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Build it with the heavy policy; decisions that come up during the build may be settled with the owning persona without asking me, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed; I won't be around to answer questions while you work.
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: readiness-gate-run-by-the-script
+    tool: Bash
+    input_match: 'readiness_check\.py'
+    min: 1
+  - type: tool_used
+    name: no-builder-while-the-gate-fails
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: first-failed-check-routed-inline
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:(?:reliability-requirements|screen-design)"'
+    min: 1
+  - type: tool_order
+    name: gate-before-the-routed-skill
+    before: {tool: Bash, input_match: 'readiness_check\.py'}
+    after: {tool: Skill, input_match: 'kad-dev-team:(?:reliability-requirements|screen-design)'}
+  - type: file_exists
+    name: log-written
+    path: docs/cancel-hold/orchestrator-log.md
+  - type: llm
+    name: backward-routes-name-the-checks
+    focus:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    weight: 1
+    criteria: |
+      The chunk loop's A step runs the design-readiness gate after the branch and before any builder. On FAIL, each failed check is a backward route with its own log entry naming the check and the document to revise in place, routed to the persona the check names; the chunk-loop entry stays open meanwhile and its A line is written only once the gate passes. Here two checks fail: the reliability document names a retry with no number (`numbers-on-waits`, to `devsecops-engineer:reliability-requirements`, document `reliability-slice-001.md`), and the screen design has no mockup for the unreachable-queue state (`states-have-mockups`, to `ux-designer:screen-design`, the screen design under `visual-ux/`).
+
+      PASS if the log has the chunk-loop entry (routed to the chunk loop, artifact "see sub-entries below") and at least one backward-route entry after it that names a failed readiness check (the retry with no number, or the missing mockup, in the check's name or in words) and routes to the matching persona or skill (reliability-requirements or screen-design) naming the document to revise. The second backward entry may be missing when the first routed skill stopped to ask the owner.
+
+      FAIL if no backward entry exists, if a backward entry routes to the builder or to a persona the check does not name, or if the chunk-loop entry's A line reports readiness as PASS without any backward route.
+  - type: llm
+    name: stops-at-the-routed-skill-or-reports-the-route
+    focus: last_message
+    weight: 1
+    criteria: |
+      The orchestrator executes one routed step at a time. Here the readiness gate fails, so the next step is the first backward route's skill run inline, which revises its document or stops to ask the owner; no builder is launched until the gate passes.
+
+      PASS if the reply reports the readiness gate's failed checks and the backward route taken, and ends either with the routed skill's question to the owner (a number for the retry, or the state to design), or with the revised document and the gate run again, or with the second backward route; in every case nothing has been built and no chunk builder has been launched.
+
+      FAIL if it launches the chunk 1 builder or the planner while a check still fails, answers the routed skill's question itself (picks the retry count or designs the state on the persona's behalf), or skips the gate.

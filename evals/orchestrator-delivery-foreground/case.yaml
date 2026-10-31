@@ -1,0 +1,74 @@
+schema_version: "1.0"
+name: orchestrator-delivery-foreground
+description: "The chunk loop's E step (design §11 case 10): resumed after D with two standing Mediums and three Lows, a local bare origin and a recording stand-in for the GitHub CLI at tools/gh. The orchestrator runs delivery inline: the branch is pushed, the pull request opened with pr-writeup's body, one issue filed per standing Medium and none for a Low, the body edited to link them, the cost script run, the E line written, all in the foreground and in the turn that reports."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command); the remote is already set up.
+  model: sonnet
+  max_turns: 70
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: delivery-skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:delivery"'
+    min: 1
+  - type: tool_used
+    name: pr-writeup-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:pr-writeup"'
+    min: 1
+  - type: tool_used
+    name: cost-script-run
+    tool: Bash
+    input_match: 'cost_by_role\.py'
+    min: 1
+  - type: regex
+    name: nothing-in-the-background
+    target: trace
+    pattern: '"run_in_background"\s*:\s*true'
+    match: not_contains
+  - type: regex
+    name: e-line-written
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '- \*\*E\. Delivery:\*\*[^\n]*PR[^\n]*7'
+  - type: regex
+    name: pull-request-then-issues-then-body-edit
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: 'pr create[\s\S]*issue create[\s\S]*issue create[\s\S]*pr edit'
+  - type: llm
+    name: one-issue-per-standing-medium-none-for-a-low
+    focus:
+      source: file
+      path: tools/gh-calls.log
+    weight: 1
+    criteria: |
+      This file lists every call made to the GitHub CLI stand-in, one per line, arguments as given. Delivery files every standing Medium as one issue (here two: `reason` optional on both statuses, and `slice(-4)` on a short card number printing it whole) and files no Low (the three Lows are: `queueWith` builds every hold with the same fixed date; the failure reason is a fixed string with nothing about which queue or title; the notice heading reads "not cancelled" for a failure too). The pull request body is then edited so each standing Medium links its issue.
+
+      PASS if there are exactly two `issue create` calls, each for one of the two standing Mediums (its title or an unmistakable paraphrase), no issue for any of the three Lows, one `pr create`, and a `pr edit` after the issues.
+
+      FAIL if any Low is filed, a standing Medium is not filed, both Mediums go into one issue, or no `pr edit` follows the issues.
+  - type: llm
+    name: reports-the-delivery-in-the-same-turn
+    focus: last_message
+    weight: 1
+    criteria: |
+      The E step ends in the same turn that finishes its last action: the report names the pull request and issue numbers, the Lows left in the body, the standing findings, the external-review result (no comments arrived from the stand-in), the cost line (`not measured`, since audit mode kept no transcripts) and the audit sync (`not configured`).
+
+      PASS if the reply reports pull request #7 and two issue numbers, says the Lows stayed in the body, and gives the cost and audit outcomes; a note that the external reviewer left nothing passes.
+
+      FAIL if it asks whether to push or open the pull request, reports the issues as filed in the background or still to be linked, or omits the pull request number.

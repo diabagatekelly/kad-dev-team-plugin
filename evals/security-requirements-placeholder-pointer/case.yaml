@@ -1,0 +1,67 @@
+schema_version: "1.0"
+name: security-requirements-placeholder-pointer
+description: "What security-requirements may touch (design §11 case 12, third part): with the pay-fine slice, its story and its design on disk and the in-play facts given, the skill writes security-slice-001.md, replaces the slice's security placeholder line with a one-line pointer and nothing else, leaves the reliability placeholder, the story (docs-writer's) and the design byte-identical."
+tags: [security-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:security-requirements` first. The library-lending app is in your current working directory; slice 001's documents are in `docs/pay-fine/`: `slice-001.md` (with its security placeholder), `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md`. Write the slice's security criteria and save them as `docs/pay-fine/security-slice-001.md`.
+
+    What's in play, so you don't have to ask: members are individuals, no shared or family accounts, and a member should only ever see their own fines; staff can see anyone's. About 3,000 members. Card payments go through Stripe, and nothing regulatory applies beyond Stripe's own terms. For the forks the slice raises, go with your recommendations; no need to check with me again. I won't be around while you work.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:security-requirements"'
+    min: 1
+  - type: file_exists
+    name: criteria-written-to-its-own-file
+    path: docs/pay-fine/security-slice-001.md
+  - type: regex
+    name: placeholder-replaced-by-a-pointer
+    target:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    pattern: 'security-slice-001\.md'
+  - type: regex
+    name: placeholder-gone
+    target:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    pattern: 'SECURITY — placeholder'
+    match: not_contains
+  - type: regex
+    name: rest-of-the-slice-untouched
+    target:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    pattern: '^\s*#\s+Slice 1: A member pays an outstanding fine from the portal\s+##\s+Thin path\s+A signed-in member opens the portal, sees their outstanding fines, picks\s+one and pays it by card\. The fine then shows as paid\.\s+##\s+Acceptance criteria\s+- Given a signed-in member with outstanding fines, when they open their\s+fines in the portal, they see each one and its amount\.\s+- Given the member pays a fine and the payment succeeds, the fine shows as\s+paid\.\s+- Given the payment is declined, the fine stays outstanding and the member\s+is told\.\s+- [^\n]*security-slice-001\.md[^\n]*\s+- \[RELIABILITY — placeholder, to be authored by devsecops-engineer\]\s*$'
+  - type: regex
+    name: story-byte-identical
+    target:
+      source: file
+      path: docs/pay-fine/user-story-001.md
+    pattern: '^\s*#\s+Pay an outstanding fine from the portal\s+As a library member with an overdue fine, I want to pay it from the member\s+portal, so that I don''t have to come to the desk just to clear it\.\s+Slice: `slice-001\.md`\. Acceptance criteria as written there\.\s*$'
+  - type: regex
+    name: nothing-else-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/pay-fine/(?:security-slice-001|slice-001)\.md")[^"]*"'
+    match: not_contains
+  - type: llm
+    name: criteria-are-checkable
+    focus:
+      source: file
+      path: docs/pay-fine/security-slice-001.md
+    weight: 1
+    criteria: |
+      Judge substance only. The member's card number comes from the session, every `Fine` carries the member's card number, but `FineLedger.find(id)` returns any fine by id and the existing pay route checks no ownership; the card is tokenised in the browser with Stripe's publishable key and the server receives only a token.
+
+      PASS if the document has at least one Given/When/Then-style criterion requiring that a member can view and pay only fines belonging to them, and at least one requiring that the application never receives, stores or logs the card number or security code (only a provider token), each stated as an outcome someone could check.
+
+      FAIL if either outcome is missing, or stated only as a control ("authorization is enforced", "stored securely") with no checkable outcome.

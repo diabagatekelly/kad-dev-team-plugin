@@ -1,0 +1,46 @@
+schema_version: "1.0"
+name: orchestrator-budget-exceeded
+description: "The chunk loop's budget line (design §11 case 9): resumed at the boundary after chunk 1, with the handoff's counters saying the loop started six hours ago against a 5 h budget. The orchestrator reads the clock and the counts, ends the flow at the boundary with the branch intact, records `budget exceeded` on the log, launches nothing, and reports what is built."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: budget-exceeded-on-the-log
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: 'budget exceeded'
+  - type: regex
+    name: branch-left-as-it-is
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\bgit\s+(?:reset\b|checkout\s+--|stash\b|clean\b|revert\b|rebase\b|push\b)'
+    match: not_contains
+  - type: llm
+    name: flow-ends-saying-what-is-built
+    focus: last_message
+    weight: 1
+    criteria: |
+      The budget is counted at every chunk boundary; when one of its numbers is exceeded (here the loop time: started six hours before, against 5 h), the flow ends there: the branch stays as it is, the log says `budget exceeded: <which>`, and the report says what is built. Nothing is launched for chunk 2.
+
+      PASS if the reply says the flow ended because the time budget was exceeded, that chunk 1 is built, reviewed and committed on the branch while chunks 2 and 3 are not built, and asks nothing beyond leaving the next step to the owner.
+
+      FAIL if it launches or describes launching chunk 2's build, proposes to continue past the budget on its own, discards or resets the branch, or does not say which budget was exceeded.

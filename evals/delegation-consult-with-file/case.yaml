@@ -1,0 +1,63 @@
+schema_version: "1.0"
+name: delegation-consult-with-file
+description: "A mid-build decision under a delegation (design §11 case 2, first half): launched the way the chunk loop launches a consult, with a reviewer's needs-decision finding, the reliability document and the owner's delegation file by path, reliability-requirements decides the question, revises its own document in place (the failure-mode row, the criterion, the decision under Decisions with the `under delegation-slice-001.md` line), commits it by name as `Decision <n>: <title>`, and hands back the hash and one sentence."
+tags: [reliability-requirements, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:reliability-requirements` first. You are launched by the orchestrator's chunk loop mid-build, as the owning persona for a decision a reviewer could not rate. The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`. The finding is in `docs/cancel-hold/implementation/chunk-1-r0-review.md`, titled "What a cancel does when the queue throws mid-remove is undecided", rated needs-decision for you. The document you own is `docs/cancel-hold/reliability-slice-001.md` (the slice is `docs/cancel-hold/slice-001.md`, the design `docs/cancel-hold/design-001.md`). The owner's delegation file is `docs/cancel-hold/delegation-slice-001.md`. Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-requirements"'
+    min: 1
+  - type: regex
+    name: revises-its-own-document
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/cancel-hold/reliability-slice-001\.md"'
+  - type: regex
+    name: writes-nothing-else
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/cancel-hold/reliability-slice-001\.md")[^"]*"'
+    match: not_contains
+  - type: tool_used
+    name: commits-the-decision-by-name
+    tool: Bash
+    input_match: 'git commit[\s\S]*Decision \d+:'
+    min: 1
+  - type: regex
+    name: no-add-all
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\bgit\s+add\s+(?:-A\b|--all\b|\.(?:\s|\\"|")|-u\b)'
+    match: not_contains
+  - type: llm
+    name: decision-written-in-place-under-the-delegation
+    focus:
+      source: file
+      path: docs/cancel-hold/reliability-slice-001.md
+    weight: 1
+    criteria: |
+      Under a delegation the skill decides the question as it would with the owner present (the failure mode, a number where a wait or retry is involved, the recommendation and the rejected alternative) and revises its document in place: the failure-mode row, the new or amended criterion with its number, and the decision under Decisions with a line `under delegation-slice-001.md, <date>`.
+
+      The question: what shape an unreachable-queue failure takes for the caller (a thrown error or a distinct failure status), and whether a failure after the hold was removed is reported as cancelled or as failed.
+
+      PASS if the document now answers both parts in a form a builder can test (a criterion or an amended row saying which result shape an unreachable queue produces and what a failure after removal reports), records it as a numbered decision under Decisions with a line saying it was made under the delegation file, with the rejected alternative named, and keeps the rest of the document (R1, R2, the first decision) intact.
+
+      FAIL if the question is answered only in prose outside the criteria and decisions, if the decision is not marked as made under the delegation, if an earlier decision or criterion was removed, or if the document was not changed.
+  - type: llm
+    name: hands-back-the-hash-and-one-sentence
+    focus: last_message
+    weight: 1
+    criteria: |
+      The consult hands back the commit hash and one sentence, nothing else: the orchestrator writes `decision <n> <sha> (<persona>)` under the chunk's line from that and passes the hash to the fixer.
+
+      PASS if the final reply contains a git commit hash (seven or more hex characters) and a one- or two-sentence statement of what was decided, and does not reproduce the document, the finding or a long rationale.
+
+      FAIL if it contains no hash, says nothing was committed, asks the owner a question, or is a page of explanation.

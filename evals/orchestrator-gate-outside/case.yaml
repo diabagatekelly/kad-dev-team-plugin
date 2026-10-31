@@ -1,0 +1,59 @@
+schema_version: "1.0"
+name: orchestrator-gate-outside
+description: "The chunk loop's C.2 step, the failure half of design §11 case 5: chunk 1's commit adds utils/card-number.ts, outside every design module. The gate fails on scope; the orchestrator hands the gate's output to one fresh fixer, runs the gate again on the fix, never widens --allow or edits the code itself, launches no reviewer before the gate passes, and hands off as told."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off once chunk 1's gate has passed, before any reviewer is launched.
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: gate-run-twice
+    tool: Bash
+    input_match: 'validation_gate\.py'
+    min: 2
+  - type: regex
+    name: first-gate-fails-on-scope
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+    pattern: 'scope outside: [^\n]*utils/card-number\.ts[\s\S]*validation gate: FAIL'
+  - type: tool_used
+    name: one-fixer
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: no-reviewer-before-the-gate-passes
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: allow-list-not-widened
+    tool: Bash
+    input_match: 'validation_gate\.py[\s\S]*--allow\s+''?utils/'
+    min: 0
+    max: 0
+  - type: llm
+    name: failure-handed-to-the-fixer-once
+    focus: last_message
+    weight: 1
+    criteria: |
+      A changed file outside every design module fails the gate's scope check, and the orchestrator hands the failing checks to one fresh fixer with the gate's output, then runs the gate again on the fix; it never widens `--allow`, drops a `--protect`, or fixes the code itself. A second failure ends the flow.
+
+      PASS if the reply reports the first gate as failed on scope for `utils/card-number.ts`, one fixer launched for it, the gate run again on the fix with its result (passed, or failed with the flow ended), and the handoff written before any review. If the second gate failed, reporting that the flow ended there with the branch intact also passes.
+
+      FAIL if it says it moved or edited the file itself, added the file to the allowed list to make the gate pass, launched a reviewer before the gate passed, or launched a second fixer for the same gate.

@@ -1,0 +1,54 @@
+schema_version: "1.0"
+name: orchestrator-gate-deviation
+description: "The chunk loop's C.2 step, the deviation half of design §11 case 5: chunk 1's commit touches lending/hold.ts, a file inside a design module that the plan's Files line does not name. The gate, run with --module-dir for the design's modules, passes and prints the deviation; the orchestrator records it, launches no fixer, edits no plan entry, and hands off before the review as told."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off once chunk 1's gate has run and its result is recorded, before any reviewer is launched.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: gate-run-with-the-design-modules
+    tool: Bash
+    input_match: 'validation_gate\.py[\s\S]*--module-dir'
+    min: 1
+  - type: file_exists
+    name: gate-file-saved
+    path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+  - type: regex
+    name: gate-passes-and-names-the-deviation
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+    pattern: 'scope[^\n]*deviation[^\n]*lending/hold\.ts[\s\S]*validation gate: PASS'
+  - type: tool_used
+    name: no-fixer-no-reviewer
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: plan-entry-not-edited
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*implementation-report-slice-001\.md"'
+    match: not_contains
+  - type: llm
+    name: deviation-recorded-not-failed
+    focus: last_message
+    weight: 1
+    criteria: |
+      The gate's scope check is three-way: a changed file on the chunk's Files line is in scope; a file inside a design module but off the Files line is a deviation, printed by the gate and recorded on the chunk's line as `deviations 1`, not a failure; only a file outside every module fails to a fixer. Here `lending/hold.ts` gained a method the chunk's Files line did not name.
+
+      PASS if the reply reports the gate as passed with one deviation naming `lending/hold.ts` (or the builder's stated reason for it), launches nothing to fix it, and says the handoff was written before the review.
+
+      FAIL if it treats the deviation as a gate failure, hands it to a fixer, widens the plan's Files line itself, or launches the reviewer.

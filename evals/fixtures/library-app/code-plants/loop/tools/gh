@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Recording stand-in for the GitHub CLI, for the delivery case: the eval
+# sandbox has no network and no account, so every call is appended to
+# gh-calls.log next to this script and answered with the shape the real
+# command prints. The graders read the log; nothing here reaches GitHub.
+log="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gh-calls.log"
+printf '%s\n' "$*" >> "$log"
+repo="example/library-lending"
+case "${1:-} ${2:-}" in
+  "repo view") echo "{\"defaultBranchRef\":{\"name\":\"main\"},\"nameWithOwner\":\"$repo\"}" ;;
+  "pr list") echo "[]" ;;
+  "pr create") echo "https://github.com/$repo/pull/7" ;;
+  "pr edit") echo "https://github.com/$repo/pull/7" ;;
+  "pr view") echo "{\"number\":7,\"url\":\"https://github.com/$repo/pull/7\",\"state\":\"OPEN\",\"headRefName\":\"slice-001-cancel-hold\"}" ;;
+  "pr checks") echo "no checks reported on the 'slice-001-cancel-hold' branch" ;;
+  "issue create") n=$((40 + $(grep -c '^issue create' "$log"))); echo "https://github.com/$repo/issues/$n" ;;
+  "issue list") echo "[]" ;;
+  "label create") echo "✓ Label \"tech-debt\" created in $repo" ;;
+  "label list") echo "tech-debt" ;;
+  "auth status") echo "Logged in to github.com account example" ;;
+  "api "*|"api") echo "[]" ;;
+  *) echo "gh (stand-in): unsupported command: $*" >&2; exit 1 ;;
+esac

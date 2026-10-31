@@ -56,13 +56,20 @@ echo "ok: $(grep -m1 '^ℹ pass' "$out/test.log")"
 
 echo "== code overlays type-check and their tests pass"
 tdd="$(cd "$(dirname "${BASH_SOURCE[0]}")/code-plants/tdd" && pwd)"
-for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/* "$(dirname "$tdd")"/reliability-review/*; do
+for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/* "$(dirname "$tdd")"/reliability-review/* "$(dirname "$tdd")"/loop/snapshots/*; do
   dir="$out/overlay-$(basename "$overlay")"
   mkdir -p "$dir"
   cp -R "$app"/. "$dir"/
   cp -R "$tdd"/. "$dir"/
   cp -R "$overlay"/. "$dir"/
   (cd "$dir" && "$out/deps/node_modules/.bin/tsc" -p tsconfig.json --noEmit --typeRoots "$out/deps/node_modules/@types")
+  if [ "$(basename "$overlay")" = slice-fixed ]; then
+    # A delta over slice-built (the notice with escaping, for the delivery
+    # state); its test needs the rest of that snapshot, which state.sh
+    # layers on. Type-checked alone, run as part of slice-built's history.
+    echo "ok: slice-fixed: type-checks (a delta the loop states layer over slice-built)"
+    continue
+  fi
   if [ "$(basename "$overlay")" = days-left ]; then
     # Its test builds `Loan` objects, and lending/loan.ts is the planted
     # runtime cycle (V2) that check 2 proves cannot load; the case reads the

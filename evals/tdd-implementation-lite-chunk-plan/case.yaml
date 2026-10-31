@@ -60,6 +60,18 @@ graders:
 
       FAIL if any chunk is a layer rather than a behaviour, the unreachable-queue criterion appears in no chunk's Delivers and no chunk's Done when, the first chunk is not the thin path, any chunk delivers an HTTP route, self-service, notification or renumbering, any Delivers line names no criterion of the slice, or any Files line names a path in `main/`, `notifications/`, `fines/`, `members/`, `reporting/`, `catalog/`, `services/` or `utils/`.
   - type: llm
+    name: every-chunk-names-a-seam-test
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation-report-slice-001.md
+    weight: 1
+    criteria: |
+      Every chunk's Done when names a seam test: its first quoted test name preceded by the word `seam` (`seam "cancels a member's hold through the real in-memory queue"`), a test that runs the behaviour through the real adapter the composition root wires (here `InMemoryHoldQueue`) and fakes only an external service. The orchestrator's plan check fails a plan whose chunk has none.
+
+      PASS if every chunk entry's Done when line has a test name marked with the word `seam` before a quoted name.
+
+      FAIL if any chunk's Done when has no `seam`-marked test name.
+  - type: llm
     name: stops-after-the-plan
     focus: last_message
     weight: 1

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Stand-in for tsc, for the same reason as bin/eslint: the gate and the
+# Definition of Done run the manifest's typecheck script, and the sandbox
+# has no node_modules to resolve the real one from.
+exit 0

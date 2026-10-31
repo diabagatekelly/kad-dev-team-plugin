@@ -1,0 +1,55 @@
+schema_version: "1.0"
+name: requirements-refinement-open-question
+description: "The problem doc's open questions in the requirements pass (design §11 case 12, first part): the pay-fine problem doc leaves two questions open (a receipt for an online payment; whether the desk keeps taking card payments). Phase 1 of requirements-refinement asks them, or lists them under Not yet confirmed with what the answer would change, instead of assuming an answer or leaving them for a later stage."
+tags: [requirements-refinement, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a new feature for it; the problem doc is in `docs/pay-fine/problem.md`. It's small enough that we're skipping a scope map. Before anyone cuts a slice, let's work out exactly what we want built for it.
+  model: sonnet
+  max_turns: 20
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:requirements-refinement"'
+    min: 1
+  - type: regex
+    name: writes-nothing-yet
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{'
+    match: not_contains
+  - type: llm
+    name: asks-the-problem-docs-open-questions
+    focus: last_message
+    weight: 1
+    criteria: |
+      `docs/pay-fine/problem.md` ends with two open questions: whether a member who pays online gets a receipt (by email or on the page, the way the desk prints one), and whether the desk keeps taking card payments once members can pay online. The skill walks the problem doc's open questions: each one this unit would have to assume an answer to is asked here, or listed under Not yet confirmed with what the answer would change; half an answer is a skipped question.
+
+      PASS if the response puts both open questions to the user (the receipt, and the desk's future), or lists them explicitly as not yet confirmed with what each answer would change. Paraphrase is fine.
+
+      FAIL if either question is neither asked nor listed, is answered by assumption ("a receipt can come later", "the desk keeps taking payments"), or is left to a later stage.
+  - type: llm
+    name: asks-before-writing
+    focus: last_message
+    weight: 1
+    criteria: |
+      What to build is the user's decision: neither the problem doc nor the code says whether members should pay one fine or several at once, whether partial payment matters, what staff need to see, or what the simplest version that would feel like progress is.
+
+      PASS if the response ends by asking the user questions, has not written its finished requirements (a summary of what it read, or a draft scope it asks the user to confirm or correct, is fine), and at least one question is about what the user wants built or prioritised for this feature.
+
+      FAIL if it delivers finished requirements without asking, decides the scope itself and only asks for a rubber stamp on a complete document, or asks only about things the problem doc or code already answer.
+  - type: llm
+    name: stays-on-the-what
+    focus: last_message
+    weight: 1
+    criteria: |
+      This step decides WHAT the user wants built, not how to build or slice it.
+
+      PASS if the response contains no thin path, no Given/When/Then acceptance criteria, and no technical design (routes, modules, data model) presented as decided. Mentioning what exists in the code as context is fine.
+
+      FAIL if it writes any of those as its output.

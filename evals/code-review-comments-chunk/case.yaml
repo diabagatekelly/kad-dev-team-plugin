@@ -1,0 +1,91 @@
+schema_version: "1.0"
+name: code-review-comments-chunk
+description: "The comments rule in the combined chunk review (design §11 case 7, review half): chunk 1's commit carries nine WHAT-comments in lending/cancel-hold.ts (\"Remove the hold from the queue\" above the remove call, and the like) and one citing \"decision 7 in design-001\"; the WHY-comment in in-memory-hold-queue.ts (why only the first matching hold is removed) earns its place. The combined review (code-review, then test-quality-review, then reliability-review for a storage chunk) rates the WHAT-comments Medium and the planning reference Medium, does not flag the WHY-comment, reports no Low and at most eight findings, and hands back counts and the path."
+tags: [code-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:code-review` first and follow its "Combined chunk review". The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`. You are the chunk's one reviewer under the orchestrator's chunk loop: chunk 1 of slice 001, "Cancel a member's hold on a title", is the range `HEAD~1..HEAD` (read it with `git diff`); the files it touched are `lending/hold-queue.ts`, `lending/cancel-hold.ts`, `infra/memory/in-memory-hold-queue.ts`, `test/cancel-hold.test.ts` and `test/in-memory-hold-queue.test.ts`; Touches: storage. The slice's criteria are in `docs/cancel-hold/slice-001.md` and the design in `docs/cancel-hold/design-001.md`; the chunk plan is in `docs/cancel-hold/implementation/implementation-report-slice-001.md`. Write one report in the shared finding format to `docs/cancel-hold/implementation/chunk-1-r0-review.md` and hand back the counts and the path.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: code-review-invoked-first
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:code-review"'
+    min: 1
+  - type: tool_used
+    name: test-quality-lens-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:test-quality-review"'
+    min: 1
+  - type: tool_used
+    name: reliability-lens-invoked-for-storage
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-review"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+  - type: regex
+    name: writes-only-the-report
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/cancel-hold/implementation/chunk-1-r0-review\.md")'
+    match: not_contains
+  - type: regex
+    name: no-low-per-chunk
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    pattern: '\*\*Severity:?\*\*:?\s*Low\b'
+    match: not_contains
+  - type: llm
+    name: what-comments-are-a-medium
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    weight: 1
+    criteria: |
+      `lending/cancel-hold.ts` in this chunk carries a comment above nearly every line that restates the line ("// Remove the hold from the queue." above the remove call, "// If nothing was removed, reject." above the if, "// Runs the cancel." above `run`, "// Takes the hold queue." above the constructor, and so on). Under the comments rule a WHAT-comment is a Medium naming the comments to delete.
+
+      PASS if the report has at least one finding rated Medium (or higher) about those restating comments in `lending/cancel-hold.ts`, whose suggested fix is to delete them (one finding covering them all, or several, both pass).
+
+      FAIL if the restating comments are not a finding, or are rated Low.
+  - type: llm
+    name: planning-reference-is-a-medium
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    weight: 1
+    criteria: |
+      One comment in `lending/cancel-hold.ts` reads "// Reject with a reason, per decision 7 in design-001." A comment citing a planning document, a decision number or a criterion is a Medium: a reader of the code cannot resolve it, and the WHY belongs in the code's own terms or nowhere.
+
+      PASS if the report has a finding rated Medium (or higher) that names that comment (the decision reference, or the design document citation) as something to remove or rewrite as the reason itself. It may be its own finding or named inside the WHAT-comments finding, as long as the planning reference is called out.
+
+      FAIL if the planning reference is not mentioned in any finding, or only as a Low.
+  - type: llm
+    name: why-comment-is-not-flagged
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    weight: 1
+    criteria: |
+      `infra/memory/in-memory-hold-queue.ts` has one comment above `findIndex` in `remove` explaining why only the first hold with that card is removed (PlaceHold does not check for duplicates, so a hold placed twice by a retried request must not take two cancels to clear). That is a WHY-comment stating a non-local constraint; it earns its place.
+
+      PASS if that comment is not a finding (not mentioned, or named as a comment that earns its place).
+
+      FAIL if the report asks for it to be deleted or rates it as a finding of any severity.
+  - type: llm
+    name: hands-back-counts-and-path
+    focus: last_message
+    weight: 1
+    criteria: |
+      The combined reviewer hands back the counts by severity and the report's path, nothing else; the fixer reads the file.
+
+      PASS if the final reply gives the counts and the report path in a few lines, without reproducing the findings' full text.
+
+      FAIL if it reproduces the report in the reply, gives no path, or gives no counts.

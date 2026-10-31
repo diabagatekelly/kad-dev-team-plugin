@@ -1,0 +1,40 @@
+schema_version: "1.0"
+name: architecture-design-scope-consequence
+description: "A design consequence that changes a confirmed requirement (design §11 case 12, last part): the cancel-hold slice carries a criterion that a cancelled hold stays gone across a restart of the service, while the Active requirements confirm out keeping holds across restarts and forbid a new table or migration. architecture-design says so and hands it back to product-manager:requirements-refinement before approving anything, instead of designing persistence around it or presenting it as the one catch inside a design approval."
+tags: [architecture-design, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:architecture-design` first. The library-lending app is in your current working directory. Design slice 001 of the hold-cancelling feature: the slice is `docs/cancel-hold/slice-001.md`, the requirements `docs/cancel-hold/requirements-001.md`, the story `docs/cancel-hold/user-story-001.md`, the problem `docs/cancel-hold/problem.md`. Save the design as `docs/cancel-hold/design-001.md`. For the design's own decisions go with your recommendations; I'll read the result. Any question you have for me, ask in plain text.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
+    min: 1
+  - type: llm
+    name: hands-back-to-the-requirements-owner
+    focus: last_message
+    weight: 1
+    criteria: |
+      The slice's third acceptance criterion says a cancelled hold is still gone after the service restarts. Holds live in memory today, so meeting it means persisting holds, and the Active requirements document confirms out "keeping holds across a restart" and forbids a new table or migration. A recommendation whose consequence changes something the requirements confirm is a hand-back to `product-manager:requirements-refinement`, not a consequence to accept inside the design: the requirement is revised by the stage that owns it, and the design decision waits for the revised requirement.
+
+      PASS if the response names the conflict (the restart criterion against the confirmed-out line or the no-new-table constraint) and presents it as a hand-back to product-manager (or requirements-refinement) for the requirement to be revised or the criterion dropped, with the design decision that depends on it left open until then.
+
+      FAIL if it designs persistence (a Postgres hold queue, a table, a migration) as approved, drops or rewrites the criterion itself, decides the scope itself, or presents the conflict only as a note inside an otherwise approved design.
+  - type: llm
+    name: does-not-approve-around-it
+    focus: last_message
+    weight: 1
+    criteria: |
+      While a hand-back is open, the design is not approved: the parts that do not depend on the handed-back requirement may be drafted, but nothing is marked approved and no decision assumes an answer to the open requirement.
+
+      PASS if the response does not report an approved, finished design; a draft of the independent parts (CancelHold, the port's removal operation, the in-memory adapter) with the restart question explicitly held open passes.
+
+      FAIL if it reports the design as approved or complete, or records a decision about persistence as made.

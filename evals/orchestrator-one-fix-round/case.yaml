@@ -1,0 +1,72 @@
+schema_version: "1.0"
+name: orchestrator-one-fix-round
+description: "The chunk loop's C.4 step (design §11 case 4): resumed after fix r1 was re-reviewed, with one regression and one pre-existing Medium in the re-review, the orchestrator records round 1 with --range so the script classifies by hunk, sends only the regression to a second and last fixer, runs the gate on the fix, launches no third review, writes the C line with the (reg 1, pre 1) split and the pre-existing Medium standing, and hands off at the chunk boundary as told."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off at the end of chunk 1, before chunk 2 starts.
+  model: sonnet
+  max_turns: 70
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: round-one-recorded-with-the-range
+    tool: Bash
+    input_match: 'rounds_record\.py[\s\S]*--range'
+    min: 1
+  - type: tool_used
+    name: second-and-last-fixer
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: no-third-review
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: pre-existing-finding-not-handed-to-the-fixer
+    tool: Agent
+    input_match: '(?=[\s\S]*tdd-coach)(?=[\s\S]*optional on both statuses)'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: gate-on-the-fix
+    tool: Bash
+    input_match: 'validation_gate\.py'
+    min: 1
+  - type: regex
+    name: c-line-carries-the-split
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*\(reg 1, pre 1\)'
+  - type: regex
+    name: c-line-leaves-the-medium-standing
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*standing `0/0/1`'
+  - type: llm
+    name: handoff-at-the-chunk-boundary
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/handoff-slice-001.md
+    weight: 1
+    criteria: |
+      The owner asked for a hand-off at the end of chunk 1. The loop's handoff file holds the step, chunk and round, the next action, the standing list, the budget counters and the environment facts.
+
+      PASS if the file says chunk 1 is done (its C line written, its records committed), lists the one standing Medium (`reason` optional on both statuses, lending/cancel-hold.ts) as standing, and names the next action as chunk 2's build.
+
+      FAIL if it says a third review or another fix round is pending for chunk 1, lists no standing finding, or names chunk 1 work as the next action.
