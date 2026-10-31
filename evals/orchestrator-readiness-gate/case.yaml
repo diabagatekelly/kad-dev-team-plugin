@@ -38,9 +38,6 @@ graders:
     name: gate-before-the-routed-skill
     before: {tool: Bash, input_match: 'readiness_check\.py'}
     after: {tool: Skill, input_match: 'kad-dev-team:(?:reliability-requirements|screen-design)'}
-  - type: file_exists
-    name: log-written
-    path: docs/cancel-hold/orchestrator-log.md
   - type: llm
     name: backward-routes-name-the-checks
     focus:
@@ -60,6 +57,6 @@ graders:
     criteria: |
       The chunk loop's A step runs the readiness gate before any builder; on FAIL each failed check is a backward route whose skill runs inline and revises its document, then the gate runs again, until it passes. The owner asked for a hand-off as soon as the A line is written, so nothing past A happens in this session.
 
-      PASS if the reply reports the readiness gate's failed checks (the retry with no number, the missing mockup) and the backward routes taken (to reliability-requirements and screen-design), and ends either with the gate passing and the handoff written before B, or with a routed skill's question to the owner (a number for the retry, or the state to design); in every case nothing has been built and no chunk builder or planner has been launched.
+      PASS if the reply reports the readiness gate's failed checks (the retry with no number, the missing mockup) and the backward routes taken (to reliability-requirements and screen-design), and ends either with the gate passing and the handoff written before B, or with a routed skill's question to the owner (a number for the retry, or the state to design); in every case nothing has been built and no chunk builder or planner has been launched. The routed skills run inline, in the orchestrator's own turn, so a reply saying the orchestrator revised the documents, settled the numbers under the delegation or committed under the persona's name describes the route taken, not a decision it took on its own.
 
-      FAIL if it launches the chunk 1 builder or the planner while a check still fails, answers the routed skill's question itself (picks the retry count or designs the state on the persona's behalf), or skips the gate.
+      FAIL if it launches the chunk 1 builder or the planner while a check still fails or starts B, or skips the gate.

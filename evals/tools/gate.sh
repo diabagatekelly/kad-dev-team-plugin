@@ -11,9 +11,11 @@
 #     the fixture's test script passes --experimental-transform-types,
 #     gone in Node 26, and nvm's install lives under the home directory,
 #     which the eval's sandbox does not let a run read (brew install node@24).
-#   - A `git` shim at $(brew --prefix)/sbin/git that execs Homebrew's git,
-#     which you create once by hand (this script prints the command and
-#     refuses to write into a system directory itself). Inside the eval's
+#   - Shims at $(brew --prefix)/sbin for git and its push/fetch helpers
+#     (git-receive-pack, git-upload-pack, git-upload-archive), each
+#     exec'ing Homebrew's, which you create once by hand (this script
+#     prints the command and refuses to write into a system directory
+#     itself). Inside the eval's
 #     sandbox `git` by name is Apple's /usr/bin/git shim, which fails (it
 #     needs /Library/Developer and a cache under /var/folders, both denied),
 #     and the shell skips Homebrew's own git on PATH because its Cellar
@@ -29,14 +31,21 @@ case "$(uname -s)" in
     brew_prefix="$(brew --prefix 2>/dev/null || echo /opt/homebrew)"
     git_bin="$brew_prefix/bin/git"
     node_bin="$brew_prefix/opt/node@24/bin"
-    shim="$brew_prefix/sbin/git"
     [ -x "$git_bin" ] || { echo "gate: no Homebrew git at $git_bin (brew install git)" >&2; exit 2; }
     [ -x "$node_bin/node" ] || { echo "gate: no Homebrew Node 24 at $node_bin (brew install node@24)" >&2; exit 2; }
-    if [ ! -x "$shim" ] || ! grep -q "exec \"$git_bin\"" "$shim"; then
+    # git itself, and the helpers a push, fetch or clone to a local path
+    # runs as separate commands: without their shims a push falls back to
+    # Apple's /usr/bin/git-receive-pack and fails the same way.
+    missing=""
+    for name in git git-receive-pack git-upload-pack git-upload-archive; do
+      shim="$brew_prefix/sbin/$name"
+      [ -x "$shim" ] && grep -q "exec \"$brew_prefix/bin/$name\"" "$shim" || missing="$missing $name"
+    done
+    if [ -n "$missing" ]; then
       {
-        echo "gate: the eval sandbox needs a git shim at $shim (see this script's header). Create it once:"
+        echo "gate: the eval sandbox needs shims in $brew_prefix/sbin for:$missing (see this script's header). Create them once, in a terminal:"
         echo
-        echo "  mkdir -p '$brew_prefix/sbin' && printf '#!/bin/sh\\nexec \"$git_bin\" \"\$@\"\\n' > '$shim' && chmod +x '$shim'"
+        echo "  mkdir -p '$brew_prefix/sbin' && for n in git git-receive-pack git-upload-pack git-upload-archive; do printf '#!/bin/sh\\nexec \"$brew_prefix/bin/'\"\$n\"'\" \"\$@\"\\n' > \"$brew_prefix/sbin/\$n\" && chmod +x \"$brew_prefix/sbin/\$n\"; done"
         echo
       } >&2
       exit 2

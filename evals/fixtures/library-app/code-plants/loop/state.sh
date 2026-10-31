@@ -176,7 +176,7 @@ records_commit() {  # records_commit <subject>
 
 cline1() {
   cat >> "$log" <<EOF
-- **C. Chunk 1/3:** \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg 0, pre 0); standing \`0/0/0\`; budget \`0.5h 2r 0c\`; records \`$rec_sha\`
+- **C. Chunk 1/3:** \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg 0, pre 0); standing \`0/0/0\`; budget \`${budget_h:-0.5}h 2r 0c\`; records \`$rec_sha\`
 EOF
 }
 
@@ -287,6 +287,7 @@ handoff() {  # handoff <state line> <next action> [extra lines...]: the file the
   local started="${started:-$(hours_ago 1)}"
   {
     printf '# Handoff: slice 001, staff cancel a member'"'"'s hold on a title\n\n'
+    printf 'Resumed by invoking `kad-dev-team:orchestrator` ("what'"'"'s next"), never by invoking the next step'"'"'s skill directly.\n\n'
     printf 'Written %s, at the end of the previous session.\n\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     printf -- '- **State:** %s\n' "$1"
     printf -- '- **Next action:** %s\n' "$2"
@@ -350,7 +351,7 @@ case "$state" in
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review-clean; record1
-    records_commit "Records: slice 001 chunk 1"; cline1
+    records_commit "Records: slice 001 chunk 1"; budget_h=5.9 cline1
     started="$(hours_ago 6)" reviews=2 fixers=1 handoff "chunk 1 of 3 done: C line written, records committed as $rec_sha" \
       "the budget check at the chunk boundary, then chunk 2" ;;
   slice-built|delivery-ready)

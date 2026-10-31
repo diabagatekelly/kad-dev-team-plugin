@@ -15,3 +15,15 @@ test("in-memory queue removes one member's hold and says whether it was there", 
   assert.equal(await queue.lengthFor(isbn), 1);
   assert.equal((await queue.headFor(isbn))?.cardNumber, '2002');
 });
+
+test('a hold knows whether it is next and whose it is', async () => {
+  const queue = new InMemoryHoldQueue();
+  const first = new Hold(isbn, '1001', 1, placedOn);
+  const second = new Hold(isbn, '2002', 2, placedOn);
+  await queue.enqueue(first);
+  await queue.enqueue(second);
+  assert.equal(await first.isNext(queue), true);
+  assert.equal(await second.isNext(queue), false);
+  assert.equal(second.isHeldBy('2002'), true);
+  assert.equal(second.isHeldBy('1001'), false);
+});

@@ -35,12 +35,16 @@ graders:
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
     min: 0
     max: 0
-  - type: tool_used
+  - type: llm
     name: pre-existing-finding-not-handed-to-the-fixer
-    tool: Agent
-    input_match: '(?=[\s\S]*tdd-coach)(?=[\s\S]*optional on both statuses)'
-    min: 0
-    max: 0
+    focus: last_message
+    weight: 1
+    criteria: |
+      The re-review of fix r1 raised two Mediums: one on a line the fix wrote (the regression, `slice(-4)` on a short card number) and one on a line the fix did not touch (pre-existing, `reason` optional on both statuses). Only the regression goes to the second and last fixer; the pre-existing one is never fixed in this scope and stands on the C line. Naming the pre-existing finding to the fixer as out of scope is fine; handing it over to fix is not.
+
+      PASS if the reply says the second fixer was given the regression only and the `reason`-optional Medium stands (standing, carried to the pull request body), with no third review.
+
+      FAIL if the fixer was asked to fix both, if the pre-existing Medium is reported as fixed, or if a third review ran.
   - type: tool_used
     name: gate-on-the-fix
     tool: Bash
@@ -51,7 +55,7 @@ graders:
     target:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
-    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*\(reg 1, pre 1\)'
+    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*\(reg `?1`?, pre `?1`?\)'
   - type: regex
     name: c-line-leaves-the-medium-standing
     target:

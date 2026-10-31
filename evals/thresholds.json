@@ -837,6 +837,109 @@
       "vertical-slicing"
     ]
   },
+  "orchestrator-budget-exceeded": {
+    "score": 0.8,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T182312-orchestrator-budget-exceeded.json",
+    "graders": {
+      "branch-left-as-it-is": 1.0,
+      "budget-exceeded-on-the-log": 1.0,
+      "flow-ends-saying-what-is-built": 0.0,
+      "nothing-launched": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-gap-without-delegation": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T182312-orchestrator-gap-without-delegation.json",
+    "graders": {
+      "needs-decision-on-the-c-line": 1.0,
+      "no-fixer": 1.0,
+      "no-planning-document-written": 1.0,
+      "no-second-reviewer": 1.0,
+      "orchestrator-invoked": 1.0,
+      "owning-persona-launched-once": 1.0,
+      "round-recorded-by-the-script": 1.0,
+      "stops-for-the-owner-with-the-recommendation": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "reliability-requirements"
+    ]
+  },
+  "orchestrator-gate-deviation": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T182312-orchestrator-gate-deviation.json",
+    "graders": {
+      "deviation-recorded-not-failed": 1.0,
+      "gate-file-saved": 1.0,
+      "gate-passes-and-names-the-deviation": 1.0,
+      "gate-run-with-the-design-modules": 1.0,
+      "no-fixer-no-reviewer": 1.0,
+      "orchestrator-invoked": 1.0,
+      "plan-entry-not-edited": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-plan-check-seam": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T182312-orchestrator-plan-check-seam.json",
+    "graders": {
+      "b-line-written": 1.0,
+      "every-chunk-names-its-seam-test": 1.0,
+      "fresh-planner-told-which-check-failed": 1.0,
+      "no-builder-launched": 1.0,
+      "orchestrator-invoked": 1.0,
+      "plan-committed-by-name": 1.0,
+      "plan-sent-back-not-edited": 1.0
+    },
+    "skills_invoked": [
+      "map-query",
+      "orchestrator",
+      "tdd-implementation"
+    ]
+  },
+  "orchestrator-readiness-gate": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T182312-orchestrator-readiness-gate.json",
+    "graders": {
+      "backward-routes-name-the-checks": 1.0,
+      "first-failed-check-routed-inline": 1.0,
+      "gate-before-the-routed-skill": 1.0,
+      "no-builder-while-the-gate-fails": 1.0,
+      "orchestrator-invoked": 1.0,
+      "readiness-gate-run-by-the-script": 1.0,
+      "stops-at-the-routed-skill-or-reports-the-route": 1.0
+    },
+    "skills_invoked": [
+      "architecture-design",
+      "map-query",
+      "orchestrator",
+      "reliability-requirements",
+      "screen-design",
+      "tdd-implementation",
+      "test-quality-review"
+    ]
+  },
   "orchestrator-route-accessibility": {
     "score": 1.0,
     "runs": 3,

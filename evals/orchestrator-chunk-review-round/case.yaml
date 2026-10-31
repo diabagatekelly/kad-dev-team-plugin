@@ -77,6 +77,6 @@ graders:
     criteria: |
       Between launches the orchestrator says one short paragraph per event, with hashes, counts and paths; it never restates a finding's text, keeps a digest, or tallies severities by reading a report itself (only `rounds_record.py`'s printed counts reach the log).
 
-      PASS if the final reply reports the round in terms of the script's counts (for example "r0 0/0/2; smoke PASS") and the report paths, and says the handoff was written, without reproducing the findings' descriptions.
+      PASS if the final reply reports the round in terms of the script's counts (for example "r0 0/0/2; smoke PASS") and the report paths, and says the handoff was written. A one-line title per needs-decision or smoke finding (what the owner will be asked, where) is fine; the descriptions, rationale and suggested fixes stay in the report.
 
-      FAIL if it quotes or paraphrases individual findings' content at length, or reports counts it says it read from the report rather than from the script.
+      FAIL if it reproduces findings' descriptions, rationale or fixes at length, or reports counts it says it read from the report rather than from the script.

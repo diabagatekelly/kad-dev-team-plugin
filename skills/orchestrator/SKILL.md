@@ -598,11 +598,14 @@ B line: the chunk titles in order.
 2. **Gate**, inline with Bash, on the chunk's commit range:
 
    ```
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --module-dir '<each module directory the design names>' --protect '<every other document in the target directory>' [--coverage]
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory the design names>' --protect '<every other document in the target directory>' [--coverage]
    ```
 
    (`python -I` where that is the interpreter's name; every project path
-   in single quotes; a quote inside a path as `'\''`.) `--base` is the
+   in single quotes; a quote inside a path as `'\''`.) The log is allowed
+   because it is this flow's own file, appended to at every step and never
+   committed inside the loop, so the scope check would otherwise fail
+   every chunk on it. `--base` is the
    commit before this chunk's first commit (the base at chunk 1, the
    previous chunk's last accepted commit after). It checks the full suite
    is green, the project's `typecheck` and `lint` scripts pass when the
@@ -725,9 +728,11 @@ B line: the chunk titles in order.
      count against the budget; one per persona per round.
    - **Without a delegation file**: launch the persona the same way; it
      hands back a recommendation and writes nothing (its skill says so).
-     Write the C line with `needs-decision <persona>: <recommendation
-     path>` and stop the flow for the owner at step 5; the owner's answer
-     resumes it at this round.
+     Save what it handed back, as given, to `<records
+     dir>/chunk-<k>-r<i>-decision-<persona>.md` (your own record, not a
+     planning document), write the C line with `needs-decision <persona>:
+     <that path>` and stop the flow for the owner at step 5; the owner's
+     answer resumes it at this round.
 
    Nothing else goes to a persona mid-loop: no "apply this edit", no
    decision you reached yourself, no editing a planning document on a
@@ -889,7 +894,9 @@ finishes its last action.
 
 **Pausing and resuming.** On a context clear, a rate limit, a session end
 or an owner's "hand off" mid-loop, before anything else write
-`<records dir>/handoff-slice-<nnn>.md`: the A–E state (which step, which
+`<records dir>/handoff-slice-<nnn>.md`: a first line saying it is resumed
+by invoking `kad-dev-team:orchestrator` ("what's next"), never by
+invoking the next step's skill directly; the A–E state (which step, which
 chunk, which round), the next action, the standing list, the budget
 counters (start time, reviewer launches, consults), the environment facts
 a successor needs (test command, module directories, records directory,

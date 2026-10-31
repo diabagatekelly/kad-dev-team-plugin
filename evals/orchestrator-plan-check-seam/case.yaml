@@ -33,7 +33,7 @@ graders:
   - type: tool_used
     name: plan-committed-by-name
     tool: Bash
-    input_match: 'git commit[^"]*Plan: slice 001 in \d+ chunks'
+    input_match: 'git commit(?:[^"\\]|\\.)*Plan: slice 001 in \d+ chunks'
     min: 1
   - type: regex
     name: b-line-written

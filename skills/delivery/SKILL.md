@@ -1,6 +1,6 @@
 ---
 name: delivery
-description: Push a finished, reviewed slice branch, open its pull request with a reviewer-ready body, file the leftover findings as tracker issues, collect the external reviewer's comments for triage and act on the verdicts (push the fixes, reply to the declines, file the deferrals). Use at the end of the orchestrator's chunk loop (its step E) or when asked to deliver, push or open a pull request for a branch whose work is done. Owns the git and hosting mechanics only; it decides nothing about the code and never pushes to the default branch.
+description: Push a finished, reviewed slice branch, open its pull request with a reviewer-ready body, file the leftover findings as tracker issues, collect the external reviewer's comments for triage and act on the verdicts (push the fixes, reply to the declines, file the deferrals). Use at the end of the orchestrator's chunk loop (its step E, which invokes this skill after its own records commit) or when asked to deliver, push or open a pull request for a branch whose work is done; a handoff file that names E as the next action is resumed through the orchestrator, not by invoking this skill. Owns the git and hosting mechanics only; it decides nothing about the code and never pushes to the default branch.
 ---
 
 # Delivery
