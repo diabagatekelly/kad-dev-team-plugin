@@ -39,7 +39,7 @@ case "$(uname -s)" in
     missing=""
     for name in git git-receive-pack git-upload-pack git-upload-archive; do
       shim="$brew_prefix/sbin/$name"
-      [ -x "$shim" ] && grep -q "exec \"$brew_prefix/bin/$name\"" "$shim" || missing="$missing $name"
+      [ -x "$shim" ] && grep -q "$brew_prefix/bin/$name" "$shim" || missing="$missing $name"
     done
     if [ -n "$missing" ]; then
       {
