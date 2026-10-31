@@ -644,9 +644,10 @@ B line: the chunk titles in order.
      tools for UI, HTTP requests otherwise), stop the app and leave no
      process behind, and write `chunk-<k>-r0-smoke.md` in the shared
      finding format: a `## Result` of `PASS` and no findings, or one
-     finding per thing that broke; an app that does not start is one
-     Critical titled "the app does not start from the documented
-     command". The accessibility agent additionally invokes
+     finding per thing that broke, each a `###` heading with
+     `**Severity:**` on the line directly under it; an app that does not
+     start is one Critical titled "the app does not start from the
+     documented command". The accessibility agent additionally invokes
      `kad-dev-team:accessibility-review` in its "Smoke run" mode and checks
      the chunk's accessibility criteria on the built screen, in the same
      report. It is handed the Done when line, the criteria by path, the
@@ -809,8 +810,12 @@ one. **Nothing in this step runs in the background**: every command and
 every launch is waited for, and the step ends in the same turn that
 finishes its last action.
 
-1. If D's fix rounds changed anything, `map-update` again and commit the
-   map.
+1. **Records.** If D's fix rounds changed anything, `map-update` again and
+   commit the map. Then commit the log and the records directory, with the
+   handoff file removed, as `Records: slice <nnn> delivery`: `delivery`
+   refuses a dirty tree, and the loop never committed the log before this
+   (each C and D line names the records commit it follows). The E line
+   written at the end stays uncommitted, like every other entry.
 2. **CI.** If the repository has no continuous-integration configuration
    (no `.github/workflows/*.yml`, no equivalent for the host the remote
    names), invoke `release-engineer:ci-pipeline` inline with the `Skill`

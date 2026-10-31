@@ -118,6 +118,7 @@ import fnmatch
 import json
 import os
 import re
+import shutil
 import socket
 import stat
 import subprocess
@@ -186,6 +187,27 @@ REQUIRED_SETTINGS = {
     "autoAllowBashIfSandboxed": True,
 }
 
+
+_GIT = None
+
+
+def find_git():
+    """The first git that answers `--version`: whatever PATH holds, then the
+    Homebrew and MacPorts paths. macOS's /usr/bin/git is Apple's xcrun
+    shim, which fails inside a sandbox that cannot read the developer
+    directory; the candidates are tried by running them, not by stat,
+    since such a sandbox may deny the stat and still allow the exec."""
+    global _GIT
+    if _GIT is None:
+        for c in (shutil.which("git") or "git", "/opt/homebrew/bin/git", "/usr/local/bin/git", "/opt/local/bin/git"):
+            try:
+                if subprocess.run([c, "--version"], capture_output=True, timeout=15).returncode == 0:
+                    _GIT = c
+                    break
+            except (OSError, subprocess.TimeoutExpired):
+                continue
+        _GIT = _GIT or "git"
+    return _GIT
 
 def home():
     return os.path.realpath(os.path.expanduser("~"))
@@ -634,7 +656,7 @@ def check_worktreeinclude(project):
             patterns = [l.strip() for l in fh if l.strip() and not l.lstrip().startswith("#")]
     except OSError as e:
         return False, f".worktreeinclude unreadable: {e}"
-    proc = subprocess.run(["git", "ls-files", "-oi", "--exclude-standard"], cwd=project,
+    proc = subprocess.run([find_git(), "ls-files", "-oi", "--exclude-standard"], cwd=project,
                           capture_output=True, text=True)
     if proc.returncode != 0:
         return False, f"cannot list the project's ignored files to see what .worktreeinclude copies: {proc.stderr.strip()}"

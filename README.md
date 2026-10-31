@@ -231,8 +231,10 @@ place. In order:
   then the six reviewers once on the whole slice diff (Lows allowed here),
   one fix round as in C, and the **stranger test**: the smoke agent
   follows the README on a fresh clone in the last round.
-- **E. Delivery, all in the foreground:** CI is written if the repository
-  has none (`release-engineer:ci-pipeline`), the branch is pushed and a
+- **E. Delivery, all in the foreground:** the log and the records are
+  committed first (`Records: slice <nnn> delivery`, the handoff file
+  removed), since `delivery` refuses a dirty tree; CI is written if the
+  repository has none (`release-engineer:ci-pipeline`), the branch is pushed and a
   pull request opened without asking (`release-engineer:delivery`, body
   by `pr-writeup`: what was built, the decisions, the Definition of Done
   table, the standing Mediums, the Known Lows grouped by theme), **only

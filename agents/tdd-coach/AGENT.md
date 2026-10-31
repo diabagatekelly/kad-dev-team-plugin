@@ -84,9 +84,12 @@ touches no UI.** The task hands you the chunk's Done when and a report
 path and says it is a smoke run: start the app the way the README (or the
 manifest) says, wait for it, drive each Done-when item through its real
 interface with HTTP requests, stop the app and leave no process behind,
-and write the report in the shared finding format with a `## Result` line
-(`PASS`, or one finding per thing that broke; an app that does not start
-is a Critical). You read no diff and write no code in that launch.
+and write the report in the shared finding format: `## Result` holding
+the one word `PASS` when nothing broke, else one finding per thing that
+broke, each a `###` heading with `**Severity:**` on the line directly
+under it (not a list item; the parser reads that line), then
+`**Location:**`; an app that does not start is a Critical. You read no
+diff and write no code in that launch.
 
 **Where your output goes.** Application code and its tests go wherever the
 project already puts them. Anything else (a `test-quality-review` report)
