@@ -177,6 +177,22 @@
       "map-query"
     ]
   },
+  "architecture-design-scope-consequence": {
+    "score": 0.667,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T170425-architecture-design-scope-consequence.json",
+    "graders": {
+      "does-not-approve-around-it": 0.667,
+      "hands-back-to-the-requirements-owner": 0.333,
+      "skill-invoked": 1.0
+    },
+    "skills_invoked": [
+      "architecture-design",
+      "map-query"
+    ]
+  },
   "architecture-review-neg-security-review": {
     "score": 1.0,
     "runs": 3,
@@ -219,6 +235,31 @@
     },
     "skills_invoked": [
       "code-review",
+      "why-comments"
+    ]
+  },
+  "code-review-comments-chunk": {
+    "score": 0.9,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T165615-code-review-comments-chunk.json",
+    "graders": {
+      "code-review-invoked-first": 1.0,
+      "hands-back-counts-and-path": 0.667,
+      "no-low-per-chunk": 1.0,
+      "planning-reference-is-a-medium": 1.0,
+      "reliability-lens-invoked-for-storage": 0.667,
+      "report-written": 1.0,
+      "test-quality-lens-invoked": 0.667,
+      "what-comments-are-a-medium": 1.0,
+      "why-comment-is-not-flagged": 1.0,
+      "writes-only-the-report": 1.0
+    },
+    "skills_invoked": [
+      "code-review",
+      "reliability-review",
+      "test-quality-review",
       "why-comments"
     ]
   },
@@ -327,6 +368,22 @@
     },
     "skills_invoked": [
       "architecture-review"
+    ]
+  },
+  "delegation-consult-without-file": {
+    "score": 0.917,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T165615-delegation-consult-without-file.json",
+    "graders": {
+      "commits-nothing": 1.0,
+      "recommendation-only-named-as-undelegated": 0.667,
+      "skill-invoked": 1.0,
+      "writes-nothing": 1.0
+    },
+    "skills_invoked": [
+      "reliability-requirements"
     ]
   },
   "design-system-payfine-phase1": {
@@ -1373,6 +1430,23 @@
       "reliability-review"
     ]
   },
+  "requirements-refinement-open-question": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T165615-requirements-refinement-open-question.json",
+    "graders": {
+      "asks-before-writing": 1.0,
+      "asks-the-problem-docs-open-questions": 1.0,
+      "skill-invoked": 1.0,
+      "stays-on-the-what": 1.0,
+      "writes-nothing-yet": 1.0
+    },
+    "skills_invoked": [
+      "requirements-refinement"
+    ]
+  },
   "requirements-refinement-payfine-phase1": {
     "score": 0.867,
     "runs": 3,
@@ -1534,6 +1608,26 @@
       "no-false-alarm-publishable-key": 1.0,
       "records-the-decision-without-relitigating": 1.0
     }
+  },
+  "security-requirements-placeholder-pointer": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T165615-security-requirements-placeholder-pointer.json",
+    "graders": {
+      "criteria-are-checkable": 1.0,
+      "criteria-written-to-its-own-file": 1.0,
+      "nothing-else-written": 1.0,
+      "placeholder-gone": 1.0,
+      "placeholder-replaced-by-a-pointer": 1.0,
+      "rest-of-the-slice-untouched": 1.0,
+      "skill-invoked": 1.0,
+      "story-byte-identical": 1.0
+    },
+    "skills_invoked": [
+      "security-requirements"
+    ]
   },
   "security-review-catalog": {
     "score": 1.0,
@@ -2223,6 +2317,26 @@
       "no-false-alarm-inline-fakes": 1.0,
       "review-written": 1.0,
       "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "test-quality-review"
+    ]
+  },
+  "test-quality-review-seam-fake": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261031T170120-test-quality-review-seam-fake.json",
+    "graders": {
+      "fake-inventory-listed": 1.0,
+      "fixed-clock-is-not-a-finding": 1.0,
+      "hands-back-counts-and-path": 1.0,
+      "own-code-fake-with-a-real-local-equivalent": 1.0,
+      "report-written": 1.0,
+      "seam-untested-is-a-high": 1.0,
+      "skill-invoked": 1.0,
+      "writes-only-the-report": 1.0
     },
     "skills_invoked": [
       "test-quality-review"
