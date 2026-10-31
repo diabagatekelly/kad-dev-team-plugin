@@ -11,8 +11,10 @@ removes it from the title's queue, and the use case says it was cancelled.
   gone from that title's queue and the result says cancelled.
 - Given a member with no hold on a title, when cancelling is asked for, the
   result is a rejection with a reason, and the queue is unchanged.
-- Given a hold was cancelled, when the service is restarted, the hold is
-  still gone and the member is not back in the queue.
+- Given a title with holds from several members, when one member's hold
+  is cancelled and the service is then restarted, the other members' holds
+  are still in that title's queue in their order, and the cancelled one is
+  not.
 - Security: only the hold named by the card number and ISBN given is
   removed; no other member's hold on that title or any other changes.
 - Reliability: a cancel asked for twice in a row removes the hold once and

@@ -23,18 +23,18 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The slice's third acceptance criterion says a cancelled hold is still gone after the service restarts. Holds live in memory today, so meeting it means persisting holds, and the Active requirements document confirms out "keeping holds across a restart" and forbids a new table or migration. A recommendation whose consequence changes something the requirements confirm is a hand-back to `product-manager:requirements-refinement`, not a consequence to accept inside the design: the requirement is revised by the stage that owns it, and the design decision waits for the revised requirement.
+      The slice's third acceptance criterion needs the other members' holds to survive a service restart. Holds live in memory today, so meeting it means persisting holds, and the Active requirements document confirms out "keeping holds across a restart" and forbids a new table or migration. A recommendation whose consequence changes something the requirements confirm is a hand-back to `product-manager:requirements-refinement`, not a consequence to accept inside the design: the requirement is revised by the stage that owns it, and the design decision that depends on it waits.
 
-      PASS if the response names the conflict (the restart criterion against the confirmed-out line or the no-new-table constraint) and presents it as a hand-back to product-manager (or requirements-refinement) for the requirement to be revised or the criterion dropped, with the design decision that depends on it left open until then.
+      PASS if the response names the conflict (the restart criterion against the confirmed-out line or the no-new-table constraint) and says the requirement or the criterion must be settled by product-manager or requirements-refinement (the requirements stage, the owner of the requirement) before the design can decide persistence. Asking the owner to take it there, saying it is not a design choice, or saying the design is reopened once the requirement is revised, all count as the hand-back. The response may also say which way it would lean.
 
-      FAIL if it designs persistence (a Postgres hold queue, a table, a migration) as approved, drops or rewrites the criterion itself, decides the scope itself, or presents the conflict only as a note inside an otherwise approved design.
+      FAIL if it resolves the conflict itself (drops or rewords the criterion, designs persistence, a table or a migration, or treats the criterion as already satisfied by the in-memory queue), presents it as a trade-off accepted inside the design, or does not name the conflict at all.
   - type: llm
     name: does-not-approve-around-it
     focus: last_message
     weight: 1
     criteria: |
-      While a hand-back is open, the design is not approved: the parts that do not depend on the handed-back requirement may be drafted, but nothing is marked approved and no decision assumes an answer to the open requirement.
+      While the hand-back is open, the design is not approved: the parts that do not depend on the handed-back requirement may be drafted and saved (CancelHold, the port's removal operation, the in-memory adapter, the outcome shapes), but the persistence question stays open and no decision assumes an answer to it.
 
-      PASS if the response does not report an approved, finished design; a draft of the independent parts (CancelHold, the port's removal operation, the in-memory adapter) with the restart question explicitly held open passes.
+      PASS if the response leaves the restart question open (an open question, a hand-back, a question for the owner) and records no decision that holds survive a restart or that they do not; a design file saved as a draft, and decisions on the independent parts (atomic removal, renumbering, duplicate holds, rejection against failure), do not count as approving around it.
 
-      FAIL if it reports the design as approved or complete, or records a decision about persistence as made.
+      FAIL if it reports the design as approved with the conflict settled, records a decision about persistence across a restart as made, or satisfies the criterion by reinterpreting it.

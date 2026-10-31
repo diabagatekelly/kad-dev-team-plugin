@@ -6,7 +6,7 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Build it with the heavy policy; decisions that come up during the build may be settled with the owning persona without asking me, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed; I won't be around to answer questions while you work.
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Build it with the heavy policy; decisions that come up during the build may be settled with the owning persona without asking me, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed; I won't be around to answer questions while you work. Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session).
   model: sonnet
   max_turns: 60
   timeout_seconds: 2400
@@ -58,8 +58,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The orchestrator executes one routed step at a time. Here the readiness gate fails, so the next step is the first backward route's skill run inline, which revises its document or stops to ask the owner; no builder is launched until the gate passes.
+      The chunk loop's A step runs the readiness gate before any builder; on FAIL each failed check is a backward route whose skill runs inline and revises its document, then the gate runs again, until it passes. The owner asked for a hand-off as soon as the A line is written, so nothing past A happens in this session.
 
-      PASS if the reply reports the readiness gate's failed checks and the backward route taken, and ends either with the routed skill's question to the owner (a number for the retry, or the state to design), or with the revised document and the gate run again, or with the second backward route; in every case nothing has been built and no chunk builder has been launched.
+      PASS if the reply reports the readiness gate's failed checks (the retry with no number, the missing mockup) and the backward routes taken (to reliability-requirements and screen-design), and ends either with the gate passing and the handoff written before B, or with a routed skill's question to the owner (a number for the retry, or the state to design); in every case nothing has been built and no chunk builder or planner has been launched.
 
       FAIL if it launches the chunk 1 builder or the planner while a check still fails, answers the routed skill's question itself (picks the retry count or designs the state on the persona's behalf), or skips the gate.

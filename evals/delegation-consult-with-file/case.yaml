@@ -21,7 +21,7 @@ graders:
   - type: regex
     name: revises-its-own-document
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/cancel-hold/reliability-slice-001\.md"'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/cancel-hold/reliability-slice-001\.md"|"name":"Bash","input":\{"command":"(?:[^"\\]|\\.)*reliability-slice-001\.md(?:[^"\\]|\\.)*(?:>|open\(|write)'
   - type: regex
     name: writes-nothing-else
     target: trace

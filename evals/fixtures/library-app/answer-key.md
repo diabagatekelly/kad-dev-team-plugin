@@ -441,6 +441,39 @@ were computed, not estimated.
 `ui-plants/design-system/` is the binding design system `screen-design-payfine`
 composes against; it has no plants.
 
+## Loop plants (`L`) and planning plants (`P`) — the chunk loop and the v4 planning rules
+
+The chunk loop cannot run end to end in an eval (a slice is hours of
+launches), so `code-plants/loop/state.sh <state>` builds the state a
+previous session would have left (the commits, the gate files, the rounds
+sidecar, the open log entry, the handoff) and each `orchestrator-*` loop
+case resumes the orchestrator from it and grades the one step it is about.
+The plants live in the loop's snapshots, records and handoff, never in
+`app/`; `planning/` holds three planning sets planted for the v4 planning
+cases. Line numbers in the records point at the snapshots' lines.
+
+| # | Where | Violation | Expected |
+|---|---|---|---|
+| L1 | `loop/snapshots/chunk1-deviation`: `lending/hold.ts` | A file inside a design module (`lending/`) that the chunk's Files line does not name. | The gate, run with `--module-dir`, passes and prints the deviation; it goes on the C line, no fixer, the plan entry untouched (`orchestrator-gate-deviation`). |
+| L2 | `loop/snapshots/chunk1-outside`: `utils/card-number.ts` | A file outside every design module. | The gate fails on scope, once, to a fresh fixer; the orchestrator never widens `--allow` or edits the code (`orchestrator-gate-outside`). |
+| L3 | `loop/records/chunk-1-r1-review.md` | One finding on a line the fix wrote (a regression) and one on a line the fix did not touch (pre-existing). | `rounds_record.py --range` splits them; only the regression goes to the second and last fixer, the pre-existing Medium stands on the C line, no third review (`orchestrator-one-fix-round`). |
+| L4 | `loop/records/chunk-1-r0-review-gap.md` | A `needs-decision (devsecops-engineer:reliability-requirements)` finding, in a state with no delegation file. | One consult, a recommendation back, nothing written, `needs-decision` on the C line, no fixer, the flow stops for the owner (`orchestrator-gap-without-delegation`). The same consult with the file commits its own document (`delegation-consult-with-file`, `-without-file`). |
+| L5 | `loop/docs/implementation-report-plan.md` with chunk 2's seam entry stripped (`plan-no-seam`) | A chunk whose Done when names no seam test. | The B step's plan check fails; the plan goes back once to a fresh planner, never edited by the orchestrator (`orchestrator-plan-check-seam`). |
+| L6 | `loop/snapshots/chunk1-comments/lending/cancel-hold.ts` | Nine WHAT-comments and one citing "decision 7 in design-001". | Medium each in the combined chunk review; the WHY-comment in `in-memory-hold-queue.ts` (why only the first matching hold goes) is the trap and stays (`code-review-comments-chunk`). |
+| L7 | `loop/snapshots/seam-fake/test/cancel-hold.test.ts` | Every test fakes `HoldQueue` with a hand-rolled class although `InMemoryHoldQueue` is the real local adapter; no seam test. | High for the untested seam, High for the fake of own code with a real local equivalent, a fake inventory; the fixed clock is the trap (`test-quality-review-seam-fake`). |
+| L8 | `loop/snapshots/slice-built` | No README; a `<script>` body in `lending/cancel-hold-notice.ts`'s template literal; comment density over the 5% line. | `done_check.py` names three fixes before any slice reviewer runs (`orchestrator-definition-of-done`). |
+| L9 | `chunk1-done`'s handoff | The loop's start time six hours before the scaffold ran, against the 5 h budget. | The flow ends at the chunk boundary, branch intact, `budget exceeded` on the log, nothing launched (`orchestrator-budget-exceeded`). |
+| L10 | `delivery-ready` | Two standing Mediums and three Lows in the sidecar; the tracker is GitHub; `tools/gh` records what gets filed. | One issue per standing Medium, none for a Low, the PR body edited to link them, the E line, all in the foreground (`orchestrator-delivery-foreground`). |
+| P1 | `planning/cancel-hold-readiness/reliability-slice-001.md`: "retries the cancel a few times" | A wait with no number on it. | `readiness_check.py` fails the numbers check; a backward route to `reliability-requirements` before any builder launch (`orchestrator-readiness-gate`). |
+| P2 | `planning/cancel-hold-readiness/visual-ux/screen-design-001.md` | No mockup for the unreachable-queue state the reliability document names. | The readiness check fails on states; a backward route to `screen-design` (`orchestrator-readiness-gate`). |
+| P3 | `planning/cancel-hold-consequence/slice-001.md`: a cancelled hold stays gone across a restart | A criterion that contradicts the Active requirements (holds stay in memory; no new table or migration). | `architecture-design` hands it back to `product-manager:requirements-refinement` before approving anything (`architecture-design-scope-consequence`). |
+| P4 | `planning/pay-fine-open-question/problem.md`: Open questions (a receipt for an online payment; whether the desk keeps taking cards) | Two questions the requirements pass must not assume an answer to. | Asked, or under Not yet confirmed with what the answer would change (`requirements-refinement-open-question`). |
+
+`security-requirements-placeholder-pointer` plants nothing: it checks
+restraint on the `planning/pay-fine-security` set (only the slice's
+security placeholder line changes; the story and the design stay
+byte-identical).
+
 ## Boy Scout scoping (same code, different framing)
 
 `library-app-reporting-pr` frames V14 plus the new `ReportFiles` port (T4) as

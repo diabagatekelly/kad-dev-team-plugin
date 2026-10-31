@@ -23,8 +23,9 @@
 #                     (outside every design module)
 #   chunk1-gated      gate PASS saved; next: the review and smoke launches
 #   chunk1-gap        reviewer and smoke returned; the review has a
-#                     needs-decision finding; no delegation file; next:
-#                     record round 0, then the gap step
+#                     needs-decision finding that cites the reliability
+#                     document (present, committed as planning); no
+#                     delegation file; next: record round 0, then the gap step
 #   chunk1-r1         round 0 recorded, fix r1 committed and gated, the
 #                     re-review written; next: record round 1 with --range
 #   chunk1-done       chunk 1's C line written and records committed; the
@@ -37,7 +38,8 @@
 #                     next: E
 # The log is never committed by the loop as the skill writes it (the C line
 # names the records commit, so it cannot be in it), so it is dirty in every
-# state, as it would be for real.
+# state, as it would be for real; the handoff file is committed, as the
+# skill commits it with the records (E.1 commits the log and removes it).
 set -euo pipefail
 
 state="${1:?usage: state.sh <state>}"
@@ -294,6 +296,9 @@ handoff() {  # handoff <state line> <next action> [extra lines...]: the file the
     printf -- '- **Environment:** test command `npm test`; module directories `lending/`, `infra/memory/`; records `%s`; report `%s`; sidecar `%s`; policy heavy; the owner opted out of the sandbox at A (later checks are logged as information)\n' "$records" "$report" "$sidecar"
     printf -- "- **Owner's standing directions:** decisions may be settled with the owning persona under \`%s/delegation-slice-001.md\`%s\n" "$target" "${deleg_note:-}"
   } > "$records/handoff-slice-001.md"
+  # The skill commits the handoff with the records; the log stays dirty.
+  git add "$records/handoff-slice-001.md"
+  git commit -qm "Records: slice 001 handoff"
 }
 
 base_repo
@@ -304,7 +309,9 @@ case "$state" in
   plan-no-seam)
     planning
     cp "$loop/docs/implementation-report-plan.md" "$report"
-    sed -i 's/seam "cancelling after the queue recovers removes the hold through the real in-memory queue", //' "$report"
+    # -i.bak: GNU and BSD sed agree on it (macOS runs this too); the backup goes.
+    sed -i.bak 's/seam "cancelling after the queue recovers removes the hold through the real in-memory queue", //' "$report"
+    rm -f "$report.bak"
     handoff "B: the planner (agent-7f3a, 22 turns) returned and wrote the plan at $report; nothing is committed yet" \
       "check the plan mechanically as B says, then commit it and write the B line" ;;
   chunk1-built)
@@ -322,6 +329,12 @@ case "$state" in
     handoff "C.2 done for chunk 1 of 3: gate PASS on $plan_sha..$c1_sha, saved as $records/gate-chunk-1-r0.txt" "C.3: the review and smoke launches for round 0" ;;
   chunk1-gap)
     delegation=no; deleg_note="; no delegation file was written (the owner answered no at A)"
+    # The gap review cites the reliability document, so the state carries
+    # it (and the slice that points at it), committed as planning.
+    cp "$loop/docs/slice-001-with-pointer.md" "$target/slice-001.md"
+    cp "$loop/docs/reliability-slice-001.md" "$target/reliability-slice-001.md"
+    git add "$target/slice-001.md" "$target/reliability-slice-001.md"
+    git commit -qm "Planning: reliability criteria for slice 001"
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     round0 chunk-1-r0-review-gap

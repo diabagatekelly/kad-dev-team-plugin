@@ -29,8 +29,8 @@ grade the one step they are about.
   with `lint` and `typecheck` scripts, and the `eslint` and `tsc` stand-ins
   the builder copies into `node_modules/.bin/` (the sandbox cannot install
   packages; the Definition of Done and the gate only need the scripts to
-  exist and exit 0). They are Bash scripts, so this fixture runs on Linux
-  and WSL, not on native Windows.
+  exist and exit 0). They are Bash scripts, so this fixture runs on Linux,
+  macOS and WSL, not on native Windows.
 - `tools/gh`: a recording stand-in for the GitHub CLI, for the delivery
   state; it logs each call to `gh-calls.log` beside it and answers in the
   real command's shape.
