@@ -52,26 +52,40 @@ audit repository at the end of each slice); a session started as plain
 with Bash, one command:
 
 ```
-[ -n "${KAD_SRT_SETTINGS:-}" ] && echo "session: under the launcher, audit ${KAD_AUDIT:-off}" || echo "session: not under the launcher; stored answers: $([ -f "${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}/launcher.json" ] && echo yes || echo none)"
+[ "${SANDBOX_RUNTIME:-}" = 1 ] && echo "session: under the sandbox runtime, audit ${KAD_AUDIT:-off}" || echo "session: not under the sandbox runtime; audit ${KAD_AUDIT:-off}; stored answers: $([ -f "${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}/launcher.json" ] && echo yes || echo none)"
 ```
 
-- **Under the launcher** (`KAD_SRT_SETTINGS` is set): nothing to decide.
-  Say so in one line and go to step 1.
+`SANDBOX_RUNTIME=1` is set by the runtime itself for every process it
+fences, the same test `sandbox_check.py` makes; a `KAD_SRT_SETTINGS` in
+the environment proves nothing on its own. `audit on` outside the runtime
+means the owner exported `KAD_AUDIT=1` for this session by hand (the
+README's audit section): the hooks are logging already, and nothing in
+this step turns that off or on for the current session.
+
+- **Under the sandbox runtime**: nothing to decide. Say so in one line
+  and go to step 1.
 - **No Bash in this session**: nothing of this step can run. Say so in one
   line and go to step 1; never put the audit or restart question to an
   owner whose session cannot act on the answer. The chunk loop's own
   check (A.1) still runs when the flow gets there.
 - **Resumed**: a session that picks up a flow from a handoff file (the
   owner's message names one, or the chunk loop's resume rule finds one)
-  skips this step; the choice was made when that flow started. So does a
-  session whose owner's message already said to continue in this session,
-  or unsandboxed: that answers both questions below.
-- **Not under the launcher, Bash in hand**: `stored answers: none` means
-  the launcher has never run on this machine and will ask its three
+  asks nothing here: the choices were made when that flow started. When
+  the one-liner says the session is not under the runtime, say so in one
+  line, with the command that resumes it fenced instead
+  (`bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --relaunch --project "$PWD" -- '/kad-dev-team:orchestrator'`,
+  the stored answers apply), and go on: the owner can stop and run it.
+  The same one line, no question, for a session whose owner's message
+  already said to continue in this session, or unsandboxed.
+- **Not under the sandbox runtime, Bash in hand**: `stored answers: none`
+  means the launcher has never run on this machine and will ask its three
   questions; `yes` means it holds them and only audit mode is this
-  session's to choose. Ask, one question per `AskUserQuestion` call, in
-  this order, each skipped when the owner's message or the stored answers
-  already hold it:
+  session's to choose (an owner who wants a stored answer changed says so
+  in their message, and the flag below carries it for this run; `kad
+  --reset` asks the three again). Ask, one question per `AskUserQuestion`
+  call, in this order, each skipped when the owner's message, the stored
+  answers or the one-liner already hold it (`audit on` in the one-liner
+  answers the first: on):
   1. **Audit mode**: on, recommended (what it records, where it stays),
      or off.
   2. **Audit repository**, only with audit on and no stored answers: a
@@ -81,9 +95,12 @@ with Bash, one command:
      builds fetch (`registry.npmjs.org` for npm, `pypi.org` for pip), or
      none; the API, sign-in and GitHub are always allowed.
   Then run, inline with Bash,
-  `bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --prepare --project '<project root>'`
+  `bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --prepare --project "$PWD"`
+  (the session runs at the project's root; never paste the path into the
+  command, quoting it by hand is where a path with a quote in it breaks)
   with the answers as flags: `--audit` or `--no-audit`, `--audit-repo
-  <url>`, one `--domain <d>` each. On a first run the launcher stores
+  <url>` only when a URL was given (an answer of none is no flag, never
+  the word), one `--domain <d>` each. On a first run the launcher stores
   them; on a later run they apply to that run only. It installs nothing
   without saying so: when it stops at `the sandbox runtime (srt) is not
   installed`, ask once whether to install it (`npm install -g
@@ -94,22 +111,24 @@ with Bash, one command:
   say what that platform can do, and nothing further is asked in this
   step. When it prints `prepared`, ask the last question: **restart in the
   fence** (recommended: run
-  `bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --relaunch --project '<project root>' -- '/kad-dev-team:orchestrator'`
+  `bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --relaunch --project "$PWD" -- '/kad-dev-team:orchestrator'`
   with the same flags; a new terminal window opens with the fenced
   session on this project, which starts this skill again and finds itself
-  under the launcher; say the owner closes this session once the new one
+  under the runtime; say the owner closes this session once the new one
   is up, and stop here: no target question, no routing in this session),
   or **continue here** (the per-command sandbox at A.1 when the flow gets
-  there; audit mode stays off for this session and starts with the next
-  launcher-started one). When the relaunch cannot open a window (it exits
+  there; audit mode in this session stays what the one-liner said, since
+  the hooks read the environment the session started with, and the
+  answer given here takes effect with the next launcher-started session).
+  When the relaunch cannot open a window (it exits
   3 and prints the command), give the owner that command to run in a
   terminal, as printed, with the launcher's full path: `kad` by name is
   not on PATH unless the owner put it there.
 
 The owner's choice is reported in step 5's text as one `session` line
-(`under the launcher, audit on`, `restarting under the launcher`, or
-`continuing here, audit off`); it is not a log entry, since no target
-exists yet when it is made.
+(`under the sandbox runtime, audit on`, `restarting under the runtime`,
+`continuing here, audit <on | off>`, or `resumed, not under the runtime`);
+it is not a log entry, since no target exists yet when it is made.
 
 **1. Identify the target.** You're invoked with the artifacts directory as
 a parameter, or not:
@@ -564,7 +583,12 @@ it at E.
      `filesystem.denyRead`. Report it and, unless the owner already opted
      out of the sandbox at A (that choice covers every later check, as
      information), stop until the owner restarts the session with it.
-     `--write-settings` is not offered there.
+     `--write-settings` is not offered there. When the slice touches UI
+     and the session was not started with `--chrome` (the smoke run then
+     has no Claude in Chrome), say so on the A line's sandbox field as
+     `PASS (<platform>; no Chrome)` and go on: the smoke agent checks the
+     screen without the browser, and the owner who wants it restarts the
+     session with `kad --chrome` (the handoff rule resumes the flow).
 
    The check is not once per flow but before every launch: before each
    chunk's build (C.1), its reviewer and smoke agent (C.3), its fixer

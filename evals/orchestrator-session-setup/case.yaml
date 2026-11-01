@@ -21,7 +21,7 @@ graders:
   - type: tool_used
     name: checks-the-session
     tool: Bash
-    input_match: 'KAD_SRT_SETTINGS'
+    input_match: 'SANDBOX_RUNTIME'
     min: 1
   - type: tool_used
     name: not-problem-framing-doc-yet

@@ -158,9 +158,11 @@ runs `kad --prepare` itself with your answers, and asks one more
 question: restart in the fence, which opens a new terminal window with
 the fenced session on the project, the orchestrator already started in
 it (`kad --relaunch`; you close the old one), or continue in this
-session with the per-command sandbox and no audit. It asks this once per
-session, never on a flow resumed from a handoff file, and never in a
-session that has no shell to run the launcher with. Nothing needs `kad`
+session with the per-command sandbox and audit mode as this session
+started (off, unless you exported `KAD_AUDIT=1` yourself). It asks this
+once per session, never in a session that has no shell to run the
+launcher with, and on a flow resumed from a handoff file it only says,
+in one line, how to resume fenced instead. Nothing needs `kad`
 on your PATH: the orchestrator and the relaunch use the script's full
 path, which for a marketplace install is under
 `~/.claude/plugins/cache/kad-dev-team-marketplace/kad-dev-team/<version>/bin/kad`

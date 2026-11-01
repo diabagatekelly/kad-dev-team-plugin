@@ -86,7 +86,7 @@ orig_args=("$@")
 while [ $# -gt 0 ]; do
   case "$1" in
     --project) project="$2"; shift 2 ;;
-    --audit-repo) audit_repo_arg="$2"; shift 2 ;;
+    --audit-repo) audit_repo_arg="$2"; [ "$audit_repo_arg" = none ] && audit_repo_arg=""; shift 2 ;;   # "none" is no repository, not a URL
     --audit) audit=1; shift ;;
     --no-audit) audit=0; shift ;;
     --install-runtime) install_runtime=1; shift ;;
@@ -136,8 +136,13 @@ case "$(uname -s)" in
   *) say "unsupported platform $(uname -s)"; exit 2 ;;
 esac
 
-# 2. The tools. --check reports and changes nothing.
-command -v claude >/dev/null || { say "claude is not on PATH; install Claude Code first"; exit 2; }
+# 2. The tools. --check reports and changes nothing. --prepare starts no
+#    claude, so it only warns when claude is missing from this shell's PATH:
+#    the terminal that runs the relaunch has its own.
+if ! command -v claude >/dev/null; then
+  if [ "$prepare" = 1 ]; then say "claude is not on this shell's PATH; the terminal that starts the fenced session needs it"
+  else say "claude is not on PATH; install Claude Code first"; exit 2; fi
+fi
 command -v python3 >/dev/null || { say "python3 is not on PATH (kad writes its JSON with it): install Python 3, then run kad again"; exit 2; }
 if ! command -v srt >/dev/null; then
   if [ "$check" = 1 ]; then
