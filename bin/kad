@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+# kad: start a Claude Code session on a project with kad-dev-team loaded,
+# inside the sandbox runtime, with audit mode on. One command in place of
+# the setup the README describes:
+#
+#   kad                      # from the project's root
+#   kad --project <dir>      # from anywhere
+#   kad --check              # show what it would do, start nothing
+#   kad -- --resume          # arguments after -- go to claude
+#
+# What it does, every time: checks the platform (macOS, Linux and WSL2
+# have the runtime's backend; native Windows is told to use WSL2) and that
+# `srt` (@anthropic-ai/sandbox-runtime) and `claude` are on PATH, offering
+# to install the runtime when it isn't; writes the runtime's settings for
+# this project under ~/.config/kad-dev-team/srt/ (writes allowed to the
+# project, Claude Code's own paths and the temp directory; the credential
+# paths denied for reading; the network allowed to the API, sign-in and
+# GitHub, plus any domains you add); exports KAD_AUDIT=1, the audit
+# repository if you gave one, and KAD_SRT_SETTINGS so the orchestrator's
+# sandbox check reads the same file; then runs `srt --settings <file>
+# claude --plugin-dir <this plugin>` in the project. The first run asks
+# two questions (the audit repository, extra domains) and stores the
+# answers in ~/.config/kad-dev-team/launcher.json; `--reset` asks again.
+# Nothing outside that directory is written.
+#
+#   --audit-repo URL   audit repository for this and later runs (stored)
+#   --no-audit         KAD_AUDIT unset for this run
+#   --domain D         extra allowed domain for this run (repeatable)
+#   --installed        the plugin is installed from the marketplace: no --plugin-dir
+#   --yes              take every default, ask nothing (first run included)
+#   --reset            forget the stored answers and ask again
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+conf_dir="${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}"
+conf="$conf_dir/launcher.json"
+project="$PWD"; yes=0; check=0; audit=1; installed=0; reset=0
+audit_repo_arg=""; domains_arg=(); claude_args=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --project) project="$2"; shift 2 ;;
+    --audit-repo) audit_repo_arg="$2"; shift 2 ;;
+    --no-audit) audit=0; shift ;;
+    --domain) domains_arg+=("$2"); shift 2 ;;
+    --installed) installed=1; shift ;;
+    --yes) yes=1; shift ;;
+    --check) check=1; shift ;;
+    --reset) reset=1; shift ;;
+    -h|--help) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --) shift; claude_args=("$@"); break ;;
+    *) echo "kad: unknown argument $1 (arguments for claude go after --)" >&2; exit 2 ;;
+  esac
+done
+project="$(cd "$project" && pwd)"
+
+say() { printf 'kad: %s\n' "$*" >&2; }
+ask() {  # ask <prompt> <default> -> answer on stdout; the default when --yes or no terminal
+  local prompt="$1" default="$2" answer
+  if [ "$yes" = 1 ] || [ ! -t 0 ]; then printf '%s' "$default"; return; fi
+  read -r -p "kad: $prompt [${default:-none}]: " answer
+  printf '%s' "${answer:-$default}"
+}
+confirm() {  # confirm <question> -> 0 for yes
+  local answer
+  if [ "$yes" = 1 ]; then return 0; fi
+  if [ ! -t 0 ]; then return 1; fi
+  read -r -p "kad: $1 [y/N]: " answer
+  [ "$answer" = y ] || [ "$answer" = Y ]
+}
+
+# 1. The platform.
+case "$(uname -s)" in
+  Darwin) tmp="/private/tmp" ;;
+  Linux)
+    tmp="/tmp"
+    for need in bwrap socat; do
+      command -v "$need" >/dev/null || { say "the sandbox runtime needs $need on Linux and WSL2: sudo apt-get install -y bubblewrap socat (then run kad again)"; exit 2; }
+    done ;;
+  MINGW*|MSYS*|CYGWIN*) say "native Windows has no sandbox backend; run kad inside WSL2 (wsl -d Ubuntu-22.04), from the project's path there"; exit 2 ;;
+  *) say "unsupported platform $(uname -s)"; exit 2 ;;
+esac
+
+# 2. The tools.
+command -v claude >/dev/null || { say "claude is not on PATH; install Claude Code first"; exit 2; }
+if ! command -v srt >/dev/null; then
+  say "the sandbox runtime (srt) is not installed; it fences the whole session, file tools, hooks and agents included"
+  if confirm "install it now with: npm install -g @anthropic-ai/sandbox-runtime ?"; then
+    command -v npm >/dev/null || { say "npm is not on PATH"; exit 2; }
+    npm install -g @anthropic-ai/sandbox-runtime
+    command -v srt >/dev/null || { say "srt still not on PATH after the install; open a new shell and run kad again"; exit 2; }
+  else
+    say "not installed; run kad again once it is"; exit 2
+  fi
+fi
+
+# 3. The stored answers (asked once).
+mkdir -p "$conf_dir/srt"
+if [ "$reset" = 1 ] && [ -f "$conf" ]; then rm -f "$conf"; fi
+stored_repo=""; stored_domains=""
+if [ -f "$conf" ]; then
+  stored_repo="$(python3 -I -c 'import json,sys;print(json.load(open(sys.argv[1])).get("audit_repo",""))' "$conf")"
+  stored_domains="$(python3 -I -c 'import json,sys;print(" ".join(json.load(open(sys.argv[1])).get("domains",[])))' "$conf")"
+else
+  say "first run: two questions, stored in $conf (kad --reset asks again)"
+  stored_repo="$(ask 'audit repository clone URL (audit material is synced there at the end of each slice; empty for none)' '')"
+  stored_domains="$(ask 'extra domains the project needs, space-separated (registry.npmjs.org for npm installs, pypi.org, ...)' '')"
+  KAD_REPO="$stored_repo" KAD_DOMAINS="$stored_domains" python3 -I - "$conf" <<'PY'
+import json, os, sys
+json.dump({"audit_repo": os.environ["KAD_REPO"], "domains": os.environ["KAD_DOMAINS"].split()}, open(sys.argv[1], "w"), indent=2)
+PY
+fi
+audit_repo="${audit_repo_arg:-$stored_repo}"
+if [ -n "$audit_repo_arg" ] && [ "$audit_repo_arg" != "$stored_repo" ]; then
+  KAD_REPO="$audit_repo_arg" python3 -I - "$conf" <<'PY'
+import json, os, sys
+d = json.load(open(sys.argv[1])); d["audit_repo"] = os.environ["KAD_REPO"]; json.dump(d, open(sys.argv[1], "w"), indent=2)
+PY
+fi
+
+# 4. The runtime's settings for this project, regenerated every run so a
+#    changed answer applies. Every key is required: the runtime refuses a
+#    file missing one rather than run on defaults that would drop its rules.
+slug="$(printf '%s' "$project" | tr '/' '_' | tr -c 'A-Za-z0-9_.-' '_')"
+settings="$conf_dir/srt/${slug#_}.json"
+KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_DOMAINS="$stored_domains ${domains_arg[*]:-}" python3 -I - "$settings" <<'PY'
+import json, os, sys
+home = os.path.expanduser("~")
+secrets = ["~/.ssh", "~/.aws", "~/.gnupg", "~/.kube", "~/.config/gcloud", "~/.azure", "~/.config/gh",
+           "~/.npmrc", "~/.netrc", "~/.git-credentials", "~/.pypirc", "~/.docker/config.json",
+           "~/.terraform.d/credentials.tfrc.json", "~/.claude/.credentials.json"]
+domains = ["api.anthropic.com", "claude.ai", "platform.claude.com", "github.com", "*.github.com"]
+for d in os.environ["KAD_DOMAINS"].split():
+    if d not in domains:
+        domains.append(d)
+settings = {
+    "filesystem": {
+        # the project, Claude Code's config and runtime files, the temp
+        # directory, and npm's cache (installs inside the project need it;
+        # the credential file ~/.npmrc is denied above)
+        "allowWrite": [os.environ["KAD_PROJECT"], "~/.claude", "~/.claude.json", os.environ["KAD_TMP"], "~/.npm"],
+        "denyWrite": [],
+        "denyRead": secrets,
+        "allowRead": [],
+    },
+    "network": {"allowedDomains": domains, "deniedDomains": []},
+}
+json.dump(settings, open(sys.argv[1], "w"), indent=2)
+PY
+
+# 5. Say what will run.
+plugin_arg=(); [ "$installed" = 1 ] || plugin_arg=(--plugin-dir "$root")
+say "project    $project"
+say "runtime    srt --settings $settings"
+say "network    $(python3 -I -c 'import json,sys;print(", ".join(json.load(open(sys.argv[1]))["network"]["allowedDomains"]))' "$settings")"
+say "audit      $([ "$audit" = 1 ] && echo "on${audit_repo:+, repository $audit_repo}" || echo off)"
+say "plugin     $([ "$installed" = 1 ] && echo "installed" || echo "--plugin-dir $root")"
+[ "$check" = 1 ] && { say "check only; nothing started"; exit 0; }
+
+# 6. Start, inside the fence. The session inherits these variables.
+export KAD_SRT_SETTINGS="$settings"
+if [ "$audit" = 1 ]; then
+  export KAD_AUDIT=1
+  [ -n "$audit_repo" ] && export KAD_AUDIT_REPO="$audit_repo"
+else
+  unset KAD_AUDIT KAD_AUDIT_REPO
+fi
+cd "$project"
+exec srt --settings "$settings" claude "${plugin_arg[@]}" "${claude_args[@]}"

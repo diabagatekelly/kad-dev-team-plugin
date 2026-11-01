@@ -174,6 +174,6 @@ way); PR 3 is pushed as PR #26 (2026-11-01), the evidence check green.
 
 ## After the PRs
 
-- [ ] 4.1 Run `personal-finance-tracker-2` slice 2 on 0.7.0 with the budget line; audit it the same way (`audit-review` skill; the audit-docs tools); compare the E-line cost and the §10 estimate.
+- [ ] 4.1 Run slice 2 on 0.7.0 with the budget line, in a fresh repository for a one-to-one comparison, started with `bin/kad` (the sandbox runtime, audit mode and the audit repository set up by it); audit it the same way (`audit-review` skill; the audit-docs tools); compare the E-line cost and the §10 estimate.
 - [ ] 4.2 Decide D9 phase 2 (a chunk-runner agent per chunk) on the orchestrator's measured context from 4.1 (> ~250k tokens → build it).
 - [ ] 4.3 Open items from run 2, in the project not the plugin: PR #2's issue-links placeholder, the untracked `pr-r1-comments.json`, the missing E line, the three suspected bugs in repo 2 (orphaned vault row before the record write; `complete()` without a held claim; the year missing from the date column), repo 1's single-account rule and cursor persistence.

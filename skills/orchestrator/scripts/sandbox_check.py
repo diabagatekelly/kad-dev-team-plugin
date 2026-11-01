@@ -87,8 +87,8 @@ settings files only for what no probe can see:
 Under the sandbox runtime (`srt claude`; the runtime sets
 `SANDBOX_RUNTIME=1` inside) the whole session is fenced, file tools, hooks
 and MCP servers included, by `~/.srt-settings.json` (or the file passed to
-`srt --settings`, which this script cannot see; `--srt-settings FILE`
-names it). The probes measure that fence like any other. The settings
+`srt --settings`, which this script cannot see unless `--srt-settings FILE`
+or `KAD_SRT_SETTINGS`, which the launcher `bin/kad` exports, names it). The probes measure that fence like any other. The settings
 checks then read the runtime's file: check 2 scans its
 `filesystem.allowWrite` (the project, the temp directories, `~/.claude`
 and `~/.claude.json` are expected there, nothing else); checks 5 and 6
@@ -322,7 +322,9 @@ def under_srt():
 
 
 def srt_settings_path(override):
-    return os.path.expanduser(override or "~/.srt-settings.json")
+    """--srt-settings, else KAD_SRT_SETTINGS (the launcher `bin/kad` exports the
+    file it passed to `srt --settings`), else the runtime's default path."""
+    return os.path.expanduser(override or os.environ.get("KAD_SRT_SETTINGS") or "~/.srt-settings.json")
 
 
 def load_srt_settings(path):
@@ -545,7 +547,9 @@ def check_write(project, settings, srt):
         # directories writable to run at all, so those are expected.
         key = "the runtime's filesystem.allowWrite"
         entries = get(srt, "filesystem", "allowWrite", default=[]) or []
-        roots += [os.path.realpath(expand(r)) for r in ("~/.claude", "~/.claude.json", "/tmp", "/private/tmp")]
+        # ~/.npm is npm's cache, which an install inside the project writes;
+        # the credential file ~/.npmrc is a separate path and stays denied.
+        roots += [os.path.realpath(expand(r)) for r in ("~/.claude", "~/.claude.json", "/tmp", "/private/tmp", "~/.npm")]
         if os.environ.get("CLAUDE_CODE_TMPDIR"):
             roots.append(os.path.realpath(os.environ["CLAUDE_CODE_TMPDIR"]))
     outside = []

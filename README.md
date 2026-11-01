@@ -93,13 +93,41 @@ criteria, stack selection, and screen design by the actual personas. Most
 changes to this plugin came from watching that run break, so its
 `summary.md` is usually the best explanation of why a rule exists.
 
+## Starting a session: `bin/kad`
+
+Everything a real run needs is one command, run from the project's root:
+
+```bash
+<plugin root>/bin/kad            # alias kad=<plugin root>/bin/kad once, then just: kad
+kad --check                      # show what it would do, start nothing
+kad -- --resume                  # arguments after -- go to claude
+```
+
+It checks the platform and the tools (macOS, Linux and WSL2 have the
+runtime's backend; native Windows is told to use WSL2; the sandbox runtime
+is offered for install when missing), writes the runtime's settings for
+this project under `~/.config/kad-dev-team/srt/` (writes allowed to the
+project, Claude Code's own paths, the temp directory and npm's cache; the
+credential paths denied for reading; the network allowed to the API,
+sign-in and GitHub plus the domains you add), turns audit mode on with
+the audit repository you named, and starts `srt claude --plugin-dir <this
+plugin>` inside that fence, so the Read tool, hooks and every agent are
+inside it too. The first run asks two questions, the audit repository and
+any extra domains (`registry.npmjs.org` for npm installs), and stores the
+answers in `~/.config/kad-dev-team/launcher.json`; `kad --reset` asks
+again, `--audit-repo`, `--domain` and `--no-audit` change one run. The
+orchestrator's sandbox check reads the same settings file
+(`KAD_SRT_SETTINGS`) before it launches anything and names whatever is
+missing. Nothing outside `~/.config/kad-dev-team/` is written. The
+sections below say what each piece does by hand.
+
 ## Local development
 
 Load this plugin directly from disk without installing it, so changes take
 effect on the next restart:
 
 ```bash
-claude --plugin-dir /Users/kellydiabagate/Documents/kad-developer-suite
+claude --plugin-dir <plugin root>
 ```
 
 You can combine this with other `--plugin-dir` flags to load alongside other
