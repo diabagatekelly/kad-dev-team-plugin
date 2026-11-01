@@ -251,7 +251,7 @@ settings="$conf_dir/srt/$slug.json"
 claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 gen_settings() {
   KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_CLAUDE_DIR="$claude_dir" KAD_GH_DIR="$gh_dir" \
-  KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains ${domains_arg[*]:-}" python3 -I - <<'PY'
+  KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains ${domains_arg[*]:-}" KAD_PTY="$([ "$(uname -s)" = Darwin ] && echo 1 || echo 0)" python3 -I - <<'PY'
 import json, os
 home = os.path.expanduser("~")
 claude_dir = os.path.abspath(os.path.expanduser(os.environ["KAD_CLAUDE_DIR"]))
@@ -284,6 +284,12 @@ settings = {
     # certificate on macOS, since the fence refuses the system trust service
     "network": {"allowedDomains": domains, "deniedDomains": [], "allowLocalBinding": os.environ["KAD_LOCAL"] == "1", "tlsTerminate": {}},
 }
+# allowPty (macOS only; the runtime's Seatbelt profile denies /dev/ptmx and
+# /dev/ttys* without it): Claude Code puts the terminal into raw mode to
+# read keys; denied, the terminal driver echoes every arrow key and mouse
+# report as text (^[[A, ^[[<35;…M) and the session cannot be driven.
+if os.environ["KAD_PTY"] == "1":
+    settings["allowPty"] = True
 print(json.dumps(settings, indent=2))
 PY
 }
