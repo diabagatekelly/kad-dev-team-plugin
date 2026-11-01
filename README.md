@@ -107,8 +107,11 @@ It checks the platform and the tools (macOS, Linux and WSL2 have the
 runtime's backend; native Windows is told to use WSL2; `claude` and
 `python3` must be on PATH; the sandbox runtime is offered for install
 when missing), writes the runtime's settings for this project under
-`~/.config/kad-dev-team/srt/` (writes allowed to the project, Claude
-Code's config directory, the temp directory and npm's cache, with the
+`~/.config/kad-dev-team/srt/` (on macOS with `allowPty`, without which
+the runtime's profile denies the terminal's raw mode and every arrow key
+and mouse report lands in the session as text; writes allowed to the
+project, Claude Code's config directory, the temp directory and npm's
+cache, with the
 user settings, hooks, commands, agents, skills and plugins under that
 config directory denied so nothing an agent writes outlives the session;
 the credential paths denied for reading; the network allowed to the API,
@@ -429,13 +432,22 @@ that fences a slice:
   "network": {
     "allowedDomains": ["api.anthropic.com", "claude.ai", "platform.claude.com", "github.com", "*.github.com"],
     "deniedDomains": []
-  }
+  },
+  "allowPty": true
 }
 ```
 
 Every one of those keys is required (the runtime refuses a file missing
 any, rather than run on defaults that would drop its rules). On Linux
-use `/tmp` in place of `/private/tmp`. `allowWrite`'s `.` is where
+use `/tmp` in place of `/private/tmp` and drop `allowPty`, which is
+macOS-only: there the runtime's profile denies the terminal devices
+without it, Claude Code's `setRawMode` fails with `EPERM`, and every
+arrow key and mouse report lands in the session as text (`^[[A`,
+`^[[<35;…M`). The grant the runtime emits for it is every `/dev/ttys*`,
+not only the session's own terminal, so a command inside the fence can
+reach another terminal the same user has open; the runtime offers no
+narrower rule, and an interactive session cannot run without one. It is
+the one place the fence is as wide as the user's own terminals. `allowWrite`'s `.` is where
 `srt` starts, so start it from the project; add the registry a test run
 installs from (`registry.npmjs.org`) when the project needs it.
 Nothing inside the session can change that file, which is the point: the
