@@ -30,9 +30,9 @@ graders:
     min: 0
     max: 0
   - type: tool_used
-    name: not-user-story-writeup
+    name: not-architecture-design
     tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:user-story-writeup"'
+    input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
     min: 0
     max: 0
   - type: file_exists
@@ -57,8 +57,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The orchestrator executes exactly one routed step per invocation, then reports what it detected, where it routed and what was produced, and asks whether to continue; it never chains into the next stage. Here the routed step is `product-slicer` (`vertical-slicing`, with `acceptance-criteria`).
+      The orchestrator executes one routed step at a time: it reports what it detected, where it routed and what was produced, then continues to the next row in the same conversation, and asks the owner only when the next row needs an owner decision to start or a routed skill has a question of its own. Here the first routed step is `product-slicer` (`vertical-slicing`, with `acceptance-criteria`); the next row is `docs-writer:user-story-writeup`, whose first move is to ask the owner whether the slice becomes a filed issue and in which system.
 
-      PASS if the response ends in one of two ways: with vertical-slicing's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is the second ending, not the orchestrator answering its questions. Either way nothing from a later stage (a user story or a design doc) has been produced.
+      PASS if the response ends in one of these ways: with vertical-slicing's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn); with the slice reported and the flow stopped there asking whether to go on; or with the slice reported and user-story-writeup started and stopped at its own question to the owner (whether to file, where), each step reported in its own words. A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is not the orchestrator answering its questions. Either way no user story has been written without the owner's answer, and nothing from a later stage (a design doc) has been produced.
 
-      FAIL if the response goes on to run or produce a later stage's work, or if the routed skill had stopped to ask the user something and the response answers that question itself from the repository and carries on past it, or if it routes to something other than vertical-slicing.
+      FAIL if the response writes the user story or a design doc without the owner's answers, settles a question the routed skill was meant to ask the owner (where the project tracks work) from the repository and carries on past it, or routes to something other than vertical-slicing first.

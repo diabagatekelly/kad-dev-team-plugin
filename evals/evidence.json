@@ -620,6 +620,15 @@
     "claude_version": "2.1.316",
     "recorded": "2026-11-01T15:35:16Z"
   },
+  "orchestrator-route-slicing": {
+    "inputs": "89a6817dc2ad803cf6eefd1cc3aa54856ed5a74766854cd1824b2e24aa2237e2",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261101T153923-orchestrator-route-slicing.json",
+    "claude_version": "2.1.316",
+    "recorded": "2026-11-01T15:40:12Z"
+  },
   "orchestrator-route-tech-bootstrap": {
     "inputs": "3ca22ce99a5eeca0dadb7547d1c5b2a7a426f83cd3ab339ab55c5beda85c2bf6",
     "score": 1.0,
