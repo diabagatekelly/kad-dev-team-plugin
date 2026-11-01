@@ -166,7 +166,7 @@ defects (the gate command never allowed the loop's own uncommitted log;
 a handoff naming E was resumed by invoking `delivery` directly). K4, the
 stale re-record of every case the skill edits reach, is done (68/68 with
 evidence, 2026-10-31; four history chains re-frozen after PR 2 on the
-way); PR 3 is pushed.
+way); PR 3 is pushed as PR #26 (2026-11-01), the evidence check green.
 
 - [x] 3.1 Cases 1–12 on `evals/fixtures/library-app/`, each with graders, per `evals/README.md`; bars recorded with `record_thresholds.py` after calibration.
 - [x] 3.2 `evals/tools/cost_by_role.py` (copy from `audit-docs/personal-finance-tracker-2-slice-1/plugin-review/tools/cost_by_role.py`; per-model prices; prints the E-line total).

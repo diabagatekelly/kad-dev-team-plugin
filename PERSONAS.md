@@ -385,8 +385,7 @@ delivery (E.1 now commits log and records). All seventeen bars are recorded
 (2026-10-31, from the Mac once `evals/tools/gate.sh`'s `git` shims
 existed; the loop cases' second pass found two more defects, the gate
 command never allowing the loop's own log and a handoff resumed by
-invoking `delivery` directly, both fixed). What is next: the stale
-re-record of the cases PR 1 and PR 2 touched, the push, then (the owner's
+invoking `delivery` directly, both fixed). The stale re-record of the cases PR 1 and PR 2 touched is done and PR 3 is open as #26 (2026-11-01, the evidence check green for all 68 cases). What is next: (the owner's
 rule being that v4 is done only once everything has been evaluated and
 shown to work) slice 2 of `personal-finance-tracker-2` on 0.7.0 with the budget line,
 audited the same way, which decides D9's phase 2.
