@@ -52,18 +52,28 @@ audit repository at the end of each slice); a session started as plain
 with Bash, one command:
 
 ```
-[ "${SANDBOX_RUNTIME:-}" = 1 ] && echo "session: under the sandbox runtime, audit ${KAD_AUDIT:-off}" || echo "session: not under the sandbox runtime; audit ${KAD_AUDIT:-off}; stored answers: $([ -f "${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}/launcher.json" ] && echo yes || echo none)"
+echo "session: runtime $([ "${SANDBOX_RUNTIME:-}" = 1 ] && echo yes || echo no); launcher $([ -n "${KAD_SRT_SETTINGS:-}" ] && echo yes || echo no); audit ${KAD_AUDIT:-off}; stored answers: $([ -f "${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}/launcher.json" ] && echo yes || echo none)"
 ```
 
-`SANDBOX_RUNTIME=1` is set by the runtime itself for every process it
-fences, the same test `sandbox_check.py` makes; a `KAD_SRT_SETTINGS` in
-the environment proves nothing on its own. `audit on` outside the runtime
-means the owner exported `KAD_AUDIT=1` for this session by hand (the
-README's audit section): the hooks are logging already, and nothing in
-this step turns that off or on for the current session.
+`runtime yes` is `SANDBOX_RUNTIME=1`, set by the runtime itself for every
+process it fences, the same test `sandbox_check.py` makes; `launcher yes`
+is `KAD_SRT_SETTINGS`, which only `bin/kad` exports, and which proves
+nothing about the fence on its own. `audit on` without the launcher means
+the owner exported `KAD_AUDIT=1` for this session by hand (the README's
+audit section): the hooks are logging already, and nothing in this step
+turns that off or on for the current session.
 
-- **Under the sandbox runtime**: nothing to decide. Say so in one line
-  and go to step 1.
+- **Runtime yes, launcher yes**: the launcher started this session and
+  audit was decided then. Nothing to decide: say so in one line and go
+  to step 1.
+- **Runtime yes, launcher no** (`srt claude` by hand, or a harness that
+  fences its runs): the fence is there, so no restart is needed for it;
+  only audit mode is open. With `audit on`, nothing to decide: one line,
+  step 1. With `audit off`, ask the audit-mode question below and
+  nothing else; on "on", say that audit starts with a session the
+  launcher starts (the relaunch command below, with `--audit`; the owner
+  runs it when they want it) and go on to step 1 in this session; on
+  "off", step 1.
 - **No Bash in this session**: nothing of this step can run. Say so in one
   line and go to step 1; never put the audit or restart question to an
   owner whose session cannot act on the answer. The chunk loop's own
@@ -71,16 +81,16 @@ this step turns that off or on for the current session.
 - **Resumed**: a session that picks up a flow from a handoff file (the
   owner's message names one, or the chunk loop's resume rule finds one)
   asks nothing here: the choices were made when that flow started. When
-  the one-liner says the session is not under the runtime, say so in one
-  line, with the command that resumes it fenced instead
+  the one-liner says `runtime no`, say so in one line, with the command
+  that resumes it fenced instead
   (`bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --relaunch --project "$PWD" -- '/kad-dev-team:orchestrator'`,
   the stored answers apply), and go on: the owner can stop and run it.
   The same one line, no question, for a session whose owner's message
   already said to continue in this session, or unsandboxed.
-- **Not under the sandbox runtime, Bash in hand**: `stored answers: none`
-  means the launcher has never run on this machine and will ask its three
-  questions; `yes` means it holds them and only audit mode is this
-  session's to choose (an owner who wants a stored answer changed says so
+- **Runtime no, Bash in hand**: `stored answers: none` means the launcher
+  has never run on this machine and will ask its three questions; `yes`
+  means it holds them and only audit mode is this session's to choose
+  (an owner who wants a stored answer changed says so
   in their message, and the flag below carries it for this run; `kad
   --reset` asks the three again). Ask, one question per `AskUserQuestion`
   call, in this order, each skipped when the owner's message, the stored
@@ -126,9 +136,10 @@ this step turns that off or on for the current session.
   not on PATH unless the owner put it there.
 
 The owner's choice is reported in step 5's text as one `session` line
-(`under the sandbox runtime, audit on`, `restarting under the runtime`,
-`continuing here, audit <on | off>`, or `resumed, not under the runtime`);
-it is not a log entry, since no target exists yet when it is made.
+(`under the launcher, audit on`, `fenced without the launcher, audit <on |
+off>`, `restarting under the runtime`, `continuing here, audit <on |
+off>`, or `resumed, not under the runtime`); it is not a log entry, since
+no target exists yet when it is made.
 
 **1. Identify the target.** You're invoked with the artifacts directory as
 a parameter, or not:

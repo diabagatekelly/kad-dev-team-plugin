@@ -34,7 +34,7 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The orchestrator's step 0, session setup, runs once per session before anything else: a session not started by the plugin's launcher (`bin/kad`) has no audit mode and is not under the sandbox runtime, and neither can be turned on from inside it. With a shell available, the orchestrator checks the environment, then asks the owner, one question at a time, whether to run in audit mode (then, on a first run, which audit repository and which extra domains), runs the launcher's `--prepare` with the answers, and asks whether to restart under the sandbox runtime or continue here. Only after that does it ask for the target directory or route anywhere.
+      The orchestrator's step 0, session setup, runs once per session before anything else: a session not started by the plugin's launcher (`bin/kad`) has no audit mode decided, and audit cannot be turned on from inside it. With a shell available, the orchestrator checks the environment (whether the session is under the sandbox runtime, whether the launcher started it, whether audit is on), then asks the owner, one question at a time, whether to run in audit mode (then, on a first run, which audit repository and which extra domains), runs the launcher's `--prepare` with the answers, and asks whether to restart under the sandbox runtime or continue here. A session that is already fenced by something other than the launcher (this eval harness fences its runs) needs no restart for the fence, so there only the audit-mode question is asked. Only after that does it ask for the target directory or route anywhere.
 
       This session has no AskUserQuestion tool, so a question is asked as plain text and the turn ends there.
 
