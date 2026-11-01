@@ -617,8 +617,10 @@ graders, following `evals/README.md`.
    3–5 wording; `orchestrator_log_check.py`.
 4. **PR 3, evals**: cases 1–12; `cost_by_role.py` under `evals/tools/`;
    bars recorded per the playbook.
-5. **Run slice 2 of `personal-finance-tracker-2` on 0.7.0 with the
-   budget line**, audit it the same way, and decide D9's phase 2 (the
+5. **Run slice 2 on 0.8.0 with the budget line** (the version that
+   carries all of v4: PR 1 to PR 3 and the launcher that landed with them;
+   0.7.0 was PR 1 alone), in a fresh repository for a one-to-one
+   comparison, audit it the same way, and decide D9's phase 2 (the
    chunk-runner agent) on the orchestrator's measured context.
 
 ## 13. Questions for the owner, with the default this design assumes
