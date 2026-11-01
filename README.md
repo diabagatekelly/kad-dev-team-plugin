@@ -126,13 +126,16 @@ keychain the fence refuses; and the runtime's TLS termination, without
 which `gh` cannot verify a certificate on macOS), turns
 audit mode on with the audit repository you named, and starts `srt
 claude --plugin-dir <this plugin>` inside that fence, so the Read tool,
-hooks and every agent are inside it too. The first run asks two
-questions, the audit repository and any extra domains
-(`registry.npmjs.org` for npm installs), and stores the answers,
-owner-readable only, in `~/.config/kad-dev-team/launcher.json`; `kad
---reset` asks again, `--audit-repo`, `--domain` and `--no-audit` change
-one run and store nothing; `kad --check` shows the plan and writes
-nothing. Local
+hooks and every agent are inside it too. The first run asks three
+questions, audit mode (on by default), the audit repository and any
+extra domains (`registry.npmjs.org` for npm installs), and stores the
+answers, owner-readable only, in `~/.config/kad-dev-team/launcher.json`;
+`kad --reset` asks again. On that first run `--audit`, `--no-audit`,
+`--audit-repo` and `--domain` answer the questions instead of the
+terminal and are stored (how the orchestrator runs it); on every later
+run they change that one run and store nothing. `kad --check` shows the
+plan and writes nothing; `--install-runtime` installs the sandbox runtime
+without asking when it is missing. Local
 ports are allowed by default (a dev server, its tests and the loop's
 smoke run bind and reach `localhost`; `--no-local` denies them for a
 slice that touches no port). `kad --chrome` adds the extension's bridge
@@ -148,13 +151,22 @@ missing. The launcher itself writes nothing outside
 settings allow.
 
 You can also start Claude the usual way and say "what's next": the
-orchestrator's first step finds the session is not in the fence, runs
-`kad --prepare` itself (asking you for the audit repository and extra
-domains the first time), and asks one question: restart in the fence,
-which opens a new terminal window with the fenced session on the project
-(`kad --relaunch`; you close the old one), or continue in this session
-with the per-command sandbox. The sections below say what each piece
-does by hand.
+orchestrator's step 0, session setup, runs before it asks anything else.
+It finds the session is not under the launcher, asks whether you want
+audit mode (and, the first time, the audit repository and extra domains),
+runs `kad --prepare` itself with your answers, and asks one more
+question: restart in the fence, which opens a new terminal window with
+the fenced session on the project, the orchestrator already started in
+it (`kad --relaunch`; you close the old one), or continue in this
+session with the per-command sandbox and no audit. It asks this once per
+session, never on a flow resumed from a handoff file, and never in a
+session that has no shell to run the launcher with. Nothing needs `kad`
+on your PATH: the orchestrator and the relaunch use the script's full
+path, which for a marketplace install is under
+`~/.claude/plugins/cache/kad-dev-team-marketplace/kad-dev-team/<version>/bin/kad`
+(and changes with the version, which is why an alias is a convenience
+for your own terminal, not something the plugin relies on). The sections
+below say what each piece does by hand.
 
 ## Local development
 

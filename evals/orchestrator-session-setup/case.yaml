@@ -1,0 +1,43 @@
+schema_version: "1.0"
+name: orchestrator-session-setup
+description: "Step 0 of the orchestrator: a session not started by the launcher, with a shell in hand, is asked about audit mode and the restart under the sandbox runtime before the target question and before any routing."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're starting to plan a new feature for it: members can only pay their fines at the desk. Its planning documents go in `docs/pay-fine/`, which is new and empty so far. What's next?
+  model: sonnet
+  max_turns: 25
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 2
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: checks-the-session
+    tool: Bash
+    input_match: 'KAD_SRT_SETTINGS'
+    min: 1
+  - type: tool_used
+    name: not-problem-framing-doc-yet
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:problem-framing-doc"'
+    min: 0
+    max: 0
+  - type: llm
+    name: asks-about-the-session-first
+    focus: last_message
+    weight: 1
+    criteria: |
+      The orchestrator's step 0, session setup, runs once per session before anything else: a session not started by the plugin's launcher (`bin/kad`) has no audit mode and is not under the sandbox runtime, and neither can be turned on from inside it. With a shell available, the orchestrator checks the environment, then asks the owner, one question at a time, whether to run in audit mode (then, on a first run, which audit repository and which extra domains), runs the launcher's `--prepare` with the answers, and asks whether to restart under the sandbox runtime or continue here. Only after that does it ask for the target directory or route anywhere.
+
+      This session has no AskUserQuestion tool, so a question is asked as plain text and the turn ends there.
+
+      PASS if the response ends on one of step 0's questions, asked of the owner: whether audit mode is wanted, the audit repository, the extra domains, whether to install the sandbox runtime, or whether to restart in the fence or continue here; or if it reports that the launcher stopped (a tool missing, a platform without a sandbox backend) and then goes on no further than the target question. No planning artifact has been produced and no planning skill has been invoked.
+
+      FAIL if it routes to problem-framing-doc or produces any planning artifact, or if it starts the planning work (writes `orchestrator-log.md` with a routing entry) before a session-setup question has been put to the owner, or if it skips step 0 without saying why.

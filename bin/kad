@@ -35,14 +35,21 @@
 # gh as git's credential helper in place of the keychain the fence
 # refuses, and the runtime's TLS termination, without which gh cannot
 # verify a certificate on macOS; then runs `srt --settings <file> claude
-# --plugin-dir <this plugin>` in the project. The first run asks two questions (the audit
-# repository, extra domains) and stores the answers, owner-readable only,
-# in ~/.config/kad-dev-team/launcher.json; `--reset` asks again. The
-# launcher itself writes nothing outside that directory; the session it
-# starts writes where the settings allow.
+# --plugin-dir <this plugin>` in the project (no --plugin-dir when the
+# plugin runs from Claude Code's plugin cache: a marketplace install). The
+# first run asks three questions (audit mode, the audit repository, extra
+# domains) and stores the answers, owner-readable only, in
+# ~/.config/kad-dev-team/launcher.json; `--reset` asks again. On that first
+# run --audit, --no-audit, --audit-repo and --domain answer the questions
+# instead of the terminal and are stored (the orchestrator's session
+# setup runs it that way, from a session with no terminal); on every later
+# run they apply to that run only. The launcher itself writes nothing
+# outside that directory; the session it starts writes where the settings
+# allow.
 #
-#   --audit-repo URL   audit repository for this run only (stored answers unchanged)
+#   --audit            KAD_AUDIT=1 for this run (the stored default is on)
 #   --no-audit         KAD_AUDIT unset for this run
+#   --audit-repo URL   audit repository for this run only (stored answers unchanged)
 #   --domain D         extra allowed domain for this run (repeatable)
 #   --chrome           Claude in Chrome: allows the extension's bridge domain
 #                      and starts claude --chrome (enable it once outside the
@@ -61,6 +68,8 @@
 #   --no-github        hand the session no GitHub token (delivery then stops
 #                      at the push)
 #   --installed        the plugin is installed from the marketplace: no --plugin-dir
+#                      (detected when this script runs from Claude Code's plugin cache)
+#   --install-runtime  install the sandbox runtime without asking when it is missing
 #   --yes              take every default, ask nothing (first run included)
 #   --reset            forget the stored answers and ask again
 set -euo pipefail
@@ -70,14 +79,17 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 conf_dir="${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}"
 conf_dir="$(mkdir -p "$conf_dir" && cd "$conf_dir" && pwd)"   # absolute: kad changes directory before srt starts
 conf="$conf_dir/launcher.json"
-project="$PWD"; yes=0; check=0; audit=1; installed=0; reset=0; chrome=0; local=1; prepare=0; relaunch=0
+project="$PWD"; yes=0; check=0; audit=""; installed=0; reset=0; chrome=0; local=1; prepare=0; relaunch=0; install_runtime=0
 audit_repo_arg=""; domains_arg=(); keep_env=(); claude_args=(); gh_token_env=""; github=1
+case "$root" in */plugins/cache/*|*/plugins/repos/*) installed=1 ;; esac   # Claude Code's plugin cache: the plugin is already loaded
 orig_args=("$@")
 while [ $# -gt 0 ]; do
   case "$1" in
     --project) project="$2"; shift 2 ;;
     --audit-repo) audit_repo_arg="$2"; shift 2 ;;
+    --audit) audit=1; shift ;;
     --no-audit) audit=0; shift ;;
+    --install-runtime) install_runtime=1; shift ;;
     --domain) domains_arg+=("$2"); shift 2 ;;
     --keep-env) keep_env+=("$2"); shift 2 ;;
     --gh-token-env) gh_token_env="$2"; shift 2 ;;
@@ -132,12 +144,12 @@ if ! command -v srt >/dev/null; then
     say "would install the sandbox runtime: npm install -g @anthropic-ai/sandbox-runtime"
   else
     say "the sandbox runtime (srt) is not installed; it fences the whole session, file tools, hooks and agents included"
-    if confirm "install it now with: npm install -g @anthropic-ai/sandbox-runtime ?"; then
+    if [ "$install_runtime" = 1 ] || confirm "install it now with: npm install -g @anthropic-ai/sandbox-runtime ?"; then
       command -v npm >/dev/null || { say "npm is not on PATH"; exit 2; }
       npm install -g @anthropic-ai/sandbox-runtime
       command -v srt >/dev/null || { say "srt still not on PATH after the install; open a new shell and run kad again"; exit 2; }
     else
-      say "not installed; run kad again once it is"; exit 2
+      say "not installed; run kad again once it is (or with --install-runtime)"; exit 2
     fi
   fi
 fi
@@ -163,22 +175,35 @@ PY
 mkdir -p "$conf_dir/srt"
 if [ "$reset" = 1 ] && [ -f "$conf" ] && [ "$check" = 0 ]; then rm -f "$conf"; fi
 if [ -f "$conf" ]; then
+  stored_audit="$(read_conf audit)"; stored_audit="${stored_audit:-1}"
   stored_repo="$(read_conf audit_repo)"
   stored_domains="$(read_conf domains)"
 elif [ "$check" = 1 ]; then
-  stored_repo=""; stored_domains=""
-  say "first run would ask two questions (audit repository, extra domains) and store them in $conf"
+  stored_audit="${audit:-1}"; stored_repo="$audit_repo_arg"; stored_domains="${domains_arg[*]:-}"
+  say "first run would ask three questions (audit mode, audit repository, extra domains) and store them in $conf"
 else
-  say "first run: two questions, stored in $conf (kad --reset asks again)"
-  stored_repo="$(ask 'audit repository clone URL (audit material is synced there at the end of each slice; empty for none)' '')"
-  stored_domains="$(ask 'extra domains the project needs, space-separated (registry.npmjs.org for npm installs, pypi.org, ...)' '')"
-  KAD_REPO="$stored_repo" KAD_DOMAINS="$stored_domains" python3 -I - <<'PY' | write_json "$conf"
+  # First run: a flag answers its question, the terminal answers the rest
+  # (the default when there is no terminal, or --yes).
+  say "first run: three questions, stored in $conf (kad --reset asks again)"
+  if [ -n "$audit" ]; then stored_audit="$audit"
+  elif [ "$yes" = 1 ] || [ ! -t 0 ]; then stored_audit=1   # the default is on: a run with no terminal keeps it
+  elif confirm "audit mode: log each prompt, skill and agent call and keep the transcripts of this project's sessions, on your machine?"; then stored_audit=1
+  else stored_audit=0; fi
+  if [ -n "$audit_repo_arg" ]; then stored_repo="$audit_repo_arg"
+  elif [ "$stored_audit" = 1 ]; then stored_repo="$(ask 'audit repository clone URL (audit material is synced there at the end of each slice; empty for none)' '')"
+  else stored_repo=""; fi
+  if [ "${#domains_arg[@]}" -gt 0 ]; then stored_domains="${domains_arg[*]}"; domains_arg=()
+  else stored_domains="$(ask 'extra domains the project needs, space-separated (registry.npmjs.org for npm installs, pypi.org, ...)' '')"; fi
+  KAD_AUDIT_ON="$stored_audit" KAD_REPO="$stored_repo" KAD_DOMAINS="$stored_domains" python3 -I - <<'PY' | write_json "$conf"
 import json, os
-print(json.dumps({"audit_repo": os.environ["KAD_REPO"], "domains": os.environ["KAD_DOMAINS"].split()}, indent=2))
+print(json.dumps({"audit": os.environ["KAD_AUDIT_ON"] == "1", "audit_repo": os.environ["KAD_REPO"], "domains": os.environ["KAD_DOMAINS"].split()}, indent=2))
 PY
 fi
-# The run's repository: the flag for this run only, else the stored one;
-# an inherited KAD_AUDIT_REPO is never used without being chosen here.
+case "$stored_audit" in True|true) stored_audit=1 ;; False|false) stored_audit=0 ;; esac
+# This run's audit mode and repository: the flag for this run only, else
+# the stored answer; an inherited KAD_AUDIT_REPO is never used without
+# being chosen here.
+audit="${audit:-$stored_audit}"
 audit_repo="${audit_repo_arg:-$stored_repo}"
 
 # 3a. GitHub, for the loop's delivery inside the fence. gh's own config
@@ -274,13 +299,13 @@ gh_line="no token: delivery stops at the push"
 say "github     $gh_line"
 [ "${#scrubbed[@]}" -gt 0 ] && say "env        dropped ${scrubbed[*]} (credential-shaped; --keep-env NAME passes one through)"
 [ "$check" = 1 ] && [ "$relaunch" = 0 ] && { say "check only; nothing written, nothing started"; exit 0; }
-[ "$prepare" = 1 ] && { say "prepared; start the fenced session with: kad --project '$project'$([ "$chrome" = 1 ] && echo ' --chrome')"; exit 0; }
+[ "$prepare" = 1 ] && { say "prepared; start the fenced session from a terminal with: $(printf '%q' "$root/bin/kad") --project $(printf '%q' "$project")$([ "$chrome" = 1 ] && echo ' --chrome')"; exit 0; }
 
 # 6a. --relaunch: a new terminal window runs kad here; the caller (a session
 #     that cannot replace its own process) then ends by hand.
 if [ "$relaunch" = 1 ]; then
   again=()
-  for a in "${orig_args[@]}"; do [ "$a" = --relaunch ] || [ "$a" = --check ] || again+=("$a"); done
+  for a in "${orig_args[@]}"; do [ "$a" = --relaunch ] || [ "$a" = --check ] || [ "$a" = --install-runtime ] || again+=("$a"); done
   cmd="cd $(printf '%q' "$project") && $(printf '%q' "$root/bin/kad")"
   for a in "${again[@]}"; do cmd="$cmd $(printf '%q' "$a")"; done
   say "relaunch command: $cmd"

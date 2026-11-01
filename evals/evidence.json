@@ -414,13 +414,13 @@
     "recorded": "2026-10-15T17:14:10Z"
   },
   "orchestrator-asks-for-target": {
-    "inputs": "44e2cb21722da150e1da7191cab2e47077858853166348180e861fcf6de5f74b",
+    "inputs": "1c73e3bd089a20733ddf19f6ca0c2d158d6062239839846998416a95038a2e1d",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261101T111421-orchestrator-asks-for-target.json",
+    "runs": 2,
+    "source": "results/gate-20261101T133739-orchestrator-asks-for-target.json",
     "claude_version": "2.1.316",
-    "recorded": "2026-11-01T11:20:28Z"
+    "recorded": "2026-11-01T13:38:11Z"
   },
   "orchestrator-backward-route": {
     "inputs": "d512dcb585c9c2a2835920296782c4dfe306be26b6389685d11b17ba869342a7",
@@ -576,13 +576,13 @@
     "recorded": "2026-11-01T11:20:28Z"
   },
   "orchestrator-route-problem-framing": {
-    "inputs": "1c80e6ff8daed5a589175a36e4d610a1cc818931a066e7ed242c35b712510c87",
+    "inputs": "24fd9741b98153dd7b0a11a7b8ab785795ece3baa9b0ae49025e204529736dc4",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261101T111421-orchestrator-route-problem-framing.json",
+    "runs": 2,
+    "source": "results/gate-20261101T133739-orchestrator-route-problem-framing.json",
     "claude_version": "2.1.316",
-    "recorded": "2026-11-01T11:20:28Z"
+    "recorded": "2026-11-01T13:38:11Z"
   },
   "orchestrator-route-reliability": {
     "inputs": "cd7bfc84ebf07b001ad2d0e407a3c90bcdbbf6a7d62efab24edc920ecaeafd15",
@@ -655,6 +655,15 @@
     "source": "results/gate-20261101T111421-orchestrator-security-stage.json",
     "claude_version": "2.1.316",
     "recorded": "2026-11-01T11:20:28Z"
+  },
+  "orchestrator-session-setup": {
+    "inputs": "87d0236253f8c135feb5e63b5c1a9bf363e8257044728607b85be86883f17e07",
+    "score": 1.0,
+    "bar": null,
+    "runs": 2,
+    "source": "results/gate-20261101T133739-orchestrator-session-setup.json",
+    "claude_version": "2.1.316",
+    "recorded": "2026-11-01T13:38:11Z"
   },
   "orchestrator-superseded-scope-map": {
     "inputs": "0e860f125065930fbae75bcbc8f3c8a6732121c5bf8b919ab18567c4a7b788f5",

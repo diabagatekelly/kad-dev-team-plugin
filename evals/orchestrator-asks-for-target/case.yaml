@@ -35,6 +35,8 @@ graders:
     criteria: |
       No artifacts directory was given. The orchestrator's rule is to ask once, before anything else, where this problem's artifacts exist or should be created, and never to guess a location or search the project for one.
 
+      This session grants no shell, so the orchestrator's step 0 (session setup: audit mode, the sandbox runtime) cannot run; its rule is to say so in one line and go on to the target question. A line to that effect before the question is fine.
+
       PASS if the response asks the user where the artifacts are or should go, and does not start producing a planning artifact.
 
       FAIL if it picks a location itself, searches for one and proceeds, or starts the planning work without asking.
