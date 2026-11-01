@@ -71,7 +71,21 @@ The first slice should:
   document, and nothing else in the slice. Until they run, the
   placeholders keep the gaps visible instead of any going missing
   silently. Shipping without all three placeholders is a gap, not a
-  deferral.
+  deferral. The one judgment that is yours: when the thin path you wrote
+  has no user-facing interface at all (an import, a scheduled job, an API
+  that an existing client calls, a command), the accessibility line says
+  so instead of waiting for a review of nothing:
+  `Accessibility: not applicable, this slice has no screen
+  (accessibility-engineer:accessibility-review when one is added)`.
+  "Screen" here means anything a person perceives and acts on, visual or
+  not: a voice or audio flow, a document a person reads, a notification
+  they receive are screens for this rule and get the real placeholder.
+  The orchestrator reads the not-applicable line as filled and never
+  routes the review. It is not a way to defer the interface: the
+  end-to-end rule below still applies, so the person still reaches and
+  observes the behaviour through something that exists. A thin path that
+  does describe an interface gets the real placeholder, and the
+  not-applicable line on such a slice is your mistake to fix.
 - **Still be genuinely end-to-end**, even if narrow. A slice that skips the
   "view the result" step to save time isn't a slice — it's half of one.
 - **Has a real user as its actor.** If the actor is "the system" or "a
@@ -275,7 +289,8 @@ thorough. See the `acceptance-criteria` skill for quality checks. Then the
 three placeholder criteria, one line each, naming the persona and skill
 that fills it: security (`devsecops-engineer:security-requirements`),
 reliability (`devsecops-engineer:reliability-requirements`), accessibility
-(`accessibility-engineer:accessibility-review`).
+(`accessibility-engineer:accessibility-review`; the not-applicable line
+above when the thin path names no screen).
 
 ## Explicitly deferred
 Open questions from the problem doc (or earlier slices) that this slice

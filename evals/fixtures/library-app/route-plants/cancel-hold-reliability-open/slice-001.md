@@ -14,6 +14,8 @@ removes it from the title's queue, and the use case says it was cancelled.
 - Security: only the hold named by the card number and ISBN given is
   removed; no other member's hold on that title or any other changes.
 - [RELIABILITY — placeholder, to be authored by devsecops-engineer]
+- Accessibility: not applicable, this slice has no screen
+  (`accessibility-engineer:accessibility-review` when one is added).
 
 ## Explicitly deferred
 

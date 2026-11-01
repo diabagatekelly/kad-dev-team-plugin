@@ -44,7 +44,7 @@ graders:
 
       PASS if the acceptance criteria include a security placeholder and a separate accessibility placeholder, and neither is written out as finished criteria by this document.
 
-      FAIL if either is missing, they are combined into one line, or the document authors the security or accessibility criteria itself.
+      FAIL if either is missing, they are combined into one line, the document authors the security or accessibility criteria itself, or the accessibility line says "not applicable" or "no screen" on this slice, whose thin path is a portal screen a member uses.
   - type: llm
     name: names-the-slice-set
     focus:

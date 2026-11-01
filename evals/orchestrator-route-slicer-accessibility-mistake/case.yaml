@@ -1,0 +1,49 @@
+schema_version: "1.0"
+name: orchestrator-route-slicer-accessibility-mistake
+description: "The slicer's not-applicable accessibility line on a slice whose thin path is a desk screen staff use (issue #25's rule, the mistake side): the orchestrator sends the slice back to product-slicer to fix the line in place, as a backward route, and runs no accessibility review, screen design or build around it."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next?
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: routes-back-to-the-slicer
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:vertical-slicing"'
+    min: 1
+  - type: tool_used
+    name: no-accessibility-review
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-build
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation(?:-lite)?"'
+    min: 0
+    max: 0
+  - type: llm
+    name: log-names-the-mismatch
+    focus:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    weight: 1
+    criteria: |
+      The slice's thin path is a desk screen staff use, yet its accessibility line says "not applicable, this slice has no screen": the slicer's line disagrees with its thin path. The orchestrator's rule routes that back to `product-slicer` (`vertical-slicing`) to fix the line in place, as a backward route, before any review of the slice.
+
+      PASS if the log has an entry that routes to product-slicer or vertical-slicing because the accessibility line says not applicable on a slice with a screen (in the entry's own words: the line contradicts the thin path, the slice is UI-touching but marked as having no screen, or the like), naming the slice file.
+
+      FAIL if no entry routes there, or the entry routes to accessibility-review, screen-design, the design-system, or the implementation, or the reason given is something other than the accessibility line disagreeing with the thin path.

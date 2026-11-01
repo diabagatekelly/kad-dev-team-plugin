@@ -178,15 +178,16 @@
     ]
   },
   "architecture-design-scope-consequence": {
-    "score": 0.667,
+    "score": 0.917,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.316",
-    "source": "results/gate-20261031T170425-architecture-design-scope-consequence.json",
+    "source": "results/gate-20261101T105453-architecture-design-scope-consequence.json",
     "graders": {
       "does-not-approve-around-it": 0.667,
-      "hands-back-to-the-requirements-owner": 0.333,
-      "skill-invoked": 1.0
+      "hands-back-to-the-requirements-owner": 1.0,
+      "skill-invoked": 1.0,
+      "slice-and-requirements-untouched": 1.0
     },
     "skills_invoked": [
       "architecture-design",
@@ -1286,6 +1287,24 @@
       "orchestrator",
       "reliability-requirements",
       "screen-design"
+    ]
+  },
+  "orchestrator-route-slicer-accessibility-mistake": {
+    "score": 1.0,
+    "runs": 1,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T111421-orchestrator-route-slicer-accessibility-mistake.json",
+    "graders": {
+      "log-names-the-mismatch": 1.0,
+      "no-accessibility-review": 1.0,
+      "no-build": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-back-to-the-slicer": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "vertical-slicing"
     ]
   },
   "orchestrator-route-slicing": {
@@ -2661,6 +2680,23 @@
       "no-slice-in-the-reply": 1.0,
       "skill-invoked": 1.0,
       "writes-no-slice": 1.0
+    },
+    "skills_invoked": [
+      "acceptance-criteria",
+      "vertical-slicing"
+    ]
+  },
+  "vertical-slicing-no-screen": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T111337-vertical-slicing-no-screen.json",
+    "graders": {
+      "accessibility-line-matches-the-thin-path": 1.0,
+      "leaves-the-planning-docs-alone": 1.0,
+      "skill-invoked": 1.0,
+      "slice-written": 1.0
     },
     "skills_invoked": [
       "acceptance-criteria",

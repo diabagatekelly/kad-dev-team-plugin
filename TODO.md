@@ -11,7 +11,7 @@ only when absolutely needed, the code self-documenting (§8, D8); the tests
 fake too much and there are no integration tests (§6, D6, D13).
 
 Rules for working this list: one PR per phase; every skill change gets its
-eval case in PR 3, and v4 is not done (0.8.0 not used for slice 2, this
+eval case in PR 3, and v4 is not done (0.8.1 not used for slice 2, this
 list not closed) until those cases and the evidence for every case the v4
 edits reach are recorded and the gate passes (the owner merged PR 1 with
 its eval-gate check red on purpose, 2026-10-26); keep the eval
@@ -174,6 +174,6 @@ way); PR 3 is pushed as PR #26 (2026-11-01), the evidence check green.
 
 ## After the PRs
 
-- [ ] 4.1 Run slice 2 on 0.8.0 (v4 complete: PR 1 to PR 3 and the launcher, #23, #24, #26, #27) with the budget line, in a fresh repository for a one-to-one comparison, started with `bin/kad` (the sandbox runtime, audit mode and the audit repository set up by it); audit it the same way (`audit-review` skill; the audit-docs tools); compare the E-line cost and the §10 estimate.
+- [ ] 4.1 Run slice 2 on 0.8.1 (v4 complete: PR 1 to PR 3, the launcher and the no-screen slice rule, #23, #24, #26, #27, #29) with the budget line, in a fresh repository for a one-to-one comparison, started with `bin/kad` (the sandbox runtime, audit mode and the audit repository set up by it); audit it the same way (`audit-review` skill; the audit-docs tools); compare the E-line cost and the §10 estimate.
 - [ ] 4.2 Decide D9 phase 2 (a chunk-runner agent per chunk) on the orchestrator's measured context from 4.1 (> ~250k tokens → build it).
 - [ ] 4.3 Open items from run 2, in the project not the plugin: PR #2's issue-links placeholder, the untracked `pr-r1-comments.json`, the missing E line, the three suspected bugs in repo 2 (orphaned vault row before the record write; `complete()` without a held claim; the year missing from the date column), repo 1's single-account rule and cursor persistence.

@@ -356,7 +356,7 @@ rather than accumulating here.
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
 lives in `evals/example/`, which is tracked.)
 
-### Current: implementation flow v4 merged (PR 1 to PR 3 and the launcher); slice 2 on 0.8.0 next
+### Current: implementation flow v4 merged (PR 1 to PR 3, the launcher, the no-screen slice rule); slice 2 on 0.8.1 next
 
 The audit of the second real run (`audit-docs`,
 `personal-finance-tracker-2-slice-1/plugin-review/2026-10-25-*`) produced
@@ -386,7 +386,7 @@ existed; the loop cases' second pass found two more defects, the gate
 command never allowing the loop's own log and a handoff resumed by
 invoking `delivery` directly, both fixed). The stale re-record of the cases PR 1 and PR 2 touched is done (the evidence check green for all 68 cases), and the launcher `bin/kad` with delivery inside the fence is merged (2026-11-01, #27). What is next: (the owner's
 rule being that v4 is done only once everything has been evaluated and
-shown to work) slice 2 on 0.8.0, the version that carries all of v4 (PR 1 to PR 3 and the launcher), with the budget line,
+shown to work) slice 2 on 0.8.1, the version that carries all of v4 (PR 1 to PR 3, the launcher and the no-screen slice rule), with the budget line,
 audited the same way, which decides D9's phase 2.
 
 ### Where things stand

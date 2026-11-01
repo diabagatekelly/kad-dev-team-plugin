@@ -84,7 +84,18 @@ mechanical checks only, never a semantic read of full artifact prose:
   conclude one doesn't exist just because the root came up empty. If it has
   one, does it still carry an unfilled accessibility-criteria placeholder
   (naming `accessibility-engineer`, or, in artifacts written before this
-  persona existed, an explicit not-authored-here placeholder)?
+  persona existed, an explicit not-authored-here placeholder)? A slice
+  whose thin path has no user-facing interface carries, by
+  `vertical-slicing`'s rule, an accessibility line saying `not applicable,
+  this slice has no screen`: read that as filled, route no review, and
+  treat the slice as not UI-touching for every row below. The line is
+  required, not optional: a slice that is not UI-touching and carries a
+  plain accessibility placeholder, or no accessibility line at all, has
+  no status and goes back to `product-slicer` to say which it is (the
+  table's row for it). And the not-applicable line on a slice whose thin
+  path does describe an interface a person perceives and acts on (a
+  screen, a voice flow, a document, a notification) is a slicer mistake:
+  the same backward route, not a review you run around it.
 - **Project-level, not per-unit:** is there a technology-bootstrap artifact
   in the target directory? If not, take the user's word for whether this
   project already has a working stack — a repo someone has been building in
@@ -160,6 +171,7 @@ forbids, just spelled backward instead of forward.
 | The current unit's slice has been written up as a user story but has no design doc yet | `software-architect:architecture-design` for that slice |
 | The slice has a design doc but its security criteria are still an unfilled placeholder | `devsecops-engineer:security-requirements` for that slice |
 | The slice's security criteria are filled but its reliability criteria are still an unfilled placeholder | `devsecops-engineer:reliability-requirements` for that slice |
+| The slice's accessibility line disagrees with its thin path: a not-applicable line on a slice with a user-facing interface, or a plain placeholder or no line on a slice with none | `product-slicer` (`vertical-slicing`) to fix the line in place: a backward route, before any review of the slice |
 | The slice is UI-touching, its runtime-safety criteria are filled, and the project has no design-system artifact yet | `ux-designer:design-system` |
 | The slice is UI-touching, its runtime-safety criteria are filled, a design-system exists, but this slice has no screen-design artifact yet | `ux-designer:screen-design` for that slice |
 | The slice is UI-touching, has a screen-design artifact, but its accessibility criteria are still an unfilled placeholder | `accessibility-engineer:accessibility-review` for that slice |
