@@ -291,7 +291,7 @@ for exactly the scope it names: drive the state's mockup or built screen
 as this skill says, write its criteria in the same form as the rest, add
 them to the accessibility document in place with a line `under
 delegation-slice-<nnn>.md, <date>`, commit it by name as `Decision <n>:
-<title>` and hand back the hash and one sentence. A question the file
+<title>` and hand back the hash and one sentence naming what was decided, nothing else: the document holds the reasoning, the criteria and the scope, and the orchestrator reads none of it from the reply. A question the file
 does not cover (scope, a requirement, a design-system change) is handed
 back as a recommendation with nothing written, named as outside the
 delegation. Launched without that file, hand back the recommendation and

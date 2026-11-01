@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Stand-in for the linter the fixture declares: the eval sandbox cannot
+# install packages, and the Definition of Done only needs the script to
+# exist and exit 0 here. Nothing in the fixture is meant to be linted.
+exit 0

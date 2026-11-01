@@ -1,0 +1,80 @@
+schema_version: "1.0"
+name: test-quality-review-seam-fake
+description: "The seam check and the fake inventory (design §11 case 6, review half): chunk 1's tests all fake the HoldQueue port with a hand-rolled FakeHoldQueue although InMemoryHoldQueue, the adapter the composition root wires, runs in a test, and no test is the seam test the plan names. test-quality-review, as a lens of the combined chunk review, raises a High that the seam is untested and a High for the fake of own code with a real local equivalent, lists the doubles in a fake inventory, and does not flag the fixed clock."
+tags: [test-quality-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:test-quality-review` first. The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`. Under the orchestrator's chunk loop, review chunk 1's tests as a set (the test-quality lens of the combined chunk review): the chunk plan is in `docs/cancel-hold/implementation/implementation-report-slice-001.md` (chunk 1, Touches: storage), the chunk's tests are `test/cancel-hold.test.ts`, the code they exercise is `lending/cancel-hold.ts`, `lending/hold-queue.ts` and `infra/memory/in-memory-hold-queue.ts`. Write your report in the shared finding format to `docs/cancel-hold/implementation/chunk-1-r0-test-quality.md` and hand back the counts and the path.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:test-quality-review"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/implementation/chunk-1-r0-test-quality.md
+  - type: regex
+    name: writes-only-the-report
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/cancel-hold/implementation/chunk-1-r0-test-quality\.md")'
+    match: not_contains
+  - type: regex
+    name: fake-inventory-listed
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-test-quality.md
+    pattern: '[Ff]ake [Ii]nventory'
+  - type: llm
+    name: seam-untested-is-a-high
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-test-quality.md
+    weight: 1
+    criteria: |
+      The chunk plan's Done when names a seam test, `seam "cancels a member's hold through the real in-memory queue"`: a test through the real adapter the composition root wires (`InMemoryHoldQueue`), faking only an external service. No test in `test/cancel-hold.test.ts` is it: every test runs `CancelHold` over a hand-rolled `FakeHoldQueue`.
+
+      PASS if the report has a finding rated High saying the seam is untested (the named seam test is missing, or every test that could be it fakes the project's own port), naming the chunk or the missing test and what the real wiring would need.
+
+      FAIL if the seam's absence is not a finding, is rated below High, or is described only as a general note without a finding.
+  - type: llm
+    name: own-code-fake-with-a-real-local-equivalent
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-test-quality.md
+    weight: 1
+    criteria: |
+      `FakeHoldQueue` in the test file replaces `HoldQueue`, a port of the project's own code, while `InMemoryHoldQueue` (the real adapter, in memory, no I/O) can run in the test as it is. A fake of own code where the real one can run in the test is a High in the fake inventory's verdicts.
+
+      PASS if the report rates the hand-rolled queue fake High (or Critical) for standing in for a module whose real implementation could run in the test, and names `InMemoryHoldQueue` (or "the real in-memory adapter") as what to use instead.
+
+      FAIL if the fake is accepted as fine, rated Medium or Low, or the real adapter is not named as the alternative.
+  - type: llm
+    name: fixed-clock-is-not-a-finding
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-test-quality.md
+    weight: 1
+    criteria: |
+      The test file fixes the clock with `const now = () => new Date('2026-03-01T10:00:00.000Z')`. Faking the clock is listed in the fake inventory as fine, never a finding.
+
+      PASS if the fixed clock is not a finding rated Medium or above (listing it in the inventory as fine, or not mentioning it, both pass).
+
+      FAIL if the fixed clock is a finding rated Medium or above.
+  - type: llm
+    name: hands-back-counts-and-path
+    focus: last_message
+    weight: 1
+    criteria: |
+      Under the chunk loop the reviewer hands back the counts by severity and the report's path, nothing else; the fixer reads the file.
+
+      PASS if the final reply gives the counts (at least the number of Highs) and the report path, in a few lines, without reproducing the findings' full text.
+
+      FAIL if it reproduces the whole report in the reply, gives no path, or gives no counts.

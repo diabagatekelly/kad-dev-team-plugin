@@ -24,12 +24,6 @@ graders:
     input_match: '"skill"\s*:\s*"kad-dev-team:scope-map"'
     min: 1
   - type: tool_used
-    name: not-requirements-refinement
-    tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:requirements-refinement"'
-    min: 0
-    max: 0
-  - type: tool_used
     name: not-vertical-slicing
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:vertical-slicing"'
@@ -57,8 +51,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The orchestrator executes exactly one routed step per invocation, then reports what it detected, where it routed and what was produced, and asks whether to continue; it never chains into the next stage. Here the routed step is `docs-writer`, which decides by `scope-map`'s own criteria whether this problem needs a scope map.
+      The orchestrator executes one routed step at a time: it reports what it detected, where it routed and what was produced, then continues to the next row in the same conversation, and asks the owner only when the next row needs an owner decision to start or a routed skill has a question of its own. Here the first routed step is `docs-writer:scope-map`, which decides by its own criteria whether this problem needs a scope map; for a one-unit problem it records that none is needed and the next row is requirements refinement, whose first move is its questions to the owner.
 
-      PASS if the response ends in one of two ways: with scope-map's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. The step's result is often the decision, made by scope-map's own criteria from the problem doc, that no scope map is needed and the whole problem is one unit; reporting that decision in the orchestrator's own voice, naming requirements refinement as what comes next and asking whether to start it, is that second ending. A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is the second ending, not the orchestrator answering its questions. Either way nothing from a later stage (a requirements doc or a slice) has been produced.
+      PASS if the response ends in one of these ways: with scope-map's own questions to the owner (the routed skill stopping to ask); with the scope-map step's result reported (a map, or the decision that none is needed) and the flow stopped there asking whether to go on; or with that result reported and requirements refinement started and stopped at its questions to the owner, each step reported in its own words. Nothing from a later stage (a requirements document written without the owner's answers, a slice) has been produced.
 
-      FAIL if the response goes on to run or produce a later stage's work, or if the routed skill had stopped to ask the user something and the response answers that question itself from the repository and carries on past it, or if it routes to something other than scope-map.
+      FAIL if the response writes a requirements document or a slice without the owner's answers, answers a routed skill's question itself from the repository and carries on past it, or routes to something other than scope-map first.

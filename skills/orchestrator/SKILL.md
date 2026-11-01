@@ -112,7 +112,13 @@ any row, check whether a later artifact has invalidated an earlier one.
 Signals, all cheap to spot: a section headed "handed back," "blocking," or
 similar naming another persona; an artifact stating it contradicts or
 supersedes something upstream; an artifact whose own text says a stage was
-skipped for it.
+skipped for it. They sit at the **end** of the document that found the
+problem (a filled security or reliability document whose last section is
+the hand-back looks complete from its first screen), so read every
+planning document to its last line before matching a row; the table is
+consulted only once that scan has come up empty. A hand-back found after
+a forward step was already taken is a forward step that should not have
+happened, not a correction to narrate.
 
 When you find one, **route to the persona that owns the invalidated
 artifact — not the one that found the problem.** A security pass that
@@ -456,6 +462,14 @@ it at E.
    - `write` or `network` failing with the settings already in place and
      the platform having a sandbox: the session is not sandboxed or
      something is open; report the line as printed, and stop.
+   - Under the sandbox runtime (`srt claude`; the `platform` line says
+     so), the whole session is fenced and the settings live in the
+     runtime's file, which nothing inside the session can write: a
+     `shell-secrets` or `read-secrets` failure names what to add to its
+     `filesystem.denyRead`. Report it and, unless the owner already opted
+     out of the sandbox at A (that choice covers every later check, as
+     information), stop until the owner restarts the session with it.
+     `--write-settings` is not offered there.
 
    The check is not once per flow but before every launch: before each
    chunk's build (C.1), its reviewer and smoke agent (C.3), its fixer
@@ -591,11 +605,14 @@ B line: the chunk titles in order.
 2. **Gate**, inline with Bash, on the chunk's commit range:
 
    ```
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --module-dir '<each module directory the design names>' --protect '<every other document in the target directory>' [--coverage]
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory the design names>' --protect '<every other document in the target directory>' [--coverage]
    ```
 
    (`python -I` where that is the interpreter's name; every project path
-   in single quotes; a quote inside a path as `'\''`.) `--base` is the
+   in single quotes; a quote inside a path as `'\''`.) The log is allowed
+   because it is this flow's own file, appended to at every step and never
+   committed inside the loop, so the scope check would otherwise fail
+   every chunk on it. `--base` is the
    commit before this chunk's first commit (the base at chunk 1, the
    previous chunk's last accepted commit after). It checks the full suite
    is green, the project's `typecheck` and `lint` scripts pass when the
@@ -644,9 +661,10 @@ B line: the chunk titles in order.
      tools for UI, HTTP requests otherwise), stop the app and leave no
      process behind, and write `chunk-<k>-r0-smoke.md` in the shared
      finding format: a `## Result` of `PASS` and no findings, or one
-     finding per thing that broke; an app that does not start is one
-     Critical titled "the app does not start from the documented
-     command". The accessibility agent additionally invokes
+     finding per thing that broke, each a `###` heading with
+     `**Severity:**` on the line directly under it; an app that does not
+     start is one Critical titled "the app does not start from the
+     documented command". The accessibility agent additionally invokes
      `kad-dev-team:accessibility-review` in its "Smoke run" mode and checks
      the chunk's accessibility criteria on the built screen, in the same
      report. It is handed the Done when line, the criteria by path, the
@@ -717,9 +735,11 @@ B line: the chunk titles in order.
      count against the budget; one per persona per round.
    - **Without a delegation file**: launch the persona the same way; it
      hands back a recommendation and writes nothing (its skill says so).
-     Write the C line with `needs-decision <persona>: <recommendation
-     path>` and stop the flow for the owner at step 5; the owner's answer
-     resumes it at this round.
+     Save what it handed back, as given, to `<records
+     dir>/chunk-<k>-r<i>-decision-<persona>.md` (your own record, not a
+     planning document), write the C line with `needs-decision <persona>:
+     <that path>` and stop the flow for the owner at step 5; the owner's
+     answer resumes it at this round.
 
    Nothing else goes to a persona mid-loop: no "apply this edit", no
    decision you reached yourself, no editing a planning document on a
@@ -809,8 +829,12 @@ one. **Nothing in this step runs in the background**: every command and
 every launch is waited for, and the step ends in the same turn that
 finishes its last action.
 
-1. If D's fix rounds changed anything, `map-update` again and commit the
-   map.
+1. **Records.** If D's fix rounds changed anything, `map-update` again and
+   commit the map. Then commit the log and the records directory, with the
+   handoff file removed, as `Records: slice <nnn> delivery`: `delivery`
+   refuses a dirty tree, and the loop never committed the log before this
+   (each C and D line names the records commit it follows). The E line
+   written at the end stays uncommitted, like every other entry.
 2. **CI.** If the repository has no continuous-integration configuration
    (no `.github/workflows/*.yml`, no equivalent for the host the remote
    names), invoke `release-engineer:ci-pipeline` inline with the `Skill`
@@ -877,7 +901,9 @@ finishes its last action.
 
 **Pausing and resuming.** On a context clear, a rate limit, a session end
 or an owner's "hand off" mid-loop, before anything else write
-`<records dir>/handoff-slice-<nnn>.md`: the A–E state (which step, which
+`<records dir>/handoff-slice-<nnn>.md`: a first line saying it is resumed
+by invoking `kad-dev-team:orchestrator` ("what's next"), never by
+invoking the next step's skill directly; the A–E state (which step, which
 chunk, which round), the next action, the standing list, the budget
 counters (start time, reviewer launches, consults), the environment facts
 a successor needs (test command, module directories, records directory,

@@ -145,11 +145,11 @@ graders:
       path: docs/pay-fine/slice-001.md
     weight: 1
     criteria: |
-      The prompt asked for the slice's accessibility placeholder to be filled in. Before this run, `slice-001.md` ended its acceptance criteria with the line `[ACCESSIBILITY — placeholder, to be authored by accessibility-engineer]`. The orchestrator decides the slice's next stage by whether that placeholder is still there, so the slice file itself has to change.
+      The prompt asked for the slice's accessibility placeholder to be dealt with. Before this run, `slice-001.md` ended its acceptance criteria with the line `[ACCESSIBILITY — placeholder, to be authored by accessibility-engineer]`. The skill writes its criteria in its own document (`accessibility-review-001.md` or the like) and replaces the slice's placeholder line with a one-line pointer to that document and nothing more: the slice's other criteria, its thin path and everything else stay as they were (the story is docs-writer's). The orchestrator decides the slice's next stage by whether the placeholder is still there, so the slice file itself has to change.
 
-      PASS if the placeholder line is gone and in its place the slice carries accessibility acceptance criteria in Given/When/Then form (the criteria themselves, or at least the confirmed-now ones with a pointer to `accessibility-review-001.md` for the rest), and the slice's other criteria are unchanged.
+      PASS if the placeholder line is gone and in its place the slice carries either a one-line pointer to the accessibility document, or the accessibility criteria themselves, and the slice's other criteria are unchanged.
 
-      FAIL if the placeholder line is still present, the slice is unchanged, or the placeholder was replaced by nothing more than a reference to the review with no criteria.
+      FAIL if the placeholder line is still present, the slice is unchanged, or other parts of the slice were rewritten.
   - type: regex
     name: writes-only-review-and-slice
     target: trace

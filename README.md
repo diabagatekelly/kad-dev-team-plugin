@@ -231,8 +231,10 @@ place. In order:
   then the six reviewers once on the whole slice diff (Lows allowed here),
   one fix round as in C, and the **stranger test**: the smoke agent
   follows the README on a fresh clone in the last round.
-- **E. Delivery, all in the foreground:** CI is written if the repository
-  has none (`release-engineer:ci-pipeline`), the branch is pushed and a
+- **E. Delivery, all in the foreground:** the log and the records are
+  committed first (`Records: slice <nnn> delivery`, the handoff file
+  removed), since `delivery` refuses a dirty tree; CI is written if the
+  repository has none (`release-engineer:ci-pipeline`), the branch is pushed and a
   pull request opened without asking (`release-engineer:delivery`, body
   by `pr-writeup`: what was built, the decisions, the Definition of Done
   table, the standing Mediums, the Known Lows grouped by theme), **only
@@ -323,6 +325,46 @@ Which sandbox a platform has:
 | Linux | bubblewrap and socat | probes it; writes the settings on a yes |
 | Windows, WSL2 session | bubblewrap and socat | probes it; writes the settings on a yes |
 | Windows, native session | none; Claude Code runs every command unsandboxed | exits 2; the orchestrator asks once whether to continue unsandboxed (the `Read(...)` deny rules and `denyRead` are still written, but never `sandbox.enabled` or `failIfUnavailable`, which with no backend would make the session refuse every command) or to stop and run the session in WSL2, and logs the choice |
+
+The stronger fence, and the one to use for a real slice, is the sandbox
+runtime: `npm install -g @anthropic-ai/sandbox-runtime`, then start the
+session as `srt claude` from the project. It wraps the whole Claude Code
+process in the same Seatbelt or bubblewrap boundary, so the Read tool,
+hooks and MCP servers are inside it too, which the per-command sandbox
+above never covers. It reads `~/.srt-settings.json` at launch (no file
+means no network and no writes outside its own paths, so write one
+first); the check recognises it (`SANDBOX_RUNTIME=1`), reads that file
+for the deny list and the write grants, and passes the `settings` check
+on its own, since Claude's sandbox keys are optional inside it. A file
+that fences a slice:
+
+```json
+{
+  "filesystem": {
+    "allowWrite": [".", "~/.claude", "~/.claude.json", "/private/tmp"],
+    "denyWrite": [],
+    "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "~/.kube", "~/.config/gcloud", "~/.azure",
+                 "~/.config/gh", "~/.npmrc", "~/.netrc", "~/.git-credentials", "~/.pypirc",
+                 "~/.docker/config.json", "~/.terraform.d/credentials.tfrc.json",
+                 "~/.claude/.credentials.json"],
+    "allowRead": []
+  },
+  "network": {
+    "allowedDomains": ["api.anthropic.com", "claude.ai", "platform.claude.com", "github.com", "*.github.com"],
+    "deniedDomains": []
+  }
+}
+```
+
+Every one of those keys is required (the runtime refuses a file missing
+any, rather than run on defaults that would drop its rules). On Linux
+use `/tmp` in place of `/private/tmp`. `allowWrite`'s `.` is where
+`srt` starts, so start it from the project; add the registry a test run
+installs from (`registry.npmjs.org`) when the project needs it.
+Nothing inside the session can change that file, which is the point: the
+check reports what is missing and the flow stops until the owner restarts
+with it. The runtime is a beta research preview; its keys may move. It
+runs on macOS, Linux and WSL2, not on native Windows.
 
 So on native Windows the loop is a strong recommendation to use WSL2
 (start Claude inside Ubuntu, from the project, and say "what's next"),

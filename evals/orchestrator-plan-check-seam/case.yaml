@@ -1,0 +1,65 @@
+schema_version: "1.0"
+name: orchestrator-plan-check-seam
+description: "The chunk loop's B step, the plan-check half of design §11 case 6: resumed just after the planner returned, with a plan whose chunk 2 names no seam test in its Done when. The mechanical check fails on that; the orchestrator sends the plan back once to a fresh planner with the failing check named, never edits the plan itself, commits the plan that passes, writes the B line, and hands off as told."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off once the B line is written, before chunk 1's build.
+  model: sonnet
+  max_turns: 50
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: fresh-planner-told-which-check-failed
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*seam)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: no-builder-launched
+    tool: Agent
+    input_match: '(?=[\s\S]*tdd-coach)(?=[\s\S]*[Bb]uild chunk)'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: plan-committed-by-name
+    tool: Bash
+    input_match: 'git commit(?:[^"\\]|\\.)*Plan: slice 001 in \d+ chunks'
+    min: 1
+  - type: regex
+    name: b-line-written
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '- \*\*B\. Plan:\*\*'
+  - type: llm
+    name: every-chunk-names-its-seam-test
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/implementation-report-slice-001.md
+    weight: 1
+    criteria: |
+      The B step's plan check requires every chunk's Done when line to name a seam test: its first quoted test name preceded by the word `seam` (`seam "cancels a member's hold through the real in-memory queue"`), a test through the real wiring and the real local store.
+
+      PASS if the report's `## Chunk plan` has two to eight chunks and every chunk's Done when line names a seam test marked with the word `seam` before a quoted test name.
+
+      FAIL if any chunk's Done when has no `seam`-marked test name, or the plan heading is missing.
+  - type: llm
+    name: plan-sent-back-not-edited
+    focus: last_message
+    weight: 1
+    criteria: |
+      The orchestrator checks the plan mechanically and nothing else; a plan that fails a check goes back once to a fresh planner with the failing check named, as a new launch with the same task. The orchestrator does not edit the plan, reorder it or judge its chunking, and a second failure ends the flow.
+
+      PASS if the reply reports that the plan failed the check (chunk 2's Done when names no seam test, or words to that effect), that a fresh planner was launched with that check named, the result of the second check, the plan's commit and the B line, and the handoff before chunk 1.
+
+      FAIL if it says it added the seam test to the plan itself, accepted the plan as it was, launched chunk 1's builder, or launched the planner more than once more.

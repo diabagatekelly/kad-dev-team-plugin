@@ -298,7 +298,10 @@ def check_numbers(docs):
         for c in criteria(body):
             if not VAGUE.search(NOT_A_WAIT.sub(" ", c)):
                 continue
-            if re.search(r"\d", c) or re.search(NUMBER_WORDS, c, re.I) or "unbounded, owner approved" in c.lower():
+            # The criterion's own identifier (`R1`, `REL-4`) is not a number
+            # on the wait; without this every identified criterion passed.
+            unlabelled = IDENT.sub(" ", c)
+            if re.search(r"\d", unlabelled) or re.search(NUMBER_WORDS, unlabelled, re.I) or "unbounded, owner approved" in c.lower():
                 continue
             vague.append(c[:60])
     if vague:

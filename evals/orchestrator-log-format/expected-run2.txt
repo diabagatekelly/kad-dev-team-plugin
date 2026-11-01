@@ -1,0 +1,5 @@
+- **ERROR** entry 4: Artifact is conditional or offers alternatives: `planning/requirements-002.md`. The owner added that cloud storage may be reconsidered later if local-only proves too much, but not now. Recorded by superseding requirements-001, not by editing it.
+- **ERROR** entry 11: Artifact names 3 paths outside its parenthetical, not one: `planning/requirements-001.md`, `planning/slice-001.md`, `planning/user-story-slice-001.md` (updated in place)
+- **ERROR** entry 28: sub-entries repeated: A, D, E (one bold line per step; an interruption or an outcome is an indented bullet)
+- **ERROR** entry 28: C chunk 6: no commit hash
+- **ERROR** entry 28: E line is not in the `E. Delivery:` form (numbered E.1, E.2 bullets are not the E line)

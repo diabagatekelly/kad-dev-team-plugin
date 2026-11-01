@@ -356,7 +356,7 @@ rather than accumulating here.
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
 lives in `evals/example/`, which is tracked.)
 
-### Current: implementation flow v4, PR 1 merged and PR 2 built; PR 3 next
+### Current: implementation flow v4, PR 1 and PR 2 merged, PR 3 built; the bars next
 
 The audit of the second real run (`audit-docs`,
 `personal-finance-tracker-2-slice-1/plugin-review/2026-10-25-*`) produced
@@ -365,20 +365,29 @@ repo root. **PR 1, the loop, is merged (2026-10-26, #23)**: the
 orchestrator's v4 chunk loop, the seam test and comments rule in both tdd
 skills, the shared finding format and the combined review in the review
 skills, the five new or changed scripts, `repo-bootstrap`, `readme`, the
-agents, version 0.7.0. **PR 2, planning, is built (2026-10-26, branch
-`implementation-flow-v4-pr2`)**: the planning-skill fixes from the two
+agents, version 0.7.0. **PR 2, planning, is merged (2026-10-26, #24)**: the planning-skill fixes from the two
 planning reviews (revise in place while the document is yours, the full
 question pass, the three placeholders, a home for every criterion and
 failure path, a number on every wait, owned documents stay owned, consult
 answers and stage reports as visible text, one question per
 `AskUserQuestion`) and `orchestrator_log_check.py` reading the v4 lines
 and the chunk loop's entry across sessions; every PR 2 item in `TODO.md`
-is ticked. What is next: **PR 3** (eval cases 1 to 12 on the library-app
-fixture and `cost_by_role.py`; the eval gate's evidence for every case
-PR 1 and PR 2 touched is recorded there, which is why both pushes need
-the hook bypassed or that evidence first; the owner's rule is that v4 is
-done only once everything has been evaluated and shown to work), then
-slice 2 of `personal-finance-tracker-2` on 0.7.0 with the budget line,
+is ticked. **PR 3, evals, is built (2026-10-31, branch
+`implementation-flow-v4-pr3`)**: the twelve §11 cases as seventeen case
+directories and one script check on the library-app fixture, the chunk
+loop's states built for real by `code-plants/loop/state.sh` so each step
+of the loop is resumed from a handoff and graded on its own, and
+`cost_by_role.py`. The first calibration pass (2026-10-31) fixed two
+real defects the cases caught: `rounds_record.py` read a smoke report's
+bulleted Severity as no finding and said PASS, and the E step never
+committed the log, so `delivery`'s clean-tree rule stopped every
+delivery (E.1 now commits log and records). All seventeen bars are recorded
+(2026-10-31, from the Mac once `evals/tools/gate.sh`'s `git` shims
+existed; the loop cases' second pass found two more defects, the gate
+command never allowing the loop's own log and a handoff resumed by
+invoking `delivery` directly, both fixed). The stale re-record of the cases PR 1 and PR 2 touched is done and PR 3 is open as #26 (2026-11-01, the evidence check green for all 68 cases). What is next: (the owner's
+rule being that v4 is done only once everything has been evaluated and
+shown to work) slice 2 of `personal-finance-tracker-2` on 0.7.0 with the budget line,
 audited the same way, which decides D9's phase 2.
 
 ### Where things stand

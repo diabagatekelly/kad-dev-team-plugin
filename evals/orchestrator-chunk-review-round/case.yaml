@@ -1,0 +1,82 @@
+schema_version: "1.0"
+name: orchestrator-chunk-review-round
+description: "The chunk loop's C.3 step (design §11 case 3): resumed from a handoff with chunk 1 built and gated, the orchestrator launches exactly one combined reviewer (code-reviewer, Opus) and one smoke agent (tdd-coach, since the chunk is not UI) and nothing else, records the round with rounds_record.py, and, told to hand off once round 0 is recorded, writes the handoff and stops. The reviewer's report has at most eight findings and no Low."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. Hand off again as soon as round 0 of chunk 1 is recorded (write the handoff file and stop; don't start the fix round in this session).
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: one-combined-reviewer
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: one-smoke-agent
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*[Ss]moke)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: two-launches-never-more
+    tool: Agent
+    min: 2
+    max: 2
+  - type: tool_used
+    name: round-recorded-by-the-script
+    tool: Bash
+    input_match: 'rounds_record\.py'
+    min: 1
+  - type: file_exists
+    name: review-report-written
+    path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+  - type: file_exists
+    name: smoke-report-written
+    path: docs/cancel-hold/implementation/chunk-1-r0-smoke.md
+  - type: llm
+    name: review-report-in-the-shared-shape
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    weight: 1
+    criteria: |
+      The combined chunk review writes one report in the shared finding format: each finding is a `###` heading with a `**Severity:**` line directly under it, the severity one of Critical, High, Medium or `needs-decision (<persona>)`; at most eight findings; no Low (a Low noticed per chunk is dropped, the slice review collects them later).
+
+      PASS if the report has at most eight findings, every finding carries a Severity line with one of those values, and no finding is rated Low. A report that says it has no findings passes.
+
+      FAIL if any finding is rated Low, if there are more than eight, or if findings lack Severity lines.
+  - type: llm
+    name: handoff-says-round-zero-is-recorded
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/handoff-slice-001.md
+    weight: 1
+    criteria: |
+      The owner asked for a hand-off as soon as round 0 of chunk 1 was recorded. The loop's handoff file holds the A–E state (which step, chunk and round), the next action, the standing list, the budget counters and the environment facts a successor needs.
+
+      PASS if the file says chunk 1's round 0 has been reviewed and recorded (the reviewer's and the smoke agent's reports exist and their counts were recorded), and names the next action as the fix round for the round-0 findings (or, when the round was clean, finishing chunk 1 and moving to chunk 2), with budget counters that count the two reviewer launches.
+
+      FAIL if the file still describes the state before the review (next action: launch the reviewer and smoke agent), says a fix round already ran, or is missing the next action.
+  - type: llm
+    name: reports-counts-not-findings
+    focus: last_message
+    weight: 1
+    criteria: |
+      Between launches the orchestrator says one short paragraph per event, with hashes, counts and paths; it never restates a finding's text, keeps a digest, or tallies severities by reading a report itself (only `rounds_record.py`'s printed counts reach the log).
+
+      PASS if the final reply reports the round in terms of the script's counts (for example "r0 0/0/2; smoke PASS") and the report paths, and says the handoff was written. A one-line title per needs-decision or smoke finding (what the owner will be asked, where) is fine; the descriptions, rationale and suggested fixes stay in the report.
+
+      FAIL if it reproduces findings' descriptions, rationale or fixes at length, or reports counts it says it read from the report rather than from the script.

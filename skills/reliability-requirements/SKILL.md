@@ -64,7 +64,7 @@ number, the recommendation, the rejected alternative), revise the
 reliability document in place (the failure-mode row, the new or amended
 criterion with its number, the decision under Decisions with a line `under
 delegation-slice-<nnn>.md, <date>`), commit it by name as `Decision <n>:
-<title>` and hand back the hash and one sentence. A question the file does
+<title>` and hand back the hash and one sentence naming what was decided, nothing else: the document holds the reasoning, the criteria and the scope, and the orchestrator reads none of it from the reply. A question the file does
 not cover (scope, a requirement, anything that changes a confirmed
 requirement) is handed back as a recommendation with nothing written,
 named as outside the delegation. Launched without that file, hand back the

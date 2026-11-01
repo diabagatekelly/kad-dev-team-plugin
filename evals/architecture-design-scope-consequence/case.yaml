@@ -1,0 +1,40 @@
+schema_version: "1.0"
+name: architecture-design-scope-consequence
+description: "A design consequence that changes a confirmed requirement (design §11 case 12, last part): the cancel-hold slice carries a criterion that a cancelled hold stays gone across a restart of the service, while the Active requirements confirm out keeping holds across restarts and forbid a new table or migration. architecture-design says so and hands it back to product-manager:requirements-refinement before approving anything, instead of designing persistence around it or presenting it as the one catch inside a design approval."
+tags: [architecture-design, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:architecture-design` first. The library-lending app is in your current working directory. Design slice 001 of the hold-cancelling feature: the slice is `docs/cancel-hold/slice-001.md`, the requirements `docs/cancel-hold/requirements-001.md`, the story `docs/cancel-hold/user-story-001.md`, the problem `docs/cancel-hold/problem.md`. Save the design as `docs/cancel-hold/design-001.md`. For the design's own decisions go with your recommendations; I'll read the result. Any question you have for me, ask in plain text.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
+    min: 1
+  - type: llm
+    name: hands-back-to-the-requirements-owner
+    focus: last_message
+    weight: 1
+    criteria: |
+      The slice's third acceptance criterion needs the other members' holds to survive a service restart. Holds live in memory today, so meeting it means persisting holds, and the Active requirements document confirms out "keeping holds across a restart" and forbids a new table or migration. A recommendation whose consequence changes something the requirements confirm is a hand-back to `product-manager:requirements-refinement`, not a consequence to accept inside the design: the requirement is revised by the stage that owns it, and the design decision that depends on it waits.
+
+      PASS if the response names the conflict (the restart criterion against the confirmed-out line or the no-new-table constraint) and says it must be settled by the stage that owns the document being changed, before the design can decide persistence: product-manager or requirements-refinement for the requirement, product-slicer or vertical-slicing for the criterion; either is the hand-back. Asking the owner to take it there, recording it as an open question for that stage, saying it is not a design choice, or saying the design is reopened once the document is revised, all count. The response may also say which way it would lean.
+
+      FAIL if it resolves the conflict itself (drops or rewords the criterion, designs persistence, a table or a migration, or treats the criterion as already satisfied by the in-memory queue), presents it as a trade-off accepted inside the design, or does not name the conflict at all.
+  - type: llm
+    name: does-not-approve-around-it
+    focus: last_message
+    weight: 1
+    criteria: |
+      While the hand-back is open, the design is not approved: the parts that do not depend on the handed-back requirement may be drafted and saved (CancelHold, the port's removal operation, the in-memory adapter, the outcome shapes), but the persistence question stays open and no decision assumes an answer to it.
+
+      PASS if the response leaves the restart question open (an open question, a hand-back, a question for the owner) and records no decision that holds survive a restart or that they do not; a design file saved as a draft, and decisions on the independent parts (atomic removal, renumbering, duplicate holds, rejection against failure), do not count as approving around it.
+
+      FAIL if it reports the design as approved with the conflict settled, records a decision about persistence across a restart as made, or satisfies the criterion by reinterpreting it.

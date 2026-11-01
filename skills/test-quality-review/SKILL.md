@@ -35,7 +35,10 @@ reading through the tests for other issues.
 
 Under the orchestrator's chunk loop (as a lens of the combined chunk
 review, and again at the slice review) these two run before the per-test
-categories, on the chunk's tests as a set:
+categories, on the chunk's tests as a set. The report goes to the path
+the task names, and what is handed back is the counts by severity and
+that path, nothing else: the fixer reads the file, and a finding restated
+in the reply is read twice and acted on once.
 
 - **Seam check.** The chunk's tests must include at least one that goes
   through the real composition root with the real adapters and the real

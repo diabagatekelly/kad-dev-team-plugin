@@ -84,6 +84,23 @@ settings files only for what no probe can see:
    matches any component). Whatever matches is copied into every
    candidate's worktree.
 
+Under the sandbox runtime (`srt claude`; the runtime sets
+`SANDBOX_RUNTIME=1` inside) the whole session is fenced, file tools, hooks
+and MCP servers included, by `~/.srt-settings.json` (or the file passed to
+`srt --settings`, which this script cannot see; `--srt-settings FILE`
+names it). The probes measure that fence like any other. The settings
+checks then read the runtime's file: check 2 scans its
+`filesystem.allowWrite` (the project, the temp directories, `~/.claude`
+and `~/.claude.json` are expected there, nothing else); checks 5 and 6
+accept a secret named in its `filesystem.denyRead`, since the Read tool
+runs inside the runtime's boundary; check 7 passes, because Claude's own
+sandbox keys are optional inside the runtime and a retry with
+`dangerouslyDisableSandbox` cannot leave it (Bash approvals are then the
+permission mode's: auto mode or `--dangerously-skip-permissions` inside
+the runtime). A missing `denyRead` entry is reported with the list to add;
+the runtime reads its file at launch, so the owner adds it outside the
+session and restarts, which `--write-settings` cannot do for them.
+
 Settings are merged the way Claude Code merges its files: user, project,
 local, then managed on top. A `--settings` flag given on the command line
 of the session is not a file and is not visible here; the probes above
@@ -108,7 +125,7 @@ allowlist, which settings files were read), then `sandbox check: PASS` or
 (no sandbox backend exists here, whatever the settings say).
 
 Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/sandbox_check.py --project DIR
-           [--secret ~/.config/private-tool/ ...]
+           [--secret ~/.config/private-tool/ ...] [--srt-settings FILE]
        python3 -I .../sandbox_check.py --project DIR --write-settings [FILE] [--secret ...]
            (writes, prints what changed, then runs the checks)
 """
@@ -118,6 +135,7 @@ import fnmatch
 import json
 import os
 import re
+import shutil
 import socket
 import stat
 import subprocess
@@ -186,6 +204,27 @@ REQUIRED_SETTINGS = {
     "autoAllowBashIfSandboxed": True,
 }
 
+
+_GIT = None
+
+
+def find_git():
+    """The first git that answers `--version`: whatever PATH holds, then the
+    Homebrew and MacPorts paths. macOS's /usr/bin/git is Apple's xcrun
+    shim, which fails inside a sandbox that cannot read the developer
+    directory; the candidates are tried by running them, not by stat,
+    since such a sandbox may deny the stat and still allow the exec."""
+    global _GIT
+    if _GIT is None:
+        for c in (shutil.which("git") or "git", "/opt/homebrew/bin/git", "/usr/local/bin/git", "/opt/local/bin/git"):
+            try:
+                if subprocess.run([c, "--version"], capture_output=True, timeout=15).returncode == 0:
+                    _GIT = c
+                    break
+            except (OSError, subprocess.TimeoutExpired):
+                continue
+        _GIT = _GIT or "git"
+    return _GIT
 
 def home():
     return os.path.realpath(os.path.expanduser("~"))
@@ -275,6 +314,31 @@ def get(settings, *path, default=None):
             return default
         cur = cur[key]
     return cur
+
+
+def under_srt():
+    """True inside the sandbox runtime, which sets SANDBOX_RUNTIME=1 for every process it fences."""
+    return os.environ.get("SANDBOX_RUNTIME") == "1"
+
+
+def srt_settings_path(override):
+    return os.path.expanduser(override or "~/.srt-settings.json")
+
+
+def load_srt_settings(path):
+    """(settings, note): the runtime's file, or {} with a note when there is none or it is unreadable."""
+    if not os.path.isfile(path):
+        return {}, f"none at {path} (runtime defaults: no network, writes to the runtime's own paths only, every read allowed)"
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError) as e:
+        return {}, f"{path} unreadable or invalid ({e}); the runtime refuses to start on such a file, so this session is not under it"
+    return (data if isinstance(data, dict) else {}), path
+
+
+def srt_deny_read_entries(srt):
+    return [expand(e) for e in (get(srt, "filesystem", "denyRead", default=[]) or []) if isinstance(e, str)]
 
 
 def deny_read_entries(settings):
@@ -443,7 +507,14 @@ def check_platform():
     return True, sys.platform
 
 
-def check_write(project, settings):
+def platform_line():
+    ok, detail = check_platform()
+    if ok and under_srt():
+        detail += " under the sandbox runtime: the whole session is fenced, file tools, hooks and MCP servers included"
+    return ok, detail
+
+
+def check_write(project, settings, srt):
     h = home()
     if project == h or h.startswith(project + os.sep):
         return False, f"the project ({project}) contains the home directory, so a write there proves nothing; run the flow from a project below it"
@@ -462,16 +533,30 @@ def check_write(project, settings):
         except OSError:
             pass
         return False, f"wrote {probe}: this command ran unsandboxed"
-    tmp = os.path.realpath(tempfile.gettempdir())
+    try:
+        tmp = os.path.realpath(tempfile.gettempdir())
+    except OSError:
+        tmp = None  # a fence that leaves no writable temp directory at all
+    roots = [r for r in (project, tmp) if r]
+    key = "sandbox.filesystem.allowWrite"
+    entries = get(settings, "sandbox", "filesystem", "allowWrite", default=[]) or []
+    if under_srt():
+        # The runtime's own grants: Claude Code needs its config and temp
+        # directories writable to run at all, so those are expected.
+        key = "the runtime's filesystem.allowWrite"
+        entries = get(srt, "filesystem", "allowWrite", default=[]) or []
+        roots += [os.path.realpath(expand(r)) for r in ("~/.claude", "~/.claude.json", "/tmp", "/private/tmp")]
+        if os.environ.get("CLAUDE_CODE_TMPDIR"):
+            roots.append(os.path.realpath(os.environ["CLAUDE_CODE_TMPDIR"]))
     outside = []
-    for entry in get(settings, "sandbox", "filesystem", "allowWrite", default=[]) or []:
+    for entry in entries:
         if not isinstance(entry, str):
             continue
-        e = expand(entry)
-        if not any(e == root or e.startswith(root + os.sep) for root in (project, tmp)):
+        e = os.path.realpath(expand(entry)) if entry not in (".", "./") else project
+        if not any(e == root or e.startswith(root + os.sep) for root in roots):
             outside.append(entry)
     if outside:
-        return False, denied + "; but sandbox.filesystem.allowWrite opens paths outside the project and temp: " + ", ".join(outside)
+        return False, denied + f"; but {key} opens paths outside the project and temp: " + ", ".join(outside)
     return True, denied
 
 
@@ -552,8 +637,10 @@ def readable(path, known):
     return opens(path)
 
 
-def check_shell_secrets(secrets, settings):
+def check_shell_secrets(secrets, settings, srt):
     entries = deny_read_entries(settings)
+    if under_srt():
+        entries = entries + srt_deny_read_entries(srt)
     unlisted = [s for s in secrets if not any(prefix_covers(e, expand(s)) for e in entries)]
     open_ = []
     for s in secrets:
@@ -564,26 +651,39 @@ def check_shell_secrets(secrets, settings):
     if open_:
         problems.append("readable from the shell now: " + ", ".join(open_))
     if unlisted:
-        problems.append("not in sandbox.filesystem.denyRead: " + ", ".join(unlisted))
+        where = ("the runtime's filesystem.denyRead (add them to its settings file outside the session and restart it)"
+                 if under_srt() else "sandbox.filesystem.denyRead")
+        problems.append(f"not in {where}: " + ", ".join(unlisted))
     if problems:
         return False, "; ".join(problems)
     present = sum(1 for s in secrets if os.path.exists(expand(s)))
     return True, f"{len(secrets)} paths denied in settings, {present} present and unreadable from the shell"
 
 
-def check_read_rules(secrets, settings):
+def check_read_rules(secrets, settings, srt):
     rules = read_rules(settings)
-    uncovered = []
+    srt_entries = srt_deny_read_entries(srt) if under_srt() else []
+    uncovered, by_runtime = [], 0
     for s in secrets:
         is_dir = is_dir_secret(s)
-        if not any(read_rule_covers(r, expand(s), is_dir) for r in rules):
-            uncovered.append(rule_for(s))
+        if any(read_rule_covers(r, expand(s), is_dir) for r in rules):
+            continue
+        if any(prefix_covers(e, expand(s)) for e in srt_entries):
+            by_runtime += 1  # the Read tool runs inside the runtime's boundary
+            continue
+        uncovered.append(rule_for(s))
     if uncovered:
-        return False, "no Read(...) deny rule reaches: " + ", ".join(uncovered) + " (permissions.deny; a directory needs the /** form)"
+        hint = (" (permissions.deny, or the runtime's filesystem.denyRead, which fences the Read tool too)" if under_srt()
+                else " (permissions.deny; a directory needs the /** form)")
+        return False, "no Read(...) deny rule reaches: " + ", ".join(uncovered) + hint
+    if by_runtime:
+        return True, f"{len(secrets)} paths covered: {len(secrets) - by_runtime} by a Read(...) deny rule, {by_runtime} by the runtime's denyRead"
     return True, f"{len(secrets)} paths each covered by a Read(...) deny rule"
 
 
 def check_settings(settings):
+    if under_srt():
+        return True, "the sandbox runtime fences the whole session; Claude's own sandbox keys are optional inside it, and an unsandboxed retry cannot leave it (Bash approvals are the permission mode's)"
     wrong = []
     for key, want in REQUIRED_SETTINGS.items():
         have = get(settings, "sandbox", key)
@@ -634,7 +734,7 @@ def check_worktreeinclude(project):
             patterns = [l.strip() for l in fh if l.strip() and not l.lstrip().startswith("#")]
     except OSError as e:
         return False, f".worktreeinclude unreadable: {e}"
-    proc = subprocess.run(["git", "ls-files", "-oi", "--exclude-standard"], cwd=project,
+    proc = subprocess.run([find_git(), "ls-files", "-oi", "--exclude-standard"], cwd=project,
                           capture_output=True, text=True)
     if proc.returncode != 0:
         return False, f"cannot list the project's ignored files to see what .worktreeinclude copies: {proc.stderr.strip()}"
@@ -653,6 +753,8 @@ def main():
                    help="another path that must be unreadable (repeatable; `~` allowed; end a directory with `/`)")
     p.add_argument("--write-settings", nargs="?", const="", metavar="FILE",
                    help="merge the required sandbox and deny settings into the session's user settings file first (FILE overrides the path)")
+    p.add_argument("--srt-settings", metavar="FILE",
+                   help="the sandbox runtime's settings file when the session was launched with `srt --settings FILE` (default ~/.srt-settings.json)")
     a = p.parse_args()
     project = os.path.realpath(a.project)
     if not os.path.isdir(project):
@@ -684,21 +786,26 @@ def main():
             print(f"settings already complete{scope}: {shown}")
 
     settings, read, broken = load_settings(project)
+    srt, srt_note = (load_srt_settings(srt_settings_path(a.srt_settings)) if under_srt() else ({}, None))
     results = [
-        ("platform", *check_platform()),
-        ("write", *check_write(project, settings)),
+        ("platform", *platform_line()),
+        ("write", *check_write(project, settings, srt)),
         ("network", *check_network()),
         ("env", *check_env()),
-        ("shell-secrets", *check_shell_secrets(secrets, settings)),
-        ("read-secrets", *check_read_rules(secrets, settings)),
+        ("shell-secrets", *check_shell_secrets(secrets, settings, srt)),
+        ("read-secrets", *check_read_rules(secrets, settings, srt)),
         ("settings", *check_settings(settings)),
         ("worktreeinclude", *check_worktreeinclude(project)),
     ]
     for name, ok, detail in results:
         print(f"{'PASS' if ok else 'FAIL'}  {name}: {detail}")
     allowed = get(settings, "sandbox", "network", "allowedDomains", default=[]) or []
+    if under_srt():
+        allowed = allowed + [f"{d} (runtime)" for d in (get(srt, "network", "allowedDomains", default=[]) or [])]
     print("network allowlist:", ", ".join(map(str, allowed)) if allowed else "none")
     print("settings read:", ", ".join(read) if read else "none found")
+    if srt_note is not None:
+        print("sandbox runtime settings:", srt_note)
     for b in broken:
         print("settings skipped:", b)
     passed = all(ok for _, ok, _ in results)

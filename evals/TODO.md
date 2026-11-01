@@ -3050,3 +3050,72 @@ proven by real runs the way the quarantine flow was (H6, I).
       `tdd-implementation-cancel-hold`, `tdd-implementation-named-fix`,
       `why-comments-collect-fine` 1.00, `tdd-implementation-lite-named-fix`
       0.96 over its three-run re-run, inside tolerance). No bar moved.
+
+## K. Implementation flow v4, PR 3: the loop's steps as cases (2026-10-31)
+
+`.synthesis/implementation-flow-v4.md` §11 lists twelve cases; the root
+`TODO.md`'s PR 3 is the work list. J4's "not cases, by decision" is
+narrowed: the eval does offer the `Agent` tool, so each step of the loop
+is a case resumed from a planted state
+(`fixtures/library-app/code-plants/loop/state.sh`); only the log entry end
+to end and the stall rule stay with the real runs.
+
+- [x] K1. The cases, built 2026-10-31: `orchestrator-readiness-gate`,
+      `-plan-check-seam`, `-gate-deviation`, `-gate-outside`,
+      `-chunk-review-round`, `-one-fix-round`, `-gap-without-delegation`,
+      `-definition-of-done`, `-budget-exceeded`, `-delivery-foreground`;
+      `delegation-consult-with-file` and `-without-file`;
+      `code-review-comments-chunk`; `test-quality-review-seam-fake`;
+      `requirements-refinement-open-question`,
+      `security-requirements-placeholder-pointer`,
+      `architecture-design-scope-consequence`; three graders on
+      `tdd-implementation-one-chunk` and one on each chunk-plan case;
+      `orchestrator-log-format/check.sh` (no model). The plants are
+      `answer-key.md`'s `L` and `P` rows.
+- [x] K2. Calibrate: one run of every new case (2026-10-31, the Mac,
+      `results/gate-20261031T163624-*` and `-163944-*`), every failure
+      read. Fixture: the gap state lacked the reliability document its
+      review cites; the scope-consequence criterion read as vacuous for an
+      in-memory queue; the handoff file was left uncommitted though the
+      skill commits it with the records; the readiness case's prompt let
+      the flow run on past A (the skill continues once the gate passes),
+      so it now hands off at the A line. Grader: the consult may revise
+      its document through a shell script, not only Edit/Write. Plugin:
+      `rounds_record.py` counted a smoke report's bulleted Severity as no
+      finding and said PASS (now tolerated, and an unparsed smoke report
+      must say PASS or exit 1); the E step never committed the log, so
+      `delivery`'s clean-tree rule stopped delivery (E.1 now commits log
+      and records, handoff removed); the scripts fall back to a working
+      git when the first on PATH is Apple's shim. Environment, not the
+      plugin: inside the Mac eval sandbox `git` by name fails (the README's
+      gate section), so the loop, tdd and delegation-with-file cases
+      cannot be measured there.
+- [x] K3. Record the bars. From the Mac (`gate.sh --runs 3`): the six
+      cases whose agent needs no git, `requirements-refinement-open-question`,
+      `security-requirements-placeholder-pointer`,
+      `architecture-design-scope-consequence`, `test-quality-review-seam-fake`,
+      `delegation-consult-without-file`, `code-review-comments-chunk`
+      (done 2026-10-31: 1.00, 1.00, 0.67, 1.00, 0.92, 0.90, see the
+      coverage rows; the scope-consequence bar is judge noise on a
+      last-message grader, recorded as measured). Then the ten
+      `orchestrator-*` loop cases and `delegation-consult-with-file`, from
+      the Mac once the `git` shim `gate.sh` asks for exists, or from WSL
+      (`wsl-gate.sh --runs 3 --cases ...`), then `record_thresholds.py
+      --gate-only` for all seventeen. Done 2026-10-31, all from the Mac
+      once the `git` shims existed: fourteen at 0.90 or above (eight at
+      1.00 in 3/3), `definition-of-done` 0.88, `budget-exceeded` 0.80 and
+      `architecture-design-scope-consequence` 0.67 recorded as measured
+      (judge losses on last-message graders, see the rows). Two more real
+      defects on the way (the gate command and the log; resuming from a
+      handoff that names E), both fixed.
+- [x] K4. Re-record the cases the v4 skill edits reach: `gate.sh --stale`
+      three times over the day (2026-10-31), 49/58, then 27/28, then the
+      last case, as the skill edits re-staled them. Two accessibility
+      graders and three routing graders still encoded v3 rules (criteria
+      in the slice, one step per invocation) and now follow PR 2's; the
+      backward-route case exposed the orchestrator matching the forward
+      table before reading a hand-back at the end of a document, fixed in
+      the skill. The four history chains whose frozen phase-1 text
+      predated PR 2 were re-frozen (phase 1 re-run, phase 2 and 3
+      re-frozen in turn), all at bar but security phase 3 at 0.89 as
+      measured. The evidence check is green for all 68 affected cases.

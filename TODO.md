@@ -123,9 +123,54 @@ non-UI slice's accessibility placeholder has no row that fills it).
 
 ## PR 3 — evals (§11)
 
-- [ ] 3.1 Cases 1–12 on `evals/fixtures/library-app/`, each with graders, per `evals/README.md`; bars recorded with `record_thresholds.py` after calibration.
-- [ ] 3.2 `evals/tools/cost_by_role.py` (copy from `audit-docs/personal-finance-tracker-2-slice-1/plugin-review/tools/cost_by_role.py`; per-model prices; prints the E-line total).
-- [ ] 3.3 Rewrite or retire the v3 cases that assume six reviewers per chunk or "until clean" rounds; the two routing cases' A step gains the delegation question and the readiness gate.
+Status (2026-10-31): built on `implementation-flow-v4-pr3`. Cases 1–12
+are seventeen case directories plus one script check, all on the
+library-app fixture: the chunk loop's states come from
+`evals/fixtures/library-app/code-plants/loop/state.sh` (eleven states,
+each the git history, gate files, sidecar and handoff a previous session
+would have left; its README and `answer-key.md`'s `L` and `P` rows list
+the plants), three planted planning sets under
+`evals/fixtures/library-app/planning/`, and `cost_by_role.py` under
+`evals/tools/`. Case 11 is `evals/orchestrator-log-format/check.sh`, no
+model: the v4 template entry parses clean, and the run-2 part runs when
+the private log is given (verified 2026-10-26 under 2.8). Case 7's
+builder half is three graders on `tdd-implementation-one-chunk`; the
+seam test is a grader on both chunk-plan cases. 3.3: no remaining v3 case
+assumed six reviewers per chunk or "until clean" rounds (J5 had rewritten
+them on 2026-10-24); the two routing cases' graders gained the delegation
+question and the readiness gate. Found on the first local run (a Mac,
+after Windows and WSL): `sed -i` without a suffix in two scripts and a
+`slice-fixed` snapshot verify.sh type-checked without its base, fixed;
+Node 24 is needed for the fixture's test flag (`evals/tools/gate.sh`
+puts Homebrew's on the path on a Mac). The first calibration pass (2026-10-31, one
+run each, the Mac) found: the recorder read a smoke report whose
+`**Severity:**` sat in a list item as zero findings and printed `smoke
+PASS` (fixed: a list marker is tolerated, and a smoke report with no
+parsed finding must say `PASS` or the script exits 1); the E step never
+committed the log, so `delivery`'s clean-tree rule stopped every real
+delivery (fixed: E.1 commits the log and removes the handoff as
+`Records: slice <nnn> delivery`); the handoff file is committed with the
+records, so the fixture's states now commit it; the gap state lacked the
+reliability document its planted review cites; the scope-consequence
+criterion was vacuous for an in-memory queue (now it needs the other
+holds to survive the restart); the readiness case ran the whole loop once
+the gate passed, as the skill says, so its prompt now hands off at the A
+line. What the Mac cannot measure: inside the eval sandbox `git` by name
+is Apple's shim and fails (see the evals README's gate section), so the
+chunk-loop, delegation-with-file and tdd cases could not be measured
+until a `git` shim in Homebrew's `sbin` was found to be reachable there
+(`gate.sh` checks for it); the scripts gained a working-git fallback as
+well. All seventeen bars are recorded from the Mac (K3 in `evals/TODO.md`,
+2026-10-31); the second pass over the loop cases found and fixed two more
+defects (the gate command never allowed the loop's own uncommitted log;
+a handoff naming E was resumed by invoking `delivery` directly). K4, the
+stale re-record of every case the skill edits reach, is done (68/68 with
+evidence, 2026-10-31; four history chains re-frozen after PR 2 on the
+way); PR 3 is pushed as PR #26 (2026-11-01), the evidence check green.
+
+- [x] 3.1 Cases 1–12 on `evals/fixtures/library-app/`, each with graders, per `evals/README.md`; bars recorded with `record_thresholds.py` after calibration.
+- [x] 3.2 `evals/tools/cost_by_role.py` (copy from `audit-docs/personal-finance-tracker-2-slice-1/plugin-review/tools/cost_by_role.py`; per-model prices; prints the E-line total).
+- [x] 3.3 Rewrite or retire the v3 cases that assume six reviewers per chunk or "until clean" rounds; the two routing cases' A step gains the delegation question and the readiness gate.
 
 ## After the PRs
 

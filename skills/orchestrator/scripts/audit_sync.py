@@ -88,8 +88,30 @@ def fail(msg: str, code: int) -> int:
     return code
 
 
+_GIT = None
+
+
+def find_git():
+    """The first git that answers `--version`: whatever PATH holds, then the
+    Homebrew and MacPorts paths. macOS's /usr/bin/git is Apple's xcrun
+    shim, which fails inside a sandbox that cannot read the developer
+    directory; the candidates are tried by running them, not by stat,
+    since such a sandbox may deny the stat and still allow the exec."""
+    global _GIT
+    if _GIT is None:
+        for c in (shutil.which("git") or "git", "/opt/homebrew/bin/git", "/usr/local/bin/git", "/opt/local/bin/git"):
+            try:
+                if subprocess.run([c, "--version"], capture_output=True, timeout=15).returncode == 0:
+                    _GIT = c
+                    break
+            except (OSError, subprocess.TimeoutExpired):
+                continue
+        _GIT = _GIT or "git"
+    return _GIT
+
+
 def run_git(cwd: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", "-C", str(cwd), *args], capture_output=True, text=True, check=check)
+    return subprocess.run([find_git(), "-C", str(cwd), *args], capture_output=True, text=True, check=check)
 
 
 def find_one(root: Path, name: str) -> list[Path]:

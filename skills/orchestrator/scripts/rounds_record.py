@@ -81,11 +81,13 @@ the orchestrator sees what is carried without opening a report:
     standing <C>/<H>/<M>
 
 Exit 0 after any parsed report, a report with no finding included. Exit 1
-when a report file is missing, or when a `-review.md` report holds
-finding-shaped blocks (a Location, a What's happening or a Suggested fix
-under a heading) and not one Severity line anywhere: the format error is
-printed as `format: no finding in the shared format in <path>` and nothing
-is written for that file.
+when a report file is missing; when a report holds finding-shaped blocks
+(a Location, a What's happening or a Suggested fix under a heading) and
+not one Severity line anywhere; or when a smoke report yields no finding
+and its `## Result` is missing or does not start with `PASS`: the format
+error is printed as `format: ... <path>` and nothing is written for that
+file, so a report the parser cannot read never counts as clean. A list
+marker before `**Severity:**` or `**Location:**` is tolerated.
 
 Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/rounds_record.py --sidecar <path>
            --report <path> [--report <path> ...] [--reviewer NAME ...]
@@ -103,9 +105,12 @@ import subprocess
 import sys
 
 HEADING = re.compile(r"^(#{2,4})\s+(.+?)\s*#*\s*$")
-SEVERITY = re.compile(r"^\s*\*\*Severity:?\*\*:?\s*(.+?)\s*$", re.I)
-LOCATION = re.compile(r"^\s*\*\*Location:?\*\*:?\s*(.+?)\s*$", re.I)
-FINDING_SHAPED = re.compile(r"^\s*\*\*(Location|What's happening|Suggested fix|Category):?\*\*", re.I)
+# A leading list marker is tolerated: the first real smoke agent wrote
+# `- **Severity:** Critical` and the count silently read as PASS.
+SEVERITY = re.compile(r"^\s*(?:[-*]\s+)?\*\*Severity:?\*\*:?\s*(.+?)\s*$", re.I)
+LOCATION = re.compile(r"^\s*(?:[-*]\s+)?\*\*Location:?\*\*:?\s*(.+?)\s*$", re.I)
+FINDING_SHAPED = re.compile(r"^\s*(?:[-*]\s+)?\*\*(Location|What's happening|Suggested fix|Category):?\*\*", re.I)
+RESULT_PASS = re.compile(r"^PASS\b", re.I)
 NEEDS_DECISION = re.compile(r"needs[- ]decision(?:\s*\(\s*`?([^)`]+?)`?\s*\))?", re.I)
 LEVELS = {"critical": "Critical", "high": "High", "medium": "Medium", "low": "Low"}
 ACTIONABLE = ("Critical", "High", "Medium")
@@ -140,15 +145,19 @@ def parse_location(text):
 
 
 def parse_report(path):
-    """(findings, finding_shaped_blocks): each finding is a dict with title,
-    severity, persona, file, line, line_end; the second value says whether
-    any heading's block looked like a finding, for the format check."""
+    """(findings, finding_shaped_blocks, result): each finding is a dict with
+    title, severity, persona, file, line, line_end; the second value says
+    whether any heading's block looked like a finding, for the format check;
+    the third is the first non-blank line under a `## Result` heading, or
+    None when the report has none."""
     lines = read_lines(path)
     headings = [(i, len(m.group(1)), m.group(2)) for i, l in enumerate(lines) for m in [HEADING.match(l)] if m]
-    findings, shaped = [], False
+    findings, shaped, result = [], False, None
     for n, (start, _level, title) in enumerate(headings):
         end = headings[n + 1][0] if n + 1 < len(headings) else len(lines)
         block = lines[start + 1:end]
+        if result is None and title.strip().lower() == "result":
+            result = next((l.strip() for l in block if l.strip()), "")
         severity_line = next((SEVERITY.match(l) for l in block if SEVERITY.match(l)), None)
         if severity_line is None:
             shaped = shaped or any(FINDING_SHAPED.match(l) for l in block)
@@ -162,7 +171,7 @@ def parse_report(path):
         file, line, line_end = parse_location(location_line.group(1)) if location_line else (None, None, None)
         findings.append({"title": clean_title, "severity": severity, "persona": persona,
                          "file": file, "line": line, "line_end": line_end})
-    return findings, shaped
+    return findings, shaped, result
 
 
 def reviewer_of(path):
@@ -170,11 +179,31 @@ def reviewer_of(path):
     return stem.rsplit("-", 1)[-1] if "-" in stem else stem
 
 
+_GIT = None
+
+
+def find_git():
+    """The first git that answers `--version`: whatever PATH holds, then the
+    Homebrew and MacPorts paths. macOS's /usr/bin/git is Apple's xcrun
+    shim, which fails inside a sandbox that cannot read the developer
+    directory; the candidates are tried by running them, not by stat,
+    since such a sandbox may deny the stat and still allow the exec."""
+    global _GIT
+    if _GIT is None:
+        for c in (shutil.which("git") or "git", "/opt/homebrew/bin/git", "/usr/local/bin/git", "/opt/local/bin/git"):
+            try:
+                if subprocess.run([c, "--version"], capture_output=True, timeout=15).returncode == 0:
+                    _GIT = c
+                    break
+            except (OSError, subprocess.TimeoutExpired):
+                continue
+        _GIT = _GIT or "git"
+    return _GIT
+
+
 def hunks(project, rng):
     """{file: [(first, last), ...]} of new-side lines the range's diff wrote."""
-    git = shutil.which("git")
-    if not git:
-        raise SystemExit("git is not on PATH; cannot classify against --range")
+    git = find_git()
     proc = subprocess.run([git, "diff", rng, "-U0", "--no-color"], cwd=project, capture_output=True,
                           text=True, encoding="utf-8", errors="replace")
     if proc.returncode != 0:
@@ -251,11 +280,22 @@ def record(a):
     changed = hunks(a.project, a.range) if a.range else None
     rows, failed, smoke_seen = [], False, False
     for report, reviewer in reports:
-        findings, shaped = parse_report(report)
-        if not findings and shaped and report.endswith("-review.md"):
+        findings, shaped, result = parse_report(report)
+        if not findings and shaped:
             print(f"format: no finding in the shared format in {report}")
             failed = True
             continue
+        if reviewer == "smoke" and not findings:
+            # A smoke report with no parsed finding counts as PASS only when
+            # it says so: anything else is a finding the parser did not see.
+            if result is None:
+                print(f"format: no `## Result` in the smoke report {report}")
+                failed = True
+                continue
+            if not RESULT_PASS.match(result.strip("*`_ ")):
+                print(f"format: smoke result is not PASS and no finding parsed in {report}: {result[:80]}")
+                failed = True
+                continue
         smoke_seen = smoke_seen or reviewer == "smoke"
         key = report_key(report, a.sidecar)
         for f in findings:
