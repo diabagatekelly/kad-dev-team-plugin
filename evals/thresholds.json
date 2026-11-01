@@ -1248,18 +1248,18 @@
     ]
   },
   "orchestrator-route-scope-decision": {
-    "score": 1.0,
+    "score": 0.944,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.316",
-    "source": "results/gate-20261101T021455-orchestrator-route-scope-decision.json",
+    "source": "results/gate-20261101T145201-orchestrator-route-scope-decision.json",
     "graders": {
       "log-names-row-and-artifact": 1.0,
       "log-written": 1.0,
       "not-vertical-slicing": 1.0,
       "orchestrator-invoked": 1.0,
       "routes-to-scope-map": 1.0,
-      "stops-after-the-routed-step": 1.0
+      "stops-after-the-routed-step": 0.667
     },
     "skills_invoked": [
       "orchestrator",
@@ -1311,13 +1311,13 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261015T140248-orchestrator-route-slicing.json",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T153923-orchestrator-route-slicing.json",
     "graders": {
       "log-names-row-and-artifact": 1.0,
       "log-written": 1.0,
+      "not-architecture-design": 1.0,
       "not-requirements-refinement": 1.0,
-      "not-user-story-writeup": 1.0,
       "orchestrator-invoked": 1.0,
       "routes-to-vertical-slicing": 1.0,
       "stops-after-the-routed-step": 1.0
@@ -1326,6 +1326,7 @@
       "acceptance-criteria",
       "orchestrator",
       "product-slicer",
+      "user-story-writeup",
       "vertical-slicing"
     ]
   },
@@ -1386,6 +1387,22 @@
     "skills_invoked": [
       "orchestrator",
       "security-requirements"
+    ]
+  },
+  "orchestrator-session-setup": {
+    "score": 1.0,
+    "runs": 2,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T133739-orchestrator-session-setup.json",
+    "graders": {
+      "asks-about-the-session-first": 1.0,
+      "checks-the-session": 1.0,
+      "not-problem-framing-doc-yet": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
     ]
   },
   "orchestrator-superseded-scope-map": {

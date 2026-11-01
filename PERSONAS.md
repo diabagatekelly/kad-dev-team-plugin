@@ -132,9 +132,17 @@ because every persona it invokes requires it.
 **`tdd-coach:tdd-implementation` is the one row that genuinely doesn't
 execute inline — it runs the chunk loop (v4, 2026-10-25), wired in and
 running by default.** A repository and an `origin` must exist (else
-`release-engineer:repo-bootstrap`, decided with the owner). The sandbox
-check (`skills/orchestrator/scripts/sandbox_check.py`) runs first, before
-any question, and before every launch after that: the plugin cannot ship
+`release-engineer:repo-bootstrap`, decided with the owner). Before any of
+this, and before the target question, the orchestrator's step 0 (session
+setup, 0.9.0) settles the two things only a session start can set: in a
+session not started by `bin/kad` and with a shell to run it, it asks
+whether audit mode is wanted (plus the audit repository and extra domains
+the first time), runs `kad --prepare` with the answers, and asks whether
+to restart under the sandbox runtime, in a new terminal window with the
+orchestrator already started, or continue here; skipped under the
+launcher, on a resumed flow, and in a session with no Bash. The sandbox
+check (`skills/orchestrator/scripts/sandbox_check.py`) runs first in the
+loop, before any question, and before every launch after that: the plugin cannot ship
 the settings that fence an unattended code writer, so the script probes
 the session's own Bash sandbox from inside it and reads the escape hatches
 off in the settings; a fixable failure gets the `--write-settings` offer,
