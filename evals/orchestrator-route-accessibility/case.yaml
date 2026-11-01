@@ -23,12 +23,10 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
     min: 1
-  - type: tool_used
-    name: not-screen-design
-    tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:screen-design"'
-    min: 0
-    max: 0
+  - type: tool_order
+    name: screen-design-only-after-the-review
+    before: {tool: Skill, input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'}
+    after: {tool: Skill, input_match: '"skill"\s*:\s*"kad-dev-team:screen-design"'}
   - type: tool_used
     name: not-technology-bootstrap
     tool: Skill
@@ -63,8 +61,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The orchestrator executes exactly one routed step per invocation, then reports what it detected, where it routed and what was produced, and asks whether to continue; it never chains into the next stage. Here the routed step is `accessibility-engineer:accessibility-review`.
+      The orchestrator executes one routed step at a time: it reports what it detected, where it routed and what was produced, then continues to the next row in the same conversation, and asks the owner only when the next row needs an owner decision or a routed skill has a question of its own. Here the routed step is `accessibility-engineer:accessibility-review` on the screen mockup; when it raises a Critical or High, the next step is a backward route to `ux-designer:screen-design` to revise the mockup, which may run in the same conversation, reported as its own step.
 
-      PASS if the response ends in one of two ways: with accessibility-review's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is the second ending, not the orchestrator answering its questions. Either way nothing from a later stage (technology-bootstrap or implementation) has been produced.
+      PASS if the response ends in one of these ways: with accessibility-review's own questions to the user; with the review's result reported (its document written, the slice's placeholder pointed at it) and the flow stopped or asking whether to go on; or with that result reported and the backward route to screen-design taken and reported in its own words, the revised mockup or screen-design's question to the owner ending the turn. Nothing from a later forward stage (a build, a technology bootstrap) has been produced.
 
-      FAIL if the response goes on to run or produce a later stage's work, or if the routed skill had stopped to ask the user something and the response answers that question itself from the repository and carries on past it, or if it routes to something other than accessibility-review.
+      FAIL if the response goes forward to a build or a technology bootstrap, answers a routed skill's question itself from the repository and carries on past it, or routes first to something other than accessibility-review.

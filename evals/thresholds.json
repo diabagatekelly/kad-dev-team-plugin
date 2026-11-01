@@ -1490,15 +1490,15 @@
     }
   },
   "reliability-requirements-payfine-phase3": {
-    "score": 0.963,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261017T121845-reliability-requirements-payfine-phase3.json",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T012726-reliability-requirements-payfine-phase3.json",
     "graders": {
       "criteria-make-the-chosen-behaviour-workable": 1.0,
       "criterion-charge-without-settle-is-caught": 1.0,
-      "criterion-double-submit-is-covered": 0.667,
+      "criterion-double-submit-is-covered": 1.0,
       "decisions-all-approved": 1.0,
       "document-written": 1.0,
       "leaves-the-code-alone": 1.0,
@@ -1834,17 +1834,17 @@
     }
   },
   "security-requirements-payfine-phase3": {
-    "score": 1.0,
+    "score": 0.889,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261017T121845-security-requirements-payfine-phase3.json",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T012956-security-requirements-payfine-phase3.json",
     "graders": {
       "criteria-cover-error-and-monitoring-exits": 1.0,
       "criteria-make-the-chosen-route-safe": 1.0,
       "criterion-card-details-never-reach-the-server": 1.0,
       "criterion-member-pays-only-own-fines": 1.0,
-      "decisions-all-approved": 1.0,
+      "decisions-all-approved": 0.0,
       "document-written": 1.0,
       "leaves-the-code-alone": 1.0,
       "no-false-alarm-publishable-key": 1.0,
