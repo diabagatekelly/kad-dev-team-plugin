@@ -114,7 +114,16 @@ config directory denied so nothing an agent writes outlives the session;
 the credential paths denied for reading; the network allowed to the API,
 sign-in and GitHub plus the domains you add), drops credential-shaped
 variables from the environment the session inherits (`--keep-env NAME`
-passes one through, and the orchestrator's check then names it), turns
+passes one through, and the orchestrator's check then names it), gives
+the session what the loop's commits, pushes, pull requests, issues and
+audit sync need inside the fence (the host's GitHub login from `gh auth
+token` as `GH_TOKEN`, the one credential the session holds, which the
+orchestrator's check reports as kept; `--gh-token-env NAME` takes a
+fine-grained token for the one repository instead, narrower than the
+login's scope; a session-local `gh` config directory, since its own is
+on the deny list; `gh` as git's credential helper in place of the
+keychain the fence refuses; and the runtime's TLS termination, without
+which `gh` cannot verify a certificate on macOS), turns
 audit mode on with the audit repository you named, and starts `srt
 claude --plugin-dir <this plugin>` inside that fence, so the Read tool,
 hooks and every agent are inside it too. The first run asks two

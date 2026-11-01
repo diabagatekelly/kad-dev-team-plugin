@@ -478,7 +478,9 @@ it at E.
      the A line with the failing checks and `flow not started`, report in
      step 5, and stop.
    - `env` or `worktreeinclude`: name the variables or files; unsetting
-     the one and removing the pattern are the user's. Stop.
+     the one and removing the pattern are the user's. Stop. (A variable
+     the launcher kept on purpose, `GH_TOKEN` for delivery, is reported on
+     the `env` line as kept, not as a failure: nothing to do.)
    - `write` or `network` failing with the settings already in place and
      the platform having a sandbox: the session is not sandboxed or
      something is open; report the line as printed, and stop.
