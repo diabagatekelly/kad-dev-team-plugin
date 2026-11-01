@@ -115,7 +115,15 @@ plugin>` inside that fence, so the Read tool, hooks and every agent are
 inside it too. The first run asks two questions, the audit repository and
 any extra domains (`registry.npmjs.org` for npm installs), and stores the
 answers in `~/.config/kad-dev-team/launcher.json`; `kad --reset` asks
-again, `--audit-repo`, `--domain` and `--no-audit` change one run. The
+again, `--audit-repo`, `--domain` and `--no-audit` change one run. Local
+ports are allowed by default (a dev server, its tests and the loop's
+smoke run bind and reach `localhost`; `--no-local` denies them for a
+slice that touches no port). `kad --chrome` adds the extension's bridge
+domain and starts `claude --chrome`, so Claude in Chrome can open
+`localhost:3000` in your real Chrome, which runs outside the fence; enable
+the extension once outside the fence first (`claude --chrome`, which
+writes Chrome's native-messaging file under `~/Library` or `~/.config`,
+paths the fence denies). The
 orchestrator's sandbox check reads the same settings file
 (`KAD_SRT_SETTINGS`) before it launches anything and names whatever is
 missing. Nothing outside `~/.config/kad-dev-team/` is written. The

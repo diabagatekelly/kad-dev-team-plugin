@@ -26,6 +26,15 @@
 #   --audit-repo URL   audit repository for this and later runs (stored)
 #   --no-audit         KAD_AUDIT unset for this run
 #   --domain D         extra allowed domain for this run (repeatable)
+#   --chrome           Claude in Chrome: allows the extension's bridge domain
+#                      and starts claude --chrome (enable it once outside the
+#                      fence first: it writes Chrome's native-messaging file
+#                      under ~/Library or ~/.config, which the fence denies)
+#   --no-local         deny local ports; by default sandboxed commands may
+#                      bind and reach localhost, which a dev server, its
+#                      tests and the loop's smoke run need (other local
+#                      services become reachable too; deny it for a slice
+#                      that touches no port)
 #   --installed        the plugin is installed from the marketplace: no --plugin-dir
 #   --yes              take every default, ask nothing (first run included)
 #   --reset            forget the stored answers and ask again
@@ -34,7 +43,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 conf_dir="${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}"
 conf="$conf_dir/launcher.json"
-project="$PWD"; yes=0; check=0; audit=1; installed=0; reset=0
+project="$PWD"; yes=0; check=0; audit=1; installed=0; reset=0; chrome=0; local=1
 audit_repo_arg=""; domains_arg=(); claude_args=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -43,10 +52,12 @@ while [ $# -gt 0 ]; do
     --no-audit) audit=0; shift ;;
     --domain) domains_arg+=("$2"); shift 2 ;;
     --installed) installed=1; shift ;;
+    --chrome) chrome=1; shift ;;
+    --no-local) local=0; shift ;;
     --yes) yes=1; shift ;;
     --check) check=1; shift ;;
     --reset) reset=1; shift ;;
-    -h|--help) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,42p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --) shift; claude_args=("$@"); break ;;
     *) echo "kad: unknown argument $1 (arguments for claude go after --)" >&2; exit 2 ;;
   esac
@@ -122,7 +133,8 @@ fi
 #    file missing one rather than run on defaults that would drop its rules.
 slug="$(printf '%s' "$project" | tr '/' '_' | tr -c 'A-Za-z0-9_.-' '_')"
 settings="$conf_dir/srt/${slug#_}.json"
-KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_DOMAINS="$stored_domains ${domains_arg[*]:-}" python3 -I - "$settings" <<'PY'
+[ "$chrome" = 1 ] && domains_arg+=("bridge.claudeusercontent.com")
+KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_DOMAINS="$stored_domains ${domains_arg[*]:-}" python3 -I - "$settings" <<'PY'
 import json, os, sys
 home = os.path.expanduser("~")
 secrets = ["~/.ssh", "~/.aws", "~/.gnupg", "~/.kube", "~/.config/gcloud", "~/.azure", "~/.config/gh",
@@ -142,7 +154,9 @@ settings = {
         "denyRead": secrets,
         "allowRead": [],
     },
-    "network": {"allowedDomains": domains, "deniedDomains": []},
+    # allowLocalBinding: sandboxed commands may bind and reach local ports
+    # (a dev server and the loop's smoke run need it); --no-local denies it
+    "network": {"allowedDomains": domains, "deniedDomains": [], "allowLocalBinding": os.environ["KAD_LOCAL"] == "1"},
 }
 json.dump(settings, open(sys.argv[1], "w"), indent=2)
 PY
@@ -152,6 +166,7 @@ plugin_arg=(); [ "$installed" = 1 ] || plugin_arg=(--plugin-dir "$root")
 say "project    $project"
 say "runtime    srt --settings $settings"
 say "network    $(python3 -I -c 'import json,sys;print(", ".join(json.load(open(sys.argv[1]))["network"]["allowedDomains"]))' "$settings")"
+say "local ports $([ "$local" = 1 ] && echo allowed || echo denied); chrome $([ "$chrome" = 1 ] && echo on || echo off)"
 say "audit      $([ "$audit" = 1 ] && echo "on${audit_repo:+, repository $audit_repo}" || echo off)"
 say "plugin     $([ "$installed" = 1 ] && echo "installed" || echo "--plugin-dir $root")"
 [ "$check" = 1 ] && { say "check only; nothing started"; exit 0; }
@@ -165,4 +180,5 @@ else
   unset KAD_AUDIT KAD_AUDIT_REPO
 fi
 cd "$project"
-exec srt --settings "$settings" claude "${plugin_arg[@]}" "${claude_args[@]}"
+chrome_arg=(); [ "$chrome" = 1 ] && chrome_arg=(--chrome)
+exec srt --settings "$settings" claude "${plugin_arg[@]}" "${chrome_arg[@]}" "${claude_args[@]}"
