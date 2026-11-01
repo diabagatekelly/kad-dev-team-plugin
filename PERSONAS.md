@@ -356,7 +356,7 @@ rather than accumulating here.
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
 lives in `evals/example/`, which is tracked.)
 
-### Current: implementation flow v4, PR 1 and PR 2 merged, PR 3 built; the bars next
+### Current: implementation flow v4 merged (PR 1 to PR 3 and the launcher); slice 2 on 0.8.0 next
 
 The audit of the second real run (`audit-docs`,
 `personal-finance-tracker-2-slice-1/plugin-review/2026-10-25-*`) produced
@@ -372,8 +372,7 @@ failure path, a number on every wait, owned documents stay owned, consult
 answers and stage reports as visible text, one question per
 `AskUserQuestion`) and `orchestrator_log_check.py` reading the v4 lines
 and the chunk loop's entry across sessions; every PR 2 item in `TODO.md`
-is ticked. **PR 3, evals, is built (2026-10-31, branch
-`implementation-flow-v4-pr3`)**: the twelve §11 cases as seventeen case
+is ticked. **PR 3, evals, is merged (2026-11-01, #26)**: the twelve §11 cases as seventeen case
 directories and one script check on the library-app fixture, the chunk
 loop's states built for real by `code-plants/loop/state.sh` so each step
 of the loop is resumed from a handoff and graded on its own, and
@@ -385,9 +384,9 @@ delivery (E.1 now commits log and records). All seventeen bars are recorded
 (2026-10-31, from the Mac once `evals/tools/gate.sh`'s `git` shims
 existed; the loop cases' second pass found two more defects, the gate
 command never allowing the loop's own log and a handoff resumed by
-invoking `delivery` directly, both fixed). The stale re-record of the cases PR 1 and PR 2 touched is done and PR 3 is open as #26 (2026-11-01, the evidence check green for all 68 cases). What is next: (the owner's
+invoking `delivery` directly, both fixed). The stale re-record of the cases PR 1 and PR 2 touched is done (the evidence check green for all 68 cases), and the launcher `bin/kad` with delivery inside the fence is merged (2026-11-01, #27). What is next: (the owner's
 rule being that v4 is done only once everything has been evaluated and
-shown to work) slice 2 of `personal-finance-tracker-2` on 0.7.0 with the budget line,
+shown to work) slice 2 on 0.8.0, the version that carries all of v4 (PR 1 to PR 3 and the launcher), with the budget line,
 audited the same way, which decides D9's phase 2.
 
 ### Where things stand
