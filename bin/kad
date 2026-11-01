@@ -6,6 +6,11 @@
 #   kad                      # from the project's root
 #   kad --project <dir>      # from anywhere
 #   kad --check              # show what it would do, start nothing
+#   kad --prepare            # do the setup, start nothing (the orchestrator
+#                            # runs this from an unfenced session)
+#   kad --relaunch           # open a new terminal window running kad in the
+#                            # project, for a session that cannot replace
+#                            # itself; the old session is closed by hand
 #   kad -- --resume          # arguments after -- go to claude
 #
 # What it does, every time: checks the platform (macOS, Linux and WSL2
@@ -43,7 +48,8 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 conf_dir="${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}"
 conf="$conf_dir/launcher.json"
-project="$PWD"; yes=0; check=0; audit=1; installed=0; reset=0; chrome=0; local=1
+project="$PWD"; yes=0; check=0; audit=1; installed=0; reset=0; chrome=0; local=1; prepare=0; relaunch=0
+orig_args=("$@")
 audit_repo_arg=""; domains_arg=(); claude_args=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -56,6 +62,8 @@ while [ $# -gt 0 ]; do
     --no-local) local=0; shift ;;
     --yes) yes=1; shift ;;
     --check) check=1; shift ;;
+    --prepare) prepare=1; shift ;;
+    --relaunch) relaunch=1; shift ;;
     --reset) reset=1; shift ;;
     -h|--help) sed -n '2,42p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --) shift; claude_args=("$@"); break ;;
@@ -169,7 +177,34 @@ say "network    $(python3 -I -c 'import json,sys;print(", ".join(json.load(open(
 say "local ports $([ "$local" = 1 ] && echo allowed || echo denied); chrome $([ "$chrome" = 1 ] && echo on || echo off)"
 say "audit      $([ "$audit" = 1 ] && echo "on${audit_repo:+, repository $audit_repo}" || echo off)"
 say "plugin     $([ "$installed" = 1 ] && echo "installed" || echo "--plugin-dir $root")"
-[ "$check" = 1 ] && { say "check only; nothing started"; exit 0; }
+[ "$check" = 1 ] && [ "$relaunch" = 0 ] && { say "check only; nothing started"; exit 0; }
+[ "$prepare" = 1 ] && { say "prepared; start the fenced session with: kad --project '$project'$([ "$chrome" = 1 ] && echo ' --chrome')"; exit 0; }
+
+# 6a. --relaunch: a new terminal window runs kad here; the caller (a session
+#     that cannot replace its own process) then ends by hand.
+if [ "$relaunch" = 1 ]; then
+  again=()
+  for a in "${orig_args[@]}"; do [ "$a" = --relaunch ] || [ "$a" = --check ] || again+=("$a"); done
+  cmd="cd $(printf '%q' "$project") && $(printf '%q' "$root/bin/kad")"
+  for a in "${again[@]}"; do cmd="$cmd $(printf '%q' "$a")"; done
+  say "relaunch command: $cmd"
+  [ "$check" = 1 ] && { say "check only; no window opened"; exit 0; }
+  case "$(uname -s)" in
+    Darwin)
+      osascript -e 'tell application "Terminal" to activate' \
+                -e "tell application \"Terminal\" to do script \"$(printf '%s' "$cmd" | sed 's/\\/\\\\/g; s/"/\\"/g')\"" >/dev/null \
+        && { say "opened a Terminal window with the fenced session; close this session when it is up"; exit 0; } ;;
+    Linux)
+      for term in x-terminal-emulator gnome-terminal konsole xterm; do
+        command -v "$term" >/dev/null || continue
+        case "$term" in
+          gnome-terminal) "$term" -- bash -lc "$cmd; exec bash" ;;
+          *) "$term" -e bash -lc "$cmd; exec bash" ;;
+        esac && { say "opened a $term window with the fenced session; close this session when it is up"; exit 0; }
+      done ;;
+  esac
+  say "could not open a terminal window here; run this yourself in one:"; say "  $cmd"; exit 3
+fi
 
 # 6. Start, inside the fence. The session inherits these variables.
 export KAD_SRT_SETTINGS="$settings"

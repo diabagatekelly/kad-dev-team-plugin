@@ -126,8 +126,16 @@ writes Chrome's native-messaging file under `~/Library` or `~/.config`,
 paths the fence denies). The
 orchestrator's sandbox check reads the same settings file
 (`KAD_SRT_SETTINGS`) before it launches anything and names whatever is
-missing. Nothing outside `~/.config/kad-dev-team/` is written. The
-sections below say what each piece does by hand.
+missing. Nothing outside `~/.config/kad-dev-team/` is written.
+
+You can also start Claude the usual way and say "what's next": the
+orchestrator's first step finds the session is not in the fence, runs
+`kad --prepare` itself (asking you for the audit repository and extra
+domains the first time), and asks one question: restart in the fence,
+which opens a new terminal window with the fenced session on the project
+(`kad --relaunch`; you close the old one), or continue in this session
+with the per-command sandbox. The sections below say what each piece
+does by hand.
 
 ## Local development
 

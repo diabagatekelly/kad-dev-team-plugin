@@ -429,6 +429,26 @@ it at E.
    kind of failure: `1` for a failure a settings file can fix, `2` when
    the platform has no sandbox at all (native Windows today; the
    `platform` line names what each platform has).
+   - **Not under the sandbox runtime, on a platform that has one** (the
+     `platform` line names Seatbelt or bubblewrap and does not say "under
+     the sandbox runtime"): the stronger fence, the whole session inside
+     it, is one command away, and this is the moment to take it, before
+     anything is launched. Run inline
+     `bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --prepare --project '<project root>'`
+     (it writes the runtime's settings for this project under
+     `~/.config/kad-dev-team/`, installs nothing without saying so, and
+     asks nothing when its input is not a terminal: pass `--audit-repo
+     <url>` and `--domain <d>` for what the owner wants, asked with
+     `AskUserQuestion` when its stored answers are empty and `KAD_AUDIT_REPO`
+     is unset; `--chrome` when the slice touches UI). Then ask once, with
+     `AskUserQuestion`, one question: **restart in the fence** (run
+     `bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --relaunch --project '<project root>'`
+     with the same flags: a new terminal window opens with the fenced
+     session on this project; write the A line as `sandbox — restarting
+     under the runtime` and stop, the owner closes this session), or
+     **continue here** with the per-command sandbox, which goes on to the
+     bullets below. The fenced session's own A step finds `platform ...
+     under the sandbox runtime` and never asks this again.
    - Exit `1` (`settings`, `shell-secrets`, `read-secrets`, and `write` or
      `network` with the settings not yet in place): ask once, with
      `AskUserQuestion`, whether to write the block into this session's
@@ -935,7 +955,7 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | flow not started: no repository>`; policy — `<heavy | lite>`; delegation — `<file path | none>`; budget — `5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
+- **A. Start:** sandbox — `<PASS (<platform>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; policy — `<heavy | lite>`; delegation — `<file path | none>`; budget — `5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
 - **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r `<consults>`c; records `<sha>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
