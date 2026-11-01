@@ -112,7 +112,13 @@ any row, check whether a later artifact has invalidated an earlier one.
 Signals, all cheap to spot: a section headed "handed back," "blocking," or
 similar naming another persona; an artifact stating it contradicts or
 supersedes something upstream; an artifact whose own text says a stage was
-skipped for it.
+skipped for it. They sit at the **end** of the document that found the
+problem (a filled security or reliability document whose last section is
+the hand-back looks complete from its first screen), so read every
+planning document to its last line before matching a row; the table is
+consulted only once that scan has come up empty. A hand-back found after
+a forward step was already taken is a forward step that should not have
+happened, not a correction to narrate.
 
 When you find one, **route to the persona that owns the invalidated
 artifact — not the one that found the problem.** A security pass that
