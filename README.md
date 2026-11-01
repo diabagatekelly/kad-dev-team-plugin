@@ -443,7 +443,11 @@ use `/tmp` in place of `/private/tmp` and drop `allowPty`, which is
 macOS-only: there the runtime's profile denies the terminal devices
 without it, Claude Code's `setRawMode` fails with `EPERM`, and every
 arrow key and mouse report lands in the session as text (`^[[A`,
-`^[[<35;…M`). `allowWrite`'s `.` is where
+`^[[<35;…M`). The grant the runtime emits for it is every `/dev/ttys*`,
+not only the session's own terminal, so a command inside the fence can
+reach another terminal the same user has open; the runtime offers no
+narrower rule, and an interactive session cannot run without one. It is
+the one place the fence is as wide as the user's own terminals. `allowWrite`'s `.` is where
 `srt` starts, so start it from the project; add the registry a test run
 installs from (`registry.npmjs.org`) when the project needs it.
 Nothing inside the session can change that file, which is the point: the
