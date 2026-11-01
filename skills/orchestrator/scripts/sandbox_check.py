@@ -43,7 +43,9 @@ settings files only for what no probe can see:
    skips the IPv6 probe.
 4. env: no credential-shaped variable (a name containing SECRET, TOKEN,
    PASSWORD, PASSWD, CREDENTIAL, API_KEY, ACCESS_KEY, PRIVATE_KEY, or
-   ending in _KEY) reaches the shell. The sandbox's `credentials.envVars`
+   ending in _KEY) reaches the shell, except one the launcher `bin/kad`
+   names in `KAD_KEPT_ENV` (GH_TOKEN for the loop's delivery), which the
+   owner kept on purpose and the line reports as information. The sandbox's `credentials.envVars`
    can deny or mask them; a candidate's shell inherits whatever is left.
    Exactly two names are exempt because the session sets them itself and
    the user cannot unset them: `CLAUDE_CODE_MESSAGING_TOKEN` and the
@@ -87,8 +89,8 @@ settings files only for what no probe can see:
 Under the sandbox runtime (`srt claude`; the runtime sets
 `SANDBOX_RUNTIME=1` inside) the whole session is fenced, file tools, hooks
 and MCP servers included, by `~/.srt-settings.json` (or the file passed to
-`srt --settings`, which this script cannot see; `--srt-settings FILE`
-names it). The probes measure that fence like any other. The settings
+`srt --settings`, which this script cannot see unless `--srt-settings FILE`
+or `KAD_SRT_SETTINGS`, which the launcher `bin/kad` exports, names it). The probes measure that fence like any other. The settings
 checks then read the runtime's file: check 2 scans its
 `filesystem.allowWrite` (the project, the temp directories, `~/.claude`
 and `~/.claude.json` are expected there, nothing else); checks 5 and 6
@@ -322,7 +324,9 @@ def under_srt():
 
 
 def srt_settings_path(override):
-    return os.path.expanduser(override or "~/.srt-settings.json")
+    """--srt-settings, else KAD_SRT_SETTINGS (the launcher `bin/kad` exports the
+    file it passed to `srt --settings`), else the runtime's default path."""
+    return os.path.expanduser(override or os.environ.get("KAD_SRT_SETTINGS") or "~/.srt-settings.json")
 
 
 def load_srt_settings(path):
@@ -545,7 +549,9 @@ def check_write(project, settings, srt):
         # directories writable to run at all, so those are expected.
         key = "the runtime's filesystem.allowWrite"
         entries = get(srt, "filesystem", "allowWrite", default=[]) or []
-        roots += [os.path.realpath(expand(r)) for r in ("~/.claude", "~/.claude.json", "/tmp", "/private/tmp")]
+        # ~/.npm is npm's cache, which an install inside the project writes;
+        # the credential file ~/.npmrc is a separate path and stays denied.
+        roots += [os.path.realpath(expand(r)) for r in ("~/.claude", "~/.claude.json", "/tmp", "/private/tmp", "~/.npm")]
         if os.environ.get("CLAUDE_CODE_TMPDIR"):
             roots.append(os.path.realpath(os.environ["CLAUDE_CODE_TMPDIR"]))
     outside = []
@@ -585,8 +591,15 @@ def check_network():
 def check_env():
     names = sorted(n for n in os.environ if ENV_SECRET.search(n))
     exempt = [n for n in names if n in ENV_EXEMPT]
-    names = [n for n in names if n not in ENV_EXEMPT]
+    # KAD_KEPT_ENV: the launcher `bin/kad` names the variables it passed
+    # into the fence on purpose (GH_TOKEN for the loop's delivery); kept
+    # by the owner at launch, they are information, not a failure.
+    kept_names = set(os.environ.get("KAD_KEPT_ENV", "").split())
+    kept = [n for n in names if n in kept_names and n not in ENV_EXEMPT]
+    names = [n for n in names if n not in ENV_EXEMPT and n not in kept_names]
     note = ("; set by the session or its sandbox, exempt: " + ", ".join(exempt)) if exempt else ""
+    if kept:
+        note += "; kept by the owner at launch (KAD_KEPT_ENV): " + ", ".join(kept)
     if names:
         return False, "credential-shaped variables reach the shell: " + ", ".join(names) + " (unset them, or deny them in sandbox.credentials.envVars)" + note
     return True, "no credential-shaped variable in the environment" + note

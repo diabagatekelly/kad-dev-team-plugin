@@ -29,12 +29,11 @@ graders:
     input_match: '"skill"\s*:\s*"kad-dev-team:design-system"'
     min: 0
     max: 0
-  - type: tool_used
-    name: not-accessibility-review
-    tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
-    min: 0
-    max: 0
+  - type: regex
+    name: accessibility-review-only-after-screen-design
+    target: trace
+    pattern: '"skill"\s*:\s*"kad-dev-team:accessibility-review"[\s\S]*"skill"\s*:\s*"kad-dev-team:screen-design"'
+    match: not_contains
   - type: file_exists
     name: log-written
     path: docs/pay-fine/orchestrator-log.md
@@ -57,8 +56,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The orchestrator executes exactly one routed step per invocation, then reports what it detected, where it routed and what was produced, and asks whether to continue; it never chains into the next stage. Here the routed step is `ux-designer:screen-design`.
+      The orchestrator executes one routed step at a time: it reports what it detected, where it routed and what was produced, then continues to the next row in the same conversation, and asks the owner only when the next row needs an owner decision or a routed skill has a question of its own. Here the routed step is `ux-designer:screen-design`; once the screen design is written, the next row is `accessibility-engineer:accessibility-review` on it, which may run in the same conversation, reported as its own step.
 
-      PASS if the response ends in one of two ways: with screen-design's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is the second ending, not the orchestrator answering its questions. Either way nothing from a later stage (an accessibility review, technology-bootstrap or implementation) has been produced.
+      PASS if the response ends in one of these ways: with screen-design's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn); with the screen design reported as written and the flow stopped or asking whether to go on; or with that reported and the accessibility review started and reported in its own words (its findings, or its question to the owner). Nothing from a later stage (a build, a technology bootstrap) has been produced, and no design-system work was redone.
 
-      FAIL if the response goes on to run or produce a later stage's work, or if the routed skill had stopped to ask the user something and the response answers that question itself from the repository and carries on past it, or if it routes to something other than screen-design.
+      FAIL if the response goes forward to a build or a technology bootstrap, redoes the design system, answers a routed skill's question itself from the repository and carries on past it, or routes first to something other than screen-design.

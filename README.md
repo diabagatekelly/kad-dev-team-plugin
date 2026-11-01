@@ -93,13 +93,76 @@ criteria, stack selection, and screen design by the actual personas. Most
 changes to this plugin came from watching that run break, so its
 `summary.md` is usually the best explanation of why a rule exists.
 
+## Starting a session: `bin/kad`
+
+Everything a real run needs is one command, run from the project's root:
+
+```bash
+<plugin root>/bin/kad            # alias kad=<plugin root>/bin/kad once, then just: kad
+kad --check                      # show what it would do, start nothing
+kad -- --resume                  # arguments after -- go to claude
+```
+
+It checks the platform and the tools (macOS, Linux and WSL2 have the
+runtime's backend; native Windows is told to use WSL2; `claude` and
+`python3` must be on PATH; the sandbox runtime is offered for install
+when missing), writes the runtime's settings for this project under
+`~/.config/kad-dev-team/srt/` (writes allowed to the project, Claude
+Code's config directory, the temp directory and npm's cache, with the
+user settings, hooks, commands, agents, skills and plugins under that
+config directory denied so nothing an agent writes outlives the session;
+the credential paths denied for reading; the network allowed to the API,
+sign-in and GitHub plus the domains you add), drops credential-shaped
+variables from the environment the session inherits (`--keep-env NAME`
+passes one through, and the orchestrator's check then names it), gives
+the session what the loop's commits, pushes, pull requests, issues and
+audit sync need inside the fence (the host's GitHub login from `gh auth
+token` as `GH_TOKEN`, the one credential the session holds, which the
+orchestrator's check reports as kept; `--gh-token-env NAME` takes a
+fine-grained token for the one repository instead, narrower than the
+login's scope; a session-local `gh` config directory, since its own is
+on the deny list; `gh` as git's credential helper in place of the
+keychain the fence refuses; and the runtime's TLS termination, without
+which `gh` cannot verify a certificate on macOS), turns
+audit mode on with the audit repository you named, and starts `srt
+claude --plugin-dir <this plugin>` inside that fence, so the Read tool,
+hooks and every agent are inside it too. The first run asks two
+questions, the audit repository and any extra domains
+(`registry.npmjs.org` for npm installs), and stores the answers,
+owner-readable only, in `~/.config/kad-dev-team/launcher.json`; `kad
+--reset` asks again, `--audit-repo`, `--domain` and `--no-audit` change
+one run and store nothing; `kad --check` shows the plan and writes
+nothing. Local
+ports are allowed by default (a dev server, its tests and the loop's
+smoke run bind and reach `localhost`; `--no-local` denies them for a
+slice that touches no port). `kad --chrome` adds the extension's bridge
+domain and starts `claude --chrome`, so Claude in Chrome can open
+`localhost:3000` in your real Chrome, which runs outside the fence; enable
+the extension once outside the fence first (`claude --chrome`, which
+writes Chrome's native-messaging file under `~/Library` or `~/.config`,
+paths the fence denies). The
+orchestrator's sandbox check reads the same settings file
+(`KAD_SRT_SETTINGS`) before it launches anything and names whatever is
+missing. The launcher itself writes nothing outside
+`~/.config/kad-dev-team/`; the session it starts writes where the
+settings allow.
+
+You can also start Claude the usual way and say "what's next": the
+orchestrator's first step finds the session is not in the fence, runs
+`kad --prepare` itself (asking you for the audit repository and extra
+domains the first time), and asks one question: restart in the fence,
+which opens a new terminal window with the fenced session on the project
+(`kad --relaunch`; you close the old one), or continue in this session
+with the per-command sandbox. The sections below say what each piece
+does by hand.
+
 ## Local development
 
 Load this plugin directly from disk without installing it, so changes take
 effect on the next restart:
 
 ```bash
-claude --plugin-dir /Users/kellydiabagate/Documents/kad-developer-suite
+claude --plugin-dir <plugin root>
 ```
 
 You can combine this with other `--plugin-dir` flags to load alongside other
