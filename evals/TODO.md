@@ -3119,3 +3119,10 @@ to end and the stall rule stay with the real runs.
       predated PR 2 were re-frozen (phase 1 re-run, phase 2 and 3
       re-frozen in turn), all at bar but security phase 3 at 0.89 as
       measured. The evidence check is green for all 68 affected cases.
+
+- [ ] K5. Issue #25, the owner's pick (2026-11-01): the slicer writes the
+      accessibility line as not applicable when its thin path names no
+      screen, and the orchestrator reads that as filled (a screen with that
+      line is a backward route to the slicer). `vertical-slicing-no-screen`
+      is the case; the non-UI fixture slices carry the line. Calibrate,
+      record, re-record what the two skill edits reach. Run.

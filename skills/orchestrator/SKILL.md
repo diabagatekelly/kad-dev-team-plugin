@@ -84,7 +84,13 @@ mechanical checks only, never a semantic read of full artifact prose:
   conclude one doesn't exist just because the root came up empty. If it has
   one, does it still carry an unfilled accessibility-criteria placeholder
   (naming `accessibility-engineer`, or, in artifacts written before this
-  persona existed, an explicit not-authored-here placeholder)?
+  persona existed, an explicit not-authored-here placeholder)? A slice
+  whose thin path names no screen carries, by `vertical-slicing`'s rule,
+  an accessibility line saying `not applicable, this slice has no screen`:
+  read that as filled, route no review, and treat the slice as not
+  UI-touching for every row below. That line on a slice whose thin path
+  does describe a screen is a slicer mistake: a backward route to
+  `product-slicer`, not a review you run around it.
 - **Project-level, not per-unit:** is there a technology-bootstrap artifact
   in the target directory? If not, take the user's word for whether this
   project already has a working stack — a repo someone has been building in

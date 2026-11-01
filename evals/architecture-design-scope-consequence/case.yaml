@@ -18,23 +18,30 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
     min: 1
+  - type: regex
+    name: slice-and-requirements-untouched
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/cancel-hold/(?:slice-001|requirements-001)\.md"'
+    match: not_contains
   - type: llm
     name: hands-back-to-the-requirements-owner
     focus: last_message
     weight: 1
     criteria: |
-      The slice's third acceptance criterion needs the other members' holds to survive a service restart. Holds live in memory today, so meeting it means persisting holds, and the Active requirements document confirms out "keeping holds across a restart" and forbids a new table or migration. A recommendation whose consequence changes something the requirements confirm is a hand-back to `product-manager:requirements-refinement`, not a consequence to accept inside the design: the requirement is revised by the stage that owns it, and the design decision that depends on it waits.
+      The slice's third acceptance criterion needs the other members' holds to survive a service restart; the Active requirements confirm out keeping holds across a restart and forbid a new table or migration. A design cannot meet both. The rule for the architect: say so, and present it as a hand-back to the stage that owns the document being changed (product-manager or requirements-refinement for the requirement, product-slicer for the criterion), the design decision that depends on it waiting. Saying which way it leans ("I'd drop the restart clause") is allowed and is NOT resolving it: resolving it would be editing the criterion or the requirement, or designing persistence, a table or a migration. Asking the owner to settle it, or to take it to that stage, is the hand-back in this session, where no other persona can be reached.
 
-      PASS if the response names the conflict (the restart criterion against the confirmed-out line or the no-new-table constraint) and says it must be settled by the stage that owns the document being changed, before the design can decide persistence: product-manager or requirements-refinement for the requirement, product-slicer or vertical-slicing for the criterion; either is the hand-back. Asking the owner to take it there, recording it as an open question for that stage, saying it is not a design choice, or saying the design is reopened once the document is revised, all count. The response may also say which way it would lean.
+      PASS if the reply names the conflict between the restart criterion and the confirmed-out line (or the no-new-table constraint), says it is not the design's to settle (a requirements or slice question, for the owner, requirements-refinement, product-manager or product-slicer), and leaves the restart part undecided in the design, whatever recommendation it offers.
 
-      FAIL if it resolves the conflict itself (drops or rewords the criterion, designs persistence, a table or a migration, or treats the criterion as already satisfied by the in-memory queue), presents it as a trade-off accepted inside the design, or does not name the conflict at all.
+      FAIL only if the reply does not name the conflict, or says the architect settled it (the criterion reworded or dropped by the architect, persistence designed in, a table or migration added), or treats the criterion as satisfied by the in-memory queue.
   - type: llm
     name: does-not-approve-around-it
-    focus: last_message
+    focus:
+      source: file
+      path: docs/cancel-hold/design-001.md
     weight: 1
     criteria: |
-      While the hand-back is open, the design is not approved: the parts that do not depend on the handed-back requirement may be drafted and saved (CancelHold, the port's removal operation, the in-memory adapter, the outcome shapes), but the persistence question stays open and no decision assumes an answer to it.
+      While the restart conflict is handed back, the design is a draft around an open question: the parts that do not depend on it may be designed and decided (the cancel use case, the port's removal operation, the in-memory adapter, the outcome shapes), but the question stays open in the document and no decision records holds surviving a restart, or a persistent store, as settled.
 
-      PASS if the response leaves the restart question open (an open question, a hand-back, a question for the owner) and records no decision that holds survive a restart or that they do not; a design file saved as a draft, and decisions on the independent parts (atomic removal, renumbering, duplicate holds, rejection against failure), do not count as approving around it.
+      PASS if the document records the restart conflict as open (an open question, a hand-back, a question for the owner, with who settles it) and no decision in it settles persistence across a restart either way. Decisions on the independent parts, and the document calling itself a design, do not count against it.
 
-      FAIL if it reports the design as approved with the conflict settled, records a decision about persistence across a restart as made, or satisfies the criterion by reinterpreting it.
+      FAIL if the document presents persistence across a restart as decided (a persistent queue designed, a table or migration, or the criterion declared satisfied by the in-memory queue), or if the conflict appears nowhere in it.

@@ -1,0 +1,40 @@
+schema_version: "1.0"
+name: vertical-slicing-no-screen
+description: "Issue #25: a first slice whose thin path names no screen (cancelling a hold as a use case; the staff route and the portal are later) carries an accessibility line that says not applicable, this slice has no screen, instead of a placeholder for a review of nothing; the security and reliability placeholders stay real. A thin path that does name a screen keeps the real accessibility placeholder: the grader checks the line matches the thin path either way."
+tags: [vertical-slicing, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for a new feature are in `docs/cancel-hold/`, and the requirements are agreed. Work out what we build first and save it as `docs/cancel-hold/slice-001.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:vertical-slicing"'
+    min: 1
+  - type: file_exists
+    name: slice-written
+    path: docs/cancel-hold/slice-001.md
+  - type: llm
+    name: accessibility-line-matches-the-thin-path
+    focus:
+      source: file
+      path: docs/cancel-hold/slice-001.md
+    weight: 1
+    criteria: |
+      The slicer writes three placeholder criteria on every slice: security, reliability, accessibility. The one judgment it may make is about its own thin path: when the thin path names no screen or view a person looks at and acts on (a use case behind a route a later slice adds), the accessibility line says it is not applicable because the slice has no screen, naming `accessibility-engineer:accessibility-review` for when one is added, instead of a placeholder waiting for a review of nothing. When the thin path does describe a screen, the accessibility line is the real placeholder for that persona, not authored.
+
+      Read the thin path first. PASS if the accessibility line matches it: a thin path with no screen has the not-applicable line (in those words or their plain equivalent: no screen, no UI, nothing to review until a screen exists) that still names the accessibility persona; a thin path with a screen has an unauthored accessibility placeholder naming that persona. The security and reliability lines are placeholders naming `devsecops-engineer` in either case, not criteria written out.
+
+      FAIL if the accessibility line is missing, if a screenless thin path keeps a plain placeholder waiting for a review, if a thin path with a screen is marked not applicable, if the accessibility criteria are authored by the slicer, or if the security or reliability placeholder is missing or written out.
+  - type: regex
+    name: leaves-the-planning-docs-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/cancel-hold/(?:problem|requirements-001)\.md"'
+    match: not_contains

@@ -178,15 +178,16 @@
     ]
   },
   "architecture-design-scope-consequence": {
-    "score": 0.667,
+    "score": 0.917,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.316",
-    "source": "results/gate-20261031T170425-architecture-design-scope-consequence.json",
+    "source": "results/gate-20261101T105453-architecture-design-scope-consequence.json",
     "graders": {
       "does-not-approve-around-it": 0.667,
-      "hands-back-to-the-requirements-owner": 0.333,
-      "skill-invoked": 1.0
+      "hands-back-to-the-requirements-owner": 1.0,
+      "skill-invoked": 1.0,
+      "slice-and-requirements-untouched": 1.0
     },
     "skills_invoked": [
       "architecture-design",
@@ -2661,6 +2662,23 @@
       "no-slice-in-the-reply": 1.0,
       "skill-invoked": 1.0,
       "writes-no-slice": 1.0
+    },
+    "skills_invoked": [
+      "acceptance-criteria",
+      "vertical-slicing"
+    ]
+  },
+  "vertical-slicing-no-screen": {
+    "score": 1.0,
+    "runs": 1,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T104425-vertical-slicing-no-screen.json",
+    "graders": {
+      "accessibility-line-matches-the-thin-path": 1.0,
+      "leaves-the-planning-docs-alone": 1.0,
+      "skill-invoked": 1.0,
+      "slice-written": 1.0
     },
     "skills_invoked": [
       "acceptance-criteria",

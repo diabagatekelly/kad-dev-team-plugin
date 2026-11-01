@@ -21,6 +21,8 @@ removes it from the title's queue, and the use case says it was cancelled.
   the second request is a rejection, never an error; if the hold queue
   can't be reached, the result is a failure the caller sees, and nothing is
   half-removed.
+- Accessibility: not applicable, this slice has no screen
+  (`accessibility-engineer:accessibility-review` when one is added).
 
 ## Explicitly deferred
 
