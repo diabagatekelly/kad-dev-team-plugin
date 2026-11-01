@@ -104,18 +104,26 @@ kad -- --resume                  # arguments after -- go to claude
 ```
 
 It checks the platform and the tools (macOS, Linux and WSL2 have the
-runtime's backend; native Windows is told to use WSL2; the sandbox runtime
-is offered for install when missing), writes the runtime's settings for
-this project under `~/.config/kad-dev-team/srt/` (writes allowed to the
-project, Claude Code's own paths, the temp directory and npm's cache; the
-credential paths denied for reading; the network allowed to the API,
-sign-in and GitHub plus the domains you add), turns audit mode on with
-the audit repository you named, and starts `srt claude --plugin-dir <this
-plugin>` inside that fence, so the Read tool, hooks and every agent are
-inside it too. The first run asks two questions, the audit repository and
-any extra domains (`registry.npmjs.org` for npm installs), and stores the
-answers in `~/.config/kad-dev-team/launcher.json`; `kad --reset` asks
-again, `--audit-repo`, `--domain` and `--no-audit` change one run. Local
+runtime's backend; native Windows is told to use WSL2; `claude` and
+`python3` must be on PATH; the sandbox runtime is offered for install
+when missing), writes the runtime's settings for this project under
+`~/.config/kad-dev-team/srt/` (writes allowed to the project, Claude
+Code's config directory, the temp directory and npm's cache, with the
+user settings, hooks, commands, agents, skills and plugins under that
+config directory denied so nothing an agent writes outlives the session;
+the credential paths denied for reading; the network allowed to the API,
+sign-in and GitHub plus the domains you add), drops credential-shaped
+variables from the environment the session inherits (`--keep-env NAME`
+passes one through, and the orchestrator's check then names it), turns
+audit mode on with the audit repository you named, and starts `srt
+claude --plugin-dir <this plugin>` inside that fence, so the Read tool,
+hooks and every agent are inside it too. The first run asks two
+questions, the audit repository and any extra domains
+(`registry.npmjs.org` for npm installs), and stores the answers,
+owner-readable only, in `~/.config/kad-dev-team/launcher.json`; `kad
+--reset` asks again, `--audit-repo`, `--domain` and `--no-audit` change
+one run and store nothing; `kad --check` shows the plan and writes
+nothing. Local
 ports are allowed by default (a dev server, its tests and the loop's
 smoke run bind and reach `localhost`; `--no-local` denies them for a
 slice that touches no port). `kad --chrome` adds the extension's bridge
@@ -126,7 +134,9 @@ writes Chrome's native-messaging file under `~/Library` or `~/.config`,
 paths the fence denies). The
 orchestrator's sandbox check reads the same settings file
 (`KAD_SRT_SETTINGS`) before it launches anything and names whatever is
-missing. Nothing outside `~/.config/kad-dev-team/` is written.
+missing. The launcher itself writes nothing outside
+`~/.config/kad-dev-team/`; the session it starts writes where the
+settings allow.
 
 You can also start Claude the usual way and say "what's next": the
 orchestrator's first step finds the session is not in the fence, runs
