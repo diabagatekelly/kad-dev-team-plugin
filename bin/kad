@@ -210,6 +210,13 @@ case "$stored_audit" in True|true) stored_audit=1 ;; False|false) stored_audit=0
 # being chosen here.
 audit="${audit:-$stored_audit}"
 audit_repo="${audit_repo_arg:-$stored_repo}"
+# The audit repository is a separate repository: the sync pushes the audit
+# documents onto its default branch, which on the project's own repository
+# means onto the project.
+if [ -n "$audit_repo" ] && origin="$(git -C "$project" remote get-url origin 2>/dev/null)"; then
+  norm() { printf '%s' "$1" | sed -e 's#\.git$##' -e 's#/$##' -e 's#^git@github\.com:#https://github.com/#'; }
+  [ "$(norm "$audit_repo")" = "$(norm "$origin")" ] && say "warning: the audit repository is this project's own origin; the audit sync would push audit documents onto the project's default branch. Use a separate repository (kad --audit-repo URL for this run, kad --reset to store a new one)"
+fi
 
 # 3a. GitHub, for the loop's delivery inside the fence. gh's own config
 #     directory is on the deny list (it holds the login), so the session
@@ -312,7 +319,7 @@ if [ "$relaunch" = 1 ]; then
   again=()
   for a in "${orig_args[@]}"; do [ "$a" = --relaunch ] || [ "$a" = --check ] || [ "$a" = --install-runtime ] || again+=("$a"); done
   cmd="cd $(printf '%q' "$project") && $(printf '%q' "$root/bin/kad")"
-  for a in "${again[@]}"; do cmd="$cmd $(printf '%q' "$a")"; done
+  for a in ${again[@]+"${again[@]}"}; do cmd="$cmd $(printf '%q' "$a")"; done
   say "relaunch command: $cmd"
   [ "$check" = 1 ] && { say "check only; no window opened"; exit 0; }
   case "$(uname -s)" in
@@ -354,4 +361,6 @@ if [ "$audit" = 1 ]; then
 fi
 cd "$project"
 chrome_arg=(); [ "$chrome" = 1 ] && chrome_arg=(--chrome)
-exec srt --settings "$settings" claude "${plugin_arg[@]}" "${chrome_arg[@]}" "${claude_args[@]}"
+# ${arr[@]+"${arr[@]}"}: an empty array expands to nothing; the plain form is
+# an unbound variable under set -u in bash 3.2 (macOS's /bin/bash)
+exec srt --settings "$settings" claude ${plugin_arg[@]+"${plugin_arg[@]}"} ${chrome_arg[@]+"${chrome_arg[@]}"} ${claude_args[@]+"${claude_args[@]}"}
