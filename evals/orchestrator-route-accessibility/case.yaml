@@ -23,10 +23,11 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
     min: 1
-  - type: tool_order
+  - type: regex
     name: screen-design-only-after-the-review
-    before: {tool: Skill, input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'}
-    after: {tool: Skill, input_match: '"skill"\s*:\s*"kad-dev-team:screen-design"'}
+    target: trace
+    pattern: '"skill"\s*:\s*"kad-dev-team:screen-design"[\s\S]*"skill"\s*:\s*"kad-dev-team:accessibility-review"'
+    match: not_contains
   - type: tool_used
     name: not-technology-bootstrap
     tool: Skill

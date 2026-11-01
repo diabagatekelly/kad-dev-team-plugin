@@ -521,6 +521,15 @@
     "claude_version": "2.1.316",
     "recorded": "2026-11-01T01:39:20Z"
   },
+  "orchestrator-route-accessibility": {
+    "inputs": "6d58376720055e76ae72130635193b13ac22c9d40e82efd70329224d59bd5c9a",
+    "score": 1.0,
+    "bar": 0.958,
+    "runs": 1,
+    "source": "results/gate-20261101T014734-orchestrator-route-accessibility.json",
+    "claude_version": "2.1.316",
+    "recorded": "2026-11-01T01:48:46Z"
+  },
   "orchestrator-route-backward-requirements": {
     "inputs": "48a11d24a92f9351bbb2b31685ddf53aa33faf1ffa897ae93a775303cffd69f3",
     "score": 1.0,

@@ -3108,6 +3108,14 @@ to end and the stall rule stay with the real runs.
       (judge losses on last-message graders, see the rows). Two more real
       defects on the way (the gate command and the log; resuming from a
       handoff that names E), both fixed.
-- [ ] K4. Re-record the cases the v4 skill edits reach (the
-      orchestrator's routing cases, the three tdd chunk cases, the triage
-      case): `gate.sh --stale` (or `wsl-gate.sh --stale`). Run.
+- [x] K4. Re-record the cases the v4 skill edits reach: `gate.sh --stale`
+      three times over the day (2026-10-31), 49/58, then 27/28, then the
+      last case, as the skill edits re-staled them. Two accessibility
+      graders and three routing graders still encoded v3 rules (criteria
+      in the slice, one step per invocation) and now follow PR 2's; the
+      backward-route case exposed the orchestrator matching the forward
+      table before reading a hand-back at the end of a document, fixed in
+      the skill. The four history chains whose frozen phase-1 text
+      predated PR 2 were re-frozen (phase 1 re-run, phase 2 and 3
+      re-frozen in turn), all at bar but security phase 3 at 0.89 as
+      measured. The evidence check is green for all 68 affected cases.

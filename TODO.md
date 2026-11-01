@@ -163,9 +163,10 @@ until a `git` shim in Homebrew's `sbin` was found to be reachable there
 well. All seventeen bars are recorded from the Mac (K3 in `evals/TODO.md`,
 2026-10-31); the second pass over the loop cases found and fixed two more
 defects (the gate command never allowed the loop's own uncommitted log;
-a handoff naming E was resumed by invoking `delivery` directly). What is
-left of PR 3 is K4, the stale re-record of the cases the skill edits
-reach, then the push.
+a handoff naming E was resumed by invoking `delivery` directly). K4, the
+stale re-record of every case the skill edits reach, is done (68/68 with
+evidence, 2026-10-31; four history chains re-frozen after PR 2 on the
+way); PR 3 is pushed.
 
 - [x] 3.1 Cases 1–12 on `evals/fixtures/library-app/`, each with graders, per `evals/README.md`; bars recorded with `record_thresholds.py` after calibration.
 - [x] 3.2 `evals/tools/cost_by_role.py` (copy from `audit-docs/personal-finance-tracker-2-slice-1/plugin-review/tools/cost_by_role.py`; per-model prices; prints the E-line total).

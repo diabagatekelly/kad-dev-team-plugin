@@ -1081,25 +1081,26 @@
     ]
   },
   "orchestrator-route-accessibility": {
-    "score": 1.0,
+    "score": 0.958,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261015T140248-orchestrator-route-accessibility.json",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T014315-orchestrator-route-accessibility.json",
     "graders": {
       "log-names-row-and-artifact": 1.0,
       "log-written": 1.0,
-      "not-screen-design": 1.0,
       "not-tdd-implementation": 1.0,
       "not-technology-bootstrap": 1.0,
       "orchestrator-invoked": 1.0,
       "routes-to-accessibility-review": 1.0,
+      "screen-design-only-after-the-review": 0.667,
       "stops-after-the-routed-step": 1.0
     },
     "skills_invoked": [
       "accessibility-review",
       "orchestrator",
-      "reliability-requirements"
+      "reliability-requirements",
+      "screen-design"
     ]
   },
   "orchestrator-route-backward-requirements": {
