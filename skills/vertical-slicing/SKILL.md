@@ -72,14 +72,20 @@ The first slice should:
   placeholders keep the gaps visible instead of any going missing
   silently. Shipping without all three placeholders is a gap, not a
   deferral. The one judgment that is yours: when the thin path you wrote
-  names no screen or view a person looks at and acts on (a use case
-  behind a route that a later slice adds, a job, an import), the
-  accessibility line says so instead of waiting for a review of nothing:
+  has no user-facing interface at all (an import, a scheduled job, an API
+  that an existing client calls, a command), the accessibility line says
+  so instead of waiting for a review of nothing:
   `Accessibility: not applicable, this slice has no screen
-  (accessibility-engineer:accessibility-review when one is added)`. The
-  orchestrator reads that line as filled and never routes the review; a
-  thin path that does describe a screen gets the real placeholder, and
-  that line on such a slice is your mistake to fix, not a deferral.
+  (accessibility-engineer:accessibility-review when one is added)`.
+  "Screen" here means anything a person perceives and acts on, visual or
+  not: a voice or audio flow, a document a person reads, a notification
+  they receive are screens for this rule and get the real placeholder.
+  The orchestrator reads the not-applicable line as filled and never
+  routes the review. It is not a way to defer the interface: the
+  end-to-end rule below still applies, so the person still reaches and
+  observes the behaviour through something that exists. A thin path that
+  does describe an interface gets the real placeholder, and the
+  not-applicable line on such a slice is your mistake to fix.
 - **Still be genuinely end-to-end**, even if narrow. A slice that skips the
   "view the result" step to save time isn't a slice — it's half of one.
 - **Has a real user as its actor.** If the actor is "the system" or "a

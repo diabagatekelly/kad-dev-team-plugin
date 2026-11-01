@@ -3120,9 +3120,14 @@ to end and the stall rule stay with the real runs.
       re-frozen in turn), all at bar but security phase 3 at 0.89 as
       measured. The evidence check is green for all 68 affected cases.
 
-- [ ] K5. Issue #25, the owner's pick (2026-11-01): the slicer writes the
-      accessibility line as not applicable when its thin path names no
-      screen, and the orchestrator reads that as filled (a screen with that
-      line is a backward route to the slicer). `vertical-slicing-no-screen`
-      is the case; the non-UI fixture slices carry the line. Calibrate,
-      record, re-record what the two skill edits reach. Run.
+- [x] K5. Issue #25, the owner's pick (2026-11-01): the slicer writes the
+      accessibility line as not applicable when its thin path has no
+      user-facing interface (nonvisual ones count as screens; the
+      exemption never defers the interface), and the orchestrator requires
+      the status either way: the line read as filled on a non-UI slice, a
+      plain placeholder or none on such a slice and the line on a UI slice
+      both routed back to the slicer. `vertical-slicing-no-screen` (1.00
+      in 3/3) and `orchestrator-route-slicer-accessibility-mistake` (1.00
+      in 3/3) are the cases, `vertical-slicing-payfine-phase1` fails the
+      line on its portal slice, and the non-UI fixture slices carry it.
+      31 affected cases re-recorded at bar.

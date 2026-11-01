@@ -1289,6 +1289,24 @@
       "screen-design"
     ]
   },
+  "orchestrator-route-slicer-accessibility-mistake": {
+    "score": 1.0,
+    "runs": 1,
+    "mode": "gate",
+    "claude_version": "2.1.316",
+    "source": "results/gate-20261101T111421-orchestrator-route-slicer-accessibility-mistake.json",
+    "graders": {
+      "log-names-the-mismatch": 1.0,
+      "no-accessibility-review": 1.0,
+      "no-build": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-back-to-the-slicer": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "vertical-slicing"
+    ]
+  },
   "orchestrator-route-slicing": {
     "score": 1.0,
     "runs": 3,
@@ -2670,10 +2688,10 @@
   },
   "vertical-slicing-no-screen": {
     "score": 1.0,
-    "runs": 1,
+    "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.316",
-    "source": "results/gate-20261101T104425-vertical-slicing-no-screen.json",
+    "source": "results/gate-20261101T111337-vertical-slicing-no-screen.json",
     "graders": {
       "accessibility-line-matches-the-thin-path": 1.0,
       "leaves-the-planning-docs-alone": 1.0,
