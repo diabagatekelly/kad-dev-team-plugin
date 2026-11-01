@@ -1260,13 +1260,13 @@
     "recorded": "2026-11-01T10:52:33Z"
   },
   "vertical-slicing-no-screen": {
-    "inputs": "8ca2059afdba9ba5c8ee768a5be378bd24652c274d9bae2e33004e84f8e376f3",
+    "inputs": "290f0b787ad0be9d454a36d0db6bdced3004536f19e6c45689c1743e38e42788",
     "score": 1.0,
-    "bar": null,
-    "runs": 1,
-    "source": "results/gate-20261101T104425-vertical-slicing-no-screen.json",
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261101T105639-rerun-vertical-slicing-no-screen.json",
     "claude_version": "2.1.316",
-    "recorded": "2026-11-01T10:52:33Z"
+    "recorded": "2026-11-01T10:58:03Z"
   },
   "vertical-slicing-payfine-phase1": {
     "inputs": "8cbf65da89bc55ecbb61d893945ee88b0ffe3e269ac9fdc8d3410e581dfb99c2",
