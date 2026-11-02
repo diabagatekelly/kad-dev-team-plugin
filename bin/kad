@@ -58,7 +58,10 @@
 #   --audit-repo URL   audit repository for this run only (stored answers unchanged)
 #   --domain D         extra allowed domain for this run (repeatable)
 #   --chrome           Claude in Chrome: allows the extension's bridge domain
-#                      and starts claude --chrome (enable it once outside the
+#                      and the unix socket its native host listens on
+#                      (/tmp/claude-mcp-browser-bridge-<user>/, which the fence
+#                      blocks by default: run 3 never reached a browser), and
+#                      starts claude --chrome (enable it once outside the
 #                      fence first: it writes Chrome's native-messaging file
 #                      under ~/Library or ~/.config, which the fence denies)
 #   --no-local         deny local ports; by default sandboxed commands may
@@ -278,12 +281,17 @@ fi
 #    the full path, so two projects never share one.
 slug="$(printf '%s' "$(basename "$project")" | tr -c 'A-Za-z0-9_.-' '_')-$(printf '%s' "$project" | shasum -a 256 2>/dev/null | cut -c1-12 || printf '%s' "$project" | sha256sum | cut -c1-12)"
 settings="$conf_dir/srt/$slug.json"
-[ "$chrome" = 1 ] && domains_arg+=("bridge.claudeusercontent.com")
+chrome_sock=""
+if [ "$chrome" = 1 ]; then
+  domains_arg+=("bridge.claudeusercontent.com")
+  chrome_sock="/tmp/claude-mcp-browser-bridge-$(id -un)"
+  [ "$(uname -s)" = Linux ] && say "chrome on Linux allows every unix socket (the runtime cannot allow one path there); the SSH agent and Docker sockets are reachable for this session"
+fi
 claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 gen_settings() {
-  KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_CLAUDE_DIR="$claude_dir" KAD_GH_DIR="$gh_dir" KAD_AUDIT_DIR_W="$audit_dir" \
+  KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_CLAUDE_DIR="$claude_dir" KAD_GH_DIR="$gh_dir" KAD_AUDIT_DIR_W="$audit_dir" KAD_CHROME_SOCK="$chrome_sock" \
   KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains ${domains_arg[*]:-}" KAD_PTY="$([ "$(uname -s)" = Darwin ] && echo 1 || echo 0)" python3 -I - <<'PY'
-import json, os
+import json, os, sys
 home = os.path.expanduser("~")
 claude_dir = os.path.abspath(os.path.expanduser(os.environ["KAD_CLAUDE_DIR"]))
 secrets = ["~/.ssh", "~/.aws", "~/.gnupg", "~/.kube", "~/.config/gcloud", "~/.azure", "~/.config/gh",
@@ -318,6 +326,16 @@ settings = {
     # certificate on macOS, since the fence refuses the system trust service
     "network": {"allowedDomains": domains, "deniedDomains": [], "allowLocalBinding": os.environ["KAD_LOCAL"] == "1", "tlsTerminate": {}},
 }
+# --chrome: Claude Code reaches the extension through a unix socket the
+# native host (spawned by Chrome, outside the fence) listens on under
+# /tmp/claude-mcp-browser-bridge-<user>/; the runtime blocks every unix
+# socket unless allowed. macOS takes a path allowlist; on Linux the path
+# list is ignored (seccomp cannot filter by path), so it is all or nothing.
+if os.environ["KAD_CHROME_SOCK"]:
+    if sys.platform == "darwin":
+        settings["network"]["allowUnixSockets"] = [os.environ["KAD_CHROME_SOCK"]]
+    else:
+        settings["network"]["allowAllUnixSockets"] = True
 # allowPty (macOS only; the runtime's Seatbelt profile denies /dev/ptmx and
 # /dev/ttys* without it): Claude Code puts the terminal into raw mode to
 # read keys; denied, the terminal driver echoes every arrow key and mouse
