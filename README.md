@@ -149,12 +149,14 @@ plan and writes nothing; `--install-runtime` installs the sandbox runtime
 without asking when it is missing. Local
 ports are allowed by default (a dev server, its tests and the loop's
 smoke run bind and reach `localhost`; `--no-local` denies them for a
-slice that touches no port). `kad --chrome` adds the extension's bridge
-domain, allows the unix socket the extension's native host listens on
-(`/tmp/claude-mcp-browser-bridge-<user>/`; the fence blocks every unix
-socket by default, which is why run 3 never reached a browser; on Linux
-the runtime cannot allow one path, so every unix socket is allowed for
-that session) and starts `claude --chrome`, so Claude in Chrome can open
+slice that touches no port). `kad --chrome` allows the extension's bridge
+host and Anthropic's MCP proxy and tunnels both past the runtime's TLS
+termination, which refuses the WebSocket upgrade the bridge needs (the
+reason run 3 never reached a browser: `upgrade request refused` in the
+runtime's debug log); it also allows the unix socket the extension's
+native host listens on (`/tmp/claude-mcp-browser-bridge-<user>/`; on
+Linux the runtime cannot allow one path, so every unix socket is allowed
+for that session) and starts `claude --chrome`, so Claude in Chrome can open
 `localhost:3000` in your real Chrome, which runs outside the fence; enable
 the extension once outside the fence first (`claude --chrome`, which
 writes Chrome's native-messaging file under `~/Library` or `~/.config`,

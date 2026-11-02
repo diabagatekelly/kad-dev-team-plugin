@@ -57,13 +57,15 @@
 #   --no-audit         KAD_AUDIT unset for this run
 #   --audit-repo URL   audit repository for this run only (stored answers unchanged)
 #   --domain D         extra allowed domain for this run (repeatable)
-#   --chrome           Claude in Chrome: allows the extension's bridge domain
-#                      and the unix socket its native host listens on
-#                      (/tmp/claude-mcp-browser-bridge-<user>/, which the fence
-#                      blocks by default: run 3 never reached a browser), and
-#                      starts claude --chrome (enable it once outside the
-#                      fence first: it writes Chrome's native-messaging file
-#                      under ~/Library or ~/.config, which the fence denies)
+#   --chrome           Claude in Chrome: allows the extension's bridge host and
+#                      Anthropic's MCP proxy, tunnels both past the runtime's
+#                      TLS termination (it refuses the WebSocket upgrade the
+#                      bridge needs: run 3 never reached a browser), allows the
+#                      unix socket the extension's native host listens on
+#                      (/tmp/claude-mcp-browser-bridge-<user>/), and starts
+#                      claude --chrome (enable it once outside the fence
+#                      first: it writes Chrome's native-messaging file under
+#                      ~/Library or ~/.config, which the fence denies)
 #   --no-local         deny local ports; by default sandboxed commands may
 #                      bind and reach localhost, which a dev server, its
 #                      tests and the loop's smoke run need (other local
@@ -283,7 +285,7 @@ slug="$(printf '%s' "$(basename "$project")" | tr -c 'A-Za-z0-9_.-' '_')-$(print
 settings="$conf_dir/srt/$slug.json"
 chrome_sock=""
 if [ "$chrome" = 1 ]; then
-  domains_arg+=("bridge.claudeusercontent.com")
+  domains_arg+=("bridge.claudeusercontent.com" "mcp-proxy.anthropic.com")
   chrome_sock="/tmp/claude-mcp-browser-bridge-$(id -un)"
   [ "$(uname -s)" = Linux ] && say "chrome on Linux allows every unix socket (the runtime cannot allow one path there); the SSH agent and Docker sockets are reachable for this session"
 fi
@@ -331,7 +333,12 @@ settings = {
 # /tmp/claude-mcp-browser-bridge-<user>/; the runtime blocks every unix
 # socket unless allowed. macOS takes a path allowlist; on Linux the path
 # list is ignored (seccomp cannot filter by path), so it is all or nothing.
+# The session reaches the extension over a WebSocket to the bridge host,
+# by way of Anthropic's MCP proxy; the runtime's TLS termination refuses
+# an HTTP upgrade ("upgrade request refused"), so those two hosts are
+# tunnelled opaquely (still subject to the allowlist) instead.
 if os.environ["KAD_CHROME_SOCK"]:
+    settings["network"]["tlsTerminate"]["excludeDomains"] = ["bridge.claudeusercontent.com", "mcp-proxy.anthropic.com"]
     if sys.platform == "darwin":
         settings["network"]["allowUnixSockets"] = [os.environ["KAD_CHROME_SOCK"]]
     else:
