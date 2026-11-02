@@ -253,7 +253,12 @@ Two more things that hold throughout:
   shell.** A file written by shell redirection, a heredoc, `tee`, `sed -i`
   or `cp`/`mv` hides what changed and in what order from the reviewer, the
   orchestrator's grader and the trace. Bash is for running things: the
-  test runner, `git`, listing and reading files.
+  test runner, `git`, listing and reading files. If you did change a file
+  through the shell anyway, say so: one `- **Shell edit**: <file>` line in
+  your report section per file, and `shell edits <n>` on your hand-back
+  line; each counts as a deviation, and three in one chunk or fix end your
+  turn as a stall (the orchestrator relaunches with your section as the
+  handover).
 
 ## Where things go
 
@@ -351,6 +356,15 @@ didn't name. Other problems you notice nearby go in the report, not in the
 diff. Then the final review above, unless your task says `orchestrator`
 grades it.
 
+**A rename is one `Edit` per occurrence, never a shell substitution** (no
+`sed -i`, `perl -pi`, or a script over the tree): a substitution rewrites
+every string that happens to match, including a test's name and prose,
+and run 3's fixer mangled a seam test's name and a function body that
+way. Before the commit, grep the old name across the tree (the only hits
+left are in your report) and run the full suite; the report says
+`renamed <old> → <new>, <n> sites` (the `Fix` line under the loop, the
+`Built` line otherwise).
+
 ## Reporting
 
 **Under the chunk loop** the report is the slice's one report: the plan
@@ -363,14 +377,17 @@ that built it, five to ten lines:
 - **Decided**: <gap>: <choice>, one line each
 - **Escalated**: <gap>, who owns it, one line each (or "none")
 - **Deviation**: <file>: <why>, one line each (or "none")
+- **Shell edit**: <file>, one line each (only when there was one)
 - **Commit**: <short sha>; <n> tests green
 ```
 
-A fix applied under the loop appends one line to that chunk's section,
+Your hand-back to the orchestrator is one line: the commit, the test
+count, `deviations <n>`, `shell edits <n>`, and the report path. A fix
+applied under the loop appends one line to that chunk's section,
 **directly after the `Commit` line** (or after the previous `Fix` line),
 never at the end of the file: `- **Fix r<i>**: <short sha>; <finding
-titles>`. A deviation a fix introduces is one more `Deviation` line in the
-same section. Nothing else goes in the report: there is no Lows list, the
+titles>` (a rename reads `renamed <old> → <new>, <n> sites`). A deviation
+a fix introduces is one more `Deviation` line in the same section. Nothing else goes in the report: there is no Lows list, the
 rounds' detail is the orchestrator's sidecar, and a reviewer's findings
 live in the reviewer's file. Invoked for a whole slice, report in the
 shape below.

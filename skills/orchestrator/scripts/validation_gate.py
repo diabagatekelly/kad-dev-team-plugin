@@ -47,9 +47,15 @@ module directories as the orchestrator's B step lists them):
    module directories) is a **deviation**: the chunk plan did not name it,
    the design's structure does, so it is listed on the `scope` line and in
    the JSON (`scope.deviations`) for the orchestrator's C line, and the
-   check still passes; the builder's report names why. A changed file
-   under neither is `outside` and fails the check: that is the one the
-   fixer moves. Untracked files
+   check still passes; the builder's report names why. Two more kinds of
+   change are deviations, never failures: a test file (under `test/`,
+   `tests/`, `__tests__/` or `spec/`, or named `*.test.*`/`*.spec.*`) the
+   Files line did not name, since a builder that adds a test it needs is
+   doing its job; and a file under a `--deviation-zone` entry (repeatable;
+   the design's composition root and entry points, `src/compose.ts`,
+   `src/main.ts`, `src/start.ts` or their equivalents, which almost every
+   chunk wires into). A changed file under none of these is `outside` and
+   fails the check: that is the one the fixer moves. Untracked files
    count as changed; so do both sides of a rename. Claude Code's own
    placeholders are not: an untracked path under a `.claude/` directory,
    or named `.mcp.json`, that is not a regular file with content (the
@@ -66,6 +72,11 @@ source files (`.ts .tsx .js .jsx .mjs .cjs .py`, test files left out) so
 the orchestrator records them per commit and the Definition of Done at D
 acts on the slice's figures:
 
+- tests: with `--expect-test <name>` (repeatable; the orchestrator passes
+  each test name quoted on the chunk plan's Done when line), the names
+  that no longer appear in any test file, so a fix that renamed or dropped
+  a Done-when test (a mangled seam-test name, run 3's chunk 8) is seen at
+  the gate and not three rounds later;
 - comments: comment lines as a share of non-blank lines in the changed
   source files, and the same share across `src/` (or, without a `src/`,
   across the `--module-dir`s). A comment line is one whose first token
@@ -269,12 +280,14 @@ def under(path, directory):
     return path.startswith(directory.rstrip("/") + "/")
 
 
-def check_scope(files, allow, module_dirs=()):
+def check_scope(files, allow, module_dirs=(), zones=()):
     """Three-way: on an `--allow` entry, fine; off the list but inside a
-    `--module-dir`, a deviation the chunk plan did not foresee (reported,
-    not failed); under neither, outside the slice, which fails."""
+    `--module-dir`, a test file, or under a `--deviation-zone` entry, a
+    deviation the chunk plan did not foresee (reported, not failed); under
+    none of these, outside the slice, which fails."""
     unlisted = [f for f in files if not any(allowed(f, e) for e in allow)]
-    deviations = [f for f in unlisted if any(under(f, d) for d in module_dirs)]
+    deviations = [f for f in unlisted
+                  if any(under(f, d) for d in module_dirs) or is_test_file(f) or any(allowed(f, z) for z in zones)]
     outside = [f for f in unlisted if f not in deviations]
     return {"passed": not outside, "changed": files, "deviations": deviations, "outside": outside}
 
@@ -700,6 +713,31 @@ def metrics(project, changed, module_dirs):
     return result
 
 
+def expected_tests(project, names):
+    """Which of the expected test names appear in no test file of the tree."""
+    if not names:
+        return None
+    found = set()
+    for dirpath, dirnames, filenames in os.walk(project):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_WALK and not d.startswith(".")]
+        for fn in filenames:
+            rel = os.path.relpath(os.path.join(dirpath, fn), project).replace("\\", "/")
+            if not is_test_file(rel):
+                continue
+            try:
+                with open(os.path.join(dirpath, fn), encoding="utf-8", errors="replace") as fh:
+                    text = fh.read()
+            except OSError:
+                continue
+            for n in names:
+                if n not in found and n in text:
+                    found.add(n)
+    return {"names": list(names), "missing": [n for n in names if n not in found]}
+
+
+SKIP_WALK = {"node_modules", "dist", "build", "coverage", "__pycache__", ".venv", "venv"}
+
+
 def metric_lines(m):
     if m["changed_source_files"]:
         comments = f"{m['comment_pct']:g}% of non-blank lines in the changed source files ({m['comment_lines']}/{m['nonblank_lines']})"
@@ -711,7 +749,12 @@ def metric_lines(m):
     size = (f"files over {LONG_FILE} non-blank lines: {json.dumps(m['files_over_300'])}; "
             f"functions over {LONG_FUNCTION} lines: {json.dumps(m['functions_over_40'])}; "
             f"lines at depth >= {DEEP}: {m['deep_pct']:g}% (max {m['max_depth']})")
-    return [f"INFO  comments: {comments}", f"INFO  size: {size}"]
+    lines = [f"INFO  comments: {comments}", f"INFO  size: {size}"]
+    exp = m.get("expected_tests")
+    if exp:
+        lines.append("INFO  tests: " + (f"expected Done-when test names missing from every test file: {json.dumps(exp['missing'])}"
+                                        if exp["missing"] else f"every expected Done-when test name found ({len(exp['names'])})"))
+    return lines
 
 
 def runtime_lines(project, files):
@@ -798,6 +841,10 @@ def main():
     p.add_argument("--allow", action="append", default=[], help="path the change may touch: dir/ or exact file (repeatable)")
     p.add_argument("--module-dir", action="append", default=[],
                    help="a design module directory: a changed file inside it but off --allow is a reported deviation, not a failure (repeatable)")
+    p.add_argument("--deviation-zone", action="append", default=[],
+                   help="a composition root or entry point (dir/ or exact file): a change there off --allow is a deviation, not a failure (repeatable); test files are one by default")
+    p.add_argument("--expect-test", action="append", default=[],
+                   help="a test name from the chunk plan's Done when; an INFO line names those missing from every test file (repeatable)")
     p.add_argument("--protect", action="append", default=[], help="file that must be unchanged (repeatable)")
     p.add_argument("--test-cmd", default="npm test")
     p.add_argument("--typecheck-cmd", help="typecheck command; default: package.json's typecheck script through the test command's runner")
@@ -851,11 +898,12 @@ def main():
                                    "files": sorted(files)}
     module_dirs = [d.replace("\\", "/") for d in a.module_dir]
     if a.allow:
-        report["checks"]["scope"] = check_scope(files, a.allow, module_dirs)
+        report["checks"]["scope"] = check_scope(files, a.allow, module_dirs, [z.replace("\\", "/") for z in a.deviation_zone])
     if a.protect:
         report["checks"]["protected"] = check_protected(project, a.protect, files)
     report["passed"] = all(c["passed"] for c in report["checks"].values())
     report["metrics"] = metrics(project, [f for f in files if os.path.isfile(os.path.join(project, f))], module_dirs)
+    report["metrics"]["expected_tests"] = expected_tests(project, a.expect_test)
 
     if a.json:
         with open(a.json, "w", encoding="utf-8") as f:

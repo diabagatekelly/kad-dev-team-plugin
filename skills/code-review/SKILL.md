@@ -42,7 +42,9 @@ names it) includes HTTP, storage or error handling. Each returns an
 answer, not the turn. Then write **one** report to the path the task
 names, in the shared format below: Critical, High, Medium and
 `needs-decision` only, no Low (a Low noticed per chunk is dropped, not
-listed; the slice review at D collects Lows once), **at most eight
+listed; the slice review at D collects Lows once, and `rounds_record.py`
+drops any that slips into a chunk report, printing `lows dropped <n>`),
+**at most eight
 findings**, ranked most severe first across the three lenses, each
 finding's **Category** prefixed with the lens that raised it (`code:`,
 `test-quality:`, `reliability:`). Eight is a budget, not a target: a chunk
