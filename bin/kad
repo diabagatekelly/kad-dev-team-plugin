@@ -221,7 +221,10 @@ audit_repo="${audit_repo_arg:-$stored_repo}"
 # means onto the project.
 if [ -n "$audit_repo" ] && origin="$(git -C "$project" remote get-url origin 2>/dev/null)"; then
   norm() { printf '%s' "$1" | sed -e 's#\.git$##' -e 's#/$##' -e 's#^git@github\.com:#https://github.com/#'; }
-  [ "$(norm "$audit_repo")" = "$(norm "$origin")" ] && say "warning: the audit repository is this project's own origin; the audit sync would push audit documents onto the project's default branch. Use a separate repository (kad --audit-repo URL for this run, kad --reset to store a new one)"
+  if [ "$(norm "$audit_repo")" = "$(norm "$origin")" ]; then
+    say "warning: the audit repository is this project's own origin, so it is ignored for this run: the audit sync would push audit documents onto the project's default branch. Use a separate repository (kad --audit-repo URL for this run, kad --reset to store a new one); audit mode stays on, with the logs and transcripts kept locally"
+    audit_repo=""
+  fi
 fi
 
 # 3b. The audit repository's clone, outside the fence: the runtime's
