@@ -615,8 +615,9 @@ it at E.
 
    Its one line goes on the A line's `audit` field as printed: `audit:
    not configured` (no audit repository), `audit clone: <dir>`, or `audit
-   clone FAILED: <why>` (git's own message, as the SessionStart hook
-   recorded it). A failed clone is reported to the owner in step 5 and
+   clone FAILED: <why>` (git's own message as the SessionStart hook
+   recorded it, or a clone that points at another repository than the
+   configured one). A failed clone is reported to the owner in step 5 and
    stops nothing: the loop runs, every sync line says `FAILED` until a
    clone exists (the launcher makes one before the fence starts; a plain
    session's hook makes one at `$KAD_AUDIT_DIR/repo/`), and the material
@@ -910,22 +911,22 @@ B line: the chunk titles in order.
    in the second case.
 6. **The records commit** (`Records: slice <nnn> chunk <k>`: the reports,
    gate files and sidecar), then, with `KAD_AUDIT=1`, **the snapshot and
-   the sync**, inline with Bash, waited for:
+   the sync**, one command, inline with Bash, waited for:
 
    ```
-   "${CLAUDE_PLUGIN_ROOT}/hooks/audit.sh" --snapshot
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/audit_sync.py" --project '<project root>' --slice <nnn> --transcripts
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/audit_sync.py" --project '<project root>' --slice <nnn> --snapshot --transcripts
    ```
 
-   The snapshot copies this session's transcript and its subagents' to
-   the audit directory now, not at a session end that may never come
-   (run 3's loop session has none on disk); the sync copies the whole
-   slice folder, the records directory and those transcripts into the
-   audit repository's clone, commits and pushes. Its last line goes on
-   the C line's `audit` field as printed: `audit commit <sha>`, `audit
-   commit none` (nothing new), or `audit sync FAILED: <reason>`, which
-   also goes into the report to the owner; a FAILED line never stops the
-   loop. Without an audit repository the field says `not configured`,
+   `--snapshot` first copies this session's transcript and its
+   subagents' to the audit directory, now, not at a session end that may
+   never come (run 3's loop session has none on disk); the sync then
+   copies the whole slice folder, the records directory and the kept
+   transcripts into the audit repository's clone, commits and pushes. Its
+   last line goes on the C line's `audit` field as printed: `audit commit
+   <sha>`, `audit commit none` (nothing new), or `audit sync FAILED:
+   <reason>`, each with `; snapshot FAILED: <why>` appended when the
+   snapshot failed; a FAILED of either kind also goes into the report to
+   the owner and never stops the loop. Without an audit repository the field says `not configured`,
    with `KAD_AUDIT` unset `off`, and nothing runs. **Then the C line**,
    then the budget check, then the next chunk. Between launches the only thing you say to the user is one
    short paragraph per event, with the hashes; you never restate a
@@ -997,7 +998,8 @@ B line: the chunk titles in order.
    the branch), follows the README and nothing else from clone to
    running, drives the slice's thin path once, removes the clone, and
    writes `slice-r<i>-smoke.md` (with no browser, the same owed finding
-   as C.3, for the slice's thin path). What it raises goes to that round's
+   as C.3, for the slice's thin path, which goes to no fixer here either).
+   What else it raises goes to that round's
    fixer (as a round-0 finding when it ran with round 0, as a regression
    when with round 1); a README that does not get a stranger to a running
    app is a High for `docs-writer:readme` again, inline, then the fixer's
@@ -1073,11 +1075,13 @@ finishes its last action.
 5. **Cost.** Inline with Bash:
 
    ```
-   python3 -I "${CLAUDE_PLUGIN_ROOT}/evals/tools/cost_by_role.py" --project '<project root>' --sidecar '<records dir>/rounds-slice-<nnn>.jsonl' --session "$CLAUDE_CODE_SESSION_ID"
+   python3 -I "${CLAUDE_PLUGIN_ROOT}/evals/tools/cost_by_role.py" --project '<project root>' --log '<target directory>/orchestrator-log.md' --sidecar '<records dir>/rounds-slice-<nnn>.jsonl' --session "$CLAUDE_CODE_SESSION_ID"
    ```
 
-   The sidecar names every session that recorded a round and `--session`
-   adds this one; the script finds each one's transcript (the project's
+   The log names every session of this entry (the A line's `session`
+   field, each `Resumed` bullet's), the sidecar every session that
+   recorded a round, and `--session` adds this one; the script finds
+   each one's transcript (the project's
    own directory, else the snapshots audit mode kept) with its subagents'
    and prints the total by role class, or `cost not measured: transcript
    missing for <id>` and no total when one is absent. Its last line goes

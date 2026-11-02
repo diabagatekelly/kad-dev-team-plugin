@@ -233,8 +233,9 @@ like a credential, and commits (under the project's git identity) and
 pushes in the clone; its result goes on the log line as printed, a failure
 included, never as a skip. Run it by hand with `python3 -I
 skills/orchestrator/scripts/audit_sync.py --project <root> --slice <n>`
-(add `--transcripts` to include the kept session transcripts, `--no-push`
-to only commit, `--clone <dir>` for a clone elsewhere). In this repo, ask Claude to "review the audit logs"
+(add `--snapshot` to copy this session's transcript first, `--transcripts`
+to include the kept session transcripts, `--no-push` to only commit,
+`--clone <dir>` for a clone elsewhere). In this repo, ask Claude to "review the audit logs"
 (the `audit-review` skill): it reads the flagged sessions against the
 skills' own rules and proposes fixes and eval cases.
 `evals/tools/audit_report.py` gives the raw overview, and

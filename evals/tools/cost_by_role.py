@@ -6,10 +6,15 @@ estimate from list prices over the token counts Claude Code records on
 every assistant message; it is not a bill.
 
 Which sessions a total must cover is decided by id, never by whatever
-transcripts happen to be on disk: `--session <id>` (repeatable; the E
-step passes its own, `CLAUDE_CODE_SESSION_ID`) and `--sidecar
-<rounds-slice-nnn.jsonl>` (every distinct `session` its rows name: each
-session that recorded a round). For each id the transcript is looked for
+transcripts happen to be on disk: `--log <orchestrator-log.md>` (every
+session the chunk-loop entry names: the A line's `session` field and each
+`Resumed … session <id>` bullet, so a session that ended before it
+recorded a round still counts), `--sidecar <rounds-slice-nnn.jsonl>`
+(every distinct `session` its rows name) and `--session <id>` (repeatable;
+the E step passes its own, `CLAUDE_CODE_SESSION_ID`). A `--log` or
+`--sidecar` that cannot be read, or a sidecar line that is not JSON, is
+`cost not measured` too: a list of ids that may be short is no list. For
+each id the transcript is looked for
 under `--projects-dir` (default `~/.claude/projects`, the project's own
 directory, the one Claude Code writes to: `C--Users-...-app/` for
 `C:\\Users\\...\\app`), then under `<audit dir>/transcripts/` (the
@@ -35,7 +40,7 @@ and cache write; `--price model=in,out,read,write` adds or overrides one.
 A model with no price is counted at the most expensive known price and
 named in the output, so the total is never silently low.
 
-Usage: python3 -I evals/tools/cost_by_role.py --project <root> [--session ID ...] [--sidecar rounds.jsonl]
+Usage: python3 -I evals/tools/cost_by_role.py --project <root> [--log orchestrator-log.md] [--sidecar rounds.jsonl] [--session ID ...]
                                             [--audit-dir DIR] [--projects-dir DIR]
                                             [--transcript s.jsonl ...] [--price model=in,out,read,write ...]
                                             [--json out.json]
@@ -167,20 +172,47 @@ def project_sessions(projects_dir, project):
     return sorted(glob.glob(os.path.join(folder, "*.jsonl"))) if os.path.isdir(folder) else []
 
 
+class UnreadableInput(Exception):
+    pass
+
+
 def sidecar_sessions(path):
-    """The distinct session ids the sidecar's rows name, in first-seen order."""
+    """The distinct session ids the sidecar's rows name, in first-seen order.
+    Rows from before the field existed name none and are passed over (the
+    log names their sessions); a line that is not JSON is an error."""
     out = []
     try:
         with open(path, encoding="utf-8") as f:
-            for line in f:
+            for n, line in enumerate(f, 1):
+                if not line.strip():
+                    continue
                 try:
                     sid = json.loads(line).get("session")
                 except ValueError:
-                    continue
+                    raise UnreadableInput(f"sidecar line {n} is not JSON: {path}")
                 if sid and sid not in out:
                     out.append(sid)
-    except OSError:
-        pass
+    except OSError as e:
+        raise UnreadableInput(f"sidecar unreadable: {path} ({e.strerror})")
+    return out
+
+
+UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+LOG_SESSION = re.compile(r"\bsession\b[\s—\-:]*`?(" + UUID + r")`?", re.I)
+
+
+def log_sessions(path):
+    """Every session id the orchestrator log names after the word `session`:
+    the A line's field and the `Resumed … session <id>` bullets."""
+    try:
+        text = open(path, encoding="utf-8", errors="replace").read()
+    except OSError as e:
+        raise UnreadableInput(f"orchestrator log unreadable: {path} ({e.strerror})")
+    out = []
+    for m in LOG_SESSION.finditer(text):
+        sid = m.group(1).lower()
+        if sid not in out:
+            out.append(sid)
     return out
 
 
@@ -205,6 +237,7 @@ def main():
     p.add_argument("--transcript", action="append", default=[])
     p.add_argument("--session", action="append", default=[], help="a session id the total must cover (repeatable)")
     p.add_argument("--sidecar", help="rounds-slice-<nnn>.jsonl: every session its rows name must be covered")
+    p.add_argument("--log", help="orchestrator-log.md: every session its chunk-loop entry names must be covered")
     p.add_argument("--price", action="append", default=[], help="model=in,out,read,write ($/M)")
     p.add_argument("--json")
     a = p.parse_args()
@@ -213,7 +246,12 @@ def main():
         PRICES[model] = tuple(float(x) for x in nums.split(","))
 
     required = list(a.session)
-    for sid in (sidecar_sessions(a.sidecar) if a.sidecar else []):
+    try:
+        named = (log_sessions(a.log) if a.log else []) + (sidecar_sessions(a.sidecar) if a.sidecar else [])
+    except UnreadableInput as e:
+        print(f"cost not measured: {e}")
+        return 0
+    for sid in named:
         if sid not in required:
             required.append(sid)
     sessions = list(a.transcript)
@@ -231,7 +269,7 @@ def main():
         if missing:
             print(f"cost not measured: transcript missing for {', '.join(sid for sid, _ in missing)}")
             return 0
-        source = f"{len(required)} session id(s) from " + " and ".join(x for x in ("--session" if a.session else "", "--sidecar" if a.sidecar else "") if x)
+        source = f"{len(required)} session id(s) from " + ", ".join(x for x in ("--log" if a.log else "", "--sidecar" if a.sidecar else "", "--session" if a.session else "") if x)
     if not sessions and a.project:
         sessions = audit_sessions(a.audit_dir, a.project)
         source = f"audit mode ({a.audit_dir})"
@@ -263,7 +301,7 @@ def main():
     unknown = sorted({m for _, _, _, u in rows for m in u["models"] if m not in PRICES})
     print(f"Sessions: {len(sessions)} ({source}); agents: {len(rows) - len(sessions)}; assistant messages counted once by id.")
     if not required:
-        print("The sessions were chosen by directory, not by id: pass --session or --sidecar for a total that is known to cover the run.")
+        print("The sessions were chosen by directory, not by id: pass --log, --sidecar or --session for a total that is known to cover the run.")
     print()
     print("| session | role class | agents | msgs | output tok | cache read (M) | cache write (M) | est. $ | models |")
     print("|---|---|---|---|---|---|---|---|---|")

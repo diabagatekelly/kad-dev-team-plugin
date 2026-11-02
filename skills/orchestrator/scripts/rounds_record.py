@@ -325,11 +325,15 @@ def record(a):
     keys = {report_key(r, a.sidecar) for r, _ in reports}
     kept = [raw for raw in load_sidecar(a.sidecar) if not ((row_of(raw) or {}).get("report") in keys)]
     os.makedirs(os.path.dirname(os.path.abspath(a.sidecar)), exist_ok=True)
-    with open(a.sidecar, "w", encoding="utf-8", newline="\n") as f:
+    # Written whole to a temporary name, then renamed: a run that stops
+    # halfway leaves the previous sidecar, never a prefix of the new one.
+    tmp = a.sidecar + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
         for raw in kept:
             f.write(raw + "\n")
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    os.replace(tmp, a.sidecar)
 
     owed = [r for r in rows if r["class"] == "owed"]
     counted = [r for r in rows if r["class"] != "owed"]

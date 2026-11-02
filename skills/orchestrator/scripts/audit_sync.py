@@ -54,14 +54,25 @@ Usage:
 
 `--check` (the orchestrator's A step) prints one line and changes nothing:
 `audit: not configured` when `KAD_AUDIT_REPO` is unset (exit 0);
-`audit clone: <dir>` when a usable clone is there (exit 0); otherwise
-`audit clone FAILED: <why>` (exit 1), with git's own message when the
-session's audit log (`$KAD_AUDIT_DIR/sessions/<id>.jsonl`, the id from
-`--session` or `CLAUDE_CODE_SESSION_ID`) recorded a failed clone.
+`audit clone: <dir>` when a usable clone is there whose origin is that
+repository (exit 0); otherwise `audit clone FAILED: <why>` (exit 1): a
+clone pointing at another repository (the configured one changed since),
+or none, with git's own message when the session's audit log
+(`$KAD_AUDIT_DIR/sessions/<id>.jsonl`, the id from `--session` or
+`CLAUDE_CODE_SESSION_ID`) recorded a failed clone. The sync applies the
+same two refusals, and a third: a clone whose origin is the project's own
+repository is never pushed to.
+
+`--snapshot` first runs `hooks/audit.sh --snapshot` (this session's
+transcript and its subagents' into the audit directory, so `--transcripts`
+carries them), prints its line, and goes on to the sync whatever it said;
+a failed snapshot is appended to the last line (`…; snapshot FAILED:
+<why>`), so the log line carries both.
 
 Exit codes: 0 synced (or nothing had changed); 1 usage or a missing input;
 3 a credential-shaped string was found and nothing was copied; 4 git
-failed in the clone (the copy stays, the commit or push did not happen).
+failed in the clone (a fast-forward refused before anything was copied,
+or the commit or push after; the copy stays).
 The last line of output names the audit commit (`audit commit <sha>`),
 `audit commit none` when there was nothing new, or `audit sync FAILED:
 <reason>` on any failure; the orchestrator's line records it as it is.
@@ -92,6 +103,7 @@ CREDENTIAL_PATTERNS = [
     ("private key block", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
     ("Plaid access or public token", re.compile(r"\b(?:access|public)-(?:sandbox|development|production)-[0-9a-f-]{36}\b")),
     ("JSON web token", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b")),
+    ("bearer token", re.compile(r"(?i)\bauthorization\b\s*[:=]\s*[\"']?bearer\s+(?!\$|<|\{|\*{3}|x{6}|your[-_]|example|placeholder|redacted)[A-Za-z0-9._~+/=-]{20,}")),
     ("secret-like assignment", re.compile(
         r"(?i)\b(?:api[_-]?key|secret|client_secret|access[_-]?token|auth[_-]?token|password|passwd)\b"
         r"\s*[:=]\s*[\"']?(?!<|\$\{|\$[A-Z_]|\*{3}|x{6}|your[-_]|example|placeholder|redacted|changeme)"
@@ -103,10 +115,43 @@ def say(msg: str) -> None:
     print(msg, flush=True)
 
 
+SNAPSHOT_NOTE = ""  # "; snapshot FAILED: <why>" once a --snapshot has failed, appended to the last line
+
+
+def last(msg: str) -> None:
+    say(msg + SNAPSHOT_NOTE)
+
+
 def fail(msg: str, code: int) -> int:
     print(f"audit_sync: {msg}", file=sys.stderr, flush=True)
-    print(f"audit sync FAILED: {msg}", flush=True)
+    last(f"audit sync FAILED: {msg}")
     return code
+
+
+def norm_url(url: str) -> str:
+    """One form for a repository URL, so two spellings of one repository compare
+    equal: no userinfo, no .git, no trailing slash, the ssh form as https."""
+    u = re.sub(r"(://)[^/@\s]+@", r"\1", url.strip())
+    u = re.sub(r"^git@([^:]+):", r"https://\1/", u)
+    u = re.sub(r"\.git$", "", u).rstrip("/")
+    return u.lower()
+
+
+def origin_of(repo: Path) -> str:
+    return run_git(repo, "remote", "get-url", "origin", check=False).stdout.strip()
+
+
+def run_snapshot() -> str:
+    """hooks/audit.sh --snapshot, from the plugin this script ships in; its one line."""
+    hook = Path(__file__).resolve().parents[3] / "hooks" / "audit.sh"
+    if not hook.is_file():
+        return f"snapshot FAILED: {hook} is not there"
+    try:
+        r = subprocess.run(["bash", str(hook), "--snapshot"], capture_output=True, text=True, timeout=300)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return f"snapshot FAILED: {e}"
+    line = (r.stdout.strip().splitlines() or [""])[-1]
+    return line or f"snapshot FAILED: no output (exit {r.returncode})"
 
 
 def default_clone(audit_dir: str, project: Path | None) -> Path:
@@ -148,7 +193,10 @@ def check(a) -> int:
     project = Path(a.project).resolve() if a.project else None
     clone = Path(a.clone).resolve() if a.clone else default_clone(a.audit_dir, project)
     if (clone / ".git").exists():
-        origin = run_git(clone, "remote", "get-url", "origin", check=False).stdout.strip()
+        origin = origin_of(clone)
+        if norm_url(origin) != norm_url(os.environ["KAD_AUDIT_REPO"]):
+            say(f"audit clone FAILED: the clone at {clone} points at {redact(origin) or 'no origin'}, not KAD_AUDIT_REPO ({redact(os.environ['KAD_AUDIT_REPO'])}); remove it, or point KAD_AUDIT_REPO back")
+            return 1
         say(f"audit clone: {clone}" + (f" (origin {redact(origin)})" if origin else ""))
         return 0
     recorded = clone_failure_recorded(a.audit_dir, a.session or os.environ.get("CLAUDE_CODE_SESSION_ID"))
@@ -246,6 +294,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--clone", help="the audit repository's clone; default: $KAD_AUDIT_DIR/repo, else the project's audit-docs/ when it holds one")
     ap.add_argument("--check", action="store_true", help="report whether a usable clone exists and change nothing")
     ap.add_argument("--session", help="with --check: the session whose audit log may hold the clone's failure (default: CLAUDE_CODE_SESSION_ID)")
+    ap.add_argument("--snapshot", action="store_true", help="first run hooks/audit.sh --snapshot for this session; a failure is appended to the last line")
     ap.add_argument("--docs", help="the orchestrator's target directory; default: the one holding orchestrator-log.md")
     ap.add_argument("--name", help="the project's name in the audit repository; default: the root's basename")
     ap.add_argument("--audit-dir", default=os.environ.get("KAD_AUDIT_DIR") or str(Path.home() / ".claude" / "kad-audit"))
@@ -255,10 +304,16 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--no-push", action="store_true", help="commit in the clone but do not push")
     ap.add_argument("--dry-run", action="store_true", help="list what would be copied and scanned; change nothing")
     a = ap.parse_args(argv)
+    global SNAPSHOT_NOTE
     if a.check:
         return check(a)
     if not a.project or a.slice is None:
         return fail("--project and --slice are required (or --check)", 1)
+    if a.snapshot:
+        line = run_snapshot()
+        say(line)
+        if not line.startswith("snapshot:"):
+            SNAPSHOT_NOTE = f"; {line}"
 
     project = Path(a.project).resolve()
     if not (project / ".git").exists():
@@ -267,6 +322,13 @@ def main(argv: list[str]) -> int:
     if not (clone / ".git").exists():
         return fail(f"no clone of the audit repository at {clone}; start the session with bin/kad (it clones before the fence), or clone it there yourself", 1)
     inside_project = clone == project / "audit-docs"
+    clone_origin = origin_of(clone)
+    configured = os.environ.get("KAD_AUDIT_REPO", "")
+    if configured and norm_url(clone_origin) != norm_url(configured):
+        return fail(f"the clone at {clone} points at {redact(clone_origin) or 'no origin'}, not KAD_AUDIT_REPO ({redact(configured)}); remove it, or point KAD_AUDIT_REPO back", 1)
+    project_origin = origin_of(project)
+    if project_origin and norm_url(clone_origin) == norm_url(project_origin):
+        return fail(f"the clone's origin is this project's own repository ({redact(project_origin)}); the sync would push audit documents onto the project's default branch", 1)
     name = a.name or project.name
     slice_dir = clone / f"{name}-slice-{a.slice}"
     nnn = f"{a.slice:03d}"
@@ -298,13 +360,17 @@ def main(argv: list[str]) -> int:
     transcripts_taken: list[str] = []
     if a.transcripts:
         sessions = Path(a.audit_dir) / "sessions"
-        needle = str(project).replace("\\", "/").lower()
+        # A session is this project's when a hook payload's cwd is the project
+        # root or below it: the whole path, never a prefix of a sibling's
+        # (`/x/app` is not `/x/app-2`) and never a mention in a prompt.
+        root = str(project).replace("\\", "/").rstrip("/").lower()
+        cwd_here = re.compile(r'"cwd"\s*:\s*"' + re.escape(root) + r'(?:/|")')
         for log in sorted(sessions.glob("*.jsonl")) if sessions.is_dir() else []:
             try:
                 body = log.read_text(encoding="utf-8", errors="replace").replace("\\\\", "/").replace("\\", "/").lower()
             except OSError:
                 continue
-            if needle not in body:
+            if not cwd_here.search(body):
                 continue
             sid = log.stem
             dest = slice_dir / "implementation-docs" / "transcripts" / sid
@@ -353,7 +419,7 @@ def main(argv: list[str]) -> int:
         if len(findings) > 50:
             say(f"  … and {len(findings) - 50} more")
         say("Nothing was copied. Remove or redact them, or pass --allow <path fragment> for a file you have read and cleared.")
-        say(f"audit sync FAILED: {len(findings)} credential-shaped string(s) in what would be copied; nothing copied")
+        last(f"audit sync FAILED: {len(findings)} credential-shaped string(s) in what would be copied; nothing copied")
         return 3
 
     say(f"audit_sync: {len(kept)} files for {slice_dir.relative_to(clone).as_posix()}/ "
@@ -365,15 +431,22 @@ def main(argv: list[str]) -> int:
     for p in allowed:
         say(f"  scan skipped by --allow: {p}")
     if a.dry_run:
-        say("audit commit none")
+        last("audit commit none")
         return 0
 
     # 3. Fast-forward the clone first (a sync from another machine, or a
     #    clone the launcher made days ago), then copy (the slice folder is
     #    rebuilt from the sources so a removed review doesn't linger).
-    ff = run_git(clone, "pull", "-q", "--ff-only", check=False)
-    if ff.returncode != 0:
-        say(f"audit_sync: warning: the clone did not fast-forward ({(ff.stderr or ff.stdout).strip().splitlines()[-1] if (ff.stderr or ff.stdout).strip() else 'no message'}); pushing may be refused")
+    fetched = run_git(clone, "fetch", "-q", check=False)
+    if fetched.returncode != 0:
+        detail = redact((fetched.stderr or fetched.stdout).strip())
+        return fail(f"the clone at {clone} could not fetch from its remote ({detail.splitlines()[-1] if detail else 'no message'}); nothing copied", 4)
+    # A brand-new audit repository has no branch yet: nothing to fast-forward to.
+    if run_git(clone, "rev-parse", "--verify", "-q", "@{u}", check=False).returncode == 0:
+        ff = run_git(clone, "merge", "-q", "--ff-only", "@{u}", check=False)
+        if ff.returncode != 0:
+            detail = redact((ff.stderr or ff.stdout).strip())
+            return fail(f"the clone at {clone} did not fast-forward from its remote ({detail.splitlines()[-1] if detail else 'no message'}); nothing copied", 4)
     for sub in ("planning", "implementation-docs"):
         if (slice_dir / sub).exists():
             shutil.rmtree(slice_dir / sub)
@@ -402,8 +475,16 @@ def main(argv: list[str]) -> int:
     try:
         run_git(clone, "add", "-A", "--", rel)
         if not run_git(clone, "status", "--porcelain", "--", rel).stdout.strip():
+            # An earlier sync may have committed and then failed to push: push it now.
+            ahead = run_git(clone, "rev-list", "--count", "@{u}..HEAD", check=False).stdout.strip()
+            if ahead.isdigit() and int(ahead) > 0 and not a.no_push:
+                run_git(clone, "push", "-q")
+                sha = run_git(clone, "rev-parse", "--short", "HEAD").stdout.strip()
+                say(f"audit_sync: nothing changed since the last sync; pushed {ahead} earlier commit(s) that had not reached the remote")
+                last(f"audit commit {sha}")
+                return 0
             say("audit_sync: nothing changed since the last sync")
-            say("audit commit none")
+            last("audit commit none")
             return 0
         # Something did change: record the sync in the slice's log, then commit both.
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -429,10 +510,10 @@ def main(argv: list[str]) -> int:
         detail = redact((e.stderr or e.stdout or "").strip())
         say(f"audit_sync: git {verb} failed in {clone}:")
         say(detail)
-        last = detail.splitlines()[-1] if detail else "no message"
-        say(f"audit sync FAILED: git {verb} in {clone}: {last}")
+        tail = detail.splitlines()[-1] if detail else "no message"
+        last(f"audit sync FAILED: git {verb} in {clone}: {tail}")
         return 4
-    say(f"audit commit {sha}")
+    last(f"audit commit {sha}")
     return 0
 
 

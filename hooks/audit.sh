@@ -43,6 +43,9 @@ redact() { sed -E 's#(://)[^/@[:space:]]+@#\1<redacted>@#g'; }
 # A path out of a JSON string: on Windows that is C:\\Users\\..., which Git
 # Bash reads once the doubled backslashes become forward slashes.
 unjson_path() { printf '%s' "$1" | sed 's#\\\\#/#g'; }
+# One form for a repository URL, so two spellings of one repository compare
+# equal: no userinfo, no .git, no trailing slash, the ssh form as https.
+norm_url() { printf '%s' "$1" | sed -E -e 's#(://)[^/@[:space:]]+@#\1#' -e 's#^git@([^:]+):#https://\1/#' -e 's#\.git$##' -e 's#/$##' | tr 'A-Z' 'a-z'; }
 # git by name inside a macOS sandbox is Apple's xcrun shim, which fails there;
 # the candidates are tried by running them (the same rule as audit_sync.py).
 find_git() {
@@ -54,16 +57,24 @@ find_git() {
 }
 
 # snapshot <session-id> <transcript path>: the transcript and its subagents'
-# into $dir/transcripts/, overwriting an earlier copy. One line on stdout.
+# into $dir/transcripts/, replacing an earlier copy only once both copied
+# whole (a copy that stops halfway leaves the earlier copy in place, never a
+# truncated one that a cost run would total). One line on stdout.
 snapshot() {
-  local sid="$1" transcript="$2" sdir n=0
+  local sid="$1" transcript="$2" sdir n=0 tmpf tmpd
   [ -f "$transcript" ] || { echo "snapshot FAILED: transcript missing at $transcript"; return 1; }
-  cp "$transcript" "$dir/transcripts/$sid.jsonl" 2>/dev/null || { echo "snapshot FAILED: could not copy $transcript into $dir/transcripts"; return 1; }
+  tmpf="$dir/transcripts/.$sid.jsonl.part"; tmpd="$dir/transcripts/.$sid.part"
+  rm -rf "$tmpf" "$tmpd"
+  cp "$transcript" "$tmpf" 2>/dev/null || { rm -f "$tmpf"; echo "snapshot FAILED: could not copy $transcript into $dir/transcripts"; return 1; }
   sdir="${transcript%.jsonl}/subagents"
   if [ -d "$sdir" ]; then
-    mkdir -p "$dir/transcripts/$sid" && cp -R "$sdir" "$dir/transcripts/$sid/" 2>/dev/null \
-      || { echo "snapshot FAILED: could not copy $sdir into $dir/transcripts/$sid"; return 1; }
+    mkdir -p "$tmpd" && cp -R "$sdir" "$tmpd/" 2>/dev/null \
+      || { rm -rf "$tmpf" "$tmpd"; echo "snapshot FAILED: could not copy $sdir into $dir/transcripts/$sid"; return 1; }
     n=$(ls "$sdir"/agent-*.jsonl 2>/dev/null | wc -l | tr -d ' ')
+  fi
+  mv -f "$tmpf" "$dir/transcripts/$sid.jsonl" || { rm -rf "$tmpf" "$tmpd"; echo "snapshot FAILED: could not place $dir/transcripts/$sid.jsonl"; return 1; }
+  if [ -d "$tmpd" ]; then
+    rm -rf "$dir/transcripts/$sid" && mv -f "$tmpd" "$dir/transcripts/$sid" || { echo "snapshot FAILED: could not place $dir/transcripts/$sid"; return 1; }
   fi
   echo "snapshot: $sid at $(now), $n subagent transcripts, in $dir/transcripts"
 }
@@ -93,25 +104,41 @@ log="$dir/sessions/$sid.jsonl"
 printf '{"ts":"%s","payload":%s}\n' "$(now)" "$payload" >> "$log"
 event=$(field hook_event_name)
 
+record_clone() {  # record_clone ok|failed <path> [<error>]
+  if [ "$1" = ok ]; then
+    printf '{"ts":"%s","payload":{"session_id":"%s","kad_audit_clone":"ok","path":"%s"}}\n' "$(now)" "$sid" "$(json_str "$2")" >> "$log"
+  else
+    printf '{"ts":"%s","payload":{"session_id":"%s","kad_audit_clone":"failed","path":"%s","error":"%s"}}\n' "$(now)" "$sid" "$(json_str "$2")" "$(json_str "$3")" >> "$log"
+  fi
+}
+
 if [ "$event" = "SessionStart" ] && [ -n "${KAD_AUDIT_REPO:-}" ]; then
   clone="$dir/repo"
   git=$(find_git)
-  if [ -d "$clone/.git" ]; then
-    printf '{"ts":"%s","payload":{"session_id":"%s","kad_audit_clone":"ok","path":"%s"}}\n' "$(now)" "$sid" "$(json_str "$clone")" >> "$log"
+  cwd=$(unjson_path "$(field cwd)")
+  project_origin=$("$git" -C "$cwd" remote get-url origin 2>/dev/null || true)
+  if [ -n "$project_origin" ] && [ "$(norm_url "$project_origin")" = "$(norm_url "$KAD_AUDIT_REPO")" ]; then
+    # The sync would push audit documents onto the project's own default branch.
+    record_clone failed "$clone" "KAD_AUDIT_REPO is this project's own origin; refused (use a separate repository)"
+  elif [ -d "$clone/.git" ]; then
+    have=$("$git" -C "$clone" remote get-url origin 2>/dev/null || true)
+    if [ "$(norm_url "$have")" = "$(norm_url "$KAD_AUDIT_REPO")" ]; then
+      record_clone ok "$clone"
+    else
+      record_clone failed "$clone" "the clone there points at $(printf '%s' "$have" | redact), not KAD_AUDIT_REPO ($(printf '%s' "$KAD_AUDIT_REPO" | redact)); remove it, or point KAD_AUDIT_REPO back"
+    fi
   else
     if out=$("$git" clone -q -- "$KAD_AUDIT_REPO" "$clone" 2>&1); then
       # The clone commits under the project's identity (a noreply address,
       # where the project uses one), never the machine's global one.
-      cwd=$(unjson_path "$(field cwd)")
       for k in user.name user.email; do
         v=$("$git" -C "$cwd" config --get "$k" 2>/dev/null || true)
         [ -n "$v" ] && "$git" -C "$clone" config "$k" "$v" 2>/dev/null
       done
-      printf '{"ts":"%s","payload":{"session_id":"%s","kad_audit_clone":"ok","path":"%s"}}\n' "$(now)" "$sid" "$(json_str "$clone")" >> "$log"
+      record_clone ok "$clone"
     else
       err=$(printf '%s\n' "$out" | redact | grep -v '^$' | tail -1)
-      printf '{"ts":"%s","payload":{"session_id":"%s","kad_audit_clone":"failed","path":"%s","error":"%s"}}\n' \
-        "$(now)" "$sid" "$(json_str "$clone")" "$(json_str "${err:-git clone failed with no message}")" >> "$log"
+      record_clone failed "$clone" "${err:-git clone failed with no message}"
     fi
   fi
 fi
