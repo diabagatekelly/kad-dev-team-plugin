@@ -1018,6 +1018,11 @@ finishes its last action.
    refuses a dirty tree, and the loop never committed the log before this
    (each C and D line names the records commit it follows). The E line
    written at the end stays uncommitted, like every other entry.
+   **Nothing is checked again at E**: the Definition of Done results that
+   `delivery` and the pull request body carry are the D line's, and the
+   last gate output is the one on D's last fix; E runs neither
+   `done_check.py` nor the gate (E is mechanics, not judgment, and a check
+   re-run here has no fixer to go to).
 2. **CI.** If the repository has no continuous-integration configuration
    (no `.github/workflows/*.yml`, no equivalent for the host the remote
    names), invoke `release-engineer:ci-pipeline` inline with the `Skill`
