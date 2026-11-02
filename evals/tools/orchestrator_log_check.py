@@ -495,6 +495,11 @@ def check_chunk_loop(e, findings):
             for part in ("deviations", "budget"):
                 if not re.search(r"\b" + part + r"\s+`?\S", text):
                     findings.append(("WARN", tag, f"{what}: no `{part}` field"))
+            if not re.search(r"\baudit\s+`?(audit commit|audit sync FAILED|not configured|off)", text):
+                findings.append(("WARN", tag, f"{what}: no `audit` field (a 0.10.0 field: the sync runs after every records commit)"))
+            m = re.search(r"audit sync FAILED:\s*`?([^`\n]+)", text)
+            if m:
+                findings.append(("WARN", tag, f"{what}: the audit sync failed ({m.group(1).strip()})"))
             m = re.search(r"needs-decision\s+`?([a-z-]+)", text)
             if m:
                 findings.append(("INFO", tag, f"{what}: stopped for the owner on a needs-decision ({m.group(1)})"))
@@ -521,6 +526,8 @@ def check_chunk_loop(e, findings):
             for part in ("done", "stranger"):
                 if not re.search(r"\b" + part + r"\s+`?\S", text):
                     findings.append(("WARN", tag, f"D line has no `{part}` field (a 0.7.0 field)"))
+            if not re.search(r"\baudit\s+`?(audit commit|audit sync FAILED|not configured|off)", text):
+                findings.append(("WARN", tag, "D line has no `audit` field (a 0.10.0 field)"))
         r, g, p, cap, wf = check_rounds(tag, "D", text, findings, v4)
         total_rounds, reg, pre, caps, with_findings = total_rounds + r, reg + g, pre + p, caps + cap, with_findings + wf
         chunks_logged["D"] = r
@@ -532,8 +539,11 @@ def check_chunk_loop(e, findings):
             findings.append(("WARN", tag, "E line names no pull request number"))
         if not re.search(r"pushed\s+`?" + SHA, text):
             findings.append(("WARN", tag, "E line names no pushed commit"))
-        if not re.search(r"audit\s+`?(" + SHA + r"|not configured|none)", text):
-            findings.append(("WARN", tag, "E line doesn't say what the audit sync did (a commit, `not configured` or `none`)"))
+        if not re.search(r"audit\s+`?(audit commit (" + SHA + r"|none)|audit sync FAILED|" + SHA + r"|not configured|none|off)", text):
+            findings.append(("WARN", tag, "E line doesn't say what the audit sync did (`audit commit <sha>`, `audit commit none`, `audit sync FAILED: <why>`, `not configured` or `off`)"))
+        m = re.search(r"audit sync FAILED:\s*`?([^`\n]+)", text)
+        if m:
+            findings.append(("WARN", tag, f"E line: the audit sync failed ({m.group(1).strip()})"))
         if v4:
             if not re.search(r"\bcost\s+`?(\$|not measured)", text):
                 findings.append(("WARN", tag, "E line has no `cost` field (`$<n>` or `not measured`)"))

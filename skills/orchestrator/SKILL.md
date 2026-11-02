@@ -594,12 +594,37 @@ it at E.
      `filesystem.denyRead`. Report it and, unless the owner already opted
      out of the sandbox at A (that choice covers every later check, as
      information), stop until the owner restarts the session with it.
-     `--write-settings` is not offered there. When the slice touches UI
-     and the session was not started with `--chrome` (the smoke run then
-     has no Claude in Chrome), say so on the A line's sandbox field as
-     `PASS (<platform>; no Chrome)` and go on: the smoke agent checks the
-     screen without the browser, and the owner who wants it restarts the
-     session with `kad --chrome` (the handoff rule resumes the flow).
+     `--write-settings` is not offered there. When the slice touches UI:
+     with `KAD_CHROME=1` in the environment (the launcher's `--chrome`),
+     call the Chrome tools' `list_connected_browsers` once, here; a
+     browser that answers puts `PASS (<platform>; Chrome)` on the A line's
+     sandbox field, none answering (or no `KAD_CHROME`) puts `PASS
+     (<platform>; no Chrome)`, and the flow goes on either way: without a
+     browser every UI smoke run raises its one owed finding (C.3), so what
+     was not checked is on the record, and the owner who wants the browser
+     restarts the session with `kad --chrome` (the handoff rule resumes the
+     flow). Run 3 learned at its first UI smoke run that no browser had
+     ever answered, and its smoke reports said `PASS`.
+
+   **Audit and session**, inline with Bash, after the sandbox check and
+   whatever it asked:
+
+   ```
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/audit_sync.py" --check --project '<project root>'; echo "session $CLAUDE_CODE_SESSION_ID"
+   ```
+
+   Its one line goes on the A line's `audit` field as printed: `audit:
+   not configured` (no audit repository), `audit clone: <dir>`, or `audit
+   clone FAILED: <why>` (git's own message as the SessionStart hook
+   recorded it, or a clone that points at another repository than the
+   configured one). A failed clone is reported to the owner in step 5 and
+   stops nothing: the loop runs, every sync line says `FAILED` until a
+   clone exists (the launcher makes one before the fence starts; a plain
+   session's hook makes one at `$KAD_AUDIT_DIR/repo/`), and the material
+   stays in the records directory meanwhile. With `KAD_AUDIT` unset the
+   field says `off` and no sync or snapshot runs in this flow. The session
+   id goes on the A line's `session` field: a resumed flow adds the new
+   id on its `Resumed` bullet, so the E step's cost covers every session.
 
    The check is not once per flow but before every launch: before each
    chunk's build (C.1), its reviewer and smoke agent (C.3), its fixer
@@ -798,7 +823,16 @@ B line: the chunk titles in order.
      `kad-dev-team:accessibility-review` in its "Smoke run" mode and checks
      the chunk's accessibility criteria on the built screen, in the same
      report. It is handed the Done when line, the criteria by path, the
-     report path, and nothing else.
+     report path, and nothing else. A UI smoke agent whose first Chrome
+     tool call finds no browser (the skill's "Smoke run" says so) checks
+     what HTTP and the served markup can show and writes, for the rest,
+     one Medium finding titled `browser checks not run` that names each
+     Done when item and each criterion it could not drive; its Result is
+     never `PASS` then. `rounds_record.py` records that finding as
+     `owed`: printed as an `owed:` line, counted on the C line as `owed
+     <n>`, never handed to a fixer (no fix makes a browser appear), and
+     carried like a standing Medium into the pull request body and its
+     issue, as the owner's checklist.
 
    Wait for both. Their hand-backs are the counts and the paths. Then,
    inline with Bash:
@@ -875,9 +909,26 @@ B line: the chunk titles in order.
    decision you reached yourself, no editing a planning document on a
    persona's behalf. If the persona refuses to write, the flow stops as
    in the second case.
-6. **C line**, then the records commit (`Records: slice <nnn> chunk <k>`:
-   the reports, gate files and sidecar), then the budget check, then the
-   next chunk. Between launches the only thing you say to the user is one
+6. **The records commit** (`Records: slice <nnn> chunk <k>`: the reports,
+   gate files and sidecar), then, with `KAD_AUDIT=1`, **the snapshot and
+   the sync**, one command, inline with Bash, waited for:
+
+   ```
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/audit_sync.py" --project '<project root>' --slice <nnn> --snapshot --transcripts
+   ```
+
+   `--snapshot` first copies this session's transcript and its
+   subagents' to the audit directory, now, not at a session end that may
+   never come (run 3's loop session has none on disk); the sync then
+   copies the whole slice folder, the records directory and the kept
+   transcripts into the audit repository's clone, commits and pushes. Its
+   last line goes on the C line's `audit` field as printed: `audit commit
+   <sha>`, `audit commit none` (nothing new), or `audit sync FAILED:
+   <reason>`, each with `; snapshot FAILED: <why>` appended when the
+   snapshot failed; a FAILED of either kind also goes into the report to
+   the owner and never stops the loop. Without an audit repository the field says `not configured`,
+   with `KAD_AUDIT` unset `off`, and nothing runs. **Then the C line**,
+   then the budget check, then the next chunk. Between launches the only thing you say to the user is one
    short paragraph per event, with the hashes; you never restate a
    finding, keep a digest, or narrate an agent's turns.
 
@@ -946,12 +997,16 @@ B line: the chunk titles in order.
    into a fresh temporary directory (`git clone <project root> <tmp>` at
    the branch), follows the README and nothing else from clone to
    running, drives the slice's thin path once, removes the clone, and
-   writes `slice-r<i>-smoke.md`. What it raises goes to that round's
+   writes `slice-r<i>-smoke.md` (with no browser, the same owed finding
+   as C.3, for the slice's thin path, which goes to no fixer here either).
+   What else it raises goes to that round's
    fixer (as a round-0 finding when it ran with round 0, as a regression
    when with round 1); a README that does not get a stranger to a running
    app is a High for `docs-writer:readme` again, inline, then the fixer's
    gate.
-5. The D line; the records commit `Records: slice <nnn> review`.
+5. The records commit `Records: slice <nnn> review`; the snapshot and
+   the sync exactly as C.6, their last line on the D line's `audit`
+   field; then the D line.
 
 **E. Delivery.** No question is asked in this step; the user decided on
 2026-10-24 that the branch is pushed and the pull request opened without
@@ -965,6 +1020,11 @@ finishes its last action.
    refuses a dirty tree, and the loop never committed the log before this
    (each C and D line names the records commit it follows). The E line
    written at the end stays uncommitted, like every other entry.
+   **Nothing is checked again at E**: the Definition of Done results that
+   `delivery` and the pull request body carry are the D line's, and the
+   last gate output is the one on D's last fix; E runs neither
+   `done_check.py` nor the gate (E is mechanics, not judgment, and a check
+   re-run here has no fixer to go to).
 2. **CI.** If the repository has no continuous-integration configuration
    (no `.github/workflows/*.yml`, no equivalent for the host the remote
    names), invoke `release-engineer:ci-pipeline` inline with the `Skill`
@@ -1013,17 +1073,28 @@ finishes its last action.
    the sidecar with `"chunk": "pr"`; the comments file is committed with
    the records.
 5. **Cost.** Inline with Bash:
-   `python3 -I "${CLAUDE_PLUGIN_ROOT}/evals/tools/cost_by_role.py" --project '<project root>'`
-   over the session transcripts audit mode kept (when audit mode is off it
-   says so and the E line records `cost not measured`). Its total goes on
-   the E line.
-6. **Audit sync.** When `KAD_AUDIT_REPO` is set and `<project>/audit-docs/`
-   exists, run
-   `python3 -I "${CLAUDE_SKILL_DIR}/scripts/audit_sync.py" --project '<project root>' --slice <nnn>`
-   inline: it copies the planning documents, the log, the report, the map,
-   the records directory and the sidecar into the audit repository's slice
-   folder, refuses on a credential-shaped string, commits there and
-   pushes. Its last line names the audit commit.
+
+   ```
+   python3 -I "${CLAUDE_PLUGIN_ROOT}/evals/tools/cost_by_role.py" --project '<project root>' --log '<target directory>/orchestrator-log.md' --sidecar '<records dir>/rounds-slice-<nnn>.jsonl' --session "$CLAUDE_CODE_SESSION_ID"
+   ```
+
+   The log names every session of this entry (the A line's `session`
+   field, each `Resumed` bullet's), the sidecar every session that
+   recorded a round, and `--session` adds this one; the script finds
+   each one's transcript (the project's
+   own directory, else the snapshots audit mode kept) with its subagents'
+   and prints the total by role class, or `cost not measured: transcript
+   missing for <id>` and no total when one is absent. Its last line goes
+   on the E line as printed: a total that does not cover the loop's own
+   sessions is never written (run 3's E line carried the planning
+   session's figure as if it were the run's).
+6. **Audit sync.** With `KAD_AUDIT=1`, the snapshot and the sync exactly
+   as C.6 (the sync's `--transcripts` carries every kept session), its
+   last line on the E line's `audit` field: `audit commit <sha>`, `audit
+   commit none`, or `audit sync FAILED: <reason>`, the last also in the
+   report to the owner; `not configured` without an audit repository,
+   `off` without audit mode. A configured repository with no clone is
+   that FAILED line, never a skip.
 7. The E line, in this same turn, then step 5 below: report what happened
    at each of the five steps, with the pull request and issue numbers, the
    standing findings if any, and the open external comments if the cap was
@@ -1041,8 +1112,9 @@ whether the owner opted out of the sandbox), and the owner's standing
 directions; commit it with the records; and write a memory pointer to it.
 On invocation with a handoff file present for the slice, resume from it:
 no new A step, no second policy question; append `Resumed <date> at
-<step>` as an indented line under the entry's last line and continue at
-the step the file names. The handoff file is removed by the records commit
+<step>, session <this session's id>` as an indented line under the
+entry's last line (the cost at E covers every session the entry names)
+and continue at the step the file names. The handoff file is removed by the records commit
 at E.
 
 **This row's `orchestrator-log.md` entry needs sub-entries for all five
@@ -1065,13 +1137,13 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; policy — `<heavy | lite>`; delegation — `<file path | none>`; budget — `5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
+- **A. Start:** sandbox — `<PASS (<platform>[; Chrome | ; no Chrome]) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; policy — `<heavy | lite>`; delegation — `<file path | none>`; budget — `5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r `<consults>`c; records `<sha>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r `<consults>`c; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
-- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; standing `<C/H/M>`; records `<sha>`
-- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; cost `$<n> | not measured`; audit `<sha | not configured>`
-  - Resumed <date> at <step>
+- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`
+- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`
+  - Resumed <date> at <step>, session `<id>`
 ```
 
 **5. Report as visible text after every step, then continue.** State

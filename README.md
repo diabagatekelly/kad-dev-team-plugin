@@ -46,17 +46,21 @@ skills/
   orchestrator/scripts/done_check.py       # the Definition of Done at the slice review: README, lint and
                        # formatter, typecheck, no code in strings, no planning references, comment
                        # density, persisted names, env defaults, test padding
-  orchestrator/scripts/audit_sync.py       # the loop's last step when KAD_AUDIT_REPO is set: a slice's planning
-                       # documents, log, report, map, reviewer reports and fix-round sidecar copied into
-                       # the audit repository's clone, refused on a credential-shaped string, committed
-                       # and pushed
+  orchestrator/scripts/audit_sync.py       # after every records commit of the loop when KAD_AUDIT_REPO is set: a
+                       # slice's planning documents, log, report, map, reviewer reports, fix-round
+                       # sidecar and kept transcripts copied into the audit repository's clone
+                       # ($KAD_AUDIT_DIR/repo/), refused on a credential-shaped string, committed
+                       # under the project's identity and pushed; --check reports the clone's state
+                       # for the A line
   map-update/scripts/extract_map.py        # the architecture map extractor (TypeScript, JavaScript, Python):
                        # modules, import edges, externals, exports, tiers carried from the prior map,
                        # the diff and the two candidate flags; a language without one is listed with
                        # no edges and said so, never hand-parsed
 hooks/
   hooks.json, audit.sh # audit mode: off unless KAD_AUDIT=1 (see below); with KAD_AUDIT_REPO set, the
-                       # SessionStart hook clones the audit repository into the project's audit-docs/
+                       # SessionStart hook finds the audit repository's clone at $KAD_AUDIT_DIR/repo/
+                       # (the launcher made it) or clones it there, and records the outcome;
+                       # `audit.sh --snapshot` copies the session's transcript on demand
 evals/
   <case>/case.yaml     # a `claude plugin eval` case (negative trigger cases use prompt.md + graders/)
   fixtures/library-app # shared fixture app with an answer key; personas plant defects in overlays
@@ -127,7 +131,11 @@ login's scope; a session-local `gh` config directory, since its own is
 on the deny list; `gh` as git's credential helper in place of the
 keychain the fence refuses; and the runtime's TLS termination, without
 which `gh` cannot verify a certificate on macOS), turns
-audit mode on with the audit repository you named, and starts `srt
+audit mode on with the audit repository you named, clones that
+repository into `$KAD_AUDIT_DIR/repo/` before the fence starts (inside
+it git cannot write a `.git/config` anywhere, so a clone from inside
+fails; the clone gets the project's git identity, and the audit
+directory is allowed for writing), and starts `srt
 claude --plugin-dir <this plugin>` inside that fence, so the Read tool,
 hooks and every agent are inside it too. The first run asks three
 questions, audit mode (on by default), the audit repository and any
@@ -141,12 +149,22 @@ plan and writes nothing; `--install-runtime` installs the sandbox runtime
 without asking when it is missing. Local
 ports are allowed by default (a dev server, its tests and the loop's
 smoke run bind and reach `localhost`; `--no-local` denies them for a
-slice that touches no port). `kad --chrome` adds the extension's bridge
-domain and starts `claude --chrome`, so Claude in Chrome can open
+slice that touches no port). `kad --chrome` allows the extension's bridge
+host and Anthropic's MCP proxy and tunnels both past the runtime's TLS
+termination, which refuses the WebSocket upgrade the bridge needs (the
+reason run 3 never reached a browser: `upgrade request refused` in the
+runtime's debug log); it also allows the unix socket the extension's
+native host listens on (`/tmp/claude-mcp-browser-bridge-<user>/`; on
+Linux the runtime cannot allow one path, so every unix socket is allowed
+for that session) and starts `claude --chrome`, so Claude in Chrome can open
 `localhost:3000` in your real Chrome, which runs outside the fence; enable
 the extension once outside the fence first (`claude --chrome`, which
 writes Chrome's native-messaging file under `~/Library` or `~/.config`,
-paths the fence denies). The
+paths the fence denies). The orchestrator's A step then asks the Chrome
+tools whether a browser answers and writes `Chrome` or `no Chrome` on its
+sandbox field; without one, every UI smoke run raises one owed finding,
+"browser checks not run", naming what it could not drive, which stands
+into the pull request as your checklist instead of a `PASS`. The
 orchestrator's sandbox check reads the same settings file
 (`KAD_SRT_SETTINGS`) before it launches anything and names whatever is
 missing. The launcher itself writes nothing outside
@@ -202,17 +220,22 @@ plugin. Nothing leaves your machine, and sessions that never used the
 plugin aren't kept.
 
 With `KAD_AUDIT_REPO` set as well, the audit material gets a home you
-choose: a separate repository, cloned at session start into the project's
-`audit-docs/` and listed in the project's `.git/info/exclude`, so the
-project's own `.gitignore` and history never mention it. At the end of
-each delivered slice the orchestrator runs `audit_sync.py`, which copies
-that slice's planning documents, orchestrator log, implementation report,
-architecture map, reviewer reports and fix-round sidecar into
-`audit-docs/<project>-slice-<n>/`, refuses if anything it would copy looks
-like a credential, and commits and pushes in the clone. Run it by hand
-with `python3 -I skills/orchestrator/scripts/audit_sync.py --project
-<root> --slice <n>` (add `--transcripts` to include the kept session
-transcripts, `--no-push` to only commit). In this repo, ask Claude to "review the audit logs"
+choose: a separate repository, cloned into `$KAD_AUDIT_DIR/repo/` (by
+`kad` before the fence starts, or by the SessionStart hook in a session
+`kad` did not start; never inside the project). The orchestrator's chunk
+loop reports the clone's state on its A line and, after every records
+commit (each chunk's, the slice review's, the delivery's), snapshots the
+session's transcript and runs `audit_sync.py`, which copies that slice's
+planning documents, orchestrator log, implementation report, architecture
+map, reviewer reports, fix-round sidecar and kept transcripts into
+`<clone>/<project>-slice-<n>/`, refuses if anything it would copy looks
+like a credential, and commits (under the project's git identity) and
+pushes in the clone; its result goes on the log line as printed, a failure
+included, never as a skip. Run it by hand with `python3 -I
+skills/orchestrator/scripts/audit_sync.py --project <root> --slice <n>`
+(add `--snapshot` to copy this session's transcript first, `--transcripts`
+to include the kept session transcripts, `--no-push` to only commit,
+`--clone <dir>` for a clone elsewhere). In this repo, ask Claude to "review the audit logs"
 (the `audit-review` skill): it reads the flagged sessions against the
 skills' own rules and proposes fixes and eval cases.
 `evals/tools/audit_report.py` gives the raw overview, and
@@ -322,9 +345,11 @@ place. In order:
   external reviewer's comments are triaged
   (`code-reviewer:external-review-triage`: fix, decline with a reply, or
   defer to an issue) for up to five rounds, the cost is computed from the
-  transcripts (`cost_by_role.py`) and written on the E line, and the audit
-  material is synced to the audit repository when one is configured, in
-  the same turn as the last issue.
+  transcripts of every session the sidecar names (`cost_by_role.py`; a
+  session with no transcript on disk means `cost not measured`, never a
+  partial total) and written on the E line, and the audit material is
+  synced to the audit repository once more when one is configured, in the
+  same turn as the last issue.
 
 Every launch passes `model` and `maxTurns` explicitly (an agent
 definition's lines are not applied in practice); every reviewer writes

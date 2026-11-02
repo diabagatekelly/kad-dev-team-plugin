@@ -50,6 +50,12 @@ graders:
       PASS if the log has the chunk-loop entry (routed to the chunk loop, artifact "see sub-entries below") and at least one backward-route entry after it that names a failed readiness check (the retry with no number, or the missing mockup, in the check's name or in words) and routes to the matching persona or skill (reliability-requirements or screen-design) naming the document to revise. The second backward entry may be missing when the first routed skill stopped to ask the owner.
 
       FAIL if no backward entry exists, if a backward entry routes to the builder or to a persona the check does not name, or if the chunk-loop entry's A line reports readiness as PASS without any backward route.
+  - type: regex
+    name: a-line-carries-session-and-audit
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*A\. Start:\*\*[^\n]*\bsession\b[^\n]*\baudit\b[^\n]*(off|not configured|audit clone)'
   - type: llm
     name: stops-at-the-routed-skill-or-reports-the-route
     focus: last_message

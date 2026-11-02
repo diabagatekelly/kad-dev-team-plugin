@@ -77,7 +77,8 @@ one. Record the pull request number and URL.
 ## 4. Issues for what is left standing
 
 Every **standing Medium** (the sidecar's pre-existing Critical, High and
-Medium rows that no fix covered; `rounds_record.py --standing` lists them)
+Medium rows that no fix covered, and its `owed` rows, the browser checks a
+UI smoke run could not drive; `rounds_record.py --standing` lists both)
 becomes one issue, in the tracker the project recorded. **Lows are not
 filed**: the second real run turned 585 Lows into 205 issues nobody will
 groom; they stay in the pull request body under "Known Lows", where a
