@@ -458,6 +458,15 @@
     "claude_version": "2.1.316",
     "recorded": "2026-11-02T18:52:22Z"
   },
+  "orchestrator-delivery-foreground": {
+    "inputs": "5e69a43248401acb9de6baf2418bc591d06ed7546d4fb0e9b6baae1ae91bff09",
+    "score": 1.0,
+    "bar": 0.926,
+    "runs": 1,
+    "source": "results/gate-20261102T185516-orchestrator-delivery-foreground.json",
+    "claude_version": "2.1.316",
+    "recorded": "2026-11-02T18:56:31Z"
+  },
   "orchestrator-gap-without-delegation": {
     "inputs": "e8430debdd1f69f8fe5de816194ce99261008d12c381a844a65b2652669afa8f",
     "score": 1.0,
