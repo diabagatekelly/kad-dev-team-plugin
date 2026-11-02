@@ -69,6 +69,6 @@ graders:
     criteria: |
       The E step ends in the same turn that finishes its last action: the report names the pull request and issue numbers, the Lows left in the body, the standing findings, the external-review result (no comments arrived from the stand-in), the cost line (`not measured`, or a figure, since this session's own transcript is the one the sidecar and `--session` name) and the audit field (`off` or `not configured`: audit mode is not on in this session).
 
-      PASS if the reply reports pull request #7 and two issue numbers, says the Lows stayed in the body, and gives the cost and audit outcomes (`off` or `not configured` for the audit, either wording); a note that the external reviewer left nothing passes.
+      PASS if the reply reports pull request #7 and two issue numbers, says the Lows stayed in the body, and gives the cost outcome (`not measured` with a reason, or a figure); the audit field is `off` in this session and may go unmentioned in the reply; a note that the external reviewer left nothing passes, and so does a note that the stand-in's `pr view` could not show the edited body.
 
       FAIL if it asks whether to push or open the pull request, reports the issues as filed in the background or still to be linked, or omits the pull request number.
