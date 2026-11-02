@@ -5,16 +5,25 @@ on the E line: `cost $<n>` or `cost not measured: <why>`. The figure is an
 estimate from list prices over the token counts Claude Code records on
 every assistant message; it is not a bill.
 
-Transcripts come from one of three places, the first that yields any:
-- `--transcript <session.jsonl>` (repeatable): a session and, next to it,
-  its `<session>/subagents/agent-*.jsonl` with their `.meta.json`;
-- `--project <root>` with audit mode on (`hooks/audit.sh`): every
-  transcript under `<audit dir>/transcripts/` whose session ran in that
-  project, with its subagents;
-- `--project <root>` with `--projects-dir` (default `~/.claude/projects`):
-  the project's own transcript directory, the one Claude Code writes to
-  (`C--Users-...-app/` for `C:\\Users\\...\\app`), for a run that audit
-  mode did not keep.
+Which sessions a total must cover is decided by id, never by whatever
+transcripts happen to be on disk: `--session <id>` (repeatable; the E
+step passes its own, `CLAUDE_CODE_SESSION_ID`) and `--sidecar
+<rounds-slice-nnn.jsonl>` (every distinct `session` its rows name: each
+session that recorded a round). For each id the transcript is looked for
+under `--projects-dir` (default `~/.claude/projects`, the project's own
+directory, the one Claude Code writes to: `C--Users-...-app/` for
+`C:\\Users\\...\\app`), then under `<audit dir>/transcripts/` (the
+snapshots `hooks/audit.sh` keeps), with `<session>/subagents/` next to
+it. **A required id with no transcript means no total**: the output ends
+with `cost not measured: transcript missing for <id>` and the E line
+carries that. Run 3's loop session had 79 subagent transcripts on disk
+and no main one; the planning session's figure went on the E line as if
+it were the run's.
+
+Without any id, `--transcript <session.jsonl>` (repeatable) names the
+sessions outright; failing that, `--project <root>` takes every kept
+transcript whose session ran in the project, then the project's own
+directory, and says the sessions were chosen by directory, not by id.
 
 Each assistant message is counted once by its id (a resumed or forked
 session repeats earlier ones). Role classes come from the subagent's launch
@@ -26,7 +35,8 @@ and cache write; `--price model=in,out,read,write` adds or overrides one.
 A model with no price is counted at the most expensive known price and
 named in the output, so the total is never silently low.
 
-Usage: python3 -I evals/tools/cost_by_role.py --project <root> [--audit-dir DIR] [--projects-dir DIR]
+Usage: python3 -I evals/tools/cost_by_role.py --project <root> [--session ID ...] [--sidecar rounds.jsonl]
+                                            [--audit-dir DIR] [--projects-dir DIR]
                                             [--transcript s.jsonl ...] [--price model=in,out,read,write ...]
                                             [--json out.json]
 """
@@ -146,11 +156,44 @@ def audit_sessions(audit_dir, project):
     return out
 
 
+def project_folder(projects_dir, project):
+    key = re.sub(r"[^A-Za-z0-9]", "-", os.path.abspath(project))
+    return os.path.join(projects_dir, key)
+
+
 def project_sessions(projects_dir, project):
     """The project's own transcript directory under ~/.claude/projects."""
-    key = re.sub(r"[^A-Za-z0-9]", "-", os.path.abspath(project))
-    folder = os.path.join(projects_dir, key)
+    folder = project_folder(projects_dir, project)
     return sorted(glob.glob(os.path.join(folder, "*.jsonl"))) if os.path.isdir(folder) else []
+
+
+def sidecar_sessions(path):
+    """The distinct session ids the sidecar's rows name, in first-seen order."""
+    out = []
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    sid = json.loads(line).get("session")
+                except ValueError:
+                    continue
+                if sid and sid not in out:
+                    out.append(sid)
+    except OSError:
+        pass
+    return out
+
+
+def transcript_for(sid, projects_dir, project, audit_dir):
+    """The session's transcript: the live one under the project's directory first, else the audit snapshot."""
+    candidates = []
+    if project:
+        candidates.append(os.path.join(project_folder(projects_dir, project), f"{sid}.jsonl"))
+    candidates.append(os.path.join(audit_dir, "transcripts", f"{sid}.jsonl"))
+    for c in candidates:
+        if os.path.isfile(c):
+            return c, candidates
+    return None, candidates
 
 
 def main():
@@ -160,6 +203,8 @@ def main():
     p.add_argument("--audit-dir", default=os.environ.get("KAD_AUDIT_DIR", os.path.expanduser("~/.claude/kad-audit")))
     p.add_argument("--projects-dir", default=os.path.expanduser("~/.claude/projects"))
     p.add_argument("--transcript", action="append", default=[])
+    p.add_argument("--session", action="append", default=[], help="a session id the total must cover (repeatable)")
+    p.add_argument("--sidecar", help="rounds-slice-<nnn>.jsonl: every session its rows name must be covered")
     p.add_argument("--price", action="append", default=[], help="model=in,out,read,write ($/M)")
     p.add_argument("--json")
     a = p.parse_args()
@@ -167,8 +212,26 @@ def main():
         model, _, nums = spec.partition("=")
         PRICES[model] = tuple(float(x) for x in nums.split(","))
 
+    required = list(a.session)
+    for sid in (sidecar_sessions(a.sidecar) if a.sidecar else []):
+        if sid not in required:
+            required.append(sid)
     sessions = list(a.transcript)
     source = "--transcript"
+    if required:
+        sessions, missing = [], []
+        for sid in required:
+            found, looked = transcript_for(sid, a.projects_dir, a.project, a.audit_dir)
+            if found:
+                sessions.append(found)
+            else:
+                missing.append((sid, looked))
+        for sid, looked in missing:
+            print(f"transcript missing for {sid}: looked at {', '.join(looked)}")
+        if missing:
+            print(f"cost not measured: transcript missing for {', '.join(sid for sid, _ in missing)}")
+            return 0
+        source = f"{len(required)} session id(s) from " + " and ".join(x for x in ("--session" if a.session else "", "--sidecar" if a.sidecar else "") if x)
     if not sessions and a.project:
         sessions = audit_sessions(a.audit_dir, a.project)
         source = f"audit mode ({a.audit_dir})"
@@ -199,6 +262,8 @@ def main():
 
     unknown = sorted({m for _, _, _, u in rows for m in u["models"] if m not in PRICES})
     print(f"Sessions: {len(sessions)} ({source}); agents: {len(rows) - len(sessions)}; assistant messages counted once by id.")
+    if not required:
+        print("The sessions were chosen by directory, not by id: pass --session or --sidecar for a total that is known to cover the run.")
     print()
     print("| session | role class | agents | msgs | output tok | cache read (M) | cache write (M) | est. $ | models |")
     print("|---|---|---|---|---|---|---|---|---|")

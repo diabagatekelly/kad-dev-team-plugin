@@ -36,9 +36,9 @@ Each finding becomes one sidecar row:
 
     {"chunk": 3, "round": 1, "reviewer": "review", "severity": "Medium",
      "persona": null, "title": "...", "file": "src/x.ts", "line": 12,
-     "class": "regression" | "pre-existing" | null, "fix": "<sha>" | null,
+     "class": "regression" | "pre-existing" | "owed" | null, "fix": "<sha>" | null,
      "fixer": "<agent id>" | null, "turns": n | null,
-     "report": "chunk-3-r1-review.md"}
+     "report": "chunk-3-r1-review.md", "session": "<the session that recorded it>"}
 
 `chunk` is an int when numeric (`D` and `pr` stay strings); `reviewer` is
 the report filename's last `-` segment (`chunk-3-r1-review.md` -> review,
@@ -58,16 +58,27 @@ line is a regression too (the file was touched); any other is
 `pre-existing`: the re-review found it in lines the fix did not write, so
 it stands and is never fixed in this scope. A smoke report's findings are
 always regressions when a range is given: a smoke failure never stands.
-Without `--range` (round 0) `class` is null.
+Without `--range` (round 0) `class` is null, with one exception: a
+finding titled "browser checks not run" (a UI smoke agent with no browser
+to drive, naming what it could not check) is `owed` in any round. It is
+never a fixer's (no fix makes a browser appear), it is left out of the
+counts and the smoke count, it is printed as an `owed:` line, and it
+stands like a pre-existing finding: `--standing` lists it, so it reaches
+the pull request body and its issue as the owner's checklist.
+
+`session` is the session that ran this script (`--session`, else
+`CLAUDE_CODE_SESSION_ID`, else null): `cost_by_role.py` reads the distinct
+ids from the sidecar to know which transcripts a cost total must cover.
 
 Printed last, exactly, for the C line:
 
-    r<i> <C>/<H>/<M>[ nd <n>][ (reg <r>, pre <p>)][; smoke PASS | ; smoke <n> findings][; L <n>]
+    r<i> <C>/<H>/<M>[ nd <n>][ (reg <r>, pre <p>)][; smoke PASS | ; smoke <n> findings][; L <n>][; owed <n>]
 
 `nd` appears only when a finding needs a decision; the regression split
 only with `--range`, counted over Critical, High and Medium; the smoke
 part only when a smoke report was among the inputs (PASS is a smoke report
-with no finding); `L` only when a Low was parsed (the slice review at D).
+with no finding); `L` only when a Low was parsed (the slice review at D); `owed` only when
+a "browser checks not run" finding was parsed.
 Before that line, one `needs-decision: <persona> — <title> (<file>:<line>)`
 per such finding and, with `--range`, one `standing: <severity> — <title>
 (<file>:<line>)` per pre-existing Critical, High or Medium.
@@ -114,6 +125,7 @@ RESULT_PASS = re.compile(r"^PASS\b", re.I)
 NEEDS_DECISION = re.compile(r"needs[- ]decision(?:\s*\(\s*`?([^)`]+?)`?\s*\))?", re.I)
 LEVELS = {"critical": "Critical", "high": "High", "medium": "Medium", "low": "Low"}
 ACTIONABLE = ("Critical", "High", "Medium")
+OWED = re.compile(r"^\s*browser checks not run\b", re.I)
 PATH_TOKEN = re.compile(r"`?((?:[\w.@+-]+/)*[\w@+-]+(?:\.[\w-]+)+)`?(?::(\d+)(?:\s*[-–]\s*(?:L?)(\d+))?)?")
 HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
 
@@ -224,6 +236,10 @@ def hunks(project, rng):
 
 
 def classify(finding, reviewer, changed):
+    if OWED.match(finding["title"] or ""):
+        return "owed"
+    if changed is None:
+        return None
     if reviewer == "smoke":
         return "regression"
     if finding["file"] is None or finding["file"] not in changed:
@@ -302,8 +318,9 @@ def record(a):
             rows.append({"chunk": chunk_value(a.chunk), "round": a.round, "reviewer": reviewer,
                          "severity": f["severity"], "persona": f["persona"], "title": f["title"],
                          "file": f["file"], "line": f["line"],
-                         "class": classify(f, reviewer, changed) if changed is not None else None,
-                         "fix": a.fix, "fixer": a.fixer, "turns": a.turns, "report": key})
+                         "class": classify(f, reviewer, changed),
+                         "fix": a.fix, "fixer": a.fixer, "turns": a.turns, "report": key,
+                         "session": a.session or None})
 
     keys = {report_key(r, a.sidecar) for r, _ in reports}
     kept = [raw for raw in load_sidecar(a.sidecar) if not ((row_of(raw) or {}).get("report") in keys)]
@@ -314,17 +331,21 @@ def record(a):
         for row in rows:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
-    counts = {s: sum(1 for r in rows if r["severity"] == s) for s in ("Critical", "High", "Medium", "Low", "needs-decision")}
-    actionable = [r for r in rows if r["severity"] in ACTIONABLE]
+    owed = [r for r in rows if r["class"] == "owed"]
+    counted = [r for r in rows if r["class"] != "owed"]
+    counts = {s: sum(1 for r in counted if r["severity"] == s) for s in ("Critical", "High", "Medium", "Low", "needs-decision")}
+    actionable = [r for r in counted if r["severity"] in ACTIONABLE]
     regressions = sum(1 for r in actionable if r["class"] == "regression")
     standing = [r for r in actionable if r["class"] == "pre-existing"]
-    smoke_findings = sum(1 for r in rows if r["reviewer"] == "smoke")
+    smoke_findings = sum(1 for r in counted if r["reviewer"] == "smoke")
 
     for r in rows:
         if r["severity"] == "needs-decision":
             print(f"needs-decision: {r['persona'] or 'persona not named'} — {r['title']} ({where(r)})")
     for r in standing:
         print(f"standing: {r['severity']} — {r['title']} ({where(r)})")
+    for r in owed:
+        print(f"owed: {r['severity']} — {r['title']} ({where(r)}); stands, never handed to a fixer")
 
     line = f"r{a.round} {counts['Critical']}/{counts['High']}/{counts['Medium']}"
     if counts["needs-decision"]:
@@ -332,9 +353,12 @@ def record(a):
     if changed is not None:
         line += f" (reg {regressions}, pre {len(standing)})"
     if smoke_seen:
-        line += "; smoke PASS" if smoke_findings == 0 else f"; smoke {smoke_findings} findings"
+        smoke_owed = any(r["reviewer"] == "smoke" for r in owed)
+        line += "; smoke PASS" if smoke_findings == 0 and not smoke_owed else f"; smoke {smoke_findings} findings"
     if counts["Low"]:
         line += f"; L {counts['Low']}"
+    if owed:
+        line += f"; owed {len(owed)}"
     if a.json:
         with open(a.json, "w", encoding="utf-8") as f:
             json.dump({"rows": rows, "counts": counts, "regressions": regressions, "standing": len(standing),
@@ -345,7 +369,7 @@ def record(a):
 
 def list_standing(a):
     rows = [r for r in (row_of(raw) for raw in load_sidecar(a.sidecar)) if r]
-    rows = [r for r in rows if r.get("class") == "pre-existing" and r.get("severity") in ACTIONABLE]
+    rows = [r for r in rows if r.get("class") in ("pre-existing", "owed") and r.get("severity") in ACTIONABLE]
     if a.chunk is not None:
         rows = [r for r in rows if str(r.get("chunk")) == a.chunk]
     order = {s: n for n, s in enumerate(ACTIONABLE)}
@@ -369,7 +393,8 @@ def main():
     p.add_argument("--fixer", help="the fixer agent's id")
     p.add_argument("--turns", type=int, help="the fixer's turn count")
     p.add_argument("--json", help="also write the rows and counts here")
-    p.add_argument("--standing", action="store_true", help="list the pre-existing Critical/High/Medium rows instead")
+    p.add_argument("--standing", action="store_true", help="list the pre-existing and owed Critical/High/Medium rows instead")
+    p.add_argument("--session", default=os.environ.get("CLAUDE_CODE_SESSION_ID"), help="the session recording this round (default: CLAUDE_CODE_SESSION_ID)")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if a.standing:

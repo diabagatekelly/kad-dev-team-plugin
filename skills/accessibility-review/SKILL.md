@@ -84,7 +84,18 @@ browser-driving launch per round:
    the real browser with the Chrome tools: each runnable item in turn.
    Each item that does not hold is one finding, Critical when the chunk's
    main path does not work, High otherwise, with what you did and what
-   you saw.
+   you saw. **No browser is a finding, never a pass.** When the first
+   Chrome tool call answers that no browser is connected (or the tools
+   are not there), check what HTTP requests and the served markup can
+   show, and write for everything else one Medium finding titled exactly
+   `browser checks not run`, listing each Done when item and each
+   accessibility criterion you could not drive (focus order and the
+   visible focus ring, live announcements, reduced motion, the narrow
+   layout, the console): the loop records it as owed, hands it to no
+   fixer, and carries it into the pull request as the owner's checklist.
+   Its `## Result` is then `FAIL`. A report that says `PASS` with a note
+   that the browser was unavailable hides what was not checked (run 3,
+   every UI chunk).
 3. **Check the chunk's accessibility criteria** (the task hands you the
    file) on the built screen, as the eight checks say, in every state the
    chunk's Done when reaches; each failure is a finding at the severity

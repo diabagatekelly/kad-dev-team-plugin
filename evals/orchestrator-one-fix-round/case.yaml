@@ -52,6 +52,12 @@ graders:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
     pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*standing `0/0/1`'
+  - type: regex
+    name: c-line-carries-the-audit-field
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*\baudit\b[^\n]*(off|not configured|audit commit|audit sync FAILED)'
   - type: llm
     name: handoff-at-the-chunk-boundary
     focus:

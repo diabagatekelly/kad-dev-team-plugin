@@ -31,7 +31,7 @@ graders:
   - type: tool_used
     name: cost-script-run
     tool: Bash
-    input_match: 'cost_by_role\.py'
+    input_match: 'cost_by_role\.py[^\n]*--sidecar'
     min: 1
   - type: regex
     name: nothing-in-the-background
@@ -67,8 +67,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The E step ends in the same turn that finishes its last action: the report names the pull request and issue numbers, the Lows left in the body, the standing findings, the external-review result (no comments arrived from the stand-in), the cost line (`not measured`, since audit mode kept no transcripts) and the audit sync (`not configured`).
+      The E step ends in the same turn that finishes its last action: the report names the pull request and issue numbers, the Lows left in the body, the standing findings, the external-review result (no comments arrived from the stand-in), the cost line (`not measured`, or a figure, since this session's own transcript is the one the sidecar and `--session` name) and the audit field (`off` or `not configured`: audit mode is not on in this session).
 
-      PASS if the reply reports pull request #7 and two issue numbers, says the Lows stayed in the body, and gives the cost and audit outcomes; a note that the external reviewer left nothing passes.
+      PASS if the reply reports pull request #7 and two issue numbers, says the Lows stayed in the body, and gives the cost and audit outcomes (`off` or `not configured` for the audit, either wording); a note that the external reviewer left nothing passes.
 
       FAIL if it asks whether to push or open the pull request, reports the issues as filed in the background or still to be linked, or omits the pull request number.

@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 """Copy one slice's audit material into the audit repository's clone, commit, push.
 
-The last step of the orchestrator's chunk loop (its step E) when audit mode
-has a repository configured: `KAD_AUDIT=1` with `KAD_AUDIT_REPO` set, which
-makes the plugin's SessionStart hook clone that repository into the
-project's `audit-docs/` (listed in the project's `.git/info/exclude`, never
-in its `.gitignore` or history). This script fills it, under the layout the
-first slice established by hand on 2026-10-24:
+Run by the orchestrator's chunk loop after every records commit (each
+chunk's, the slice review's, the delivery's) when audit mode has a
+repository configured: `KAD_AUDIT=1` with `KAD_AUDIT_REPO` set. The clone
+lives at `$KAD_AUDIT_DIR/repo/` (the launcher clones it there before the
+sandbox runtime starts, since inside the fence git cannot write a
+`.git/config` anywhere; the SessionStart hook clones there for a session
+the launcher did not start). `--clone <dir>` names another one; without
+it, the project's own `audit-docs/` is still accepted when it holds a
+clone (the location before 2026-11-02). Each sync copies the whole slice
+folder, so a sync that a crash skipped is covered by the next one. This
+script fills the clone under the layout the first slice established by
+hand on 2026-10-24:
 
-    audit-docs/<project>-slice-<n>/
+    <clone>/<project>-slice-<n>/
       planning/                      every file in the orchestrator's target
                                      directory (the planning documents, the
                                      orchestrator log, the implementation
@@ -21,9 +27,9 @@ first slice established by hand on 2026-10-24:
                                      <project>/.git/kad-audit/reviews/slice-<nnn>/
         transcripts/<session>/       only with --transcripts: the sessions
                                      audit mode kept whose log mentions this
-                                     project (a session's transcript is kept
-                                     at its end, so the current one is not
-                                     there yet)
+                                     project, as snapshotted by
+                                     `hooks/audit.sh --snapshot` after each
+                                     records commit and at session end
       sync-log.md                    one line per sync: when, from which
                                      project commit, what was copied
 
@@ -35,22 +41,36 @@ refuses on the first hit, listing them with the matched text masked;
 cleared (a test fixture with an invented token, say), and the sync log
 records that it was allowed. Files named `.env*` are never copied.
 
+The clone commits under the project's `user.name` and `user.email` when
+the project sets them (a noreply address, where GitHub's email privacy
+would otherwise refuse the push), and fast-forwards from its remote before
+copying, so a clone another machine pushed to is not left behind.
+
 Usage:
   python3 -I audit_sync.py --project <root> --slice <n> [--docs <dir>]
-      [--name <project name>] [--audit-dir <dir>] [--transcripts]
+      [--name <project name>] [--audit-dir <dir>] [--clone <dir>] [--transcripts]
       [--allow <fragment>]... [--no-push] [--dry-run]
+  python3 -I audit_sync.py --check [--audit-dir <dir>] [--clone <dir>] [--session <id>]
+
+`--check` (the orchestrator's A step) prints one line and changes nothing:
+`audit: not configured` when `KAD_AUDIT_REPO` is unset (exit 0);
+`audit clone: <dir>` when a usable clone is there (exit 0); otherwise
+`audit clone FAILED: <why>` (exit 1), with git's own message when the
+session's audit log (`$KAD_AUDIT_DIR/sessions/<id>.jsonl`, the id from
+`--session` or `CLAUDE_CODE_SESSION_ID`) recorded a failed clone.
 
 Exit codes: 0 synced (or nothing had changed); 1 usage or a missing input;
 3 a credential-shaped string was found and nothing was copied; 4 git
 failed in the clone (the copy stays, the commit or push did not happen).
-The last line of output names the audit commit (`audit commit <sha>`), or
-`audit commit none` when there was nothing new; the orchestrator's E line
-records it.
+The last line of output names the audit commit (`audit commit <sha>`),
+`audit commit none` when there was nothing new, or `audit sync FAILED:
+<reason>` on any failure; the orchestrator's line records it as it is.
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import os
 import re
 import shutil
@@ -85,7 +105,71 @@ def say(msg: str) -> None:
 
 def fail(msg: str, code: int) -> int:
     print(f"audit_sync: {msg}", file=sys.stderr, flush=True)
+    print(f"audit sync FAILED: {msg}", flush=True)
     return code
+
+
+def default_clone(audit_dir: str, project: Path | None) -> Path:
+    """The clone's location: under the audit directory, else the project's
+    own audit-docs/ when that still holds one (the location before 2026-11-02)."""
+    primary = Path(audit_dir) / "repo"
+    if (primary / ".git").exists() or project is None:
+        return primary
+    legacy = project / "audit-docs"
+    return legacy if (legacy / ".git").exists() else primary
+
+
+def clone_failure_recorded(audit_dir: str, session: str | None) -> str | None:
+    """What the SessionStart hook recorded about its clone attempt, if anything."""
+    if not session:
+        return None
+    log = Path(audit_dir) / "sessions" / f"{session}.jsonl"
+    try:
+        lines = log.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    for line in reversed(lines):
+        if '"kad_audit_clone"' not in line:
+            continue
+        try:
+            p = json.loads(line).get("payload", {})
+        except ValueError:
+            continue
+        if p.get("kad_audit_clone") == "failed":
+            return p.get("error") or "git clone failed with no message"
+        return None
+    return None
+
+
+def check(a) -> int:
+    if not os.environ.get("KAD_AUDIT_REPO"):
+        say("audit: not configured")
+        return 0
+    project = Path(a.project).resolve() if a.project else None
+    clone = Path(a.clone).resolve() if a.clone else default_clone(a.audit_dir, project)
+    if (clone / ".git").exists():
+        origin = run_git(clone, "remote", "get-url", "origin", check=False).stdout.strip()
+        say(f"audit clone: {clone}" + (f" (origin {redact(origin)})" if origin else ""))
+        return 0
+    recorded = clone_failure_recorded(a.audit_dir, a.session or os.environ.get("CLAUDE_CODE_SESSION_ID"))
+    why = f"git said: {recorded}" if recorded else "no clone and no record of an attempt (was the session started by bin/kad?)"
+    say(f"audit clone FAILED: nothing at {clone}; {why}")
+    return 1
+
+
+def redact(url: str) -> str:
+    return re.sub(r"(://)[^/@\s]+@", r"\1<redacted>@", url)
+
+
+def identity(project: Path) -> list[str]:
+    """`-c user.name=… -c user.email=…` from the project's git config, when set:
+    the clone's commits carry the project's identity, never the machine's."""
+    out: list[str] = []
+    for key in ("user.name", "user.email"):
+        v = run_git(project, "config", "--get", key, check=False).stdout.strip()
+        if v:
+            out += ["-c", f"{key}={v}"]
+    return out
 
 
 _GIT = None
@@ -157,8 +241,11 @@ def scan(path: Path) -> list[str]:
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--project", required=True, help="the project's root (its git work tree)")
-    ap.add_argument("--slice", required=True, type=int, help="the slice number, as in slice-<nnn>")
+    ap.add_argument("--project", help="the project's root (its git work tree)")
+    ap.add_argument("--slice", type=int, help="the slice number, as in slice-<nnn>")
+    ap.add_argument("--clone", help="the audit repository's clone; default: $KAD_AUDIT_DIR/repo, else the project's audit-docs/ when it holds one")
+    ap.add_argument("--check", action="store_true", help="report whether a usable clone exists and change nothing")
+    ap.add_argument("--session", help="with --check: the session whose audit log may hold the clone's failure (default: CLAUDE_CODE_SESSION_ID)")
     ap.add_argument("--docs", help="the orchestrator's target directory; default: the one holding orchestrator-log.md")
     ap.add_argument("--name", help="the project's name in the audit repository; default: the root's basename")
     ap.add_argument("--audit-dir", default=os.environ.get("KAD_AUDIT_DIR") or str(Path.home() / ".claude" / "kad-audit"))
@@ -168,13 +255,18 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--no-push", action="store_true", help="commit in the clone but do not push")
     ap.add_argument("--dry-run", action="store_true", help="list what would be copied and scanned; change nothing")
     a = ap.parse_args(argv)
+    if a.check:
+        return check(a)
+    if not a.project or a.slice is None:
+        return fail("--project and --slice are required (or --check)", 1)
 
     project = Path(a.project).resolve()
     if not (project / ".git").exists():
         return fail(f"{project} is not a git work tree", 1)
-    clone = project / "audit-docs"
+    clone = Path(a.clone).resolve() if a.clone else default_clone(a.audit_dir, project)
     if not (clone / ".git").exists():
-        return fail(f"{clone} is not a clone of the audit repository; set KAD_AUDIT_REPO and start a session, or clone it there yourself", 1)
+        return fail(f"no clone of the audit repository at {clone}; start the session with bin/kad (it clones before the fence), or clone it there yourself", 1)
+    inside_project = clone == project / "audit-docs"
     name = a.name or project.name
     slice_dir = clone / f"{name}-slice-{a.slice}"
     nnn = f"{a.slice:03d}"
@@ -261,7 +353,7 @@ def main(argv: list[str]) -> int:
         if len(findings) > 50:
             say(f"  … and {len(findings) - 50} more")
         say("Nothing was copied. Remove or redact them, or pass --allow <path fragment> for a file you have read and cleared.")
-        say("audit commit none")
+        say(f"audit sync FAILED: {len(findings)} credential-shaped string(s) in what would be copied; nothing copied")
         return 3
 
     say(f"audit_sync: {len(kept)} files for {slice_dir.relative_to(clone).as_posix()}/ "
@@ -276,7 +368,12 @@ def main(argv: list[str]) -> int:
         say("audit commit none")
         return 0
 
-    # 3. Copy (the slice folder is rebuilt from the sources so a removed review doesn't linger).
+    # 3. Fast-forward the clone first (a sync from another machine, or a
+    #    clone the launcher made days ago), then copy (the slice folder is
+    #    rebuilt from the sources so a removed review doesn't linger).
+    ff = run_git(clone, "pull", "-q", "--ff-only", check=False)
+    if ff.returncode != 0:
+        say(f"audit_sync: warning: the clone did not fast-forward ({(ff.stderr or ff.stdout).strip().splitlines()[-1] if (ff.stderr or ff.stdout).strip() else 'no message'}); pushing may be refused")
     for sub in ("planning", "implementation-docs"):
         if (slice_dir / sub).exists():
             shutil.rmtree(slice_dir / sub)
@@ -287,8 +384,9 @@ def main(argv: list[str]) -> int:
     head = run_git(project, "rev-parse", "--short", "HEAD", check=False).stdout.strip() or "unknown"
     branch = run_git(project, "rev-parse", "--abbrev-ref", "HEAD", check=False).stdout.strip() or "unknown"
 
-    # Belt and braces: the clone must never show up in the project's git.
-    common = run_git(project, "rev-parse", "--git-common-dir", check=False).stdout.strip()
+    # Belt and braces, for a clone still inside the project: it must never
+    # show up in the project's git.
+    common = run_git(project, "rev-parse", "--git-common-dir", check=False).stdout.strip() if inside_project else ""
     if common:
         exclude = (project / common if not Path(common).is_absolute() else Path(common)) / "info" / "exclude"
         try:
@@ -319,7 +417,7 @@ def main(argv: list[str]) -> int:
         with sync_log.open("a", encoding="utf-8") as fh:
             fh.write(line)
         run_git(clone, "add", "--", f"{rel}/sync-log.md")
-        run_git(clone, "commit", "-q", "-m", f"{name} slice {a.slice}: sync from {branch} at {head}")
+        run_git(clone, *identity(project), "commit", "-q", "-m", f"{name} slice {a.slice}: sync from {branch} at {head}")
         sha = run_git(clone, "rev-parse", "--short", "HEAD").stdout.strip()
         if not a.no_push:
             run_git(clone, "push", "-q")
@@ -327,9 +425,12 @@ def main(argv: list[str]) -> int:
         else:
             say(f"audit_sync: committed {sha}, not pushed (--no-push)")
     except subprocess.CalledProcessError as e:
-        say(f"audit_sync: git {' '.join(e.cmd[3:5])} failed in {clone}:")
-        say((e.stderr or e.stdout or "").strip())
-        say("audit commit none")
+        verb = next((w for w in e.cmd[3:] if not w.startswith("-") and "=" not in w), "command")
+        detail = redact((e.stderr or e.stdout or "").strip())
+        say(f"audit_sync: git {verb} failed in {clone}:")
+        say(detail)
+        last = detail.splitlines()[-1] if detail else "no message"
+        say(f"audit sync FAILED: git {verb} in {clone}: {last}")
         return 4
     say(f"audit commit {sha}")
     return 0

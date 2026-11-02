@@ -24,9 +24,15 @@
 # paths denied for reading; the network allowed to the API, sign-in and
 # GitHub, plus any domains you add; local ports allowed unless --no-local);
 # drops credential-shaped variables from the environment the session
-# inherits; exports KAD_AUDIT=1, the audit repository if you gave one, and
-# KAD_SRT_SETTINGS so the orchestrator's sandbox check reads the same
-# file; gives the session what the loop's commits, pushes, pull requests,
+# inherits; exports KAD_AUDIT=1, the audit repository if you gave one,
+# KAD_AUDIT_DIR (the audit directory, allowed for writing: the session's
+# logs, transcript snapshots and the audit repository's clone live there),
+# KAD_CHROME=1 under --chrome, and KAD_SRT_SETTINGS so the orchestrator's
+# sandbox check reads the same file; with an audit repository, clones it
+# into $KAD_AUDIT_DIR/repo/ before the fence starts, or fast-forwards the
+# clone that is there, and gives the clone the project's git identity
+# (inside the fence git cannot write a .git/config or .git/hooks anywhere,
+# so a clone from inside fails every time); gives the session what the loop's commits, pushes, pull requests,
 # issues and audit sync need inside the fence: the host's GitHub login
 # (`gh auth token`, or the variable --gh-token-env names) as GH_TOKEN,
 # the one credential the session holds (KAD_KEPT_ENV names it, so the
@@ -218,6 +224,28 @@ if [ -n "$audit_repo" ] && origin="$(git -C "$project" remote get-url origin 2>/
   [ "$(norm "$audit_repo")" = "$(norm "$origin")" ] && say "warning: the audit repository is this project's own origin; the audit sync would push audit documents onto the project's default branch. Use a separate repository (kad --audit-repo URL for this run, kad --reset to store a new one)"
 fi
 
+# 3b. The audit repository's clone, outside the fence: the runtime's
+#     mandatory deny covers .git/config and .git/hooks under every path it
+#     allows, so a clone attempted inside the session (run 3's SessionStart
+#     hook) fails every time. The clone lives under the audit directory,
+#     never under the project, and commits under the project's identity.
+audit_dir="${KAD_AUDIT_DIR:-$HOME/.claude/kad-audit}"
+audit_clone="$audit_dir/repo"
+if [ "$audit" = 1 ] && [ -n "$audit_repo" ] && [ "$check" = 0 ] && [ "$prepare" = 0 ] && [ "$relaunch" = 0 ]; then
+  mkdir -p "$audit_dir"
+  if [ -d "$audit_clone/.git" ]; then
+    git -C "$audit_clone" pull -q --ff-only 2>/dev/null || say "warning: the audit clone at $audit_clone did not fast-forward (unpushed commits, or no network); the sync reports it if the push is refused"
+  elif ! git clone -q -- "$audit_repo" "$audit_clone"; then
+    say "warning: cloning the audit repository into $audit_clone failed (git's message above); the session's A step reports it"
+  fi
+  if [ -d "$audit_clone/.git" ]; then
+    for k in user.name user.email; do
+      v="$(git -C "$project" config --get "$k" 2>/dev/null || true)"
+      [ -n "$v" ] && git -C "$audit_clone" config "$k" "$v"
+    done
+  fi
+fi
+
 # 3a. GitHub, for the loop's delivery inside the fence. gh's own config
 #     directory is on the deny list (it holds the login), so the session
 #     gets a config directory of its own under ours and the token in the
@@ -250,7 +278,7 @@ settings="$conf_dir/srt/$slug.json"
 [ "$chrome" = 1 ] && domains_arg+=("bridge.claudeusercontent.com")
 claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 gen_settings() {
-  KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_CLAUDE_DIR="$claude_dir" KAD_GH_DIR="$gh_dir" \
+  KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_CLAUDE_DIR="$claude_dir" KAD_GH_DIR="$gh_dir" KAD_AUDIT_DIR_W="$audit_dir" \
   KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains ${domains_arg[*]:-}" KAD_PTY="$([ "$(uname -s)" = Darwin ] && echo 1 || echo 0)" python3 -I - <<'PY'
 import json, os
 home = os.path.expanduser("~")
@@ -266,12 +294,15 @@ for d in os.environ["KAD_DOMAINS"].split():
     if d not in domains:
         domains.append(d)
 # Writes: the project, Claude Code's config directory and runtime files,
-# the temp directories, and npm's cache (installs inside the project need
-# it; the credential file ~/.npmrc is denied above). Within the config
+# the temp directories, npm's cache (installs inside the project need
+# it; the credential file ~/.npmrc is denied above), and the audit
+# directory (the session's logs, the transcript snapshots and the audit
+# repository's clone; its commits and pushes write no .git/config, which
+# the runtime denies everywhere). Within the config
 # directory, what would outlive the session is denied: user settings,
 # hooks, commands, agents, skills and plugins run in later sessions
 # outside this fence. denyWrite takes precedence over allowWrite.
-allow = [os.environ["KAD_PROJECT"], claude_dir, "~/.claude.json", os.environ["KAD_TMP"], "~/.npm", os.environ["KAD_GH_DIR"]]
+allow = [os.environ["KAD_PROJECT"], claude_dir, "~/.claude.json", os.environ["KAD_TMP"], "~/.npm", os.environ["KAD_GH_DIR"], os.environ["KAD_AUDIT_DIR_W"]]
 if os.environ["KAD_CLAUDE_TMP"]:
     allow.append(os.environ["KAD_CLAUDE_TMP"])
 deny_write = [os.path.join(claude_dir, p) for p in ("settings.json", "settings.local.json", "hooks", "commands", "agents", "skills", "plugins")]
@@ -310,7 +341,7 @@ say "project    $project"
 say "runtime    srt --settings $settings"
 say "network    $(gen_settings | python3 -I -c 'import json,sys;print(", ".join(json.load(sys.stdin)["network"]["allowedDomains"]))')"
 say "local ports $([ "$local" = 1 ] && echo allowed || echo denied); chrome $([ "$chrome" = 1 ] && echo on || echo off)"
-say "audit      $([ "$audit" = 1 ] && echo "on${audit_repo:+, repository $audit_repo}" || echo off)"
+say "audit      $([ "$audit" = 1 ] && echo "on, directory $audit_dir${audit_repo:+, repository $audit_repo, clone $audit_clone}" || echo off)"
 say "plugin     $([ "$installed" = 1 ] && echo "installed" || echo "--plugin-dir $root")"
 gh_line="no token: delivery stops at the push"
 [ -n "$gh_token" ] && gh_line="token from ${gh_token_env:-the host gh login} as GH_TOKEN; gh config in $gh_dir; gh is the git credential helper"
@@ -360,11 +391,12 @@ if [ -n "$gh_token" ]; then
   kept="$kept GH_TOKEN"
 fi
 export KAD_KEPT_ENV="${kept# }"
-unset KAD_AUDIT KAD_AUDIT_REPO
+unset KAD_AUDIT KAD_AUDIT_REPO KAD_CHROME
 if [ "$audit" = 1 ]; then
-  export KAD_AUDIT=1
+  export KAD_AUDIT=1 KAD_AUDIT_DIR="$audit_dir"
   [ -n "$audit_repo" ] && export KAD_AUDIT_REPO="$audit_repo"
 fi
+[ "$chrome" = 1 ] && export KAD_CHROME=1
 cd "$project"
 chrome_arg=(); [ "$chrome" = 1 ] && chrome_arg=(--chrome)
 # ${arr[@]+"${arr[@]}"}: an empty array expands to nothing; the plain form is
