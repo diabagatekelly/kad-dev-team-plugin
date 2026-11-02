@@ -51,15 +51,15 @@ Status 2026-11-02: built as kad-dev-team 0.11.0 on branch `h2-loop`. H2.2's firs
 
 ## H4. In the project, before slice 2 (personal-finance-tracker-3, not the plugin)
 
-File these as issues on the project (the cold read found them; none is among #3, #4, #5 or the 37 Lows):
+Filed on the project on 2026-11-02 as #6 to #12, plus #13 for the seven further findings the Opus cold read of the same commit confirmed (`.synthesis/cold-read-check/`). None is among #3, #4, #5 or the 37 Lows:
 
-- [ ] H4.1 A JSON body of `null` reaches `readStringField` as a TypeError and is logged and answered as an app fault (500) instead of 400 (`src/web/server.ts:59,67`; confirmed by execution).
-- [ ] H4.2 An exchange whose first attempt times out after Plaid created the Item, then gets `INVALID_PUBLIC_TOKEN` on the retry, ends "not completed" with no Login, so nothing is revoked and the Item is orphaned (`src/ledger/connect-institution.ts:44-50`). Needs a reliability decision (retry the exchange or not) and a test; the fake already has `failExchangeAfterExchanging`.
-- [ ] H4.3 `fetchSince` has no page cap and the retrieval window is checked only on failure (`src/plaid/plaid-transaction-source.ts:143-159`).
-- [ ] H4.4 `PORT=abc` crashes with a stack trace (`src/start.ts:15`).
-- [ ] H4.5 README says "No CI runs these yet" one commit after CI was added; the `stripTypeScriptTypes` ExperimentalWarning and the real-Keychain test's side effect are unmentioned.
-- [ ] H4.6 S20's console half: the owner's Sandbox connection worked; whether the console showed a CSP violation was not recorded. One look in the browser closes it.
-- [ ] H4.7 Low, record only: `Cache-Control: no-store` on `GET /` and `/api/ledger`; the transient `SourceFailure`'s `cause` carries the Plaid secret header (nothing prints it today).
+- [x] H4.1 (filed as #6) A JSON body of `null` reaches `readStringField` as a TypeError and is logged and answered as an app fault (500) instead of 400 (`src/web/server.ts:59,67`; confirmed by execution).
+- [x] H4.2 (filed as #7) An exchange whose first attempt times out after Plaid created the Item, then gets `INVALID_PUBLIC_TOKEN` on the retry, ends "not completed" with no Login, so nothing is revoked and the Item is orphaned (`src/ledger/connect-institution.ts:44-50`). Needs a reliability decision (retry the exchange or not) and a test; the fake already has `failExchangeAfterExchanging`.
+- [x] H4.3 (filed as #8) `fetchSince` has no page cap and the retrieval window is checked only on failure (`src/plaid/plaid-transaction-source.ts:143-159`).
+- [x] H4.4 (filed as #9) `PORT=abc` crashes with a stack trace (`src/start.ts:15`).
+- [x] H4.5 (filed as #10) README says "No CI runs these yet" one commit after CI was added; the `stripTypeScriptTypes` ExperimentalWarning and the real-Keychain test's side effect are unmentioned.
+- [x] H4.6 (filed as #11) S20's console half: the owner's Sandbox connection worked; whether the console showed a CSP violation was not recorded. One look in the browser closes it.
+- [x] H4.7 (filed as #12) Low, record only: `Cache-Control: no-store` on `GET /` and `/api/ledger`; the transient `SourceFailure`'s `cause` carries the Plaid secret header (nothing prints it today).
 
 ## H5. Slice 2's audit: the lite policy's tests
 
