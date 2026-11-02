@@ -177,3 +177,14 @@ way); PR 3 is pushed as PR #26 (2026-11-01), the evidence check green.
 - [ ] 4.1 Run slice 2 on 0.8.1 (v4 complete: PR 1 to PR 3, the launcher and the no-screen slice rule, #23, #24, #26, #27, #29) with the budget line, in a fresh repository for a one-to-one comparison, started with `bin/kad` (the sandbox runtime, audit mode and the audit repository set up by it); audit it the same way (`audit-review` skill; the audit-docs tools); compare the E-line cost and the §10 estimate.
 - [ ] 4.2 Decide D9 phase 2 (a chunk-runner agent per chunk) on the orchestrator's measured context from 4.1 (> ~250k tokens → build it).
 - [ ] 4.3 Open items from run 2, in the project not the plugin: PR #2's issue-links placeholder, the untracked `pr-r1-comments.json`, the missing E line, the three suspected bugs in repo 2 (orphaned vault row before the record write; `complete()` without a held claim; the year missing from the date column), repo 1's single-account rule and cursor persistence.
+
+## After run 3 (2026-11-01)
+
+Run 3 (`personal-finance-tracker-3` slice 1, 0.9.2) is reviewed; 4.1's
+comparison is done in `audit-docs/personal-finance-tracker-3-slice-1/plugin-review/`.
+The work list that came out of it is `.synthesis/handoff-run3.md`: audit
+and measurement that failed silently (H1), the loop (H2, including the cold-read
+protocol for every reviewer), planning (H3), the project's own open bugs
+(H4), the slice 2 audit of the lite policy's tests (H5) and two questions
+for the owner (H6). Slice 2 runs on the version
+that carries H1 to H3.
