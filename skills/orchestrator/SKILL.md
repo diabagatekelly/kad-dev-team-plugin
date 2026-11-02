@@ -814,17 +814,23 @@ B line: the chunk titles in order.
    severity, no escalation, nothing the user has been told, no "check
    whether X"):
    - **The combined reviewer**: `kad-dev-team:code-reviewer:AGENT`, told to
-     invoke `kad-dev-team:code-review` first and follow its "Combined
-     chunk review" paragraph: `code-review`, then `test-quality-review`,
-     then `reliability-review` when the chunk's Touches line includes
-     HTTP, storage or error handling, and **one** report in the shared
-     finding format, Critical, High, Medium and `needs-decision` only, at
-     most eight findings, ranked. It is handed the chunk's diff as a range
-     (`<previous>..HEAD`, which it reads with `git diff`), the files the
-     chunk touched (the report left out), the slice's criteria and design
-     by absolute path, the Touches line, the report path
-     `chunk-<k>-r0-review.md`, and the instruction to hand back counts and
-     the path.
+     invoke `kad-dev-team:code-review` first and follow its "Cold pass
+     first" and then its "Combined chunk review": the whole of the modules
+     the range touches read, the checks run, suspected bugs probed by
+     execution, the cold findings written, then `code-review`,
+     `test-quality-review`, and `reliability-review` when the range
+     touches HTTP, storage or error handling, with the reliability
+     criteria checked last under their own heading, and **one** report in
+     the shared finding format, Critical, High, Medium and
+     `needs-decision` only, at most eight findings, ranked. **It is handed
+     four things and nothing else**: the project root, the documented
+     test command, the chunk's commit range (`<previous>..HEAD`) and the
+     report path `chunk-<k>-r0-review.md`, plus the instruction to hand
+     back counts and the path. No slice document, no Touches line, no
+     file list: the reviewer finds the planning documents for its second
+     pass from the report path (the owner's decision, 2026-11-01, after
+     run 3's document-first reviewers read past the seam). The tree is
+     installed (the gate just ran on it); reviewers never install.
    - **The smoke agent**: `kad-dev-team:accessibility-engineer:AGENT` when
      Touches includes UI, else `kad-dev-team:tdd-coach:AGENT`. Its task:
      start the app the way the README (or, before a README exists, the
@@ -876,8 +882,10 @@ B line: the chunk titles in order.
    and appends a `Fix r1` line to the chunk's report section. Then the
    gate on the fix's range (`--base` the commit before the fix). Then the
    **re-review**: the same combined reviewer kind, `model: "opus"`, on
-   the fix's diff only (`<before fix>..HEAD`) and the files it touched,
-   with the report path `chunk-<k>-r1-review.md` and nothing of round 0;
+   the fix's diff only (`<before fix>..HEAD`) and the files it touched
+   (handed as before: the range, the files, the report path; no cold
+   pass, diff-scoped by the owner's decision of 2026-11-01), with the
+   report path `chunk-<k>-r1-review.md` and nothing of round 0;
    and the smoke agent again only when round 0's smoke report had
    findings (`chunk-<k>-r1-smoke.md`). Then:
 
@@ -991,10 +999,17 @@ B line: the chunk titles in order.
    defaults and padding are Medium (the pull request body's Definition of
    Done table). Only then:
 3. **The six reviewers once.** Sandbox check. `model: "opus"`, in
-   parallel, each handed the whole slice's diff as the range
-   `<base>..HEAD` (the records directory and the map left out), the map
-   diff, the slice documents by path, and its report path
-   `slice-r0-<reviewer>.md`: `tdd-coach:test-quality-review`,
+   parallel, **each handed four things and nothing else**: the project
+   root, the documented test command, the whole slice's range
+   `<base>..HEAD`, and its report path `slice-r0-<reviewer>.md`. Each
+   follows its skill's "Cold pass first": all of `src/` and `test/`
+   read, the checks run (the tree is installed; no reviewer installs,
+   since the six share one `node_modules`), suspected bugs probed by
+   execution, the cold findings written; then, for the four criteria
+   reviewers, the slice documents found from the report path and the
+   criteria checked under `## Against the criteria` (`architecture-review`
+   takes the map diff from `docs/architecture-map.md` in the tree then).
+   The six: `tdd-coach:test-quality-review`,
    `code-reviewer:code-review`, `software-architect:architecture-review`,
    `devsecops-engineer:security-review`,
    `devsecops-engineer:reliability-review`, and

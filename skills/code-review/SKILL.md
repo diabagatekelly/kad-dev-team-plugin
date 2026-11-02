@@ -32,14 +32,64 @@ Note a pre-existing issue in untouched code separately, as a lower priority
 than anything in scope — the Boy Scout Rule: leave what you touched better,
 don't demand the whole file be clean first.
 
+## Cold pass first, under the chunk loop
+
+When the orchestrator's chunk loop launches you at a round 0 (the
+chunk's combined review at its C.3, the slice review at its D.3), the
+task hands you four things and nothing else: the project root, the
+documented test command, the commit range, and the report path. No
+planning document, no earlier report, no record, no git log: you learn
+the code from the code, in this order.
+
+1. **Read the code whole, not the diff.** `git diff --stat <range>` names
+   the modules the range touches; read every file of each of those
+   modules in full, and every test file that exercises them (at D, all of
+   `src/` and `test/`). The diff says what moved; the module says whether
+   it is right. Run 3's slice reviewers, each reading one side of the
+   exchange-once seam, missed an orphaned Plaid Item three runs running.
+2. **Run the checks** from the project root with the manifest's own
+   scripts: the typecheck, the lint, the format check where each exists,
+   and the full suite with the documented test command. Never install:
+   the tree was installed with the frozen lockfile before you were
+   launched, and at D five reviewers share one `node_modules`. Open the
+   report with a `## Checks run` section, one line per command with its
+   exit code.
+3. **Probe every suspected bug by execution** where you can: a scratch
+   script outside the tree (the session's scratchpad, importing the
+   module by path) or a one-off test invocation; never a change to any
+   file in the tree, never the app against a real external service. Each
+   finding carries a `**Status:**` line under its Category: `confirmed by
+   execution`, with the probe and its output in the body, or `verify`,
+   with what would confirm it.
+4. **Write the cold findings** under `## Findings`, in the shared format
+   below, ranked. A cold finding never cites a planning document: it
+   stands on the code and the run.
+
+This skill has no second pass: nothing in it needs a planning document,
+and a chunk's Lows are dropped. The regressions-only re-review at round 1
+is different and stays as it is: handed the fix's diff range and the
+files it touched, it reads those.
+
+Why the order: a reviewer handed nothing traced the seam in one pass and
+confirmed a second bug by running it, where six handed the documents
+first had read past it; the same protocol on Opus found every
+load-bearing bug on three runs' recorded lists
+(`.synthesis/cold-read-check/`). The documents are the second pass
+because they tell you what to look for, and the cold pass is for what
+nobody wrote down.
+
 ## Combined chunk review
 
 Under the orchestrator's chunk loop one `code-reviewer` launch per round
-carries three lenses. Invoke, with the `Skill` tool, in this order and
+carries three lenses. At round 0 the cold pass above comes first, on the
+whole of the modules the range touches; the lenses are read over what
+it found. Invoke, with the `Skill` tool, in this order and
 each as its own call: this skill; `kad-dev-team:test-quality-review`;
-`kad-dev-team:reliability-review` when the chunk's Touches line (the task
-names it) includes HTTP, storage or error handling. Each returns an
-answer, not the turn. Then write **one** report to the path the task
+`kad-dev-team:reliability-review` when the range touches HTTP, storage or
+error handling (you see that in the modules you read; no Touches line is
+handed over). Each returns an
+answer, not the turn. Only the reliability lens has a second pass, over
+the reliability criteria, under `## Against the criteria`. Then write **one** report to the path the task
 names, in the shared format below: Critical, High, Medium and
 `needs-decision` only, no Low (a Low noticed per chunk is dropped, not
 listed; the slice review at D collects Lows once, and `rounds_record.py`
@@ -50,7 +100,7 @@ finding's **Category** prefixed with the lens that raised it (`code:`,
 `test-quality:`, `reliability:`). Eight is a budget, not a target: a chunk
 with two real findings reports two. Hand back the counts by severity and
 the path, nothing else. On a re-review (the task hands you a fix's diff
-range) read the fix's diff and the files it touched, not the chunk; a
+range and the files it touched) read the fix's diff and those files, not the chunk; a
 finding on a line the fix did not write is still reported (the orchestrator
 classifies it pre-existing and records it as standing, so it is not lost),
 but nothing of round 0 is re-litigated.

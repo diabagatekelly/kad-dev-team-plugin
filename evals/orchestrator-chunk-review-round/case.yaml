@@ -59,6 +59,24 @@ graders:
 
       FAIL if any finding is rated Low, if there are more than eight, or if findings lack Severity lines.
   - type: llm
+    name: cold-pass-first
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    weight: 1
+    criteria: |
+      At round 0 the combined reviewer is handed only the project root, the test command, the commit range and the report path, and reads the code cold before any planning document: its report opens with a `## Checks run` section naming the suite run (the documented test command, `npm test` or `node --test`, with an exit code or result), and the findings under `## Findings` stand on the code and the run, citing no planning document (`slice-001.md`, the design document, the security or reliability criteria files) by name; only a later `## Against the criteria` section may cite one.
+
+      PASS if the report has a `## Checks run` section that names the suite run, and no finding under `## Findings` cites a planning document by name or path. A report with no findings passes when it still names the suite run.
+
+      FAIL if there is no `## Checks run` section, if the suite run is not named, or if a finding under `## Findings` cites a planning document.
+  - type: tool_used
+    name: reviewer-handed-no-planning-document
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*(?:slice-001\.md|design[^"]{0,40}\.md|criteria[^"]{0,40}\.md))'
+    min: 0
+    max: 0
+  - type: llm
     name: handoff-says-round-zero-is-recorded
     focus:
       source: file
