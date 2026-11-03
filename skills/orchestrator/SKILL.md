@@ -757,10 +757,20 @@ B line: the chunk titles in order.
    as handover and one line saying the tree may hold uncommitted work from
    a previous attempt that it should read before writing. A second stall
    on the same chunk ends the flow: C line, step 5.
+
+   **Shell edits.** The builder's and the fixer's hand-back line carries
+   `shell edits <n>`: the files it changed through the shell (`sed -i`, a
+   heredoc, `python -c`, `node -e`, `cp`) instead of `Edit` or `Write`,
+   each also a `Shell edit` line in its report section (the skills say
+   so). Each counts as a deviation on the C line, which also records
+   `shell edits <n>` when there are any; **three or more in one chunk or
+   fix is a stall**, handled by the stall rule above (one relaunch with
+   the section as handover; a second ends the flow). Run 3's fixer
+   mangled a seam test's name and rewrote a function with one `sed -i`.
 2. **Gate**, inline with Bash, on the chunk's commit range:
 
    ```
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory the design names>' --protect '<every other document in the target directory>' [--coverage]
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory the design names>' --deviation-zone '<each composition root and entry point the design or the plan layout names: src/compose.ts, src/main.ts, src/start.ts or their equivalents>' --expect-test '<each test name quoted on the chunk'''s Done when line>' --protect '<every other document in the target directory>' [--coverage]
    ```
 
    (`python -I` where that is the interpreter's name; every project path
@@ -776,13 +786,19 @@ B line: the chunk titles in order.
    runs on Node's test runner), coverage holds on the changed source. Its
    scope check is three-way: a changed file on the Files line or in the
    records directory is in scope; a file inside a design module but off
-   the Files line is a **deviation**, printed on the `scope` line and
+   the Files line, a test file off it, or a file under a deviation zone
+   (the composition root and entry points, which almost every chunk
+   wires into) is a **deviation**, printed on the `scope` line and
    recorded on the C line as `deviations <n>`, not a failure (the builder
    names it in its report section; nobody edits the plan entry); a file
-   outside both is the `FAIL` that goes to the fixer. It also prints
-   report-only `INFO` lines (comment density, files over 300 lines,
-   functions over 40, lines at depth 4 or more); read them, log nothing
-   from them, and let D act on the slice's figures. Save the output as
+   outside all of these is the `FAIL` that goes to the fixer. It also
+   prints report-only `INFO` lines (comment density, files over 300
+   lines, functions over 40, lines at depth 4 or more); read them, log
+   nothing from them, and let D act on the slice's figures. Its `tests`
+   check fails the gate when a Done-when test name is registered in no
+   test file, on a build's gate and on a fix's alike: a build has not met
+   its own Done when, and a fix that renamed a seam test away is that
+   fix's failure; either goes to a fixer the way a scope failure does. Save the output as
    the gate file. Read its last line; read the rest only on `FAIL`. On
    `FAIL`, hand the failing checks to a fresh fixer (`model: "sonnet"`,
    the policy's skill, its "Applying a fix handed back from review" path,
@@ -797,17 +813,28 @@ B line: the chunk titles in order.
    severity, no escalation, nothing the user has been told, no "check
    whether X"):
    - **The combined reviewer**: `kad-dev-team:code-reviewer:AGENT`, told to
-     invoke `kad-dev-team:code-review` first and follow its "Combined
-     chunk review" paragraph: `code-review`, then `test-quality-review`,
-     then `reliability-review` when the chunk's Touches line includes
-     HTTP, storage or error handling, and **one** report in the shared
-     finding format, Critical, High, Medium and `needs-decision` only, at
-     most eight findings, ranked. It is handed the chunk's diff as a range
-     (`<previous>..HEAD`, which it reads with `git diff`), the files the
-     chunk touched (the report left out), the slice's criteria and design
-     by absolute path, the Touches line, the report path
-     `chunk-<k>-r0-review.md`, and the instruction to hand back counts and
-     the path.
+     invoke `kad-dev-team:code-review` first and follow its "Cold pass
+     first" and then its "Combined chunk review": the whole of the modules
+     the range touches read, the checks run, suspected bugs probed by
+     execution, the cold findings written, then `code-review`,
+     `test-quality-review`, and `reliability-review` when the range
+     touches HTTP, storage or error handling, with the reliability
+     criteria checked last under their own heading, and **one** report in
+     the shared finding format, Critical, High, Medium and
+     `needs-decision` only, at most eight findings, ranked. **It is handed
+     five things and nothing else**: the project root, the documented
+     test command, the chunk's commit range (`<previous>..HEAD`), the
+     report path `chunk-<k>-r0-review.md`, and the path of this chunk's
+     last gate output (`gate-chunk-<k>-r<i>.txt`), which is the suite's
+     run on this commit: the reviewer reads the suite's result there and
+     runs the typecheck, lint and format check itself, never the suite,
+     since the smoke agent is starting the app on the same checkout at
+     the same time. Plus the instruction to hand back counts and the
+     path. No slice document, no Touches line, no file list: the reviewer
+     finds the planning documents for its second pass from the report
+     path (the owner's decision, 2026-11-01, after run 3's document-first
+     reviewers read past the seam). The tree is installed (the gate just
+     ran on it); reviewers never install.
    - **The smoke agent**: `kad-dev-team:accessibility-engineer:AGENT` when
      Touches includes UI, else `kad-dev-team:tdd-coach:AGENT`. Its task:
      start the app the way the README (or, before a README exists, the
@@ -843,7 +870,9 @@ B line: the chunk titles in order.
 
    It writes one sidecar row per finding and prints the round's C-line
    fragment (`r0 <C/H/M> ... ; smoke PASS|<n> findings`) and one line per
-   `needs-decision` finding. **Only its printed counts reach the log**:
+   `needs-decision` finding; a Low in a chunk report is dropped before
+   anything is recorded (`lows dropped <n>`), since Lows are the slice
+   review's. **Only its printed counts reach the log**:
    you never parse a report yourself, never tally severities by reading,
    and never write a script to do either.
 4. **One fix round, then a regressions-only re-review.** If round 0
@@ -857,8 +886,10 @@ B line: the chunk titles in order.
    and appends a `Fix r1` line to the chunk's report section. Then the
    gate on the fix's range (`--base` the commit before the fix). Then the
    **re-review**: the same combined reviewer kind, `model: "opus"`, on
-   the fix's diff only (`<before fix>..HEAD`) and the files it touched,
-   with the report path `chunk-<k>-r1-review.md` and nothing of round 0;
+   the fix's diff only (`<before fix>..HEAD`) and the files it touched
+   (handed as before: the range, the files, the report path; no cold
+   pass, diff-scoped by the owner's decision of 2026-11-01), with the
+   report path `chunk-<k>-r1-review.md` and nothing of round 0;
    and the smoke agent again only when round 0's smoke report had
    findings (`chunk-<k>-r1-smoke.md`). Then:
 
@@ -972,10 +1003,20 @@ B line: the chunk titles in order.
    defaults and padding are Medium (the pull request body's Definition of
    Done table). Only then:
 3. **The six reviewers once.** Sandbox check. `model: "opus"`, in
-   parallel, each handed the whole slice's diff as the range
-   `<base>..HEAD` (the records directory and the map left out), the map
-   diff, the slice documents by path, and its report path
-   `slice-r0-<reviewer>.md`: `tdd-coach:test-quality-review`,
+   parallel, **each handed five things and nothing else**: the project
+   root, the documented test command, the whole slice's range
+   `<base>..HEAD`, its report path `slice-r0-<reviewer>.md`, and the
+   path of the last gate output on this tree (the suite's run; six
+   suites at once on one checkout contend for ports and files, so no
+   reviewer runs it). Each follows its skill's "Cold pass first": all of
+   `src/` and `test/` read, the typecheck, lint and format check run and
+   the suite's result read from the gate output (the tree is installed;
+   no reviewer installs, since the six share one `node_modules`),
+   suspected bugs probed by execution, the cold findings written; then, for the four criteria
+   reviewers, the slice documents found from the report path and the
+   criteria checked under `## Against the criteria` (`architecture-review`
+   takes the map diff from `docs/architecture-map.md` in the tree then).
+   The six: `tdd-coach:test-quality-review`,
    `code-reviewer:code-review`, `software-architect:architecture-review`,
    `devsecops-engineer:security-review`,
    `devsecops-engineer:reliability-review`, and
@@ -1139,7 +1180,7 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 **Artifact:** see sub-entries below
 - **A. Start:** sandbox — `<PASS (<platform>[; Chrome | ; no Chrome]) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; policy — `<heavy | lite>`; delegation — `<file path | none>`; budget — `5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r `<consults>`c; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r `<consults>`c; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
 - **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`
 - **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`

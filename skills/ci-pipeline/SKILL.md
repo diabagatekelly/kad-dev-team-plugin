@@ -68,9 +68,16 @@ change is the user's to ask for).
 
 Then validate the YAML parses (`python3 -c "import yaml, sys;
 yaml.safe_load(open(sys.argv[1]))" .github/workflows/ci.yml`, or the
-equivalent available), and commit it by name:
-`git add .github/workflows/ci.yml && git commit -m 'CI: test, typecheck and
-coverage on pull requests'`. Never push here; `delivery` pushes.
+equivalent available). Then the README's CI line, when a README exists:
+replace its `No CI runs these yet.` sentence (the one `readme` writes
+under "Tests and checks") with `CI: see .github/workflows/ci.yml`, or add
+that line under its tests section when the sentence is not there, with
+the `Edit` tool. Commit by name, the README only when it changed:
+`git add .github/workflows/ci.yml README.md && git commit -m 'CI: test,
+typecheck and coverage on pull requests'` (without `README.md` in the
+`git add` when there is none; `readme` writes the CI line itself later,
+and the report says the README was not there). Never push here;
+`delivery` pushes.
 
 ## 3. Report
 

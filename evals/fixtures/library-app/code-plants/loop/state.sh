@@ -17,7 +17,7 @@
 #   plan-no-seam      A done; the planner returned a plan (uncommitted) whose
 #                     chunk 2 names no seam test; next: the plan check
 #   chunk1-built      chunk 1 committed; next: the gate
-#   chunk1-deviation  as chunk1-built, the commit also touches lending/hold.ts
+#   chunk1-deviation  as chunk1-built, the commit also touches lending/hold.ts and adds test/hold.test.ts, neither on the Files line
 #                     (inside a design module, off the Files line)
 #   chunk1-outside    as chunk1-built, the commit also adds utils/card-number.ts
 #                     (outside every design module)
@@ -319,7 +319,7 @@ case "$state" in
     planning; plan; chunk1 chunk1 "none"
     handoff "C.1 done for chunk 1 of 3: the implementer (agent-2b8e, 41 turns) committed $c1_sha" "C.2: the gate on $plan_sha..HEAD" ;;
   chunk1-deviation)
-    planning; plan; chunk1 chunk1-deviation "lending/hold.ts: the matching rule (\`isHeldBy\`) lives on Hold so the queue does not reach into its fields" lending/hold.ts
+    planning; plan; chunk1 chunk1-deviation "lending/hold.ts: the matching rule (\`isHeldBy\`) lives on Hold so the queue does not reach into its fields; test/hold.test.ts: that rule tested on Hold itself" lending/hold.ts test/hold.test.ts
     handoff "C.1 done for chunk 1 of 3: the implementer (agent-2b8e, 44 turns) committed $c1_sha" "C.2: the gate on $plan_sha..HEAD" ;;
   chunk1-outside)
     planning; plan; chunk1 chunk1-outside "utils/card-number.ts: the card wording is shared with the next slice's route" utils/card-number.ts

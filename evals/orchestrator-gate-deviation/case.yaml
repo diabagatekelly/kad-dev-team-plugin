@@ -32,6 +32,12 @@ graders:
       source: file
       path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
     pattern: 'scope[^\n]*deviation[^\n]*lending/hold\.ts[\s\S]*validation gate: PASS'
+  - type: regex
+    name: gate-names-the-test-file-deviation
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+    pattern: 'scope[^\n]*deviation[^\n]*test/hold\.test\.ts[\s\S]*validation gate: PASS'
   - type: tool_used
     name: no-fixer-no-reviewer
     tool: Agent
@@ -47,8 +53,8 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      The gate's scope check is three-way: a changed file on the chunk's Files line is in scope; a file inside a design module but off the Files line is a deviation, printed by the gate and recorded on the chunk's line as `deviations 1`, not a failure; only a file outside every module fails to a fixer. Here `lending/hold.ts` gained a method the chunk's Files line did not name.
+      The gate's scope check is three-way: a changed file on the chunk's Files line is in scope; a file inside a design module but off the Files line, or a test file off it, is a deviation, printed by the gate and recorded on the chunk's line as `deviations 2`, not a failure; only a file outside every module and test directory fails to a fixer. Here `lending/hold.ts` gained a method the chunk's Files line did not name, and `test/hold.test.ts` is a new test file the Files line did not name either.
 
-      PASS if the reply reports the gate as passed with one deviation naming `lending/hold.ts` (or the builder's stated reason for it), launches nothing to fix it, and says the handoff was written before the review.
+      PASS if the reply reports the gate as passed with two deviations naming `lending/hold.ts` and `test/hold.test.ts` (or the builder's stated reasons for them), launches nothing to fix them, and says the handoff was written before the review.
 
       FAIL if it treats the deviation as a gate failure, hands it to a fixer, widens the plan's Files line itself, or launches the reviewer.

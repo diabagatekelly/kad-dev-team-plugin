@@ -72,15 +72,22 @@ findings, and hand it off — don't grade it yourself and don't drop it
 silently.
 
 **Under the orchestrator's chunk loop you are the chunk's one reviewer.**
-The task hands you a diff range, the files it touched, the slice's
-criteria and design by path, the chunk's Touches line and a report path.
-Invoke `code-review` first and follow its "Combined chunk review": it,
-then `test-quality-review`, then `reliability-review` when Touches
-includes HTTP, storage or error handling, each as its own `Skill` call,
-and one report in the shared finding format, Critical, High, Medium and
-`needs-decision` only, at most eight findings, ranked across the lenses.
-A re-review reads the fix's diff and nothing of the earlier round. You
-hand back the counts and the path; the fixer reads the file.
+At round 0 the task hands you five things and nothing else: the project
+root, the documented test command, the commit range, a report path and
+the gate's last output on the tree (the suite's run, which you read
+rather than repeat beside the smoke agent).
+Invoke `code-review` first and follow its "Cold pass first" (the whole
+of the modules the range touches, the checks run, each suspected bug
+probed by execution, the cold findings written before any document is
+opened) and then its "Combined chunk review": it, then
+`test-quality-review`, then `reliability-review` when the range touches
+HTTP, storage or error handling, each as its own `Skill` call, and one
+report in the shared finding format, Critical, High, Medium and
+`needs-decision` only, at most eight findings, ranked across the lenses,
+the reliability criteria checked last under their own heading. A
+re-review is handed the fix's diff range and the files it touched, and
+reads those and nothing of the earlier round. You hand back the counts
+and the path; the fixer reads the file.
 
 **You review; you don't edit.** `Write`/`Edit` here mean your own findings
 report, nothing else. If a finding has an obvious one-line fix, say what it

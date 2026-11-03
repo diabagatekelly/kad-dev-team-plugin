@@ -45,7 +45,12 @@ beside it.
    the address the app answers on. A stranger with the prerequisites runs
    these and nothing else.
 4. **Tests and checks** — the test command, the typecheck, the lint and
-   the format check, each as the manifest names it; which of them CI runs.
+   the format check, each as the manifest names it; then one line on CI:
+   `CI: see .github/workflows/<file>` (or the host's equivalent) when a
+   workflow file exists, else exactly `No CI runs these yet.`, the
+   sentence `ci-pipeline` replaces when it adds one. Never write "no CI"
+   when a workflow is there (run 3's README said it one commit after CI
+   landed).
 5. **Where things live** — where the data is stored locally, where the
    logs go, which files hold local secrets and are ignored by git.
 6. **What this slice does and does not** — the slice's behaviour in a few

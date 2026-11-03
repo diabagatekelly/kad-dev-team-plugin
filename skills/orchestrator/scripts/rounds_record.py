@@ -77,8 +77,9 @@ Printed last, exactly, for the C line:
 `nd` appears only when a finding needs a decision; the regression split
 only with `--range`, counted over Critical, High and Medium; the smoke
 part only when a smoke report was among the inputs (PASS is a smoke report
-with no finding); `L` only when a Low was parsed (the slice review at D); `owed` only when
-a "browser checks not run" finding was parsed.
+with no finding); `L` only when a Low was parsed (the slice review at D: a chunk report's
+Lows are dropped before anything is recorded, with one `lows dropped <n>`
+line); `owed` only when a "browser checks not run" finding was parsed.
 Before that line, one `needs-decision: <persona> — <title> (<file>:<line>)`
 per such finding and, with `--range`, one `standing: <severity> — <title>
 (<file>:<line>)` per pre-existing Critical, High or Medium.
@@ -297,6 +298,13 @@ def record(a):
     rows, failed, smoke_seen = [], False, False
     for report, reviewer in reports:
         findings, shaped, result = parse_report(report)
+        if isinstance(chunk_value(a.chunk), int):
+            # A chunk review raises no Low (the slice review at D collects
+            # them once): one that slipped through is dropped, and said.
+            lows = [f for f in findings if f["severity"] == "Low"]
+            if lows:
+                findings = [f for f in findings if f["severity"] != "Low"]
+                print(f"lows dropped {len(lows)} from {os.path.basename(report)}")
         if not findings and shaped:
             print(f"format: no finding in the shared format in {report}")
             failed = True

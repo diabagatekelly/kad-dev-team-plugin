@@ -47,9 +47,16 @@ module directories as the orchestrator's B step lists them):
    module directories) is a **deviation**: the chunk plan did not name it,
    the design's structure does, so it is listed on the `scope` line and in
    the JSON (`scope.deviations`) for the orchestrator's C line, and the
-   check still passes; the builder's report names why. A changed file
-   under neither is `outside` and fails the check: that is the one the
-   fixer moves. Untracked files
+   check still passes; the builder's report names why. Two more kinds of
+   change are deviations, never failures: a test source file (a `.ts`,
+   `.js` or `.py` file under `test/`, `tests/`, `__tests__/` or `spec/`,
+   or named `*.test.*`/`*.spec.*`; a `test/config.json` is not one and
+   stays outside) the Files line did not name, since a builder that adds
+   a test it needs is doing its job; and a file under a `--deviation-zone` entry (repeatable;
+   the design's composition root and entry points, `src/compose.ts`,
+   `src/main.ts`, `src/start.ts` or their equivalents, which almost every
+   chunk wires into). A changed file under none of these is `outside` and
+   fails the check: that is the one the fixer moves. Untracked files
    count as changed; so do both sides of a rename. Claude Code's own
    placeholders are not: an untracked path under a `.claude/` directory,
    or named `.mcp.json`, that is not a regular file with content (the
@@ -59,6 +66,12 @@ module directories as the orchestrator's B step lists them):
    from, both of which git lists as untracked). A settings file a
    change that actually wrote one there has content and stays in the set.
 5. protected: every `--protect` file is byte-identical to the baseline.
+6. tests: with `--expect-test <name>` (repeatable; the orchestrator passes
+   each test name quoted on the chunk plan's Done when line), every name
+   is registered in some test file: the title of a `test(`, `it(` or
+   `describe(` call, or a `def <name>(`, never a mention in a comment or
+   a fixture. A Done-when test a fix renamed or dropped (a mangled
+   seam-test name, run 3's chunk 8) fails here, at the gate.
 
 After the checks, two report-only `INFO` lines (never part of the
 verdict; also under `metrics` in the JSON), computed over the changed
@@ -269,12 +282,16 @@ def under(path, directory):
     return path.startswith(directory.rstrip("/") + "/")
 
 
-def check_scope(files, allow, module_dirs=()):
+def check_scope(files, allow, module_dirs=(), zones=()):
     """Three-way: on an `--allow` entry, fine; off the list but inside a
-    `--module-dir`, a deviation the chunk plan did not foresee (reported,
-    not failed); under neither, outside the slice, which fails."""
+    `--module-dir`, a test file, or under a `--deviation-zone` entry, a
+    deviation the chunk plan did not foresee (reported, not failed); under
+    none of these, outside the slice, which fails."""
     unlisted = [f for f in files if not any(allowed(f, e) for e in allow)]
-    deviations = [f for f in unlisted if any(under(f, d) for d in module_dirs)]
+    deviations = [f for f in unlisted
+                  if any(under(f, d) for d in module_dirs)
+                  or (is_test_file(f) and f.endswith(METRIC_SOURCE))
+                  or any(allowed(f, z) for z in zones)]
     outside = [f for f in unlisted if f not in deviations]
     return {"passed": not outside, "changed": files, "deviations": deviations, "outside": outside}
 
@@ -700,6 +717,46 @@ def metrics(project, changed, module_dirs):
     return result
 
 
+TEST_NAME_LIMIT = 2 * 1024 * 1024  # bytes of a test file read for registered names
+
+
+def registered(name, text):
+    """Is `name` a registered test in this file: the title of a `test(`, `it(` or
+    `describe(` call (JS/TS), or a `def <name>(` (Python)? A mention in a
+    comment, a fixture or another test's title does not count."""
+    quoted = r"\b(?:test|it|describe)\s*\(\s*(['\"`])" + re.escape(name) + r"\1"
+    pydef = r"\bdef\s+" + re.escape(name) + r"\s*\("
+    return re.search(quoted, text) is not None or re.search(pydef, text) is not None
+
+
+def check_expected_tests(project, names):
+    """Every `--expect-test` name is registered in some test file of the tree.
+    A Done-when test that a fix renamed or dropped fails here, at the gate,
+    not three rounds later. Symlinks and non-regular files are skipped and a
+    file is read up to TEST_NAME_LIMIT bytes."""
+    found = set()
+    for dirpath, dirnames, filenames in os.walk(project):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_WALK and not d.startswith(".")]
+        for fn in filenames:
+            full = os.path.join(dirpath, fn)
+            rel = os.path.relpath(full, project).replace("\\", "/")
+            if not is_test_file(rel) or os.path.islink(full) or not os.path.isfile(full):
+                continue
+            try:
+                with open(full, encoding="utf-8", errors="replace") as fh:
+                    text = fh.read(TEST_NAME_LIMIT)
+            except OSError:
+                continue
+            for n in names:
+                if n not in found and registered(n, text):
+                    found.add(n)
+    missing = [n for n in names if n not in found]
+    return {"passed": not missing, "names": list(names), "missing": missing}
+
+
+SKIP_WALK = {"node_modules", "dist", "build", "coverage", "__pycache__", ".venv", "venv"}
+
+
 def metric_lines(m):
     if m["changed_source_files"]:
         comments = f"{m['comment_pct']:g}% of non-blank lines in the changed source files ({m['comment_lines']}/{m['nonblank_lines']})"
@@ -798,6 +855,10 @@ def main():
     p.add_argument("--allow", action="append", default=[], help="path the change may touch: dir/ or exact file (repeatable)")
     p.add_argument("--module-dir", action="append", default=[],
                    help="a design module directory: a changed file inside it but off --allow is a reported deviation, not a failure (repeatable)")
+    p.add_argument("--deviation-zone", action="append", default=[],
+                   help="a composition root or entry point (dir/ or exact file): a change there off --allow is a deviation, not a failure (repeatable); test files are one by default")
+    p.add_argument("--expect-test", action="append", default=[],
+                   help="a test name from the chunk plan's Done when; an INFO line names those missing from every test file (repeatable)")
     p.add_argument("--protect", action="append", default=[], help="file that must be unchanged (repeatable)")
     p.add_argument("--test-cmd", default="npm test")
     p.add_argument("--typecheck-cmd", help="typecheck command; default: package.json's typecheck script through the test command's runner")
@@ -851,9 +912,11 @@ def main():
                                    "files": sorted(files)}
     module_dirs = [d.replace("\\", "/") for d in a.module_dir]
     if a.allow:
-        report["checks"]["scope"] = check_scope(files, a.allow, module_dirs)
+        report["checks"]["scope"] = check_scope(files, a.allow, module_dirs, [z.replace("\\", "/") for z in a.deviation_zone])
     if a.protect:
         report["checks"]["protected"] = check_protected(project, a.protect, files)
+    if a.expect_test:
+        report["checks"]["tests"] = check_expected_tests(project, a.expect_test)
     report["passed"] = all(c["passed"] for c in report["checks"].values())
     report["metrics"] = metrics(project, [f for f in files if os.path.isfile(os.path.join(project, f))], module_dirs)
 
@@ -865,7 +928,10 @@ def main():
         if c.get("skipped"):
             print(f"SKIP  {name}: {c['reason']}")
             continue
-        if name == "scope" and c["outside"]:
+        if name == "tests":
+            detail = (f" registered in no test file: {json.dumps(c['missing'])}" if not c["passed"]
+                      else f" every expected Done-when test name registered ({len(c['names'])})")
+        elif name == "scope" and c["outside"]:
             detail = " outside: " + ", ".join(c["outside"])
         elif name == "scope" and c["deviations"]:
             detail = " deviations: " + json.dumps(c["deviations"])

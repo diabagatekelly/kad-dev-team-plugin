@@ -58,6 +58,25 @@ graders:
       PASS if the report has at most eight findings, every finding carries a Severity line with one of those values, and no finding is rated Low. A report that says it has no findings passes.
 
       FAIL if any finding is rated Low, if there are more than eight, or if findings lack Severity lines.
+  - type: regex
+    name: report-names-the-suite-run
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    pattern: '## Checks run[\s\S]*?(npm (run )?test|node [^\n]*--test|gate-chunk-1-r0\.txt)'
+  - type: regex
+    name: cold-findings-cite-no-planning-document
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    pattern: '## Findings(?:(?!## Against the criteria)[\s\S])*?(slice-001\.md|design\.md|design-doc|security-criteria|reliability-criteria|screen-design|accessibility-criteria)'
+    match: not_contains
+  - type: tool_used
+    name: reviewer-handed-no-planning-document
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*(?:slice-001\.md|design[^"]{0,40}\.md|criteria[^"]{0,40}\.md))'
+    min: 0
+    max: 0
   - type: llm
     name: handoff-says-round-zero-is-recorded
     focus:
@@ -77,6 +96,6 @@ graders:
     criteria: |
       Between launches the orchestrator says one short paragraph per event, with hashes, counts and paths; it never restates a finding's text, keeps a digest, or tallies severities by reading a report itself (only `rounds_record.py`'s printed counts reach the log).
 
-      PASS if the final reply reports the round in terms of the script's counts (for example "r0 0/0/2; smoke PASS") and the report paths, and says the handoff was written. A one-line title per needs-decision or smoke finding (what the owner will be asked, where) is fine; the descriptions, rationale and suggested fixes stay in the report.
+      PASS if the final reply reports the round in terms of the script's counts (for example "r0 0/0/2; smoke PASS") and the report paths, and says the handoff was written. One line per finding, its title or what it is about and where (file and line), is fine, for any severity; what fails is restating a finding's body: its rationale, its suggested fix, or a tally of severities the orchestrator made by reading the report instead of taking the script's counts.
 
       FAIL if it reproduces findings' descriptions, rationale or fixes at length, or reports counts it says it read from the report rather than from the script.

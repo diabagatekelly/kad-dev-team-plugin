@@ -34,6 +34,61 @@ boundaries exist is `software-architect`'s decision; what each one must
 enforce is yours. When the right check has no boundary to sit at, report
 the missing boundary and leave the structure alone.
 
+## Cold pass first, under the chunk loop
+
+When the orchestrator's chunk loop launches you at a round 0 (the
+chunk's combined review at its C.3, the slice review at its D.3), the
+task hands you five things and nothing else: the project root, the
+documented test command, the commit range, the report path, and the
+path of the gate's last output on this tree. No planning document, no
+earlier report, no record, no git log: you learn the code from the
+code, in this order.
+
+1. **Read the code whole, not the diff.** `git diff --stat <range>` names
+   the modules the range touches; read every file of each of those
+   modules in full, and every test file that exercises them (at D, all of
+   `src/` and `test/`). The diff says what moved; the module says whether
+   it is right. Run 3's slice reviewers, each reading one side of the
+   exchange-once seam, missed an orphaned Plaid Item three runs running.
+2. **Run the checks** from the project root with the manifest's own
+   scripts: the typecheck, the lint and the format check where each
+   exists. The full suite you do not run: the gate ran it on this very
+   tree minutes ago and the task hands you its output file; read the
+   suite's result there (the smoke agent is starting the app on the same
+   checkout as you work, and at D five other reviewers share it, so six
+   suites at once would contend for ports and files). Never install: the
+   tree was installed with the frozen lockfile before you were launched.
+   Open the report with a `## Checks run` section, one line per command
+   with its exit code, and one for the suite naming the gate output it
+   came from.
+3. **Probe every suspected bug by execution** where you can: a scratch
+   script outside the tree (the session's scratchpad, importing the
+   module by path) or a one-off test invocation; never a change to any
+   file in the tree, never the app against a real external service. Each
+   finding carries a `**Status:**` line under its Category: `confirmed by
+   execution`, with the probe and its output in the body, or `verify`,
+   with what would confirm it.
+4. **Write the cold findings** under `## Findings`, in the shared format
+   below, ranked. A cold finding never cites a planning document: it
+   stands on the code and the run.
+
+**Only then the second pass.** Open the slice's planning documents (they
+live in the target directory above the report's records directory: the
+slice file, the design, the criteria this skill owns) and check the code
+against those criteria, under its own heading, `## Against the
+criteria`, in the same format; a finding here may cite the criterion it
+fails. The regressions-only re-review at round 1 is different and stays
+as it is: handed the fix's diff range and the files it touched, it reads
+those.
+
+Why the order: a reviewer handed nothing traced the seam in one pass and
+confirmed a second bug by running it, where six handed the documents
+first had read past it; the same protocol on Opus found every
+load-bearing bug on three runs' recorded lists
+(`.synthesis/cold-read-check/`). The documents are the second pass
+because they tell you what to look for, and the cold pass is for what
+nobody wrote down.
+
 ## The question that gates every finding
 
 **Is it reachable, and by whom?** A finding needs a path from something an
