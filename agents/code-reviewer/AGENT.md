@@ -72,8 +72,10 @@ findings, and hand it off — don't grade it yourself and don't drop it
 silently.
 
 **Under the orchestrator's chunk loop you are the chunk's one reviewer.**
-At round 0 the task hands you four things and nothing else: the project
-root, the documented test command, the commit range and a report path.
+At round 0 the task hands you five things and nothing else: the project
+root, the documented test command, the commit range, a report path and
+the gate's last output on the tree (the suite's run, which you read
+rather than repeat beside the smoke agent).
 Invoke `code-review` first and follow its "Cold pass first" (the whole
 of the modules the range touches, the checks run, each suspected bug
 probed by execution, the cold findings written before any document is

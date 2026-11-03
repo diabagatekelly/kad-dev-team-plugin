@@ -794,12 +794,11 @@ B line: the chunk titles in order.
    outside all of these is the `FAIL` that goes to the fixer. It also
    prints report-only `INFO` lines (comment density, files over 300
    lines, functions over 40, lines at depth 4 or more); read them, log
-   nothing from them, and let D act on the slice's figures. One INFO line
-   is acted on: `tests:` naming a Done-when test missing from every test
-   file. On a build's gate it is a FAIL handed to the fixer like a scope
-   failure (the chunk's own Done when is not met); on a fix's gate (C.4,
-   D) it is a regression of that fix, `Done-when test missing: <name>`,
-   handed to the second fixer with the re-review's regressions. Save the output as
+   nothing from them, and let D act on the slice's figures. Its `tests`
+   check fails the gate when a Done-when test name is registered in no
+   test file, on a build's gate and on a fix's alike: a build has not met
+   its own Done when, and a fix that renamed a seam test away is that
+   fix's failure; either goes to a fixer the way a scope failure does. Save the output as
    the gate file. Read its last line; read the rest only on `FAIL`. On
    `FAIL`, hand the failing checks to a fresh fixer (`model: "sonnet"`,
    the policy's skill, its "Applying a fix handed back from review" path,
@@ -823,14 +822,19 @@ B line: the chunk titles in order.
      criteria checked last under their own heading, and **one** report in
      the shared finding format, Critical, High, Medium and
      `needs-decision` only, at most eight findings, ranked. **It is handed
-     four things and nothing else**: the project root, the documented
-     test command, the chunk's commit range (`<previous>..HEAD`) and the
-     report path `chunk-<k>-r0-review.md`, plus the instruction to hand
-     back counts and the path. No slice document, no Touches line, no
-     file list: the reviewer finds the planning documents for its second
-     pass from the report path (the owner's decision, 2026-11-01, after
-     run 3's document-first reviewers read past the seam). The tree is
-     installed (the gate just ran on it); reviewers never install.
+     five things and nothing else**: the project root, the documented
+     test command, the chunk's commit range (`<previous>..HEAD`), the
+     report path `chunk-<k>-r0-review.md`, and the path of this chunk's
+     last gate output (`gate-chunk-<k>-r<i>.txt`), which is the suite's
+     run on this commit: the reviewer reads the suite's result there and
+     runs the typecheck, lint and format check itself, never the suite,
+     since the smoke agent is starting the app on the same checkout at
+     the same time. Plus the instruction to hand back counts and the
+     path. No slice document, no Touches line, no file list: the reviewer
+     finds the planning documents for its second pass from the report
+     path (the owner's decision, 2026-11-01, after run 3's document-first
+     reviewers read past the seam). The tree is installed (the gate just
+     ran on it); reviewers never install.
    - **The smoke agent**: `kad-dev-team:accessibility-engineer:AGENT` when
      Touches includes UI, else `kad-dev-team:tdd-coach:AGENT`. Its task:
      start the app the way the README (or, before a README exists, the
@@ -999,13 +1003,16 @@ B line: the chunk titles in order.
    defaults and padding are Medium (the pull request body's Definition of
    Done table). Only then:
 3. **The six reviewers once.** Sandbox check. `model: "opus"`, in
-   parallel, **each handed four things and nothing else**: the project
+   parallel, **each handed five things and nothing else**: the project
    root, the documented test command, the whole slice's range
-   `<base>..HEAD`, and its report path `slice-r0-<reviewer>.md`. Each
-   follows its skill's "Cold pass first": all of `src/` and `test/`
-   read, the checks run (the tree is installed; no reviewer installs,
-   since the six share one `node_modules`), suspected bugs probed by
-   execution, the cold findings written; then, for the four criteria
+   `<base>..HEAD`, its report path `slice-r0-<reviewer>.md`, and the
+   path of the last gate output on this tree (the suite's run; six
+   suites at once on one checkout contend for ports and files, so no
+   reviewer runs it). Each follows its skill's "Cold pass first": all of
+   `src/` and `test/` read, the typecheck, lint and format check run and
+   the suite's result read from the gate output (the tree is installed;
+   no reviewer installs, since the six share one `node_modules`),
+   suspected bugs probed by execution, the cold findings written; then, for the four criteria
    reviewers, the slice documents found from the report path and the
    criteria checked under `## Against the criteria` (`architecture-review`
    takes the map diff from `docs/architecture-map.md` in the tree then).

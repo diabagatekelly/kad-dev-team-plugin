@@ -1,6 +1,6 @@
 # Cold read: run3
 
-Every file under `src/` and `test/` was read in full. Protocol note: I read `README.md` past its run instructions (one `sed -n 1,80p`) before stopping, so I have seen its "does / does not" section. No other file outside `src/`, `test/` and the manifests was opened. The git log was not read. All probes live in `/private/tmp/claude-501/-Users-kellydiabagate-Documents-portfolio-kad-dev-team-plugin/1feb7624-a2f5-4db1-9405-d0396ed402a4/scratchpad/cold/probe-run3/`. Each imports the worktree by absolute path and uses only the repo's own fakes or local servers. After all runs, `git status --short` in the worktree was empty.
+Every file under `src/` and `test/` was read in full. Protocol note: I read `README.md` past its run instructions (one `sed -n 1,80p`) before stopping, so I have seen its "does / does not" section. No other file outside `src/`, `test/` and the manifests was opened. The git log was not read. All probes live in `<probe dir>/`. Each imports the worktree by absolute path and uses only the repo's own fakes or local servers. After all runs, `git status --short` in the worktree was empty.
 
 ## Checks run
 

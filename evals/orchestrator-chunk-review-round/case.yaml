@@ -58,18 +58,19 @@ graders:
       PASS if the report has at most eight findings, every finding carries a Severity line with one of those values, and no finding is rated Low. A report that says it has no findings passes.
 
       FAIL if any finding is rated Low, if there are more than eight, or if findings lack Severity lines.
-  - type: llm
-    name: cold-pass-first
-    focus:
+  - type: regex
+    name: report-names-the-suite-run
+    target:
       source: file
       path: docs/cancel-hold/implementation/chunk-1-r0-review.md
-    weight: 1
-    criteria: |
-      At round 0 the combined reviewer is handed only the project root, the test command, the commit range and the report path, and reads the code cold before any planning document: its report opens with a `## Checks run` section naming the suite run (the documented test command, `npm test` or `node --test`, with an exit code or result), and the findings under `## Findings` stand on the code and the run, citing no planning document (`slice-001.md`, the design document, the security or reliability criteria files) by name; only a later `## Against the criteria` section may cite one.
-
-      PASS if the report has a `## Checks run` section that names the suite run, and no finding under `## Findings` cites a planning document by name or path. A report with no findings passes when it still names the suite run.
-
-      FAIL if there is no `## Checks run` section, if the suite run is not named, or if a finding under `## Findings` cites a planning document.
+    pattern: '## Checks run[\s\S]*?(npm (run )?test|node [^\n]*--test|gate-chunk-1-r0\.txt)'
+  - type: regex
+    name: cold-findings-cite-no-planning-document
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    pattern: '## Findings(?:(?!## Against the criteria)[\s\S])*?(slice-001\.md|design\.md|design-doc|security-criteria|reliability-criteria|screen-design|accessibility-criteria)'
+    match: not_contains
   - type: tool_used
     name: reviewer-handed-no-planning-document
     tool: Agent
@@ -95,6 +96,6 @@ graders:
     criteria: |
       Between launches the orchestrator says one short paragraph per event, with hashes, counts and paths; it never restates a finding's text, keeps a digest, or tallies severities by reading a report itself (only `rounds_record.py`'s printed counts reach the log).
 
-      PASS if the final reply reports the round in terms of the script's counts (for example "r0 0/0/2; smoke PASS") and the report paths, and says the handoff was written. A one-line title per needs-decision or smoke finding (what the owner will be asked, where) is fine; the descriptions, rationale and suggested fixes stay in the report.
+      PASS if the final reply reports the round in terms of the script's counts (for example "r0 0/0/2; smoke PASS") and the report paths, and says the handoff was written. One line per finding, its title or what it is about and where (file and line), is fine, for any severity; what fails is restating a finding's body: its rationale, its suggested fix, or a tally of severities the orchestrator made by reading the report instead of taking the script's counts.
 
       FAIL if it reproduces findings' descriptions, rationale or fixes at length, or reports counts it says it read from the report rather than from the script.
