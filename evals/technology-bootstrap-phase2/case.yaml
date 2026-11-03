@@ -42,7 +42,14 @@ graders:
 
       Score 0 if the output solicits a decision on, or settles, ANY of the above
       as part of the bootstrap set. Merely listing one as deliberately-not-decided
-      (with an owner) is correct and does not count as deciding it.
+      (with an owner) is correct and does not count as deciding it. Nor does the
+      skill's default set: for the categories a later chunk of slice 1 may force
+      (an HTTP server, a client for the bank-aggregation vendor, a log, how the
+      page is rendered, a store on disk if a chunk ever needs one), "the runtime's
+      built-in unless a chunk forces a dependency" (Node's own http, crypto and
+      fs modules, the vendor's official client exact-pinned, server-rendered HTML,
+      a JSON-lines log), approved once as a whole, is a default rule, not a
+      stack choice, and does not count against this check.
 
       Score 1 if the categories it treats as forced stay within: language and
       runtime, test runner, package manager (with its lockfile/pinning posture),
@@ -59,6 +66,16 @@ graders:
       PASS if the response recommends a package manager and says what posture it gets by default (hashed lockfile, installs that refuse to drift, or equivalent) and why that beats the alternative(s) it rejected, so the choice is visibly made on pinning rather than on speed or ergonomics alone.
 
       FAIL if the package manager is recommended with no pinning reasoning, if pinning is mentioned only as something to configure later, or if no package manager is recommended at all.
+  - type: llm
+    name: recommends-the-built-in-default-set-once
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule (since 0.12.0): the categories slice 1's first failing test does not force but a later chunk of the slice may (an HTTP server, since the UI is a web app; a client for the bank-aggregation vendor the design isolates behind an adapter; a log; how the page is rendered) are not left to be decided one at a time during the build. They are recommended now as one default set, "the runtime's built-in unless a chunk forces a dependency" (Node's own modules, the vendor's official client exact-pinned, server-rendered HTML, or a named dependency with its reason), with one approval for the whole set.
+
+      PASS if the response presents such a set, covering at least a server and the vendor client with a built-in or official-pinned default for each, and asks the user to approve it as a whole (the user may still change an item; asking once for the set is the point). Presenting it alongside the forced choices in the one message the user asked for is fine.
+
+      FAIL if the categories a later chunk may force are left with no default ("decided when a chunk needs it", "an owner will decide"), or if the set is presented as separate decisions each needing its own answer, or if no such set appears at all.
   - type: regex
     name: consults-supply-chain-for-pinning
     target: trace

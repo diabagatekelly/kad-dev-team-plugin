@@ -159,7 +159,11 @@ nothing else about the unit.
   insert fails"), never a default fixture every test shares. No test
   harness built from source text: a `new Function` over a script string,
   or a hand-rolled DOM, means the code under test has no module of its
-  own, and the fix is the module, not the harness.
+  own, and the fix is the module, not the harness. Made-up data
+  throughout: never a real token, secret, key or record. The design's
+  "Tests and fixtures" line says the same thing for the slice's own
+  boundaries; where it says less (a store faked that the real one could
+  replace), this rule stands.
 - Stop when **Done when** holds and the full suite is green. Not before,
   not after.
 - A file you needed that **Files** does not name: create it, and record it

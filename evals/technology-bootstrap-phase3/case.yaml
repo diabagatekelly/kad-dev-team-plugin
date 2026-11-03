@@ -25,6 +25,18 @@ graders:
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/technology-bootstrap-001\.md")[^"]*"'
     match: not_contains
   - type: llm
+    name: records-the-built-in-default-set
+    focus:
+      source: file
+      path: docs/technology-bootstrap-001.md
+    weight: 1
+    criteria: |
+      The skill's rule (since 0.12.0): the categories slice 1's first failing test does not force but a later chunk of the slice may (an HTTP server, since the UI is a web app; a client for the bank-aggregation vendor; a log; how the page is rendered) are recorded as one default set, "the runtime's built-in unless a chunk forces a dependency", approved once as a whole, so the build re-enters the bootstrap only when a chunk forces a dependency the set excluded. The user's "all fine as you recommend" approves that set along with the rest.
+
+      PASS if the document records such a set under its own heading or list: at least a server and the vendor client, each with its default (Node's own module, the vendor's official client exact-pinned, server-rendered HTML, or a named dependency with its reason), the set recorded as approved by the user (one line for the whole set is enough), and the rule that a chunk inside the set re-enters nothing while a dependency outside it is the one re-entry (in words; the exact phrasing does not matter).
+
+      FAIL if those categories appear only as not-yet-decided with an owner and no default, if the set is recorded as pending or as separate open decisions, or if no such set appears.
+  - type: llm
     name: asks-only-what-the-first-test-forces
     focus:
       source: file
@@ -42,7 +54,14 @@ graders:
 
       Score 0 if the output solicits a decision on, or settles, ANY of the above
       as part of the bootstrap set. Merely listing one as deliberately-not-decided
-      (with an owner) is correct and does not count as deciding it.
+      (with an owner) is correct and does not count as deciding it. Nor does the
+      skill's default set: for the categories a later chunk of slice 1 may force
+      (an HTTP server, a client for the bank-aggregation vendor, a log, how the
+      page is rendered, a store on disk if a chunk ever needs one), "the runtime's
+      built-in unless a chunk forces a dependency" (Node's own http, crypto and
+      fs modules, the vendor's official client exact-pinned, server-rendered HTML,
+      a JSON-lines log), approved once as a whole, is a default rule, not a
+      stack choice, and does not count against this check.
 
       Score 1 if the categories it treats as forced stay within: language and
       runtime, test runner, package manager (with its lockfile/pinning posture),
@@ -83,7 +102,10 @@ graders:
       and hosting/deployment should appear here, and persistence must carry
       the reason it can wait: slice 1's transactions need only last for the
       session, so an in-memory implementation behind the design's persistence
-      boundary satisfies every test the slice has.
+      boundary satisfies every test the slice has. Persistence may instead sit
+      in the built-in default set ("a file through the runtime's own module if
+      a chunk ever needs data to outlive a restart") with that same reason; what
+      fails is a chosen engine, or no reason.
 
       Score 0 if rejected options go unrecorded, if unforced categories are
       silently absent rather than listed as open, or if persistence is deferred

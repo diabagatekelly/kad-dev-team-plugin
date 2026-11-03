@@ -39,7 +39,14 @@ graders:
 
       Score 0 if the output solicits a decision on, or settles, ANY of the above
       as part of the bootstrap set. Merely listing one as deliberately-not-decided
-      (with an owner) is correct and does not count as deciding it.
+      (with an owner) is correct and does not count as deciding it. Nor does the
+      skill's default set: for the categories a later chunk of slice 1 may force
+      (an HTTP server, a client for the bank-aggregation vendor, a log, how the
+      page is rendered, a store on disk if a chunk ever needs one), "the runtime's
+      built-in unless a chunk forces a dependency" (Node's own http, crypto and
+      fs modules, the vendor's official client exact-pinned, server-rendered HTML,
+      a JSON-lines log), approved once as a whole, is a default rule, not a
+      stack choice, and does not count against this check.
 
       Score 1 if the categories it treats as forced stay within: language and
       runtime, test runner, package manager (with its lockfile/pinning posture),

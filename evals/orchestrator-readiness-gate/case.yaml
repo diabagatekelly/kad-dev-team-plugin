@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: orchestrator-readiness-gate
-description: "The chunk loop's A step with its design-readiness gate (design §11 case 1): a fully planned UI slice whose reliability document says \"retries the cancel a few times\" and whose screen design has no mockup for the unreachable-queue state the reliability document names. The orchestrator reaches the chunk loop, runs readiness_check.py before any builder, logs one backward route per failed check (reliability-requirements, screen-design), runs the first routed skill inline with the check named, and launches no builder while the gate fails."
+description: "The chunk loop's A step with its design-readiness gate (design §11 case 1): a fully planned UI slice whose reliability document says \"retries the cancel a few times\" and whose screen design has no mockup for the unreachable-queue state the reliability document names. The orchestrator reaches the chunk loop, runs readiness_check.py before any builder, logs one backward route per failed check (reliability-requirements, screen-design), runs the first routed skill inline with the check named, and launches no builder while the gate fails. Since H3.2 the design homes both failure paths under `### Strategic` and `### Tactical` only (its Decisions are one line each), the headings the check reads by name: no route to architecture-design for failure paths."
 tags: [orchestrator, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -56,6 +56,16 @@ graders:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
     pattern: '\*\*A\. Start:\*\*[^\n]*\bsession\b[^\n]*\baudit\b[^\n]*(off|not configured|audit clone)'
+  - type: regex
+    name: no-failure-paths-route
+    # The design's failure paths live under `### Strategic` and `### Tactical`
+    # (H3.2): the check reads those headings by name, so the gate never routes
+    # back to architecture-design for them.
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: 'failure-paths-homed'
+    match: not_contains
   - type: llm
     name: stops-at-the-routed-skill-or-reports-the-route
     focus: last_message

@@ -45,10 +45,14 @@ The eight checks, how each decides, and where a failure routes:
    `cannot`, `can't`, `unreachable`, `times out`) has a structural home:
    at least half of its content words (lower-cased, 4+ letters, stopwords
    removed) occur in the design's Structure, Boundaries, Components or
-   Decisions sections (this roster's designs place failure handling in
-   their numbered decisions as often as in Structure). A row that passes
-   may still be homed badly; a row that fails is one the builder will have
-   to place.
+   Decisions sections, or in any section whose heading contains
+   `strategic` or `tactical`, case ignored (this roster's designs place
+   failure handling in their numbered decisions as often as in Structure,
+   and `architecture-design` writes the components as `### Strategic` and
+   `### Tactical` under Structure; run 3's design kept its failure paths
+   there and failed this check until those headings were renamed). A row
+   that passes may still be homed badly; a row that fails is one the
+   builder will have to place.
 3. numbers-on-waits -> devsecops-engineer:reliability-requirements. No
    criterion paragraph in the reliability document mentions a wait, retry,
    poll, give-up, staleness or timeout in vague words (`a few`, `several`,
@@ -265,9 +269,9 @@ def failure_rows(reliability):
 
 def check_failure_paths(docs, design):
     home = " ".join(body for heading, body in sections(design)
-                    if re.search(r"structure|boundar|component|decision", heading, re.I)).lower()
+                    if re.search(r"structure|boundar|component|decision|strategic|tactical", heading, re.I)).lower()
     if not home:
-        return False, "the design has no Structure, Boundaries or Components section"
+        return False, "the design has no Structure, Boundaries, Components, Strategic or Tactical section"
     home_words = content_words(home)
     paths = []
     if docs.get("reliability"):

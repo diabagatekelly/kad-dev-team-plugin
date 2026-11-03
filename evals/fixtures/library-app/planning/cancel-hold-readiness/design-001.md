@@ -9,15 +9,25 @@ title's queue) outrank the screen and outrank how holds are stored.
 
 ## Structure
 
-- **CancelHold** (lending, strategic): cancels a member's hold on a title
-  and says whether it did, or that the hold queue cannot be reached.
-- **HoldQueue** (lending, strategic, existing port): gains an operation that
-  removes one member's hold on a title and says whether there was one.
-- **InMemoryHoldQueue** (infrastructure, tactical, existing adapter):
-  implements the new operation.
-- **Desk hold route** (infrastructure, tactical): `POST /holds/:isbn/cancel`
-  for staff, calling CancelHold and rendering the desk screen's result
-  state.
+### Strategic
+
+- **CancelHold** (lending): cancels a member's hold on a title and returns
+  one of three results: cancelled; rejected, with a reason, when the
+  member has no hold on that title or when the same cancel is asked for
+  twice in a row (the hold is removed once, and the second request is a
+  rejection with a reason, never an error); failed when the hold queue
+  cannot be reached, with nothing half-removed and the queue as it was.
+- **HoldQueue** (lending, existing port): gains an operation that removes
+  one member's hold on a title and says whether there was one.
+
+### Tactical
+
+- **InMemoryHoldQueue** (infrastructure, existing adapter): implements the
+  new operation.
+- **Desk hold route** (infrastructure): `POST /holds/:isbn/cancel` for
+  staff, calling CancelHold and rendering the desk screen's result as the
+  cancelled state, the refused state, or the unreachable-queue state when
+  the hold queue cannot be reached.
 
 ## Criteria, placed
 
@@ -55,14 +65,9 @@ slice to read back.
 ## Decisions
 
 - Cancelling removes the member's hold from that title's queue. Approved.
-- Asking to cancel a hold the member doesn't have is a rejection, not an
-  error. Approved.
-- When the hold queue cannot be reached, CancelHold returns a failed
-  result and removes nothing; the route renders the unreachable-queue
-  state. Approved.
-- The same cancel asked for twice in a row: the hold is removed once and
-  the second request is the rejected result, rendered as the refused
-  state. Approved.
+- A missing hold is a rejection, not an error. Approved.
+- An unreachable store is a failed result and removes nothing. Approved.
+- A repeated request is a rejection, never an error. Approved.
 
 ## Open questions
 
