@@ -9,8 +9,9 @@ carries these fixes, started with `bin/kad --chrome`, under the lite policy
 again, audited the same way plus H5's assessment of the tests.
 
 Where it stands (2026-11-03): H1 merged as PR #34 (0.10.0); H2 as PR #35
-(0.11.0); H4 filed on the project; H3 is next, on its own branch, then
-slice 2; H5 is slice 2's audit; H6 is still the owner's. Before slice 2:
+(0.11.0); H4 filed on the project; H3 built as 0.12.0 on branch
+`h3-planning` (its status note below); then slice 2; H5 is slice 2's
+audit; H6 is still the owner's. Before slice 2:
 `kad --reset` (or `--audit-repo https://github.com/diabagatekelly/audit-docs`
 on the run), since the stored launcher answer on the Mac names the
 project's own origin as the audit repository and the launcher now
@@ -54,10 +55,25 @@ Drift found by H2's gate, 2026-11-03, not caused by H2 (the same two cases fail 
 
 ## H3. Planning
 
-- [ ] H3.1 **Built-ins by default in `technology-bootstrap`.** A deferred category is decided at planning as "the runtime's built-in unless a chunk forces a dependency", with one owner approval for the whole set; a re-entry during the build happens only when a chunk forces a dependency the set excluded. Done when: run 3's six re-entries (node:http, the SDK pin, node:crypto, `/usr/bin/security`, a JSON-lines writer, server-rendered HTML) would have been one approval at planning and zero interruptions.
-- [ ] H3.2 **Readiness check reads any heading** containing "strategic" or "tactical" (case-insensitive), and `architecture-design` names the exact headings it writes. Done when: run 3's design at `88bb833` passes failure-paths-homed without the rename.
-- [ ] H3.3 **The design's test line matches the seam rule.** `architecture-design`'s template line under "Tests and fixtures" reads: tests run the real store under a temporary directory and the real use cases, and fake only what the lite policy's "Fakes only at the system boundary" allows: the external service at its wire boundary, the clock, randomness, a browser-only API, and a port fake of own code for a branch the seam test cannot reach, named in the report, with made-up data throughout. Done when: the template and `tdd-implementation-lite`'s "Fakes only at the system boundary" say the same thing.
-- [ ] H3.4 **`reliability-review` checklist: a remote resource created, then a timeout, then a retry.** For every call that creates something at the provider (an exchange, an item, a payment), what happens to the thing created when the reply is lost and the call is retried. Done when: the skill's checklist has the row and the eval fixture's planted adapter has the bug.
+Status 2026-11-03: built as kad-dev-team 0.12.0 on branch `h3-planning`
+(the four skill texts, `readiness_check.py`, the readiness fixture's
+design restructured to home its failure paths under `### Strategic` and
+`### Tactical` only, the refund overlay and its case
+`reliability-review-refund-pr`, graders in the bootstrap chain and the
+design phase 2). The bootstrap and design chains were re-frozen for the
+new skill text; the gate's `--stale` run and the bars are recorded in
+`evals/README.md`'s coverage table. Two follow-ups wait for the review
+skills' next change, proposed to the owner and not folded in here: the
+agent-file text fix for the drift under Claude Code 2.1.316 (a
+directly-invoked `code-reviewer` skipping `why-comments`, a
+directly-invoked heavy `tdd-coach` skipping its reviews), and requiring
+the cold findings written to the report file before any planning
+document is opened, so an eval can grade the reading order.
+
+- [x] H3.1 (0.12.0; graded in `technology-bootstrap-phase2`'s `recommends-the-built-in-default-set-once` and phase 3's `records-the-built-in-default-set`) **Built-ins by default in `technology-bootstrap`.** A deferred category is decided at planning as "the runtime's built-in unless a chunk forces a dependency", with one owner approval for the whole set; a re-entry during the build happens only when a chunk forces a dependency the set excluded. Done when: run 3's six re-entries (node:http, the SDK pin, node:crypto, `/usr/bin/security`, a JSON-lines writer, server-rendered HTML) would have been one approval at planning and zero interruptions.
+- [x] H3.2 (0.12.0; `orchestrator-readiness-gate`'s `no-failure-paths-route` on a fixture whose Decisions are one line each, and `architecture-design-payfine-phase2`'s `structure-headings-strategic-and-tactical`) **Readiness check reads any heading** containing "strategic" or "tactical" (case-insensitive), and `architecture-design` names the exact headings it writes. Done when: run 3's design at `88bb833` passes failure-paths-homed without the rename. Checked 2026-11-03: at `88bb833` the old check failed 11 of 15 failure paths; the new one fails 1 of 15, the "same action twice" row, which the architect homed in the next commit (`f4b4627`) with a sentence under Institution connections, not with the rename: a real gap the gate was right to name, so 10 of the 11 were the headings and one was the design.
+- [x] H3.3 (0.12.0; `architecture-design-payfine-phase2`'s `tests-line-matches-the-seam-rule`; `tdd-implementation-lite`'s rule gained "made-up data throughout" so both say the same thing, `tdd-implementation` untouched) **The design's test line matches the seam rule.** `architecture-design`'s template line under "Tests and fixtures" reads: tests run the real store under a temporary directory and the real use cases, and fake only what the lite policy's "Fakes only at the system boundary" allows: the external service at its wire boundary, the clock, randomness, a browser-only API, and a port fake of own code for a branch the seam test cannot reach, named in the report, with made-up data throughout. Done when: the template and `tdd-implementation-lite`'s "Fakes only at the system boundary" say the same thing.
+- [x] H3.4 (0.12.0; the row, and the refund overlay `code-plants/reliability-review/refund/` for `reliability-review-refund-pr`: a refund made before the client's 10 s timeout, refused on the retry as already refunded, treated as a refusal, recorded nowhere, answer key R16 with traps RT12 and RT13; the portal-pay overlay's R14 already carried the duplicate ending) **`reliability-review` checklist: a remote resource created, then a timeout, then a retry.** For every call that creates something at the provider (an exchange, an item, a payment), what happens to the thing created when the reply is lost and the call is retried. Done when: the skill's checklist has the row and the eval fixture's planted adapter has the bug.
 
 ## H4. In the project, before slice 2 (personal-finance-tracker-3, not the plugin)
 
@@ -86,3 +102,4 @@ Still open on 2026-11-03; H1.4's transcripts will exist from slice 2 on, so the 
 
 - D9 phase 2 (a chunk-runner agent per chunk) was to be decided on the orchestrator's measured loop context (`TODO.md` 4.2). Run 3's loop transcript is missing, so there is no measurement; decide after slice 2 with H1.4 in place, or decide now on the planning session's figure (167 messages, 36.9M cache-read tokens over 2.5 h).
 - The 5 h loop budget: run 3 reached it at chunk 7 and the owner lifted it. Raise the default to 8 h for a UI slice, or keep 5 h and let the owner lift it each time.
+- The heavy policy (`tdd-implementation`) and its five eval cases: the owner asked on 2026-11-03 whether they had been removed (they have not; nothing in H1 to H3 touches them) and said to take the question up after all the planned changes are in, so it waits for H5.4's verdict on lite's tests after slice 2.
