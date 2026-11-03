@@ -152,6 +152,15 @@
     "claude_version": "2.1.316",
     "recorded": "2026-11-03T00:26:53Z"
   },
+  "code-review-fine-notices-pr-via-agent": {
+    "inputs": "d7b1aca882eeaa4d32528d08401641438b8fbb9a67684f794606333931f2a32e",
+    "score": 0.833,
+    "bar": 0.833,
+    "runs": 1,
+    "source": "results/gate-20261103T121749-code-review-fine-notices-pr-via-agent.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T12:20:28Z"
+  },
   "code-review-fines-report-pr": {
     "inputs": "26395e121f8893c1cd71986b0a0d07a5eecf150f45fccb1e65507c115c8ea6fd",
     "score": 1.0,
@@ -1079,6 +1088,15 @@
     "claude_version": "2.1.316",
     "recorded": "2026-11-03T00:26:53Z"
   },
+  "tdd-implementation-cancel-hold-via-agent": {
+    "inputs": "06cd1aa3a00b50c81d3d603102a9f0103409aeec8842bbd165baa5fe1a5a384c",
+    "score": 0.917,
+    "bar": 0.806,
+    "runs": 1,
+    "source": "results/gate-20261103T121749-tdd-implementation-cancel-hold-via-agent.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T12:20:28Z"
+  },
   "tdd-implementation-chunk-plan": {
     "inputs": "a77331f9d9019ea8e56d2a84d1db2b1281e07c0d575b9336c28ceb0ceb100974",
     "score": 0.833,
@@ -1125,13 +1143,13 @@
     "recorded": "2026-11-03T00:26:53Z"
   },
   "tdd-implementation-lite-rename-fix": {
-    "inputs": "165e5e0a093d14b41556d474749ce27e4080bde9f834e3725b609a56bfeb915e",
+    "inputs": "e683956c936f9f34a21a01044d84e4ce99db690f8348b203e0dfa56bfac789d9",
     "score": 1.0,
-    "bar": null,
+    "bar": 1.0,
     "runs": 1,
-    "source": "results/gate-20261102T234423-tdd-implementation-lite-rename-fix.json",
-    "claude_version": "2.1.316",
-    "recorded": "2026-11-03T00:26:53Z"
+    "source": "results/gate-20261103T121749-tdd-implementation-lite-rename-fix.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T12:20:28Z"
   },
   "tdd-implementation-named-fix": {
     "inputs": "246b464b84d9143f9833c35bbdaf5a6528980514c5ffe0c0e4680478d9ad6c5a",
