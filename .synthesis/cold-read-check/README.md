@@ -7,7 +7,10 @@ protocol: read all of `src/` and `test/`, no `planning/`, `docs/` or git
 log; install with the frozen lockfile; typecheck, lint, format check and
 the suite; probe each suspected bug by execution with a scratch script
 outside the tree; never the app against a real service. The three
-reports are beside this file. Compared with each run's recorded
+reports are beside this file. Run 2's reader read all of `src/` and most
+of `test/` whole but, for five large screen-script test files and
+`test/repo/*`, only the harness setup and the test names, and says so
+at the top of its report; the other two read everything. Compared with each run's recorded
 assessment (`audit-docs/<project>-slice-1/plugin-review/*code-assessment*`).
 
 | Run (commit) | Recorded bug | Opus cold read |

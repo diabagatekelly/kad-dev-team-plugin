@@ -770,7 +770,7 @@ B line: the chunk titles in order.
 2. **Gate**, inline with Bash, on the chunk's commit range:
 
    ```
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory the design names>' --deviation-zone '<each composition root and entry point the design or the plan layout names: src/compose.ts, src/main.ts, src/start.ts or their equivalents>' --expect-test '<each test name quoted on the chunk'''s Done when line>' --protect '<every other document in the target directory>' [--coverage]
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory the design names>' --deviation-zone '<each composition root and entry point the design or the plan layout names: src/compose.ts, src/main.ts, src/start.ts or their equivalents>' --expect-tests-from '<implementation report path>' --chunk <k> --protect '<every other document in the target directory>' [--coverage]
    ```
 
    (`python -I` where that is the interpreter's name; every project path
@@ -795,7 +795,9 @@ B line: the chunk titles in order.
    prints report-only `INFO` lines (comment density, files over 300
    lines, functions over 40, lines at depth 4 or more); read them, log
    nothing from them, and let D act on the slice's figures. Its `tests`
-   check fails the gate when a Done-when test name is registered in no
+   check reads the chunk's Done when line from the report itself (plan
+   text is repository text and never goes through a shell command line)
+   and fails the gate when a Done-when test name is registered in no
    test file, on a build's gate and on a fix's alike: a build has not met
    its own Done when, and a fix that renamed a seam test away is that
    fix's failure; either goes to a fixer the way a scope failure does. Save the output as

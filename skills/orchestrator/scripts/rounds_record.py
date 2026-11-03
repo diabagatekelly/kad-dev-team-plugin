@@ -305,6 +305,8 @@ def record(a):
             if lows:
                 findings = [f for f in findings if f["severity"] != "Low"]
                 print(f"lows dropped {len(lows)} from {os.path.basename(report)}")
+                if not findings:
+                    shaped = False  # a report of nothing but Lows is a clean round, not a malformed one
         if not findings and shaped:
             print(f"format: no finding in the shared format in {report}")
             failed = True

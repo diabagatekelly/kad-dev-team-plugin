@@ -85,6 +85,11 @@ graders:
     target: trace
     pattern: 'ℹ fail 0'
   - type: regex
+    name: last-test-run-green
+    target: trace
+    pattern: 'ℹ fail [1-9](?![\s\S]*ℹ fail \d)'
+    match: not_contains
+  - type: regex
     name: report-names-the-rename-and-its-sites
     target:
       source: file
