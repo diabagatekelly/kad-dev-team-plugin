@@ -1,7 +1,7 @@
 # Cold read: run1
 
-Project root: `/private/tmp/claude-501/-Users-kellydiabagate-Documents-portfolio-kad-dev-team-plugin/1feb7624-a2f5-4db1-9405-d0396ed402a4/scratchpad/cold/run1`
-Probes: `/private/tmp/claude-501/-Users-kellydiabagate-Documents-portfolio-kad-dev-team-plugin/1feb7624-a2f5-4db1-9405-d0396ed402a4/scratchpad/cold/probe-run1/` (`p1-second-connect.ts`, `p2-secret-at-complete.ts`, `p3-empty-pull.ts`, `p4-location-case.ts`, each run with `node <file>` on Node v24.22.2). No file in the tree was changed (`git status --short` is empty after the probes).
+Project root: `<worktree>`
+Probes: `<probe dir>/` (`p1-second-connect.ts`, `p2-secret-at-complete.ts`, `p3-empty-pull.ts`, `p4-location-case.ts`, each run with `node <file>` on Node v24.22.2). No file in the tree was changed (`git status --short` is empty after the probes).
 
 ## Checks run
 

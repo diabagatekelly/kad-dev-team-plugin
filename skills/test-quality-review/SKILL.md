@@ -35,10 +35,11 @@ reading through the tests for other issues.
 
 When the orchestrator's chunk loop launches you at a round 0 (the
 chunk's combined review at its C.3, the slice review at its D.3), the
-task hands you four things and nothing else: the project root, the
-documented test command, the commit range, and the report path. No
-planning document, no earlier report, no record, no git log: you learn
-the code from the code, in this order.
+task hands you five things and nothing else: the project root, the
+documented test command, the commit range, the report path, and the
+path of the gate's last output on this tree. No planning document, no
+earlier report, no record, no git log: you learn the code from the
+code, in this order.
 
 1. **Read the code whole, not the diff.** `git diff --stat <range>` names
    the modules the range touches; read every file of each of those
@@ -47,12 +48,16 @@ the code from the code, in this order.
    it is right. Run 3's slice reviewers, each reading one side of the
    exchange-once seam, missed an orphaned Plaid Item three runs running.
 2. **Run the checks** from the project root with the manifest's own
-   scripts: the typecheck, the lint, the format check where each exists,
-   and the full suite with the documented test command. Never install:
-   the tree was installed with the frozen lockfile before you were
-   launched, and at D five reviewers share one `node_modules`. Open the
-   report with a `## Checks run` section, one line per command with its
-   exit code.
+   scripts: the typecheck, the lint and the format check where each
+   exists. The full suite you do not run: the gate ran it on this very
+   tree minutes ago and the task hands you its output file; read the
+   suite's result there (the smoke agent is starting the app on the same
+   checkout as you work, and at D five other reviewers share it, so six
+   suites at once would contend for ports and files). Never install: the
+   tree was installed with the frozen lockfile before you were launched.
+   Open the report with a `## Checks run` section, one line per command
+   with its exit code, and one for the suite naming the gate output it
+   came from.
 3. **Probe every suspected bug by execution** where you can: a scratch
    script outside the tree (the session's scratchpad, importing the
    module by path) or a one-off test invocation; never a change to any

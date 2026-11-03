@@ -1,6 +1,6 @@
 # Cold read, run 2
 
-Tree: `/private/tmp/claude-501/-Users-kellydiabagate-Documents-portfolio-kad-dev-team-plugin/1feb7624-a2f5-4db1-9405-d0396ed402a4/scratchpad/cold/run2` (detached worktree). I read every file under `src/` in full. Under `test/`, I read the adapter, store, vault, use-case, stage-log, route and cross-site test files in full. For the large screen-script suites (`plaid-connect.test.ts`, `live-status.test.ts`, `connect-failure-screen.test.tsx`, `transactions-screen.test.tsx`, `history-status-screen.test.tsx`) and the `test/repo/*` files, I read the harness setup and every test name, not each assertion body.
+Tree: `<worktree>` (detached worktree). I read every file under `src/` in full. Under `test/`, I read the adapter, store, vault, use-case, stage-log, route and cross-site test files in full. For the large screen-script suites (`plaid-connect.test.ts`, `live-status.test.ts`, `connect-failure-screen.test.tsx`, `transactions-screen.test.tsx`, `history-status-screen.test.tsx`) and the `test/repo/*` files, I read the harness setup and every test name, not each assertion body.
 
 Probes are under `.../scratchpad/cold/probe-run2/` (`a.probe.ts`, `b.probe.ts`). They run against the worktree's real modules, the Miniflare D1 database and a fake Plaid `fetch`, through a vitest config that lives outside the tree. I changed no file in the tree, and `git status --short` stays empty.
 
