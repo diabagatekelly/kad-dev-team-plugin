@@ -188,3 +188,16 @@ protocol for every reviewer), planning (H3), the project's own open bugs
 (H4), the slice 2 audit of the lite policy's tests (H5) and two questions
 for the owner (H6). Slice 2 runs on the version
 that carries H1 to H3.
+
+Status 2026-11-03: H1 merged as PR #34 (0.10.0: the audit clone before the
+fence, a sync after every records commit, failures on the line, transcript
+snapshots, Chrome under the fence, no browser owed); H2 as PR #35 (0.11.0:
+the cold pass first for every round-0 reviewer, decided by a three-run Opus
+check, deviation zones, the fixer's rename and shell-edit rules, no chunk
+Lows, the README's CI line); H4 filed on the project as #6 to #13. Next: H3
+on its own branch, then slice 2 under `bin/kad --chrome` with audit on (after
+`kad --reset`: the stored audit repository is the project's own origin), whose
+audit is H5. Two eval bars were re-recorded for drift under Claude Code
+2.1.316 (the handoff's H2 note): a directly-invoked reviewer skipping
+`why-comments`, a directly-invoked heavy builder skipping its reviews; a
+candidate agent-file fix, not scheduled.

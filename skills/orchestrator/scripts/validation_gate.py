@@ -66,8 +66,10 @@ module directories as the orchestrator's B step lists them):
    from, both of which git lists as untracked). A settings file a
    change that actually wrote one there has content and stays in the set.
 5. protected: every `--protect` file is byte-identical to the baseline.
-6. tests: with `--expect-test <name>` (repeatable; the orchestrator passes
-   each test name quoted on the chunk plan's Done when line), every name
+6. tests: with `--expect-tests-from <report> --chunk <k>` (the names quoted
+   on that chunk's Done when line, read from the implementation report so
+   plan text never crosses a shell command line; `--expect-test <name>`
+   adds one by hand), every name
    is registered in some test file: the title of a `test(`, `it(` or
    `describe(` call, or a `def <name>(`, never a mention in a comment or
    a fixture. A Done-when test a fix renamed or dropped (a mangled
@@ -729,6 +731,28 @@ def registered(name, text):
     return re.search(quoted, text) is not None or re.search(pydef, text) is not None
 
 
+DONE_WHEN_QUOTED = re.compile(r'"([^"\n]+)"|`([^`\n]+)`')
+
+
+def done_when_tests(report_path, chunk):
+    """The test names quoted on the chunk plan's Done when line for chunk <k>
+    (double quotes or backticks), read from the implementation report so no
+    plan text ever passes through a shell command line."""
+    try:
+        with open(report_path, encoding="utf-8", errors="replace") as fh:
+            text = fh.read()
+    except OSError as e:
+        raise SystemExit(f"--expect-tests-from: cannot read {report_path}: {e.strerror}")
+    section = re.search(r"^###\s+Chunk\s+" + re.escape(str(chunk)) + r"\b[^\n]*\n(.*?)(?=^###\s|\Z)", text, re.M | re.S)
+    if not section:
+        raise SystemExit(f"--expect-tests-from: no `### Chunk {chunk}` section in {report_path}")
+    line = re.search(r"^\s*[-*]\s*\*\*Done when\*\*\s*:?\s*(.+)$", section.group(1), re.M)
+    if not line:
+        raise SystemExit(f"--expect-tests-from: chunk {chunk} has no Done when line in {report_path}")
+    names = [a or b for a, b in DONE_WHEN_QUOTED.findall(line.group(1))]
+    return [n for n in names if n.strip()]
+
+
 def check_expected_tests(project, names):
     """Every `--expect-test` name is registered in some test file of the tree.
     A Done-when test that a fix renamed or dropped fails here, at the gate,
@@ -858,7 +882,10 @@ def main():
     p.add_argument("--deviation-zone", action="append", default=[],
                    help="a composition root or entry point (dir/ or exact file): a change there off --allow is a deviation, not a failure (repeatable); test files are one by default")
     p.add_argument("--expect-test", action="append", default=[],
-                   help="a test name from the chunk plan's Done when; an INFO line names those missing from every test file (repeatable)")
+                   help="a test name from the chunk plan's Done when (repeatable); the `tests` check fails when one is registered in no test file")
+    p.add_argument("--expect-tests-from", metavar="REPORT",
+                   help="read the Done when test names from this implementation report's `### Chunk <k>` section (with --chunk); plan text never crosses a shell")
+    p.add_argument("--chunk", type=int, help="the chunk whose Done when line --expect-tests-from reads")
     p.add_argument("--protect", action="append", default=[], help="file that must be unchanged (repeatable)")
     p.add_argument("--test-cmd", default="npm test")
     p.add_argument("--typecheck-cmd", help="typecheck command; default: package.json's typecheck script through the test command's runner")
@@ -915,8 +942,13 @@ def main():
         report["checks"]["scope"] = check_scope(files, a.allow, module_dirs, [z.replace("\\", "/") for z in a.deviation_zone])
     if a.protect:
         report["checks"]["protected"] = check_protected(project, a.protect, files)
-    if a.expect_test:
-        report["checks"]["tests"] = check_expected_tests(project, a.expect_test)
+    expected = list(a.expect_test)
+    if a.expect_tests_from:
+        if a.chunk is None:
+            raise SystemExit("--expect-tests-from needs --chunk <k>")
+        expected += [n for n in done_when_tests(a.expect_tests_from, a.chunk) if n not in expected]
+    if expected:
+        report["checks"]["tests"] = check_expected_tests(project, expected)
     report["passed"] = all(c["passed"] for c in report["checks"].values())
     report["metrics"] = metrics(project, [f for f in files if os.path.isfile(os.path.join(project, f))], module_dirs)
 
