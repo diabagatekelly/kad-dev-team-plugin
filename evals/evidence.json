@@ -440,6 +440,15 @@
     "claude_version": "2.1.317",
     "recorded": "2026-11-03T16:17:35Z"
   },
+  "orchestrator-chunk-review-round": {
+    "inputs": "579e7ec72b020d29e80cbd9aa44a03e75e61151018df28748c04d02c9e37dc36",
+    "score": 0.923,
+    "bar": 0.967,
+    "runs": 3,
+    "source": "results/gate-20261103T180818-rerun-orchestrator-chunk-review-round.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T18:33:44Z"
+  },
   "orchestrator-definition-of-done": {
     "inputs": "326ad40d850459639bc538fffa962f969eb83da659df1abcaef2f2dc2c69f129",
     "score": 0.818,
@@ -1069,6 +1078,15 @@
     "source": "results/gate-20261015T164135-supply-chain-review-workflows.json",
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T17:14:10Z"
+  },
+  "tdd-implementation-cancel-hold": {
+    "inputs": "5a8b41442c5a144471213113d0a50dc28fafe6b2ec1c5caf4cded473ec844c47",
+    "score": 0.885,
+    "bar": 0.91,
+    "runs": 3,
+    "source": "results/gate-20261103T180818-rerun-tdd-implementation-cancel-hold.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T18:33:44Z"
   },
   "tdd-implementation-cancel-hold-via-agent": {
     "inputs": "2e0182549e6e547d95fe0db97727429e7a32b166870be8cb6789a28affb709a4",
