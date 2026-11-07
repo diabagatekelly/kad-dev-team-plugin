@@ -55,7 +55,7 @@ graders:
     target:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
-    pattern: '\*\*A\. Start:\*\*[^\n]*\bsession\b[^\n]*\baudit\b[^\n]*(off|not configured|audit clone)'
+    pattern: '\*\*A\. Start:\*\*[^\n]*\bsession\b[^\n]*\baudit\b[^\n]*(off|not configured|audit clone)[^\n]*\btranscript\b[^\n]*(kept|MISSING|not checked)'
   - type: regex
     name: no-failure-paths-route
     # The design's failure paths live under `### Strategic` and `### Tactical`

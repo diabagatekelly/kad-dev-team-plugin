@@ -606,7 +606,7 @@ it at E.
    whatever it asked:
 
    ```
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/audit_sync.py" --check --project '<project root>'; echo "session $CLAUDE_CODE_SESSION_ID"
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/audit_sync.py" --check --project '<project root>'; echo "session $CLAUDE_CODE_SESSION_ID"; bash "${CLAUDE_PLUGIN_ROOT}/hooks/audit.sh" --snapshot
    ```
 
    Its one line goes on the A line's `audit` field as printed: `audit:
@@ -622,19 +622,42 @@ it at E.
    id goes on the A line's `session` field: a resumed flow adds the new
    id on its `Resumed` bullet, so the E step's cost covers every session.
 
+   The snapshot's line is the proof that this session's transcript is
+   being written, taken here and not discovered at E: `snapshot: …` puts
+   `transcript — kept` on the A line, `snapshot FAILED: …` puts
+   `transcript — MISSING: <why, as printed>`, and with audit mode off
+   (the script answers "audit mode off") the field says `transcript — not
+   checked (audit off)`. Claude Code saves no transcript for a session
+   started from a shell that carries another session's
+   `CLAUDE_CODE_CHILD_SESSION` (its start screen says "Transcript saving
+   is off"; the launcher drops the marker since 0.13.1): run 3's loop
+   session and the 2026-11-07 fix session each reached E with `cost not
+   measured: transcript missing` and nothing for the audit to read. A
+   MISSING transcript is the **transcript question** of step 2. A resumed
+   flow runs the same snapshot and puts the same field on its `Resumed`
+   bullet.
+
    The check is not once per flow but before every launch: before each
    chunk's build (C.1), its reviewer and smoke agent (C.3), its fixer
    (C.4), a consult (C.5), the slice reviewers (D) and the triage (E). A
    `PASS` that turns into a `FAIL` between steps ends the flow the way a
    second gate failure does, unless the user opted out at A, in which
    case the later checks are logged and the flow continues.
-2. **Questions, one per `AskUserQuestion` call, three separate calls at
-   most, in this order: settings, sandbox, delegation.** Never
+2. **Questions, one per `AskUserQuestion` call, four separate calls at
+   most, in this order: settings, sandbox, transcript, delegation.** Never
    bundle two of them into one call, whatever the tool allows: a call
    carrying two questions is this rule broken. A question the owner's own
    message already answered is skipped (a plain "go ahead" answers none);
-   the settings and sandbox questions exist only when A.1 raised them.
+   the settings, sandbox and transcript questions exist only when A.1
+   raised them.
    - **Settings** and **sandbox**: as A.1 says.
+   - **Transcript**, only on `transcript — MISSING`: "This session's
+     transcript is not being saved (<why>), so the loop's cost and the
+     audit of this build cannot be measured. Restart under the launcher
+     now, or continue without one?" On restart, write the handoff file
+     (the handoff rule resumes the flow in the new session) and stop. On
+     continue, the A line keeps `MISSING`, the E step's cost says `not
+     measured`, and the owner has said so on the record.
    - **Delegation**: "May decisions that come up during the build be
      settled with the owning persona without asking you? Each is logged,
      committed under the persona's name, and you can overturn it." On
@@ -1138,8 +1161,9 @@ a successor needs (test command, module directories, records directory,
 whether the owner opted out of the sandbox), and the owner's standing
 directions; commit it with the records; and write a memory pointer to it.
 On invocation with a handoff file present for the slice, resume from it:
-no new A step; append `Resumed <date> at
-<step>, session <this session's id>` as an indented line under the
+no new A step; run A's snapshot check (`audit.sh --snapshot`) and append
+`Resumed <date> at <step>, session <this session's id>, transcript <kept |
+MISSING: <why> | not checked (audit off)>` as an indented line under the
 entry's last line (the cost at E covers every session the entry names)
 and continue at the step the file names. The handoff file is removed by the records commit
 at E.
@@ -1164,13 +1188,13 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>[; Chrome | ; no Chrome]) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; delegation — `<file path | none>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
+- **A. Start:** sandbox — `<PASS (<platform>[; Chrome | ; no Chrome]) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
 - **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r `<consults>`c; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
 - **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`
 - **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`
-  - Resumed <date> at <step>, session `<id>`
+  - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```
 
 **5. Report as visible text after every step, then continue.** State

@@ -24,7 +24,11 @@
 # paths denied for reading; the network allowed to the API, sign-in and
 # GitHub, plus any domains you add; local ports allowed unless --no-local);
 # drops credential-shaped variables from the environment the session
-# inherits; exports KAD_AUDIT=1, the audit repository if you gave one,
+# inherits, and another Claude Code session's variables (a shell opened
+# from inside a session, or a terminal window a session launched, carries
+# CLAUDE_CODE_CHILD_SESSION, and Claude Code then saves no transcript for
+# the session started there: run 3's loop and the 2026-11-07 fix session
+# on the Mac); exports KAD_AUDIT=1, the audit repository if you gave one,
 # KAD_AUDIT_DIR (the audit directory, allowed for writing: the session's
 # logs, transcript snapshots and the audit repository's clone live there),
 # KAD_CHROME=1 under --chrome, and KAD_SRT_SETTINGS so the orchestrator's
@@ -50,8 +54,11 @@
 # instead of the terminal and are stored (the orchestrator's session
 # setup runs it that way, from a session with no terminal); on every later
 # run they apply to that run only. The launcher itself writes nothing
-# outside that directory; the session it starts writes where the settings
-# allow.
+# outside that directory, the audit directory (the clone) and, for a
+# --plugin-dir run, the plugin's hook data directory under
+# <config>/plugins/data/ (Claude Code creates it on first use, which the
+# fence denies, and every hook then fails before it runs); the session it
+# starts writes where the settings allow.
 #
 #   --audit            KAD_AUDIT=1 for this run (the stored default is on)
 #   --no-audit         KAD_AUDIT unset for this run
@@ -363,8 +370,34 @@ for name in $(env | cut -d= -f1 | grep -E 'SECRET|TOKEN|PASSWORD|PASSWD|CREDENTI
   [ "$keep" = 1 ] || { unset "$name"; scrubbed+=("$name"); }
 done
 
+# 5a. Another session's variables. A shell opened from inside a Claude Code
+#     session (its Bash tool, or a terminal window it launched, which keeps
+#     the environment for its lifetime) carries CLAUDE_CODE_CHILD_SESSION,
+#     CLAUDE_PID and the parent's session id, and Claude Code takes the
+#     session started there for a child of that one: "Transcript saving is
+#     off — inherited CLAUDE_CODE_CHILD_SESSION marker", nothing written
+#     under ~/.claude/projects/, the loop's cost line "not measured" and
+#     nothing for the audit to read (run 3's loop session, the 2026-11-07
+#     fix session). Dropped here, and the session told to persist whatever
+#     else it inherits. The hook cannot tell from inside: Claude Code sets
+#     the same marker for every child it spawns, hooks included.
+inherited=()
+for name in CLAUDECODE CLAUDE_CODE_CHILD_SESSION CLAUDE_PID CLAUDE_CODE_SESSION_ID CLAUDE_CODE_SSE_PORT CLAUDE_CODE_MESSAGING_SOCKET CLAUDE_CODE_MESSAGING_TOKEN CLAUDE_CODE_SESSION_ATTENDED CLAUDE_CODE_ENTRYPOINT; do
+  [ -n "${!name:-}" ] && { unset "$name"; inherited+=("$name"); }
+done
+export CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1
+
 # 6. Say what will run.
 plugin_arg=(); [ "$installed" = 1 ] || plugin_arg=(--plugin-dir "$root")
+# Claude Code gives a plugin's hooks a data directory under
+# <config>/plugins/data/ (<name>-inline for a --plugin-dir plugin) and
+# creates it on first use; the fence denies writes under plugins/, so in a
+# fenced session with no such directory yet every hook fails before it
+# runs ("EPERM ... mkdir .../plugins/data/kad-dev-team-inline": the audit
+# log then has nothing). Created here, outside the fence; the installed
+# plugin's was created by its install.
+plugin_data="$claude_dir/plugins/data/$(python3 -I -c 'import json,sys;print(json.load(open(sys.argv[1]))["name"])' "$root/.claude-plugin/plugin.json" 2>/dev/null || echo kad-dev-team)-inline"
+[ "$installed" = 1 ] || [ "$check" = 1 ] || [ -d "$plugin_data" ] || mkdir -p "$plugin_data" 2>/dev/null || say "warning: could not create $plugin_data; the plugin's hooks will fail inside the fence until it exists"
 say "project    $project"
 say "runtime    srt --settings $settings"
 say "network    $(gen_settings | python3 -I -c 'import json,sys;print(", ".join(json.load(sys.stdin)["network"]["allowedDomains"]))')"
@@ -375,6 +408,7 @@ gh_line="no token: delivery stops at the push"
 [ -n "$gh_token" ] && gh_line="token from ${gh_token_env:-the host gh login} as GH_TOKEN; gh config in $gh_dir; gh is the git credential helper"
 say "github     $gh_line"
 [ "${#scrubbed[@]}" -gt 0 ] && say "env        dropped ${scrubbed[*]} (credential-shaped; --keep-env NAME passes one through)"
+[ "${#inherited[@]}" -gt 0 ] && say "env        dropped ${inherited[*]} (another Claude Code session's: this shell was opened from a session, and kept, they would turn transcript saving off for the one started here)"
 [ "$check" = 1 ] && [ "$relaunch" = 0 ] && { say "check only; nothing written, nothing started"; exit 0; }
 [ "$prepare" = 1 ] && { say "prepared; start the fenced session from a terminal with: $(printf '%q' "$root/bin/kad") --project $(printf '%q' "$project")$([ "$chrome" = 1 ] && echo ' --chrome')"; exit 0; }
 
@@ -391,7 +425,7 @@ if [ "$relaunch" = 1 ]; then
     Darwin)
       osascript -e 'tell application "Terminal" to activate' \
                 -e "tell application \"Terminal\" to do script \"$(printf '%s' "$cmd" | sed 's/\\/\\\\/g; s/"/\\"/g')\"" >/dev/null \
-        && { say "opened a Terminal window with the fenced session; close this session when it is up"; exit 0; } ;;
+        && { say "opened a Terminal window with the fenced session; close this session when it is up (a Terminal this command had to start carries this session's variables for its lifetime; kad drops them before it starts claude, but a plain claude typed in that window would save no transcript until Terminal is quit and reopened)"; exit 0; } ;;
     Linux)
       for term in x-terminal-emulator gnome-terminal konsole xterm; do
         command -v "$term" >/dev/null || continue

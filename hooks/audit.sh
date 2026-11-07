@@ -62,7 +62,12 @@ find_git() {
 # truncated one that a cost run would total). One line on stdout.
 snapshot() {
   local sid="$1" transcript="$2" sdir n=0 tmpf tmpd
-  [ -f "$transcript" ] || { echo "snapshot FAILED: transcript missing at $transcript"; return 1; }
+  # Claude Code writes no transcript at all for a session started from a
+  # shell that carries another session's CLAUDE_CODE_CHILD_SESSION (its
+  # start screen says "Transcript saving is off"); bin/kad drops the marker
+  # since 0.13.1. The cause is named here, not detected: Claude Code sets
+  # the same marker for every child it spawns, this hook included.
+  [ -f "$transcript" ] || { echo "snapshot FAILED: transcript missing at $transcript (nothing written yet, or transcript saving is off: a session started from a shell that carries another session's CLAUDE_CODE_CHILD_SESSION saves none; start it with bin/kad 0.13.1 or later, which drops the marker)"; return 1; }
   tmpf="$dir/transcripts/.$sid.jsonl.part"; tmpd="$dir/transcripts/.$sid.part"
   rm -rf "$tmpf" "$tmpd"
   cp "$transcript" "$tmpf" 2>/dev/null || { rm -f "$tmpf"; echo "snapshot FAILED: could not copy $transcript into $dir/transcripts"; return 1; }
