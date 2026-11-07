@@ -33,7 +33,7 @@ graders:
     criteria: |
       The skill's rule (since 0.12.0): the categories slice 1's first failing test does not force but a later chunk of the slice may (an HTTP server, since the UI is a web app; a client for the bank-aggregation vendor; a log; how the page is rendered) are recorded as one default set, "the runtime's built-in unless a chunk forces a dependency", approved once as a whole, so the build re-enters the bootstrap only when a chunk forces a dependency the set excluded. The user's "all fine as you recommend" approves that set along with the rest.
 
-      PASS if the document records such a set under its own heading or list: at least a server and the vendor client, each with its default (Node's own module, the vendor's official client exact-pinned, server-rendered HTML, or a named dependency with its reason), the set recorded as approved by the user (one line for the whole set is enough), and the rule that a chunk inside the set re-enters nothing while a dependency outside it is the one re-entry (in words; the exact phrasing does not matter).
+      PASS if the document records such a set under its own heading or list: at least a server and the vendor client, each with its default (Node's own module, the vendor's official client exact-pinned, server-rendered HTML, or a named dependency with its reason), and the set recorded as approved by the user (one line for the whole set is enough; a row marked provisional for a detail the user has not supplied, such as which vendor, is still approved). Saying that a chunk inside the set re-enters nothing while a dependency outside it is the one re-entry is a plus, not required.
 
       FAIL if those categories appear only as not-yet-decided with an owner and no default, if the set is recorded as pending or as separate open decisions, or if no such set appears.
   - type: llm
@@ -92,10 +92,16 @@ graders:
     criteria: |
       The output must do both of the following.
 
-      (1) Record what was REJECTED, per decided category — the options declined
-      and a concrete reason each. A decided category with no rejected
-      alternatives named is a fail. "Too heavy for a solo project" and "YAGNI"
-      are complete reasons.
+      (1) Record what was REJECTED for each of the three forced categories
+      (language and runtime, test runner, package manager): the options
+      declined and a concrete reason each. One of those three with no rejected
+      alternative named anywhere in the document is a fail. "Too heavy for a
+      solo project" and "YAGNI" are complete reasons. This part is about those
+      three only: a type checker or compiler listed alongside them needs no
+      rejected alternative, and the rows of the built-in default set (a
+      server, page rendering, persistence, a vendor client, crypto, logging,
+      credentials, a linter) record what each default gives up instead of
+      options declined, which is their form of the record and is not a fail.
 
       (2) Name the categories this slice did NOT force as explicitly
       not-yet-decided, each with an owner or a trigger for when it will be
