@@ -69,8 +69,7 @@ evals/
                        # freeze-history.sh, audit_report.py, orchestrator_log_check.py (a real
                        # project's log against the orchestrator's rules), implementation_judge.py (the
                        # blind pairwise judge of two implementations, kept for the evals), pairwise_judge.py
-                       # (with/without arms, over that judge), compare_arms.py (heavy against lite tdd
-                       # builds from kept runs, the same judge), new-case.sh,
+                       # (with/without arms, over that judge), new-case.sh,
                        # summarize_results.py and report_evidence.py (read a results dir or CI artifact),
                        # eval_evidence.py (the PR check: a passing gate run recorded against these exact files),
                        # wsl-setup.sh and wsl-gate.sh (set up, then run the gate under WSL2 in one command)
@@ -271,14 +270,14 @@ place. In order:
 
 - **A. Start:** a repository and an `origin` must exist (otherwise
   `release-engineer:repo-bootstrap`, decided with the owner); the sandbox
-  check (below); then up to four questions, **one per `AskUserQuestion`
-  call**, in order: settings, sandbox, policy, delegation. On "yes" to the
+  check (below); then up to three questions, **one per `AskUserQuestion`
+  call**, in order: settings, sandbox, delegation. On "yes" to the
   delegation question the orchestrator writes
   `planning/delegation-slice-<nnn>.md` (the owner's words, what it covers,
   what it never covers), which is what lets a persona settle a mid-build
-  decision without the owner. The **budget line** is written: 5 h of loop
-  time, 2 reviewer launches per chunk, 1 fixer per scope plus 1 for
-  regressions, 8 consults; counted at every chunk boundary, and the flow
+  decision without the owner. The **budget line** is written: 8 h of loop
+  time for a UI-touching slice and 5 h otherwise, 2 reviewer launches per
+  chunk, 1 fixer per scope plus 1 for regressions, 8 consults; counted at every chunk boundary, and the flow
   ends at the boundary that exceeds one. A `slice-<nnn>-<slug>` branch
   (uncommitted planning documents are committed on it first), the base
   commit recorded. Then the **design-readiness gate**
