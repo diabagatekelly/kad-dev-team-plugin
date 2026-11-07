@@ -59,11 +59,12 @@ graders:
   - type: regex
     name: structure-headings-strategic-and-tactical
     # H3.2: the readiness gate reads the failure-path homes from the sections
-    # whose headings contain these words; the template names them.
+    # whose headings contain these words; the template names them, as
+    # sub-headings of ## Structure, before the next ## heading.
     target:
       source: file
       path: docs/pay-fine/design-001.md
-    pattern: '(?:^|\n)#{2,6}[^\n]*[Ss]trategic[\s\S]*(?:^|\n)#{2,6}[^\n]*[Tt]actical'
+    pattern: '(?:^|\n)## Structure[^\n]*\n(?:(?!\n## )[\s\S])*?\n###[^\n]*[Ss]trategic(?:(?!\n## )[\s\S])*?\n###[^\n]*[Tt]actical'
   - type: llm
     name: tests-line-matches-the-seam-rule
     focus:

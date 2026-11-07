@@ -2473,15 +2473,15 @@
     ]
   },
   "tdd-implementation-named-fix": {
-    "score": 1.0,
+    "score": 0.929,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261017T115620-tdd-implementation-named-fix.json",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261107T010403-rerun-tdd-implementation-named-fix.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "behaviour-unchanged": 1.0,
-      "final-review-runs": 1.0,
+      "final-review-runs": 0.0,
       "final-run-is-the-whole-suite": 1.0,
       "honest-about-order": 1.0,
       "last-test-run-green": 1.0,
@@ -2567,16 +2567,16 @@
     ]
   },
   "technology-bootstrap-phase3": {
-    "score": 1.0,
+    "score": 0.889,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.319",
-    "source": "results/gate-20261107T005438-technology-bootstrap-phase3.json",
+    "source": "results/gate-20261107T010403-rerun-technology-bootstrap-phase3.json",
     "graders": {
       "asks-only-what-the-first-test-forces": 1.0,
       "bootstrap-written": 1.0,
       "recommends-rather-than-decides": 1.0,
-      "records-non-choices-and-open-categories": 1.0,
+      "records-non-choices-and-open-categories": 0.333,
       "records-the-built-in-default-set": 1.0,
       "writes-nothing-else": 1.0
     },

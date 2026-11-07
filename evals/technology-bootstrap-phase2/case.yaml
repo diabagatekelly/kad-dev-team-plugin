@@ -74,7 +74,7 @@ graders:
     criteria: |
       The skill's rule (since 0.12.0): the categories slice 1's first failing test does not force but a later chunk of the slice may (an HTTP server, since the UI is a web app; a client for the bank-aggregation vendor the design isolates behind an adapter; a log; how the page is rendered) are not left to be decided one at a time during the build. They are recommended now as one default set, "the runtime's built-in unless a chunk forces a dependency" (Node's own modules, the vendor's official client exact-pinned, server-rendered HTML, or a named dependency with its reason), with one approval for the whole set.
 
-      PASS if the response presents such a set, covering at least a server and the vendor client with a built-in or official-pinned default for each, and asks the user to approve it as a whole (the user may still change an item; asking once for the set is the point). Presenting it alongside the forced choices in the one message the user asked for is fine.
+      PASS if the response presents such a set, covering at least a server, the vendor client and how the transaction list page is rendered (the three categories the fixture's design and the user's "web app" force on a later chunk) with a built-in or official-pinned default for each, and asks the user to approve it as a whole (the user may still change an item; asking once for the set is the point). Presenting it alongside the forced choices in the one message the user asked for is fine.
 
       FAIL if the categories a later chunk may force are left with no default ("decided when a chunk needs it", "an owner will decide"), or if the set is presented as separate decisions each needing its own answer, or if no such set appears at all.
   - type: regex

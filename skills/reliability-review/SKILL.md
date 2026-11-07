@@ -111,10 +111,13 @@ happy one:
   the repeat refused because the first went through (an "already
   refunded", "already exchanged" answer) and treated as a failure, so the
   thing exists at the provider and is recorded nowhere, never settled,
-  released or revoked. The adapter that created it is where the fix
-  lives: an idempotency key the provider honours, the attempt recorded
-  before the call so a repeat can find it, the refused repeat reconciled
-  against what the provider holds. Run 3's exchange timed out after
+  released or revoked. The adapter that created it is where to look; the
+  fix lives where the record lives: an idempotency key the provider
+  honours, passed by the adapter; an attempt claimed before the call in
+  the use case's own store, one claim per thing so two overlapping
+  requests share it and a repeat can find it; the refused repeat
+  reconciled against what the provider holds before it is reported as a
+  failure. Run 3's exchange timed out after
   Plaid had created the Item, the retry got `INVALID_PUBLIC_TOKEN`, and
   the Item was orphaned with nothing revoked; three runs' reviewers read
   the success path and the failure path one at a time and missed it.
