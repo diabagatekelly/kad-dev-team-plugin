@@ -8,10 +8,13 @@ Next step after this list: slice 2 of the same project on the version that
 carries these fixes, started with `bin/kad --chrome`, under the lite policy
 again, audited the same way plus H5's assessment of the tests.
 
-Where it stands (2026-11-03): H1 merged as PR #34 (0.10.0); H2 as PR #35
-(0.11.0); H4 filed on the project; H3 built as 0.12.0 on branch
-`h3-planning` (its status note below); then slice 2; H5 is slice 2's
-audit; H6 is still the owner's. Before slice 2:
+Where it stands (2026-11-06): H1 merged as PR #34 (0.10.0); H2 as PR #35
+(0.11.0); H3 is PR #37 (0.12.0, Sourcery's round triaged, checks green,
+the owner merges; its status note below). H4 is filed on the project as
+issues #6 to #13 and none is fixed yet: fixing them there, on 0.12.0, is
+the next piece, and the first real session under `bin/kad` with audit on
+since H1 (H1.1's tick). Then slice 2; H5 is slice 2's audit; H6 is still
+the owner's. Before slice 2:
 `kad --reset` (or `--audit-repo https://github.com/diabagatekelly/audit-docs`
 on the run), since the stored launcher answer on the Mac names the
 project's own origin as the audit repository and the launcher now
@@ -77,7 +80,7 @@ document is opened, so an eval can grade the reading order.
 
 ## H4. In the project, before slice 2 (personal-finance-tracker-3, not the plugin)
 
-Filed on the project on 2026-11-02 as #6 to #12, plus #13 for the seven further findings the Opus cold read of the same commit confirmed (`.synthesis/cold-read-check/`). None is among #3, #4, #5 or the 37 Lows:
+Filed on the project on 2026-11-02 as #6 to #12, plus #13 for the seven further findings the Opus cold read of the same commit confirmed (`.synthesis/cold-read-check/`). None is among #3, #4, #5 or the 37 Lows. Status 2026-11-06: all open; the ticks below mean filed, not fixed. The fixes are project work on the plugin's 0.12.0 (one branch, one PR on the project), before slice 2: #6, #8, #9, #10 and #12 are named fixes; #7 needs a reliability decision first (retry the exchange or not, and the orphaned Item revoked) and lands with H3.4's row in force; #11 is one look in the browser; #13 is split into its own issues before anything is built. Done when: each issue is closed by a commit on the project's default branch, or by a recorded decision not to fix it.
 
 - [x] H4.1 (filed as #6) A JSON body of `null` reaches `readStringField` as a TypeError and is logged and answered as an app fault (500) instead of 400 (`src/web/server.ts:59,67`; confirmed by execution).
 - [x] H4.2 (filed as #7) An exchange whose first attempt times out after Plaid created the Item, then gets `INVALID_PUBLIC_TOKEN` on the retry, ends "not completed" with no Login, so nothing is revoked and the Item is orphaned (`src/ledger/connect-institution.ts:44-50`). Needs a reliability decision (retry the exchange or not) and a test; the fake already has `failExchangeAfterExchanging`.
