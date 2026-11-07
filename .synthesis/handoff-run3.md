@@ -10,11 +10,15 @@ again, audited the same way plus H5's assessment of the tests.
 
 Where it stands (2026-11-06): H1 merged as PR #34 (0.10.0); H2 as PR #35
 (0.11.0); H3 merged as PR #37 (0.12.0); H6's budget and heavy-policy
-questions built as 0.13.0 (its status note under H6). H4 is filed on the project as
-issues #6 to #13 and none is fixed yet: fixing them there, on 0.13.0, is
-the next piece, and the first real session under `bin/kad` with audit on
-since H1 (H1.1's tick). Then slice 2; H5 is slice 2's audit; H6 is still
-the owner's. Before slice 2:
+questions built as 0.13.0, PR #38 (Sourcery's seven comments triaged,
+checks green, the owner merges; its status note under H6). H4 is filed
+on the project as issues #6 to #13 and none is fixed yet: fixing them
+there, on 0.13.0, is the next piece (the fix list is commented on the
+project's PR #2), and the first real session under `bin/kad` with audit
+on since H1 (H1.1's tick). Then slice 2; H5 is slice 2's audit. Still the
+owner's: D9 phase 2 after slice 2's measurement, and the review-cadence
+policy arm after H5 (`.synthesis/review-cadence-survey.md`). Before
+slice 2:
 `kad --reset` (or `--audit-repo https://github.com/diabagatekelly/audit-docs`
 on the run), since the stored launcher answer on the Mac names the
 project's own origin as the audit repository and the launcher now
@@ -101,7 +105,7 @@ Slice 2 runs under `tdd-implementation-lite` again, so its audit assesses the te
 
 ## H6. Questions for the owner
 
-Status 2026-11-06: the second and third decided by the owner and built as 0.13.0 (the loop budget 8 h for a UI-touching slice and 5 h otherwise; the heavy policy retired, lite the only implementation skill, its five cases and the compare tool removed, the one-chunk case ported to lite). The first waits for slice 2's measurement. A fourth question, the loop's review cadence, is parked as a measured policy arm for after H5: `.synthesis/review-cadence-survey.md` holds what was read and what was decided.
+Status 2026-11-06: the second and third decided by the owner and built as 0.13.0, PR #38 (the loop budget 8 h for a UI-touching slice and 5 h otherwise; the heavy policy retired, lite the only implementation skill, its five cases and the compare tool removed, the one-chunk case ported to lite). The first waits for slice 2's measurement. A fourth question, the loop's review cadence, is parked as a measured policy arm for after H5: `.synthesis/review-cadence-survey.md` holds what was read and what was decided.
 
 - [ ] D9 phase 2 (a chunk-runner agent per chunk) was to be decided on the orchestrator's measured loop context (`TODO.md` 4.2). Run 3's loop transcript is missing, so there is no measurement; decide after slice 2 with H1.4 in place, or decide now on the planning session's figure (167 messages, 36.9M cache-read tokens over 2.5 h).
 - [x] The 5 h loop budget: run 3 reached it at chunk 7 and the owner lifted it. Decided 2026-11-06: 8 h for a UI-touching slice, 5 h otherwise (0.13.0).
