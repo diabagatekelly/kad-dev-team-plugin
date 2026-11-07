@@ -125,6 +125,15 @@
     "claude_version": "2.1.317",
     "recorded": "2026-11-03T18:06:50Z"
   },
+  "code-review-comments-chunk": {
+    "inputs": "4e8dbd2a094939812ddd5e681e2fc93df47e7784a961b132a94658c86523d2ad",
+    "score": 1.0,
+    "bar": 0.9,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-code-review-comments-chunk.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
   "code-review-days-left-pr": {
     "inputs": "92317fdba84c6b18121e9bb7a2395cd1a798640b78ea4c2ae410b18c3e328a68",
     "score": 1.0,
@@ -431,6 +440,24 @@
     "claude_version": "2.1.317",
     "recorded": "2026-11-03T20:47:01Z"
   },
+  "orchestrator-chunk-review-round": {
+    "inputs": "6879193732dff839074e3fdc0f500f3cb9afba343cc24a840d44b55b02bfef4a",
+    "score": 1.0,
+    "bar": 0.967,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-chunk-review-round.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-definition-of-done": {
+    "inputs": "27111d666f6f1a8417492f9186a9f7d3876ad7f6235cc4682bd78ab161c2567a",
+    "score": 1.0,
+    "bar": 0.879,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-definition-of-done.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
   "orchestrator-delivery-foreground": {
     "inputs": "7037311923fef13ae25a7dcd7efc2bec4f75ef92053414d5afb93b0b5ac794e8",
     "score": 1.0,
@@ -466,6 +493,123 @@
     "source": "results/gate-20261103T204226-orchestrator-gate-outside.json",
     "claude_version": "2.1.317",
     "recorded": "2026-11-03T20:47:01Z"
+  },
+  "orchestrator-one-fix-round": {
+    "inputs": "1ff6936fec62add5026e8e5606531ec1fdfc777bc969be9b7a0c60ef7398e32c",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-one-fix-round.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-plan-check-seam": {
+    "inputs": "890160f9548f7345e1542e27205717bd04b66b225bcd05df7cb31b776dbdc408",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-plan-check-seam.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-readiness-gate": {
+    "inputs": "a9425ad9a63f7b78ce8e46411baec41a5d610aad6ba86fd6c2996a473383586a",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-readiness-gate.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-backward-requirements": {
+    "inputs": "796e1225b40852a7c6f41562bad441049621cf0043d3f56ac4f5a7a92223e593",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-backward-requirements.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-design": {
+    "inputs": "afc54093e7e3d32086623d08a2831f4faf76a6218babbda4dcf5c3b0f4ff7e4e",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-design.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-design-system": {
+    "inputs": "b3faadef1faac9eb3f04c5cd5d82e5d403718889bcc58d178ad10d06b8c3e5f2",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-design-system.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-implementation": {
+    "inputs": "89d0ff2fbc092e386c75cd99da040e96163b4721b2e5567a6145d2051542d485",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-implementation.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-implementation-prenamed": {
+    "inputs": "8ae82a2a106c193217f572e8a765906569dd973b692e2ad9c9d187e6ea3c75ce",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-implementation-prenamed.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-problem-framing": {
+    "inputs": "8db113c41c3e54b00d79785dae15817bf3cde27ae6f6dbab9aead80bcf578ec3",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-problem-framing.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-reliability": {
+    "inputs": "f6d15444788af570480b2c99f1ec0c3cfcef99ee55f34bab05ad23546b32050f",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-reliability.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-scope-decision": {
+    "inputs": "53d4c71c93f00afe87aed8adbdeda47f09b9732d030024f2c91d5f9df623de1d",
+    "score": 1.0,
+    "bar": 0.944,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-scope-decision.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-slicer-accessibility-mistake": {
+    "inputs": "7e21801cdf58599fa5e922321b549b4f20b7bcc540de7df29b9bda0aefab0761",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-slicer-accessibility-mistake.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
+  },
+  "orchestrator-route-slicing": {
+    "inputs": "8409597162fff7d97afa4a586e2ac8ddc82cc5df539d8411a132e21acbeb28f6",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261103T215109-orchestrator-route-slicing.json",
+    "claude_version": "2.1.317",
+    "recorded": "2026-11-03T21:56:21Z"
   },
   "pr-writeup-portal-fines": {
     "inputs": "36dadfbf0c44cdf3a8ccf70d3cb64293e6abe4a8680ffe2f5feccc0c9548c4fc",
