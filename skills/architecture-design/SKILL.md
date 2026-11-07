@@ -237,7 +237,7 @@ the next slice resumes from has designed the next slice's first bug.
 The design says what the builder's tests run for real and what they
 fake, and it says the same thing the implementation policy holds the
 builder to: `tdd-implementation-lite`'s "Fakes only at the system
-boundary" (`tdd-implementation` carries the same rule). Tests run the
+boundary". Tests run the
 real store (a local database the project already runs its tests against,
 or a file store under a temporary directory) and the real use case behind
 the real route; they fake only the external service at its wire boundary,

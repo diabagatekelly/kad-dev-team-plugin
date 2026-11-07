@@ -6,6 +6,11 @@ phase before running its evals. "Run" marks items that need a paid eval run
 to close; everything else is a file edit. Keep the README playbook's rule:
 read every failure before re-recording a bar.
 
+Note 2026-11-06 (0.13.0): the heavy `tdd-implementation` skill and its five
+cases were retired after G2 and run 2 showed lite matching it; every item
+below that names them is history, and the compare policy and
+`compare_arms.py` are gone.
+
 ## A. Gate arithmetic (no runs except the final re-record)
 
 - [x] A1. Delete `agent-delegated-legacy-task-display` (`tool: Task`) from

@@ -6,7 +6,7 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Build it with the heavy policy; decisions that come up during the build may be settled with the owning persona without asking me, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed; I won't be around to answer questions while you work. Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session).
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Decisions that come up during the build may be settled with the owning persona without asking me, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed; I won't be around to answer questions while you work. Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session).
   model: sonnet
   max_turns: 60
   timeout_seconds: 2400

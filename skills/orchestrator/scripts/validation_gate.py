@@ -116,7 +116,7 @@ outside the working tree (`.git/` is a good place).
 Exit 0 when every check passes, 1 otherwise (also when git cannot compute
 the change set: an unknown base must not read as "nothing changed").
 The same checks are what the
-`tdd-implementation-*` eval cases prove with trace regexes; this is the
+`tdd-implementation-lite-*` eval cases prove with trace regexes; this is the
 runtime version for real changes.
 
 A protected document the user amends while the flow is running (a design

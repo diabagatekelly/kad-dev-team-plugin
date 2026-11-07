@@ -21,7 +21,7 @@ graders:
     name: writes-nothing-else
     target: trace
     # The document is the output; scaffolding (package.json, configs) is
-    # tdd-implementation's job once the choices are recorded.
+    # tdd-implementation-lite's job once the choices are recorded.
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/technology-bootstrap-001\.md")[^"]*"'
     match: not_contains
   - type: llm

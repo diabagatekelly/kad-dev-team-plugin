@@ -1,6 +1,6 @@
 # Implementation report: slice 001, staff cancel a member's hold on a title
 
-Policy: heavy (`tdd-implementation`). Branch `slice-001-cancel-hold`.
+Implementer: `tdd-implementation-lite`. Branch `slice-001-cancel-hold`.
 
 ## Chunk plan
 

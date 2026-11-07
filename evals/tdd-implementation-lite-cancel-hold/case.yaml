@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: tdd-implementation-lite-cancel-hold
-description: "Lite arm of tdd-implementation-cancel-hold: the same approved slice built with tdd-implementation-lite, the contract without the prescribed loop. Floor graders hold the contract (skill invoked first, tests run for real and green last, no shell writes, inside the slice, design untouched, map-query consulted, the queue question escalated to its owners, the wording decided visibly, a report that says what was built and verified). Measurement graders record what the model does unprompted of what the heavy skill prescribes (test-first order, a run after each test edit, RED then GREEN, the can-it-fail check, minimal GREEN, behaviour tests, the whole suite last); their rates are the finding, not a bar to tune."
+description: "The cancel-hold slice built with tdd-implementation-lite (the lite arm of G2; the heavy arm was retired on 2026-11-06): the same approved slice built with tdd-implementation-lite, the contract without the prescribed loop. Floor graders hold the contract (skill invoked first, tests run for real and green last, no shell writes, inside the slice, design untouched, map-query consulted, the queue question escalated to its owners, the wording decided visibly, a report that says what was built and verified). Measurement graders record what the model does unprompted of what the heavy skill prescribes (test-first order, a run after each test edit, RED then GREEN, the can-it-fail check, minimal GREEN, behaviour tests, the whole suite last); their rates are the finding, not a bar to tune."
 tags: [tdd-implementation-lite, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -21,7 +21,7 @@ execution:
 runs: 3
 graders:
   # Floor (what the lite skill tells the model; a miss is a defect):
-  # report-written, skill-invoked, not-heavy-skill, skill-before-any-edit,
+  # report-written, skill-invoked, skill-before-any-edit,
   # skill-before-any-write, runs-the-tests, queue-test-before-queue-code and
   # use-case-test-before-use-case (lite says test-first; only the how is
   # left to the model), last-test-run-green, a-green-run-happened,
@@ -35,10 +35,10 @@ graders:
   # runner names as a test, not a file) and break-and-restore-in-trace (a
   # code edit between a green and a failing run, and another before the
   # final green).
-  # Measurement (what only tdd-implementation prescribes; the rate is the
+  # Measurement (what only the retired tdd-implementation prescribed; the rate is the
   # finding): test-run-after-each-test-edit (the per-test cycle),
   # green-stays-minimal, tests-check-behaviour, final-run-is-the-whole-suite.
-  # (The heavy case's red-then-green-seen wants a RED run with no edit
+  # (The retired heavy case's red-then-green-seen wanted a RED run with no edit
   # between the test edit and the run; lite's stub step puts the stub
   # writes there by design, and red-on-assertions is the RED check here.)
   - type: file_exists
@@ -68,12 +68,6 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
     min: 1
-  - type: tool_used
-    name: not-heavy-skill
-    tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation"'
-    min: 0
-    max: 0
   - type: tool_order
     name: skill-before-any-edit
     before: {tool: Skill, input_match: 'kad-dev-team:tdd-implementation-lite'}

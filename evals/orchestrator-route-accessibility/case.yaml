@@ -37,7 +37,7 @@ graders:
   - type: tool_used
     name: not-tdd-implementation
     tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation"'
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
     min: 0
     max: 0
   - type: file_exists

@@ -1088,33 +1088,6 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T17:14:10Z"
   },
-  "tdd-implementation-cancel-hold": {
-    "inputs": "7381040f36c8b136ae65c5ed001861aac7a06b4a5405808749fe299f7e2497f1",
-    "score": 0.897,
-    "bar": 0.91,
-    "runs": 3,
-    "source": "results/gate-20261107T010403-rerun-tdd-implementation-cancel-hold.json",
-    "claude_version": "2.1.319",
-    "recorded": "2026-11-07T01:41:25Z"
-  },
-  "tdd-implementation-cancel-hold-via-agent": {
-    "inputs": "a9c4a1bc339ac41ed6ae2883f30dc47467f1c13e23e389e863d3965c1c15c589",
-    "score": 0.875,
-    "bar": 0.806,
-    "runs": 1,
-    "source": "results/gate-20261107T010403-tdd-implementation-cancel-hold-via-agent.json",
-    "claude_version": "2.1.319",
-    "recorded": "2026-11-07T01:41:25Z"
-  },
-  "tdd-implementation-chunk-plan": {
-    "inputs": "fc853e75cbd4c5162f849f24a04520accfc22ea971c205c5b78288077ff89698",
-    "score": 1.0,
-    "bar": 0.857,
-    "runs": 1,
-    "source": "results/gate-20261107T010403-tdd-implementation-chunk-plan.json",
-    "claude_version": "2.1.319",
-    "recorded": "2026-11-07T01:41:25Z"
-  },
   "tdd-implementation-lite-cancel-hold": {
     "inputs": "b7c0586f9ef2d1775fdd3fbdba404756c0b516ebfbc7af88971fcc28d9df483f",
     "score": 0.963,
@@ -1157,24 +1130,6 @@
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261107T010403-tdd-implementation-lite-rename-fix.json",
-    "claude_version": "2.1.319",
-    "recorded": "2026-11-07T01:41:25Z"
-  },
-  "tdd-implementation-named-fix": {
-    "inputs": "47ad803c5c9ae896966a564dbc649192bc26037b277fc08ad62f1dfe9b91753a",
-    "score": 0.929,
-    "bar": 0.929,
-    "runs": 1,
-    "source": "results/gate-20261107T014346-tdd-implementation-named-fix.json",
-    "claude_version": "2.1.319",
-    "recorded": "2026-11-07T01:44:40Z"
-  },
-  "tdd-implementation-one-chunk": {
-    "inputs": "e41b6e305355b17d9565d3f4a5d159593666ae3ee524664d1a55d38c75330ee2",
-    "score": 1.0,
-    "bar": 0.974,
-    "runs": 1,
-    "source": "results/gate-20261107T010403-tdd-implementation-one-chunk.json",
     "claude_version": "2.1.319",
     "recorded": "2026-11-07T01:41:25Z"
   },

@@ -97,7 +97,7 @@ planning() {  # the slice branch, the delegation file when the state has one, th
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; policy — \`heavy\`; delegation — \`$deleg\`; budget — \`5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults\`; branch — \`slice-001-cancel-hold\`; base — \`$base_sha\`$commit; records — \`$records\`; readiness — \`PASS\`
+- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; delegation — \`$deleg\`; budget — \`5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults\`; branch — \`slice-001-cancel-hold\`; base — \`$base_sha\`$commit; records — \`$records\`; readiness — \`PASS\`
 EOF
 }
 

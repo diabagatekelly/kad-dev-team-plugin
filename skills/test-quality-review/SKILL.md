@@ -1,6 +1,6 @@
 ---
 name: test-quality-review
-description: Critique existing tests — over-mocking, false positives, tests that verify nothing, untested exports and branches, implementation-detail assertions. Use whenever someone asks whether tests are any good ("are these tests actually testing anything?", "review my tests", "can you check this test file?"), and inline in tdd-implementation's loop after each cycle. Reports only; never edits the tests.
+description: Critique existing tests — over-mocking, false positives, tests that verify nothing, untested exports and branches, implementation-detail assertions. Use whenever someone asks whether tests are any good ("are these tests actually testing anything?", "review my tests", "can you check this test file?"), and by the chunk loop's combined reviewer after every chunk. Reports only; never edits the tests.
 ---
 
 # Test Quality Review
@@ -8,9 +8,10 @@ description: Critique existing tests — over-mocking, false positives, tests th
 ## Scope
 
 You're reading and judging tests that already exist — a test
-`tdd-implementation` just wrote, or any test file someone hands you
+`tdd-implementation-lite` just wrote, or any test file someone hands you
 directly. You don't write or fix tests here; you produce findings.
-Applying a fix is `tdd-implementation`'s job, through its own loop.
+Applying a fix is `tdd-implementation-lite`'s job, through its
+handed-back path.
 
 Read the test file, then the implementation file(s) it exercises — enough
 to understand what's actually being verified. Don't go broader than that;
@@ -220,9 +221,10 @@ Style and naming are Low.
 
 ## Output
 
-**Invoked inline, as part of `tdd-implementation`'s own loop**, after a
-single cycle: a short pass/fail plus anything Critical or High that needs
-fixing before moving on. No persisted file needed for this — the whole
+**Invoked inline by a builder checking its own newest test** (lite leaves
+the loop to the model, and this is the check to reach for): a short
+pass/fail plus anything Critical or High that needs fixing before moving
+on. No persisted file needed for this — the whole
 point is a fast check on the newest thing on the stack, not a standing
 archive of every cycle.
 
@@ -279,7 +281,7 @@ its **Category** is the issue category above (prefixed `test-quality:` in
 a combined report); its **What's happening** quotes the assertion or mock
 setup when that is the issue; its **Why it matters** names the bug that
 ships unnoticed, not the rule broken; its **Suggested fix** is a change
-`tdd-implementation` can apply, described, not a rewritten test file.
+`tdd-implementation-lite` can apply, described, not a rewritten test file.
 
 If nothing rises above Low, say so plainly rather than padding the report
 to look thorough.

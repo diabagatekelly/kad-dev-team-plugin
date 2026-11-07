@@ -4,7 +4,7 @@ description: Use this agent to review existing or changed code for local, code-l
 
 <example>
 Context: A slice has just been implemented and is about to be marked done
-user: "tdd-implementation just finished the case-assignment slice. Is it ready to ship?"
+user: "tdd-implementation-lite just finished the case-assignment slice. Is it ready to ship?"
 assistant: "I'll use code-reviewer to check the new code for duplication, naming, and comment quality before this gets marked done."
 <commentary>
 Post-implementation trigger, the same point architecture-review and the security/reliability reviewers already run at — this is the readability pass the other reviewers don't cover.

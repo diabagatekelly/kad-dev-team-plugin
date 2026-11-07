@@ -243,28 +243,24 @@ skills' own rules and proposes fixes and eval cases.
 `orchestrator-log.md` against the orchestrator's rules and the kept
 transcripts.
 
-## Implementation policy: heavy or lite
+## The implementation skill
 
-Before the chunk loop launches anything, the orchestrator asks once per
-slice which skill the implementer builds every chunk with:
-
-- **heavy** (default): `tdd-implementation`, the full prescribed loop (Test
-  List, one test at a time, RED seen failing, a `test-quality-review`
-  self-check every cycle, the can-it-fail check).
-- **lite**: `tdd-implementation-lite`, the same contract (what the
-  implementer owns, where things go, how a gap is escalated, what the
-  report holds) as test-first with verification rather than TDD: the tests
-  before the code, seen failing on their own assertions against a stub,
-  then shown to catch a deliberate break, with the loop between left to
-  the model. On the first real slice it cost about a quarter of heavy for
-  the same design quality.
-
-The policy is recorded on the log's A line. `tdd-implementation-lite` is
-never chosen from a plain "build it": it runs only when a task names it.
+Every chunk is built by `tdd-implementation-lite`: the contract (what the
+implementer owns, where things go, how a gap is escalated, what the
+report holds) as test-first with verification rather than TDD: the tests
+before the code, seen failing on their own assertions against a stub,
+then shown to catch a deliberate break, with the loop between left to the
+model. Until 0.13.0 the orchestrator asked once per slice whether to
+build with this or with `tdd-implementation`, TDD proper with a Test List
+and a `test-quality-review` call every cycle; two real slices showed lite
+matching its design quality at about a quarter of the cost, and the
+heavier skill was retired on 2026-11-06. `tdd-implementation-lite` is
+never chosen from a plain "build it": it runs only when the chunk loop
+names it.
 
 ## The chunk loop
 
-The orchestrator's `tdd-coach:tdd-implementation` row builds a slice as a
+The orchestrator's `tdd-coach:tdd-implementation-lite` row builds a slice as a
 series of small commits on a slice branch, each checked before the next
 starts, and delivers the branch as a pull request. This is the v4 shape
 (`.synthesis/implementation-flow-v4.md`), redesigned after the second real

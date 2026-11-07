@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: tdd-implementation-lite-named-fix
-description: "Lite arm of tdd-implementation-named-fix: the V15 fix (ReturnBook reaching into main/wiring.ts) applied with tdd-implementation-lite. Floor: the fix itself (constructor injection, server.ts updated, behaviour unchanged, pinned by tests that run for real), honest about the order, nothing else touched, no shell writes, the final reviewers run. Measurement: the whole suite last."
+description: "The V15 named fix with tdd-implementation-lite (the lite arm of G2; the heavy arm was retired on 2026-11-06): the V15 fix (ReturnBook reaching into main/wiring.ts) applied with tdd-implementation-lite. Floor: the fix itself (constructor injection, server.ts updated, behaviour unchanged, pinned by tests that run for real), honest about the order, nothing else touched, no shell writes, the final reviewers run. Measurement: the whole suite last."
 tags: [tdd-implementation-lite, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -18,7 +18,7 @@ execution:
 runs: 3
 graders:
   # Floor (the contract any variant keeps): every grader but the last.
-  # Measurement (what tdd-implementation prescribes and this skill leaves to
+  # Measurement (what the retired tdd-implementation prescribed and this skill leaves to
   # the model; the rate is the finding): final-run-is-the-whole-suite.
   - type: file_exists
     name: report-written
@@ -28,12 +28,6 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
     min: 1
-  - type: tool_used
-    name: not-heavy-skill
-    tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation"'
-    min: 0
-    max: 0
   - type: tool_used
     name: runs-the-tests
     tool: Bash
