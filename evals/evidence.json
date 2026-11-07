@@ -513,13 +513,13 @@
     "recorded": "2026-11-07T11:40:04Z"
   },
   "orchestrator-readiness-gate": {
-    "inputs": "452a1dca47aa3e849091069f495bf58282d51342b449a4c7ff7496bc3c753130",
-    "score": 1.0,
+    "inputs": "604623963671c29172b84064382b02eb43cbd0ba13a47c5bd932f7118248a2fc",
+    "score": 0.926,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261107T112137-orchestrator-readiness-gate.json",
+    "runs": 3,
+    "source": "results/gate-20261107T191402-orchestrator-readiness-gate.json",
     "claude_version": "2.1.319",
-    "recorded": "2026-11-07T11:40:04Z"
+    "recorded": "2026-11-07T19:16:13Z"
   },
   "orchestrator-route-accessibility": {
     "inputs": "4673c828f490158767587db6dde6f8f11c09ab2baad91c693106e4d025336fc0",

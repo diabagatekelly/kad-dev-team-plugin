@@ -25,11 +25,14 @@ hand on 2026-10-24:
                                      sidecar rounds-slice-<nnn>.jsonl, from
                                      $KAD_AUDIT_DIR/reviews/slice-<nnn>/ or
                                      <project>/.git/kad-audit/reviews/slice-<nnn>/
-        transcripts/<session>/       only with --transcripts: the sessions
-                                     audit mode kept whose log mentions this
-                                     project, as snapshotted by
-                                     `hooks/audit.sh --snapshot` after each
-                                     records commit and at session end
+        transcripts/<session>/       only with --transcripts: every session
+                                     whose audit log ran in this project,
+                                     its log as calls.jsonl, and its
+                                     transcript and subagents' when audit
+                                     mode kept them (snapshotted by
+                                     `hooks/audit.sh --snapshot` at A, after
+                                     each records commit and at session end);
+                                     the sync-log line counts the two apart
       sync-log.md                    one line per sync: when, from which
                                      project commit, what was copied
 
@@ -357,7 +360,8 @@ def main(argv: list[str]) -> int:
     for rd in review_dirs:
         for src in files_under(rd):
             plan.append((src, slice_dir / "implementation-docs" / f"reviews-slice-{nnn}" / src.relative_to(rd)))
-    transcripts_taken: list[str] = []
+    transcripts_taken: list[str] = []   # every session log copied (calls.jsonl)
+    with_transcript: list[str] = []     # those whose transcript audit mode kept
     if a.transcripts:
         sessions = Path(a.audit_dir) / "sessions"
         # A session is this project's when a hook payload's cwd is the project
@@ -378,6 +382,7 @@ def main(argv: list[str]) -> int:
             t = Path(a.audit_dir) / "transcripts" / f"{sid}.jsonl"
             if t.exists():
                 plan.append((t, dest / f"{sid}.jsonl"))
+                with_transcript.append(sid)
             tdir = Path(a.audit_dir) / "transcripts" / sid
             if tdir.is_dir():
                 for src in files_under(tdir):
@@ -425,7 +430,7 @@ def main(argv: list[str]) -> int:
     say(f"audit_sync: {len(kept)} files for {slice_dir.relative_to(clone).as_posix()}/ "
         f"(planning from {docs}, {'map, ' if maps else 'no map, '}"
         f"{'reviews from ' + ', '.join(str(r) for r in review_dirs) if review_dirs else 'no reviews directory'}"
-        f"{', transcripts: ' + ', '.join(transcripts_taken) if transcripts_taken else ''})")
+        f"{', sessions: ' + ', '.join(s if s in with_transcript else s + ' (calls only, no transcript kept)' for s in transcripts_taken) if transcripts_taken else ''})")
     for s in skipped:
         say(f"  skipped {s}")
     for p in allowed:
@@ -489,7 +494,7 @@ def main(argv: list[str]) -> int:
         # Something did change: record the sync in the slice's log, then commit both.
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         line = (f"- {stamp}: {len(kept)} files from `{branch}` at {head}; "
-                f"{len(review_dirs)} reviews dir(s), {len(transcripts_taken)} transcript session(s)"
+                f"{len(review_dirs)} reviews dir(s), {len(transcripts_taken)} session log(s), {len(with_transcript)} with a transcript"
                 f"{'; scan skipped by --allow for ' + ', '.join(p.name for p in allowed) if allowed else ''}"
                 f"{'; skipped ' + str(len(skipped)) + ' file(s)' if skipped else ''}\n")
         sync_log = slice_dir / "sync-log.md"

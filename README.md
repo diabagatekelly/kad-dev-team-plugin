@@ -120,7 +120,11 @@ config directory denied so nothing an agent writes outlives the session;
 the credential paths denied for reading; the network allowed to the API,
 sign-in and GitHub plus the domains you add), drops credential-shaped
 variables from the environment the session inherits (`--keep-env NAME`
-passes one through, and the orchestrator's check then names it), gives
+passes one through, and the orchestrator's check then names it) and
+another Claude Code session's variables (a shell opened from inside a
+session, or a terminal window a session launched, carries
+`CLAUDE_CODE_CHILD_SESSION`, and Claude Code saves no transcript for a
+session started there; `kad --check` names what it would drop), gives
 the session what the loop's commits, pushes, pull requests, issues and
 audit sync need inside the fence (the host's GitHub login from `gh auth
 token` as `GH_TOKEN`, the one credential the session holds, which the
@@ -167,8 +171,11 @@ into the pull request as your checklist instead of a `PASS`. The
 orchestrator's sandbox check reads the same settings file
 (`KAD_SRT_SETTINGS`) before it launches anything and names whatever is
 missing. The launcher itself writes nothing outside
-`~/.config/kad-dev-team/`; the session it starts writes where the
-settings allow.
+`~/.config/kad-dev-team/`, the audit directory (the clone) and, for a
+`--plugin-dir` run, the plugin's hook data directory under
+`~/.claude/plugins/data/` (Claude Code creates it on first use, which the
+fence denies, and every hook then fails before it runs); the session it
+starts writes where the settings allow.
 
 You can also start Claude the usual way and say "what's next": the
 orchestrator's step 0, session setup, runs before it asks anything else.
@@ -222,7 +229,9 @@ With `KAD_AUDIT_REPO` set as well, the audit material gets a home you
 choose: a separate repository, cloned into `$KAD_AUDIT_DIR/repo/` (by
 `kad` before the fence starts, or by the SessionStart hook in a session
 `kad` did not start; never inside the project). The orchestrator's chunk
-loop reports the clone's state on its A line and, after every records
+loop reports the clone's state, and whether this session's transcript is
+being written (`transcript — kept | MISSING: <why>`, from an `audit.sh
+--snapshot` run there and then), on its A line and, after every records
 commit (each chunk's, the slice review's, the delivery's), snapshots the
 session's transcript and runs `audit_sync.py`, which copies that slice's
 planning documents, orchestrator log, implementation report, architecture
