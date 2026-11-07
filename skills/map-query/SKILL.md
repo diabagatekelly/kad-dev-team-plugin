@@ -11,7 +11,7 @@ One question, asked at whatever granularity the asker operates at:
 **does something comparable to this already exist in the codebase?** At
 the structural level (`architecture-design`'s altitude — no file paths, no
 function signatures) that means a comparable module, interface, or
-boundary. At the implementation level (`tdd-implementation`'s altitude —
+boundary. At the implementation level (`tdd-implementation-lite`'s altitude —
 below `architecture-design`'s conceptual grain, inside what actually gets
 written) that means a comparable function, class, or helper.
 
@@ -88,7 +88,7 @@ thorough than the map actually supports.
 A short report, returned directly to the asking persona in the same
 conversation — this isn't a skill that produces its own saved artifact.
 When another skill consulted you mid-task (`architecture-design`,
-`tdd-implementation`), the report is that skill's input, not your final
+`tdd-implementation-lite`), the report is that skill's input, not your final
 message: write it, then carry straight on with the calling skill's work in
 the same response. Emit the report header as visible text every time,
 after actually checking the path: when the answer is "no map", the report

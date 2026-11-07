@@ -39,7 +39,7 @@ settled.
 
 Slicing decides what gets built first, not how it's built: technology,
 architecture and module structure are `architecture-design`'s, code is
-`tdd-implementation`'s.
+`tdd-implementation-lite`'s, through the orchestrator's chunk loop.
 
 The first slice should:
 

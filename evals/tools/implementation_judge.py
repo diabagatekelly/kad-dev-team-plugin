@@ -6,8 +6,8 @@ Until 2026-10-24 this was the orchestrator's Combine-step judge
 it to be pure position bias (each order preferred the implementation shown
 first), and the chunk loop that replaced the two-candidate flow has no pair
 to judge. The eval suite keeps it: `pairwise_judge.py` (with-plugin against
-without) and `compare_arms.py` (heavy against lite) import `compare` and
-the rubric from here, and the text below describes the judge as it was.
+without) imports `compare` and the rubric from here (`compare_arms.py`,
+heavy against lite, went with the heavy skill on 2026-11-06), and the text below describes the judge as it was.
 
 Two `tdd-implementation` candidates built the same slice in two worktrees.
 Before the orchestrator reads them and makes its combine call, this script

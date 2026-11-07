@@ -12,7 +12,7 @@ Pre-design consult, structural granularity, read-only.
 </example>
 
 <example>
-Context: tdd-implementation is about to write a new repository-shaped class
+Context: tdd-implementation-lite is about to write a new repository-shaped class
 user: "I'm about to build a CaseRepository for this. Does anything like it already exist?"
 assistant: "I'll use architecture-cartographer's map-query at the implementation level — it'll check the map's recorded exports for a comparable function or class (a CaseDirectory, say) and report the candidate with its location and exports, not a verdict on whether it's the same thing."
 <commentary>
@@ -89,7 +89,7 @@ report to decide, if they decide it matters at all.
 **Two skills, two distinct moments.** `map-query` is read-only, consulted
 before code or a design decision exists — at whatever granularity the
 asking persona operates at, structural for `architecture-design`,
-implementation for `tdd-implementation`. It never regenerates the map
+implementation for `tdd-implementation-lite`. It never regenerates the map
 itself; if nothing is there, or the map may be stale, it says so plainly
 rather than quietly falling back to a live scan that would blur the line
 between the two skills. `map-update` is the only skill that ever writes

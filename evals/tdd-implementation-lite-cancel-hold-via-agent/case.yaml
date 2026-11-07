@@ -24,7 +24,7 @@ runs: 3
 graders:
   # Floor (what the lite skill tells the model; a miss is a defect):
   # report-written, agent-delegated-display, lite-skill-in-trace,
-  # not-heavy-skill, runs-the-tests, queue-test-before-queue-code and
+  # runs-the-tests, queue-test-before-queue-code and
   # use-case-test-before-use-case (lite says test-first; only the how is
   # left to the model), last-test-run-green, a-green-run-happened,
   # design-doc-unchanged, stays-inside-the-slice, no-bash-writes,
@@ -37,10 +37,10 @@ graders:
   # runner names as a test, not a file) and break-and-restore-in-trace (a
   # code edit between a green and a failing run, and another before the
   # final green).
-  # Measurement (what only tdd-implementation prescribes; the rate is the
+  # Measurement (what only the retired tdd-implementation prescribed; the rate is the
   # finding): test-run-after-each-test-edit (the per-test cycle),
   # green-stays-minimal, tests-check-behaviour, final-run-is-the-whole-suite.
-  # (The heavy case's red-then-green-seen wants a RED run with no edit
+  # (The retired heavy case's red-then-green-seen wanted a RED run with no edit
   # between the test edit and the run; lite's stub step puts the stub
   # writes there by design, and red-on-assertions is the RED check here.)
   - type: file_exists
@@ -75,11 +75,6 @@ graders:
     name: lite-skill-in-trace
     target: trace
     pattern: '"skill": ?"kad-dev-team:tdd-implementation-lite"'
-  - type: regex
-    name: not-heavy-skill
-    target: trace
-    pattern: '"skill": ?"kad-dev-team:tdd-implementation"'
-    match: not_contains
   - type: tool_used
     name: runs-the-tests
     tool: Bash

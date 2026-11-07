@@ -1,15 +1,15 @@
 ---
 name: tdd-implementation-lite
-description: The implementation contract of tdd-implementation as test-first with verification rather than TDD — tests before the code, seen failing on their own assertions, then shown to catch a break, with the loop between left to the model — plus what it owns and what it doesn't, where things go, how a gap in the design is handled, what the report holds. Invoke it only when a task names it by this name — the orchestrator's chunk loop under its lite policy (once to write a slice's chunk plan, then once per chunk to build and commit it), or a user asking for "tdd-implementation-lite" in so many words. A plain "build it", "implement this" or "apply this fix" is tdd-implementation's, and a stage guessed at in passing ("if the next step is the implementation, go ahead") is orchestrator's.
+description: The implementation contract, test-first with verification rather than full TDD — tests before the code, seen failing on their own assertions, then shown to catch a break, with the loop between left to the model — plus what it owns and what it doesn't, where things go, how a gap in the design is handled, what the report holds. Invoke it only when a task names it by this name — the orchestrator's chunk loop (once to write a slice's chunk plan, then once per chunk to build and commit it, and for every fix handed back), or a user asking for "tdd-implementation-lite" in so many words. A plain "build it", "implement this" or "apply this fix", and a stage guessed at in passing ("if the next step is the implementation, go ahead"), are orchestrator's: its chunk loop is the only way a slice is built.
 ---
 
 # TDD Implementation, lite
 
-The same job as `tdd-implementation`, with less said about how to do it.
-That skill is TDD proper: a Test List, one test at a time, RED seen
-failing for the right reason, the minimum GREEN, a refactor step, a
-`test-quality-review` call every cycle, a can-it-fail check before the
-report. This one is test-first with verification: the tests before the
+The roster's one implementation skill since 0.13.0 (the heavier
+`tdd-implementation`, TDD proper with a Test List, one test at a time and
+a `test-quality-review` call every cycle, was retired on 2026-11-06 after
+two real slices showed this one matching its design quality at a quarter
+of the cost). This is test-first with verification: the tests before the
 code, seen failing on their assertions, then shown to catch a break, and
 the loop between those points left to you. What it does not leave to you
 is the contract below: what is yours to decide and what is not, where

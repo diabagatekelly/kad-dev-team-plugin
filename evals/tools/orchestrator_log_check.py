@@ -14,8 +14,8 @@ transcripts audit mode kept for it, and prints a markdown report of:
 - the chunk loop's own lines, in the 0.6.0 (v3) form or the 0.7.0 (v4)
   form, told apart by the A line's `budget`/`readiness`/`delegation`
   fields or a C line's `smoke`/`standing`: the A line opens with the
-  sandbox result and names the policy, branch and base (`policy — …` or
-  `Policy: …`, either spelling); one C line per chunk, numbered in order
+  sandbox result and names the branch and base (a `policy` field was
+  required until 0.13.0 and is ignored now); one C line per chunk, numbered in order
   and agreeing with B's count, each with commit hashes, a gate result and
   the lenses that always run; a round 0 and one segment per fix round
   (`r<i> fix <sha> → C/H/M (reg r, pre p)`; a parenthetical before the
@@ -137,7 +137,7 @@ def load_table(skill_path):
         names = set()
         for tok in re.findall(r"`([^`]+)`", cells[1]):
             names.add(tok.split(":")[-1].strip())
-        if "tdd-implementation" in names:
+        if names & {"tdd-implementation", "tdd-implementation-lite"}:
             names |= IMPLEMENTERS
         if names:
             rows.append((cells[0], names))
@@ -151,6 +151,8 @@ def stage_key(names):
     for n in ("scope-map", "vertical-slicing", "tdd-implementation"):
         if n in names:
             return n
+    if "tdd-implementation-lite" in names:
+        return "tdd-implementation"
     return sorted(n for n in names if "-" in n)[0] if any("-" in n for n in names) else sorted(names)[0]
 
 
@@ -211,7 +213,7 @@ def route_rank(routed, table):
     None if it names nothing in the table. The first skill named decides the row."""
     low = (routed or "").lower().strip()
     if "quarantine" in low or "chunk loop" in low:
-        return next(i for i, (_, names) in enumerate(table) if "tdd-implementation" in names)
+        return next(i for i, (_, names) in enumerate(table) if names & {"tdd-implementation", "tdd-implementation-lite"})
     if is_none_route(routed):
         return NONE
     toks = routed_names(routed)
@@ -438,8 +440,6 @@ def check_chunk_loop(e, findings):
             findings.append(("ERROR", tag, f"A line says the sandbox check failed, yet the flow went on to {', '.join(sorted(steps - {'A'}))}"))
         elif sb == "none on":
             findings.append(("INFO", tag, "ran unsandboxed on a platform without a sandbox, by the owner's logged choice"))
-        if not re.search(r"(?i)policy" + SEP + r"`?(heavy|lite)\b", a_text):
-            findings.append(("ERROR", tag, "A line doesn't name the policy (heavy or lite)"))
         for part in ("branch", "base"):
             if field(a_text, part) is None:
                 findings.append(("WARN", tag, f"A line has no {part}"))
@@ -509,8 +509,9 @@ def check_chunk_loop(e, findings):
         r, g, p, cap, wf = check_rounds(tag, what, text, findings, v4)
         total_rounds, reg, pre, caps, with_findings = total_rounds + r, reg + g, pre + p, caps + cap, with_findings + wf
         chunks_logged[int(k)] = r
-        if re.search(r"stall:\s*`?(relaunched|ended)", text):
-            findings.append(("INFO", tag, f"{what}: stall ({re.search(r'stall:\s*`?(relaunched|ended)', text).group(1)})"))
+        stall = re.search(r"stall:\s*`?(relaunched|ended)", text)
+        if stall:
+            findings.append(("INFO", tag, f"{what}: stall ({stall.group(1)})"))
     if "D" in steps and not d_lines:
         findings.append(("ERROR", tag, "D line is not in the `D. Slice review:` form"))
     if d_lines:
@@ -659,8 +660,6 @@ def check_loop(entries, findings, project=None, log_dir=None, sidecar_arg=None):
                 check_sidecar(project, log_dir, e, sidecar_arg or sidecar, nnn, chunks_logged, totals, findings)
             continue
         a = re.search(r"^- \*\*A\..*$", e["body"], re.M)
-        if a and not re.search(r"policy" + SEP + r"`?(heavy|lite|compare)", a.group(0)):
-            findings.append(("ERROR", tag, "A line doesn't open with the policy (heavy, lite or compare)"))
 
 
 def check_order(entries, table, findings):

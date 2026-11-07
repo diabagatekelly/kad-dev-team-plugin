@@ -35,13 +35,11 @@ graders:
       FAIL only if the reply does not name the conflict, or says the architect settled it (the criterion reworded or dropped by the architect, persistence designed in, a table or migration added), or treats the criterion as satisfied by the in-memory queue.
   - type: llm
     name: does-not-approve-around-it
-    focus:
-      source: file
-      path: docs/cancel-hold/design-001.md
+    focus: last_message
     weight: 1
     criteria: |
-      While the restart conflict is handed back, the design is a draft around an open question: the parts that do not depend on it may be designed and decided (the cancel use case, the port's removal operation, the in-memory adapter, the outcome shapes), but the question stays open in the document and no decision records holds surviving a restart, or a persistent store, as settled.
+      While the restart conflict is handed back, nothing is approved around it. The skill may write no design at all (it stops at the first decision, and since 0.12.0 the usual run writes nothing), or it may leave a draft whose independent parts (the cancel use case, the port's removal operation, the in-memory adapter, the outcome shapes) are designed while the restart question stays open; what it may not do is settle persistence across a restart either way.
 
-      PASS if the document records the restart conflict as open (an open question, a hand-back, a question for the owner, with who settles it) and no decision in it settles persistence across a restart either way. Decisions on the independent parts, and the document calling itself a design, do not count against it.
+      PASS if the reply reports that no design was written, or that a draft was saved with the restart conflict recorded as open (a hand-back, a question for the owner, who settles it) and no decision on persistence across a restart. Decisions on the independent parts, and a draft calling itself a design, do not count against it.
 
-      FAIL if the document presents persistence across a restart as decided (a persistent queue designed, a table or migration, or the criterion declared satisfied by the in-memory queue), or if the conflict appears nowhere in it.
+      FAIL if the reply presents persistence across a restart as decided (a persistent queue designed, a table or migration, the criterion declared satisfied by the in-memory queue), or says a design was saved without the conflict in it.

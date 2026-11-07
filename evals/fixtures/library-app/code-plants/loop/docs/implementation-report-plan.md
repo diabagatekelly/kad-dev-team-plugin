@@ -1,6 +1,6 @@
 # Implementation report: slice 001, staff cancel a member's hold on a title
 
-Policy: heavy (`tdd-implementation`). Branch `slice-001-cancel-hold`.
+Implementer: `tdd-implementation-lite`. Branch `slice-001-cancel-hold`.
 
 `map-query`: no comparable use case or helper at the implementation level; `PlaceHold` is the nearest neighbour and is not reused (it takes the HTTP request). Where tests run: `test/*.test.ts` under `npm test`.
 

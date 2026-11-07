@@ -69,8 +69,7 @@ evals/
                        # freeze-history.sh, audit_report.py, orchestrator_log_check.py (a real
                        # project's log against the orchestrator's rules), implementation_judge.py (the
                        # blind pairwise judge of two implementations, kept for the evals), pairwise_judge.py
-                       # (with/without arms, over that judge), compare_arms.py (heavy against lite tdd
-                       # builds from kept runs, the same judge), new-case.sh,
+                       # (with/without arms, over that judge), new-case.sh,
                        # summarize_results.py and report_evidence.py (read a results dir or CI artifact),
                        # eval_evidence.py (the PR check: a passing gate run recorded against these exact files),
                        # wsl-setup.sh and wsl-gate.sh (set up, then run the gate under WSL2 in one command)
@@ -243,28 +242,24 @@ skills' own rules and proposes fixes and eval cases.
 `orchestrator-log.md` against the orchestrator's rules and the kept
 transcripts.
 
-## Implementation policy: heavy or lite
+## The implementation skill
 
-Before the chunk loop launches anything, the orchestrator asks once per
-slice which skill the implementer builds every chunk with:
-
-- **heavy** (default): `tdd-implementation`, the full prescribed loop (Test
-  List, one test at a time, RED seen failing, a `test-quality-review`
-  self-check every cycle, the can-it-fail check).
-- **lite**: `tdd-implementation-lite`, the same contract (what the
-  implementer owns, where things go, how a gap is escalated, what the
-  report holds) as test-first with verification rather than TDD: the tests
-  before the code, seen failing on their own assertions against a stub,
-  then shown to catch a deliberate break, with the loop between left to
-  the model. On the first real slice it cost about a quarter of heavy for
-  the same design quality.
-
-The policy is recorded on the log's A line. `tdd-implementation-lite` is
-never chosen from a plain "build it": it runs only when a task names it.
+Every chunk is built by `tdd-implementation-lite`: the contract (what the
+implementer owns, where things go, how a gap is escalated, what the
+report holds) as test-first with verification rather than TDD: the tests
+before the code, seen failing on their own assertions against a stub,
+then shown to catch a deliberate break, with the loop between left to the
+model. Until 0.13.0 the orchestrator asked once per slice whether to
+build with this or with `tdd-implementation`, TDD proper with a Test List
+and a `test-quality-review` call every cycle; two real slices showed lite
+matching its design quality at about a quarter of the cost, and the
+heavier skill was retired on 2026-11-06. `tdd-implementation-lite` is
+never chosen from a plain "build it": it runs only when the chunk loop
+names it.
 
 ## The chunk loop
 
-The orchestrator's `tdd-coach:tdd-implementation` row builds a slice as a
+The orchestrator's `tdd-coach:tdd-implementation-lite` row builds a slice as a
 series of small commits on a slice branch, each checked before the next
 starts, and delivers the branch as a pull request. This is the v4 shape
 (`.synthesis/implementation-flow-v4.md`), redesigned after the second real
@@ -275,14 +270,14 @@ place. In order:
 
 - **A. Start:** a repository and an `origin` must exist (otherwise
   `release-engineer:repo-bootstrap`, decided with the owner); the sandbox
-  check (below); then up to four questions, **one per `AskUserQuestion`
-  call**, in order: settings, sandbox, policy, delegation. On "yes" to the
+  check (below); then up to three questions, **one per `AskUserQuestion`
+  call**, in order: settings, sandbox, delegation. On "yes" to the
   delegation question the orchestrator writes
   `planning/delegation-slice-<nnn>.md` (the owner's words, what it covers,
   what it never covers), which is what lets a persona settle a mid-build
-  decision without the owner. The **budget line** is written: 5 h of loop
-  time, 2 reviewer launches per chunk, 1 fixer per scope plus 1 for
-  regressions, 8 consults; counted at every chunk boundary, and the flow
+  decision without the owner. The **budget line** is written: 8 h of loop
+  time for a UI-touching slice and 5 h otherwise, 2 reviewer launches per
+  chunk, 1 fixer per scope plus 1 for regressions, 8 consults; counted at every chunk boundary, and the flow
   ends at the boundary that exceeds one. A `slice-<nnn>-<slug>` branch
   (uncommitted planning documents are committed on it first), the base
   commit recorded. Then the **design-readiness gate**

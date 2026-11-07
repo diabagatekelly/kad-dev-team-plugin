@@ -1,7 +1,7 @@
 """Is this session fenced well enough to run code-writing instances unattended?
 
-The quarantine flow launches three `tdd-implementation` instances and up to
-eighteen reviewers that nobody watches. The sandbox that keeps them off the
+The chunk loop launches `tdd-implementation-lite` builders, fixers and
+reviewers that nobody watches. The sandbox that keeps them off the
 machine's keys and off the network is a property of the session they run
 in, not of the plugin: a plugin cannot ship `sandbox` or `permissions`
 settings, a plugin-shipped agent's `permissionMode` and `hooks` are ignored,

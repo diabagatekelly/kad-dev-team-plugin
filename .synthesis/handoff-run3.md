@@ -9,9 +9,9 @@ carries these fixes, started with `bin/kad --chrome`, under the lite policy
 again, audited the same way plus H5's assessment of the tests.
 
 Where it stands (2026-11-06): H1 merged as PR #34 (0.10.0); H2 as PR #35
-(0.11.0); H3 is PR #37 (0.12.0, Sourcery's round triaged, checks green,
-the owner merges; its status note below). H4 is filed on the project as
-issues #6 to #13 and none is fixed yet: fixing them there, on 0.12.0, is
+(0.11.0); H3 merged as PR #37 (0.12.0); H6's budget and heavy-policy
+questions built as 0.13.0 (its status note under H6). H4 is filed on the project as
+issues #6 to #13 and none is fixed yet: fixing them there, on 0.13.0, is
 the next piece, and the first real session under `bin/kad` with audit on
 since H1 (H1.1's tick). Then slice 2; H5 is slice 2's audit; H6 is still
 the owner's. Before slice 2:
@@ -101,8 +101,8 @@ Slice 2 runs under `tdd-implementation-lite` again, so its audit assesses the te
 
 ## H6. Questions for the owner
 
-Still open on 2026-11-03; H1.4's transcripts will exist from slice 2 on, so the first can be decided after it.
+Status 2026-11-06: the second and third decided by the owner and built as 0.13.0 (the loop budget 8 h for a UI-touching slice and 5 h otherwise; the heavy policy retired, lite the only implementation skill, its five cases and the compare tool removed, the one-chunk case ported to lite). The first waits for slice 2's measurement. A fourth question, the loop's review cadence, is parked as a measured policy arm for after H5: `.synthesis/review-cadence-survey.md` holds what was read and what was decided.
 
-- D9 phase 2 (a chunk-runner agent per chunk) was to be decided on the orchestrator's measured loop context (`TODO.md` 4.2). Run 3's loop transcript is missing, so there is no measurement; decide after slice 2 with H1.4 in place, or decide now on the planning session's figure (167 messages, 36.9M cache-read tokens over 2.5 h).
-- The 5 h loop budget: run 3 reached it at chunk 7 and the owner lifted it. Raise the default to 8 h for a UI slice, or keep 5 h and let the owner lift it each time.
-- The heavy policy (`tdd-implementation`) and its five eval cases: the owner asked on 2026-11-03 whether they had been removed (they have not; nothing in H1 to H3 touches them) and said to take the question up after all the planned changes are in, so it waits for H5.4's verdict on lite's tests after slice 2.
+- [ ] D9 phase 2 (a chunk-runner agent per chunk) was to be decided on the orchestrator's measured loop context (`TODO.md` 4.2). Run 3's loop transcript is missing, so there is no measurement; decide after slice 2 with H1.4 in place, or decide now on the planning session's figure (167 messages, 36.9M cache-read tokens over 2.5 h).
+- [x] The 5 h loop budget: run 3 reached it at chunk 7 and the owner lifted it. Decided 2026-11-06: 8 h for a UI-touching slice, 5 h otherwise (0.13.0).
+- [x] The heavy policy (`tdd-implementation`) and its five eval cases: decided 2026-11-06, removed in 0.13.0; lite is the only implementation skill. H5.4 still audits lite's tests, and any heavy rule they turn out to need comes back as a lite rule.

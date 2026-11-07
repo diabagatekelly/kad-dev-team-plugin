@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Route a problem to whichever kad-dev-team persona/skill applies next, by inspecting what already exists (problem doc, scope map, requirements, slices) rather than the user having to name the right persona each time. Use when the user wants to move a problem forward and hasn't said which persona/skill to use, or says "what's next" / "keep going" on a problem already in progress — including when they guess at the next stage in passing or conditionally ("if the next step is the implementation, go ahead", "probably the security pass next"). A stage guessed at is not a skill named, and the implementation stage in particular reaches tdd-implementation (or tdd-implementation-lite) only through this skill's sandbox check and chunk loop (a design-readiness gate first, one implementer per chunk, a gate, one combined reviewer and one smoke run per commit, one fix round per scope, a Definition of Done and a slice review at the end, then delivery), under the implementation policy the user picks there, never by invoking either directly.
+description: Route a problem to whichever kad-dev-team persona/skill applies next, by inspecting what already exists (problem doc, scope map, requirements, slices) rather than the user having to name the right persona each time. Use when the user wants to move a problem forward and hasn't said which persona/skill to use, or says "what's next" / "keep going" on a problem already in progress — including when they guess at the next stage in passing or conditionally ("if the next step is the implementation, go ahead", "probably the security pass next"). A stage guessed at is not a skill named, and the implementation stage in particular reaches tdd-implementation-lite only through this skill's sandbox check and chunk loop (a design-readiness gate first, one implementer per chunk, a gate, one combined reviewer and one smoke run per commit, one fix round per scope, a Definition of Done and a slice review at the end, then delivery), never by invoking it directly.
 ---
 
 # Orchestrator
@@ -14,7 +14,7 @@ directly. `accessibility-engineer` is
 `background: true` and *could* be launched async outside this skill, but
 this skill still runs it inline like every other row,
 since routing here is sequential by design, not because every persona it
-invokes requires it. **The one exception is the `tdd-coach:tdd-implementation`
+invokes requires it. **The one exception is the `tdd-coach:tdd-implementation-lite`
 row** — see "The chunk loop" below — which genuinely launches real async
 `Agent` calls, the only place in this skill that does.
 
@@ -25,9 +25,9 @@ you'd otherwise have to guess or ask them to pick. A stage the user
 guesses at while asking to move forward ("if the next step is the
 implementation, go ahead") is not that: they named what they expect, not
 a skill, and the routing table decides. This matters most for
-implementation, which `tdd-implementation` invoked directly would do
-inline in the real tree with no sandbox check, no chunking, no gate and
-no reviewers.
+implementation, which `tdd-implementation-lite` invoked directly would
+do inline in the real tree with no sandbox check, no chunking, no gate
+and no reviewers.
 
 **Stay inside your lane while inspecting.** Every read you do — in step 2,
 and while running the routed skill in step 4 — is confined to (a) what
@@ -276,8 +276,8 @@ forbids, just spelled backward instead of forward.
 | The slice is UI-touching, its runtime-safety criteria are filled, a design-system exists, but this slice has no screen-design artifact yet | `ux-designer:screen-design` for that slice |
 | The slice is UI-touching, has a screen-design artifact, but its accessibility criteria are still an unfilled placeholder | `accessibility-engineer:accessibility-review` for that slice |
 | The slice is designed with its runtime-safety criteria filled (and, if UI-touching, its screen designed and its accessibility criteria filled), and the project has no stack yet | `software-architect:technology-bootstrap` for that slice |
-| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed and its accessibility criteria filled), the project has a stack, but the slice hasn't been implemented yet | `tdd-coach:tdd-implementation` for that slice |
-| The slice has been implemented — `tdd-coach:tdd-implementation` has produced working, tested code for it | **Stop — see step 5.** Don't advance to the next scope-map step. |
+| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed and its accessibility criteria filled), the project has a stack, but the slice hasn't been implemented yet | `tdd-coach:tdd-implementation-lite` for that slice |
+| The slice has been implemented — `tdd-coach:tdd-implementation-lite` has produced working, tested code for it | **Stop — see step 5.** Don't advance to the next scope-map step. |
 
 **Why the requirements rows come *after* design, not before.** These are
 the only non-functional criteria in the spine that depend on structural
@@ -313,7 +313,7 @@ technology to exist — it names boundaries and what crosses them — and
 runtime-safety criteria are deliberately technology-agnostic ("bank
 credentials never enter the system" holds regardless of what's storing
 anything). The one thing that genuinely can't proceed without a stack is
-writing the first failing test, which is `tdd-coach:tdd-implementation`'s
+writing the first failing test, which is `tdd-coach:tdd-implementation-lite`'s
 job, the next stage after this row. Putting it here means the choices get
 made against a slice that's fully
 specified, and only the ones that slice actually forces get made at all.
@@ -333,7 +333,7 @@ reached. Hand off to them only if the user asks. `code-reviewer` (applying
 `code-review`, `test-quality-review` and, by territory, `reliability-review`
 in one launch) also runs as the chunk loop's per-chunk reviewer, and all
 six review skills run once on the whole slice at its D step, inside
-`tdd-implementation`'s own row — that's not a spine stage either, it's
+`tdd-implementation-lite`'s own row — that's not a spine stage either, it's
 part of how that one row does its job.
 
 **`architecture-cartographer:map-query` is another inline advisor consult,
@@ -342,7 +342,7 @@ not a spine stage — it doesn't get its own row here either.**
 design doc, at the structural level ("does a comparable module or
 interface already exist"), the same inline, hand-control-straight-back
 pattern that row already uses for its `devsecops-engineer` consult.
-`tdd-coach:tdd-implementation` consults it again before writing each Test
+`tdd-coach:tdd-implementation-lite` consults it again before writing each Test
 List entry's code, at the implementation level ("does a comparable
 function or helper already exist") — below `architecture-design`'s own
 conceptual altitude, squarely inside what that row actually writes. Both
@@ -352,7 +352,7 @@ them. `architecture-cartographer:map-update` has its own wiring inside the
 chunk loop below — see "The chunk loop."
 
 **4. Execute exactly one routed step.** For every row except
-`tdd-coach:tdd-implementation`, execute inline: invoke the skill the
+`tdd-coach:tdd-implementation-lite`, execute inline: invoke the skill the
 trigger matched with the `Skill` tool (`kad-dev-team:<skill>`), passing the
 target directory. Don't go looking for the persona's `AGENT.md`: it sits
 outside the project, a read of it may be refused, and everything a routed
@@ -386,7 +386,7 @@ correction) still goes through the `Skill` tool: the call is what the log
 check and a reviewer look for, and a stage run from memory is a stage
 that ran unlogged.
 
-**The `tdd-coach:tdd-implementation` row doesn't execute inline — it runs
+**The `tdd-coach:tdd-implementation-lite` row doesn't execute inline — it runs
 the chunk loop below, every time, by default.** There is no separate "is
 this slice worth it" judgment call here: no signal anywhere in this
 roster's pipeline reliably predicts implementation risk, and inventing one
@@ -396,18 +396,12 @@ building it one small commit at a time. If the user explicitly wants a
 specific slice built without it, that's their call to make by saying so
 directly; this skill doesn't offer a way to opt out on its own judgment.
 
-**Which skill the implementer builds with is the user's call, asked once
-per slice, after the sandbox check and before anything is launched.** The
-question, its options and when to skip it are in step A.2 of "The chunk
-loop" below. The policy chosen is written on the entry's A line; "not now"
-stops here and gets its own entry later, as below.
-
 **Append one entry to `orchestrator-log.md`, in the target directory,
 every time this step runs — as soon as you've routed, before invoking the
 routed skill.** A routed skill often stops partway to ask the user
 something, so an entry left until the step finishes may never be written.
 The same goes for any question you put to the user yourself about the
-routed step, such as the sandbox question or the policy question, or
+routed step, such as the sandbox question, or
 whether something is already built: write the entry first, then ask. The entry records where the state table routed, not the user's
 consent to proceed, and a reply of "not now" gets its own entry later.
 This is the only
@@ -468,7 +462,7 @@ For a backward route (the step 3 rule that supersedes the table), log it
 the same way, naming which artifact is revised, whether in place or by
 superseding, and why, not just the forward destination.
 
-### The chunk loop — the `tdd-coach:tdd-implementation` row's own procedure
+### The chunk loop — the `tdd-coach:tdd-implementation-lite` row's own procedure
 
 Five steps, A to E, replacing the normal single inline execution for this
 one row only. Every other row in the table is unaffected. The planning is
@@ -507,7 +501,9 @@ reads them itself, and `rounds_record.py` (C.3) is the only thing that
 parses one.
 
 **Budget** (the A line records it; counted at every chunk boundary):
-loop time 5 h, 2 reviewer launches per chunk, 1 fixer per scope plus 1
+loop time 8 h for a UI-touching slice and 5 h otherwise (run 3's UI
+slice reached 5 h at chunk 7 of 8 and the owner lifted it; decided
+2026-11-06), 2 reviewer launches per chunk, 1 fixer per scope plus 1
 for regressions, 8 consults per slice, unless the owner's message named
 other numbers. At each chunk boundary read the clock and the counts; when
 one is exceeded, the flow ends there: the branch stays as it is, the C
@@ -632,24 +628,13 @@ it at E.
    `PASS` that turns into a `FAIL` between steps ends the flow the way a
    second gate failure does, unless the user opted out at A, in which
    case the later checks are logged and the flow continues.
-2. **Questions, one per `AskUserQuestion` call, four separate calls at
-   most, in this order: settings, sandbox, policy, delegation.** Never
+2. **Questions, one per `AskUserQuestion` call, three separate calls at
+   most, in this order: settings, sandbox, delegation.** Never
    bundle two of them into one call, whatever the tool allows: a call
    carrying two questions is this rule broken. A question the owner's own
    message already answered is skipped (a plain "go ahead" answers none);
    the settings and sandbox questions exist only when A.1 raised them.
    - **Settings** and **sandbox**: as A.1 says.
-   - **Policy**: heavy first as the recommended default, lite second,
-     "not now" third, each with its one-line distinction: **heavy** builds
-     every chunk with `tdd-coach:tdd-implementation` (the full loop: Test
-     List, one test at a time, RED seen failing, the per-cycle
-     `test-quality-review` self-check, the can-it-fail check); **lite**
-     builds every chunk with `tdd-coach:tdd-implementation-lite` (tests
-     before code, seen failing on their assertions, the suite green, one
-     deliberate break caught, the loop between left to the model; about
-     a quarter of heavy's cost on the first real slice for the same design
-     quality). Skip it only when the owner's message named a policy by one
-     of these words. "Not now" stops here and gets its own entry later.
    - **Delegation**: "May decisions that come up during the build be
      settled with the owning persona without asking you? Each is logged,
      committed under the persona's name, and you can overturn it." On
@@ -700,9 +685,8 @@ Write the A line now (format below), then go to B.
 **B. Plan.** Launch one implementer, `kad-dev-team:tdd-coach:AGENT`,
 `model: "sonnet"`, real async `Agent` call, no worktree isolation (the
 slice branch in the real tree is the worktree, and one agent writes at a
-time). Its task: invoke the policy's skill first, by name
-(`kad-dev-team:tdd-implementation` or `kad-dev-team:tdd-implementation-lite`),
-and follow its "The chunk plan" section: read the slice file, the design
+time). Its task: invoke `kad-dev-team:tdd-implementation-lite` first, by
+name, and follow its "The chunk plan" section: read the slice file, the design
 doc, the security and reliability criteria, the screen design and
 accessibility criteria if UI-touching, and the unit's read context (the
 Active requirements document, every slice file cut for the unit, every
@@ -734,7 +718,7 @@ B line: the chunk titles in order.
 
 1. **Build.** Sandbox check (as A.1; logged). Launch a fresh implementer,
    `kad-dev-team:tdd-coach:AGENT`, `model: "sonnet"`, `maxTurns: 120`,
-   with: the policy's skill to invoke first, by name; the chunk's five
+   with: `kad-dev-team:tdd-implementation-lite` to invoke first, by name; the chunk's five
    plan lines verbatim; the report's path (its earlier chunk sections are
    the handover from whoever built them, and the code is in the tree); the
    slice documents by absolute path (a decision document a consult
@@ -803,7 +787,7 @@ B line: the chunk titles in order.
    fix's failure; either goes to a fixer the way a scope failure does. Save the output as
    the gate file. Read its last line; read the rest only on `FAIL`. On
    `FAIL`, hand the failing checks to a fresh fixer (`model: "sonnet"`,
-   the policy's skill, its "Applying a fix handed back from review" path,
+   `tdd-implementation-lite`, its "Applying a fix handed back from review" path,
    the gate's output verbatim, chunks are committed), once; run the gate
    again on the fix's range with the same `--base`. A second `FAIL` ends
    the flow: the branch stays as it is, the C line says which checks
@@ -880,7 +864,7 @@ B line: the chunk titles in order.
 4. **One fix round, then a regressions-only re-review.** If round 0
    raised any Critical, High, Medium or smoke finding (after C.5 for any
    `needs-decision`): sandbox check, then one fresh fixer (`model:
-   "sonnet"`, `maxTurns: 120`, the policy's skill, its handed-back path,
+   "sonnet"`, `maxTurns: 120`, `tdd-implementation-lite`, its handed-back path,
    chunks are committed) with every finding of both reports verbatim, as
    the paths of the two report files to read plus the list of which
    findings in them are handed back (and the decision commit from C.5, if
@@ -997,7 +981,7 @@ B line: the chunk titles in order.
    `why-comments` on every file over the line, report
    `slice-comments-review.md`); everything else, and the comment
    verdicts, go as named fixes to **one** fresh Sonnet fixer
-   (`maxTurns: 160`, the policy's skill, its handed-back path, chunks are
+   (`maxTurns: 160`, `tdd-implementation-lite`, its handed-back path, chunks are
    committed). Then the gate on the fix's range, then the check again. A
    check still failing after that stands: README, typecheck, lint, code
    in strings and the persisted names are High (the flow stops for the
@@ -1154,7 +1138,7 @@ a successor needs (test command, module directories, records directory,
 whether the owner opted out of the sandbox), and the owner's standing
 directions; commit it with the records; and write a memory pointer to it.
 On invocation with a handoff file present for the slice, resume from it:
-no new A step, no second policy question; append `Resumed <date> at
+no new A step; append `Resumed <date> at
 <step>, session <this session's id>` as an indented line under the
 entry's last line (the cost at E covers every session the entry names)
 and continue at the step the file names. The handoff file is removed by the records commit
@@ -1180,7 +1164,7 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>[; Chrome | ; no Chrome]) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; policy — `<heavy | lite>`; delegation — `<file path | none>`; budget — `5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
+- **A. Start:** sandbox — `<PASS (<platform>[; Chrome | ; no Chrome]) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; delegation — `<file path | none>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
 - **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r `<consults>`c; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
@@ -1201,7 +1185,7 @@ question comes after it, in its own turn. Then:
   unit): name it in the report and continue to it in this same
   conversation, looping back to step 2 for the now-current state (don't
   re-run step 1). Ask whether to continue only when the next row needs an
-  owner decision to start (the implementation policy, a destination, a
+  owner decision to start (a destination, a
   sandbox stop) or the owner has asked to be asked; re-inspection is
   free, and a question that buys nothing is the one the owner stops
   answering.
@@ -1220,7 +1204,7 @@ question comes after it, in its own turn. Then:
 - **If the current unit just reached the terminal row** (its slice is
   designed, its runtime-safety criteria are filled, its screen is designed
   and its accessibility criteria filled if it's UI-touching, the project
-  has a stack to build on, and `tdd-coach:tdd-implementation` has produced
+  has a stack to build on, and `tdd-coach:tdd-implementation-lite` has produced
   working, tested code for it, reviewed chunk by chunk by `code-reviewer`
   and a smoke run, held to the Definition of Done and reviewed once whole
   by every applicable reviewer inside the chunk loop, and delivered as a

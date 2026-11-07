@@ -200,12 +200,16 @@ still open; H3 is PR #37, 0.12.0 (built-ins by default approved once in
 headings by name and the design template naming them, the design's tests
 line saying what lite's seam rule says, `reliability-review`'s
 created-then-timeout-then-retry row with the refund overlay planting it;
-Sourcery's eleven comments triaged, five fixed and six declined). Next,
-after the merge: H4's fixes in the project (issues #6 to #13 on
-personal-finance-tracker-3, on 0.12.0, the first real `bin/kad` session
-with audit on since H1), then slice 2 under `bin/kad --chrome` with audit
-on (after `kad --reset`: the stored audit repository is the project's own
-origin), whose audit is H5. Two eval bars were re-recorded for drift under Claude Code
+Sourcery's eleven comments triaged, five fixed and six declined), merged
+2026-11-06. H6's budget and heavy-policy questions decided and built as
+0.13.0 (8 h for a UI slice, 5 h otherwise; `tdd-implementation` retired
+with its five cases, lite the only implementation skill); D9 phase 2
+waits for slice 2's measurement; the review cadence is a policy arm for
+after H5 (`.synthesis/review-cadence-survey.md`). Next: H4's fixes in the
+project (issues #6 to #13 on personal-finance-tracker-3, on 0.13.0, the
+first real `bin/kad` session with audit on since H1), then slice 2 under
+`bin/kad --chrome` with audit on (after `kad --reset`: the stored audit
+repository is the project's own origin), whose audit is H5. Two eval bars were re-recorded for drift under Claude Code
 2.1.316 (the handoff's H2 note): a directly-invoked reviewer skipping
 `why-comments`, a directly-invoked heavy builder skipping its reviews; a
 candidate agent-file fix, not scheduled.
