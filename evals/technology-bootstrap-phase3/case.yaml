@@ -25,30 +25,50 @@ graders:
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/technology-bootstrap-001\.md")[^"]*"'
     match: not_contains
   - type: llm
+    name: records-the-built-in-default-set
+    focus:
+      source: file
+      path: docs/technology-bootstrap-001.md
+    weight: 1
+    criteria: |
+      The skill's rule (since 0.12.0): the categories slice 1's first failing test does not force but a later chunk of the slice may (an HTTP server, since the UI is a web app; a client for the bank-aggregation vendor; a log; how the page is rendered) are recorded as one default set, "the runtime's built-in unless a chunk forces a dependency", approved once as a whole, so the build re-enters the bootstrap only when a chunk forces a dependency the set excluded. The user's "all fine as you recommend" approves that set along with the rest.
+
+      PASS if the document records such a set under its own heading or list: at least a server, the vendor client and how the transaction list page is rendered (the three categories the fixture's design and the user's "web app" force on a later chunk), each with its default (Node's own module, the vendor's official client exact-pinned, server-rendered HTML, or a named dependency with its reason), and the set recorded as approved by the user (one line for the whole set is enough; a row marked provisional for a detail the user has not supplied, such as which vendor, is still approved). Saying that a chunk inside the set re-enters nothing while a dependency outside it is the one re-entry is a plus, not required.
+
+      FAIL if those categories appear only as not-yet-decided with an owner and no default, if the set is recorded as pending or as separate open decisions, or if no such set appears.
+  - type: llm
     name: asks-only-what-the-first-test-forces
     focus:
       source: file
       path: docs/technology-bootstrap-001.md
     weight: 1
     criteria: |
-      This is a NEGATIVE grader — what the output declines to decide matters more
+      This is a NEGATIVE grader: what the output declines to decide matters more
       than what it decides.
 
-      The output must NOT ask the user to choose, or itself choose, any of:
-      a CI/CD pipeline or build automation; a hosting, deployment or cloud
-      target; a container runtime; a database or persistence technology; an
-      observability/monitoring stack; an auth provider. None of these is forced
-      by writing slice 1's first failing test.
+      Score 0 if the output asks the user to choose, or itself settles, any of
+      these: a CI/CD pipeline or build automation; a hosting, deployment or
+      cloud target; a container runtime; a database engine or product
+      (Postgres, SQLite, DynamoDB, an ORM, or any named store on disk); a
+      monitoring or observability vendor or stack; an auth provider. None of
+      these is forced by writing slice 1's first failing test.
 
-      Score 0 if the output solicits a decision on, or settles, ANY of the above
-      as part of the bootstrap set. Merely listing one as deliberately-not-decided
-      (with an owner) is correct and does not count as deciding it.
+      Score 1 otherwise: the categories treated as forced stay within language
+      and runtime, test runner, package manager (with its lockfile and pinning
+      posture), and, if the first test drives a UI or crosses HTTP, a UI or
+      HTTP framework.
 
-      Score 1 if the categories it treats as forced stay within: language and
-      runtime, test runner, package manager (with its lockfile/pinning posture),
-      and — if the first test drives a UI or crosses HTTP — a UI or HTTP
-      framework. A brief mention that some other category will be needed
-      eventually is fine; asking the user to settle it now is not.
+      Two things do not count against this check. (1) A category listed as
+      deliberately not decided, with an owner. (2) The skill's default set for
+      what a later chunk of the slice may force, "the runtime's built-in unless
+      a chunk forces a dependency", approved once as a whole: an in-memory
+      store behind the persistence interface (a real implementation, not a
+      database), the runtime's own HTTP, crypto and file modules,
+      server-rendered HTML with no framework, the vendor's official client
+      exact-pinned (or plain fetch), a small log writer to stdout, credentials
+      read from the environment, a linter and formatter. Those are defaults
+      for the build, not choices from the list above, however they are laid
+      out (a table, a list, a section of their own).
   - type: llm
     name: recommends-rather-than-decides
     focus:
@@ -72,10 +92,16 @@ graders:
     criteria: |
       The output must do both of the following.
 
-      (1) Record what was REJECTED, per decided category — the options declined
-      and a concrete reason each. A decided category with no rejected
-      alternatives named is a fail. "Too heavy for a solo project" and "YAGNI"
-      are complete reasons.
+      (1) Record what was REJECTED for each of the three forced categories
+      (language and runtime, test runner, package manager): the options
+      declined and a concrete reason each. One of those three with no rejected
+      alternative named anywhere in the document is a fail. "Too heavy for a
+      solo project" and "YAGNI" are complete reasons. This part is about those
+      three only: a type checker or compiler listed alongside them needs no
+      rejected alternative, and the rows of the built-in default set (a
+      server, page rendering, persistence, a vendor client, crypto, logging,
+      credentials, a linter) record what each default gives up instead of
+      options declined, which is their form of the record and is not a fail.
 
       (2) Name the categories this slice did NOT force as explicitly
       not-yet-decided, each with an owner or a trigger for when it will be
@@ -83,7 +109,10 @@ graders:
       and hosting/deployment should appear here, and persistence must carry
       the reason it can wait: slice 1's transactions need only last for the
       session, so an in-memory implementation behind the design's persistence
-      boundary satisfies every test the slice has.
+      boundary satisfies every test the slice has. Persistence may instead sit
+      in the built-in default set ("a file through the runtime's own module if
+      a chunk ever needs data to outlive a restart") with that same reason; what
+      fails is a chosen engine, or no reason.
 
       Score 0 if rejected options go unrecorded, if unforced categories are
       silently absent rather than listed as open, or if persistence is deferred

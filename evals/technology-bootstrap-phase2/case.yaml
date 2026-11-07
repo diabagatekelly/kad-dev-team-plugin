@@ -31,24 +31,32 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      This is a NEGATIVE grader — what the output declines to decide matters more
+      This is a NEGATIVE grader: what the output declines to decide matters more
       than what it decides.
 
-      The output must NOT ask the user to choose, or itself choose, any of:
-      a CI/CD pipeline or build automation; a hosting, deployment or cloud
-      target; a container runtime; a database or persistence technology; an
-      observability/monitoring stack; an auth provider. None of these is forced
-      by writing slice 1's first failing test.
+      Score 0 if the output asks the user to choose, or itself settles, any of
+      these: a CI/CD pipeline or build automation; a hosting, deployment or
+      cloud target; a container runtime; a database engine or product
+      (Postgres, SQLite, DynamoDB, an ORM, or any named store on disk); a
+      monitoring or observability vendor or stack; an auth provider. None of
+      these is forced by writing slice 1's first failing test.
 
-      Score 0 if the output solicits a decision on, or settles, ANY of the above
-      as part of the bootstrap set. Merely listing one as deliberately-not-decided
-      (with an owner) is correct and does not count as deciding it.
+      Score 1 otherwise: the categories treated as forced stay within language
+      and runtime, test runner, package manager (with its lockfile and pinning
+      posture), and, if the first test drives a UI or crosses HTTP, a UI or
+      HTTP framework.
 
-      Score 1 if the categories it treats as forced stay within: language and
-      runtime, test runner, package manager (with its lockfile/pinning posture),
-      and — if the first test drives a UI or crosses HTTP — a UI or HTTP
-      framework. A brief mention that some other category will be needed
-      eventually is fine; asking the user to settle it now is not.
+      Two things do not count against this check. (1) A category listed as
+      deliberately not decided, with an owner. (2) The skill's default set for
+      what a later chunk of the slice may force, "the runtime's built-in unless
+      a chunk forces a dependency", approved once as a whole: an in-memory
+      store behind the persistence interface (a real implementation, not a
+      database), the runtime's own HTTP, crypto and file modules,
+      server-rendered HTML with no framework, the vendor's official client
+      exact-pinned (or plain fetch), a small log writer to stdout, credentials
+      read from the environment, a linter and formatter. Those are defaults
+      for the build, not choices from the list above, however they are laid
+      out (a table, a list, a section of their own).
   - type: llm
     name: pinning-posture-treated-as-a-choice
     focus: last_message
@@ -59,6 +67,16 @@ graders:
       PASS if the response recommends a package manager and says what posture it gets by default (hashed lockfile, installs that refuse to drift, or equivalent) and why that beats the alternative(s) it rejected, so the choice is visibly made on pinning rather than on speed or ergonomics alone.
 
       FAIL if the package manager is recommended with no pinning reasoning, if pinning is mentioned only as something to configure later, or if no package manager is recommended at all.
+  - type: llm
+    name: recommends-the-built-in-default-set-once
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule (since 0.12.0): the categories slice 1's first failing test does not force but a later chunk of the slice may (an HTTP server, since the UI is a web app; a client for the bank-aggregation vendor the design isolates behind an adapter; a log; how the page is rendered) are not left to be decided one at a time during the build. They are recommended now as one default set, "the runtime's built-in unless a chunk forces a dependency" (Node's own modules, the vendor's official client exact-pinned, server-rendered HTML, or a named dependency with its reason), with one approval for the whole set.
+
+      PASS if the response presents such a set, covering at least a server, the vendor client and how the transaction list page is rendered (the three categories the fixture's design and the user's "web app" force on a later chunk) with a built-in or official-pinned default for each, and asks the user to approve it as a whole (the user may still change an item; asking once for the set is the point). Presenting it alongside the forced choices in the one message the user asked for is fine.
+
+      FAIL if the categories a later chunk may force are left with no default ("decided when a chunk needs it", "an owner will decide"), or if the set is presented as separate decisions each needing its own answer, or if no such set appears at all.
   - type: regex
     name: consults-supply-chain-for-pinning
     target: trace

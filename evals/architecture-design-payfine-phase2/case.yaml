@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: architecture-design-payfine-phase2
-description: "Pay-a-fine design, phase 2: the user overrules the recommendation (a second provider is now real) and approves the rest; expects a finished design that reflects that choice, builds on the existing payment path, notes the leaky payment port (V7), keeps the one-implementation port, . No baseline arm: the history is a with-plugin transcript."
+description: "Pay-a-fine design, phase 2: the user overrules the recommendation (a second provider is now real) and approves the rest; expects a finished design that reflects that choice, builds on the existing payment path, notes the leaky payment port (V7), keeps the one-implementation port, writes its Structure as Strategic and Tactical sub-headings and a tests-and-fixtures line that says what the lite policy says (H3.2, H3.3). No baseline arm: the history is a with-plugin transcript."
 tags: [architecture-design, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -56,6 +56,27 @@ graders:
       PORTABLE. At least one boundary the slice introduces or uses must say what crosses it, in plain-data terms (for example a fine id and a card token in, a payment outcome out), rather than only naming the boundary.
 
       PASS if so. FAIL if boundaries are named without what crosses them.
+  - type: regex
+    name: structure-headings-strategic-and-tactical
+    # H3.2: the readiness gate reads the failure-path homes from the sections
+    # whose headings contain these words; the template names them, as
+    # sub-headings of ## Structure, before the next ## heading.
+    target:
+      source: file
+      path: docs/pay-fine/design-001.md
+    pattern: '(?:^|\n)## Structure[^\n]*\n(?:(?!\n## )[\s\S])*?\n###[^\n]*[Ss]trategic(?:(?!\n## )[\s\S])*?\n###[^\n]*[Tt]actical'
+  - type: llm
+    name: tests-line-matches-the-seam-rule
+    focus:
+      source: file
+      path: docs/pay-fine/design-001.md
+    weight: 1
+    criteria: |
+      The design template (since 0.12.0) carries a "Tests and fixtures" line saying what the builder's tests run for real and what they fake, in the implementation policy's own terms: tests run the real store the project already runs its tests against (or a file store under a temporary directory) and the real use case behind the real route; they fake only the external service at its wire boundary (here Stripe), the clock, randomness and a browser-only API; a port fake of the project's own code only for a branch the seam test cannot reach, named in the builder's report; made-up data throughout, never a real token, secret, key or record.
+
+      PASS if the design has such a line or section and it says that: the real store and use cases run, only the external service (Stripe), the clock, randomness or a browser-only API are faked, and any fake of own code is the exception for an unreachable branch. Naming Stripe and the fines ledger as this slice's boundary and store is a plus, not required.
+
+      FAIL if the design has no statement about what tests run and fake, or if its statement widens the fakes (tests run against in-memory or faked stores or use cases as the rule, "mock the ledger", "fake the payment port in every test").
   - type: llm
     name: reflects-the-users-gateway-choice
     focus:

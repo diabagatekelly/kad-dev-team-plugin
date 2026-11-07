@@ -101,6 +101,26 @@ happy one:
   worse — the system now proceeds on bad state and nobody knows.
 - **Partial completion leaves defined state.** If the operation dies
   midway, what's left behind, and can it be resumed or retried safely?
+- **A remote resource created, then a timeout, then a retry.** For every
+  call that creates something at the provider (an exchange, an item, a
+  charge, a refund, a reservation, a customer), trace what becomes of
+  the thing created when the reply is lost (a timeout, a dropped
+  connection, the process stopping) and the call is made again, by a
+  retry in code or by a person told to try again. Two endings, both
+  findings: the same thing created twice (charged twice, two items), or
+  the repeat refused because the first went through (an "already
+  refunded", "already exchanged" answer) and treated as a failure, so the
+  thing exists at the provider and is recorded nowhere, never settled,
+  released or revoked. The adapter that created it is where to look; the
+  fix lives where the record lives: an idempotency key the provider
+  honours, passed by the adapter; an attempt claimed before the call in
+  the use case's own store, one claim per thing so two overlapping
+  requests share it and a repeat can find it; the refused repeat
+  reconciled against what the provider holds before it is reported as a
+  failure. Run 3's exchange timed out after
+  Plaid had created the Item, the retry got `INVALID_PUBLIC_TOKEN`, and
+  the Item was orphaned with nothing revoked; three runs' reviewers read
+  the success path and the failure path one at a time and missed it.
 - **State that has to outlive the process doesn't live only in it.** Check
   each store the code writes to: one backed by process memory loses
   everything on every deploy, restart and crash, and each instance has its
@@ -237,8 +257,10 @@ the premature-optimization noise that makes reviews ignorable.
 Go back and verify the specific claim: that the call really has no timeout
 anywhere on its path (a client default, a wrapper, the adapter), that the
 failure really is unhandled rather than caught a layer up, that the retry
-really does fire on the failure you named. A first pass that
-pattern-matched its way to a finding is a hypothesis. Medium and Low
+really does fire on the failure you named, and, for a thing created at
+a provider and then retried, that the provider's answer to the repeat is
+what you say it is (its types or its documentation in the repository).
+A first pass that pattern-matched its way to a finding is a hypothesis. Medium and Low
 findings don't need this step.
 
 For a capacity finding (a missing bulkhead or circuit breaker, a shared

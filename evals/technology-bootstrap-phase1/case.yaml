@@ -28,24 +28,32 @@ graders:
     focus: last_message
     weight: 1
     criteria: |
-      This is a NEGATIVE grader — what the output declines to decide matters more
+      This is a NEGATIVE grader: what the output declines to decide matters more
       than what it decides.
 
-      The output must NOT ask the user to choose, or itself choose, any of:
-      a CI/CD pipeline or build automation; a hosting, deployment or cloud
-      target; a container runtime; a database or persistence technology; an
-      observability/monitoring stack; an auth provider. None of these is forced
-      by writing slice 1's first failing test.
+      Score 0 if the output asks the user to choose, or itself settles, any of
+      these: a CI/CD pipeline or build automation; a hosting, deployment or
+      cloud target; a container runtime; a database engine or product
+      (Postgres, SQLite, DynamoDB, an ORM, or any named store on disk); a
+      monitoring or observability vendor or stack; an auth provider. None of
+      these is forced by writing slice 1's first failing test.
 
-      Score 0 if the output solicits a decision on, or settles, ANY of the above
-      as part of the bootstrap set. Merely listing one as deliberately-not-decided
-      (with an owner) is correct and does not count as deciding it.
+      Score 1 otherwise: the categories treated as forced stay within language
+      and runtime, test runner, package manager (with its lockfile and pinning
+      posture), and, if the first test drives a UI or crosses HTTP, a UI or
+      HTTP framework.
 
-      Score 1 if the categories it treats as forced stay within: language and
-      runtime, test runner, package manager (with its lockfile/pinning posture),
-      and — if the first test drives a UI or crosses HTTP — a UI or HTTP
-      framework. A brief mention that some other category will be needed
-      eventually is fine; asking the user to settle it now is not.
+      Two things do not count against this check. (1) A category listed as
+      deliberately not decided, with an owner. (2) The skill's default set for
+      what a later chunk of the slice may force, "the runtime's built-in unless
+      a chunk forces a dependency", approved once as a whole: an in-memory
+      store behind the persistence interface (a real implementation, not a
+      database), the runtime's own HTTP, crypto and file modules,
+      server-rendered HTML with no framework, the vendor's official client
+      exact-pinned (or plain fetch), a small log writer to stdout, credentials
+      read from the environment, a linter and formatter. Those are defaults
+      for the build, not choices from the list above, however they are laid
+      out (a table, a list, a section of their own).
   - type: tool_used
     name: skill-invoked-display
     tool: Skill

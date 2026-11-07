@@ -212,12 +212,45 @@ re-entered before implementation and gains that concept, which is what
 the orchestrator's readiness gate routes back for; it is never patched by
 the implementer.
 
+**The headings are read by name.** The orchestrator's readiness gate
+(`readiness_check.py`, its `failure-paths-homed` check) looks for each
+failure path's words in the sections whose headings contain `Structure`,
+`Boundaries`, `Components`, `Decisions`, `Strategic` or `Tactical`, case
+ignored, and nowhere else. So write the components under `## Structure`
+as `### Strategic` and `### Tactical`, exactly those words (a qualifier
+after the word, `### Strategic (no knowledge of Plaid, the database or
+HTTP)`, is fine; a heading that drops the word is not), and home every
+failure path under one of those headings or under `## Decisions`. Run 3's
+design kept its failure paths under `### Strategic` and `### Tactical`
+and failed the gate until the headings were renamed; the gate now reads
+those names, and this template names what it writes.
+
 Name what the next slice needs kept from this one. Identifiers, cursors,
 provenance and status a later slice will read are structural facts of this
 one: a `Kept for later slices` line in the design (under Structure, or as
 its own short section) names them, or says `none` when the slice set
 shows nothing downstream needs any. A slice that throws away the cursor
 the next slice resumes from has designed the next slice's first bug.
+
+## The tests and fixtures line
+
+The design says what the builder's tests run for real and what they
+fake, and it says the same thing the implementation policy holds the
+builder to: `tdd-implementation-lite`'s "Fakes only at the system
+boundary" (`tdd-implementation` carries the same rule). Tests run the
+real store (a local database the project already runs its tests against,
+or a file store under a temporary directory) and the real use case behind
+the real route; they fake only the external service at its wire boundary,
+the clock, randomness and a browser-only API; a port fake of own code is
+allowed only for a branch the seam test cannot reach, and each one is
+named in the builder's report with that branch; made-up data throughout,
+never a real token, secret, key or record. Name the slice's own
+boundaries in that line (which external service, which store); never
+widen the fakes. Run 3's design wrote "tests run against in-memory
+implementations of the Transaction source and the stores", the builder
+followed it, and the slice review's fake inventory was the finding: the
+design is the one document the builder reads before the policy, so a
+test line that contradicts the policy is followed, not caught.
 
 ## Fixing a violation you find while designing
 
@@ -331,10 +364,17 @@ The strategic-vs-tactical call for this slice's parts, stated explicitly —
 not left implicit.
 
 ## Structure
-Components this slice needs, grouped by strategic vs. tactical, named per
-Screaming Architecture, each listing the acceptance criteria (and the
-placeholder failure paths) it is the home of. Conceptual only — no file
-paths, no signatures.
+Conceptual only — no file paths, no signatures. Two sub-headings, by
+these names (the readiness gate reads them):
+
+### Strategic
+The components kept independent of any technology, named per Screaming
+Architecture, each listing the acceptance criteria (and the placeholder
+failure paths) it is the home of.
+
+### Tactical
+The components that implement a boundary (an adapter, a store, a route,
+the composition root), each listing what it is the home of the same way.
 
 ## Boundaries and interfaces
 Where Good Fences apply, what crosses each one, which side owns each
@@ -350,6 +390,17 @@ Any Invasive Species calls this slice makes, and why.
 ## Technology at each boundary
 Per boundary: the technology chosen and what forced it now, or an explicit
 "not chosen yet — an in-memory implementation satisfies this slice."
+
+## Tests and fixtures
+What the builder's tests run for real and what they fake, in the policy's
+own terms: tests run the real store (a local database the project already
+runs its tests against, or a file store under a temporary directory) and
+the real use case behind the real route, and fake only the external
+service at its wire boundary, the clock, randomness and a browser-only
+API; a port fake of own code only for a branch the seam test cannot
+reach, named in the builder's report with that branch; made-up data
+throughout, never a real token, secret, key or record. Name this slice's
+external service and store.
 
 ## Decisions
 Every real decision, each with: the recommendation, the alternative(s)

@@ -1,6 +1,6 @@
 ---
 name: technology-bootstrap
-description: Decide the smallest set of technology choices that must exist before a slice's first failing test can be written — language, runtime, test runner, package manager and its pinning posture — and explicitly defer everything the slice doesn't force. Recommends with trade-offs and gets approval; never decides unilaterally. Use when a designed slice is about to be implemented in a repo that has no stack yet, or when a later slice forces a technology category nothing has chosen.
+description: Decide the smallest set of technology choices that must exist before a slice's first failing test can be written — language, runtime, test runner, package manager and its pinning posture — give everything a later chunk of the slice may force one default, the runtime's built-in unless a chunk forces a dependency, approved once as a set, and leave what no chunk forces explicitly open. Recommends with trade-offs and gets approval; never decides unilaterally. Use when a designed slice is about to be implemented in a repo that has no stack yet, when a later slice forces a technology category nothing has chosen, or when a chunk forces a dependency the approved set excluded.
 ---
 
 # Technology Bootstrap
@@ -127,6 +127,10 @@ Two things to hold on to inside that loop:
   test runner" approves the test runner, not the UI framework you decide
   is also forced. A category the user hasn't spoken to still gets its own
   recommendation and its own wait.
+- **The default set is one question.** What a later chunk may force gets
+  its defaults as one set (the next section) and one approval for the
+  whole of it, not a wait per category: it decides nothing now, it says
+  what the build does by default.
 - **Scale the recommendation to the situation.** Ask who's building and
   maintaining this if it isn't already established. A one-person project
   and a team of eight have different right answers about tooling weight,
@@ -169,13 +173,68 @@ against this family" are complete reasons. A rejection with no reason is
 worse than no record at all, because it looks settled without being
 checkable.
 
+## Built-ins by default for what a later chunk may force
+
+The first failing test forces three or four choices. The build forces
+more, one chunk at a time: the chunk whose seam test goes over HTTP needs
+a server; the chunk that talks to the external service needs a client;
+the chunk whose data must outlive a restart needs a store on disk; a
+chunk may need the machine's keychain, a log, a rendered page, a test
+DOM, a linter. Run 3 left each of those "not yet decided" and re-entered
+this skill six times mid-build (`node:http`, the vendor SDK's exact pin,
+`node:crypto`, `/usr/bin/security`, a JSON-lines writer on `node:fs`,
+server-rendered HTML), each an interruption of the loop for a choice that
+came out as the runtime's own built-in.
+
+So settle them now, as one set, with one default: **the runtime's
+built-in unless a chunk forces a dependency.** Walk the design's
+boundaries and the slice's criteria once, list every category a chunk of
+this slice may force that the first test does not, and give each its
+default:
+
+- the runtime's own module where it has one (on Node, `node:http` for a
+  server, `node:crypto` for encryption and randomness, `node:fs` for a
+  file store or a JSON-lines log);
+- the operating system's own tool for an OS facility (the macOS
+  `security` command for the Keychain), called without a shell;
+- the vendor's official client, exact-pinned, for the one external
+  service the slice exists to integrate with (the design's third-party
+  isolation names it), or plain `fetch` where the vendor has none;
+- server-rendered HTML with no framework for a page the first test does
+  not drive in a browser;
+- a named dependency only where no built-in can do the job, with its
+  reason (a test DOM for page tests; a database engine when the criteria
+  require encryption a file cannot give; a linter and formatter,
+  exact-pinned).
+
+Recommend the set once, with what each default gives up (a hand-written
+router and no middleware ecosystem; a file rewritten whole on each save;
+a client whose transitive dependencies ride along), and get **one
+approval for the whole set**: one `AskUserQuestion`, not one per
+category. A category the user changes is recorded with their choice and
+their reason, like any other decision. The set is not a stack plan: it
+settles nothing a chunk never reaches, and a category outside every chunk
+of this slice (hosting, CI, deployment, an auth provider, a store that
+only a later slice needs) stays in the next section, open, with its
+owner.
+
+During the build the set is the rule. A chunk whose need is inside it
+re-enters nothing: the builder uses the built-in, and its report names
+the category and what it used. A chunk that needs a dependency the set
+excluded (a native library, a framework, a package where the set said
+"built-in") is the only re-entry: this skill again, for that category
+only, appended to the document (under the orchestrator's chunk loop,
+through its gap step, with `software-architect` as the persona and this
+skill named), never a choice the builder makes alone.
+
 ## Leave the rest explicitly open
 
-Name the categories this slice didn't force as *not yet decided*, with the
-owner from the table above — don't just omit them. An omitted decision is
-indistinguishable from a forgotten one, which is exactly why
+Name the categories no chunk of this slice forces as *not yet decided*,
+with the owner from the table above — don't just omit them. An omitted
+decision is indistinguishable from a forgotten one, which is exactly why
 `vertical-slicing` writes placeholders instead of dropping criteria it
-can't fill.
+can't fill. A category in the default set above is not open: it has its
+default and its approval.
 
 ## When a choice is ADR-worthy
 
@@ -200,11 +259,18 @@ One entry per forced category: the choice, why this slice forced it, the
 recommendation made, and what the user approved or changed. Note any
 flagged as ADR-worthy.
 
+## Built-in unless a chunk forces a dependency
+The set, approved once: one line per category a chunk of this slice may
+force, its default (the runtime's module, the OS tool, the vendor's
+exact-pinned client, plain HTML, or the named dependency with its
+reason) and what the default gives up; then the approval line, who
+approved the set and when, and any category the user changed.
+
 ## Considered and rejected
 Per category, the options declined and the concrete reason.
 
 ## Deliberately not decided yet
-Categories this slice did not force, and who owns each when it does.
+Categories no chunk of this slice forces, and who owns each when it does.
 
 ## Consults
 Any `devsecops-engineer` question asked and the answer recorded.
@@ -222,9 +288,17 @@ for a place to put it.
 
 ## Re-entering this skill
 
-This runs once per project and then stays additive. When a later slice
-forces a category that was left open — the first slice that needs data to
-survive a restart, the first one that authenticates — run it again for
-*that category only* and append. Never reopen a settled choice unless the
-user asks; a bootstrap decision that keeps getting revisited isn't a
-bootstrap, it's an unresolved argument.
+This runs once per project and then stays additive. Two things bring it
+back, and only these:
+
+- **A later slice forces a category that was left open** — the first
+  slice that needs data to survive a restart, the first one that
+  authenticates: run it again for *that category only* and append, and
+  extend the default set the same way, once, for that slice's chunks.
+- **A chunk forces a dependency the set excluded**: the one mid-build
+  re-entry, for that category only, appended with the chunk that forced
+  it and why the built-in could not do the job.
+
+A chunk that stays inside the set is not a re-entry. Never reopen a
+settled choice unless the user asks; a bootstrap decision that keeps
+getting revisited isn't a bootstrap, it's an unresolved argument.

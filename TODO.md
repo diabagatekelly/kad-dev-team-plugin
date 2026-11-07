@@ -194,10 +194,18 @@ fence, a sync after every records commit, failures on the line, transcript
 snapshots, Chrome under the fence, no browser owed); H2 as PR #35 (0.11.0:
 the cold pass first for every round-0 reviewer, decided by a three-run Opus
 check, deviation zones, the fixer's rename and shell-edit rules, no chunk
-Lows, the README's CI line); H4 filed on the project as #6 to #13. Next: H3
-on its own branch, then slice 2 under `bin/kad --chrome` with audit on (after
-`kad --reset`: the stored audit repository is the project's own origin), whose
-audit is H5. Two eval bars were re-recorded for drift under Claude Code
+Lows, the README's CI line); H4 filed on the project as #6 to #13, all
+still open; H3 is PR #37, 0.12.0 (built-ins by default approved once in
+`technology-bootstrap`, the readiness check reading Strategic and Tactical
+headings by name and the design template naming them, the design's tests
+line saying what lite's seam rule says, `reliability-review`'s
+created-then-timeout-then-retry row with the refund overlay planting it;
+Sourcery's eleven comments triaged, five fixed and six declined). Next,
+after the merge: H4's fixes in the project (issues #6 to #13 on
+personal-finance-tracker-3, on 0.12.0, the first real `bin/kad` session
+with audit on since H1), then slice 2 under `bin/kad --chrome` with audit
+on (after `kad --reset`: the stored audit repository is the project's own
+origin), whose audit is H5. Two eval bars were re-recorded for drift under Claude Code
 2.1.316 (the handoff's H2 note): a directly-invoked reviewer skipping
 `why-comments`, a directly-invoked heavy builder skipping its reviews; a
 candidate agent-file fix, not scheduled.

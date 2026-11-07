@@ -1,0 +1,78 @@
+schema_version: "1.0"
+name: reliability-review-refund-pr
+description: "PR letting staff refund a paid fine (a use case, a refunds port and its Stripe adapter with a 10-second client timeout, a desk route, the ledger recording the refund, the wiring): the H3.4 row, a remote resource created, then a timeout, then a retry. The adapter's refund call may have gone through when the client stops waiting; the route tells staff to try again; the repeat is refused by Stripe as already refunded, the use case treats that as a refusal, and the refund that exists at the provider is recorded nowhere. Traps: no automatic retry in the adapter (a retry is the hazard, not the fix), and the timeout is reported with its ids. Overlay code-plants/reliability-review/refund/."
+tags: [reliability-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `ops/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
+
+    Review this pull request for how it behaves when things go wrong. It lets staff refund a fine a member has paid: it adds `fines/refund-fine.ts`, `fines/fine-refunds.port.ts`, `infra/payments/stripe-fine-refunds.ts` and `test/refund-fine.test.ts`; adds `paymentOf` and `markRefunded` to `FineLedger` in `fines/fine-ledger.port.ts` and to the Postgres adapter in `infra/postgres/postgres-fine-ledger.ts`; replaces `POST /charges/:id/refund` with `POST /fines/:id/refund` in `infra/http/fines-routes.ts`; wires it in `main/server.ts` and `main/wiring.ts`; and extends the Stripe declarations in `types/vendor.d.ts` (the decline-code union in `fines/fine-payments.port.ts` follows them). Everything else already existed before this PR.
+
+    Save the review as `docs/reviews/reliability-review-refund-pr.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
+runs: 3
+graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/reliability-review-refund-pr.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/reliability-review-refund-pr\.md")[^"]*"'
+    match: not_contains
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-review"'
+    min: 1
+  - type: llm
+    name: finds-refund-created-then-refused-on-retry-unrecorded
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-refund-pr.md
+    weight: 1
+    criteria: |
+      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
+
+      `StripeFineRefunds` (`infra/payments/stripe-fine-refunds.ts`) calls `refunds.create` with a 10-second client timeout; when Stripe has not answered by then the SDK rejects with `StripeTimeout`, which the adapter turns into `RefundTimedOut`, and the route answers staff "The refund did not complete. Try again." Stripe may already have made the refund. On the repeat, `types/vendor.d.ts` says a charge whose full amount is already refunded is refused with `charge_already_refunded`; the adapter returns that as `{ ok: false }`, `RefundFine` (`fines/refund-fine.ts`) throws `RefundRefused` and never calls `markRefunded`, and the route answers 409 "The payment provider refused the refund." So the member has their money back, the fine is recorded as paid and not refunded, nothing in the system says a refund exists, and a staff member will refund it by hand.
+
+      PASS if the review identifies that a refund made before the timeout is refused on the repeat and ends up recorded nowhere (the refund exists at Stripe with no record against the fine), and proposes something that would address it: treat `charge_already_refunded` as the refund having succeeded and record it (looking the refund up at the provider or recording the attempt before the call so the repeat can find it), an idempotency key the provider honours, or an equivalent reconciliation. Rating it Critical or High is expected but the rating is not graded.
+
+      FAIL if it is missed, if the review's only concern with the timeout path is a duplicate refund (Stripe refuses one, so the orphaned record is the problem) or the message's wording, or if it treats "already refunded" as a refusal the staff member simply reads.
+  - type: llm
+    name: no-false-alarm-no-automatic-retry
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-refund-pr.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      Neither `StripeFineRefunds` nor `RefundFine` retries the refund call automatically. A timeout reaches the staff member as a 504 with "Try again", so nothing is lost that an automatic retry would save, and an automatic retry of a call that creates something at the provider is the hazard this PR already has, not its fix.
+
+      PASS if the review does not ask for the refund call to be retried automatically (in the adapter or the use case) as a fix in itself. Asking for a retry that is made safe first (an idempotency key, the attempt recorded, the already-refunded answer reconciled) passes; so does not mentioning retries at all.
+
+      FAIL if it recommends adding automatic retries or backoff to the refund call without making the repeat safe, or presents the absence of a retry as a defect.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
+  - type: llm
+    name: no-false-alarm-timeout-is-reported
+    focus:
+      source: file
+      path: docs/reviews/reliability-review-refund-pr.md
+    weight: 1
+    criteria: |
+      Judge substance only. This checks that the review does NOT raise a false alarm.
+
+      When the refund times out, `POST /fines/:id/refund` in `infra/http/fines-routes.ts` sends the error to the error reporter with the request path, the fine id and the charge id before answering 504, so the timed-out attempt can be found and told apart from a refusal.
+
+      PASS if the review does not claim that a timed-out refund goes unlogged or unreported, or that nobody could tell it happened. Saying the report is not enough on its own (because nothing records the attempt against the fine, so the record and the provider still disagree) passes.
+
+      FAIL if it reports the timeout as silent, unlogged or invisible to whoever runs the service.
+
+      An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
