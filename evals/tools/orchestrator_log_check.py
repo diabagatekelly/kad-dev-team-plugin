@@ -137,7 +137,7 @@ def load_table(skill_path):
         names = set()
         for tok in re.findall(r"`([^`]+)`", cells[1]):
             names.add(tok.split(":")[-1].strip())
-        if "tdd-implementation" in names:
+        if names & {"tdd-implementation", "tdd-implementation-lite"}:
             names |= IMPLEMENTERS
         if names:
             rows.append((cells[0], names))
@@ -151,6 +151,8 @@ def stage_key(names):
     for n in ("scope-map", "vertical-slicing", "tdd-implementation"):
         if n in names:
             return n
+    if "tdd-implementation-lite" in names:
+        return "tdd-implementation"
     return sorted(n for n in names if "-" in n)[0] if any("-" in n for n in names) else sorted(names)[0]
 
 
@@ -211,7 +213,7 @@ def route_rank(routed, table):
     None if it names nothing in the table. The first skill named decides the row."""
     low = (routed or "").lower().strip()
     if "quarantine" in low or "chunk loop" in low:
-        return next(i for i, (_, names) in enumerate(table) if "tdd-implementation" in names)
+        return next(i for i, (_, names) in enumerate(table) if names & {"tdd-implementation", "tdd-implementation-lite"})
     if is_none_route(routed):
         return NONE
     toks = routed_names(routed)
@@ -507,8 +509,9 @@ def check_chunk_loop(e, findings):
         r, g, p, cap, wf = check_rounds(tag, what, text, findings, v4)
         total_rounds, reg, pre, caps, with_findings = total_rounds + r, reg + g, pre + p, caps + cap, with_findings + wf
         chunks_logged[int(k)] = r
-        if re.search(r"stall:\s*`?(relaunched|ended)", text):
-            findings.append(("INFO", tag, f"{what}: stall ({re.search(r'stall:\s*`?(relaunched|ended)', text).group(1)})"))
+        stall = re.search(r"stall:\s*`?(relaunched|ended)", text)
+        if stall:
+            findings.append(("INFO", tag, f"{what}: stall ({stall.group(1)})"))
     if "D" in steps and not d_lines:
         findings.append(("ERROR", tag, "D line is not in the `D. Slice review:` form"))
     if d_lines:

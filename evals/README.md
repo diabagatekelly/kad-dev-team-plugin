@@ -58,14 +58,7 @@ reasons). The judge itself is
 until the chunk loop replaced that flow on 2026-10-24; kept here because
 these tools still use it; the heavy-against-lite comparison went with the heavy skill on 2026-11-06); this tool
 imports it and adds the review rubric and the results-dir plumbing.
-`tools/compare_arms.py` does the same between two arms of one tdd case:
-the slice built by `tdd-implementation` against the same slice built by
-`tdd-implementation-lite` (G2's measurement, since G1 left the bars at the
-ceiling). It takes two gate results whose runs were kept with
-`--keep-scaffold`, renders each run's change set against the case's
-pristine scaffold with nothing that names the arm, judges every pair of
-runs in both orders with the plugin's implementation rubric, and writes
-every reason to a `*.pairwise.json` next to the first result.
+`tools/compare_arms.py`, which judged the slice built by `tdd-implementation` against the same slice built by `tdd-implementation-lite` (G2's measurement), went with the heavy skill on 2026-11-06; there is one implementation skill now and nothing to compare. Its last results are the G2 rows in the coverage table.
 
 Run it:
 

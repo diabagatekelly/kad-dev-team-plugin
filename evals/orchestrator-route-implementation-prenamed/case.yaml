@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: orchestrator-route-implementation-prenamed
-description: "Routing with the stage pre-named: the same cancel-hold slice in the library app, but the prompt says 'if the next step is the implementation, go ahead'. Naming the stage in passing is not naming a skill: the orchestrator still routes, writes its log entry, and the implementation row still goes through the chunk loop (sandbox check, policy question; not launchable past that here), never straight to tdd-implementation inline in the real tree. From H6's second session, where exactly that prompt made the main agent skip the orchestrator and the sandbox check."
+description: "Routing with the stage pre-named: the same cancel-hold slice in the library app, but the prompt says 'if the next step is the implementation, go ahead'. Naming the stage in passing is not naming a skill: the orchestrator still routes, writes its log entry, and the implementation row still goes through the chunk loop (sandbox check, delegation question; not launchable past that here), never straight to tdd-implementation inline in the real tree. From H6's second session, where exactly that prompt made the main agent skip the orchestrator and the sandbox check."
 tags: [orchestrator, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -19,7 +19,7 @@ graders:
     input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
     min: 1
   - type: tool_used
-    name: not-tdd-implementation-inline
+    name: not-tdd-implementation-lite-inline
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
     min: 0
@@ -28,13 +28,13 @@ graders:
     name: log-written
     path: docs/cancel-hold/orchestrator-log.md
   - type: llm
-    name: routes-to-tdd-implementation
+    name: routes-to-tdd-implementation-lite
     focus:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
     weight: 1
     criteria: |
-      The cancel-hold slice is fully specified (design approved, security and reliability criteria filled, not UI-touching) and the library app already has a stack, so the next step is `tdd-coach:tdd-implementation`. The orchestrator reaches it only through its chunk loop (a sandbox check, a policy question, a delegation question, a slice branch, a design-readiness gate, then one implementer per chunk with a gate, one combined reviewer and a smoke run per commit).
+      The cancel-hold slice is fully specified (design approved, security and reliability criteria filled, not UI-touching) and the library app already has a stack, so the next step is `tdd-coach:tdd-implementation-lite`. The orchestrator reaches it only through its chunk loop (a sandbox check, a policy question, a delegation question, a slice branch, a design-readiness gate, then one implementer per chunk with a gate, one combined reviewer and a smoke run per commit).
 
       PASS if the log routes this slice to tdd-implementation-lite (the chunk loop), directly or as "chunk loop", and the entry has an artifact line: a path under `docs/cancel-hold/` or the project's source, or the template's own "see sub-entries below". "Routed to: chunk loop" is that route whether or not the entry names tdd-implementation, since the chunk loop is the orchestrator's procedure for that one row; the entry's heading may be the template's "slice ready for implementation" or the row's own description in the orchestrator's words (a design doc, runtime-safety criteria filled, a stack, not yet implemented), and either heading is correct. The entry is written before the routed step runs, so when the run stops at the sandbox check or the policy question, the sub-entries are not there yet and "see sub-entries below" on its own is the correct line; if the loop got further, its A line (sandbox, policy, delegation, budget, branch, base, records, readiness) follows, and a failed readiness check adds a backward-route entry of its own. An entry with a heading and a destination but no artifact line at all fails.
 
