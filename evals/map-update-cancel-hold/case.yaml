@@ -35,11 +35,11 @@ graders:
       path: docs/architecture-map.md
     weight: 1
     criteria: |
-      The previous map had about 70 module rows: `catalog/`, `members/`, `lending/`, `fines/` and `notifications/` at tier 1, `reporting/` at tier 2, `infra/` and `main/` at tier 3, and `services/payment-service.ts`, `utils/date-utils.ts` and the two `test/` files untiered.
+      The previous map had about 70 module rows: `catalog/`, `members/`, `lending/`, `fines/` and `notifications/` at tier 1, `reporting/` at tier 2, `infra/` and `main/` at tier 3, and `services/payment-service.ts` and `utils/date-utils.ts` untiered. It also listed two `test/` files; the shipped extractor leaves test files out by design (its header says so), so their absence is expected and is not a dropped module.
 
-      PASS if the updated table still lists those modules (for example `catalog/book.ts`, `fines/money.ts`, `main/jobs.ts`, `infra/http/respond.ts`, `services/payment-service.ts`) with the same tiers.
+      PASS if the updated table still lists the source modules (for example `catalog/book.ts`, `fines/money.ts`, `main/jobs.ts`, `infra/http/respond.ts`, `services/payment-service.ts`) with the same tiers, `services/payment-service.ts` and `utils/date-utils.ts` still untiered.
 
-      FAIL if any existing module is dropped, or any existing tier changed (including giving `services/` or `utils/date-utils.ts` a tier).
+      FAIL if any existing source module (outside `test/`) is dropped, or any existing tier changed (including giving `services/` or `utils/date-utils.ts` a tier).
   - type: llm
     name: flags-new-wrong-direction-edge
     focus:
@@ -83,9 +83,9 @@ graders:
     criteria: |
       The previous map already listed `lending/return-book.ts` → `main/wiring.ts` and `notifications/sms-reminder.ts` → `infra/sms/sms-gateway.port.ts` as wrong-direction candidates.
 
-      PASS if the "changes since the prior map" section does not list either edge as new. Carrying them forward in the candidates section is fine.
+      PASS if neither edge is reported as new in this update: a candidates list that marks them "carried forward" (or leaves them unmarked while marking another edge "new"), and a changes section that does not name them as new, both pass.
 
-      FAIL if either is reported as a new edge or a new candidate in this update.
+      FAIL only if either edge is explicitly reported as new (marked "new" in the candidates list, or listed under new edges or new candidates in the changes section).
   - type: llm
     name: no-severity
     focus:
