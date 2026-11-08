@@ -175,8 +175,8 @@ way); PR 3 is pushed as PR #26 (2026-11-01), the evidence check green.
 ## After the PRs
 
 - [x] 4.1 Run slice 2 on 0.8.1 (v4 complete: PR 1 to PR 3, the launcher and the no-screen slice rule, #23, #24, #26, #27, #29) with the budget line, in a fresh repository for a one-to-one comparison, started with `bin/kad` (the sandbox runtime, audit mode and the audit repository set up by it); audit it the same way (`audit-review` skill; the audit-docs tools); compare the E-line cost and the §10 estimate. Done as run 3, slice 1 of a fresh repository on 0.9.2 (the comparison is in the review below); the E-line cost covered the planning session only (H1.4). Slice 2 itself is the next run, on the version that carries H1 to H3, not on 0.8.1.
-- [ ] 4.2 Decide D9 phase 2 (a chunk-runner agent per chunk) on the orchestrator's measured context from 4.1 (> ~250k tokens → build it).
-- [ ] 4.3 Open items from run 2, in the project not the plugin: PR #2's issue-links placeholder, the untracked `pr-r1-comments.json`, the missing E line, the three suspected bugs in repo 2 (orphaned vault row before the record write; `complete()` without a held claim; the year missing from the date column), repo 1's single-account rule and cursor persistence.
+- [x] 4.2 Decide D9 phase 2 (a chunk-runner agent per chunk) on the orchestrator's measured context from 4.1 (> ~250k tokens → build it). Decided 2026-11-08: slice 2 measured about 427k cache-read tokens per call; build it (`.synthesis/handoff-slice2.md` P3.1).
+- [x] 4.3 Won't do (owner, 2026-11-08). Open items from run 2, in the project not the plugin: PR #2's issue-links placeholder, the untracked `pr-r1-comments.json`, the missing E line, the three suspected bugs in repo 2 (orphaned vault row before the record write; `complete()` without a held claim; the year missing from the date column), repo 1's single-account rule and cursor persistence.
 
 ## After run 3 (2026-11-01)
 
