@@ -92,8 +92,11 @@ and MCP servers included, by `~/.srt-settings.json` (or the file passed to
 `srt --settings`, which this script cannot see unless `--srt-settings FILE`
 or `KAD_SRT_SETTINGS`, which the launcher `bin/kad` exports, names it). The probes measure that fence like any other. The settings
 checks then read the runtime's file: check 2 scans its
-`filesystem.allowWrite` (the project, the temp directories, `~/.claude`
-and `~/.claude.json` are expected there, nothing else); checks 5 and 6
+`filesystem.allowWrite` (the project, the temp directories, `~/.claude`,
+`~/.claude.json`, npm's cache and, under the launcher, the launcher's own
+folders, which it names on the line: its gh config directory
+`KAD_GH_DIR`, the audit directory `KAD_AUDIT_DIR` and the directory of
+the settings file `KAD_SRT_SETTINGS`; nothing else); checks 5 and 6
 accept a secret named in its `filesystem.denyRead`, since the Read tool
 runs inside the runtime's boundary; check 7 passes, because Claude's own
 sandbox keys are optional inside the runtime and a retry with
@@ -552,8 +555,10 @@ def check_write(project, settings, srt):
         # ~/.npm is npm's cache, which an install inside the project writes;
         # the credential file ~/.npmrc is a separate path and stays denied.
         roots += [os.path.realpath(expand(r)) for r in ("~/.claude", "~/.claude.json", "/tmp", "/private/tmp", "~/.npm")]
+        roots.append(expand(config_dir()))   # CLAUDE_CONFIG_DIR may be tilde-prefixed; the launcher expands it the same way
         if os.environ.get("CLAUDE_CODE_TMPDIR"):
             roots.append(os.path.realpath(os.environ["CLAUDE_CODE_TMPDIR"]))
+        roots += [path for _, path in launcher_dirs()]
     outside = []
     for entry in entries:
         if not isinstance(entry, str):
@@ -563,7 +568,30 @@ def check_write(project, settings, srt):
             outside.append(entry)
     if outside:
         return False, denied + f"; but {key} opens paths outside the project and temp: " + ", ".join(outside)
+    if under_srt() and launcher_dirs():
+        denied += "; the launcher's own folders, allowed: " + ", ".join(f"{name} {path}" for name, path in launcher_dirs())
     return True, denied
+
+
+def launcher_dirs():
+    """The folders the launcher `bin/kad` opens for writing besides the project
+    and temp, each named by a variable only the launcher exports: its gh
+    config directory (`KAD_GH_DIR`, the session's `GH_CONFIG_DIR` before
+    0.14.0), the audit directory (`KAD_AUDIT_DIR`: the session's logs, the
+    transcript snapshots and the audit repository's clone) and the directory
+    of the runtime settings file it wrote (`KAD_SRT_SETTINGS`). Read only
+    under the launcher (`KAD_SRT_SETTINGS` set): a runtime file written by
+    hand gets no such allowance. Before 0.14.0 the write check failed every
+    launcher session on these folders (the owner clicked through at A)."""
+    if not os.environ.get("KAD_SRT_SETTINGS"):
+        return []
+    found = []
+    for name, var in (("gh config", "KAD_GH_DIR"), ("gh config", "GH_CONFIG_DIR"), ("audit directory", "KAD_AUDIT_DIR")):
+        value = os.environ.get(var)
+        if value and not any(p == os.path.realpath(os.path.expanduser(value)) for _, p in found):
+            found.append((name, os.path.realpath(os.path.expanduser(value))))
+    found.append(("runtime settings", os.path.realpath(os.path.dirname(os.path.expanduser(os.environ["KAD_SRT_SETTINGS"])))))
+    return found
 
 
 def check_network():

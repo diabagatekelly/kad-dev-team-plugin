@@ -14,6 +14,23 @@ One skill, `orchestrator`, isn't tied to any single persona — it routes a
 problem to whichever persona/skill applies next by inspecting what already
 exists, instead of you having to name the right one each time.
 
+## Start
+
+From the project's root, in a terminal:
+
+```bash
+kad                 # alias kad=<plugin root>/bin/kad once; or run bin/kad by its path
+```
+
+That is the whole setup. The first run on a project prints the permission
+set the session runs with (what it may write, what it may never read, which
+hosts it reaches, the one credential it holds, local ports, Chrome, audit
+mode) and asks one yes; every later run prints one line and starts, inside
+the sandbox runtime, with audit mode on and Claude in Chrome ready. Then
+say "what's next". A plain `claude` session cannot run the flow: its
+orchestrator prints this one command and stops. The details are under
+"Starting a session: `bin/kad`".
+
 ## Structure
 
 ```
@@ -33,10 +50,10 @@ skills/
                        # while the loop was running
   orchestrator/scripts/ts_runtime_lines.mjs # which lines of a TypeScript file keep runtime code, for the
                        # gate's coverage check (type-only modules exempt, erased type lines discounted)
-  orchestrator/scripts/sandbox_check.py    # the loop's first step: the session's Bash sandbox probed from
-                       # inside, secrets unreadable, no direct network, escape hatches off; exit 2 when
-                       # the platform has no sandbox at all, which the orchestrator turns into a logged
-                       # choice, not a stop (see below); --write-settings then writes the deny rules only
+  orchestrator/scripts/sandbox_check.py    # the loop's first step: the launcher's fence probed from inside,
+                       # secrets unreadable, no direct network, writes only where the approved set allows
+                       # (the launcher's own folders named); a FAIL under the launcher stops the flow with
+                       # no question, since the cause is outside the session (see below)
   orchestrator/scripts/readiness_check.py  # the design-readiness gate before the first builder: eight
                        # mechanical checks over the planning documents, each failure routed to the
                        # persona that owns the document
@@ -98,104 +115,107 @@ changes to this plugin came from watching that run break, so its
 
 ## Starting a session: `bin/kad`
 
-Everything a real run needs is one command, run from the project's root:
+One command, run from the project's root (alias `kad=<plugin root>/bin/kad`
+once, or run the script by its path; a marketplace install's is under
+`~/.claude/plugins/cache/kad-dev-team-marketplace/kad-dev-team/<version>/bin/kad`,
+and changes with the version):
 
 ```bash
-<plugin root>/bin/kad            # alias kad=<plugin root>/bin/kad once, then just: kad
-kad --check                      # show what it would do, start nothing
+kad                              # start the fenced session
+kad --check                      # print the set it would start with; write and start nothing
+kad --reset                      # show the permission set again, the stored answers open to change
+kad --no-chrome                  # a slice that touches no screen; a UI slice then owes every screen check
 kad -- --resume                  # arguments after -- go to claude
 ```
 
-It checks the platform and the tools (macOS, Linux and WSL2 have the
-runtime's backend; native Windows is told to use WSL2; `claude` and
-`python3` must be on PATH; the sandbox runtime is offered for install
-when missing), writes the runtime's settings for this project under
-`~/.config/kad-dev-team/srt/` (on macOS with `allowPty`, without which
-the runtime's profile denies the terminal's raw mode and every arrow key
-and mouse report lands in the session as text; writes allowed to the
-project, Claude Code's config directory, the temp directory and npm's
-cache, with the
-user settings, hooks, commands, agents, skills and plugins under that
-config directory denied so nothing an agent writes outlives the session;
-the credential paths denied for reading; the network allowed to the API,
-sign-in and GitHub plus the domains you add), drops credential-shaped
-variables from the environment the session inherits (`--keep-env NAME`
-passes one through, and the orchestrator's check then names it) and
-another Claude Code session's variables (a shell opened from inside a
-session, or a terminal window a session launched, carries
-`CLAUDE_CODE_CHILD_SESSION`, and Claude Code saves no transcript for a
-session started there; `kad --check` names what it would drop), gives
-the session what the loop's commits, pushes, pull requests, issues and
-audit sync need inside the fence (the host's GitHub login from `gh auth
-token` as `GH_TOKEN`, the one credential the session holds, which the
-orchestrator's check reports as kept; `--gh-token-env NAME` takes a
-fine-grained token for the one repository instead, narrower than the
-login's scope; a session-local `gh` config directory, since its own is
-on the deny list; `gh` as git's credential helper in place of the
-keychain the fence refuses; and the runtime's TLS termination, without
-which `gh` cannot verify a certificate on macOS), turns
-audit mode on with the audit repository you named, clones that
-repository into `$KAD_AUDIT_DIR/repo/` before the fence starts (inside
-it git cannot write a `.git/config` anywhere, so a clone from inside
-fails; the clone gets the project's git identity, and the audit
-directory is allowed for writing), and starts `srt
-claude --plugin-dir <this plugin>` inside that fence, so the Read tool,
-hooks and every agent are inside it too. The first run asks three
-questions, audit mode (on by default), the audit repository and any
-extra domains (`registry.npmjs.org` for npm installs), and stores the
-answers, owner-readable only, in `~/.config/kad-dev-team/launcher.json`;
-`kad --reset` asks again. On that first run `--audit`, `--no-audit`,
-`--audit-repo` and `--domain` answer the questions instead of the
-terminal and are stored (how the orchestrator runs it); on every later
-run they change that one run and store nothing. `kad --check` shows the
-plan and writes nothing; `--install-runtime` installs the sandbox runtime
-without asking when it is missing. Local
-ports are allowed by default (a dev server, its tests and the loop's
-smoke run bind and reach `localhost`; `--no-local` denies them for a
-slice that touches no port). `kad --chrome` allows the extension's bridge
-host and Anthropic's MCP proxy and tunnels both past the runtime's TLS
-termination, which refuses the WebSocket upgrade the bridge needs (the
-reason run 3 never reached a browser: `upgrade request refused` in the
-runtime's debug log); it also allows the unix socket the extension's
-native host listens on (`/tmp/claude-mcp-browser-bridge-<user>/`; on
-Linux the runtime cannot allow one path, so every unix socket is allowed
-for that session) and starts `claude --chrome`, so Claude in Chrome can open
-`localhost:3000` in your real Chrome, which runs outside the fence; enable
-the extension once outside the fence first (`claude --chrome`, which
-writes Chrome's native-messaging file under `~/Library` or `~/.config`,
-paths the fence denies). The orchestrator's A step then asks the Chrome
-tools whether a browser answers and writes `Chrome` or `no Chrome` on its
-sandbox field; without one, every UI smoke run raises one owed finding,
-"browser checks not run", naming what it could not drive, which stands
-into the pull request as your checklist instead of a `PASS`. The
-orchestrator's sandbox check reads the same settings file
-(`KAD_SRT_SETTINGS`) before it launches anything and names whatever is
-missing. The launcher itself writes nothing outside
-`~/.config/kad-dev-team/`, the audit directory (the clone) and, for a
-`--plugin-dir` run, the plugin's hook data directory under
-`~/.claude/plugins/data/` (Claude Code creates it on first use, which the
-fence denies, and every hook then fails before it runs); the session it
-starts writes where the settings allow.
+**The first run on a project** prints the permission set in plain words
+and asks one yes: what the session may write (the project, the audit
+directory, Claude Code's own files, the temp directory, npm's cache and
+kad's `gh` directory; never Claude Code's user settings, hooks, commands,
+agents, skills or plugins, so nothing an agent writes outlives the
+session); what it may never read (`~/.ssh`, `~/.aws`, `~/.gnupg`,
+`~/.kube`, `~/.config/gcloud`, `~/.azure`, `~/.config/gh`, `~/.npmrc`,
+`~/.netrc`, `~/.git-credentials`, `~/.pypirc`, `~/.docker/config.json`,
+`~/.terraform.d/credentials.tfrc.json`, the Claude credentials file);
+which hosts it reaches (the API and sign-in, GitHub, Chrome's bridge, the
+registries the project's manifests call for, `registry.npmjs.org` for a
+`package.json` and `pypi.org` for a `pyproject.toml`, and any extra
+domain you add); the one credential it holds (the GitHub token from your
+`gh` login, as `GH_TOKEN`, so the loop can push, open the pull request
+and file issues inside the fence; `--gh-token-env NAME` takes a
+fine-grained token instead; every other credential-shaped variable is
+dropped from the environment); local ports (allowed, for a dev server and
+the smoke runs; `--no-local` denies them); Chrome (on; on Linux the set
+says that this opens every unix socket to the session, the SSH agent's
+and Docker's included, since the runtime cannot allow the extension's
+socket alone); audit mode (on, with the repository the material is synced
+to at the end of each slice, or local only). Answer `n` to change the
+three answers behind it (audit mode, the audit repository, the extra
+domains; `none` clears one) and the set is shown again. The answers and
+the approval are stored per project, owner-readable only, in
+`~/.config/kad-dev-team/launcher.json` (a project without answers of its
+own starts from the file's root-level ones, where 0.13.x kept them),
+which the launcher only ever rewrites whole, under a lock, through a
+temporary file, and never deletes: a declined or interrupted run leaves it
+as it was (0.13.1's `--reset` deleted it before asking, and an interrupted
+reset lost every answer). **Every later run prints one line and starts.**
+A run whose set is wider than the approved one (a manifest that now calls
+for a registry, a `--domain`, Chrome or local ports back on after an
+opt-out, another audit repository) is shown again for one yes; a narrower
+run (`--no-chrome`, `--no-local`, `--no-audit`) starts without a question.
+`--audit`, `--no-audit`, `--audit-repo URL` and `--domain D` set the
+answers on the first run and change one run afterwards (`--audit-repo
+none` is local-only for that run).
 
-You can also start Claude the usual way and say "what's next": the
-orchestrator's step 0, session setup, runs before it asks anything else.
-It finds the session is not under the launcher, asks whether you want
-audit mode (and, the first time, the audit repository and extra domains),
-runs `kad --prepare` itself with your answers, and asks one more
-question: restart in the fence, which opens a new terminal window with
-the fenced session on the project, the orchestrator already started in
-it (`kad --relaunch`; you close the old one), or continue in this
-session with the per-command sandbox and audit mode as this session
-started (off, unless you exported `KAD_AUDIT=1` yourself). It asks this
-once per session, never in a session that has no shell to run the
-launcher with, and on a flow resumed from a handoff file it only says,
-in one line, how to resume fenced instead. Nothing needs `kad`
-on your PATH: the orchestrator and the relaunch use the script's full
-path, which for a marketplace install is under
-`~/.claude/plugins/cache/kad-dev-team-marketplace/kad-dev-team/<version>/bin/kad`
-(and changes with the version, which is why an alias is a convenience
-for your own terminal, not something the plugin relies on). The sections
-below say what each piece does by hand.
+What it does every time: checks the platform (macOS, Linux and WSL2 have
+the runtime's backend; native Windows is told to run it from WSL2) and
+that `claude`, `python3` and the sandbox runtime `srt` are on PATH
+(offering to install the runtime); makes sure Claude in Chrome can reach
+Claude Code, writing the extension's native-messaging manifest into each
+installed Chromium-family browser's profile and the native host wrapper
+under `~/.claude/chrome/` when they are missing (Claude Code writes them
+the first time Chrome is enabled in a plain session; the fence denies both
+paths, so the launcher writes them outside it, with the same content, once
+the set is approved); writes the runtime's settings for this run under
+`~/.config/kad-dev-team/srt/`, one file per launch so two overlapping
+launches of one project never read each other's (with `allowPty` on macOS, without which
+the runtime's profile denies the terminal's raw mode and every arrow key
+lands in the session as text; the bridge hosts tunnelled past the
+runtime's TLS termination, which refuses the WebSocket upgrade the bridge
+needs, the reason run 3 never reached a browser; the extension's unix
+socket allowed, which on Linux means every unix socket, since the runtime
+cannot allow one path there, and the set says so); drops the credential-shaped variables and
+another Claude Code session's variables (`CLAUDE_CODE_CHILD_SESSION` and
+its kin, which would turn transcript saving off for the session started
+here); clones the audit repository into `$KAD_AUDIT_DIR/repo/` before the
+fence starts (inside it git cannot write a `.git/config`), with the
+project's git identity; creates the plugin's hook data directory under
+`~/.claude/plugins/data/` for a `--plugin-dir` run (the fence denies its
+creation, and every hook then fails before it runs); and starts `srt
+--settings <file> claude --chrome --plugin-dir <this plugin>` in the
+project, so the Read tool, hooks and every agent are inside the fence.
+The session gets `KAD_SRT_SETTINGS`, `KAD_GH_DIR`, `KAD_AUDIT_DIR`,
+`KAD_AUDIT=1`, `KAD_AUDIT_REPO` and `KAD_CHROME=1`, which the
+orchestrator's sandbox check reads before anything is launched: it names
+the launcher's own folders as allowed and whatever else is missing.
+
+**Nothing restarts.** The fence has to exist before Claude Code starts, so
+there is no `--relaunch`, no `--prepare` and no terminal window (0.13.1's
+window inherited the session's variables and lost two runs' transcripts).
+A plain `claude` session asked "what's next" runs the orchestrator's step
+0, which finds the session is not fenced, prints this one command with the
+launcher's full path, and stops; it asks nothing. A session fenced by
+something other than the launcher (`srt claude` by hand) goes on without a
+question, with audit mode as its environment says.
+
+The orchestrator's A step asks nothing the launcher guarantees: no
+settings, sandbox or transcript question. On a slice that touches UI it
+asks the Chrome tools whether a browser answers; none answering is an
+error with the fix on the line (the browser not open, the extension not
+installed or not connected, `--no-chrome` given) and one question: restart
+with Chrome, or continue with every screen check owed. Delegation is asked
+once per project and kept in `planning/delegation.md`.
+`bash evals/tools/kad_test.sh` tests the launcher with stub tools.
 
 ## Local development
 
@@ -372,86 +392,47 @@ The loop launches code-writing instances and reviewers that run unattended
 with Bash in hand. A plugin cannot ship the settings that fence them (a
 plugin's settings carry no `sandbox` or `permissions` keys, and a
 plugin-shipped agent's `permissionMode` and `hooks` are ignored), so the
-orchestrator checks the session it is about to run in, first thing, before
-any question, and again before every launch. You don't have to write the
-settings by hand: on a fixable failure the orchestrator asks once whether
-to write them into the session's user settings (`settings.json` under
-`CLAUDE_CONFIG_DIR`, or `~/.claude`), runs `sandbox_check.py
---write-settings` on a yes, and continues if the re-check passes. When the
-session's sandbox is already on but incomplete, Bash cannot write a file
-outside the project, so the script prints the intended content and the
-orchestrator writes it with its Write tool, which runs outside the
-sandbox. What it writes:
+fence is the launcher's: `bin/kad` writes the sandbox runtime's settings
+from the approved set and starts the whole session inside it, and the
+orchestrator checks that fence before the flow starts and before every
+launch, with `skills/orchestrator/scripts/sandbox_check.py --project
+<root>`. Because the script runs inside the fence, it probes it instead of
+trusting the file: a write to the home directory must fail with the
+sandbox's own error; a direct TCP connection to each of two public
+addresses must fail with "network unreachable" (a timeout or a refusal is a
+firewall, not a sandbox); no credential-shaped environment variable may
+reach the shell (the one the launcher kept, `GH_TOKEN`, is reported as
+kept); each credential path must be unreadable from the shell if it exists
+and named in the runtime's `denyRead` whether or not it exists (a login can
+create one later); the runtime's `allowWrite` may open nothing beyond the
+project, Claude Code's own paths, temp, npm's cache and the launcher's own
+folders (its `gh` config directory, the audit directory and the settings
+directory, named on the line; before 0.14.0 the check failed every
+launcher session on them and the owner clicked through); and the project's
+`.worktreeinclude`, which copies gitignored files into every worktree, may
+match no credential-shaped file. `--secret <path>` adds a path to the
+list, with a trailing `/` for a directory that may not exist yet. The last
+line is `sandbox check: PASS` or `FAIL`; the exit code is 0, 1 for a
+failing check, 2 when the platform has no sandbox. Under the launcher a
+`FAIL` is reported and the flow stops with no question: the cause is
+outside the session. `python3 -I evals/tools/sandbox_check_test.py`
+covers the write check against the launcher's folders.
 
-```json
-{
-  "sandbox": {
-    "enabled": true,
-    "allowUnsandboxedCommands": false,
-    "failIfUnavailable": true,
-    "excludedCommands": [],
-    "autoAllowBashIfSandboxed": true,
-    "network": { "allowedDomains": [] },
-    "filesystem": {
-      "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "~/.kube", "~/.config/gcloud", "~/.azure",
-                   "~/.config/gh", "~/.npmrc", "~/.netrc", "~/.git-credentials", "~/.pypirc",
-                   "~/.docker/config.json", "~/.terraform.d/credentials.tfrc.json",
-                   "~/.claude/.credentials.json"]
-    }
-  },
-  "permissions": {
-    "deny": ["Read(~/.ssh/**)", "Read(~/.aws/**)", "Read(~/.gnupg/**)", "Read(~/.kube/**)",
-             "Read(~/.config/gcloud/**)", "Read(~/.azure/**)", "Read(~/.config/gh/**)",
-             "Read(~/.npmrc)", "Read(~/.netrc)", "Read(~/.git-credentials)", "Read(~/.pypirc)",
-             "Read(~/.docker/config.json)", "Read(~/.terraform.d/credentials.tfrc.json)",
-             "Read(~/.claude/.credentials.json)"]
-  }
-}
-```
-
-What each part is for: the sandbox confines what the Bash tool runs
-(writes to the project and the temp directory, network only through its
-proxy to `allowedDomains`) but lets a command read the whole machine
-unless `denyRead` names the path; the `permissions.deny` rules repeat the
-list for the Read tool, which runs outside the sandbox and which every
-implementer holds (a directory needs the `/**` form, or the rule covers
-the directory and not its files); `allowUnsandboxedCommands: false` makes
-a retry with `dangerouslyDisableSandbox` a no-op; `failIfUnavailable:
-true` makes a session with no sandbox backend refuse to start instead of
-running every command unsandboxed; an empty `excludedCommands` leaves no
-command outside the sandbox; `autoAllowBashIfSandboxed` lets sandboxed
-commands run without an approval prompt no unattended agent could answer.
-Don't deny `~/.claude` wholesale: the plugin's own scripts live under
-`~/.claude/plugins/`. `allowedDomains` is the project's call (a test run
-that needs a registry names it); the orchestrator records the list in the
-log.
-
-Which sandbox a platform has:
-
-| Platform | Sandbox | What the check does |
-|---|---|---|
-| macOS | Seatbelt | probes it; writes the settings on a yes |
-| Linux | bubblewrap and socat | probes it; writes the settings on a yes |
-| Windows, WSL2 session | bubblewrap and socat | probes it; writes the settings on a yes |
-| Windows, native session | none; Claude Code runs every command unsandboxed | exits 2; the orchestrator asks once whether to continue unsandboxed (the `Read(...)` deny rules and `denyRead` are still written, but never `sandbox.enabled` or `failIfUnavailable`, which with no backend would make the session refuse every command) or to stop and run the session in WSL2, and logs the choice |
-
-The stronger fence, and the one to use for a real slice, is the sandbox
-runtime: `npm install -g @anthropic-ai/sandbox-runtime`, then start the
-session as `srt claude` from the project. It wraps the whole Claude Code
-process in the same Seatbelt or bubblewrap boundary, so the Read tool,
-hooks and MCP servers are inside it too, which the per-command sandbox
-above never covers. It reads `~/.srt-settings.json` at launch (no file
-means no network and no writes outside its own paths, so write one
-first); the check recognises it (`SANDBOX_RUNTIME=1`), reads that file
-for the deny list and the write grants, and passes the `settings` check
-on its own, since Claude's sandbox keys are optional inside it. A file
-that fences a slice:
+The runtime (`npm install -g @anthropic-ai/sandbox-runtime`) wraps the
+whole Claude Code process in the platform's boundary, Seatbelt on macOS
+and bubblewrap on Linux and WSL2, so the Read tool, hooks and MCP servers
+are inside it too. Native Windows has no backend: run `kad` from WSL2
+(`wsl -d Ubuntu-22.04`, from the project's path there). What the launcher
+writes for a project, every key required (the runtime refuses a file
+missing one rather than run on defaults that would drop its rules):
 
 ```json
 {
   "filesystem": {
-    "allowWrite": [".", "~/.claude", "~/.claude.json", "/private/tmp"],
-    "denyWrite": [],
+    "allowWrite": ["<project>", "~/.claude", "~/.claude.json", "/private/tmp", "~/.npm",
+                   "~/.config/kad-dev-team/gh", "~/.claude/kad-audit"],
+    "denyWrite": ["~/.claude/settings.json", "~/.claude/settings.local.json", "~/.claude/hooks",
+                  "~/.claude/commands", "~/.claude/agents", "~/.claude/skills", "~/.claude/plugins"],
     "denyRead": ["~/.ssh", "~/.aws", "~/.gnupg", "~/.kube", "~/.config/gcloud", "~/.azure",
                  "~/.config/gh", "~/.npmrc", "~/.netrc", "~/.git-credentials", "~/.pypirc",
                  "~/.docker/config.json", "~/.terraform.d/credentials.tfrc.json",
@@ -459,59 +440,32 @@ that fences a slice:
     "allowRead": []
   },
   "network": {
-    "allowedDomains": ["api.anthropic.com", "claude.ai", "platform.claude.com", "github.com", "*.github.com"],
-    "deniedDomains": []
+    "allowedDomains": ["api.anthropic.com", "claude.ai", "platform.claude.com", "github.com", "*.github.com",
+                       "registry.npmjs.org", "bridge.claudeusercontent.com", "mcp-proxy.anthropic.com"],
+    "deniedDomains": [],
+    "allowLocalBinding": true,
+    "tlsTerminate": { "excludeDomains": ["bridge.claudeusercontent.com", "mcp-proxy.anthropic.com"] },
+    "allowUnixSockets": ["/tmp/claude-mcp-browser-bridge-<user>"]
   },
   "allowPty": true
 }
 ```
 
-Every one of those keys is required (the runtime refuses a file missing
-any, rather than run on defaults that would drop its rules). On Linux
-use `/tmp` in place of `/private/tmp` and drop `allowPty`, which is
-macOS-only: there the runtime's profile denies the terminal devices
-without it, Claude Code's `setRawMode` fails with `EPERM`, and every
+`allowPty` is macOS-only: without it the runtime's profile denies the
+terminal devices, Claude Code's `setRawMode` fails with `EPERM`, and every
 arrow key and mouse report lands in the session as text (`^[[A`,
 `^[[<35;…M`). The grant the runtime emits for it is every `/dev/ttys*`,
 not only the session's own terminal, so a command inside the fence can
 reach another terminal the same user has open; the runtime offers no
 narrower rule, and an interactive session cannot run without one. It is
-the one place the fence is as wide as the user's own terminals. `allowWrite`'s `.` is where
-`srt` starts, so start it from the project; add the registry a test run
-installs from (`registry.npmjs.org`) when the project needs it.
-Nothing inside the session can change that file, which is the point: the
-check reports what is missing and the flow stops until the owner restarts
-with it. The runtime is a beta research preview; its keys may move. It
-runs on macOS, Linux and WSL2, not on native Windows.
-
-So on native Windows the loop is a strong recommendation to use WSL2
-(start Claude inside Ubuntu, from the project, and say "what's next"),
-never a hard stop: the owner can say "continue unsandboxed" once, and the
-log's A line carries that choice for the audit. The settings live in that
-session's user file; a `--settings` flag on the session's command line is
-not a file and the check cannot see it, so start the session without one,
-or put the block in managed settings, where nothing can loosen it.
-
-`skills/orchestrator/scripts/sandbox_check.py --project <root>` is what
-the orchestrator runs, inline, before each launch. Because it runs inside
-the session's own Bash sandbox, it probes the fence instead of trusting
-the file: a write to the home directory must fail with the sandbox's own
-error, a direct TCP connection to each of two public addresses must fail
-with "network unreachable" (a timeout or a refusal is a firewall, not a
-sandbox), no credential-shaped environment variable may reach the shell
-(Claude Code's own `CLAUDE_CODE_*` are listed and exempt), each
-credential path must be unreadable from the shell if it exists and named
-in `denyRead` whether or not it exists (a login can create one later),
-and each must be covered by a `Read(...)` rule, recursive for a directory
-(`*` does not cross a slash in the matcher, so `Read(~/.ssh/*)` does not
-count); the settings above it reads from the merged settings files, since
-an escape hatch leaves no trace until it is used; and the project's
-`.worktreeinclude`, which copies gitignored files into every worktree, may
-match no credential-shaped file, by name or by living under a credential
-directory, with gitignore's `**/` rules. `--secret <path>` adds a path to
-the list, with a trailing `/` for a directory that may not exist yet. The
-last line is `sandbox check: PASS` or `FAIL`; the exit code is 0, 1 for a
-failure the settings can fix, 2 when the platform has no sandbox.
+the one place the fence is as wide as the user's own terminals. On Linux
+the temp path is `/tmp` and Chrome's socket is `allowAllUnixSockets`
+(seccomp cannot filter by path). `tlsTerminate` is the runtime's own
+local proxy terminating TLS with a trust bundle, without which `gh` (Go)
+cannot verify a certificate on macOS; the two bridge hosts are excluded
+because the proxy refuses the WebSocket upgrade the extension needs.
+Nothing inside the session can change the file, which is the point. The
+runtime is a beta research preview; its keys may move.
 
 ## Installing for real (once pushed to a repo)
 

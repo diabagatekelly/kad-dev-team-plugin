@@ -134,13 +134,14 @@ execute inline — it runs the chunk loop (v4, 2026-10-25), wired in and
 running by default.** A repository and an `origin` must exist (else
 `release-engineer:repo-bootstrap`, decided with the owner). Before any of
 this, and before the target question, the orchestrator's step 0 (session
-setup, 0.9.0) settles the two things only a session start can set: in a
-session not started by `bin/kad` and with a shell to run it, it asks
-whether audit mode is wanted (plus the audit repository and extra domains
-the first time), runs `kad --prepare` with the answers, and asks whether
-to restart under the sandbox runtime, in a new terminal window with the
-orchestrator already started, or continue here; skipped under the
-launcher, on a resumed flow, and in a session with no Bash. The sandbox
+setup; 0.14.0) asks nothing: the launcher `bin/kad` is the one way a flow
+runs (it fences the session, turns audit mode on and approves the
+permission set once per project), so a session under the sandbox runtime
+is told so in one line and goes on, and a plain `claude` session is told
+the one command to type (`kad` from the project's root) and stopped; a
+session with no Bash cannot tell and goes on to the chunk loop's own
+check. Nothing restarts, prepares or opens a window (0.13.1's relaunch
+did, and lost two runs' transcripts). The sandbox
 check (`skills/orchestrator/scripts/sandbox_check.py`) runs first in the
 loop, before any question, and before every launch after that: the plugin cannot ship
 the settings that fence an unattended code writer, so the script probes
