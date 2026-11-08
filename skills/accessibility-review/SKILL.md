@@ -7,14 +7,28 @@ description: Verify whether a UI-touching slice's rendered artifact — a screen
 
 ## What you're producing
 
-Three modes, told apart by what the task hands you. **Design time** (a
+Four modes, told apart by what the task hands you. **Design time** (a
 screen-design mockup, the slice's placeholder still unfilled): the full
 review below and the slice's accessibility criteria. **Smoke run** (the
 orchestrator's chunk loop hands you a chunk's Done when and a report path):
 the "Smoke run" section below, nothing else. **Slice review** (the whole
 built slice's diff at the chunk loop's D step): the full review below on
 the built screens, every state, in the shared report format, no criteria
-rewritten.
+rewritten. **Criteria walk** (the chunk loop's D step hands you the
+slice's criteria by path, the start command and a report path ending in
+`-walk.md`): the "Criteria walk" section below, nothing else.
+
+**Every mode that starts the app starts it through the launcher the task
+hands you** (`scratch_run.py`, by path, with a scratch folder): the
+app's data paths given explicitly inside that folder, `HOME` pointed
+there, a made-up ledger (the project's fixture or one you build), the
+project's fake credential tool or a disposable store, never the owner's
+login Keychain, not even to read, no provider connection started, and
+the folder removed after (`scratch_run.py --clean`). You never open the
+owner's data directory; the launcher refuses a path outside the folder,
+and the orchestrator hashes the real data around your launch. Two of
+slice 2's smoke runs started the app on the owner's real ledger and
+Keychain, and nothing in the text then said not to.
 
 At design time, two things from one pass: a findings report on the artifact
 in front of you, and the slice's actual accessibility acceptance criteria —
@@ -109,9 +123,17 @@ live in the target directory above the report's records directory: the
 slice file, the design, the criteria this skill owns) and check the code
 against those criteria, under its own heading, `## Against the
 criteria`, in the same format; a finding here may cite the criterion it
-fails. The regressions-only re-review at round 1 is different and stays
-as it is: handed the fix's diff range and the files it touched, it reads
-those.
+fails. In the same section, restate every accepted deferral the slice
+file carries (its `Still open` and `Explicitly deferred` items, each
+marked `Usable without it`) as a finding of its own, "the slice ships
+with <X> undecided; consequence <Y>", Medium when the consequence is
+something a person meets on the screen (a permanent state, an action
+with no way back), Low otherwise: an accepted deferral is a fact about
+what ships, not something a review drops because a document accepted it
+(slice 2's deferred "changing a merchant's general rule" was accepted by
+six reviewers and found by a cold read as a misclick with no undo). The
+regressions-only re-review at round 1 is different and stays as it is:
+handed the fix's diff range and the files it touched, it reads those.
 
 Why the order: a reviewer handed nothing traced the seam in one pass and
 confirmed a second bug by running it, where six handed the documents
@@ -130,33 +152,42 @@ question, does the chunk work for a person using it, and it is the one
 browser-driving launch per round:
 
 1. **Start the app** the way the README says (or, before a README exists,
-   the manifest's documented command), from the project root, with Bash,
-   in the background, and wait until it answers. If it does not start,
-   write one Critical finding titled "the app does not start from the
-   documented command" with the command and the last lines of its output,
-   and stop.
+   the manifest's documented command), from the project root, through
+   the launcher the task hands you (`python3 -I <scratch_run.py> --scratch
+   '<folder>' --project '<root>' --env <NAME>=<relative path> … -- <the
+   start command>`, in the background), and wait until it answers. If it
+   does not start, write one Critical finding titled "the app does not
+   start from the documented command" with the command and the last
+   lines of its output, and stop. If the launcher refuses (a path outside
+   the folder), that refusal is the Critical, quoted.
 2. **Drive the chunk's Done when** (the task hands you the line) through
-   the real browser with the Chrome tools: each runnable item in turn.
-   Each item that does not hold is one finding, Critical when the chunk's
-   main path does not work, High otherwise, with what you did and what
-   you saw. **No browser is a finding, never a pass.** When the first
-   Chrome tool call answers that no browser is connected (or the tools
-   are not there), check what HTTP requests and the served markup can
-   show, and write for everything else one Medium finding titled exactly
-   `browser checks not run`, listing each Done when item and each
-   accessibility criterion you could not drive (focus order and the
-   visible focus ring, live announcements, reduced motion, the narrow
-   layout, the console): the loop records it as owed, hands it to no
-   fixer, and carries it into the pull request as the owner's checklist.
-   Its `## Result` is then `FAIL`. A report that says `PASS` with a note
-   that the browser was unavailable hides what was not checked (run 3,
-   every UI chunk).
+   the real browser with the Chrome tools, never a DOM library or a
+   headless substitute: each runnable item in turn, with one screenshot
+   per state reached, saved under the records directory
+   (`smoke/chunk-<k>-r<i>/<n>-<state>.png`) and named in the report.
+   Slice 2's eight happy-dom smoke runs said the UI chunks worked; the
+   owner's real browser the next day found confirmations drawn 2,000 px
+   above the viewport. Each item that does not hold is one finding,
+   Critical when the chunk's main path does not work, High otherwise,
+   with what you did, what you saw and the screenshot. **No browser is a
+   finding, never a pass.** When a Chrome tool call answers that no
+   browser is connected (or the tools are not there), check what HTTP
+   requests and the served markup can show, and write for everything else
+   one Medium finding titled exactly `browser checks not run`, listing
+   each Done when item and each accessibility criterion you could not
+   drive (focus order and the visible focus ring, live announcements,
+   reduced motion, the narrow layout, the console): the loop records it
+   as owed, hands it to no fixer, and carries it into the pull request as
+   the owner's checklist. Its `## Result` is then `FAIL`. A report that
+   says `PASS` with a note that the browser was unavailable hides what
+   was not checked (run 3, every UI chunk).
 3. **Check the chunk's accessibility criteria** (the task hands you the
    file) on the built screen, as the eight checks say, in every state the
    chunk's Done when reaches; each failure is a finding at the severity
    the Severity section gives it.
-4. **Stop the app** and leave no process behind: kill what you started
-   and check the port is free.
+4. **Stop the app** and leave no process behind: kill what you started,
+   check the port is free, and remove the scratch folder
+   (`scratch_run.py --clean '<folder>'`).
 5. **Write the report** to the path the task names, in the shared format,
    opening with a `## Result` line of `PASS` when there are no findings
    and `FAIL` otherwise; Critical, High and Medium only, no Low per
@@ -169,6 +200,61 @@ a fresh temporary directory, following the README from its first command
 and nothing else, with the slice's thin path as the Done when; a README
 that does not get you to a running app is the Critical above, and the
 clone is removed afterwards.
+
+## Criteria walk: the acceptance criteria in a real browser, at D
+
+The chunk loop's D step launches you once per UI-touching slice as the
+**criteria walker**: the owner's own check, done by an agent before the
+owner has to ("if the AC is a checklist, an agent should open the browser
+and check all AC points pass manual testing, maybe excluding screen
+reader"). Slice 2's eight smoke runs and six reviewers passed a screen
+whose confirmations and failures drew 2,000 px above the viewport; the
+owner found it in the first real browser session.
+
+1. **The checklist** is every criterion the task hands you by path: the
+   slice file's Given/When/Then list, the accessibility criteria (A), and
+   the security (S) and reliability (R) criteria a browser can reach (a
+   refusal shown, a failure state drawn, a retry visible); a criterion a
+   browser cannot reach (a file's encryption at rest, a log's content)
+   is listed as NOT REACHABLE with that reason, not dropped. Screen-reader
+   announcements are the owner's manual checks: listed as NOT REACHABLE
+   with the reason `the owner's manual screen-reader check`, and nothing
+   else is deferred to the owner.
+2. **Start the app** through the launcher as the smoke run does (the data
+   rule), seed the made-up ledger with what the criteria need (a row to
+   categorize, a hold to cancel), and open it in the real browser with
+   the Chrome tools.
+3. **Drive each criterion** as a person would, at the default width and
+   again at the narrow width (360 px) when the criterion shows a layout,
+   with one screenshot per state reached, saved under the records
+   directory (`walk/<criterion id>-<state>.png`). A criterion holds when
+   what the Then clause says is what the screen shows, where a person
+   would look for it (a message drawn outside the viewport does not
+   hold). A FAIL is also a finding in the shared format below, Critical
+   when a required action has no path, High otherwise, with the
+   screenshot named.
+4. **Stop the app**, remove the scratch folder, leave no process behind.
+5. **Write the report** to the path the task names: `# Criteria walk:
+   <slice>`, then `## Criteria walked`, a table with exactly these
+   columns, one row per criterion, in the documents' order:
+
+   ```markdown
+   | criterion | result | how | screenshot |
+   |---|---|---|---|
+   | AC1 Given … When … Then … | PASS | what you did, in one line | walk/ac1-after.png |
+   | A2 … | NOT REACHABLE | the owner's manual screen-reader check | — |
+   ```
+
+   `result` is one of `PASS`, `FAIL`, `NOT REACHABLE`; `how` says what
+   you drove or why you could not; then `## Findings` (a `###` per FAIL,
+   `No findings.` when every reachable row passed). `rounds_record.py`
+   reads the table into the sidecar and prints `walk <pass>/<fail>/<not
+   reachable>` for the D line; the fixer gets the FAIL findings; the NOT
+   REACHABLE rows go to the owner's checklist issue. With no browser
+   answering, every row is NOT REACHABLE with `no browser connected` and
+   the report carries the `browser checks not run` Medium as the smoke run
+   does. Read nothing else: not the diff, not a reviewer's report, not
+   the design.
 
 ## Drive it, don't just read it
 
@@ -185,6 +271,15 @@ for real:
 - **Compute contrast against the values actually rendered**, not the
   values you'd guess from a token name — a token can drift from what
   actually painted.
+
+Under the launcher (`kad`) the Chrome tools are there: open each mockup
+file in the browser (the `file://` path, or `screen-design`'s served
+copy), take the measurements from the rendered page (computed styles for
+contrast, `document.activeElement` after each Tab, the bounding boxes for
+touch targets), at the default width and at 360 px, and keep one
+screenshot per mockup beside `screen-design`'s under `visual-ux/`
+(`<mockup>-a11y.png`). Slice 2's mockups were never rendered and the
+layout a long table forces was invisible until the built screen.
 
 Fall back to a markup-only read only when nothing in this session can
 actually load the artifact, and say so explicitly in the report rather
@@ -366,7 +461,9 @@ approval.
 
 ## Output format
 
-The report is `# Accessibility review: <slice/artifact name>` with these
+A smoke run writes `## Result` and `## Findings` only; a criteria walk
+writes `## Criteria walked` and `## Findings` only (above). Otherwise the
+report is `# Accessibility review: <slice/artifact name>` with these
 sections: `## What was checked, and how` (which artifact(s), whether
 driven live in a browser or read statically, and why if it fell back,
 which states were covered); `## Findings` in the shared format below;
@@ -377,8 +474,7 @@ distinguishable); `## Not yet verifiable` (what a static mockup can't
 confirm and why, carried forward rather than silently dropped); `## Open
 questions` (anything genuinely unresolved, including any finding this
 pass couldn't get fixed, and who resolves it next: a named persona and
-skill, never the implementer). A smoke run writes `## Result` and `##
-Findings` only.
+skill, never the implementer).
 
 ## Finding report format
 

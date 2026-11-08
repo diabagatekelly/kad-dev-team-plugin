@@ -73,7 +73,38 @@ module directories as the orchestrator's B step lists them):
    is registered in some test file: the title of a `test(`, `it(` or
    `describe(` call, or a `def <name>(`, never a mention in a comment or
    a fixture. A Done-when test a fix renamed or dropped (a mangled
-   seam-test name, run 3's chunk 8) fails here, at the gate.
+   seam-test name, run 3's chunk 8) fails here, at the gate. What counts
+   as a name on the Done when line: a double-quoted string, or a
+   backticked string with whitespace in it; a backticked single word
+   (`POST`, `npm test`'s `test`) is a word of the prose, never a test
+   name. Both sides are compared after NFC normalisation, case folded,
+   whitespace folded, with a `seam "…"` wrapper stripped from either side
+   (a builder that titled its test `seam "cancels…"` and a plan that
+   wrote `seam "cancels…"` name the same test). Slice 2 failed this check
+   three times on exactly those three shapes.
+7. transcript (report-only, with `--agent-transcript <path>` or `--agent
+   <id>`): the builder's or fixer's own transcript, replayed. Counts the
+   **shell edits**: every Bash command that wrote a file inside the tree
+   (`>` and `>>` redirections, `tee`, `sed -i`, `perl -i`, `cp`, `mv`,
+   `rm` on a tracked file, and a `python3 -`/`python3 -c`/`node -e`
+   script that opens a path for writing), one per file per command;
+   plus, as the catch-all, every tracked file that changed between the
+   agent's first and last commit on the branch without an `Edit` or
+   `Write` call naming it. A formatter run (`prettier --write`, `eslint
+   --fix`, the manifest's `format` script through its runner) is not a
+   shell edit, and a write outside the tree (the scratchpad) is not one.
+   Prints `shell edits <n> (reported <m>)`, `m` being the number the
+   agent's own hand-back claimed (`shell edits <m>` in its last message,
+   `?` when it claimed none), and one `shell edit: <file> (<command>)`
+   line per count. Then the **commit rule**: a Bash command that runs
+   `git commit` in the same command line as the test command (`npm test
+   … && git commit`, `test | grep … && commit`) is printed as `commit
+   chained to its test run: <sha>`; when the command's recorded output
+   shows a failing summary (`ℹ fail <n>`, n > 0), `committed on a red
+   run: <sha> (fail <n>)`. Slice 2's chunk 2 builder reported 1 shell
+   edit and made 9; its chunk 4 builder committed on a red run through a
+   grep chain and reported green. Neither fails the gate (the suite check
+   judges the tree as it is); both reach the C line.
 
 After the checks, two report-only `INFO` lines (never part of the
 verdict; also under `metrics` in the JSON), computed over the changed
@@ -135,6 +166,7 @@ Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/validation_gate.py [--project DIR]
            [--module-dir src/lending ...] [--protect docs/x/design.md ...]
            [--test-cmd "npm test"] [--typecheck-cmd CMD] [--lint-cmd CMD] [--timeout 600]
            [--coverage] [--min-line 90] [--min-branch 80] [--json out.json]
+           [--agent-transcript PATH | --agent ID [--projects-dir DIR] [--session ID]]
        python3 -I .../validation_gate.py [--project DIR] --record-baseline FILE
        python3 -I .../validation_gate.py [--project DIR] --baseline FILE --protect PATH ... --accept-protected PATH
        (from this repository: python3 -I skills/orchestrator/scripts/validation_gate.py ...)
@@ -722,22 +754,62 @@ def metrics(project, changed, module_dirs):
 TEST_NAME_LIMIT = 2 * 1024 * 1024  # bytes of a test file read for registered names
 
 
+def test_key(name):
+    """A test title as the gate compares it: NFC-normalised, case folded,
+    whitespace folded, surrounding quotes and a `seam "…"`/`seam …`
+    wrapper stripped. The same function runs over the plan's name and the
+    registered title, so either side may carry the wrapper or differ in
+    case or encoding (slice 2's three false FAILs)."""
+    import unicodedata
+    n = unicodedata.normalize("NFC", name).strip()
+    n = re.sub(r"^\s*seam\s*:?\s*", "", n, flags=re.I)
+    n = n.strip().strip("\"'`“”‘’").strip()
+    return re.sub(r"\s+", " ", n).casefold()
+
+
+TITLE_CALLS = re.compile(r"\b(?:test|it|describe)\s*\(\s*(['\"`])((?:\\.|(?!\1).)*)\1", re.S)
+PY_DEFS = re.compile(r"\bdef\s+(\w+)\s*\(")
+
+
+def registered_titles(text):
+    """Every title registered in a test file: `test(`, `it(` and `describe(`
+    call titles (JS/TS; a template literal is taken as written) and
+    `def <name>(` names (Python), as comparison keys."""
+    keys = {test_key(m.group(2).replace("\\'", "'").replace('\\"', '"')) for m in TITLE_CALLS.finditer(text)}
+    keys |= {test_key(m.group(1)) for m in PY_DEFS.finditer(text)}
+    return keys
+
+
 def registered(name, text):
     """Is `name` a registered test in this file: the title of a `test(`, `it(` or
     `describe(` call (JS/TS), or a `def <name>(` (Python)? A mention in a
-    comment, a fixture or another test's title does not count."""
-    quoted = r"\b(?:test|it|describe)\s*\(\s*(['\"`])" + re.escape(name) + r"\1"
-    pydef = r"\bdef\s+" + re.escape(name) + r"\s*\("
-    return re.search(quoted, text) is not None or re.search(pydef, text) is not None
+    comment, a fixture or another test's title does not count. Compared
+    through `test_key` on both sides."""
+    return test_key(name) in registered_titles(text)
 
 
 DONE_WHEN_QUOTED = re.compile(r'"([^"\n]+)"|`([^`\n]+)`')
 
 
+def done_when_names(line):
+    """The test names a Done when line quotes: every double-quoted string,
+    and a backticked string that holds whitespace. A backticked single
+    word (`POST`, `npm`) is prose, never a test name; the `seam` word
+    before a quote is the plan's marker, not part of the name."""
+    names = []
+    for a, b in DONE_WHEN_QUOTED.findall(line):
+        if a:
+            names.append(a)
+        elif b and re.search(r"\s", b.strip()):
+            names.append(b)
+    return [n for n in names if test_key(n)]
+
+
 def done_when_tests(report_path, chunk):
     """The test names quoted on the chunk plan's Done when line for chunk <k>
-    (double quotes or backticks), read from the implementation report so no
-    plan text ever passes through a shell command line."""
+    (double quotes, or backticks around more than one word), read from the
+    implementation report so no plan text ever passes through a shell
+    command line."""
     try:
         with open(report_path, encoding="utf-8", errors="replace") as fh:
             text = fh.read()
@@ -749,8 +821,7 @@ def done_when_tests(report_path, chunk):
     line = re.search(r"^\s*[-*]\s*\*\*Done when\*\*\s*:?\s*(.+)$", section.group(1), re.M)
     if not line:
         raise SystemExit(f"--expect-tests-from: chunk {chunk} has no Done when line in {report_path}")
-    names = [a or b for a, b in DONE_WHEN_QUOTED.findall(line.group(1))]
-    return [n for n in names if n.strip()]
+    return done_when_names(line.group(1))
 
 
 def check_expected_tests(project, names):
@@ -771,11 +842,217 @@ def check_expected_tests(project, names):
                     text = fh.read(TEST_NAME_LIMIT)
             except OSError:
                 continue
+            titles = registered_titles(text)
             for n in names:
-                if n not in found and registered(n, text):
+                if n not in found and test_key(n) in titles:
                     found.add(n)
     missing = [n for n in names if n not in found]
     return {"passed": not missing, "names": list(names), "missing": missing}
+
+
+# ---- the agent's transcript: shell edits and the commit rule -----------------
+
+FORMATTER = re.compile(r"\b(?:prettier\b[^|;&\n]*\s(?:--write|-w)\b|eslint\b[^|;&\n]*--fix\b|(?:npm|pnpm|yarn|bun)\s+run\s+format\b|"
+                       r"corepack\s+pnpm\s+run\s+format\b|gofmt\s+-w\b|black\s|ruff\s+format\b)")
+REDIRECT = re.compile(r"(?<![0-9&<>=\-])>{1,2}\s*(?!&)([^\s;&|)`'\"]+|'[^']+'|\"[^\"]+\")")
+HEREDOC = re.compile(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n")
+INPLACE = re.compile(r"\b(?:sed|gsed)\s+(?:-[a-zA-Z]*i\S*|--in-place\S*)|\bperl\s+-[a-zA-Z]*i\S*|\bawk\s+-i\b")
+SCRIPT_WRITE = re.compile(r"\bopen\s*\(\s*[^)]*,\s*['\"][wax]b?\+?['\"]|\.write_text\(|\.write_bytes\(|writeFileSync\(|writeFile\(|appendFileSync\(|appendFile\(|fs\.promises\.writeFile")
+PATH_LITERAL = re.compile(r"^\s*(?:const|let|var)?\s*\w+\s*=\s*['\"]([^'\"\n]+)['\"]\s*;?\s*$|\bopen\s*\(\s*['\"]([^'\"\n]+)['\"]|write(?:File(?:Sync)?|_text|_bytes)\s*\(\s*['\"]([^'\"\n]+)['\"]", re.M)
+TEST_CMDS = re.compile(r"\b(?:npm|pnpm|yarn|bun)\s+(?:run\s+)?test\b|\bnode\s+[^|;&\n]*--test\b|\bpytest\b|\bvitest\b|\bjest\b|\bcorepack\s+pnpm\s+test\b")
+SHA_LINE = re.compile(r"^\s*([0-9a-f]{7,40})\s*$", re.M)
+REPORTED = re.compile(r"shell edits?\W{0,6}(\d+)", re.I)
+
+
+def tool_calls_of(path):
+    """(calls, results, last_text) of one agent transcript: each tool_use once
+    by id (the audit hook records every Bash call twice, once with a `cd`
+    prefix), the tool_result text by tool_use id, and the agent's last
+    text (its hand-back)."""
+    calls, results, last_text = [], {}, ""
+    seen = set()
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            content = (row.get("message") or {}).get("content") or []
+            if not isinstance(content, list):
+                continue
+            for block in content:
+                if not isinstance(block, dict):
+                    continue
+                if row.get("type") == "assistant" and block.get("type") == "tool_use" and block.get("id") not in seen:
+                    seen.add(block.get("id"))
+                    calls.append(block)
+                    if block.get("name") == "SubagentHandback":
+                        text = json.dumps(block.get("input") or {})
+                        last_text = text
+                elif row.get("type") == "assistant" and block.get("type") == "text" and block.get("text", "").strip():
+                    last_text = block["text"]
+                elif row.get("type") == "user" and block.get("type") == "tool_result":
+                    c = block.get("content")
+                    if isinstance(c, list):
+                        c = "\n".join(x.get("text", "") for x in c if isinstance(x, dict))
+                    results[block.get("tool_use_id")] = c or ""
+    return calls, results, last_text
+
+
+def split_heredocs(command):
+    """(the command text with heredoc bodies removed, [body, ...])."""
+    bodies, out, i = [], [], 0
+    lines = command.split("\n")
+    while i < len(lines):
+        line = lines[i]
+        m = HEREDOC.search(line + "\n")
+        out.append(line)
+        i += 1
+        if m:
+            delim, body = m.group(2), []
+            while i < len(lines) and lines[i].strip() != delim:
+                body.append(lines[i])
+                i += 1
+            i += 1  # the delimiter line
+            bodies.append("\n".join(body))
+    return "\n".join(out), bodies
+
+
+def tree_path(project, token, tracked):
+    """The project-relative path a shell token names, when it is inside the
+    tree (relative, or absolute under the project); None for the
+    scratchpad, /dev/null, a variable or a flag."""
+    token = token.strip().strip("'\"")
+    if not token or token.startswith(("-", "$", "/dev/")) or "$(" in token:
+        return None
+    full = token if os.path.isabs(token) else os.path.join(project, token)
+    try:
+        rel = os.path.relpath(os.path.abspath(full), project).replace(os.sep, "/")
+    except ValueError:
+        return None
+    if rel.startswith("..") or rel in (".", ""):
+        return None
+    if rel.split("/")[0] in SKIP_WALK or rel.endswith((".bak", ".tmp", ".orig", "~")):
+        return None
+    if tracked is not None and rel not in tracked and not os.path.isfile(os.path.join(project, rel)):
+        return None  # a path that never existed in the tree
+    return rel
+
+
+def shell_writes(project, command, tracked):
+    """The tree files one Bash command wrote through the shell, distinct, or
+    [] when the command is a formatter run or writes nothing."""
+    text, bodies = split_heredocs(command)
+    files = set()
+    for segment in re.split(r"&&|\|\||;|\n", text):
+        if FORMATTER.search(segment):
+            continue
+        for m in REDIRECT.finditer(segment):
+            rel = tree_path(project, m.group(1), tracked)
+            if rel:
+                files.add(rel)
+        if INPLACE.search(segment):
+            for tok in re.findall(r"(?<=\s)(?!-)[\w./@-]+\.[A-Za-z0-9]+(?=\s|$)", segment):
+                rel = tree_path(project, tok, tracked)
+                if rel:
+                    files.add(rel)
+        m = re.match(r"\s*(?:cp|mv)\s+(?:-\w+\s+)*(?:\S+\s+)+(\S+)\s*$", segment)
+        if m:
+            rel = tree_path(project, m.group(1), tracked)
+            if rel:
+                files.add(rel)
+        m = re.match(r"\s*rm\s+(?:-\w+\s+)*(.+)$", segment)
+        if m:
+            for tok in m.group(1).split():
+                rel = tree_path(project, tok, tracked)
+                if rel and tracked is not None and rel in tracked:
+                    files.add(rel)
+        m = re.search(r"\b(?:python3?|node)\s+-[ce]\s+(['\"])(.*)\1", segment, re.S)
+        if m:
+            bodies.append(m.group(2))
+    for body in bodies:
+        if not SCRIPT_WRITE.search(body):
+            continue
+        for m in PATH_LITERAL.finditer(body):
+            rel = tree_path(project, m.group(1) or m.group(2) or m.group(3) or "", tracked)
+            if rel and ("/" in rel or "." in rel):
+                files.add(rel)
+    return sorted(files)
+
+
+def check_transcript(project, path, base, test_cmd):
+    """The report-only replay of one agent transcript (docstring point 7)."""
+    calls, results, last_text = tool_calls_of(path)
+    try:
+        tracked = set(git(project, "ls-files").stdout.splitlines())
+    except SystemExit:
+        tracked = None
+    edits, named = [], set()
+    for call in calls:
+        name, inp = call.get("name"), call.get("input") or {}
+        if name in ("Edit", "Write", "MultiEdit", "NotebookEdit"):
+            fp = inp.get("file_path") or inp.get("path") or inp.get("notebook_path") or ""
+            rel = tree_path(project, fp, None)
+            if rel:
+                named.add(rel)
+        elif name == "Bash":
+            cmd = inp.get("command") or ""
+            for rel in shell_writes(project, cmd, tracked):
+                head = cmd.strip().split("\n")[0]
+                edits.append((rel, head[:60] + ("…" if len(head) > 60 else "")))
+    counted = {rel for rel, _ in edits}
+    catch_all = []
+    if base and base != "HEAD":
+        try:
+            changed = git(project, "diff", "--name-only", f"{base}..HEAD").stdout.splitlines()
+        except SystemExit:
+            changed = []
+        catch_all = [f for f in changed if f and f not in named and f not in counted]
+    m = REPORTED.search(last_text or "")
+    reported = m.group(1) if m else "?"
+    commits = []
+    for call in calls:
+        if call.get("name") != "Bash":
+            continue
+        cmd = (call.get("input") or {}).get("command") or ""
+        text, _ = split_heredocs(cmd)
+        if not re.search(r"\bgit\s+commit\b", text):
+            continue
+        chained = bool(TEST_CMDS.search(text) or (test_cmd and test_cmd.strip() in text))
+        out = results.get(call.get("id"), "")
+        fails = re.findall(r"ℹ fail (\d+)", out)
+        sha_m = SHA_LINE.search(out)
+        sha = sha_m.group(1)[:7] if sha_m else "sha unknown"
+        red = fails and fails[-1] != "0"
+        if chained or red:
+            commits.append({"sha": sha, "chained": chained, "red": bool(red), "fail": fails[-1] if fails else None,
+                            "command": text.strip().split("\n")[0][:80]})
+    return {"passed": True, "report_only": True, "transcript": path, "shell_edits": len(edits) + len(catch_all),
+            "edits": edits, "catch_all": catch_all, "reported": reported, "commits": commits}
+
+
+def transcript_lines(c):
+    lines = [f"INFO  transcript: shell edits {c['shell_edits']} (reported {c['reported']})"]
+    for rel, head in c["edits"]:
+        lines.append(f"INFO  shell edit: {rel} ({head})")
+    for rel in c["catch_all"]:
+        lines.append(f"INFO  shell edit: {rel} (changed in the range with no Edit or Write naming it)")
+    for k in c["commits"]:
+        if k["red"]:
+            lines.append(f"INFO  committed on a red run: {k['sha']} (fail {k['fail']}; {k['command']})")
+        else:
+            lines.append(f"INFO  commit chained to its test run: {k['sha']} ({k['command']})")
+    return lines
+
+
+def agent_transcript_path(agent_id, project, projects_dir, session):
+    """`<projects dir>/<project key>/<session>/subagents/agent-<id>.jsonl`, the
+    file Claude Code writes for a subagent of this session."""
+    key = re.sub(r"[^A-Za-z0-9]", "-", os.path.abspath(project))
+    aid = agent_id if agent_id.startswith("agent-") else f"agent-{agent_id}"
+    if not aid.endswith(".jsonl"):
+        aid += ".jsonl"
+    return os.path.join(projects_dir, key, session or "", "subagents", aid)
 
 
 SKIP_WALK = {"node_modules", "dist", "build", "coverage", "__pycache__", ".venv", "venv"}
@@ -894,6 +1171,10 @@ def main():
     p.add_argument("--coverage", action="store_true")
     p.add_argument("--min-line", type=float, default=90)
     p.add_argument("--min-branch", type=float, default=80)
+    p.add_argument("--agent-transcript", metavar="PATH", help="the builder's or fixer's transcript, replayed for shell edits and the commit rule (report-only)")
+    p.add_argument("--agent", metavar="ID", help="the agent id instead of its path: resolved under --projects-dir / this project / $CLAUDE_CODE_SESSION_ID / subagents/")
+    p.add_argument("--projects-dir", default=os.path.expanduser("~/.claude/projects"))
+    p.add_argument("--session", default=os.environ.get("CLAUDE_CODE_SESSION_ID"), help="the session whose subagent --agent names (default: CLAUDE_CODE_SESSION_ID)")
     p.add_argument("--json")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -949,6 +1230,12 @@ def main():
         expected += [n for n in done_when_tests(a.expect_tests_from, a.chunk) if n not in expected]
     if expected:
         report["checks"]["tests"] = check_expected_tests(project, expected)
+    transcript = a.agent_transcript or (agent_transcript_path(a.agent, project, a.projects_dir, a.session) if a.agent else None)
+    if transcript:
+        if os.path.isfile(transcript):
+            report["transcript"] = check_transcript(project, transcript, base, a.test_cmd)
+        else:
+            report["transcript"] = {"missing": transcript}
     report["passed"] = all(c["passed"] for c in report["checks"].values())
     report["metrics"] = metrics(project, [f for f in files if os.path.isfile(os.path.join(project, f))], module_dirs)
 
@@ -1002,6 +1289,12 @@ def main():
             print(f"--- {name} output, last 30 lines ---\n" + tail + "\n---")
     for line in metric_lines(report["metrics"]):
         print(line)
+    if "transcript" in report:
+        if "missing" in report["transcript"]:
+            print(f"INFO  transcript: not found at {report['transcript']['missing']}; shell edits stay the agent's reported number")
+        else:
+            for line in transcript_lines(report["transcript"]):
+                print(line)
     print("validation gate:", "PASS" if report["passed"] else "FAIL")
     return 0 if report["passed"] else 1
 

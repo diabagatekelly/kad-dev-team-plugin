@@ -19,5 +19,5 @@ says it was cancelled.
 
 ## Explicitly deferred
 
-- Member self-service cancelling.
-- Telling the next member they moved up the queue.
+- Member self-service cancelling. Usable without it: members ask the desk, as they do today.
+- Telling the next member they moved up the queue. Usable without it: the queue order is already right; the member learns of it on their next visit or notice, as today.

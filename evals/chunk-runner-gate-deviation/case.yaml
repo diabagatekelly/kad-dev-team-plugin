@@ -1,0 +1,82 @@
+schema_version: "1.0"
+name: chunk-runner-gate-deviation
+description: "The chunk runner's step 2, the deviation half of design §11 case 5: chunk 1's commit touches lending/hold.ts and adds test/hold.test.ts, neither on the plan's Files line but inside a design module or a test file. The gate, run with --module-dir for the design's modules, passes and prints the deviations; the runner records them for its hand-back, launches no fixer, edits no plan entry, and stops before the review as told."
+tags: [chunk-runner, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the chunk runner the orchestrator launched for chunk 1 of 3 of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:chunk-runner` first and follow it.
+
+    What the orchestrator hands you. Chunk 1 of 3: **Title**: Cancel a member's hold on a title. **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes". **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts. **Done when**: seam "cancels a member's hold through the real in-memory queue", `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green. **Touches**: storage.
+
+    The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI.
+
+    Resume point: the round stopped after the build: the implementer committed chunk 1 (the handoff names the commit and the agent); next is step 2, the gate. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Stop once the gate has run and its result is known, before any launch: hand back the line as far as it goes with `stopped at step 2` appended.
+  model: opus
+  max_turns: 40
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: chunk-runner-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:chunk-runner"'
+    min: 1
+  - type: tool_used
+    name: orchestrator-not-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 0
+    max: 0
+  - type: regex
+    name: log-not-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
+    match: not_contains
+  - type: regex
+    name: no-records-commit
+    target: trace
+    pattern: 'git commit[^"]*Records:'
+    match: not_contains
+  - type: tool_used
+    name: gate-run-with-the-design-modules
+    tool: Bash
+    input_match: 'validation_gate\.py[\s\S]*--module-dir'
+    min: 1
+  - type: file_exists
+    name: gate-file-saved
+    path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+  - type: regex
+    name: gate-passes-and-names-the-deviation
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+    pattern: 'scope[^\n]*deviation[^\n]*lending/hold\.ts[\s\S]*validation gate: PASS'
+  - type: regex
+    name: gate-names-the-test-file-deviation
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+    pattern: 'scope[^\n]*deviation[^\n]*test/hold\.test\.ts[\s\S]*validation gate: PASS'
+  - type: tool_used
+    name: no-fixer-no-reviewer
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: plan-entry-not-edited
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{{[^{{}}]*"(?:file_path|path)":"[^"]*implementation-report-slice-001\.md"'
+    match: not_contains
+  - type: llm
+    name: deviation-recorded-not-failed
+    focus: last_message
+    weight: 1
+    criteria: |
+      The gate's scope check is three-way: a changed file on the chunk's Files line is in scope; a file inside a design module but off the Files line, or a test file off it, is a deviation, printed by the gate and carried on the hand-back as `deviations 2`, not a failure; only a file outside every module and test directory fails to a fixer. Here `lending/hold.ts` gained a method the chunk's Files line did not name, and `test/hold.test.ts` is a new test file the Files line did not name either.
+
+      PASS if the reply hands back the gate as passed with two deviations naming `lending/hold.ts` and `test/hold.test.ts` (or the builder's stated reasons for them), launches nothing to fix them, and stops before the review.
+
+      FAIL if it treats the deviation as a gate failure, hands it to a fixer, widens the plan's Files line itself, or launches the reviewer.

@@ -99,6 +99,7 @@ the full roster is built, delete it and scrub any remaining source mentions.
 | 9 | `ux-designer` *(optional)* | Visual & interaction design — screen layout, component composition, and interaction flow for a slice's UI-touching parts, decided before code is written. Two skills, establish-once/apply-per-slice like `software-architect`'s: `design-system` (once per project, also handles review/evolve) and `screen-design` (per slice) | Borrowed/synthesized (weak area) | Done — cut if you don't do frontend work; hands off to `accessibility-engineer` for WCAG-correctness review, doesn't verify compliance itself. Real cases (2026-10-11): `design-system-payfine-phase1`–`3` (9/9, 12/12, 19/21) and `screen-design-payfine` (33/33; the baseline writes no mockups). The persona's save location, hand-backs and no-browser handling now live in both skills; calibration added a ratio for every text colour and kept scratch candidates out of `visual-ux/` |
 | 10 | `architecture-cartographer` | Maintains a mechanically-derived map of the codebase's actual structure — real dependency graph, public exports, external packages, each module's importance tier as already decided by `architecture-design` — and answers "does something like this already exist" queries against it. Doesn't decide architecture, doesn't judge whether a flagged similarity is a real duplicate or coincidental, doesn't grade anything itself; supplies facts and mechanical flags, not verdicts. Two skills: `map-query` (read-only, consulted pre-write) and `map-update` (regenerate + diff against the prior map, post-write) | Infrastructure for the rest of the roster | Done — the roster's tenth and last planned persona, and its third `background: true` one; consulted inline by `architecture-design` and `tdd-implementation` the same way `software-architect` already consults `devsecops-engineer`, and wired into the quarantine flow's Grade/Finalize steps. Real cases (2026-10-11): the map has a fixed home, `docs/architecture-map.md` at the app root; `map-update-cancel-hold` 27/27, `map-query-consults` 3/3 clean, `map-query-no-map` 2/3 (3/3 after the consult fix: a consulted `map-query` hands its report back and the caller carries on, where through the architect agent the report had ended the turn) |
 | 11 | `release-engineer` | Getting finished, reviewed work off the machine — push the slice branch, open the pull request with `pr-writeup`'s body, file the leftover findings as tracker issues, act on `external-review-triage`'s verdicts (push the fixes, reply to the declines, file the deferrals), and write the CI configuration a repository is missing, hardened (pinned action SHAs, least privilege). Owns git and hosting mechanics only; never decides what to build, never edits application code, never pushes to the default branch. Three skills: `delivery` (files only the standing Mediums; Lows stay in the pull request body), `ci-pipeline`, and since 2026-10-25 `repo-bootstrap` in its smallest form (`git init`, the default branch, `.gitignore`, a private `gh repo create` and the first push, each decided with the owner through `AskUserQuestion` and recorded in the technology-bootstrap document; the chunk loop's A step routes there when the target has no repository or no `origin`); `deployment` is phase 2 | Borrowed/synthesized (weak area) | Building (2026-10-24) — added with implementation flow v3 (`.synthesis/implementation-flow-v3.md` §4c, §4.E) to close the roster's post-implementation gaps; `repo-bootstrap` added with v4 after the second real run improvised the repository in the orchestrator's own turn. `devsecops-engineer` keeps its "never writes pipeline config" boundary and reviews the result through `operational-readiness` once a deployment path exists. All three skills run inline in the orchestrator's session because the push and the `gh` calls use the session's credentials and `repo-bootstrap` asks; the agent is `background: false` for that reason. No eval cases yet; the first real delivery was the first test of `delivery` and `ci-pipeline` |
+| 12 | `chunk-runner` | Runs one chunk's round of the orchestrator's chunk loop on a context of its own: launches the builder, runs the gate (the builder's transcript replayed for shell edits and the commit rule), launches the combined reviewer and the smoke agent, records the rounds with `rounds_record.py`, launches the fixer and the regressions re-review, and hands back the chunk's log line and nothing else. Never asks the owner, never consults a persona, never writes the log, never commits the records; a `needs-decision` finding or a second gate failure comes back on its line. One skill, `chunk-runner`, which the agent invokes first. | Core strength | Done (0.14.1, 2026-11-08; the v4 design's D9 phase 2, built once slice 2 measured the orchestrator's thread at about 427k cache-read tokens per call and 44% of the slice's cost). Launched by the orchestrator's C step as `model: opus`, `maxTurns: 200`; the old `orchestrator-*` mid-chunk cases became `chunk-runner-*` cases (review round, one fix round, gate deviation, gate outside, the needs-decision hand-back), and two new orchestrator cases grade its side (the launch, the hand-back into the C line). Under the `light` cadence it runs the build, the gate and the smoke run only |
 
 **Rows 7 and 8 were merged.** The roster originally planned
 `security-engineer` (threat-aware review) and `reliability-engineer`
@@ -141,60 +142,77 @@ is told so in one line and goes on, and a plain `claude` session is told
 the one command to type (`kad` from the project's root) and stopped; a
 session with no Bash cannot tell and goes on to the chunk loop's own
 check. Nothing restarts, prepares or opens a window (0.13.1's relaunch
-did, and lost two runs' transcripts). The sandbox
-check (`skills/orchestrator/scripts/sandbox_check.py`) runs first in the
-loop, before any question, and before every launch after that: the plugin cannot ship
-the settings that fence an unattended code writer, so the script probes
-the session's own Bash sandbox from inside it and reads the escape hatches
-off in the settings; a fixable failure gets the `--write-settings` offer,
-and a platform with no sandbox at all (native Windows) gets one question,
-continue unsandboxed or stop, whose answer the log's A line carries (and
-on which `--write-settings` writes the deny rules only). Then up to four
-questions, one per `AskUserQuestion` call: settings, sandbox, the policy
-(heavy, `tdd-implementation`, the default, or lite,
-`tdd-implementation-lite`) and the delegation, whose "yes" is written to
-`planning/delegation-slice-<nnn>.md` so a persona can settle a mid-build
-decision without the owner. The A line carries a budget (5 h, 2 reviewer
-launches per chunk, 1 fixer per scope plus 1 for regressions, 8 consults),
-counted at every chunk boundary. A slice branch is cut, the base recorded,
+did, and lost two runs' transcripts). Before any planning document is read, the orchestrator asks the tracker
+what is open (0.14.1): a pull request from a slice branch routes to the
+external-review triage on every unresolved comment whoever wrote it (the
+flow's own posts carry the footer `— kad-dev-team` and are the only ones
+skipped), and an open Critical or High issue is one question to the owner.
+The sandbox check (`skills/orchestrator/scripts/sandbox_check.py`) runs
+first in the loop, before any question, and before every launch after
+that: the plugin cannot ship the settings that fence an unattended code
+writer, so the script probes the launcher's fence from inside it and reads
+the escape hatches off in the settings; under the launcher a FAIL stops
+the flow with no question. Then at most two questions, one per
+`AskUserQuestion` call: the browser (a UI slice with no browser answering)
+and the delegation, asked once per project and stored, whose "yes" is
+written to `planning/delegation.md` and the per-slice file so a persona
+can settle a mid-build decision without the owner. The A line carries the
+cadence (`loop`, or `light` when the owner's message names the one
+measured arm) and a budget (8 h for a UI slice, 5 h otherwise, 2 reviewer
+launches per chunk, 1 fixer per scope plus 1 for regressions; consults
+counted, never capped), counted at every chunk boundary. A slice branch is cut, the base recorded,
 and the **design-readiness gate** (`readiness_check.py`: every criterion
 and failure path homed in the design, a number on every wait, security
 and reliability agreeing, a mockup per named state, no question routed to
-the implementer, a "Kept for later slices" line, an unusable-reply row)
-routes each failure back to the owning persona before any builder is
-launched. One implementer (`model: sonnet`, since a plugin agent's own
+the implementer, a "Kept for later slices" line, every open or deferred
+item of the slice triaged as usable-without-it or a blocker that goes to
+the owner, an unusable-reply row) routes each failure back to the owning
+persona before any builder is launched, and a new chunk-loop entry
+carries the A line after the last route. One implementer (`model: sonnet`, since a plugin agent's own
 `model:` line is not applied in practice) writes the chunk plan into the
 implementation report, two to eight vertical chunks, each with its
 criteria, files, done check (naming a **seam test** through the real
 composition root with only the external service faked at its wire
-boundary) and territories; then for each chunk a fresh implementer builds
-it on a short context, seam test first and comments only where
-`why-comments` would keep one, and commits it under the chunk's title; the
-mechanical gate (`validation_gate.py`: suite, typecheck, lint, scope
-against the chunk's files plus the design's module directories with
-in-module deviations reported rather than failed, protected documents,
-coverage, report-only comment density and size figures) runs on the
-commit range; then **two launches, never more**: one combined reviewer
-(`code-reviewer`, `model: opus`, applying `code-review`,
-`test-quality-review` and by territory `reliability-review`, one report of
-at most eight Critical/High/Medium findings) and one smoke run
-(`accessibility-engineer` in the browser for UI, `tdd-coach` over HTTP
-otherwise, the app started as the README says). One fix round: a fresh
-fixer for every finding, the gate, a regressions-only re-review on the
-fix's diff, a second and last fixer for the regressions, the gate, done;
-pre-existing findings stand (a Critical or High stops the loop, a Medium
-goes to the pull request body); a `needs-decision` finding launches the
-owning persona once with the delegation file, which writes its own
-document and commits `Decision <n>`. `rounds_record.py` is the only thing
+boundary) and territories; then for each chunk one **chunk runner** (`chunk-runner`,
+`model: opus`, 0.14.1) carries the round on a context of its own: a fresh
+implementer builds the chunk on a short context, seam test first and
+comments only where `why-comments` would keep one, and commits it under
+the chunk's title; the mechanical gate (`validation_gate.py`: suite,
+typecheck, lint, scope against the chunk's files plus the design's module
+directories with in-module deviations reported rather than failed,
+protected documents, coverage, report-only comment density and size
+figures, the builder's transcript replayed for its shell edits and a
+commit chained to its test run) runs on the commit range; then **two
+launches, never more**: one combined reviewer (`code-reviewer`, `model:
+opus`, applying `code-review`, `test-quality-review` and by territory
+`reliability-review`, one report of at most eight Critical/High/Medium
+findings) and one smoke run (`accessibility-engineer` in the real browser
+with a screenshot per state for UI, `tdd-coach` over HTTP otherwise, the
+app started through `scratch_run.py` with every data path inside a
+scratch folder, never the owner's data). One fix round: a fresh fixer for
+every finding, the gate, a regressions-only re-review on the fix's diff, a
+second and last fixer for the regressions, the gate, done; pre-existing
+findings stand (a Critical or High stops the loop, a Medium goes to the
+pull request body); a `needs-decision` finding comes back on the runner's
+line and the orchestrator launches the owning persona once with the
+delegation file, which writes its own document and commits `Decision
+<n>`, then relaunches the runner. `rounds_record.py` is the only thing
 that parses a report; it writes the sidecar and prints the C line's
-counts. At the end the map is regenerated with the shipped extractor, the
+counts; the orchestrator keeps the records commit, the audit sync, the C
+line and the budget. Under the `light` cadence the runner stops after the
+smoke run and the findings wait for D, where each chunk's own builder is
+resumed by message to fix them. At the end the map is regenerated with the shipped extractor, the
 **Definition of Done** (`done_check.py`: README by `docs-writer:readme`,
 linter and formatter, typecheck, no code in strings, no planning
 references in code, comment density at or under 5%, persisted names, env
 defaults, test padding) is met by one fixer batch, all six reviewers read
 the whole slice diff once with one fix round (Lows allowed here, to the
-pull request body under "Known Lows"), and the smoke agent follows the
-README on a fresh clone; then `release-engineer:delivery` pushes the
+pull request body under "Known Lows"; each criteria reviewer restates the
+slice's accepted deferrals as findings), the **criteria walk** on a UI
+slice (`accessibility-engineer` drives every acceptance criterion a
+browser can reach in the real browser and writes the per-criterion table,
+the screen-reader announcements the owner's only manual item), and the
+smoke agent follows the README on a fresh clone; then `release-engineer:delivery` pushes the
 branch, opens the pull request (body by `pr-writeup`) without asking,
 files only the standing Mediums as issues, has
 `code-reviewer:external-review-triage` judge the external reviewer's

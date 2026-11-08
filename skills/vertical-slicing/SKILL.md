@@ -294,12 +294,31 @@ above when the thin path names no screen).
 
 ## Explicitly deferred
 Open questions from the problem doc (or earlier slices) that this slice
-does NOT resolve, and why deferring is fine for now.
+does NOT resolve, and why deferring is fine for now. Each item ends with
+its triage (below).
 
 ## Still open
 Anything genuinely unresolved that the next slice (or another persona —
-name which one) needs to answer before it can be scoped.
+name which one) needs to answer before it can be scoped. Each item ends
+with its triage (below).
 ```
+
+**Every deferred or open item is triaged where it is written.** An item
+ends with one of two sentences, in these words: `Usable without it: <how
+the slice behaves for the person meanwhile>` (what they see, what they
+can and cannot do, and that nothing is lost), or `Blocker: <why the
+build waits for the owner's answer>`. The test for which: would a person
+using the slice as shipped meet the open question and have no way out
+(a first choice that cannot be changed, an action with no undo, a state
+nobody designed)? Then it is a blocker, and the readiness gate puts it to
+the owner before any build; otherwise the slice is usable without it and
+the sentence says how. An item with neither sentence fails the readiness
+gate back to this skill. Why: slice 2 deferred "changing a merchant's
+general rule" to requirements, six reviewers accepted the deferral as the
+document's, and a cold read found that the first pick for a merchant was
+permanent and a misclick had no undo. The criteria reviewers restate
+every accepted deferral as a finding at the slice review, so what ships
+undecided reaches the pull request.
 
 Keep the whole write-up skimmable — this document answers "what are we
 building first and why," not "here is everything about the feature."

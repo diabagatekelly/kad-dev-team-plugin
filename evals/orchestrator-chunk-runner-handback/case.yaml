@@ -1,0 +1,70 @@
+schema_version: "1.0"
+name: orchestrator-chunk-runner-handback
+description: "The chunk loop's C.6 step with the chunk runner in between (handoff-slice2 P3.1): chunk 1's runner handed back its one line (commits, gate PASS, shell edits 2 reported 1, r0 0/0/2, smoke PASS, r1 fix clean, standing 0/0/0, the builder's id); the reports and sidecar are in the records directory, uncommitted. The orchestrator commits the records as `Records: slice 001 chunk 1`, writes the C line from the hand-back's fields with the counted shell edits, the builder and the data field, launches nothing, opens no report, and hands off before chunk 2 as told."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off once chunk 1's C line is written and its records committed, before chunk 2's runner is launched.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: records-committed-by-name
+    target: trace
+    pattern: 'git commit[^"]*Records: slice 001 chunk 1'
+  - type: regex
+    name: c-line-written-from-the-hand-back
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*gate `?PASS[^\n]*r0 `?0/0/2[^\n]*smoke `?PASS'
+  - type: regex
+    name: c-line-carries-the-counted-shell-edits
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*shell edits `?2`? \(reported `?1`?\)'
+  - type: regex
+    name: c-line-names-the-builder
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*builder `?agent-2b8e'
+  - type: regex
+    name: c-line-carries-the-data-field
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*C\. Chunk 1/3:\*\*[^\n]*\bdata `?(unchanged|not named)'
+  - type: regex
+    name: no-report-opened
+    target: trace
+    pattern: '"name":"Read","input":\{[^{}]*"file_path":"[^"]*chunk-1-r[01]-(?:review|smoke)\.md"'
+    match: not_contains
+  - type: llm
+    name: handoff-before-chunk-two
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/handoff-slice-001.md
+    weight: 1
+    criteria: |
+      The owner asked for a hand-off once chunk 1's C line is written and its records committed. The loop's handoff file holds the step, chunk and round, the next action, the standing list, the budget counters, each finished chunk's builder id and the environment facts.
+
+      PASS if the file says chunk 1 is done (its C line written, its records committed) and names the next action as launching chunk 2's chunk runner (or chunk 2's build through the runner), with the budget counters counting chunk 1's two reviewer launches and one fixer.
+
+      FAIL if it names chunk 1 work as the next action, says a runner or builder for chunk 2 was already launched, or is missing the next action.

@@ -32,10 +32,14 @@ directory, and says the sessions were chosen by directory, not by id.
 
 Each assistant message is counted once by its id (a resumed or forked
 session repeats earlier ones). Role classes come from the subagent's launch
-description, as the orchestrator words them: builder/planner, fixer,
-reviewer (combined chunk review, one of the slice reviewers, or the
-comments pass), smoke, consult, triage; the session itself is the
-orchestrator. Prices are per million tokens for input, output, cache read
+description, as the orchestrator words them, by its opening verb first
+(Build, Plan, Fix, Apply, Review chunk, Re-review chunk, Smoke, Stranger,
+Walk, Decide, Triage, Run), then by the review names in it (the six slice
+reviewers and their re-reviews, the comments pass, the cold review), then
+by the agent type (`agentType` in the meta file): builder/planner, fixer,
+runner (the chunk runner), reviewer:chunk, reviewer:<name>, smoke, walk,
+consult, triage; the session itself is the orchestrator. "fix" counts only
+at the start of the description. Prices are per million tokens for input, output, cache read
 and cache write; `--price model=in,out,read,write` adds or overrides one.
 A model with no price is counted at the most expensive known price and
 named in the output, so the total is never silently low.
@@ -58,27 +62,64 @@ PRICES = {  # $ per million tokens: input, output, cache read, cache write (1.25
     "claude-sonnet-5-5": (2.0, 10.0, 0.20, 2.5),
     "claude-haiku-5-5": (0.8, 4.0, 0.08, 1.0),
 }
-ROLE_RULES = [
-    (re.compile(r"\b(smoke|stranger test)\b", re.I), "smoke"),
-    (re.compile(r"\b(triage|external review)\b", re.I), "triage"),
-    (re.compile(r"\b(fix|fixer)\b", re.I), "fixer"),
-    (re.compile(r"\b(plan slice|chunk plan|planner|replan)\b", re.I), "builder/planner"),
-    (re.compile(r"^build\b|\bbuild chunk\b|\bimplement\b", re.I), "builder/planner"),
-    (re.compile(r"\b(why-comments|comments? (pass|review))\b", re.I), "reviewer:comments"),
-    (re.compile(r"\b(combined|chunk) review\b|\breview chunk\b", re.I), "reviewer:chunk"),
-    (re.compile(r"\baccessibility review\b|\ba11y\b", re.I), "reviewer:accessibility"),
+# Classes come from the launch description's opening verb first, then from
+# the words in it, then from the agent type; "fix" counts only at the start
+# ("Re-review slice 002 chunk 4 fixes" is a re-review, not a fixer). Slice
+# 2's first table counted the eleven re-reviews as fixers and the eight
+# chunk reviews as "other" on the old word-anywhere rules.
+VERB_RULES = [
+    (re.compile(r"^(?:run|chunk[- ]runner|run chunk)\b", re.I), "runner"),
+    (re.compile(r"^(?:build|implement|plan|replan|write the chunk plan)\b", re.I), "builder/planner"),
+    (re.compile(r"^(?:fix|apply|patch|repair)\b", re.I), "fixer"),
+    (re.compile(r"^(?:smoke|smoke-run|stranger)\b", re.I), "smoke"),
+    (re.compile(r"^(?:walk|ac walk|criteria walk)\b", re.I), "walk"),
+    (re.compile(r"^(?:triage)\b", re.I), "triage"),
+    (re.compile(r"^(?:decide|decision|consult)\b", re.I), "consult"),
+    (re.compile(r"^(?:review|re-review)\b.*\bchunk\b|^re-review\b", re.I), "reviewer:chunk"),
+    (re.compile(r"^(?:cold)\b", re.I), "reviewer:cold"),
+]
+WORD_RULES = [
+    (re.compile(r"\b(?:smoke|stranger test)\b", re.I), "smoke"),
+    (re.compile(r"\b(?:criteria walk|ac walk)\b", re.I), "walk"),
+    (re.compile(r"\b(?:triage|external review)\b", re.I), "triage"),
+    (re.compile(r"\b(?:chunk runner|runs? chunk)\b", re.I), "runner"),
+    (re.compile(r"\b(?:why-comments|comments?[- ]only|comments? (?:pass|review))\b", re.I), "reviewer:comments"),
+    (re.compile(r"\b(?:combined|chunk) review\b|\breview chunk\b|\bre-review\b.*\bchunk\b", re.I), "reviewer:chunk"),
+    (re.compile(r"\bcold (?:read|review)\b", re.I), "reviewer:cold"),
+    (re.compile(r"\baccessibility (?:review|re-review)\b|\ba11y\b", re.I), "reviewer:accessibility"),
     (re.compile(r"\btest[- ]quality\b", re.I), "reviewer:test-quality"),
-    (re.compile(r"\barchitecture review\b", re.I), "reviewer:architecture"),
-    (re.compile(r"\bsecurity review\b", re.I), "reviewer:security"),
-    (re.compile(r"\breliability review\b", re.I), "reviewer:reliability"),
-    (re.compile(r"\bcode review\b", re.I), "reviewer:code"),
-    (re.compile(r"\b(consult|decision|decide)\b", re.I), "consult"),
+    (re.compile(r"\barchitecture (?:review|re-review)\b", re.I), "reviewer:architecture"),
+    (re.compile(r"\bsecurity (?:review|re-review)\b", re.I), "reviewer:security"),
+    (re.compile(r"\breliability (?:review|re-review)\b", re.I), "reviewer:reliability"),
+    (re.compile(r"\bcode (?:review|re-review)\b", re.I), "reviewer:code"),
+    (re.compile(r"\b(?:plan slice|chunk plan|planner|replan|build chunk)\b", re.I), "builder/planner"),
+    (re.compile(r"\b(?:decision|decide|consult|criterion)\b", re.I), "consult"),
+]
+# What an agent type is for when the description decides nothing.
+TYPE_RULES = [
+    ("chunk-runner", "runner"),
+    ("code-reviewer", "reviewer:code"),
+    ("tdd-coach", "builder/planner"),
+    ("software-architect", "consult"),
+    ("devsecops-engineer", "consult"),
+    ("ux-designer", "consult"),
+    ("accessibility-engineer", "consult"),
+    ("product-slicer", "consult"),
+    ("product-manager", "consult"),
+    ("docs-writer", "consult"),
 ]
 
 
-def role_of(description):
-    for rule, role in ROLE_RULES:
-        if rule.search(description or ""):
+def role_of(description, agent_type=""):
+    text = (description or "").strip()
+    for rule, role in VERB_RULES:
+        if rule.search(text):
+            return role
+    for rule, role in WORD_RULES:
+        if rule.search(text):
+            return role
+    for key, role in TYPE_RULES:
+        if key in (agent_type or ""):
             return role
     return "other"
 
@@ -127,17 +168,18 @@ def usage_of(path, seen):
 
 
 def subagents_of(session):
-    """(path, description) for every subagent transcript kept next to a session."""
+    """(path, description, agent type) for every subagent transcript kept next to a session."""
     out = []
     for path in sorted(glob.glob(os.path.join(session[:-6], "subagents", "agent-*.jsonl"))):
         meta = path[:-6] + ".meta.json"
-        description = ""
+        description, agent_type = "", ""
         if os.path.isfile(meta):
             try:
-                description = json.load(open(meta, encoding="utf-8")).get("description", "")
+                m = json.load(open(meta, encoding="utf-8"))
+                description, agent_type = m.get("description", ""), m.get("agentType", "") or m.get("subagent_type", "")
             except ValueError:
                 pass
-        out.append((path, description))
+        out.append((path, description, agent_type))
     return out
 
 
@@ -286,8 +328,8 @@ def main():
     for session in sessions:
         name = os.path.basename(session)[:8]
         rows.append((name, "orchestrator", "the session", usage_of(session, seen)))
-        for path, description in subagents_of(session):
-            rows.append((name, role_of(description), description, usage_of(path, seen)))
+        for path, description, agent_type in subagents_of(session):
+            rows.append((name, role_of(description, agent_type), description, usage_of(path, seen)))
 
     by_role = collections.OrderedDict()
     for name, role, _, u in rows:

@@ -77,9 +77,17 @@ live in the target directory above the report's records directory: the
 slice file, the design, the criteria this skill owns) and check the code
 against those criteria, under its own heading, `## Against the
 criteria`, in the same format; a finding here may cite the criterion it
-fails. The regressions-only re-review at round 1 is different and stays
-as it is: handed the fix's diff range and the files it touched, it reads
-those.
+fails. In the same section, restate every accepted deferral the slice
+file carries (its `Still open` and `Explicitly deferred` items, each
+marked `Usable without it`) as a finding of its own, "the slice ships
+with <X> undecided; consequence <Y>", Medium when the consequence is one
+a person meets (data kept that a decision would have removed, an action
+with no way back), Low otherwise: an accepted deferral is a fact about
+what ships, not something a review drops because a document accepted it
+(slice 2's six reviewers accepted "changing a merchant's general rule"
+as deferred; a cold read found the first pick permanent). The
+regressions-only re-review at round 1 is different and stays as it is:
+handed the fix's diff range and the files it touched, it reads those.
 
 Why the order: a reviewer handed nothing traced the seam in one pass and
 confirmed a second bug by running it, where six handed the documents

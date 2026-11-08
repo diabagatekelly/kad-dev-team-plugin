@@ -5,11 +5,21 @@ description: Judge each comment an external reviewer (Sourcery, another bot, a h
 
 # External review triage
 
-**Trigger:** a pull request has review comments from someone other than
-this flow. The orchestrator's chunk loop launches this at its step E with
-a comments file `delivery` collected; invoked directly ("what do we do
-with these Sourcery comments"), the same judgement on the comments you are
-given or can read. You hold `Read`, `Grep` and `Glob`: the comments file,
+**Trigger:** a pull request has review comments or issue comments that
+this flow did not post: an external reviewer's, a bot's, a human's, the
+owner's, the owner writing from the same GitHub account the flow pushes
+as. The author is never the test; the one thing skipped is a comment the
+flow itself posted, which `delivery` marks with the plugin's footer line
+(`— kad-dev-team`) and filters out before you see it. The orchestrator's
+chunk loop launches this at its step E with a comments file `delivery`
+collected, and again from its routing when it finds a slice's pull
+request still open with unresolved comments (its step 1b); invoked
+directly ("what do we do with these Sourcery comments"), the same
+judgement on the comments you are given or can read. An owner's comment
+gets the same four verdicts: a decline of the owner's comment is a
+recommendation back to them with the reason, posted as the reply, and
+the owner's next word decides. An issue comment with no file has `—` in
+the table's file column. You hold `Read`, `Grep` and `Glob`: the comments file,
 the code, the planning documents and the reviewer reports are all files.
 
 **What you are given.** The pull request number; the comments file

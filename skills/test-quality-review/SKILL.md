@@ -126,6 +126,27 @@ in the reply is read twice and acted on once.
   on its content). A share over 10% is a **Medium** naming the tests; the
   ratio alone is information. The Definition of Done computes the same
   figures mechanically; yours names which tests to delete or rewrite.
+- **Duplicated helpers and brittle assertions, at the slice review
+  only**, measured by the script this skill ships, inline with Bash from
+  the project root:
+
+  ```
+  python3 -I "${CLAUDE_SKILL_DIR}/scripts/test_measures.py" --project '<project root>'
+  ```
+
+  It prints `duplicated helpers <n>: <name> (<k> files), …` (a function
+  or arrow constant defined at the top level of two or more test files
+  outside the suite's support folder) and `brittle assertions <b> over
+  <t> tests: <share> per test` (assertions whose expected value is a
+  regular expression, markup, a CSS fragment or four words or more of
+  prose), the ten worst files under it. Each duplicated helper is one
+  **Medium** ("helper copied across <k> files; move it into the support
+  folder"), and a brittle share above the bar the script prints (0.30
+  per test; run 3 and slice 2 measured 0.61 and 0.57, run 2's suite 0.11)
+  is one **Medium** naming the ten files and the fix the lite skill
+  prescribes: the page's user-facing strings exported from one module so
+  the tests assert on the constant. Quote the script's lines under `##
+  Checks run`; never recount by hand.
 
 ## Issue categories
 

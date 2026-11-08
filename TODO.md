@@ -225,3 +225,7 @@ checks (the acceptance criteria walked in a real browser), the loop (the
 chunk runner, the light cadence arm with the builder as fixer, deferred
 decisions as blockers), planning data (nothing of the owner's by value) and
 audit. 4.2 is decided there (build the chunk runner); 4.3 is dropped.
+P1 shipped as 0.14.0 (PR #41) and P2 with P3 as 0.14.1 (branch
+`p2-p3-loop`): the chunk runner, the criteria walk, the data rule, the
+open-work routing, the triaged deferrals, the counted shell edits and the
+light cadence arm (measured at slice 3). P4 and P5 are next.

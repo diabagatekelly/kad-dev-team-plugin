@@ -11,6 +11,13 @@ wrong-direction candidates) and, with `--write`, replaces
 
 Modules: one per source file under the source roots (`src/` when the
 project has one, else every top-level directory holding source files),
+plus the **test support** modules: every non-test source file under a
+test directory's `support/`, `helpers/`, `utils/`, `fixtures/` or
+`lib/` folder (`test/support/persistent-app.ts`), listed with the tier
+`test-support` so an implementation-level `map-query` can answer "is
+there already a helper" (slice 2's builders consulted the map every
+chunk and still redefined `openPage` and `startApp` in ten files, since
+the map indexed `src/` only). Test files themselves stay out,
 skipping `node_modules`, `dist`, `build`, `.git`, `coverage`, `.wrangler`,
 `test`, `tests`, `__tests__`, `spec`, `evals`, `docs`, `planning`,
 `audit-docs`, `scripts`, and test files by name (`*.test.*`, `*.spec.*`,
@@ -134,6 +141,21 @@ def source_roots(project):
         full = os.path.join(project, d)
         if os.path.isdir(full) and d not in SKIP and not d.startswith("."):
             if any(f.endswith(tuple(LANG)) for _, _, fs in os.walk(full) for f in fs):
+                roots.append(full)
+    return roots
+
+
+TEST_DIRS = ("test", "tests", "__tests__", "spec")
+SUPPORT_DIRS = ("support", "helpers", "utils", "fixtures", "lib")
+
+
+def test_support_roots(project):
+    """`test/support/`-style folders: the helpers a test suite shares."""
+    roots = []
+    for t in TEST_DIRS:
+        for sdir in SUPPORT_DIRS:
+            full = os.path.join(project, t, sdir)
+            if os.path.isdir(full):
                 roots.append(full)
     return roots
 
@@ -398,6 +420,8 @@ def render(project, date, modules, prior, prior_wrong, no_extractor):
     lines += ["", "## Wrong-direction candidates"]
     wrong, unknown = [], []
     for name, m in modules.items():
+        if m["tier"] == "test-support":
+            continue  # a test helper importing the source is the expected direction, never a candidate
         for target in sorted(m["edges"]):
             if target not in modules:
                 continue
@@ -429,14 +453,16 @@ def main():
     prior_path = a.prior or os.path.join(project, "docs", "architecture-map.md")
     prior, prior_wrong = parse_prior(prior_path)
     roots = source_roots(project)
-    known = modules_under(project, roots)
+    support_roots = test_support_roots(project)
+    known = modules_under(project, roots) + modules_under(project, support_roots)
+    support = set(modules_under(project, support_roots))
     alias_list = aliases(project)
     pyroots = py_roots(project, roots)
     modules, no_extractor = {}, set()
     for name in known:
         ext = os.path.splitext(name)[1].lower()
         lang = LANG.get(ext, ext)
-        tier = prior.get(name, {}).get("tier", "untiered")
+        tier = "test-support" if name in support else prior.get(name, {}).get("tier", "untiered")
         if ext in TS_EXT:
             edges, externals, exports = extract_ts(project, name, alias_list, set(known))
         elif ext == ".py":

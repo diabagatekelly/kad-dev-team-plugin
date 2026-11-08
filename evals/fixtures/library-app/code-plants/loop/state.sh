@@ -25,7 +25,15 @@
 #   chunk1-gap        reviewer and smoke returned; the review has a
 #                     needs-decision finding that cites the reliability
 #                     document (present, committed as planning); no
-#                     delegation file; next: record round 0, then the gap step
+#                     delegation file; next: record round 0 (the runner's
+#                     side: it records and hands back)
+#   chunk1-gap-handback  as chunk1-gap with round 0 recorded and the chunk
+#                     runner's hand-back line in the handoff (needs-decision);
+#                     next: the orchestrator's C.5 without a delegation file
+#   chunk1-handback   chunk 1's round finished by the chunk runner (round 0
+#                     and round 1 recorded, fix r1 committed and gated), its
+#                     hand-back line in the handoff, records uncommitted;
+#                     next: the records commit, the C line, the budget check
 #   chunk1-r1         round 0 recorded, fix r1 committed and gated, the
 #                     re-review written; next: record round 1 with --range
 #   chunk1-done       chunk 1's C line written and records committed; the
@@ -97,7 +105,7 @@ planning() {  # the slice branch, the delegation file when the state has one, th
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; delegation — \`$deleg\`; budget — \`5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults\`; branch — \`slice-001-cancel-hold\`; base — \`$base_sha\`$commit; records — \`$records\`; readiness — \`PASS\`
+- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; delegation — \`$deleg\`; cadence — \`loop\`; budget — \`5h, 2 reviews/chunk, 1 fix/scope (+1 regressions)\`; branch — \`slice-001-cancel-hold\`; base — \`$base_sha\`$commit; records — \`$records\`; readiness — \`PASS\`
 EOF
 }
 
@@ -294,7 +302,7 @@ handoff() {  # handoff <state line> <next action> [extra lines...]: the file the
     shift 2
     for line in "$@"; do printf -- '- %s\n' "$line"; done
     printf -- '- **Budget counters:** loop started %s; reviewer launches %s; fixers %s; consults %s\n' "$started" "${reviews:-0}" "${fixers:-0}" "${consults:-0}"
-    printf -- '- **Environment:** test command `npm test`; module directories `lending/`, `infra/memory/`; records `%s`; report `%s`; sidecar `%s`; policy heavy; the owner opted out of the sandbox at A (later checks are logged as information)\n' "$records" "$report" "$sidecar"
+    printf -- '- **Environment:** test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; records `%s`; report `%s`; sidecar `%s`; cadence loop; the owner opted out of the sandbox at A (later checks are logged as information); the design and the README name no data directory for the app (`data not named`)\n' "$records" "$report" "$sidecar"
     printf -- "- **Owner's standing directions:** decisions may be settled with the owning persona under \`%s/delegation-slice-001.md\`%s\n" "$target" "${deleg_note:-}"
   } > "$records/handoff-slice-001.md"
   # The skill commits the handoff with the records; the log stays dirty.
@@ -328,7 +336,7 @@ case "$state" in
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     handoff "C.2 done for chunk 1 of 3: gate PASS on $plan_sha..$c1_sha, saved as $records/gate-chunk-1-r0.txt" "C.3: the review and smoke launches for round 0" ;;
-  chunk1-gap)
+  chunk1-gap|chunk1-gap-handback)
     delegation=no; deleg_note="; no delegation file was written (the owner answered no at A)"
     # The gap review cites the reliability document, so the state carries
     # it (and the slice that points at it), committed as planning.
@@ -339,14 +347,26 @@ case "$state" in
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     round0 chunk-1-r0-review-gap
-    reviews=2 handoff "C.3 done for chunk 1 of 3: the combined reviewer (agent-c41a) handed back 1 needs-decision and 1 Medium at $records/chunk-1-r0-review.md; the smoke agent (agent-e07d) handed back PASS at $records/chunk-1-r0-smoke.md" \
-      "record round 0 with rounds_record.py, then C.5 for the needs-decision finding before any fixer" ;;
+    if [ "$state" = chunk1-gap ]; then
+      reviews=2 handoff "the chunk runner for chunk 1 of 3 (agent-b7e2) reached its step 3: the combined reviewer (agent-c41a) handed back 1 needs-decision and 1 Medium at $records/chunk-1-r0-review.md; the smoke agent (agent-e07d) handed back PASS at $records/chunk-1-r0-smoke.md; round 0 is not recorded yet" \
+        "the runner records round 0 with rounds_record.py and acts on the needs-decision as its skill says"
+    else
+      record0
+      reviews=2 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\` (reported \`0\`); review \`co tq re\` r0 \`0/0/1\` nd \`1\`; smoke \`PASS\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`0\`; sandbox \`3\` PASS; needs-decision devsecops-engineer: $records/chunk-1-r0-review.md — What a cancel does when the queue throws mid-remove is undecided" \
+        "C.5: the gap step for the needs-decision finding (no delegation file), before any fixer or a relaunched runner"
+    fi ;;
   chunk1-r1)
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review
     reviews=2 fixers=1 handoff "C.4 for chunk 1 of 3: round 0 recorded (0/0/2, smoke PASS); the fixer (agent-5c21, 19 turns) committed $f1_sha; gate PASS on $c1_sha..$f1_sha ($records/gate-chunk-1-r1.txt); the re-reviewer (agent-a93f) handed back 2 Mediums at $records/chunk-1-r1-review.md" \
       "record round 1 with rounds_record.py --range $c1_sha..$f1_sha, then act on the split as C.4 says" ;;
+  chunk1-handback)
+    planning; plan; chunk1 chunk1 "none"
+    gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
+    round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review-clean; record1
+    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`2\` (reported \`1\`); review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg \`0\`, pre \`0\`); standing \`0/0/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted" \
+      "C.6 for chunk 1: the records commit, the audit sync (audit off here), the C line from the hand-back, the budget check; then chunk 2's runner" ;;
   chunk1-done)
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"

@@ -31,7 +31,7 @@ item or table cell that starts with `Given` (continuation lines joined
 until the next bullet or blank line), or one that carries an identifier
 like `AC-1`, `S1`, `SEC-3`, `R2`, `REL-4`, `A11Y-2`.
 
-The eight checks, how each decides, and where a failure routes:
+The nine checks, how each decides, and where a failure routes:
 
 1. criteria-homed -> software-architect:architecture-design. Every
    criterion in the slice, security, reliability and accessibility files
@@ -95,6 +95,19 @@ The eight checks, how each decides, and where a failure routes:
 7. kept-for-later-slices -> software-architect:architecture-design. The
    design document has a line or heading containing `kept for later
    slices` (also `kept for the next slice`, `persisted for later slices`).
+9. open-items-triaged -> product-slicer:vertical-slicing, or the owner.
+   Every item under the slice file's `Still open` and `Explicitly
+   deferred` headings is triaged: it says the slice is usable without it
+   and how (the words `usable without` on the item, followed by the
+   sentence that says how the slice behaves meanwhile), or it is marked a
+   blocker (`blocker` or `blocking` on the item). An item with neither
+   fails to `product-slicer:vertical-slicing`, which triages it in place;
+   a blocker fails to the owner (`route: open-items-triaged -> the owner
+   (blocker: <item>)`), who decides before any build. Why: slice 2
+   deferred "changing a merchant's general rule" to requirements, six
+   reviewers accepted the deferral, and the cold read found the first
+   pick permanent with no undo. The four criteria reviewers restate each
+   accepted deferral as a finding at D, so it reaches the pull request.
 8. unusable-reply-row -> devsecops-engineer:reliability-requirements. When
    the design names an adapter to an external service (`adapter` within 80
    characters of HTTP, API, provider, external, third-party, SDK, vendor,
@@ -366,6 +379,55 @@ def check_states(docs, mockups):
     return True, f"{len(names)} named states appear in the screen design or a mockup file"
 
 
+OPEN_HEADINGS = re.compile(r"still open|explicitly deferred|open items|deferred", re.I)
+USABLE = re.compile(r"usable without", re.I)
+BLOCKER = re.compile(r"\bblock(?:er|ing|s)\b", re.I)
+
+
+def open_items(slice_text):
+    """The bullets under the slice file's open and deferred headings, each
+    joined with its continuation lines."""
+    items = []
+    for heading, body in sections(slice_text):
+        if not OPEN_HEADINGS.search(heading):
+            continue
+        current = None
+        for line in body.splitlines():
+            stripped = line.strip()
+            bullet = re.match(r"^(?:[-*+]|\d+[.)])\s+(.*)", stripped)
+            if bullet:
+                if current:
+                    items.append(current)
+                current = bullet.group(1)
+            elif stripped and current is not None:
+                current += " " + stripped
+            elif not stripped and current is not None:
+                items.append(current)
+                current = None
+        if current:
+            items.append(current)
+    return [re.sub(r"\s+", " ", i).strip() for i in items if i.strip()]
+
+
+def check_open_items(slice_text):
+    """(passed, detail, route): every open or deferred item triaged as usable
+    without it (with how) or as a blocker; a blocker is itself a failure,
+    routed to the owner."""
+    items = open_items(slice_text)
+    if not items:
+        return True, "no open or deferred item in the slice file", "product-slicer:vertical-slicing"
+    untriaged = [i for i in items if not USABLE.search(i) and not BLOCKER.search(i)]
+    blockers = [i for i in items if BLOCKER.search(i) and not USABLE.search(i)]
+    thin = [i for i in items if USABLE.search(i) and len(USABLE.split(i, 1)[1].split()) < 4]
+    if blockers:
+        return False, f"{len(blockers)} open item(s) marked blocking; the owner decides before any build: " + " | ".join(b[:70] for b in blockers), \
+            "the owner (blocker)"
+    if untriaged or thin:
+        what = [f"untriaged: {i[:70]}" for i in untriaged] + [f"no sentence on how the slice is usable without it: {i[:70]}" for i in thin]
+        return False, f"{len(what)} of {len(items)} open or deferred items not triaged: " + " | ".join(what), "product-slicer:vertical-slicing"
+    return True, f"{len(items)} open or deferred items each say the slice is usable without them, and how", "product-slicer:vertical-slicing"
+
+
 def owner_of(filename):
     base = os.path.basename(filename).lower()
     for key, persona in OWNERS:
@@ -449,6 +511,7 @@ def main():
     if not any(r[0] == "no-question-to-implementer" for r in results):
         results.append(("no-question-to-implementer", True, "no open question is routed to the implementer", "the document's owner"))
     results.append(("kept-for-later-slices", *check_kept(docs["design"]), arch))
+    results.append(("open-items-triaged", *check_open_items(docs["slice"])))
     if "reliability" in docs:
         results.append(("unusable-reply-row", *check_unusable(docs, docs["design"]), rel))
 

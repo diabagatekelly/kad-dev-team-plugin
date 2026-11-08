@@ -19,5 +19,5 @@ removes it from the title's queue, and the use case says it was cancelled.
 
 ## Explicitly deferred
 
-- The staff HTTP route (slice 2).
-- Member self-service cancelling.
+- The staff HTTP route (slice 2). Usable without it: the desk reaches the use case through the existing staff console command until the route lands.
+- Member self-service cancelling. Usable without it: members ask the desk, as they do today.

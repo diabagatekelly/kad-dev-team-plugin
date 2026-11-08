@@ -234,18 +234,28 @@ this for real, not aspirationally:
    sense if someone imagines the CSS applied. Save them in `visual-ux/`,
    alongside `design-system`'s own output — one place for everything
    this persona has produced.
-2. Open it in a browser and look at it before presenting it. If browser
-   automation is available in this session, use it — that is exactly what
-   it's for. Screenshot what you actually built and save the screenshot in
-   `visual-ux/` too; don't assume the markup looks like what you intended
-   without having looked, and don't let the only record of having looked
-   be your own claim that you did.
-3. If no way to actually view it exists in this session, say so
-   explicitly and hand over the HTML file directly so the user can open it
-   themselves — don't silently fall back to describing it in prose as if
-   that were an equivalent substitute. A description is not a rendering,
-   even when nothing else is available. Don't claim a screenshot you
-   couldn't take.
+2. Open it in a browser and look at it before presenting it. Under the
+   launcher (`kad`) the Chrome tools are in the session: open each
+   mockup's `file://` path in a tab, look at it at the default width and
+   at 360 px wide, and, for any list or table the screen shows, once
+   more with the mockup's data multiplied to a long list (forty rows, or
+   whatever a month of the real thing would be), since a layout that
+   holds for three rows and breaks for forty is the layout problem the
+   built screen will have (slice 2's mockups were never rendered and
+   that problem was invisible until the owner's browser review).
+   Screenshot each of those views and save the screenshots in
+   `visual-ux/` beside the mockup (`<mockup>.png`, `<mockup>-narrow.png`,
+   `<mockup>-long.png`); don't assume the markup looks like what you
+   intended without having looked, and don't let the only record of
+   having looked be your own claim that you did. Nothing you look at is
+   the owner's data: the mockup's rows are invented.
+3. If no way to actually view it exists in this session (no Chrome tool
+   answers), say so explicitly, in the document and in your reply, and
+   hand over the HTML file directly so the user can open it themselves;
+   don't silently fall back to describing it in prose as if that were an
+   equivalent substitute. A description is not a rendering, even when
+   nothing else is available. Don't claim a screenshot you couldn't
+   take.
 
 Reference the HTML file's path, and the screenshot's when one exists, from
 the written artifact, so either is findable later without regenerating

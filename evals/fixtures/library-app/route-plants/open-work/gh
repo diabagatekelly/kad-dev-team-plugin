@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Stand-in for the GitHub CLI answering the orchestrator's open-work check
+# (its step 1b): one open pull request from a slice branch with two
+# unresolved review comments, and one open High issue. Every call is
+# appended to gh-calls.log beside this script. Nothing reaches GitHub.
+log="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gh-calls.log"
+printf '%s\n' "$*" >> "$log"
+repo="example/library-lending"
+case "${1:-} ${2:-}" in
+  "pr list")
+    cat <<EOF
+[{"number":7,"headRefName":"slice-001-cancel-hold","url":"https://github.com/$repo/pull/7","title":"Staff cancel a member's hold on a title","state":"OPEN"}]
+EOF
+    ;;
+  "pr view") echo "{\"number\":7,\"url\":\"https://github.com/$repo/pull/7\",\"state\":\"OPEN\",\"headRefName\":\"slice-001-cancel-hold\",\"baseRefName\":\"main\"}" ;;
+  "pr checks") echo "✓ ci  pass  1m2s  https://github.com/$repo/actions/runs/1" ;;
+  "issue list")
+    cat <<EOF
+[{"number":14,"title":"[High] A queue that comes back after a failure keeps the half-removed hold","labels":[{"name":"severity:high"},{"name":"tech-debt"}],"body":"**Severity:** High\n**Location:** lending/cancel-hold.ts:40\n\nWhen the hold queue fails after removing the hold but before answering, the next cancel finds nothing and the member's hold is gone with no record.\n\nRaised by the reliability review of PR #7.\n\n— kad-dev-team","state":"OPEN"},
+ {"number":15,"title":"[Low] The rejection reason repeats the ISBN twice","labels":[{"name":"severity:low"}],"body":"**Severity:** Low\n\n— kad-dev-team","state":"OPEN"}]
+EOF
+    ;;
+  "repo view") echo "{\"defaultBranchRef\":{\"name\":\"main\"},\"nameWithOwner\":\"$repo\"}" ;;
+  "auth status") echo "Logged in to github.com account example" ;;
+  "api "*|"api")
+    case "$*" in
+      *"pulls/7/comments"*)
+        cat <<EOF
+[{"id":9001,"user":{"login":"sourcery-ai[bot]"},"path":"lending/cancel-hold.ts","line":32,"body":"The reason string is built with string concatenation; consider a template literal.","commit_id":"abc1234","in_reply_to_id":null},
+ {"id":9002,"user":{"login":"example"},"path":"lending/cancel-hold.ts","line":55,"body":"A card number shorter than four digits makes slice(-4) return the whole number; is that intended?","commit_id":"abc1234","in_reply_to_id":null}]
+EOF
+        ;;
+      *"issues/7/comments"*) echo "[]" ;;
+      *"pulls/7/reviews"*) echo "[]" ;;
+      *graphql*) echo '{"data":{"repository":{"pullRequest":{"reviewThreads":{"nodes":[{"isResolved":false,"comments":{"nodes":[{"databaseId":9001}]}},{"isResolved":false,"comments":{"nodes":[{"databaseId":9002}]}}]}}}}}' ;;
+      *) echo "[]" ;;
+    esac
+    ;;
+  "issue create") n=$((40 + $(grep -c '^issue create' "$log"))); echo "https://github.com/$repo/issues/$n" ;;
+  "issue comment") echo "https://github.com/$repo/issues/14#issuecomment-1" ;;
+  "label create"|"label list") echo "ok" ;;
+  *) echo "gh (stand-in): unsupported command: $*" >&2; exit 1 ;;
+esac

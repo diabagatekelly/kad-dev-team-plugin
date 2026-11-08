@@ -1,0 +1,61 @@
+schema_version: "1.0"
+name: orchestrator-route-open-pr
+description: "The orchestrator's open-work step (handoff-slice2 P3.10): before reading a planning document it asks the tracker what is open. The stand-in GitHub CLI answers one open pull request from a slice branch with two unresolved comments (one the owner's, one a bot's) and one open High issue. The orchestrator routes the pull request to the triage first (a log entry naming it), asks the owner about the High issue with the three answers, invokes no planning skill and cuts no slice, and stops at that question as told."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command). Report what is open and stop after your first question to me; don't run the triage or any fix in this session.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: asks-the-tracker-for-open-pull-requests
+    tool: Bash
+    input_match: 'gh pr list'
+    min: 1
+  - type: tool_used
+    name: asks-the-tracker-for-open-issues
+    tool: Bash
+    input_match: 'gh issue list'
+    min: 1
+  - type: tool_order
+    name: tracker-before-any-planning-read
+    before: {tool: Bash, input_match: 'gh pr list'}
+    after: {tool: Read, input_match: 'docs/cancel-hold/(?:slice|design|requirements|problem|user-story)'}
+  - type: regex
+    name: log-routes-the-open-pull-request-to-the-triage
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: 'external-review-triage[^\n]*(?:#7|PR 7|pull request 7|pull request #7)|(?:#7|PR 7|pull request 7)[^\n]*external-review-triage'
+  - type: tool_used
+    name: no-planning-skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:(?:vertical-slicing|requirements-refinement|architecture-design|user-story-writeup|scope-map|problem-framing-doc|technology-bootstrap|tdd-implementation-lite)"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: llm
+    name: asks-about-the-high-issue-with-three-answers
+    focus: last_message
+    weight: 1
+    criteria: |
+      The orchestrator's open-work step found an open pull request from a slice branch (#7, two unresolved comments) and an open High issue (#14). The pull request routes to the external-review triage (merging stays the owner's), and each open Critical or High issue is one question to the owner with three answers: fix it in the open slice's fix round, fix it first on its own branch, or accept it as known and recorded (a Critical never gets the third). Nothing newer starts while a slice's pull request is open; the Low issue (#15) is not asked about.
+
+      PASS if the reply reports pull request #7 as open with its unresolved comments routed to the triage (not yet run, as the owner asked), and ends with one question about issue #14 offering those three choices (in words to that effect), without cutting a slice, writing a planning document or asking about the Low issue.
+
+      FAIL if it proceeds to slice or plan anything, runs the triage or a fix, asks about the Low issue, treats the open pull request as done, or asks about #14 without the three choices.

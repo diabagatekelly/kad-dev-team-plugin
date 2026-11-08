@@ -66,13 +66,33 @@ counts and the smoke count, it is printed as an `owed:` line, and it
 stands like a pre-existing finding: `--standing` lists it, so it reaches
 the pull request body and its issue as the owner's checklist.
 
+**The criteria walk** (0.14.1, handoff-slice2 P2.1): a report whose
+filename ends in `-walk.md` (`slice-r0-walk.md`, the AC walk at D) carries,
+besides any findings, a table under a `## Criteria walked` heading:
+
+    | criterion | result | how | screenshot |
+    |---|---|---|---|
+    | A1 Given … | PASS | tabbed to the control, chose a category | visual-ux/walk/a1.png |
+
+Each row becomes one sidecar row of its own kind, `{"kind": "criterion",
+"criterion": "...", "result": "PASS" | "FAIL" | "NOT REACHABLE", "how": "...",
+"screenshot": "...", "reviewer": "walk", ...}`, so the audit can count what
+a real browser confirmed; a `FAIL` row is expected to have a finding in the
+same report (that is what goes to the fixer), and a `NOT REACHABLE` row
+names why in its `how` cell (a native menu, a provider not connected, the
+owner's manual screen-reader check). The C/D-line fragment gains
+`; walk <pass>/<fail>/<not reachable>` when a walk table was parsed, and
+`--standing` lists the NOT REACHABLE rows as the owner's checklist. A walk
+report with no table and no finding is a format error, like a smoke report
+with no Result.
+
 `session` is the session that ran this script (`--session`, else
 `CLAUDE_CODE_SESSION_ID`, else null): `cost_by_role.py` reads the distinct
 ids from the sidecar to know which transcripts a cost total must cover.
 
 Printed last, exactly, for the C line:
 
-    r<i> <C>/<H>/<M>[ nd <n>][ (reg <r>, pre <p>)][; smoke PASS | ; smoke <n> findings][; L <n>][; owed <n>]
+    r<i> <C>/<H>/<M>[ nd <n>][ (reg <r>, pre <p>)][; smoke PASS | ; smoke <n> findings][; L <n>][; owed <n>][; walk <p>/<f>/<n>]
 
 `nd` appears only when a finding needs a decision; the regression split
 only with `--range`, counted over Critical, High and Medium; the smoke
@@ -187,6 +207,39 @@ def parse_report(path):
     return findings, shaped, result
 
 
+WALK_RESULT = re.compile(r"^(PASS|FAIL|NOT REACHABLE|NOT-REACHABLE|UNREACHABLE)\b", re.I)
+
+
+def parse_walk_table(path):
+    """The rows of the `## Criteria walked` table of an AC-walk report:
+    [{"criterion", "result", "how", "screenshot"}]; [] when the report has
+    no such table. The result is read from the first word(s) of its cell."""
+    lines = read_lines(path)
+    rows, in_section, header_seen = [], False, False
+    for line in lines:
+        m = HEADING.match(line)
+        if m:
+            in_section = m.group(2).strip().lower().startswith("criteria walked")
+            header_seen = False
+            continue
+        if not in_section or not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not header_seen:
+            header_seen = True  # the header row
+            continue
+        if all(re.fullmatch(r":?-{2,}:?", c) for c in cells if c):
+            continue  # the separator row
+        if len(cells) < 2 or not cells[0]:
+            continue
+        rm = WALK_RESULT.match(cells[1].strip("*`_ "))
+        result = rm.group(1).upper().replace("-", " ") if rm else cells[1][:30]
+        result = "NOT REACHABLE" if result == "UNREACHABLE" else result
+        rows.append({"criterion": cells[0].strip("*`"), "result": result,
+                     "how": cells[2] if len(cells) > 2 else "", "screenshot": cells[3] if len(cells) > 3 else ""})
+    return rows
+
+
 def reviewer_of(path):
     stem = os.path.splitext(os.path.basename(path))[0]
     return stem.rsplit("-", 1)[-1] if "-" in stem else stem
@@ -295,7 +348,7 @@ def record(a):
         return 1
 
     changed = hunks(a.project, a.range) if a.range else None
-    rows, failed, smoke_seen = [], False, False
+    rows, failed, smoke_seen, walk_seen = [], False, False, False
     for report, reviewer in reports:
         findings, shaped, result = parse_report(report)
         if isinstance(chunk_value(a.chunk), int):
@@ -324,6 +377,17 @@ def record(a):
                 continue
         smoke_seen = smoke_seen or reviewer == "smoke"
         key = report_key(report, a.sidecar)
+        if reviewer == "walk":
+            walked = parse_walk_table(report)
+            if not walked and not findings:
+                print(f"format: no `## Criteria walked` table and no finding in the walk report {report}")
+                failed = True
+                continue
+            for w in walked:
+                rows.append({"chunk": chunk_value(a.chunk), "round": a.round, "reviewer": reviewer, "kind": "criterion",
+                             "criterion": w["criterion"], "result": w["result"], "how": w["how"],
+                             "screenshot": w["screenshot"], "report": key, "session": a.session or None})
+            walk_seen = True
         for f in findings:
             rows.append({"chunk": chunk_value(a.chunk), "round": a.round, "reviewer": reviewer,
                          "severity": f["severity"], "persona": f["persona"], "title": f["title"],
@@ -345,15 +409,20 @@ def record(a):
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
     os.replace(tmp, a.sidecar)
 
-    owed = [r for r in rows if r["class"] == "owed"]
-    counted = [r for r in rows if r["class"] != "owed"]
+    walked = [r for r in rows if r.get("kind") == "criterion"]
+    rows_f = [r for r in rows if r.get("kind") != "criterion"]
+    owed = [r for r in rows_f if r["class"] == "owed"]
+    counted = [r for r in rows_f if r["class"] != "owed"]
     counts = {s: sum(1 for r in counted if r["severity"] == s) for s in ("Critical", "High", "Medium", "Low", "needs-decision")}
     actionable = [r for r in counted if r["severity"] in ACTIONABLE]
     regressions = sum(1 for r in actionable if r["class"] == "regression")
     standing = [r for r in actionable if r["class"] == "pre-existing"]
     smoke_findings = sum(1 for r in counted if r["reviewer"] == "smoke")
 
-    for r in rows:
+    for r in walked:
+        if r["result"] == "NOT REACHABLE":
+            print(f"not reachable: {r['criterion'][:70]} ({r['how'][:60]})")
+    for r in rows_f:
         if r["severity"] == "needs-decision":
             print(f"needs-decision: {r['persona'] or 'persona not named'} — {r['title']} ({where(r)})")
     for r in standing:
@@ -373,6 +442,10 @@ def record(a):
         line += f"; L {counts['Low']}"
     if owed:
         line += f"; owed {len(owed)}"
+    if walk_seen:
+        wp = sum(1 for r in walked if r["result"] == "PASS")
+        wf = sum(1 for r in walked if r["result"] == "FAIL")
+        line += f"; walk {wp}/{wf}/{len(walked) - wp - wf}"
     if a.json:
         with open(a.json, "w", encoding="utf-8") as f:
             json.dump({"rows": rows, "counts": counts, "regressions": regressions, "standing": len(standing),
@@ -383,6 +456,10 @@ def record(a):
 
 def list_standing(a):
     rows = [r for r in (row_of(raw) for raw in load_sidecar(a.sidecar)) if r]
+    for r in rows:
+        if r.get("kind") == "criterion" and r.get("result") == "NOT REACHABLE" and (a.chunk is None or str(r.get("chunk")) == a.chunk):
+            print(f"walk: NOT REACHABLE — {r.get('criterion')} ({r.get('how')})")
+    rows = [r for r in rows if r.get("kind") != "criterion"]
     rows = [r for r in rows if r.get("class") in ("pre-existing", "owed") and r.get("severity") in ACTIONABLE]
     if a.chunk is not None:
         rows = [r for r in rows if str(r.get("chunk")) == a.chunk]
