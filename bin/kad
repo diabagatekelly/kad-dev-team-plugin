@@ -60,17 +60,23 @@
 # never read, which hosts it may reach, which credential it holds, local
 # ports, Chrome, audit mode and the audit repository) and asks one yes;
 # "n" opens the three answers behind it (audit mode, the audit repository,
-# the extra domains) and shows the set again. The answers and the project's
-# approval are stored, owner-readable only, in
-# ~/.config/kad-dev-team/launcher.json, which is only ever rewritten whole,
-# through a temporary file, and never deleted: a run that is interrupted or
-# declined leaves it as it was (--reset in 0.13.1 deleted it before asking,
-# and an interrupted reset lost every answer). A later run on the same
-# project prints one line and starts; a set that changed since the approval
-# (a manifest that now calls for a registry) is shown again for one yes.
-# On a first run --audit, --no-audit, --audit-repo and --domain set the
-# answers the set shows and are stored with it; on every later run they
-# apply to that run only.
+# the extra domains; "none" clears one) and shows the set again. The
+# answers and the approval are stored per project, owner-readable only, in
+# ~/.config/kad-dev-team/launcher.json (a project with no answers of its
+# own takes the file's root-level ones, where 0.13.x stored them, as its
+# defaults), which is only ever rewritten whole, under a lock, through a
+# temporary file, and never deleted: a run that is interrupted or declined
+# leaves it as it was (--reset in 0.13.1 deleted it before asking, and an
+# interrupted reset lost every answer). A later run on the same project
+# prints one line and starts; a set that is wider than the approved one
+# (a manifest that now calls for a registry, a --domain, Chrome or local
+# ports back on after an opt-out) is shown again for one yes, a narrower
+# run (--no-chrome, --no-local, --no-audit) starts without a question. On a
+# first run --audit, --no-audit, --audit-repo and --domain set the answers
+# the set shows and are stored with it; on every later run they apply to
+# that run only (--audit-repo none: local only for this run). Each run gets
+# its own settings file under srt/, so two overlapping launches of one
+# project never read each other's.
 #
 #   --audit            KAD_AUDIT=1 for this run (the stored default is on)
 #   --no-audit         KAD_AUDIT unset for this run
@@ -100,16 +106,13 @@ set -euo pipefail
 umask 077
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-conf_dir="${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}"
-conf_dir="$(mkdir -p "$conf_dir" && cd "$conf_dir" && pwd)"   # absolute: kad changes directory before srt starts
-conf="$conf_dir/launcher.json"
 project="$PWD"; yes=0; check=0; audit=""; installed=0; reset=0; chrome=1; local=1; install_runtime=0
-audit_repo_arg=""; domains_arg=(); keep_env=(); claude_args=(); gh_token_env=""; github=1
+audit_repo_arg=""; audit_repo_set=0; domains_arg=(); keep_env=(); claude_args=(); gh_token_env=""; github=1
 case "$root" in */plugins/cache/*|*/plugins/repos/*) installed=1 ;; esac   # Claude Code's plugin cache: the plugin is already loaded
 while [ $# -gt 0 ]; do
   case "$1" in
     --project) project="$2"; shift 2 ;;
-    --audit-repo) audit_repo_arg="$2"; [ "$audit_repo_arg" = none ] && audit_repo_arg=""; shift 2 ;;   # "none" is no repository, not a URL
+    --audit-repo) audit_repo_arg="$2"; audit_repo_set=1; [ "$audit_repo_arg" = none ] && audit_repo_arg=""; shift 2 ;;   # "none" is no repository, not a URL
     --audit) audit=1; shift ;;
     --no-audit) audit=0; shift ;;
     --install-runtime) install_runtime=1; shift ;;
@@ -124,13 +127,19 @@ while [ $# -gt 0 ]; do
     --yes) yes=1; shift ;;
     --check) check=1; shift ;;
     --reset) reset=1; shift ;;
-    -h|--help) sed -n '2,98p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,104p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --) shift; claude_args=("$@"); break ;;
     --relaunch|--prepare) echo "kad: $1 is gone since 0.14.0: kad is the way in, run it from a terminal at the project's root; nothing restarts" >&2; exit 2 ;;
     *) echo "kad: unknown argument $1 (arguments for claude go after --)" >&2; exit 2 ;;
   esac
 done
 project="$(cd "$project" && pwd)"
+# The config directory, absolute (kad changes directory before srt starts);
+# --check makes nothing, not even the directory.
+conf_dir="${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}"
+if [ "$check" = 1 ]; then conf_dir="$(python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "$conf_dir")"
+else conf_dir="$(mkdir -p "$conf_dir" && cd "$conf_dir" && pwd)"; fi
+conf="$conf_dir/launcher.json"
 
 say() { printf 'kad: %s\n' "$*" >&2; }
 ask() {  # ask <prompt> <default> -> answer on stdout; the default when --yes or no terminal
@@ -185,31 +194,54 @@ if ! command -v srt >/dev/null; then
 fi
 
 # 3. The stored answers and the project's approval. The file is read whole,
-#    rewritten whole through a temporary name, and never deleted: nothing in
-#    this script removes it, so an interrupted or declined run leaves the
-#    answers as they were.
+#    rewritten whole under a lock through a temporary name, and never
+#    deleted: nothing in this script removes it, so an interrupted or
+#    declined run leaves the answers as they were. The three answers live
+#    in the project's entry; a project without its own falls back to the
+#    root-level ones (where 0.13.x stored them), which also seed a new
+#    project's defaults.
 write_json() {  # write_json <path>: JSON on stdin, written to a temp name then renamed
   local path="$1" tmpf
   tmpf="$(mktemp "$path.XXXXXX")"
   cat > "$tmpf" && chmod 600 "$tmpf" && mv -f "$tmpf" "$path"
 }
-read_conf() {  # read_conf <key> [<project>] -> value (list keys joined by spaces); empty on a missing file or key
+read_conf() {  # read_conf <key> [project|root] -> value (list keys joined by spaces); empty on a missing file or key.
+  # With "project", the project's entry first, then the root (the 0.13.x place); "root" reads the root only.
   [ -f "$conf" ] || { printf ''; return; }
-  python3 -I - "$conf" "$1" "${2:-}" <<'PY' || { say "$conf is not valid JSON; fix it by hand (it is only ever rewritten whole, never deleted)"; exit 2; }
+  python3 -I - "$conf" "$1" "${2:-root}" "$project" <<'PY' || { say "$conf is not valid JSON; fix it by hand (it is only ever rewritten whole, never deleted)"; exit 2; }
 import json, sys
 try:
     d = json.load(open(sys.argv[1]))
 except ValueError:
     sys.exit(1)
-if sys.argv[3]:
-    d = d.get("projects", {}).get(sys.argv[3], {})
-v = d.get(sys.argv[2], "")
-print(" ".join(v) if isinstance(v, list) else v)
+if not isinstance(d, dict):
+    d = {}
+key, scope, project = sys.argv[2], sys.argv[3], sys.argv[4]
+entry = (d.get("projects") or {}).get(project) or {}
+if scope == "project" and key in entry:
+    v = entry[key]
+elif scope == "project" and key in ("approved", "set"):
+    v = ""
+else:
+    v = d.get(key, "")
+if isinstance(v, bool):
+    v = "1" if v else "0"
+print(" ".join(v) if isinstance(v, list) else (json.dumps(v) if isinstance(v, dict) else v))
 PY
 }
-write_conf() {  # the three answers, this project's approval and the domains its manifests called for; other projects' entries kept
+lock_conf() {  # a directory as the lock: mkdir is atomic everywhere; waits up to five seconds
+  local i=0
+  while ! mkdir "$conf.lock" 2>/dev/null; do
+    i=$((i + 1)); [ "$i" -lt 50 ] || { say "another kad holds $conf.lock for more than five seconds; remove it if no kad is running"; exit 2; }
+    sleep 0.1
+  done
+  trap 'rmdir "$conf.lock" 2>/dev/null' EXIT
+}
+unlock_conf() { rmdir "$conf.lock" 2>/dev/null || true; trap - EXIT; }
+write_conf() {  # under the lock: this project's answers, approval and approved set into its entry; the root seeded once; other entries kept
+  lock_conf
   KAD_CONF="$conf" KAD_AUDIT_ON="$stored_audit" KAD_REPO="$stored_repo" KAD_DOMAINS="$stored_domains" \
-  KAD_PROJECT="$project" KAD_PROJECT_DOMAINS="$project_domains" python3 -I - <<'PY' | write_json "$conf"
+  KAD_PROJECT="$project" KAD_SET="$(effective_set)" python3 -I - <<'PY' | write_json "$conf"
 import datetime, json, os
 try:
     d = json.load(open(os.environ["KAD_CONF"]))
@@ -217,38 +249,45 @@ try:
         d = {}
 except (OSError, ValueError):
     d = {}
-d["audit"] = os.environ["KAD_AUDIT_ON"] == "1"
-d["audit_repo"] = os.environ["KAD_REPO"]
-d["domains"] = os.environ["KAD_DOMAINS"].split()
+answers = {"audit": os.environ["KAD_AUDIT_ON"] == "1", "audit_repo": os.environ["KAD_REPO"], "domains": os.environ["KAD_DOMAINS"].split()}
+for k, v in answers.items():
+    d.setdefault(k, v)   # the root: the defaults a new project starts from, seeded by the first project, never overwritten
 projects = d.get("projects")
 if not isinstance(projects, dict):
     projects = {}
-projects[os.environ["KAD_PROJECT"]] = {
-    "approved": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-    "domains": os.environ["KAD_PROJECT_DOMAINS"].split(),
-}
+entry = dict(answers)
+entry["approved"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+entry["set"] = json.loads(os.environ["KAD_SET"])
+projects[os.environ["KAD_PROJECT"]] = entry
 d["projects"] = projects
 print(json.dumps(d, indent=2))
 PY
+  unlock_conf
 }
-mkdir -p "$conf_dir/srt"
+[ "$check" = 1 ] || mkdir -p "$conf_dir/srt"
 first_machine=0
 if [ -f "$conf" ]; then
-  stored_audit="$(read_conf audit)"; stored_audit="${stored_audit:-1}"
-  stored_repo="$(read_conf audit_repo)"
-  stored_domains="$(read_conf domains)"
+  stored_audit="$(read_conf audit project)"; stored_audit="${stored_audit:-1}"
+  stored_repo="$(read_conf audit_repo project)"
+  stored_domains="$(read_conf domains project)"
+  # A first run on this project with a flag: the flag is the answer the set shows and stores.
+  approved="$(read_conf approved project)"
+  if [ -z "$approved" ]; then
+    [ -n "$audit" ] && stored_audit="$audit"
+    [ "$audit_repo_set" = 1 ] && stored_repo="$audit_repo_arg"
+    if [ "${#domains_arg[@]}" -gt 0 ]; then stored_domains="$stored_domains ${domains_arg[*]}"; domains_arg=(); fi
+    audit=""; audit_repo_set=0
+  fi
 else
   # First run on this machine: a flag sets an answer, the set shows the rest
   # as defaults (audit on, no repository, no extra domains) and "n" opens them.
-  first_machine=1
+  first_machine=1; approved=""
   stored_audit="${audit:-1}"; stored_repo="$audit_repo_arg"; stored_domains="${domains_arg[*]:-}"
-  domains_arg=()   # stored above; not also added for this run
+  domains_arg=(); audit=""; audit_repo_set=0   # stored above; not also applied to this run
 fi
-case "$stored_audit" in True|true) stored_audit=1 ;; False|false) stored_audit=0 ;; esac
-approved="$(read_conf approved "$project")"
-approved_domains="$(read_conf domains "$project")"
-# The domains the project's own manifests call for: shown on the set,
-# stored with the approval, and a change since then is shown again.
+stored_domains="$(printf '%s' "$stored_domains" | tr -s ' ' | sed 's/^ //; s/ $//')"
+# The domains the project's own manifests call for: shown on the set and
+# part of the approved set, so a manifest that appears later is shown again.
 project_domains=""
 [ -f "$project/package.json" ] && project_domains="$project_domains registry.npmjs.org"
 { [ -f "$project/pyproject.toml" ] || [ -f "$project/requirements.txt" ] || [ -f "$project/Pipfile" ]; } && project_domains="$project_domains pypi.org files.pythonhosted.org"
@@ -256,10 +295,46 @@ project_domains=""
 [ -f "$project/Cargo.toml" ] && project_domains="$project_domains crates.io static.crates.io index.crates.io"
 [ -f "$project/Gemfile" ] && project_domains="$project_domains rubygems.org index.rubygems.org"
 project_domains="${project_domains# }"
+# This run's audit mode and repository: the flag for this run only, else the
+# stored answer (--audit-repo none is an explicit answer: local only).
+run_audit() { printf '%s' "${audit:-$stored_audit}"; }
+run_repo() { if [ "$audit_repo_set" = 1 ]; then printf '%s' "$audit_repo_arg"; else printf '%s' "$stored_repo"; fi; }
+# The effective permission set of this run, as JSON, compared with the
+# approved one: anything wider is shown again for one yes.
+effective_set() {
+  KAD_CHROME_ON="$chrome" KAD_LOCAL_ON="$local" KAD_AUDIT_ON="$(run_audit)" KAD_REPO="$(run_repo)" KAD_GITHUB="$github" \
+  KAD_ALL_DOMAINS="$stored_domains $project_domains ${domains_arg[*]:-}" python3 -I - <<'PY'
+import json, os
+print(json.dumps({"chrome": os.environ["KAD_CHROME_ON"] == "1", "local": os.environ["KAD_LOCAL_ON"] == "1",
+                  "audit": os.environ["KAD_AUDIT_ON"] == "1", "audit_repo": os.environ["KAD_REPO"], "github": os.environ["KAD_GITHUB"] == "1",
+                  "domains": sorted(set(os.environ["KAD_ALL_DOMAINS"].split()))}, sort_keys=True))
+PY
+}
+set_widening() {  # what this run's set has that the approved one lacks; empty when nothing
+  KAD_NOW="$(effective_set)" KAD_WAS="$(read_conf set project)" python3 -I - <<'PY'
+import json, os
+now = json.loads(os.environ["KAD_NOW"]); was = os.environ["KAD_WAS"]
+was = json.loads(was) if was else None
+if was is None:
+    print("the approved set did not record the permissions (approved before 0.14.0's full set)"); raise SystemExit
+wider = []
+for k, name in (("chrome", "Chrome on"), ("local", "local ports allowed"), ("audit", "audit mode on"), ("github", "a GitHub token")):
+    if now.get(k) and not was.get(k):
+        wider.append(name)
+if now.get("audit_repo") and now.get("audit_repo") != was.get("audit_repo"):
+    wider.append("audit repository " + now["audit_repo"])
+new = [d for d in now.get("domains", []) if d not in (was.get("domains") or [])]
+if new:
+    wider.append("domains " + ", ".join(new))
+print("; ".join(wider))
+PY
+}
 need_screen=0; why_screen=""
 if [ -z "$approved" ]; then need_screen=1; why_screen="first run on this project"
 elif [ "$reset" = 1 ]; then need_screen=1; why_screen="--reset"
-elif [ "$project_domains" != "$approved_domains" ]; then need_screen=1; why_screen="the project's manifests now call for other domains than the approved set (${approved_domains:-none} → ${project_domains:-none})"
+else
+  wider="$(set_widening)"
+  [ -n "$wider" ] && { need_screen=1; why_screen="this run's set is wider than the one approved $approved ($wider)"; }
 fi
 
 # 3a. GitHub, for the loop's delivery inside the fence. gh's own config
@@ -278,7 +353,8 @@ if [ "$github" = 1 ]; then
   else
     gh_line="no GitHub token (gh is not installed); delivery stops at the push"
   fi
-  [ -n "$gh_token" ] && gh_line="the GitHub token from ${gh_token_env:-your gh login} as GH_TOKEN, the one credential the session holds (gh config in $gh_dir; gh is git's credential helper)"
+  if [ -n "$gh_token" ]; then gh_line="the GitHub token from ${gh_token_env:-your gh login} as GH_TOKEN, the one credential the session holds (gh config in $gh_dir; gh is git's credential helper)"
+  else say "warning: $gh_line"; fi
   if [ "$check" = 0 ]; then
     mkdir -p "$gh_dir"
     [ -f "$gh_dir/config.yml" ] || printf 'git_protocol: https\n' > "$gh_dir/config.yml"
@@ -320,25 +396,39 @@ if [ "$chrome" = 1 ]; then
     chrome_line="on, but no Chromium-family browser profile was found on this machine: install Chrome and the Claude in Chrome extension (chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn); a slice that touches UI stops at A until a browser answers"
   else
     wrote=""; missing=""
-    [ -x "$chrome_host" ] || missing="$missing $chrome_host"
-    while IFS= read -r d; do [ -f "$d/$chrome_manifest" ] || missing="$missing $d/$chrome_manifest"; done <<< "$profiles"
+    host_ok() { [ -x "$chrome_host" ] && grep -q -- '--chrome-native-host' "$chrome_host"; }
+    manifest_ok() {  # valid JSON naming the wrapper and the extension; anything else is rewritten
+      KAD_HOST="$chrome_host" python3 -I - "$1" <<'PY' 2>/dev/null
+import json, os, sys
+m = json.load(open(sys.argv[1]))
+ok = m.get("name") == "com.anthropic.claude_code_browser_extension" and m.get("path") == os.environ["KAD_HOST"] \
+     and "chrome-extension://fcoeoabgfenejglbffodgkkbkcdhcgfn/" in (m.get("allowed_origins") or [])
+sys.exit(0 if ok else 1)
+PY
+    }
+    host_ok || missing="$missing $chrome_host"
+    while IFS= read -r d; do manifest_ok "$d/$chrome_manifest" || missing="$missing $d/$chrome_manifest"; done <<< "$profiles"
     chrome_line="on: Claude in Chrome drives your real browser, which runs outside the fence (the extension must be installed and the browser open for a slice that touches UI)"
-    [ -n "$missing" ] && chrome_line="$chrome_line; the native-messaging files Claude Code has not written yet are written once the set is approved:$missing (open the browser again afterwards if it was running)"
+    [ "$(uname -s)" = Linux ] && chrome_line="$chrome_line; on Linux this opens every unix socket to the session, the SSH agent's and Docker's included, because the runtime cannot allow the extension's socket alone (--no-chrome closes them)"
+    [ -n "$missing" ] && chrome_line="$chrome_line; the native-messaging files Claude Code has not written, or left invalid, are written once the set is approved:$missing (open the browser again afterwards if it was running)"
   fi
 fi
 write_chrome_files() {  # after the approval: the wrapper and each missing manifest, with the content Claude Code writes
   local d
   [ -n "$missing" ] || return 0
-  if [ ! -x "$chrome_host" ]; then
+  local tmpf
+  if ! host_ok; then
     mkdir -p "$(dirname "$chrome_host")"
-    printf '#!/bin/sh\n# Chrome native host wrapper script\n# Written by kad (kad-dev-team) because Claude Code had not written its own yet; Claude Code rewrites it\nexec %s --chrome-native-host\n' "$(printf '%q' "$(command -v claude)")" > "$chrome_host"
-    chmod 755 "$chrome_host"
+    tmpf="$(mktemp "$chrome_host.XXXXXX")"
+    printf '#!/bin/sh\n# Chrome native host wrapper script\n# Written by kad (kad-dev-team) because Claude Code had not written its own yet; Claude Code rewrites it\nexec %s --chrome-native-host\n' "$(printf '%q' "$(command -v claude)")" > "$tmpf"
+    chmod 755 "$tmpf" && mv -f "$tmpf" "$chrome_host"
     wrote="$wrote $chrome_host"
   fi
   while IFS= read -r d; do
-    [ -f "$d/$chrome_manifest" ] && continue
+    manifest_ok "$d/$chrome_manifest" && continue
     mkdir -p "$d"
-    KAD_HOST="$chrome_host" python3 -I - <<'PY' > "$d/$chrome_manifest"
+    tmpf="$(mktemp "$d/.$chrome_manifest.XXXXXX")"
+    KAD_HOST="$chrome_host" python3 -I - <<'PY' > "$tmpf"
 import json, os
 print(json.dumps({
     "name": "com.anthropic.claude_code_browser_extension",
@@ -348,26 +438,27 @@ print(json.dumps({
     "allowed_origins": ["chrome-extension://fcoeoabgfenejglbffodgkkbkcdhcgfn/"],
 }, indent=2))
 PY
-    chmod 644 "$d/$chrome_manifest"
-    wrote="$wrote $d/$chrome_manifest"
+    if manifest_ok "$tmpf"; then chmod 644 "$tmpf" && mv -f "$tmpf" "$d/$chrome_manifest"; wrote="$wrote $d/$chrome_manifest"
+    else rm -f "$tmpf"; say "warning: could not write a valid $d/$chrome_manifest; Chrome will not reach this session until claude --chrome writes it"; fi
   done <<< "$profiles"
   say "chrome: wrote the native-messaging files Claude Code had not written yet:$wrote"
 }
 
-# 4. The runtime's settings for this project, regenerated every run so a
+# 4. The runtime's settings for this run, written fresh every run so a
 #    changed answer applies (--check only names the path). Every key is
 #    required: the runtime refuses a file missing one rather than run on
 #    defaults that would drop its rules. The file name carries a hash of
-#    the full path, so two projects never share one.
+#    the project's full path and this run's process id, so two projects
+#    never share one and two overlapping launches of one project never read
+#    each other's (the runtime reads it at start; the orchestrator's check
+#    reads it through the session); files from runs older than a week go.
 slug="$(printf '%s' "$(basename "$project")" | tr -c 'A-Za-z0-9_.-' '_')-$(printf '%s' "$project" | shasum -a 256 2>/dev/null | cut -c1-12 || printf '%s' "$project" | sha256sum | cut -c1-12)"
-settings="$conf_dir/srt/$slug.json"
+settings="$conf_dir/srt/$slug.$$.json"
+[ "$check" = 1 ] || find "$conf_dir/srt" -name "$slug.*.json" -mtime +7 -delete 2>/dev/null || true
 audit_dir="${KAD_AUDIT_DIR:-$HOME/.claude/kad-audit}"
 audit_clone="$audit_dir/repo"
 chrome_sock=""
-if [ "$chrome" = 1 ]; then
-  chrome_sock="/tmp/claude-mcp-browser-bridge-$(id -un)"
-  [ "$(uname -s)" = Linux ] && chrome_note="chrome on Linux allows every unix socket (the runtime cannot allow one path there); the SSH agent and Docker sockets are reachable for this session"
-fi
+[ "$chrome" = 1 ] && chrome_sock="/tmp/claude-mcp-browser-bridge-$(id -un)"
 gen_settings() {
   KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_CLAUDE_DIR="$claude_dir" KAD_GH_DIR="$gh_dir" KAD_AUDIT_DIR_W="$audit_dir" KAD_CHROME_SOCK="$chrome_sock" \
   KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains $project_domains ${domains_arg[*]:-}$([ "$chrome" = 1 ] && echo ' bridge.claudeusercontent.com mcp-proxy.anthropic.com')" KAD_PTY="$([ "$(uname -s)" = Darwin ] && echo 1 || echo 0)" python3 -I - <<'PY'
@@ -436,7 +527,8 @@ plugin_arg=(); [ "$installed" = 1 ] || plugin_arg=(--plugin-dir "$root")
 #    project, on --reset, on --check and when the set changed; approved
 #    with one yes, stored with the three answers behind it.
 show_set() {
-  local run_audit="${audit:-$stored_audit}" run_repo="${audit_repo_arg:-$stored_repo}" extra
+  local run_audit run_repo extra
+  run_audit="$(run_audit)"; run_repo="$(run_repo)"
   extra="$(printf '%s' "$stored_domains ${domains_arg[*]:-}" | tr -s ' ' | sed 's/^ //; s/ $//')"
   say "${why_screen:-the set this session starts with}: $project"
   say "  writes       the project; the audit directory $audit_dir; Claude Code's own files ($claude_dir, ~/.claude.json), the temp directory, npm's cache and kad's gh directory ($gh_dir); never Claude Code's user settings, hooks, commands, agents, skills or plugins"
@@ -465,20 +557,20 @@ if [ "$need_screen" = 1 ]; then
     if [ "$asked" = 1 ]; then say "not approved; nothing stored, nothing started"; exit 2; fi
     asked=1
     if approve "audit mode: log each prompt, skill and agent call and keep the transcripts of this project's sessions, on your machine? (recommended)"; then stored_audit=1; else stored_audit=0; fi
-    if [ "$stored_audit" = 1 ]; then stored_repo="$(ask 'audit repository clone URL (the audit material is synced there at the end of each slice; empty for none, local only)' "$stored_repo")"
+    if [ "$stored_audit" = 1 ]; then stored_repo="$(ask 'audit repository clone URL (the audit material is synced there at the end of each slice; "none" for local only; Enter keeps the shown value)' "$stored_repo")"
     else stored_repo=""; fi
-    stored_domains="$(ask 'extra domains the sessions may reach, space-separated (beyond the API, GitHub and what the manifests call for; empty for none)' "$stored_domains")"
-    audit=""; audit_repo_arg=""; why_screen="the set with your answers"
+    [ "$stored_repo" = none ] && stored_repo=""
+    stored_domains="$(ask 'extra domains the sessions may reach, space-separated (beyond the API, GitHub and what the manifests call for; "none" for no extra domain; Enter keeps the shown value)' "$stored_domains")"
+    [ "$stored_domains" = none ] && stored_domains=""
+    audit=""; audit_repo_set=0; audit_repo_arg=""; why_screen="the set with your answers"
   done
   write_conf
   say "approved and stored in $conf (kad --reset shows it again; kad --check prints it)"
 fi
 [ "$chrome" = 1 ] && [ -n "$profiles" ] && write_chrome_files
-# This run's audit mode and repository: the flag for this run only, else
-# the stored answer; an inherited KAD_AUDIT_REPO is never used without
-# being chosen here.
-audit="${audit:-$stored_audit}"
-audit_repo="${audit_repo_arg:-$stored_repo}"
+# An inherited KAD_AUDIT_REPO is never used without being chosen here.
+audit="$(run_audit)"
+audit_repo="$(run_repo)"
 # The audit repository is a separate repository: the sync pushes the audit
 # documents onto its default branch, which on the project's own repository
 # means onto the project.
@@ -497,11 +589,15 @@ fi
 #     commits under the project's identity.
 if [ "$audit" = 1 ] && [ -n "$audit_repo" ]; then
   mkdir -p "$audit_dir"
+  # A remote that accepts the connection and then stalls would hold the
+  # launch: git gives up when the transfer stays under 1 KB/s for 30 s.
+  export GIT_HTTP_LOW_SPEED_LIMIT=1000 GIT_HTTP_LOW_SPEED_TIME=30
   if [ -d "$audit_clone/.git" ]; then
-    git -C "$audit_clone" pull -q --ff-only 2>/dev/null || say "warning: the audit clone at $audit_clone did not fast-forward (unpushed commits, or no network); the sync reports it if the push is refused"
+    git -C "$audit_clone" pull -q --ff-only 2>/dev/null || say "warning: the audit clone at $audit_clone did not fast-forward (unpushed commits, no network, or a remote that stalled past 30 s); the sync reports it if the push is refused"
   elif ! git clone -q -- "$audit_repo" "$audit_clone"; then
-    say "warning: cloning the audit repository into $audit_clone failed (git's message above); the session's A step reports it"
+    say "warning: cloning the audit repository into $audit_clone failed (git's message above; a remote that stalls past 30 s is given up); the session's A step reports it"
   fi
+  unset GIT_HTTP_LOW_SPEED_LIMIT GIT_HTTP_LOW_SPEED_TIME
   if [ -d "$audit_clone/.git" ]; then
     for k in user.name user.email; do
       v="$(git -C "$project" config --get "$k" 2>/dev/null || true)"
@@ -549,15 +645,19 @@ plugin_data="$claude_dir/plugins/data/$(python3 -I -c 'import json,sys;print(jso
 [ "$installed" = 1 ] || [ -d "$plugin_data" ] || mkdir -p "$plugin_data" 2>/dev/null || say "warning: could not create $plugin_data; the plugin's hooks will fail inside the fence until it exists"
 
 # 8. One line, then start. The approved set is on record; --check prints it.
-[ "${chrome_note:-}" ] && say "$chrome_note"
 [ "${#scrubbed[@]}" -gt 0 ] && say "env dropped ${scrubbed[*]} (credential-shaped; --keep-env NAME passes one through)"
 [ "${#inherited[@]}" -gt 0 ] && say "env dropped ${inherited[*]} (another Claude Code session's: kept, they would turn transcript saving off for the one started here)"
-[ "$need_screen" = 1 ] || say "$project: set approved $(read_conf approved "$project"); fenced, audit $([ "$audit" = 1 ] && echo "on${audit_repo:+ → $audit_repo}" || echo off), chrome $([ "$chrome" = 1 ] && echo on || echo off), $([ -n "$gh_token" ] && echo 'GitHub token' || echo 'no GitHub token'), local ports $([ "$local" = 1 ] && echo allowed || echo denied) (kad --check prints the set, kad --reset asks again)"
+[ "$need_screen" = 1 ] || say "$project: set approved $approved; fenced, audit $([ "$audit" = 1 ] && echo "on${audit_repo:+ → $audit_repo}" || echo off), chrome $([ "$chrome" = 1 ] && echo on || echo off), $([ -n "$gh_token" ] && echo 'GitHub token' || echo 'no GitHub token'), local ports $([ "$local" = 1 ] && echo allowed || echo denied) (kad --check prints the set, kad --reset asks again)"
 
 export KAD_SRT_SETTINGS="$settings"
 kept="${keep_env[*]:-}"
+# KAD_GH_DIR and KAD_AUDIT_DIR name the launcher's own folders whatever this
+# run's GitHub and audit choices: both are in the settings' allowWrite, and
+# the orchestrator's sandbox check reads them to allow exactly those. Audit
+# mode itself is KAD_AUDIT=1, which the hooks and the sync key on.
+export KAD_GH_DIR="$gh_dir" KAD_AUDIT_DIR="$audit_dir"
 if [ -n "$gh_token" ]; then
-  export GH_TOKEN="$gh_token" GH_CONFIG_DIR="$gh_dir" GIT_TERMINAL_PROMPT=0 KAD_GH_DIR="$gh_dir"
+  export GH_TOKEN="$gh_token" GH_CONFIG_DIR="$gh_dir" GIT_TERMINAL_PROMPT=0
   # git's credential helper for the session, by environment, no file written:
   # the keychain helper reset, then gh's, which answers from GH_TOKEN
   export GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential'
@@ -567,11 +667,10 @@ if [ -n "$gh_token" ]; then
   fi
   kept="$kept GH_TOKEN"
 fi
-[ "$github" = 1 ] && export KAD_GH_DIR="$gh_dir"
 export KAD_KEPT_ENV="${kept# }"
 unset KAD_AUDIT KAD_AUDIT_REPO KAD_CHROME
 if [ "$audit" = 1 ]; then
-  export KAD_AUDIT=1 KAD_AUDIT_DIR="$audit_dir"
+  export KAD_AUDIT=1
   [ -n "$audit_repo" ] && export KAD_AUDIT_REPO="$audit_repo"
 fi
 [ "$chrome" = 1 ] && export KAD_CHROME=1

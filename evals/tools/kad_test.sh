@@ -68,8 +68,12 @@ run() {  # run <stdin> <args...> -> output in $out, status in $rc
 run /dev/null --check
 check "check: exit 0" [ "$rc" = 0 ]
 check "check: names the first run" has "$out" "first run on this machine"
-check "check: shows the set (writes, never reads, network, chrome, audit)" bash -c '[ "$(printf "%s" "$1" | grep -c "  writes \|  never reads \|  network \|  chrome \|  audit ")" = 5 ]' _ "$out"
-check "check: nothing written" [ ! -f "$conf" ]
+check "check: shows the set with its values" bash -c '
+  grep -q "  writes       the project; the audit directory $2/audit" <<< "$1" && grep -q "  never reads .*~/.ssh.*~/.config/gh" <<< "$1" \
+  && grep -q "  network .*api.anthropic.com.*github.com.*bridge.claudeusercontent.com.*registry.npmjs.org" <<< "$1" \
+  && grep -q "  credential .*GH_TOKEN" <<< "$1" && grep -q "  local ports  allowed" <<< "$1" \
+  && grep -q "  chrome       on" <<< "$1" && grep -q "  audit        on.*$2/audit" <<< "$1"' _ "$out" "$T"
+check "check: nothing written, not even the config directory" [ ! -e "$T/conf" ]
 check "check: nothing started" bash -c '! grep -q srt-stub <<< "$1"' _ "$out"
 
 # 2. First run with no terminal and no --yes: stops, stores nothing.
@@ -83,19 +87,21 @@ check "first run, no terminal: nothing started" bash -c '! grep -q srt-stub <<< 
 run /dev/null --yes --domain extra.example
 check "approve: exit 0" [ "$rc" = 0 ]
 check "approve: says stored" has "$out" "approved and stored in $conf"
-check "approve: starts srt with the settings file and claude --chrome" bash -c 'grep -q "srt-stub: --settings $2/conf/srt/proj-[0-9a-f]*.json claude --plugin-dir $3 --chrome" <<< "$1"' _ "$out" "$T" "$root"
+check "approve: starts srt with a per-run settings file and claude --chrome" bash -c 'grep -q "srt-stub: --settings $2/conf/srt/proj-[0-9a-f]*\.[0-9]*\.json claude --plugin-dir $3 --chrome" <<< "$1"' _ "$out" "$T" "$root"
 check "approve: KAD_CHROME=1 in the session" has "$out" "KAD_CHROME=1"
 check "approve: KAD_GH_DIR names the launcher's gh folder" has "$out" "KAD_GH_DIR=$T/conf/gh"
 check "approve: GH_TOKEN from the gh login" has "$out" "GH_TOKEN=ghs_stub_token"
-check "approve: KAD_SRT_SETTINGS exported" has "$out" "KAD_SRT_SETTINGS=$T/conf/srt/"
+settings="$(sed -n 's/^srt-stub: --settings \([^ ]*\) .*/\1/p' <<< "$out")"
+check "approve: KAD_SRT_SETTINGS is exactly the file srt was given, and it exists" bash -c 'grep -qx "KAD_SRT_SETTINGS=$2" <<< "$1" && [ -f "$2" ]' _ "$out" "$settings"
+check "approve: KAD_AUDIT_DIR exported" has "$out" "KAD_AUDIT_DIR=$T/audit"
 check "approve: audit on by default" has "$out" "KAD_AUDIT=1"
-check "approve: stored file lists the project" python3 -I -c '
+check "approve: stored file lists the project with its answers and the approved set" python3 -I -c '
 import json, sys; d = json.load(open(sys.argv[1])); p = d["projects"][sys.argv[2]]
-assert p["approved"].endswith("Z") and p["domains"] == ["registry.npmjs.org"], p
-assert d["audit"] is True and d["audit_repo"] == "" and d["domains"] == ["extra.example"], d
+assert p["approved"].endswith("Z") and p["domains"] == ["extra.example"] and p["audit"] is True and p["audit_repo"] == "", p
+assert p["set"] == {"audit": True, "audit_repo": "", "chrome": True, "domains": ["extra.example", "registry.npmjs.org"], "github": True, "local": True}, p["set"]
+assert d["audit"] is True and d["audit_repo"] == "" and d["domains"] == ["extra.example"], d   # the root: the defaults for the next project
 ' "$conf" "$T/proj"
 check "approve: stored file owner-readable only" bash -c '[ "$(stat -f %Lp "$1" 2>/dev/null || stat -c %a "$1")" = 600 ]' _ "$conf"
-settings="$(ls "$T"/conf/srt/proj-*.json)"
 check "approve: settings allow the launcher's folders and carry the domains" python3 -I -c '
 import json, sys; s = json.load(open(sys.argv[1])); T = sys.argv[2]
 w = s["filesystem"]["allowWrite"]; d = s["network"]["allowedDomains"]
@@ -146,8 +152,7 @@ check "reset --yes: stored again" has "$out" "approved and stored"
 check "reset --yes: other project kept, this one re-approved, answers kept" python3 -I -c '
 import json, sys; d = json.load(open(sys.argv[1]))
 assert "/elsewhere/other" in d["projects"], d
-assert d["projects"][sys.argv[2]]["domains"] == ["registry.npmjs.org"]
-assert d["domains"] == ["extra.example"] and d["audit"] is True, d
+assert d["projects"][sys.argv[2]]["domains"] == ["extra.example"] and d["projects"][sys.argv[2]]["audit"] is True, d
 ' "$conf" "$T/proj"
 
 # 7. A changed set is shown again for one yes.
@@ -155,19 +160,53 @@ printf '[project]\nname = "proj"\n' > "$T/proj/pyproject.toml"
 cp "$conf" "$T/conf.before"
 run /dev/null
 check "changed set, no terminal: exit 2" [ "$rc" = 2 ]
-check "changed set: names the change" has "$out" "now call for other domains"
+check "changed set: names the widening" has "$out" "wider than the one approved"
+check "changed set: names the new domains" has "$out" "domains files.pythonhosted.org, pypi.org"
 check "changed set: file untouched" cmp -s "$conf" "$T/conf.before"
 run /dev/null --yes
 check "changed set --yes: exit 0" [ "$rc" = 0 ]
-check "changed set --yes: pypi stored with the approval" python3 -I -c '
+check "changed set --yes: pypi in the approved set" python3 -I -c '
 import json, sys; d = json.load(open(sys.argv[1]))
-assert d["projects"][sys.argv[2]]["domains"] == ["registry.npmjs.org", "pypi.org", "files.pythonhosted.org"], d
+assert "pypi.org" in d["projects"][sys.argv[2]]["set"]["domains"], d
 ' "$conf" "$T/proj"
+settings="$(sed -n 's/^srt-stub: --settings \([^ ]*\) .*/\1/p' <<< "$out")"
 check "changed set --yes: pypi in the settings" bash -c 'grep -q files.pythonhosted.org "$1"' _ "$settings"
+
+# 7b. A per-run --domain widens the set (one yes); a narrower run asks nothing.
+run /dev/null --domain more.example
+check "per-run domain, no terminal: exit 2 (wider)" bash -c '[ "$1" = 2 ] && grep -q "domains more.example" <<< "$2"' _ "$rc" "$out"
+run /dev/null --no-local
+check "narrower run (--no-local): starts without a question" bash -c '[ "$1" = 0 ] && grep -q "srt-stub:" <<< "$2"' _ "$rc" "$out"
+
+# 7c. Answers are per project: a second project with audit off and a local
+#     audit repository leaves the first project's answers alone, and
+#     --audit-repo none is local-only for one run.
+git init -q --bare "$T/audit-remote.git"
+mkdir -p "$T/proj2"
+rc=0; out="$(cd "$T/proj2" && "$kad" --yes --audit-repo "$T/audit-remote.git" 2>&1 < /dev/null)" || rc=$?
+check "second project: approved with its own repository" bash -c '[ "$1" = 0 ] && grep -q "KAD_AUDIT_REPO=$3/audit-remote.git" <<< "$2"' _ "$rc" "$out" "$T"
+check "second project: the clone was made under the audit directory" [ -d "$T/audit/repo/.git" ]
+run /dev/null
+check "first project: still no repository, audit on" bash -c 'grep -q "KAD_AUDIT=1" <<< "$1" && ! grep -q "KAD_AUDIT_REPO=" <<< "$1"' _ "$out"
+rc=0; out="$(cd "$T/proj2" && "$kad" --audit-repo none 2>&1 < /dev/null)" || rc=$?
+check "second project, --audit-repo none: local only for this run" bash -c '[ "$1" = 0 ] && grep -q "KAD_AUDIT=1" <<< "$2" && ! grep -q "KAD_AUDIT_REPO=" <<< "$2"' _ "$rc" "$out"
+check "second project: stored repository untouched" python3 -I -c '
+import json, sys; d = json.load(open(sys.argv[1])); assert d["projects"][sys.argv[2]]["audit_repo"] == sys.argv[3], d
+' "$conf" "$T/proj2" "$T/audit-remote.git"
+
+# 7d. A manifest left invalid is repaired on the next launch, atomically.
+printf 'garbage' > "$manifest"
+run /dev/null
+check "invalid manifest: repaired" python3 -I -c '
+import json, sys; m = json.load(open(sys.argv[1])); assert m["path"] == sys.argv[2], m
+' "$manifest" "$HOME/.claude/chrome/chrome-native-host"
+check "invalid manifest: said so" has "$out" "chrome: wrote the native-messaging files"
+check "invalid manifest: no temp file left" bash -c '! ls "$(dirname "$1")"/.com.anthropic.* 2>/dev/null | grep -q .' _ "$manifest"
 
 # 8. --no-chrome: the bridge stays closed, claude starts with --no-chrome.
 run /dev/null --no-chrome
 check "no-chrome: exit 0" [ "$rc" = 0 ]
+settings="$(sed -n 's/^srt-stub: --settings \([^ ]*\) .*/\1/p' <<< "$out")"
 check "no-chrome: claude --no-chrome" has "$out" "claude --plugin-dir $root --no-chrome"
 check "no-chrome: KAD_CHROME unset" bash -c '! grep -q "KAD_CHROME=" <<< "$1"' _ "$out"
 check "no-chrome: no bridge host in the settings" bash -c '! grep -q bridge.claudeusercontent.com "$1"' _ "$settings"
@@ -181,6 +220,7 @@ check "prepare: refused" bash -c '[ "$1" = 2 ] && grep -q "gone since 0.14.0" <<
 # 10. Nothing in the launcher removes the stored file or opens a window.
 check "source: no rm of the stored file" bash -c '! grep -nE "rm -r?f? *\"?\\\$conf\"?" "$1"' _ "$kad"
 check "source: no osascript, no terminal window" bash -c '! grep -qE "osascript|x-terminal-emulator|gnome-terminal" "$1"' _ "$kad"
+check "no lock left behind" [ ! -d "$conf.lock" ]
 
 echo
 if [ "$fails" = 0 ]; then echo "kad test: PASS"; else echo "kad test: FAIL ($fails)"; exit 1; fi

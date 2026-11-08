@@ -145,19 +145,27 @@ domain you add); the one credential it holds (the GitHub token from your
 and file issues inside the fence; `--gh-token-env NAME` takes a
 fine-grained token instead; every other credential-shaped variable is
 dropped from the environment); local ports (allowed, for a dev server and
-the smoke runs; `--no-local` denies them); Chrome (on); audit mode (on,
-with the repository the material is synced to at the end of each slice,
-or local only). Answer `n` to change the three answers behind it (audit
-mode, the audit repository, the extra domains) and the set is shown
-again. The answers and the project's approval are stored, owner-readable
-only, in `~/.config/kad-dev-team/launcher.json`, which the launcher only
-ever rewrites whole, through a temporary file, and never deletes: a
-declined or interrupted run leaves it as it was (0.13.1's `--reset`
-deleted it before asking, and an interrupted reset lost every answer).
-**Every later run prints one line and starts.** A set that changed since
-the approval (a manifest that now calls for a registry) is shown again
-for one yes. `--audit`, `--no-audit`, `--audit-repo URL` and `--domain D`
-set the answers on the first run and change one run afterwards.
+the smoke runs; `--no-local` denies them); Chrome (on; on Linux the set
+says that this opens every unix socket to the session, the SSH agent's
+and Docker's included, since the runtime cannot allow the extension's
+socket alone); audit mode (on, with the repository the material is synced
+to at the end of each slice, or local only). Answer `n` to change the
+three answers behind it (audit mode, the audit repository, the extra
+domains; `none` clears one) and the set is shown again. The answers and
+the approval are stored per project, owner-readable only, in
+`~/.config/kad-dev-team/launcher.json` (a project without answers of its
+own starts from the file's root-level ones, where 0.13.x kept them),
+which the launcher only ever rewrites whole, under a lock, through a
+temporary file, and never deletes: a declined or interrupted run leaves it
+as it was (0.13.1's `--reset` deleted it before asking, and an interrupted
+reset lost every answer). **Every later run prints one line and starts.**
+A run whose set is wider than the approved one (a manifest that now calls
+for a registry, a `--domain`, Chrome or local ports back on after an
+opt-out, another audit repository) is shown again for one yes; a narrower
+run (`--no-chrome`, `--no-local`, `--no-audit`) starts without a question.
+`--audit`, `--no-audit`, `--audit-repo URL` and `--domain D` set the
+answers on the first run and change one run afterwards (`--audit-repo
+none` is local-only for that run).
 
 What it does every time: checks the platform (macOS, Linux and WSL2 have
 the runtime's backend; native Windows is told to run it from WSL2) and
@@ -168,14 +176,15 @@ installed Chromium-family browser's profile and the native host wrapper
 under `~/.claude/chrome/` when they are missing (Claude Code writes them
 the first time Chrome is enabled in a plain session; the fence denies both
 paths, so the launcher writes them outside it, with the same content, once
-the set is approved); writes the runtime's settings for the project under
-`~/.config/kad-dev-team/srt/` (with `allowPty` on macOS, without which
+the set is approved); writes the runtime's settings for this run under
+`~/.config/kad-dev-team/srt/`, one file per launch so two overlapping
+launches of one project never read each other's (with `allowPty` on macOS, without which
 the runtime's profile denies the terminal's raw mode and every arrow key
 lands in the session as text; the bridge hosts tunnelled past the
 runtime's TLS termination, which refuses the WebSocket upgrade the bridge
 needs, the reason run 3 never reached a browser; the extension's unix
 socket allowed, which on Linux means every unix socket, since the runtime
-cannot allow one path there); drops the credential-shaped variables and
+cannot allow one path there, and the set says so); drops the credential-shaped variables and
 another Claude Code session's variables (`CLAUDE_CODE_CHILD_SESSION` and
 its kin, which would turn transcript saving off for the session started
 here); clones the audit repository into `$KAD_AUDIT_DIR/repo/` before the

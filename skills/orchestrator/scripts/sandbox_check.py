@@ -555,7 +555,7 @@ def check_write(project, settings, srt):
         # ~/.npm is npm's cache, which an install inside the project writes;
         # the credential file ~/.npmrc is a separate path and stays denied.
         roots += [os.path.realpath(expand(r)) for r in ("~/.claude", "~/.claude.json", "/tmp", "/private/tmp", "~/.npm")]
-        roots.append(os.path.realpath(config_dir()))
+        roots.append(expand(config_dir()))   # CLAUDE_CONFIG_DIR may be tilde-prefixed; the launcher expands it the same way
         if os.environ.get("CLAUDE_CODE_TMPDIR"):
             roots.append(os.path.realpath(os.environ["CLAUDE_CODE_TMPDIR"]))
         roots += [path for _, path in launcher_dirs()]
