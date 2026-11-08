@@ -213,3 +213,15 @@ repository is the project's own origin), whose audit is H5. Two eval bars were r
 2.1.316 (the handoff's H2 note): a directly-invoked reviewer skipping
 `why-comments`, a directly-invoked heavy builder skipping its reviews; a
 candidate agent-file fix, not scheduled.
+
+## After slice 2 (2026-11-08)
+
+Slice 2 (`personal-finance-tracker-3` PR #20, 0.13.1) is reviewed in
+`audit-docs/personal-finance-tracker-3-slice-2/plugin-review/`. The work list
+that came out of it, with everything left from `.synthesis/handoff-run3.md`
+and the owner's decisions of 2026-11-08, is `.synthesis/handoff-slice2.md`:
+start (the launcher as the one way in, Chrome always, no questions), screen
+checks (the acceptance criteria walked in a real browser), the loop (the
+chunk runner, the light cadence arm with the builder as fixer, deferred
+decisions as blockers), planning data (nothing of the owner's by value) and
+audit. 4.2 is decided there (build the chunk runner); 4.3 is dropped.
