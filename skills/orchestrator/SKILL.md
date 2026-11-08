@@ -42,104 +42,53 @@ skill's job.
 ## Procedure
 
 **0. Session setup.** Once per session, before the target question and
-before anything is read: decide how this session runs, because two things
-can only be set when a session starts. The launcher `bin/kad` starts a
-session inside the sandbox runtime (the whole session fenced: file tools,
-hooks, every agent) with audit mode on (each prompt, skill and agent call
-logged and the transcripts kept, on the owner's machine, synced to the
-audit repository at the end of each slice); a session started as plain
-`claude` has neither, and nothing inside it can turn either on. Inline
-with Bash, one command:
+before anything is read. The launcher `bin/kad` is the one way a flow
+runs: it starts Claude Code inside the sandbox runtime (the whole session
+fenced: file tools, hooks, every agent) with audit mode on (each prompt,
+skill and agent call logged and the transcripts kept, on the owner's
+machine, synced to the audit repository at the end of each slice), the
+GitHub token, Claude in Chrome and the permission set the owner approved
+once for the project. A session started as plain `claude` has none of
+that, and nothing inside it can turn any of it on, so nothing in this
+step asks, prepares, restarts or relaunches a session (0.13.1's relaunch
+opened a terminal window that carried this session's variables and lost
+two runs' transcripts; gone since 0.14.0). Inline with Bash, one command:
 
 ```
-echo "session: runtime $([ "${SANDBOX_RUNTIME:-}" = 1 ] && echo yes || echo no); launcher $([ -n "${KAD_SRT_SETTINGS:-}" ] && echo yes || echo no); audit ${KAD_AUDIT:-off}; stored answers: $([ -f "${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}/launcher.json" ] && echo yes || echo none)"
+echo "session: runtime $([ "${SANDBOX_RUNTIME:-}" = 1 ] && echo yes || echo no); launcher $([ -n "${KAD_SRT_SETTINGS:-}" ] && echo yes || echo no); audit ${KAD_AUDIT:-off}; chrome ${KAD_CHROME:-off}"
 ```
 
 `runtime yes` is `SANDBOX_RUNTIME=1`, set by the runtime itself for every
 process it fences, the same test `sandbox_check.py` makes; `launcher yes`
-is `KAD_SRT_SETTINGS`, which only `bin/kad` exports, and which proves
-nothing about the fence on its own. `audit on` without the launcher means
-the owner exported `KAD_AUDIT=1` for this session by hand (the README's
-audit section): the hooks are logging already, and nothing in this step
-turns that off or on for the current session.
+is `KAD_SRT_SETTINGS`, which only `bin/kad` exports.
 
-- **Runtime yes, launcher yes**: the launcher started this session and
-  audit was decided then. Nothing to decide: say so in one line and go
-  to step 1.
-- **Runtime yes, launcher no** (`srt claude` by hand, or a harness that
-  fences its runs): the fence is there, so no restart is needed for it;
-  only audit mode is open. With `audit on`, nothing to decide: one line,
-  step 1. With `audit off`, ask the audit-mode question below and
-  nothing else; on "on", say that audit starts with a session the
-  launcher starts (the relaunch command below, with `--audit`; the owner
-  runs it when they want it) and go on to step 1 in this session; on
-  "off", step 1.
-- **No Bash in this session**: nothing of this step can run. Say so in one
-  line and go to step 1; never put the audit or restart question to an
-  owner whose session cannot act on the answer. The chunk loop's own
-  check (A.1) still runs when the flow gets there.
+- **Runtime yes**: the fence is there. Under the launcher (`launcher
+  yes`) everything else was decided when it started; fenced by something
+  else (`srt claude` by hand, or a harness that fences its runs) audit
+  mode is whatever the environment says and nothing here can change it.
+  Say so in one line and go to step 1. Nothing is asked.
+- **Runtime no**: this session cannot run the flow, and nothing it can do
+  makes it able to. Say so in one line that carries the one command to
+  type, then stop: no target question, no routing, no question, no
+  handoff file, no new window. The command is `kad` from the project's
+  root when the owner has it on PATH, else the launcher by its full path,
+  `"${CLAUDE_SKILL_DIR}/../../bin/kad" --project <project root>`, with
+  the path resolved (print the real path, never a placeholder). The first
+  run on a project shows the permission set and asks one yes; every later
+  run starts on one line. On native Windows the same command, from WSL2.
+- **No Bash in this session**: nothing of this step can run. Say so in
+  one line and go to step 1; the chunk loop's own check (A.1) still runs
+  when the flow gets there and stops a flow whose session is not fenced.
 - **Resumed**: a session that picks up a flow from a handoff file (the
   owner's message names one, or the chunk loop's resume rule finds one)
-  asks nothing here: the choices were made when that flow started. When
-  the one-liner says `runtime no`, say so in one line, with the command
-  that resumes it fenced instead
-  (`bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --relaunch --project "$PWD" -- '/kad-dev-team:orchestrator'`,
-  the stored answers apply), and go on: the owner can stop and run it.
-  The same one line, no question, for a session whose owner's message
-  already said to continue in this session, or unsandboxed.
-- **Runtime no, Bash in hand**: `stored answers: none` means the launcher
-  has never run on this machine and will ask its three questions; `yes`
-  means it holds them and only audit mode is this session's to choose
-  (an owner who wants a stored answer changed says so
-  in their message, and the flag below carries it for this run; `kad
-  --reset` asks the three again). Ask, one question per `AskUserQuestion`
-  call, in this order, each skipped when the owner's message, the stored
-  answers or the one-liner already hold it (`audit on` in the one-liner
-  answers the first: on):
-  1. **Audit mode**: on, recommended (what it records, where it stays),
-     or off.
-  2. **Audit repository**, only with audit on and no stored answers: a
-     clone URL the audit material is synced to at the end of each slice,
-     or none (local only). Free text through the tool's own "Other".
-  3. **Extra domains**, only with no stored answers: what the project's
-     builds fetch (`registry.npmjs.org` for npm, `pypi.org` for pip), or
-     none; the API, sign-in and GitHub are always allowed.
-  Then run, inline with Bash,
-  `bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --prepare --project "$PWD"`
-  (the session runs at the project's root; never paste the path into the
-  command, quoting it by hand is where a path with a quote in it breaks)
-  with the answers as flags: `--audit` or `--no-audit`, `--audit-repo
-  <url>` only when a URL was given (an answer of none is no flag, never
-  the word), one `--domain <d>` each. On a first run the launcher stores
-  them; on a later run they apply to that run only. It installs nothing
-  without saying so: when it stops at `the sandbox runtime (srt) is not
-  installed`, ask once whether to install it (`npm install -g
-  @anthropic-ai/sandbox-runtime`) and on yes run the same command with
-  `--install-runtime` added. When it stops for anything else (a platform
-  with no sandbox backend, a tool missing from PATH), report its last
-  line as printed: the session continues here, the chunk loop's A.1 will
-  say what that platform can do, and nothing further is asked in this
-  step. When it prints `prepared`, ask the last question: **restart in the
-  fence** (recommended: run
-  `bash "${CLAUDE_SKILL_DIR}/../../bin/kad" --relaunch --project "$PWD" -- '/kad-dev-team:orchestrator'`
-  with the same flags; a new terminal window opens with the fenced
-  session on this project, which starts this skill again and finds itself
-  under the runtime; say the owner closes this session once the new one
-  is up, and stop here: no target question, no routing in this session),
-  or **continue here** (the per-command sandbox at A.1 when the flow gets
-  there; audit mode in this session stays what the one-liner said, since
-  the hooks read the environment the session started with, and the
-  answer given here takes effect with the next launcher-started session).
-  When the relaunch cannot open a window (it exits
-  3 and prints the command), give the owner that command to run in a
-  terminal, as printed, with the launcher's full path: `kad` by name is
-  not on PATH unless the owner put it there.
+  follows the same bullets: `runtime yes`, one line and on; `runtime no`,
+  the one line with the command and stop, the handoff file left where it
+  is for the fenced session to resume.
 
-The owner's choice is reported in step 5's text as one `session` line
-(`under the launcher, audit on`, `fenced without the launcher, audit <on |
-off>`, `restarting under the runtime`, `continuing here, audit <on |
-off>`, or `resumed, not under the runtime`); it is not a log entry, since
-no target exists yet when it is made.
+The outcome is reported in step 5's text as one `session` line (`under
+the launcher`, `fenced without the launcher, audit <on | off>`, or `not
+fenced: stopped`); it is not a log entry, since no target exists yet when
+it is made.
 
 **1. Identify the target.** You're invoked with the artifacts directory as
 a parameter, or not:
@@ -504,12 +453,14 @@ parses one.
 loop time 8 h for a UI-touching slice and 5 h otherwise (run 3's UI
 slice reached 5 h at chunk 7 of 8 and the owner lifted it; decided
 2026-11-06), 2 reviewer launches per chunk, 1 fixer per scope plus 1
-for regressions, 8 consults per slice, unless the owner's message named
-other numbers. At each chunk boundary read the clock and the counts; when
-one is exceeded, the flow ends there: the branch stays as it is, the C
-line says `budget exceeded: <which>`, and step 5 says what is built. The
-dollar figure is not estimated during the run; `cost_by_role.py` computes
-it at E.
+for regressions, unless the owner's message named other numbers.
+Consults are counted, never capped: the count goes on the E line
+(0.13.1's cap of 8 per slice produced owner questions nobody wanted;
+dropped 2026-11-08). At each chunk boundary read the clock and the
+counts; when one is exceeded, the flow ends there: the branch stays as
+it is, the C line says `budget exceeded: <which>`, and step 5 says what
+is built. The dollar figure is not estimated during the run;
+`cost_by_role.py` computes it at E.
 
 **A. Start.** In this order:
 
@@ -537,70 +488,64 @@ it at E.
    kind of failure: `1` for a failure a settings file can fix, `2` when
    the platform has no sandbox at all (native Windows today; the
    `platform` line names what each platform has).
-   - **Not under the sandbox runtime, on a platform that has one** (the
-     `platform` line names Seatbelt or bubblewrap and does not say "under
-     the sandbox runtime"): the owner already chose this at step 0 of this
-     session (continue here), or step 0 could not run (no Bash then, or a
-     resumed flow). Don't ask again when step 0 asked; go on to the
-     bullets below with the per-command sandbox. When step 0 never asked
-     in this session, ask it now, the same way and with the same two
-     outcomes: on restart, write the A line as `sandbox — restarting
-     under the runtime` and stop; the fenced session's own A step finds
-     `platform ... under the sandbox runtime` and never asks this again.
-     Add `--chrome` to the launcher's flags when the slice touches UI.
-   - Exit `1` (`settings`, `shell-secrets`, `read-secrets`, and `write` or
-     `network` with the settings not yet in place): ask once, with
-     `AskUserQuestion`, whether to write the block into this session's
-     user settings file; on yes, run the same command with
-     `--write-settings` added, no path. It merges only what it needs,
-     prints what changed, and runs the checks again in the same call. If
-     the probe lines still fail in that call, run the check once more
-     without `--write-settings` as its own Bash command (the session reads
-     the settings again between commands). If it prints `settings not
-     written: the write ... was refused`, write exactly the content it
-     prints between its marker lines to the path it names with the `Write`
-     tool, then re-check. Never write without the question, never into a
-     project's `.claude/`, never anything but the printed content.
-   - Exit `2`, or the probes still failing after the settings are in: this
-     platform cannot fence the agents. Ask once, with `AskUserQuestion`,
-     one question: continue unsandboxed (the agents run with the session's
-     normal permission prompts and whatever `Read(...)` deny rules the
-     settings carry), or stop and run the session where a sandbox exists
-     (WSL2 on Windows). On exit 2 the settings question, when asked, still
-     offers `--write-settings`, which on this platform writes the deny
-     rules only and never `sandbox.enabled` or `failIfUnavailable` (a
-     session with those set and no backend refuses every command). This
-     is a strong recommendation and a logged choice, never a hard stop:
-     on "continue", the A line says `sandbox — none on <platform>; owner
-     opted to continue unsandboxed`, and every later sandbox check in this
-     flow is still run and still logged, as information. On "stop", write
-     the A line with the failing checks and `flow not started`, report in
-     step 5, and stop.
+   - **Under the launcher** (`KAD_SRT_SETTINGS` set; the `platform` line
+     says "under the sandbox runtime"): the settings are the launcher's,
+     written outside the fence from the set the owner approved, and
+     nothing inside the session can change them. `PASS` goes on the A
+     line's sandbox field. A `FAIL` is a launcher or environment problem,
+     never a question: report the failing lines as printed, write the A
+     line as `FAIL: <checks>; flow not started`, and stop; the owner fixes
+     the cause outside the session. An `env` line naming a variable the
+     launcher kept on purpose (`GH_TOKEN` for delivery) is information,
+     not a failure. No settings, sandbox or transcript question exists
+     under the launcher. The check still runs and is logged before every
+     launch (below).
+   - **Fenced without the launcher** (the `platform` line says "under the
+     sandbox runtime", no `KAD_SRT_SETTINGS`: `srt claude` by hand, or a
+     harness that fences its runs): the runtime's own file fences the
+     session and nothing inside can write it. On `PASS`, go on. On `FAIL`,
+     report the lines as printed; when the owner's message already said to
+     continue unsandboxed, the A line says `none on <platform>; owner
+     opted to continue unsandboxed` and every later check in this flow is
+     logged as information; otherwise write the A line with the failing
+     checks and `flow not started`, and stop. `--write-settings` is never
+     offered: the file lives outside the session.
+   - **Not under the sandbox runtime** (the `platform` line without "under
+     the sandbox runtime"): step 0 stops such a session before any flow
+     starts, so reaching this means step 0 could not run (no Bash then).
+     Write the A line as `FAIL: not fenced; flow not started` with step
+     0's one command in the report, and stop. Nothing is asked and no
+     settings are written: 0.13.1's per-command sandbox, its
+     `--write-settings` offer and the "continue unsandboxed" choice on a
+     platform that has a sandbox are gone since 0.14.0; the fence is the
+     launcher's.
    - `env` or `worktreeinclude`: name the variables or files; unsetting
-     the one and removing the pattern are the user's. Stop. (A variable
-     the launcher kept on purpose, `GH_TOKEN` for delivery, is reported on
-     the `env` line as kept, not as a failure: nothing to do.)
-   - `write` or `network` failing with the settings already in place and
-     the platform having a sandbox: the session is not sandboxed or
-     something is open; report the line as printed, and stop.
-   - Under the sandbox runtime (`srt claude`; the `platform` line says
-     so), the whole session is fenced and the settings live in the
-     runtime's file, which nothing inside the session can write: a
-     `shell-secrets` or `read-secrets` failure names what to add to its
-     `filesystem.denyRead`. Report it and, unless the owner already opted
-     out of the sandbox at A (that choice covers every later check, as
-     information), stop until the owner restarts the session with it.
-     `--write-settings` is not offered there. When the slice touches UI:
-     with `KAD_CHROME=1` in the environment (the launcher's `--chrome`),
-     call the Chrome tools' `list_connected_browsers` once, here; a
-     browser that answers puts `PASS (<platform>; Chrome)` on the A line's
-     sandbox field, none answering (or no `KAD_CHROME`) puts `PASS
-     (<platform>; no Chrome)`, and the flow goes on either way: without a
-     browser every UI smoke run raises its one owed finding (C.3), so what
-     was not checked is on the record, and the owner who wants the browser
-     restarts the session with `kad --chrome` (the handoff rule resumes the
-     flow). Run 3 learned at its first UI smoke run that no browser had
-     ever answered, and its smoke reports said `PASS`.
+     the one and removing the pattern are the owner's. Stop.
+
+   **Browser**, only when the slice touches UI (step 2's reading of the
+   slice file), inline, after the sandbox check: with `KAD_CHROME=1` in
+   the environment (the launcher's default since 0.14.0), ask the Chrome
+   tools once, here, for the connected browsers
+   (`list_connected_browsers`). A browser that answers puts `PASS
+   (<platform>; Chrome)` on the A line's sandbox field. None answering, or
+   no `KAD_CHROME`, is an error with the fix on the line, in the report:
+   the browser is not open; the Claude in Chrome extension is not
+   installed or not connected (`/chrome` in a plain `claude` session
+   reconnects it); or the launcher ran with `--no-chrome`. Then the
+   **browser question**, with `AskUserQuestion`: **restart with Chrome**
+   (the owner opens the browser with the extension and runs `kad` again
+   from the project root; write the A line as `sandbox — no browser; flow
+   not started` and stop: nothing below has run, nothing to hand off), or
+   **continue with every screen check owed** (the A line says `PASS
+   (<platform>; no Chrome, screen checks owed)`, and every UI smoke run
+   raises its one owed finding (C.3), so what was not checked is on the
+   record). Skip the question when the owner's message already chose. On
+   a slice with no screen the field says `PASS (<platform>; browser not
+   needed)`, no Chrome tool is called, and `--no-chrome` costs nothing.
+   Run 3 learned at its first UI smoke run that no browser had ever
+   answered, and its smoke reports said `PASS`; slice 2 ran with no
+   browser because the field said `no Chrome` and the flow was allowed to
+   go on.
 
    **Audit and session**, inline with Bash, after the sandbox check and
    whatever it asked:
@@ -633,9 +578,12 @@ it at E.
    is off"; the launcher drops the marker since 0.13.1): run 3's loop
    session and the 2026-11-07 fix session each reached E with `cost not
    measured: transcript missing` and nothing for the audit to read. A
-   MISSING transcript is the **transcript question** of step 2. A resumed
-   flow runs the same snapshot and puts the same field on its `Resumed`
-   bullet.
+   MISSING transcript is a fact for the record, reported to the owner in
+   step 5 and asked about nowhere: the launcher drops the marker, so
+   nothing a restart could change is left, the flow goes on, and the E
+   step's cost says `not measured` (0.13.1's transcript question is
+   gone). A resumed flow runs the same snapshot and puts the same field
+   on its `Resumed` bullet.
 
    The check is not once per flow but before every launch: before each
    chunk's build (C.1), its reviewer and smoke agent (C.3), its fixer
@@ -643,32 +591,36 @@ it at E.
    `PASS` that turns into a `FAIL` between steps ends the flow the way a
    second gate failure does, unless the user opted out at A, in which
    case the later checks are logged and the flow continues.
-2. **Questions, one per `AskUserQuestion` call, four separate calls at
-   most, in this order: settings, sandbox, transcript, delegation.** Never
-   bundle two of them into one call, whatever the tool allows: a call
-   carrying two questions is this rule broken. A question the owner's own
-   message already answered is skipped (a plain "go ahead" answers none);
-   the settings, sandbox and transcript questions exist only when A.1
-   raised them.
-   - **Settings** and **sandbox**: as A.1 says.
-   - **Transcript**, only on `transcript — MISSING`: "This session's
-     transcript is not being saved (<why>), so the loop's cost and the
-     audit of this build cannot be measured. Restart under the launcher
-     now, or continue without one?" On restart, write the handoff file
-     (the handoff rule resumes the flow in the new session) and stop. On
-     continue, the A line keeps `MISSING`, the E step's cost says `not
-     measured`, and the owner has said so on the record.
-   - **Delegation**: "May decisions that come up during the build be
-     settled with the owning persona without asking you? Each is logged,
-     committed under the persona's name, and you can overturn it." On
-     yes, write `<target>/delegation-slice-<nnn>.md`: the owner's words,
-     the date, the slice, what it covers (design decisions, security and
-     reliability criteria, screen states, accessibility criteria) and
-     what it never covers (scope, requirements, anything that changes a
-     confirmed requirement: those stay backward routes to the owner).
-     Skip the question when the owner's message already said it; write
-     the file anyway. On no, write no file: a mid-build gap then stops the
-     flow for the owner (C.5).
+2. **Questions: two at most in this step, one per `AskUserQuestion`
+   call, in this order: browser, delegation.** Never bundle two of them
+   into one call, whatever the tool allows: a call carrying two questions
+   is this rule broken. A question the owner's own message already
+   answered is skipped (a plain "go ahead" answers none). The settings,
+   sandbox and transcript questions of 0.13.1 no longer exist: the
+   launcher guarantees what they asked about (2026-11-08).
+   - **Browser**: as A.1 says, only on a UI-touching slice with no
+     browser answering.
+   - **Delegation**, asked once per project and stored. When
+     `<target>/delegation.md` exists it holds the owner's standing
+     answer: read it and ask nothing. If it says yes, write
+     `<target>/delegation-slice-<nnn>.md` for this slice from it (the
+     standing answer's date and words quoted, this slice's number and
+     today's date); if it says no, write no per-slice file, and a
+     mid-build gap stops the flow for the owner (C.5). Without it, ask:
+     "May decisions that come up during the build be settled with the
+     owning persona without asking you, on this slice and every later one
+     on this project? Each is logged, committed under the persona's name,
+     and you can overturn it." Write `<target>/delegation.md` with the
+     answer either way: the owner's words, the date, the slice it was
+     asked on, what it covers (design decisions, security and reliability
+     criteria, screen states, accessibility criteria), what it never
+     covers (scope, requirements, anything that changes a confirmed
+     requirement: those stay backward routes to the owner), and how it is
+     changed (the owner says so in a message, or edits the file). On yes,
+     also write the per-slice file as above. An owner's message that
+     answers for this slice only ("no delegation on this one") applies to
+     this slice and leaves the standing file as it is. The per-slice file
+     stays the record C.5 reads and the planning commit carries.
 3. **Branch and base.** Inline with Bash: `git status --porcelain` on the
    target directory. Then `git switch -c slice-<nnn>-<slug>` from the
    current commit, the number from the slice file's name and the slug from
@@ -770,10 +722,17 @@ B line: the chunk titles in order.
    heredoc, `python -c`, `node -e`, `cp`) instead of `Edit` or `Write`,
    each also a `Shell edit` line in its report section (the skills say
    so). Each counts as a deviation on the C line, which also records
-   `shell edits <n>` when there are any; **three or more in one chunk or
-   fix is a stall**, handled by the stall rule above (one relaunch with
-   the section as handover; a second ends the flow). Run 3's fixer
-   mangled a seam test's name and rewrote a function with one `sed -i`.
+   `shell edits <n>` when there are any, and that is all a shell edit
+   does: never a stall, never a relaunch, never a question to the owner
+   (0.13.1's "three in one chunk is a stall" produced an owner question
+   nobody wanted; dropped 2026-11-08). A formatter run through the
+   manifest's `format` script is not a shell edit. The number on the C
+   line is the agent's reported count until the gate counts it from the
+   transcript (`validation_gate.py --agent-transcript`, planned), after
+   which the counted number is the one written. Run 3's fixer mangled a
+   seam test's name and rewrote a function with one `sed -i`; slice 2's
+   chunk 2 builder reported 1 and made 9: the count is there for the
+   audit to find, not for the loop to act on.
 2. **Gate**, inline with Bash, on the chunk's commit range:
 
    ```
@@ -936,7 +895,8 @@ B line: the chunk titles in order.
      continuing the document's own numbering) and hands back the hash and
      one sentence. Write one indented line under the C line, `decision
      <n> <sha> (<persona>)`, and pass the hash to the fixer. Consults
-     count against the budget; one per persona per round.
+     are counted for the E line's `consults` field, never capped; one per
+     persona per round.
    - **Without a delegation file**: launch the persona the same way; it
      hands back a recommendation and writes nothing (its skill says so).
      Save what it handed back, as given, to `<records
@@ -1145,7 +1105,9 @@ finishes its last action.
    report to the owner; `not configured` without an audit repository,
    `off` without audit mode. A configured repository with no clone is
    that FAILED line, never a skip.
-7. The E line, in this same turn, then step 5 below: report what happened
+7. The E line (its `consults` field is the number of persona consults
+   this flow launched, at C.5 and D), in this same turn, then step 5
+   below: report what happened
    at each of the five steps, with the pull request and issue numbers, the
    standing findings if any, and the open external comments if the cap was
    hit; the slice has reached the terminal row.
@@ -1188,12 +1150,12 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>[; Chrome | ; no Chrome]) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | restarting under the runtime | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
+- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r `<consults>`c; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
 - **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`
-- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`
+- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`
   - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```
 

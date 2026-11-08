@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: orchestrator-session-setup
-description: "Step 0 of the orchestrator: a session not started by the launcher, with a shell in hand, is asked about audit mode and the restart under the sandbox runtime before the target question and before any routing."
+description: "Step 0 of the orchestrator since 0.14.0: a session that is fenced by something other than the launcher (this harness fences its runs) is told so in one line and asked nothing: no audit-mode, audit-repository, extra-domain, install or restart question, no `kad --prepare` or `--relaunch` (both gone). The flow goes straight on to the target (given) and routes to problem-framing-doc for the new, empty planning folder. Before 0.14.0 this case expected the questions; the owner's decision of 2026-11-08 (handoff-slice2 P1) is that the launcher is the one way in and the session asks nothing it cannot act on."
 tags: [orchestrator, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -24,20 +24,25 @@ graders:
     input_match: 'SANDBOX_RUNTIME'
     min: 1
   - type: tool_used
-    name: not-problem-framing-doc-yet
-    tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:problem-framing-doc"'
+    name: no-launcher-run-from-the-session
+    tool: Bash
+    input_match: 'bin/kad'
     min: 0
     max: 0
+  - type: tool_used
+    name: routes-to-problem-framing-doc
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:problem-framing-doc"'
+    min: 1
   - type: llm
-    name: asks-about-the-session-first
+    name: asks-nothing-about-the-session
     focus: last_message
     weight: 1
     criteria: |
-      The orchestrator's step 0, session setup, runs once per session before anything else: a session not started by the plugin's launcher (`bin/kad`) has no audit mode decided, and audit cannot be turned on from inside it. With a shell available, the orchestrator checks the environment (whether the session is under the sandbox runtime, whether the launcher started it, whether audit is on), then asks the owner, one question at a time, whether to run in audit mode (then, on a first run, which audit repository and which extra domains), runs the launcher's `--prepare` with the answers, and asks whether to restart under the sandbox runtime or continue here. A session that is already fenced by something other than the launcher (this eval harness fences its runs) needs no restart for the fence, so there only the audit-mode question is asked. Only after that does it ask for the target directory or route anywhere.
+      The orchestrator's step 0, session setup, runs once per session before anything else. Since 0.14.0 it decides nothing and asks nothing: the launcher `bin/kad` is the one way a flow runs (it fences the session, turns audit mode on and approves the permission set once per project), a plain `claude` session is told the one command to type and stopped, and a session that is already fenced by something other than the launcher (this harness fences its runs) is told so in one line and the flow goes on to the target and the routing. The old questions (audit mode on or off, which audit repository, which extra domains, whether to install the sandbox runtime, whether to restart in the fence or continue here) and the old commands (`kad --prepare`, `kad --relaunch`) no longer exist.
 
-      This session has no AskUserQuestion tool, so a question is asked as plain text and the turn ends there.
+      Here the target is given (`docs/pay-fine/`, new and empty), so the orchestrator routes to problem-framing-doc, which asks its own questions about the problem; the reply may end on one of those.
 
-      PASS if the response ends on one of step 0's questions, asked of the owner: whether audit mode is wanted, the audit repository, the extra domains, whether to install the sandbox runtime, or whether to restart in the fence or continue here; or if it reports that the launcher stopped (a tool missing, a platform without a sandbox backend) and then goes on no further than the target question. No planning artifact has been produced and no planning skill has been invoked.
+      PASS if the reply never puts a session-setup question to the owner (audit mode, audit repository, extra domains, installing the runtime, restarting or continuing), at most states in one line how the session runs (fenced without the launcher, audit on or off), and goes on to route to problem-framing-doc (its questions about the problem, or its document, may follow).
 
-      FAIL if it routes to problem-framing-doc or produces any planning artifact, or if it starts the planning work (writes `orchestrator-log.md` with a routing entry) before a session-setup question has been put to the owner, or if it skips step 0 without saying why.
+      FAIL if it asks any of the session-setup questions, tells the owner to restart or relaunch, runs or recommends `kad --prepare` or `kad --relaunch`, or stops after the session line without routing anywhere.

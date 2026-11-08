@@ -1,78 +1,84 @@
 #!/usr/bin/env bash
-# kad: start a Claude Code session on a project with kad-dev-team loaded,
-# inside the sandbox runtime, with audit mode on. One command in place of
-# the setup the README describes:
+# kad: the one way to start a kad-dev-team session. From the project's root:
 #
-#   kad                      # from the project's root
+#   kad                      # start the fenced session; the first run on a
+#                            # project shows the permission set once and asks
+#                            # one yes, every later run prints one line and starts
 #   kad --project <dir>      # from anywhere
-#   kad --check              # show what it would do; writes and installs nothing
-#   kad --prepare            # do the setup, start nothing (the orchestrator
-#                            # runs this from an unfenced session)
-#   kad --relaunch           # open a new terminal window running kad in the
-#                            # project, for a session that cannot replace
-#                            # itself; the old session is closed by hand
+#   kad --check              # show the set it would start with; writes and
+#                            # installs nothing
+#   kad --reset              # show the permission set again, with the stored
+#                            # answers behind it (audit mode, audit repository,
+#                            # extra domains) open to change
 #   kad -- --resume          # arguments after -- go to claude
 #
-# What it does, every time: checks the platform (macOS, Linux and WSL2
-# have the runtime's backend; native Windows is told to use WSL2) and that
-# `srt` (@anthropic-ai/sandbox-runtime), `claude` and `python3` are on
-# PATH, offering to install the runtime when it isn't; writes the
-# runtime's settings for this project under ~/.config/kad-dev-team/srt/
-# (writes allowed to the project, Claude Code's own paths and the temp
-# directory, with Claude Code's user settings, hooks, commands, agents and
-# plugins denied so nothing persists past the session; the credential
-# paths denied for reading; the network allowed to the API, sign-in and
-# GitHub, plus any domains you add; local ports allowed unless --no-local);
-# drops credential-shaped variables from the environment the session
-# inherits, and another Claude Code session's variables (a shell opened
-# from inside a session, or a terminal window a session launched, carries
-# CLAUDE_CODE_CHILD_SESSION, and Claude Code then saves no transcript for
-# the session started there: run 3's loop and the 2026-11-07 fix session
-# on the Mac); exports KAD_AUDIT=1, the audit repository if you gave one,
-# KAD_AUDIT_DIR (the audit directory, allowed for writing: the session's
-# logs, transcript snapshots and the audit repository's clone live there),
-# KAD_CHROME=1 under --chrome, and KAD_SRT_SETTINGS so the orchestrator's
-# sandbox check reads the same file; with an audit repository, clones it
-# into $KAD_AUDIT_DIR/repo/ before the fence starts, or fast-forwards the
-# clone that is there, and gives the clone the project's git identity
-# (inside the fence git cannot write a .git/config or .git/hooks anywhere,
-# so a clone from inside fails every time); gives the session what the loop's commits, pushes, pull requests,
-# issues and audit sync need inside the fence: the host's GitHub login
-# (`gh auth token`, or the variable --gh-token-env names) as GH_TOKEN,
-# the one credential the session holds (KAD_KEPT_ENV names it, so the
-# orchestrator's check reports it as kept rather than refusing), a
-# session-local config directory for gh (its own is on the deny list),
-# gh as git's credential helper in place of the keychain the fence
-# refuses, and the runtime's TLS termination, without which gh cannot
-# verify a certificate on macOS; then runs `srt --settings <file> claude
+# Nothing restarts and nothing opens a window: the fence has to exist before
+# Claude Code starts, so this script is the entry point. An orchestrator that
+# finds itself in a plain `claude` session prints this command and stops.
+#
+# What it does, every time: checks the platform (macOS, Linux and WSL2 have
+# the runtime's backend; native Windows is told to use WSL2) and that `srt`
+# (@anthropic-ai/sandbox-runtime), `claude` and `python3` are on PATH,
+# offering to install the runtime when it isn't; makes sure Claude in Chrome
+# can reach Claude Code (the extension's native-messaging manifest in each
+# installed Chromium-family browser's profile and the native host wrapper
+# under Claude Code's config directory, written here, outside the fence, only
+# when missing: the fence denies those paths, and a session cannot write them
+# itself); writes the runtime's settings for this project under
+# ~/.config/kad-dev-team/srt/ (writes allowed to the project, Claude Code's
+# own paths, the temp directory, npm's cache, kad's gh directory and the
+# audit directory, with Claude Code's user settings, hooks, commands, agents
+# and plugins denied so nothing persists past the session; the credential
+# paths denied for reading; the network allowed to the API, sign-in, GitHub
+# and Chrome's bridge, plus the domains the project's manifests call for and
+# any you add; local ports allowed unless --no-local); drops
+# credential-shaped variables from the environment the session inherits,
+# and another Claude Code session's variables (a shell opened from inside a
+# session carries CLAUDE_CODE_CHILD_SESSION, and Claude Code then saves no
+# transcript for the session started there); exports KAD_AUDIT=1, the audit
+# repository if you gave one, KAD_AUDIT_DIR (the audit directory, allowed
+# for writing: the session's logs, transcript snapshots and the audit
+# repository's clone live there), KAD_CHROME=1 unless --no-chrome, KAD_GH_DIR
+# and KAD_SRT_SETTINGS so the orchestrator's sandbox check reads the same
+# file and knows which folders are this launcher's; with an audit
+# repository, clones it into $KAD_AUDIT_DIR/repo/ before the fence starts, or
+# fast-forwards the clone that is there, and gives the clone the project's
+# git identity (inside the fence git cannot write a .git/config or
+# .git/hooks anywhere); gives the session what the loop's commits, pushes,
+# pull requests, issues and audit sync need inside the fence: the host's
+# GitHub login (`gh auth token`, or the variable --gh-token-env names) as
+# GH_TOKEN, the one credential the session holds (KAD_KEPT_ENV names it), a
+# session-local config directory for gh (its own is on the deny list), gh as
+# git's credential helper in place of the keychain the fence refuses, and
+# the runtime's TLS termination, without which gh cannot verify a
+# certificate on macOS; then runs `srt --settings <file> claude --chrome
 # --plugin-dir <this plugin>` in the project (no --plugin-dir when the
-# plugin runs from Claude Code's plugin cache: a marketplace install). The
-# first run asks three questions (audit mode, the audit repository, extra
-# domains) and stores the answers, owner-readable only, in
-# ~/.config/kad-dev-team/launcher.json; `--reset` asks again. On that first
-# run --audit, --no-audit, --audit-repo and --domain answer the questions
-# instead of the terminal and are stored (the orchestrator's session
-# setup runs it that way, from a session with no terminal); on every later
-# run they apply to that run only. The launcher itself writes nothing
-# outside that directory, the audit directory (the clone) and, for a
-# --plugin-dir run, the plugin's hook data directory under
-# <config>/plugins/data/ (Claude Code creates it on first use, which the
-# fence denies, and every hook then fails before it runs); the session it
-# starts writes where the settings allow.
+# plugin runs from Claude Code's plugin cache: a marketplace install).
+#
+# The permission set, once per project: the first run on a project prints
+# the whole set in plain words (what the session may write, what it may
+# never read, which hosts it may reach, which credential it holds, local
+# ports, Chrome, audit mode and the audit repository) and asks one yes;
+# "n" opens the three answers behind it (audit mode, the audit repository,
+# the extra domains) and shows the set again. The answers and the project's
+# approval are stored, owner-readable only, in
+# ~/.config/kad-dev-team/launcher.json, which is only ever rewritten whole,
+# through a temporary file, and never deleted: a run that is interrupted or
+# declined leaves it as it was (--reset in 0.13.1 deleted it before asking,
+# and an interrupted reset lost every answer). A later run on the same
+# project prints one line and starts; a set that changed since the approval
+# (a manifest that now calls for a registry) is shown again for one yes.
+# On a first run --audit, --no-audit, --audit-repo and --domain set the
+# answers the set shows and are stored with it; on every later run they
+# apply to that run only.
 #
 #   --audit            KAD_AUDIT=1 for this run (the stored default is on)
 #   --no-audit         KAD_AUDIT unset for this run
 #   --audit-repo URL   audit repository for this run only (stored answers unchanged)
 #   --domain D         extra allowed domain for this run (repeatable)
-#   --chrome           Claude in Chrome: allows the extension's bridge host and
-#                      Anthropic's MCP proxy, tunnels both past the runtime's
-#                      TLS termination (it refuses the WebSocket upgrade the
-#                      bridge needs: run 3 never reached a browser), allows the
-#                      unix socket the extension's native host listens on
-#                      (/tmp/claude-mcp-browser-bridge-<user>/), and starts
-#                      claude --chrome (enable it once outside the fence
-#                      first: it writes Chrome's native-messaging file under
-#                      ~/Library or ~/.config, which the fence denies)
+#   --no-chrome        no Claude in Chrome: the bridge hosts and the extension's
+#                      socket stay closed and claude starts with --no-chrome;
+#                      a slice that touches UI then owes every screen check
 #   --no-local         deny local ports; by default sandboxed commands may
 #                      bind and reach localhost, which a dev server, its
 #                      tests and the loop's smoke run need (other local
@@ -88,8 +94,8 @@
 #   --installed        the plugin is installed from the marketplace: no --plugin-dir
 #                      (detected when this script runs from Claude Code's plugin cache)
 #   --install-runtime  install the sandbox runtime without asking when it is missing
-#   --yes              take every default, ask nothing (first run included)
-#   --reset            forget the stored answers and ask again
+#   --yes              take every default and approve the set, ask nothing
+#   --reset            show the permission set again and open the stored answers
 set -euo pipefail
 umask 077
 
@@ -97,10 +103,9 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 conf_dir="${KAD_CONFIG_DIR:-$HOME/.config/kad-dev-team}"
 conf_dir="$(mkdir -p "$conf_dir" && cd "$conf_dir" && pwd)"   # absolute: kad changes directory before srt starts
 conf="$conf_dir/launcher.json"
-project="$PWD"; yes=0; check=0; audit=""; installed=0; reset=0; chrome=0; local=1; prepare=0; relaunch=0; install_runtime=0
+project="$PWD"; yes=0; check=0; audit=""; installed=0; reset=0; chrome=1; local=1; install_runtime=0
 audit_repo_arg=""; domains_arg=(); keep_env=(); claude_args=(); gh_token_env=""; github=1
 case "$root" in */plugins/cache/*|*/plugins/repos/*) installed=1 ;; esac   # Claude Code's plugin cache: the plugin is already loaded
-orig_args=("$@")
 while [ $# -gt 0 ]; do
   case "$1" in
     --project) project="$2"; shift 2 ;;
@@ -113,15 +118,15 @@ while [ $# -gt 0 ]; do
     --gh-token-env) gh_token_env="$2"; shift 2 ;;
     --no-github) github=0; shift ;;
     --installed) installed=1; shift ;;
-    --chrome) chrome=1; shift ;;
+    --chrome) chrome=1; shift ;;      # the default since 0.14.0; accepted for old aliases
+    --no-chrome) chrome=0; shift ;;
     --no-local) local=0; shift ;;
     --yes) yes=1; shift ;;
     --check) check=1; shift ;;
-    --prepare) prepare=1; shift ;;
-    --relaunch) relaunch=1; shift ;;
     --reset) reset=1; shift ;;
-    -h|--help) sed -n '2,64p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,98p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --) shift; claude_args=("$@"); break ;;
+    --relaunch|--prepare) echo "kad: $1 is gone since 0.14.0: kad is the way in, run it from a terminal at the project's root; nothing restarts" >&2; exit 2 ;;
     *) echo "kad: unknown argument $1 (arguments for claude go after --)" >&2; exit 2 ;;
   esac
 done
@@ -134,12 +139,19 @@ ask() {  # ask <prompt> <default> -> answer on stdout; the default when --yes or
   read -r -p "kad: $prompt [${default:-none}]: " answer
   printf '%s' "${answer:-$default}"
 }
-confirm() {  # confirm <question> -> 0 for yes
+confirm() {  # confirm <question> -> 0 for yes (default no)
   local answer
   if [ "$yes" = 1 ]; then return 0; fi
   if [ ! -t 0 ]; then return 1; fi
   read -r -p "kad: $1 [y/N]: " answer
   [ "$answer" = y ] || [ "$answer" = Y ]
+}
+approve() {  # approve <question> -> 0 for yes (the default), 1 for no, 2 when there is no terminal to ask
+  local answer
+  if [ "$yes" = 1 ]; then return 0; fi
+  if [ ! -t 0 ]; then return 2; fi
+  read -r -p "kad: $1 [Y/n]: " answer
+  case "$answer" in n|N|no|NO) return 1 ;; *) return 0 ;; esac
 }
 
 # 1. The platform.
@@ -154,13 +166,8 @@ case "$(uname -s)" in
   *) say "unsupported platform $(uname -s)"; exit 2 ;;
 esac
 
-# 2. The tools. --check reports and changes nothing. --prepare starts no
-#    claude, so it only warns when claude is missing from this shell's PATH:
-#    the terminal that runs the relaunch has its own.
-if ! command -v claude >/dev/null; then
-  if [ "$prepare" = 1 ]; then say "claude is not on this shell's PATH; the terminal that starts the fenced session needs it"
-  else say "claude is not on PATH; install Claude Code first"; exit 2; fi
-fi
+# 2. The tools. --check reports and changes nothing.
+command -v claude >/dev/null || { say "claude is not on PATH; install Claude Code first"; exit 2; }
 command -v python3 >/dev/null || { say "python3 is not on PATH (kad writes its JSON with it): install Python 3, then run kad again"; exit 2; }
 if ! command -v srt >/dev/null; then
   if [ "$check" = 1 ]; then
@@ -177,88 +184,82 @@ if ! command -v srt >/dev/null; then
   fi
 fi
 
-# 3. The stored answers (asked once; written owner-readable, atomically).
+# 3. The stored answers and the project's approval. The file is read whole,
+#    rewritten whole through a temporary name, and never deleted: nothing in
+#    this script removes it, so an interrupted or declined run leaves the
+#    answers as they were.
 write_json() {  # write_json <path>: JSON on stdin, written to a temp name then renamed
   local path="$1" tmpf
   tmpf="$(mktemp "$path.XXXXXX")"
   cat > "$tmpf" && chmod 600 "$tmpf" && mv -f "$tmpf" "$path"
 }
-read_conf() {  # read_conf <key> -> value (list keys joined by spaces); empty on a missing file
+read_conf() {  # read_conf <key> [<project>] -> value (list keys joined by spaces); empty on a missing file or key
   [ -f "$conf" ] || { printf ''; return; }
-  python3 -I - "$conf" "$1" <<'PY' || { say "$conf is not valid JSON; fix it or run kad --reset"; exit 2; }
+  python3 -I - "$conf" "$1" "${2:-}" <<'PY' || { say "$conf is not valid JSON; fix it by hand (it is only ever rewritten whole, never deleted)"; exit 2; }
 import json, sys
 try:
     d = json.load(open(sys.argv[1]))
 except ValueError:
     sys.exit(1)
+if sys.argv[3]:
+    d = d.get("projects", {}).get(sys.argv[3], {})
 v = d.get(sys.argv[2], "")
 print(" ".join(v) if isinstance(v, list) else v)
 PY
 }
+write_conf() {  # the three answers, this project's approval and the domains its manifests called for; other projects' entries kept
+  KAD_CONF="$conf" KAD_AUDIT_ON="$stored_audit" KAD_REPO="$stored_repo" KAD_DOMAINS="$stored_domains" \
+  KAD_PROJECT="$project" KAD_PROJECT_DOMAINS="$project_domains" python3 -I - <<'PY' | write_json "$conf"
+import datetime, json, os
+try:
+    d = json.load(open(os.environ["KAD_CONF"]))
+    if not isinstance(d, dict):
+        d = {}
+except (OSError, ValueError):
+    d = {}
+d["audit"] = os.environ["KAD_AUDIT_ON"] == "1"
+d["audit_repo"] = os.environ["KAD_REPO"]
+d["domains"] = os.environ["KAD_DOMAINS"].split()
+projects = d.get("projects")
+if not isinstance(projects, dict):
+    projects = {}
+projects[os.environ["KAD_PROJECT"]] = {
+    "approved": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "domains": os.environ["KAD_PROJECT_DOMAINS"].split(),
+}
+d["projects"] = projects
+print(json.dumps(d, indent=2))
+PY
+}
 mkdir -p "$conf_dir/srt"
-if [ "$reset" = 1 ] && [ -f "$conf" ] && [ "$check" = 0 ]; then rm -f "$conf"; fi
+first_machine=0
 if [ -f "$conf" ]; then
   stored_audit="$(read_conf audit)"; stored_audit="${stored_audit:-1}"
   stored_repo="$(read_conf audit_repo)"
   stored_domains="$(read_conf domains)"
-elif [ "$check" = 1 ]; then
-  stored_audit="${audit:-1}"; stored_repo="$audit_repo_arg"; stored_domains="${domains_arg[*]:-}"
-  say "first run would ask three questions (audit mode, audit repository, extra domains) and store them in $conf"
 else
-  # First run: a flag answers its question, the terminal answers the rest
-  # (the default when there is no terminal, or --yes).
-  say "first run: three questions, stored in $conf (kad --reset asks again)"
-  if [ -n "$audit" ]; then stored_audit="$audit"
-  elif [ "$yes" = 1 ] || [ ! -t 0 ]; then stored_audit=1   # the default is on: a run with no terminal keeps it
-  elif confirm "audit mode: log each prompt, skill and agent call and keep the transcripts of this project's sessions, on your machine?"; then stored_audit=1
-  else stored_audit=0; fi
-  if [ -n "$audit_repo_arg" ]; then stored_repo="$audit_repo_arg"
-  elif [ "$stored_audit" = 1 ]; then stored_repo="$(ask 'audit repository clone URL (audit material is synced there at the end of each slice; empty for none)' '')"
-  else stored_repo=""; fi
-  if [ "${#domains_arg[@]}" -gt 0 ]; then stored_domains="${domains_arg[*]}"; domains_arg=()
-  else stored_domains="$(ask 'extra domains the project needs, space-separated (registry.npmjs.org for npm installs, pypi.org, ...)' '')"; fi
-  KAD_AUDIT_ON="$stored_audit" KAD_REPO="$stored_repo" KAD_DOMAINS="$stored_domains" python3 -I - <<'PY' | write_json "$conf"
-import json, os
-print(json.dumps({"audit": os.environ["KAD_AUDIT_ON"] == "1", "audit_repo": os.environ["KAD_REPO"], "domains": os.environ["KAD_DOMAINS"].split()}, indent=2))
-PY
+  # First run on this machine: a flag sets an answer, the set shows the rest
+  # as defaults (audit on, no repository, no extra domains) and "n" opens them.
+  first_machine=1
+  stored_audit="${audit:-1}"; stored_repo="$audit_repo_arg"; stored_domains="${domains_arg[*]:-}"
+  domains_arg=()   # stored above; not also added for this run
 fi
 case "$stored_audit" in True|true) stored_audit=1 ;; False|false) stored_audit=0 ;; esac
-# This run's audit mode and repository: the flag for this run only, else
-# the stored answer; an inherited KAD_AUDIT_REPO is never used without
-# being chosen here.
-audit="${audit:-$stored_audit}"
-audit_repo="${audit_repo_arg:-$stored_repo}"
-# The audit repository is a separate repository: the sync pushes the audit
-# documents onto its default branch, which on the project's own repository
-# means onto the project.
-if [ -n "$audit_repo" ] && origin="$(git -C "$project" remote get-url origin 2>/dev/null)"; then
-  norm() { printf '%s' "$1" | sed -e 's#\.git$##' -e 's#/$##' -e 's#^git@github\.com:#https://github.com/#'; }
-  if [ "$(norm "$audit_repo")" = "$(norm "$origin")" ]; then
-    say "warning: the audit repository is this project's own origin, so it is ignored for this run: the audit sync would push audit documents onto the project's default branch. Use a separate repository (kad --audit-repo URL for this run, kad --reset to store a new one); audit mode stays on, with the logs and transcripts kept locally"
-    audit_repo=""
-  fi
-fi
-
-# 3b. The audit repository's clone, outside the fence: the runtime's
-#     mandatory deny covers .git/config and .git/hooks under every path it
-#     allows, so a clone attempted inside the session (run 3's SessionStart
-#     hook) fails every time. The clone lives under the audit directory,
-#     never under the project, and commits under the project's identity.
-audit_dir="${KAD_AUDIT_DIR:-$HOME/.claude/kad-audit}"
-audit_clone="$audit_dir/repo"
-if [ "$audit" = 1 ] && [ -n "$audit_repo" ] && [ "$check" = 0 ] && [ "$prepare" = 0 ] && [ "$relaunch" = 0 ]; then
-  mkdir -p "$audit_dir"
-  if [ -d "$audit_clone/.git" ]; then
-    git -C "$audit_clone" pull -q --ff-only 2>/dev/null || say "warning: the audit clone at $audit_clone did not fast-forward (unpushed commits, or no network); the sync reports it if the push is refused"
-  elif ! git clone -q -- "$audit_repo" "$audit_clone"; then
-    say "warning: cloning the audit repository into $audit_clone failed (git's message above); the session's A step reports it"
-  fi
-  if [ -d "$audit_clone/.git" ]; then
-    for k in user.name user.email; do
-      v="$(git -C "$project" config --get "$k" 2>/dev/null || true)"
-      [ -n "$v" ] && git -C "$audit_clone" config "$k" "$v"
-    done
-  fi
+approved="$(read_conf approved "$project")"
+approved_domains="$(read_conf domains "$project")"
+# The domains the project's own manifests call for: shown on the set,
+# stored with the approval, and a change since then is shown again.
+project_domains=""
+[ -f "$project/package.json" ] && project_domains="$project_domains registry.npmjs.org"
+{ [ -f "$project/pyproject.toml" ] || [ -f "$project/requirements.txt" ] || [ -f "$project/Pipfile" ]; } && project_domains="$project_domains pypi.org files.pythonhosted.org"
+[ -f "$project/go.mod" ] && project_domains="$project_domains proxy.golang.org sum.golang.org"
+[ -f "$project/Cargo.toml" ] && project_domains="$project_domains crates.io static.crates.io index.crates.io"
+[ -f "$project/Gemfile" ] && project_domains="$project_domains rubygems.org index.rubygems.org"
+project_domains="${project_domains# }"
+need_screen=0; why_screen=""
+if [ -z "$approved" ]; then need_screen=1; why_screen="first run on this project"
+elif [ "$reset" = 1 ]; then need_screen=1; why_screen="--reset"
+elif [ "$project_domains" != "$approved_domains" ]; then need_screen=1; why_screen="the project's manifests now call for other domains than the approved set (${approved_domains:-none} → ${project_domains:-none})"
 fi
 
 # 3a. GitHub, for the loop's delivery inside the fence. gh's own config
@@ -266,22 +267,92 @@ fi
 #     gets a config directory of its own under ours and the token in the
 #     environment, from the host's gh login unless --gh-token-env names a
 #     variable (a fine-grained token for the one repository is narrower).
-gh_dir="$conf_dir/gh"; gh_token=""
+gh_dir="$conf_dir/gh"; gh_token=""; gh_line="no GitHub token: delivery stops at the push"
 if [ "$github" = 1 ]; then
   if [ -n "$gh_token_env" ]; then
     gh_token="${!gh_token_env:-}"
     [ -n "$gh_token" ] || { say "--gh-token-env $gh_token_env: the variable is empty"; exit 2; }
   elif command -v gh >/dev/null; then
     gh_token="$(gh auth token 2>/dev/null || true)"
-    [ -n "$gh_token" ] || say "gh is not logged in on this machine (gh auth login); the session gets no GitHub token and delivery will stop at the push"
+    [ -n "$gh_token" ] || gh_line="no GitHub token (gh is not logged in on this machine: gh auth login); delivery stops at the push"
   else
-    say "gh is not installed; the session gets no GitHub token and delivery will stop at the push"
+    gh_line="no GitHub token (gh is not installed); delivery stops at the push"
   fi
+  [ -n "$gh_token" ] && gh_line="the GitHub token from ${gh_token_env:-your gh login} as GH_TOKEN, the one credential the session holds (gh config in $gh_dir; gh is git's credential helper)"
   if [ "$check" = 0 ]; then
     mkdir -p "$gh_dir"
     [ -f "$gh_dir/config.yml" ] || printf 'git_protocol: https\n' > "$gh_dir/config.yml"
   fi
 fi
+
+# 3c. Claude in Chrome. Claude Code reaches the extension through a native
+#     host it spawns from Chrome: a manifest in each browser profile's
+#     NativeMessagingHosts directory naming a wrapper script under Claude
+#     Code's config directory. Claude Code writes both the first time
+#     Chrome is enabled in a plain session, which the fence forbids (both
+#     paths are denied inside it), so this launcher writes whichever is
+#     missing, here, outside the fence, with the content Claude Code
+#     writes (observed 2026-11-08; Claude Code rewrites both when it
+#     wants to). A browser that is not open, or has no extension, is the
+#     orchestrator's to report at A for a slice that touches UI.
+claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+chrome_host="$claude_dir/chrome/chrome-native-host"
+chrome_manifest="com.anthropic.claude_code_browser_extension.json"
+chrome_line="off (--no-chrome): a slice that touches UI owes every screen check"
+profiles=""; missing=""; wrote=""
+chrome_profiles() {  # the NativeMessagingHosts directory of each Chromium-family browser that has a profile here
+  local base d
+  case "$(uname -s)" in
+    Darwin) base="$HOME/Library/Application Support"
+      for d in "Google/Chrome" "Google/Chrome Beta" "Google/Chrome Canary" "Chromium" "BraveSoftware/Brave-Browser" "Microsoft Edge" "Vivaldi" "com.operasoftware.Opera" "Arc/User Data"; do
+        [ -d "$base/$d" ] && printf '%s\n' "$base/$d/NativeMessagingHosts"
+      done ;;
+    Linux) base="${XDG_CONFIG_HOME:-$HOME/.config}"
+      for d in google-chrome google-chrome-beta chromium BraveSoftware/Brave-Browser microsoft-edge vivaldi opera; do
+        [ -d "$base/$d" ] && printf '%s\n' "$base/$d/NativeMessagingHosts"
+      done ;;
+  esac
+  return 0
+}
+if [ "$chrome" = 1 ]; then
+  profiles="$(chrome_profiles)"
+  if [ -z "$profiles" ]; then
+    chrome_line="on, but no Chromium-family browser profile was found on this machine: install Chrome and the Claude in Chrome extension (chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn); a slice that touches UI stops at A until a browser answers"
+  else
+    wrote=""; missing=""
+    [ -x "$chrome_host" ] || missing="$missing $chrome_host"
+    while IFS= read -r d; do [ -f "$d/$chrome_manifest" ] || missing="$missing $d/$chrome_manifest"; done <<< "$profiles"
+    chrome_line="on: Claude in Chrome drives your real browser, which runs outside the fence (the extension must be installed and the browser open for a slice that touches UI)"
+    [ -n "$missing" ] && chrome_line="$chrome_line; the native-messaging files Claude Code has not written yet are written once the set is approved:$missing (open the browser again afterwards if it was running)"
+  fi
+fi
+write_chrome_files() {  # after the approval: the wrapper and each missing manifest, with the content Claude Code writes
+  local d
+  [ -n "$missing" ] || return 0
+  if [ ! -x "$chrome_host" ]; then
+    mkdir -p "$(dirname "$chrome_host")"
+    printf '#!/bin/sh\n# Chrome native host wrapper script\n# Written by kad (kad-dev-team) because Claude Code had not written its own yet; Claude Code rewrites it\nexec %s --chrome-native-host\n' "$(printf '%q' "$(command -v claude)")" > "$chrome_host"
+    chmod 755 "$chrome_host"
+    wrote="$wrote $chrome_host"
+  fi
+  while IFS= read -r d; do
+    [ -f "$d/$chrome_manifest" ] && continue
+    mkdir -p "$d"
+    KAD_HOST="$chrome_host" python3 -I - <<'PY' > "$d/$chrome_manifest"
+import json, os
+print(json.dumps({
+    "name": "com.anthropic.claude_code_browser_extension",
+    "description": "Claude Code Browser Extension Native Host",
+    "path": os.environ["KAD_HOST"],
+    "type": "stdio",
+    "allowed_origins": ["chrome-extension://fcoeoabgfenejglbffodgkkbkcdhcgfn/"],
+}, indent=2))
+PY
+    chmod 644 "$d/$chrome_manifest"
+    wrote="$wrote $d/$chrome_manifest"
+  done <<< "$profiles"
+  say "chrome: wrote the native-messaging files Claude Code had not written yet:$wrote"
+}
 
 # 4. The runtime's settings for this project, regenerated every run so a
 #    changed answer applies (--check only names the path). Every key is
@@ -290,16 +361,16 @@ fi
 #    the full path, so two projects never share one.
 slug="$(printf '%s' "$(basename "$project")" | tr -c 'A-Za-z0-9_.-' '_')-$(printf '%s' "$project" | shasum -a 256 2>/dev/null | cut -c1-12 || printf '%s' "$project" | sha256sum | cut -c1-12)"
 settings="$conf_dir/srt/$slug.json"
+audit_dir="${KAD_AUDIT_DIR:-$HOME/.claude/kad-audit}"
+audit_clone="$audit_dir/repo"
 chrome_sock=""
 if [ "$chrome" = 1 ]; then
-  domains_arg+=("bridge.claudeusercontent.com" "mcp-proxy.anthropic.com")
   chrome_sock="/tmp/claude-mcp-browser-bridge-$(id -un)"
-  [ "$(uname -s)" = Linux ] && say "chrome on Linux allows every unix socket (the runtime cannot allow one path there); the SSH agent and Docker sockets are reachable for this session"
+  [ "$(uname -s)" = Linux ] && chrome_note="chrome on Linux allows every unix socket (the runtime cannot allow one path there); the SSH agent and Docker sockets are reachable for this session"
 fi
-claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 gen_settings() {
   KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_CLAUDE_DIR="$claude_dir" KAD_GH_DIR="$gh_dir" KAD_AUDIT_DIR_W="$audit_dir" KAD_CHROME_SOCK="$chrome_sock" \
-  KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains ${domains_arg[*]:-}" KAD_PTY="$([ "$(uname -s)" = Darwin ] && echo 1 || echo 0)" python3 -I - <<'PY'
+  KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains $project_domains ${domains_arg[*]:-}$([ "$chrome" = 1 ] && echo ' bridge.claudeusercontent.com mcp-proxy.anthropic.com')" KAD_PTY="$([ "$(uname -s)" = Darwin ] && echo 1 || echo 0)" python3 -I - <<'PY'
 import json, os, sys
 home = os.path.expanduser("~")
 claude_dir = os.path.abspath(os.path.expanduser(os.environ["KAD_CLAUDE_DIR"]))
@@ -315,10 +386,10 @@ for d in os.environ["KAD_DOMAINS"].split():
         domains.append(d)
 # Writes: the project, Claude Code's config directory and runtime files,
 # the temp directories, npm's cache (installs inside the project need
-# it; the credential file ~/.npmrc is denied above), and the audit
-# directory (the session's logs, the transcript snapshots and the audit
-# repository's clone; its commits and pushes write no .git/config, which
-# the runtime denies everywhere). Within the config
+# it; the credential file ~/.npmrc is denied above), kad's gh directory
+# and the audit directory (the session's logs, the transcript snapshots
+# and the audit repository's clone; its commits and pushes write no
+# .git/config, which the runtime denies everywhere). Within the config
 # directory, what would outlive the session is denied: user settings,
 # hooks, commands, agents, skills and plugins run in later sessions
 # outside this fence. denyWrite takes precedence over allowWrite.
@@ -335,7 +406,7 @@ settings = {
     # certificate on macOS, since the fence refuses the system trust service
     "network": {"allowedDomains": domains, "deniedDomains": [], "allowLocalBinding": os.environ["KAD_LOCAL"] == "1", "tlsTerminate": {}},
 }
-# --chrome: Claude Code reaches the extension through a unix socket the
+# Chrome: Claude Code reaches the extension through a unix socket the
 # native host (spawned by Chrome, outside the fence) listens on under
 # /tmp/claude-mcp-browser-bridge-<user>/; the runtime blocks every unix
 # socket unless allowed. macOS takes a path allowlist; on Linux the path
@@ -359,9 +430,89 @@ if os.environ["KAD_PTY"] == "1":
 print(json.dumps(settings, indent=2))
 PY
 }
-if [ "$check" = 0 ]; then gen_settings | write_json "$settings"; fi
+plugin_arg=(); [ "$installed" = 1 ] || plugin_arg=(--plugin-dir "$root")
 
-# 5. Credential-shaped variables never reach the session (the orchestrator's
+# 5. The permission set, in plain words: printed on the first run on a
+#    project, on --reset, on --check and when the set changed; approved
+#    with one yes, stored with the three answers behind it.
+show_set() {
+  local run_audit="${audit:-$stored_audit}" run_repo="${audit_repo_arg:-$stored_repo}" extra
+  extra="$(printf '%s' "$stored_domains ${domains_arg[*]:-}" | tr -s ' ' | sed 's/^ //; s/ $//')"
+  say "${why_screen:-the set this session starts with}: $project"
+  say "  writes       the project; the audit directory $audit_dir; Claude Code's own files ($claude_dir, ~/.claude.json), the temp directory, npm's cache and kad's gh directory ($gh_dir); never Claude Code's user settings, hooks, commands, agents, skills or plugins"
+  say "  never reads  your keys and credential files: ~/.ssh, ~/.aws, ~/.gnupg, ~/.kube, ~/.config/gcloud, ~/.azure, ~/.config/gh, ~/.npmrc, ~/.netrc, ~/.git-credentials, ~/.pypirc, ~/.docker/config.json, ~/.terraform.d/credentials.tfrc.json, the Claude credentials file"
+  say "  network      the API and sign-in (api.anthropic.com, claude.ai, platform.claude.com), GitHub (github.com, *.github.com)$([ "$chrome" = 1 ] && echo ", Chrome's bridge (bridge.claudeusercontent.com, mcp-proxy.anthropic.com)")$([ -n "$project_domains" ] && echo "; for this project's manifests: $project_domains")$([ -n "$extra" ] && echo "; extra: $extra"); nothing else"
+  say "  credential   $gh_line; every other credential-shaped variable is dropped from the session's environment"
+  say "  local ports  $([ "$local" = 1 ] && echo 'allowed: a dev server, its tests and the smoke runs bind and reach localhost (--no-local denies them)' || echo 'denied (--no-local)')"
+  say "  chrome       $chrome_line"
+  say "  audit        $([ "$run_audit" = 1 ] && echo "on: each prompt, skill and agent call logged and the transcripts kept under $audit_dir, on this machine; synced at the end of each slice to ${run_repo:-nowhere (no audit repository: local only)}" || echo off)"
+  say "  runtime      srt --settings $settings; plugin $([ "$installed" = 1 ] && echo installed || echo "--plugin-dir $root")"
+}
+if [ "$check" = 1 ]; then
+  [ "$first_machine" = 1 ] && say "first run on this machine: the set below would be shown for one yes and stored in $conf"
+  show_set
+  say "check only; nothing written, nothing started"; exit 0
+fi
+if [ "$need_screen" = 1 ]; then
+  asked=0
+  while :; do
+    show_set
+    approve "start with this set? (n: change audit mode, the audit repository or the extra domains first)" && break
+    rc=$?
+    if [ "$rc" = 2 ]; then
+      say "this project's set has not been approved and there is no terminal to ask: run kad once from a terminal, or kad --yes to approve the set above"; exit 2
+    fi
+    if [ "$asked" = 1 ]; then say "not approved; nothing stored, nothing started"; exit 2; fi
+    asked=1
+    if approve "audit mode: log each prompt, skill and agent call and keep the transcripts of this project's sessions, on your machine? (recommended)"; then stored_audit=1; else stored_audit=0; fi
+    if [ "$stored_audit" = 1 ]; then stored_repo="$(ask 'audit repository clone URL (the audit material is synced there at the end of each slice; empty for none, local only)' "$stored_repo")"
+    else stored_repo=""; fi
+    stored_domains="$(ask 'extra domains the sessions may reach, space-separated (beyond the API, GitHub and what the manifests call for; empty for none)' "$stored_domains")"
+    audit=""; audit_repo_arg=""; why_screen="the set with your answers"
+  done
+  write_conf
+  say "approved and stored in $conf (kad --reset shows it again; kad --check prints it)"
+fi
+[ "$chrome" = 1 ] && [ -n "$profiles" ] && write_chrome_files
+# This run's audit mode and repository: the flag for this run only, else
+# the stored answer; an inherited KAD_AUDIT_REPO is never used without
+# being chosen here.
+audit="${audit:-$stored_audit}"
+audit_repo="${audit_repo_arg:-$stored_repo}"
+# The audit repository is a separate repository: the sync pushes the audit
+# documents onto its default branch, which on the project's own repository
+# means onto the project.
+if [ -n "$audit_repo" ] && origin="$(git -C "$project" remote get-url origin 2>/dev/null)"; then
+  norm() { printf '%s' "$1" | sed -e 's#\.git$##' -e 's#/$##' -e 's#^git@github\.com:#https://github.com/#'; }
+  if [ "$(norm "$audit_repo")" = "$(norm "$origin")" ]; then
+    say "warning: the audit repository is this project's own origin, so it is ignored for this run: the audit sync would push audit documents onto the project's default branch. Use a separate repository (kad --audit-repo URL for this run, kad --reset to store a new one); audit mode stays on, with the logs and transcripts kept locally"
+    audit_repo=""
+  fi
+fi
+
+# 5b. The audit repository's clone, outside the fence: the runtime's
+#     mandatory deny covers .git/config and .git/hooks under every path it
+#     allows, so a clone attempted inside the session fails every time. The
+#     clone lives under the audit directory, never under the project, and
+#     commits under the project's identity.
+if [ "$audit" = 1 ] && [ -n "$audit_repo" ]; then
+  mkdir -p "$audit_dir"
+  if [ -d "$audit_clone/.git" ]; then
+    git -C "$audit_clone" pull -q --ff-only 2>/dev/null || say "warning: the audit clone at $audit_clone did not fast-forward (unpushed commits, or no network); the sync reports it if the push is refused"
+  elif ! git clone -q -- "$audit_repo" "$audit_clone"; then
+    say "warning: cloning the audit repository into $audit_clone failed (git's message above); the session's A step reports it"
+  fi
+  if [ -d "$audit_clone/.git" ]; then
+    for k in user.name user.email; do
+      v="$(git -C "$project" config --get "$k" 2>/dev/null || true)"
+      [ -n "$v" ] && git -C "$audit_clone" config "$k" "$v"
+    done
+  fi
+fi
+
+gen_settings | write_json "$settings"
+
+# 6. Credential-shaped variables never reach the session (the orchestrator's
 #    own check refuses to launch with one present); --keep-env passes one.
 scrubbed=()
 for name in $(env | cut -d= -f1 | grep -E 'SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIAL|API_?KEY|ACCESS_?KEY|PRIVATE_?KEY|_KEY$' || true); do
@@ -370,79 +521,43 @@ for name in $(env | cut -d= -f1 | grep -E 'SECRET|TOKEN|PASSWORD|PASSWD|CREDENTI
   [ "$keep" = 1 ] || { unset "$name"; scrubbed+=("$name"); }
 done
 
-# 5a. Another session's variables. A shell opened from inside a Claude Code
-#     session (its Bash tool, or a terminal window it launched, which keeps
-#     the environment for its lifetime) carries CLAUDE_CODE_CHILD_SESSION,
-#     CLAUDE_PID and the parent's session id, and Claude Code takes the
-#     session started there for a child of that one: "Transcript saving is
-#     off — inherited CLAUDE_CODE_CHILD_SESSION marker", nothing written
-#     under ~/.claude/projects/, the loop's cost line "not measured" and
-#     nothing for the audit to read (run 3's loop session, the 2026-11-07
-#     fix session). Dropped here, and the session told to persist whatever
-#     else it inherits. The hook cannot tell from inside: Claude Code sets
-#     the same marker for every child it spawns, hooks included.
+# 6a. Another session's variables. A shell opened from inside a Claude Code
+#     session (its Bash tool, or a terminal a session started) carries
+#     CLAUDE_CODE_CHILD_SESSION, CLAUDE_PID and the parent's session id, and
+#     Claude Code takes the session started there for a child of that one:
+#     "Transcript saving is off — inherited CLAUDE_CODE_CHILD_SESSION
+#     marker", nothing written under ~/.claude/projects/, the loop's cost
+#     line "not measured" and nothing for the audit to read (run 3's loop
+#     session, the 2026-11-07 fix session). Dropped here, and the session
+#     told to persist whatever else it inherits. The hook cannot tell from
+#     inside: Claude Code sets the same marker for every child it spawns,
+#     hooks included.
 inherited=()
 for name in CLAUDECODE CLAUDE_CODE_CHILD_SESSION CLAUDE_PID CLAUDE_CODE_SESSION_ID CLAUDE_CODE_SSE_PORT CLAUDE_CODE_MESSAGING_SOCKET CLAUDE_CODE_MESSAGING_TOKEN CLAUDE_CODE_SESSION_ATTENDED CLAUDE_CODE_ENTRYPOINT; do
   [ -n "${!name:-}" ] && { unset "$name"; inherited+=("$name"); }
 done
 export CLAUDE_CODE_FORCE_SESSION_PERSISTENCE=1
 
-# 6. Say what will run.
-plugin_arg=(); [ "$installed" = 1 ] || plugin_arg=(--plugin-dir "$root")
-# Claude Code gives a plugin's hooks a data directory under
-# <config>/plugins/data/ (<name>-inline for a --plugin-dir plugin) and
-# creates it on first use; the fence denies writes under plugins/, so in a
-# fenced session with no such directory yet every hook fails before it
-# runs ("EPERM ... mkdir .../plugins/data/kad-dev-team-inline": the audit
-# log then has nothing). Created here, outside the fence; the installed
-# plugin's was created by its install.
+# 7. Claude Code gives a plugin's hooks a data directory under
+#    <config>/plugins/data/ (<name>-inline for a --plugin-dir plugin) and
+#    creates it on first use; the fence denies writes under plugins/, so in a
+#    fenced session with no such directory yet every hook fails before it
+#    runs ("EPERM ... mkdir .../plugins/data/kad-dev-team-inline": the audit
+#    log then has nothing). Created here, outside the fence; the installed
+#    plugin's was created by its install.
 plugin_data="$claude_dir/plugins/data/$(python3 -I -c 'import json,sys;print(json.load(open(sys.argv[1]))["name"])' "$root/.claude-plugin/plugin.json" 2>/dev/null || echo kad-dev-team)-inline"
-[ "$installed" = 1 ] || [ "$check" = 1 ] || [ -d "$plugin_data" ] || mkdir -p "$plugin_data" 2>/dev/null || say "warning: could not create $plugin_data; the plugin's hooks will fail inside the fence until it exists"
-say "project    $project"
-say "runtime    srt --settings $settings"
-say "network    $(gen_settings | python3 -I -c 'import json,sys;print(", ".join(json.load(sys.stdin)["network"]["allowedDomains"]))')"
-say "local ports $([ "$local" = 1 ] && echo allowed || echo denied); chrome $([ "$chrome" = 1 ] && echo on || echo off)"
-say "audit      $([ "$audit" = 1 ] && echo "on, directory $audit_dir${audit_repo:+, repository $audit_repo, clone $audit_clone}" || echo off)"
-say "plugin     $([ "$installed" = 1 ] && echo "installed" || echo "--plugin-dir $root")"
-gh_line="no token: delivery stops at the push"
-[ -n "$gh_token" ] && gh_line="token from ${gh_token_env:-the host gh login} as GH_TOKEN; gh config in $gh_dir; gh is the git credential helper"
-say "github     $gh_line"
-[ "${#scrubbed[@]}" -gt 0 ] && say "env        dropped ${scrubbed[*]} (credential-shaped; --keep-env NAME passes one through)"
-[ "${#inherited[@]}" -gt 0 ] && say "env        dropped ${inherited[*]} (another Claude Code session's: this shell was opened from a session, and kept, they would turn transcript saving off for the one started here)"
-[ "$check" = 1 ] && [ "$relaunch" = 0 ] && { say "check only; nothing written, nothing started"; exit 0; }
-[ "$prepare" = 1 ] && { say "prepared; start the fenced session from a terminal with: $(printf '%q' "$root/bin/kad") --project $(printf '%q' "$project")$([ "$chrome" = 1 ] && echo ' --chrome')"; exit 0; }
+[ "$installed" = 1 ] || [ -d "$plugin_data" ] || mkdir -p "$plugin_data" 2>/dev/null || say "warning: could not create $plugin_data; the plugin's hooks will fail inside the fence until it exists"
 
-# 6a. --relaunch: a new terminal window runs kad here; the caller (a session
-#     that cannot replace its own process) then ends by hand.
-if [ "$relaunch" = 1 ]; then
-  again=()
-  for a in "${orig_args[@]}"; do [ "$a" = --relaunch ] || [ "$a" = --check ] || [ "$a" = --install-runtime ] || again+=("$a"); done
-  cmd="cd $(printf '%q' "$project") && $(printf '%q' "$root/bin/kad")"
-  for a in ${again[@]+"${again[@]}"}; do cmd="$cmd $(printf '%q' "$a")"; done
-  say "relaunch command: $cmd"
-  [ "$check" = 1 ] && { say "check only; no window opened"; exit 0; }
-  case "$(uname -s)" in
-    Darwin)
-      osascript -e 'tell application "Terminal" to activate' \
-                -e "tell application \"Terminal\" to do script \"$(printf '%s' "$cmd" | sed 's/\\/\\\\/g; s/"/\\"/g')\"" >/dev/null \
-        && { say "opened a Terminal window with the fenced session; close this session when it is up (a Terminal this command had to start carries this session's variables for its lifetime; kad drops them before it starts claude, but a plain claude typed in that window would save no transcript until Terminal is quit and reopened)"; exit 0; } ;;
-    Linux)
-      for term in x-terminal-emulator gnome-terminal konsole xterm; do
-        command -v "$term" >/dev/null || continue
-        case "$term" in
-          gnome-terminal) "$term" -- bash -lc "$cmd; exec bash" ;;
-          *) "$term" -e bash -lc "$cmd; exec bash" ;;
-        esac && { say "opened a $term window with the fenced session; close this session when it is up"; exit 0; }
-      done ;;
-  esac
-  say "could not open a terminal window here; run this yourself in one:"; say "  $cmd"; exit 3
-fi
+# 8. One line, then start. The approved set is on record; --check prints it.
+[ "${chrome_note:-}" ] && say "$chrome_note"
+[ "${#scrubbed[@]}" -gt 0 ] && say "env dropped ${scrubbed[*]} (credential-shaped; --keep-env NAME passes one through)"
+[ "${#inherited[@]}" -gt 0 ] && say "env dropped ${inherited[*]} (another Claude Code session's: kept, they would turn transcript saving off for the one started here)"
+[ "$need_screen" = 1 ] || say "$project: set approved $(read_conf approved "$project"); fenced, audit $([ "$audit" = 1 ] && echo "on${audit_repo:+ → $audit_repo}" || echo off), chrome $([ "$chrome" = 1 ] && echo on || echo off), $([ -n "$gh_token" ] && echo 'GitHub token' || echo 'no GitHub token'), local ports $([ "$local" = 1 ] && echo allowed || echo denied) (kad --check prints the set, kad --reset asks again)"
 
-# 7. Start, inside the fence. The session inherits these variables.
 export KAD_SRT_SETTINGS="$settings"
 kept="${keep_env[*]:-}"
 if [ -n "$gh_token" ]; then
-  export GH_TOKEN="$gh_token" GH_CONFIG_DIR="$gh_dir" GIT_TERMINAL_PROMPT=0
+  export GH_TOKEN="$gh_token" GH_CONFIG_DIR="$gh_dir" GIT_TERMINAL_PROMPT=0 KAD_GH_DIR="$gh_dir"
   # git's credential helper for the session, by environment, no file written:
   # the keychain helper reset, then gh's, which answers from GH_TOKEN
   export GIT_CONFIG_COUNT=2 GIT_CONFIG_KEY_0=credential.helper GIT_CONFIG_VALUE_0= GIT_CONFIG_KEY_1=credential.helper GIT_CONFIG_VALUE_1='!gh auth git-credential'
@@ -452,6 +567,7 @@ if [ -n "$gh_token" ]; then
   fi
   kept="$kept GH_TOKEN"
 fi
+[ "$github" = 1 ] && export KAD_GH_DIR="$gh_dir"
 export KAD_KEPT_ENV="${kept# }"
 unset KAD_AUDIT KAD_AUDIT_REPO KAD_CHROME
 if [ "$audit" = 1 ]; then
@@ -460,7 +576,7 @@ if [ "$audit" = 1 ]; then
 fi
 [ "$chrome" = 1 ] && export KAD_CHROME=1
 cd "$project"
-chrome_arg=(); [ "$chrome" = 1 ] && chrome_arg=(--chrome)
+chrome_arg=(--no-chrome); [ "$chrome" = 1 ] && chrome_arg=(--chrome)
 # ${arr[@]+"${arr[@]}"}: an empty array expands to nothing; the plain form is
 # an unbound variable under set -u in bash 3.2 (macOS's /bin/bash)
-exec srt --settings "$settings" claude ${plugin_arg[@]+"${plugin_arg[@]}"} ${chrome_arg[@]+"${chrome_arg[@]}"} ${claude_args[@]+"${claude_args[@]}"}
+exec srt --settings "$settings" claude ${plugin_arg[@]+"${plugin_arg[@]}"} "${chrome_arg[@]}" ${claude_args[@]+"${claude_args[@]}"}
