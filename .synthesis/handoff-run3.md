@@ -1,5 +1,7 @@
 # Handoff after run 3: what to fix before slice 2
 
+**Closed 2026-11-08.** Slice 2 ran on 0.13.1 and was reviewed (`audit-docs/personal-finance-tracker-3-slice-2/plugin-review/2026-11-08-slice-2-review.md`). H5 is answered there (lite stays; its two follow-up sentences are P3.8 of the next list); H1.6's 28 cases run with the next orchestrator PR; H4's open issues and D9 phase 2 are carried forward. Everything still open is in `.synthesis/handoff-slice2.md`, which replaces this file.
+
 Written 2026-11-01 from the review of `personal-finance-tracker-3` slice 1
 on kad-dev-team 0.9.2 (the review and the independent code assessment are
 in `audit-docs/personal-finance-tracker-3-slice-1/plugin-review/`; the
