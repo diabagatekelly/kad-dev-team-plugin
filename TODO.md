@@ -229,7 +229,7 @@ P1 shipped as 0.14.0 (PR #41) and P2 with P3 as 0.14.1 (PR #42, merged
 2026-11-09): the chunk runner, the criteria walk, the data rule, the
 open-work routing, the triaged deferrals, the counted shell edits and the
 light cadence arm (measured at slice 3). P4 (planning data) is built as
-0.14.2 (PR #@PR@, the owner's to merge): the "described, never quoted"
+0.14.2 (PR #44, the owner's to merge): the "described, never quoted"
 rule in five planning skills, `source_scan.py` behind the readiness
 gate's tenth check, the chunk gate's `sources` check and delivery's scan
 before a push, and delivery's removal procedure. Next, in order: P5

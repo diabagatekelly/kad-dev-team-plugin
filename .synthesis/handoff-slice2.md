@@ -12,11 +12,11 @@ slice 2".
 |---|---|
 | P1 Start | **Merged** as kad 0.14.0, PR #41 (2026-11-08) |
 | P2 Screen checks and P3 The loop | **Merged** as kad 0.14.1, PR #42 (2026-11-09, merge `4fc83e4`), one PR as decided |
-| P4 Planning data | **Built** as kad 0.14.2, PR #@PR@ open from `p4-planning-data`, gate green; merging is the owner's |
+| P4 Planning data | **Built** as kad 0.14.2, PR #44 open from `p4-planning-data`, gate green; merging is the owner's |
 | P5 Audit and measurement | **Next.** One PR, branch `p5-audit`, kad 0.14.3, from `main` once P4 is merged |
 | Slice 2's fix round, then slice 3 | After P5, on `personal-finance-tracker-3` (see "After this list") |
 
-`main` is at 0.14.1 until PR #@PR@ merges. What a session starting P5
+`main` is at 0.14.1 until PR #44 merges. What a session starting P5
 needs from the P4 build, beyond the items' own notes below:
 
 - **New pieces P5 touches.** `skills/orchestrator/scripts/source_scan.py`

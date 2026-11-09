@@ -394,7 +394,7 @@ in, 0.14.0, PR #41) and P2 with P3 (the criteria walk in a real browser,
 the data rule, the chunk runner, the open-work routing, the triaged
 deferrals, the counted shell edits, the light cadence text; 0.14.1, PR
 #42) are merged. P4 (planning data: nothing of the owner's by value) is
-built as 0.14.2 and waits for the owner's merge (PR #@PR@): a planning
+built as 0.14.2 and waits for the owner's merge (PR #44): a planning
 stage pointed at a file of the owner's lists it in `sources.md`, reads
 its shape through `source_scan.py describe` and never a cell, and
 invents every example; the same script finds a listed file's values in
