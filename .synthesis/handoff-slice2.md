@@ -109,20 +109,22 @@ build, beyond the items' own notes below:
   over 300,000 characters (PR #42); the triage rule is §2's first
   bullet.
 - **Sourcery's round on PR #44** (the rule stands: fix, decline with the
-  reason, defer): 25 comments. Ten fixed in `13bac00` (a value in a path
-  found in history and renamed by the rewrite; a listed source git would
-  commit, and a byte-for-byte copy of one, problems in a history scan
-  too; files not read as text counted; the map and an extract private
-  and never through a symlink; UTF-16 exports; transcript keys and
+  reason, defer): 25 comments, all answered, none open. 21 findings:
+  eleven fixed in `13bac00` (a value in a path found in history and
+  renamed by the rewrite; a listed source git would commit, and a
+  byte-for-byte copy of one, problems in a history scan too; files not
+  read as text counted; the map private, an extract private, neither
+  written through a symlink; UTF-16 exports; transcript keys and
   numbers; an unreadable transcript not reported clean; a rewrite
   refused while earlier `refs/original/` backups exist; delivery
-  rescans a head that moved). Nine declined, each with its reason on
-  the thread, five of them the design calls above. One deferred: it is
-  P5.1 (the audit sync withholding a transcript that holds a value).
-  The four opengrep hits (one audit rule on list-form `subprocess.run`)
-  were declined and the owner ignored that rule for this repository in
+  rescans a head that moved), nine declined with the reason on each
+  thread (five of them the design calls above), one deferred, which is
+  P5.1 (the audit sync withholding a transcript that holds a value; the
+  function it needs, `scan_transcript`, shipped in P4). The other four
+  comments were one opengrep audit rule on list-form `subprocess.run`,
+  declined, and the owner then ignored that rule for this repository in
   Sourcery's dashboard (2026-11-09), so the check no longer fails on
-  `source_scan.py`; `evals/README.md`'s planning-data bullet has the
+  `source_scan.py`. `evals/README.md`'s planning-data bullet has the
   detail.
 - **Known and left for P5's PR:** `evals/orchestrator-log-format/check.sh`
   prints one KNOWN order error on entry 9 of the committed fixture (the
