@@ -24,12 +24,11 @@ graders:
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner'
     min: 1
     max: 1
-  - type: tool_used
-    name: no-builder-or-reviewer-launched-directly
-    tool: Agent
-    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?(?:tdd-coach|code-reviewer|accessibility-engineer)'
-    min: 0
-    max: 0
+  # No grader on builder or reviewer launches: the trace holds the
+  # runner's own nested launches too (seen on 2026-11-09: the runner's
+  # builder, reviewer and smoke agent appear as Agent calls), so a count
+  # of them says nothing about who launched them. The handoff judge below
+  # and the single runner launch are the check.
   - type: tool_used
     name: runner-told-to-invoke-its-skill
     tool: Agent
@@ -38,7 +37,7 @@ graders:
   - type: tool_used
     name: runner-handed-the-plan-lines-and-paths
     tool: Agent
-    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner)(?=[\s\S]*Done when)(?=[\s\S]*implementation-report-slice-001\.md)(?=[\s\S]*rounds-slice-001\.jsonl)(?=[\s\S]*npm test)(?=[\s\S]*scratch_run)(?=[\s\S]*cadence)'
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner)(?=[\s\S]*Done when)(?=[\s\S]*implementation-report-slice-001\.md)(?=[\s\S]*rounds-slice-001\.jsonl)(?=[\s\S]*npm test)(?=[\s\S]*scratch_run)(?=[\s\S]*[Cc]adence)'
     min: 1
   - type: tool_used
     name: runner-launched-as-opus

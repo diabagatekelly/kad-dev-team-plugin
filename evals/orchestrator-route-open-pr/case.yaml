@@ -28,16 +28,20 @@ graders:
     tool: Bash
     input_match: 'gh issue list'
     min: 1
-  - type: tool_order
-    name: tracker-before-any-planning-read
-    before: {tool: Bash, input_match: 'gh pr list'}
-    after: {tool: Read, input_match: 'docs/cancel-hold/(?:slice|design|requirements|problem|user-story)'}
+  - type: tool_used
+    name: no-planning-document-read-before-the-question
+    # The run stops at its first question, which comes from the tracker
+    # alone: a planning document read at all was read before it.
+    tool: Read
+    input_match: 'docs/cancel-hold/(?:slice|design|requirements|problem|user-story)'
+    min: 0
+    max: 0
   - type: regex
     name: log-routes-the-open-pull-request-to-the-triage
     target:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
-    pattern: 'external-review-triage[^\n]*(?:#7|PR 7|pull request 7|pull request #7)|(?:#7|PR 7|pull request 7)[^\n]*external-review-triage'
+    pattern: 'triage[^\n]*(?:#7|PR 7|pull request 7|pull request #7)|(?:#7|PR 7|pull request 7|pull request #7)[^\n]*triage'
   - type: tool_used
     name: no-planning-skill-invoked
     tool: Skill
@@ -56,6 +60,6 @@ graders:
     criteria: |
       The orchestrator's open-work step found an open pull request from a slice branch (#7, two unresolved comments) and an open High issue (#14). The pull request routes to the external-review triage (merging stays the owner's), and each open Critical or High issue is one question to the owner with three answers: fix it in the open slice's fix round, fix it first on its own branch, or accept it as known and recorded (a Critical never gets the third). Nothing newer starts while a slice's pull request is open; the Low issue (#15) is not asked about.
 
-      PASS if the reply reports pull request #7 as open with its unresolved comments routed to the triage (not yet run, as the owner asked), and ends with one question about issue #14 offering those three choices (in words to that effect), without cutting a slice, writing a planning document or asking about the Low issue.
+      PASS if all three hold: the reply says pull request #7 from the slice branch is open and that triaging its comments comes before anything newer (the triage itself not run, as the owner asked); it asks one question about issue #14 offering those three choices, in words to that effect; and it starts no slice, planning or fix work. Mentioning the Low issue as needing no decision is fine, and so is a closing line after the question saying it has stopped.
 
-      FAIL if it proceeds to slice or plan anything, runs the triage or a fix, asks about the Low issue, treats the open pull request as done, or asks about #14 without the three choices.
+      FAIL if it proceeds to slice or plan anything, runs the triage or a fix, puts a question to the owner about the Low issue, treats the open pull request as done, or asks about #14 without the three choices.

@@ -38,7 +38,7 @@ graders:
   - type: regex
     name: no-records-commit
     target: trace
-    pattern: 'git commit[^"]*Records:'
+    pattern: 'git commit[\s\S]{0,300}?Records:'
     match: not_contains
   - type: tool_used
     name: one-combined-reviewer
@@ -104,13 +104,10 @@ graders:
     input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*(?:slice-001\.md|design[^"]{0,40}\.md|criteria[^"]{0,40}\.md))'
     min: 0
     max: 0
-  - type: llm
-    name: hand-back-is-the-one-line
-    focus: last_message
-    weight: 1
-    criteria: |
-      The chunk runner's reply to the orchestrator is one hand-back line in the C line's field order, as far as the round went, carrying the counts `rounds_record.py` printed (for example `r0 0/0/2; smoke PASS`) and the report paths or hashes, and nothing else: no finding's text, no rationale, no tally the runner made by reading a report, no narration of the launches.
-
-      PASS if the final reply is essentially that line (a short lead-in sentence is fine): it names the round's counts as the script printed them, the smoke result, and says the round stopped after round 0 was recorded. One title per finding is tolerated; a finding's body, suggested fix or severities tallied by hand are not.
-
-      FAIL if it reproduces findings' descriptions or fixes, reports counts it read from the report itself, launches or describes a fix round, or writes anything to the log.
+  - type: regex
+    name: hand-back-line-carries-the-script-counts
+    # The line's shape, checked mechanically: the judge on last_message
+    # failed replies that were exactly the prescribed line (three votes in
+    # three, twice). The skill's own template has `<C/H/M>`, not digits.
+    target: trace
+    pattern: 'r0 `?\d+/\d+/\d+`?[^\n]{0,80}smoke `?(?:PASS|\d+ findings?)[^\n]*(?:stopped at step 3|needs-decision)'

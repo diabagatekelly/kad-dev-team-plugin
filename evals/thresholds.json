@@ -14,6 +14,27 @@
       "acceptance-criteria"
     ]
   },
+  "accessibility-review-ac-walk": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-accessibility-review-ac-walk.json",
+    "graders": {
+      "app-never-started-bare": 1.0,
+      "app-started-through-the-launcher": 1.0,
+      "honest-about-what-was-driven": 1.0,
+      "no-browser-is-owed-not-passed": 1.0,
+      "screen-reader-is-the-owners-manual-item": 1.0,
+      "skill-invoked": 1.0,
+      "table-has-a-row-per-criterion": 1.0,
+      "walk-report-written": 1.0,
+      "writes-only-the-report": 1.0
+    },
+    "skills_invoked": [
+      "accessibility-review"
+    ]
+  },
   "accessibility-review-neg-readability": {
     "score": 1.0,
     "runs": 3,
@@ -219,6 +240,129 @@
       "does-not-invoke-architecture-review": 1.0
     },
     "skills_invoked": [
+      "test-quality-review"
+    ]
+  },
+  "chunk-runner-gap-handback": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-chunk-runner-gap-handback.json",
+    "graders": {
+      "chunk-runner-invoked": 1.0,
+      "hand-back-names-the-decision": 1.0,
+      "log-not-written": 1.0,
+      "no-planning-document-written": 1.0,
+      "no-records-commit": 1.0,
+      "nothing-launched": 1.0,
+      "orchestrator-not-invoked": 1.0,
+      "round-recorded-by-the-script": 1.0,
+      "stops-with-the-decision-on-the-line": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner"
+    ]
+  },
+  "chunk-runner-gate-deviation": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-chunk-runner-gate-deviation.json",
+    "graders": {
+      "chunk-runner-invoked": 1.0,
+      "deviation-recorded-not-failed": 1.0,
+      "gate-file-saved": 1.0,
+      "gate-names-the-test-file-deviation": 1.0,
+      "gate-passes-and-names-the-deviation": 1.0,
+      "gate-run-with-the-design-modules": 1.0,
+      "log-not-written": 1.0,
+      "no-fixer-no-reviewer": 1.0,
+      "no-records-commit": 1.0,
+      "orchestrator-not-invoked": 1.0,
+      "plan-entry-not-edited": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner"
+    ]
+  },
+  "chunk-runner-gate-outside": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-chunk-runner-gate-outside.json",
+    "graders": {
+      "allow-list-not-widened": 1.0,
+      "chunk-runner-invoked": 1.0,
+      "failure-handed-to-the-fixer-once": 1.0,
+      "first-gate-fails-on-scope": 1.0,
+      "gate-passes-after-the-fix": 1.0,
+      "gate-run-twice": 1.0,
+      "log-not-written": 1.0,
+      "no-records-commit": 1.0,
+      "no-reviewer-before-the-pass": 1.0,
+      "orchestrator-not-invoked": 1.0,
+      "runner-edits-no-code": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "tdd-implementation-lite"
+    ]
+  },
+  "chunk-runner-one-fix-round": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-chunk-runner-one-fix-round.json",
+    "graders": {
+      "chunk-runner-invoked": 1.0,
+      "gate-on-the-fix": 1.0,
+      "hand-back-carries-the-split": 1.0,
+      "hand-back-is-the-one-line": 1.0,
+      "hand-back-leaves-the-medium-standing": 1.0,
+      "log-not-written": 1.0,
+      "no-records-commit": 1.0,
+      "no-third-review": 1.0,
+      "orchestrator-not-invoked": 1.0,
+      "round-one-recorded-with-the-range": 1.0,
+      "second-and-last-fixer": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "tdd-implementation-lite"
+    ]
+  },
+  "chunk-runner-review-round": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-chunk-runner-review-round.json",
+    "graders": {
+      "chunk-runner-invoked": 1.0,
+      "cold-findings-cite-no-planning-document": 1.0,
+      "hand-back-line-carries-the-script-counts": 1.0,
+      "log-not-written": 1.0,
+      "no-records-commit": 1.0,
+      "one-combined-reviewer": 1.0,
+      "one-smoke-agent": 1.0,
+      "orchestrator-not-invoked": 1.0,
+      "report-names-the-suite-run": 1.0,
+      "review-report-in-the-shared-shape": 1.0,
+      "review-report-written": 1.0,
+      "reviewer-handed-no-planning-document": 1.0,
+      "round-recorded-by-the-script": 1.0,
+      "smoke-agent-handed-the-launcher": 1.0,
+      "smoke-report-written": 1.0,
+      "two-launches-never-more": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "code-review",
+      "reliability-review",
       "test-quality-review"
     ]
   },
@@ -878,25 +1022,45 @@
       "orchestrator"
     ]
   },
-  "orchestrator-chunk-review-round": {
-    "score": 0.967,
+  "orchestrator-chunk-runner-handback": {
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T195445-orchestrator-chunk-review-round.json",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-orchestrator-chunk-runner-handback.json",
     "graders": {
-      "handoff-says-round-zero-is-recorded": 1.0,
-      "one-combined-reviewer": 1.0,
-      "one-smoke-agent": 1.0,
+      "c-line-carries-the-counted-shell-edits": 1.0,
+      "c-line-carries-the-data-field": 1.0,
+      "c-line-names-the-builder": 1.0,
+      "c-line-written-from-the-hand-back": 1.0,
+      "handoff-before-chunk-two": 1.0,
+      "no-report-opened": 1.0,
+      "nothing-launched": 1.0,
       "orchestrator-invoked": 1.0,
-      "reports-counts-not-findings": 0.667,
-      "review-report-in-the-shared-shape": 1.0,
-      "review-report-written": 1.0,
-      "round-recorded-by-the-script": 1.0,
-      "smoke-report-written": 1.0,
-      "two-launches-never-more": 1.0
+      "records-committed-by-name": 1.0
     },
     "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-chunk-runner-launch": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-orchestrator-chunk-runner-launch.json",
+    "graders": {
+      "check-before-the-runner": 1.0,
+      "handoff-says-the-runner-is-in-flight": 1.0,
+      "one-chunk-runner-launched": 1.0,
+      "orchestrator-invoked": 1.0,
+      "runner-handed-the-plan-lines-and-paths": 1.0,
+      "runner-launched-as-opus": 1.0,
+      "runner-told-to-invoke-its-skill": 1.0,
+      "sandbox-checked-before-the-launch": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
       "code-review",
       "orchestrator",
       "reliability-review",
@@ -959,82 +1123,21 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T182312-orchestrator-gap-without-delegation.json",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-orchestrator-gap-without-delegation.json",
     "graders": {
       "needs-decision-on-the-c-line": 1.0,
-      "no-fixer": 1.0,
+      "no-fixer-no-runner": 1.0,
       "no-planning-document-written": 1.0,
       "no-second-reviewer": 1.0,
       "orchestrator-invoked": 1.0,
       "owning-persona-launched-once": 1.0,
-      "round-recorded-by-the-script": 1.0,
+      "round-zero-not-recorded-again": 1.0,
       "stops-for-the-owner-with-the-recommendation": 1.0
     },
     "skills_invoked": [
       "orchestrator",
       "reliability-requirements"
-    ]
-  },
-  "orchestrator-gate-deviation": {
-    "score": 1.0,
-    "runs": 3,
-    "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T182312-orchestrator-gate-deviation.json",
-    "graders": {
-      "deviation-recorded-not-failed": 1.0,
-      "gate-file-saved": 1.0,
-      "gate-passes-and-names-the-deviation": 1.0,
-      "gate-run-with-the-design-modules": 1.0,
-      "no-fixer-no-reviewer": 1.0,
-      "orchestrator-invoked": 1.0,
-      "plan-entry-not-edited": 1.0
-    },
-    "skills_invoked": [
-      "orchestrator"
-    ]
-  },
-  "orchestrator-gate-outside": {
-    "score": 1.0,
-    "runs": 3,
-    "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T195445-orchestrator-gate-outside.json",
-    "graders": {
-      "allow-list-not-widened": 1.0,
-      "failure-handed-to-the-fixer-once": 1.0,
-      "first-gate-fails-on-scope": 1.0,
-      "gate-run-twice": 1.0,
-      "no-reviewer-before-the-gate-passes": 1.0,
-      "one-fixer": 1.0,
-      "orchestrator-invoked": 1.0
-    },
-    "skills_invoked": [
-      "orchestrator",
-      "tdd-implementation"
-    ]
-  },
-  "orchestrator-one-fix-round": {
-    "score": 1.0,
-    "runs": 3,
-    "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T200107-orchestrator-one-fix-round.json",
-    "graders": {
-      "c-line-carries-the-split": 1.0,
-      "c-line-leaves-the-medium-standing": 1.0,
-      "gate-on-the-fix": 1.0,
-      "handoff-at-the-chunk-boundary": 1.0,
-      "no-third-review": 1.0,
-      "orchestrator-invoked": 1.0,
-      "round-one-recorded-with-the-range": 1.0,
-      "second-and-last-fixer": 1.0
-    },
-    "skills_invoked": [
-      "orchestrator",
-      "tdd-implementation",
-      "test-quality-review"
     ]
   },
   "orchestrator-plan-check-seam": {
@@ -1083,6 +1186,24 @@
       "screen-design",
       "tdd-implementation",
       "test-quality-review"
+    ]
+  },
+  "orchestrator-readiness-open-item": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-orchestrator-readiness-open-item.json",
+    "graders": {
+      "blocker-named-in-the-log": 1.0,
+      "nothing-launched-while-blocked": 1.0,
+      "orchestrator-invoked": 1.0,
+      "puts-the-blocker-to-the-owner": 1.0,
+      "readiness-gate-run-by-the-script": 1.0,
+      "slice-file-not-edited-by-the-orchestrator": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
     ]
   },
   "orchestrator-route-accessibility": {
@@ -1209,6 +1330,26 @@
       "map-query",
       "orchestrator",
       "tdd-implementation"
+    ]
+  },
+  "orchestrator-route-open-pr": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T111044-orchestrator-route-open-pr.json",
+    "graders": {
+      "asks-about-the-high-issue-with-three-answers": 1.0,
+      "asks-the-tracker-for-open-issues": 1.0,
+      "asks-the-tracker-for-open-pull-requests": 1.0,
+      "log-routes-the-open-pull-request-to-the-triage": 1.0,
+      "no-planning-document-read-before-the-question": 1.0,
+      "no-planning-skill-invoked": 1.0,
+      "nothing-launched": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
     ]
   },
   "orchestrator-route-problem-framing": {
@@ -2368,16 +2509,20 @@
   },
   "tdd-implementation-lite-rename-fix": {
     "score": 1.0,
-    "runs": 1,
+    "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261102T234423-tdd-implementation-lite-rename-fix.json",
+    "claude_version": "2.1.319",
+    "source": "results/gate-20261109T113119-tdd-implementation-lite-rename-fix.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "edits-each-site-with-the-edit-tool": 1.0,
+      "last-test-run-green": 1.0,
+      "new-name-in-every-caller": 1.0,
       "new-name-in-wiring": 1.0,
-      "no-shell-substitution": 1.0,
-      "old-name-gone-from-callers": 1.0,
+      "no-shell-writes-into-the-tree": 1.0,
+      "old-name-gone-from-jobs": 1.0,
+      "old-name-gone-from-return-book": 1.0,
+      "old-name-gone-from-server": 1.0,
       "old-name-gone-from-wiring": 1.0,
       "report-names-the-rename-and-its-sites": 1.0,
       "report-written": 1.0,

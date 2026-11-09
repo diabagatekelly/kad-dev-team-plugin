@@ -36,11 +36,13 @@ graders:
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
     min: 0
     max: 0
-  - type: regex
+  - type: tool_used
     name: round-zero-not-recorded-again
-    target: trace
-    pattern: 'rounds_record\.py[^"]*--round 0'
-    match: not_contains
+    # A Bash call, not a trace regex: the skill's own text names the script.
+    tool: Bash
+    input_match: 'rounds_record\.py[\s\S]*--round 0'
+    min: 0
+    max: 0
   - type: regex
     name: needs-decision-on-the-c-line
     target:

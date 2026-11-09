@@ -38,7 +38,7 @@ graders:
   - type: regex
     name: no-records-commit
     target: trace
-    pattern: 'git commit[^"]*Records:'
+    pattern: 'git commit[\s\S]{0,300}?Records:'
     match: not_contains
   - type: tool_used
     name: round-one-recorded-with-the-range

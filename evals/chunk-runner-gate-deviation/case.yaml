@@ -38,7 +38,7 @@ graders:
   - type: regex
     name: no-records-commit
     target: trace
-    pattern: 'git commit[^"]*Records:'
+    pattern: 'git commit[\s\S]{0,300}?Records:'
     match: not_contains
   - type: tool_used
     name: gate-run-with-the-design-modules
@@ -77,6 +77,6 @@ graders:
     criteria: |
       The gate's scope check is three-way: a changed file on the chunk's Files line is in scope; a file inside a design module but off the Files line, or a test file off it, is a deviation, printed by the gate and carried on the hand-back as `deviations 2`, not a failure; only a file outside every module and test directory fails to a fixer. Here `lending/hold.ts` gained a method the chunk's Files line did not name, and `test/hold.test.ts` is a new test file the Files line did not name either.
 
-      PASS if the reply hands back the gate as passed with two deviations naming `lending/hold.ts` and `test/hold.test.ts` (or the builder's stated reasons for them), launches nothing to fix them, and stops before the review.
+      PASS if the reply hands back the gate as passed with the two deviations counted (`deviations 2` on the hand-back line is enough: the line's format carries the count, and the gate file names the files), launches nothing to fix them, and stops before the review.
 
       FAIL if it treats the deviation as a gate failure, hands it to a fixer, widens the plan's Files line itself, or launches the reviewer.

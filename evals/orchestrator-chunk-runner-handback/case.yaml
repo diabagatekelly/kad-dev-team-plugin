@@ -26,7 +26,7 @@ graders:
   - type: regex
     name: records-committed-by-name
     target: trace
-    pattern: 'git commit[^"]*Records: slice 001 chunk 1'
+    pattern: 'git commit[\s\S]{0,300}?Records: slice 001 chunk 1'
   - type: regex
     name: c-line-written-from-the-hand-back
     target:
