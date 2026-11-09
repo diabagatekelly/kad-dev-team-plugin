@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Route a problem to whichever kad-dev-team persona/skill applies next, by inspecting what already exists (problem doc, scope map, requirements, slices) rather than the user having to name the right persona each time. Use when the user wants to move a problem forward and hasn't said which persona/skill to use, or says "what's next" / "keep going" on a problem already in progress — including when they guess at the next stage in passing or conditionally ("if the next step is the implementation, go ahead", "probably the security pass next"). A stage guessed at is not a skill named, and the implementation stage in particular reaches tdd-implementation-lite only through this skill's sandbox check and chunk loop (a design-readiness gate first, one implementer per chunk, a gate, one combined reviewer and one smoke run per commit, one fix round per scope, a Definition of Done and a slice review at the end, then delivery), never by invoking it directly.
+description: Route a problem to whichever kad-dev-team persona/skill applies next, by inspecting what already exists (problem doc, scope map, requirements, slices) rather than the user having to name the right persona each time. Use when the user wants to move a problem forward and hasn't said which persona/skill to use, or says "what's next" / "keep going" on a problem already in progress — including when they guess at the next stage in passing or conditionally ("if the next step is the implementation, go ahead", "probably the security pass next"). A stage guessed at is not a skill named, and the implementation stage in particular reaches tdd-implementation-lite only through this skill's sandbox check and chunk loop (a design-readiness gate first, one chunk runner per chunk carrying one implementer, a gate, one combined reviewer and one smoke run per commit and one fix round per scope, a Definition of Done, a slice review and the criteria walked in a real browser at the end, then delivery), never by invoking it directly. Before any planning document is read it asks the tracker what is open (a pull request from a slice branch, a Critical or High issue) and routes that first.
 ---
 
 # Orchestrator
@@ -102,6 +102,73 @@ a parameter, or not:
   first artifact actually landing there. Never guess a location yourself
   and never search the project for one instead of asking — if it wasn't
   handed to you, ask.
+
+**1b. Open work first.** Before any planning document is read, inline
+with Bash, one read of the repository decides whether there is a tracker
+to ask: `git remote get-url origin` from the target. When the session
+has Bash and that URL is on `github.com`, two questions to GitHub, with
+`gh`:
+
+```
+gh pr list --state open --limit 500 --json number,headRefName,url
+gh issue list --state open --limit 500 --json number,title,labels,body
+```
+
+A `gh` call that fails there (not installed, not signed in, no network)
+stops the routing with the command's error on the line, as one log entry
+(`**Routed to:** none (tracker unreachable)`, `**Artifact:** this log`)
+and a report in step 5; the flow never proceeds as if nothing were open.
+When there is nothing to ask (no Bash in the session, no repository, no
+`origin`, or an `origin` that is not on `github.com`: a local path, a
+bare repository, another host) the step is one indented bullet under the
+next entry written (`tracker: no shell`, `tracker: no repository`,
+`tracker: not GitHub (<url>)`) and the routing goes on: no question, no
+stop, no planning document opened to find out. Another tracker's
+equivalent of these two calls waits for a project that records one.
+Then:
+
+- **An open pull request from a slice branch** (`headRefName` matching
+  `slice-<nnn>-*`): that slice is not closed, so nothing newer starts.
+  Write the entry (`**Routed to:** \`code-reviewer:external-review-triage\`
+  (chunk loop E.4, PR #<n>)`, `**Artifact:**` the triage report's path in
+  the records directory) and run the chunk loop's E.4 on it: `delivery`
+  collects every unresolved review thread and issue comment on the pull
+  request, whoever wrote it (an external reviewer, a bot, the owner, the
+  owner writing from the same GitHub account the session pushes as); the
+  only comments skipped are the ones this flow posted itself, recognised
+  by the plugin's footer line in their body (`delivery` writes it on
+  everything it posts and filters by that marker, never by author); then
+  the triage, the fixes under the loop's fix-round rules (one fixer plus
+  one regressions round per round of comments, the gate before each),
+  `delivery` to push, reply and file, until a round has nothing to fix or
+  round 5 is done; then report that the pull request is clean. A pull
+  request whose comments are all resolved and whose checks are green is
+  reported as `ready to merge` in one line, and the flow waits for the
+  merge before any slice work: merging is the owner's. Two open slice
+  pull requests are reported together and the lower-numbered slice is
+  taken first.
+- **Open issues at Critical or High**: `delivery` files every issue with
+  a `severity:<level>` label as well as the title prefix, so read the
+  label first, the title prefix (`[High]`, `High:`) second, and a
+  `**Severity:**` line quoted in the body third, so issues filed before
+  the label existed are still found. Each such issue is one
+  `AskUserQuestion` with three answers: **fix it in the open slice's fix
+  round** (it joins the triage round above as a fix), **fix it first on
+  its own branch** (a backward route to the chunk loop for that issue
+  alone, before any slice), or **accept it as known and recorded** (the
+  owner's words go on the issue as a comment with the footer line, and
+  the issue stays open with a `known` label). A Critical is never
+  "accept": its two answers are the first two. One question per issue,
+  one issue per call, the log entry written before each.
+
+Only then does the planning-document inspection below run; both checks
+are entries in the log like any route, and a GitHub project with nothing
+open gets one indented bullet under its next entry: `tracker: nothing
+open`.
+Why: on 2026-11-08 PR #20 of the project this plugin is measured on sat
+open with eighteen findings as comments while the next slice would have
+been cut on a branch behind it, and a High open since 2026-11-02 had never
+been routed by any stage.
 
 **2. Inspect what already exists in the target directory** — cheap,
 mechanical checks only, never a semantic read of full artifact prose:
@@ -415,23 +482,55 @@ superseding, and why, not just the forward destination.
 
 Five steps, A to E, replacing the normal single inline execution for this
 one row only. Every other row in the table is unaffected. The planning is
-checked for readiness before anything is built; one implementer builds the
-slice one chunk at a time, each chunk a commit on a slice branch; a
-mechanical gate, one combined reviewer and one smoke run check every
-chunk; each scope gets one fix round and a regressions-only re-review, no
-more; the whole slice is held to a Definition of Done and reviewed once
-more at the end; then the branch is pushed, a pull request opened, the
-standing Mediums filed, and the external reviewer's comments triaged.
-Nothing in it runs "until clean", nothing runs in the background, and
-nothing is resumed by message to fix something: every build and every fix
-is a fresh agent on a short context.
+checked for readiness before anything is built; one **chunk runner** per
+chunk (an Opus agent, `kad-dev-team:chunk-runner`) carries that chunk's
+whole round, one implementer building it as a commit on the slice branch,
+a mechanical gate, one combined reviewer and one smoke run in a real
+browser, one fix round and a regressions-only re-review, no more, and
+hands back one line; the orchestrator keeps the records, the log and the
+owner's questions; the whole slice is held to a Definition of Done,
+reviewed once more at the end and, when it has a screen, its acceptance
+criteria are walked in a real browser; then the branch is pushed, a pull
+request opened, the standing Mediums filed, and the external reviewer's
+comments triaged. Nothing in it runs "until clean", nothing runs in the
+background, and nothing is resumed by message to fix something: every
+build and every fix is a fresh agent on a short context. The one measured
+exception is the `light` cadence (P3.2 of `handoff-slice2.md`, one arm on
+one slice), where D's fixes go back to the chunk's own builder by message.
 
 **Every launch below passes `model` explicitly on the `Agent` call**:
 `"sonnet"` for every implementer and fixer, `"opus"` for every reviewer,
-smoke agent, consult and the triage. An agent definition's `model:` line
-is documentation; in practice the launch parameter is what decides.
-Builders and fixers are launched with `maxTurns: 120`; the Definition of
-Done fixer at D with `maxTurns: 160`.
+smoke agent, criteria walk, consult, the triage and the chunk runner. An
+agent definition's `model:` line is documentation; in practice the launch
+parameter is what decides. Builders and fixers are launched with
+`maxTurns: 120`; the Definition of Done fixer at D with `maxTurns: 160`;
+the chunk runner with `maxTurns: 200`.
+
+**Scripts.** Every script below lives in `${CLAUDE_SKILL_DIR}/scripts/`;
+the chunk runner is handed that directory by absolute path (its own
+`CLAUDE_SKILL_DIR` is another skill's), and so is every agent that starts
+the app (`scratch_run.py`, the data rule below).
+
+**The data rule** (P2.3; two of slice 2's smoke agents started the app on
+the owner's real ledger and login Keychain). Every agent that starts the
+app (a smoke run, the criteria walk, the slice accessibility review, the
+stranger test) starts it through `scratch_run.py`, handed by absolute
+path with a scratch folder outside the project
+(`${TMPDIR:-/tmp}/kad-run-<slice>-<k>-<round>`): the app's data paths are
+given explicitly inside that folder (`--env NAME=<relative path>` for each
+variable the README or the design names), `HOME` is pointed there as
+well, the script refuses to start when any resolved path is outside the
+folder, a made-up ledger (the fixture's or one the agent builds), the
+project's fake credential tool or a disposable store, never the owner's
+login Keychain, not even for reading, no provider connection started,
+and `scratch_run.py --clean <folder>` after. The agent never opens the
+owner's data directory, so the before-and-after check of the real data
+files is the launcher's step around the launch, not the agent's:
+`scratch_run.py --hash '<data dir>'` before and after, the data directory
+being the one the design or the README names (`data not named` when
+neither does), and `data unchanged` or `data CHANGED` on the C or D line.
+`CHANGED` stops the flow before the next step and is reported to the
+owner in step 5.
 
 **Every launch below names a file for the agent's report** and tells the
 agent to hand back counts and the path, not the report. Records live in
@@ -446,7 +545,7 @@ allows that directory as a whole and protects every other document in the
 target directory; the records are committed after each chunk as
 `Records: slice <nnn> chunk <k>` and after D as `Records: slice <nnn>
 review`. You open one of those files only to decide something; the fixer
-reads them itself, and `rounds_record.py` (C.3) is the only thing that
+reads them itself, and `rounds_record.py` (the runner's step 3) is the only thing that
 parses one.
 
 **Budget** (the A line records it; counted at every chunk boundary):
@@ -538,7 +637,7 @@ is built. The dollar figure is not estimated during the run;
    not started` and stop: nothing below has run, nothing to hand off), or
    **continue with every screen check owed** (the A line says `PASS
    (<platform>; no Chrome, screen checks owed)`, and every UI smoke run
-   raises its one owed finding (C.3), so what was not checked is on the
+   raises its one owed finding (the runner's step 3), so what was not checked is on the
    record). Skip the question when the owner's message already chose. On
    a slice with no screen the field says `PASS (<platform>; browser not
    needed)`, no Chrome tool is called, and `--no-chrome` costs nothing.
@@ -546,6 +645,17 @@ is built. The dollar figure is not estimated during the run;
    answered, and its smoke reports said `PASS`; slice 2 ran with no
    browser because the field said `no Chrome` and the flow was allowed to
    go on.
+
+   **Cadence**, never a question: `light` when the owner's message for
+   this slice names it (the word `light`, or "no per-chunk review"), else
+   `loop`. It goes on the A line as `cadence — <loop | light>` and the
+   chunk runner is told it. `light` is one measured arm on one slice
+   (handoff-slice2 P3.2, H6's fourth question): per chunk, gate and smoke
+   run only, no reviewer and no fix round; at D the six reviewers and the
+   criteria walk once, then the criteria pass; fixes by the chunk's own
+   builder resumed by message, an Opus fixer for what it cannot clear.
+   The slice review states which of the three to keep, and the default
+   here is set from that; until then `loop` is the default.
 
    **Audit and session**, inline with Bash, after the sandbox check and
    whatever it asked:
@@ -586,8 +696,9 @@ is built. The dollar figure is not estimated during the run;
    on its `Resumed` bullet.
 
    The check is not once per flow but before every launch: before each
-   chunk's build (C.1), its reviewer and smoke agent (C.3), its fixer
-   (C.4), a consult (C.5), the slice reviewers (D) and the triage (E). A
+   chunk's runner (C.1; the runner runs it again before each of its own
+   launches and counts them on its hand-back), a consult (C.5), the slice
+   reviewers (D) and the triage (E). A
    `PASS` that turns into a `FAIL` between steps ends the flow the way a
    second gate failure does, unless the user opted out at A, in which
    case the later checks are logged and the flow continues.
@@ -639,21 +750,49 @@ is built. The dollar figure is not estimated during the run;
    python3 -I "${CLAUDE_SKILL_DIR}/scripts/readiness_check.py" --planning '<target directory>' --slice <nnn>
    ```
 
-   Eight mechanical checks over the planning documents: every criterion
+   Nine mechanical checks over the planning documents: every criterion
    quoted under a design component; every failure path homed; a number on
    every retry, wait, poll and give-up; security and reliability agreeing
    on shared failure paths; a mockup for every named state; no open
-   question routed to the implementer; a "Kept for later slices" line; a
-   failure-mode row for an external provider's unusable reply. Its last
-   line is `readiness: PASS` or `FAIL`, with a `route:` line per failed
-   check naming the persona. On FAIL, each failed check is a backward
-   route (step 3's rule): write its own log entry naming the check and the
-   document, run the named skill inline with the `Skill` tool (telling it
-   which check failed and which document to revise in place), and when it
-   returns run the gate again. Repeat until it passes; the chunk loop's
-   entry stays open meanwhile and no builder is launched. Then write the
-   A line: `readiness — PASS` when it passed first time, otherwise
-   `readiness — PASS after <check> (entry <n>), <check> (entry <m>)`.
+   question routed to the implementer; a "Kept for later slices" line;
+   every open or deferred item in the slice file triaged (`usable without
+   it`, with how, or a blocker); a failure-mode row for an external
+   provider's unusable reply. Its last line is `readiness: PASS` or
+   `FAIL`, with a `route:` line per failed check naming the persona. On
+   FAIL, each failed check is a backward route (step 3's rule): write its
+   own log entry naming the check and the document, run the named skill
+   inline with the `Skill` tool (telling it which check failed and which
+   document to revise in place), and when it returns run the gate again.
+   Repeat until it passes; no builder is launched meanwhile.
+
+   **A blocker** (`route: open-items-triaged -> the owner (blocker)`) is
+   the one readiness failure that goes to the owner, not a persona: one
+   `AskUserQuestion` per blocking item, the item quoted, three answers:
+   **decide it now** (the answer is a backward route to the document that
+   owns the question, `requirements-refinement` or `vertical-slicing`,
+   which records it), **cut it into its own slice first** (a backward
+   route to `product-slicer:vertical-slicing`), or **the slice is usable
+   without it** (the owner's words, recorded on the item by
+   `vertical-slicing` as its `Usable without it:` sentence). Why: slice
+   2 deferred "changing a merchant's general rule" to requirements, six
+   reviewers accepted the deferral, and a cold read found the first pick
+   permanent and a misclick without undo.
+
+   **The log after the routes.** The backward routes are entries of
+   their own, so once the gate passes after one or more of them, write a
+   **new** chunk-loop entry (heading `slice ready for implementation,
+   readiness PASS after <check> (entry <n>), <check> (entry <m>)`,
+   `**Routed to:** chunk loop`, `**Artifact:** see sub-entries below`)
+   and put the A line and everything after it under that entry; the
+   first chunk-loop entry gets one indented bullet, `readiness routed
+   back (entries <n>, <m>); the loop continues under entry <new>`, and
+   nothing else. Run 3 did this (its entry 34); slice 2 appended A to E
+   under its second backward route and the log checker read all sixty
+   loop calls as unlogged (the checker now reads either form; the skill
+   says this one). When the gate passed first time the entry already
+   written is the one. Then write the A line: `readiness — PASS` when it
+   passed first time, otherwise `readiness — PASS after <check> (entry
+   <n>), <check> (entry <m>)`.
 
 Write the A line now (format below), then go to B.
 
@@ -689,197 +828,65 @@ the plan, reorder it or judge its chunking: the plan is the implementer's.
 Commit the plan, by name, as `Plan: slice <nnn> in <k> chunks`. Write the
 B line: the chunk titles in order.
 
-**C. Chunks, one at a time.** For chunk k of n, in the plan's order:
+**C. Chunks, one at a time.** For chunk k of n, in the plan's order, one
+chunk runner carries the round and the orchestrator keeps the records.
+Why: slice 2's orchestrator thread averaged about 427k cache-read tokens
+per call over 396 calls and was 44% of the slice's cost; the v4 design
+(D9) said to build the runner above about 250k. The runner's own
+procedure is `skills/chunk-runner/SKILL.md`; what follows is the
+orchestrator's side.
 
-1. **Build.** Sandbox check (as A.1; logged). Launch a fresh implementer,
-   `kad-dev-team:tdd-coach:AGENT`, `model: "sonnet"`, `maxTurns: 120`,
-   with: `kad-dev-team:tdd-implementation-lite` to invoke first, by name; the chunk's five
-   plan lines verbatim; the report's path (its earlier chunk sections are
-   the handover from whoever built them, and the code is in the tree); the
-   slice documents by absolute path (a decision document a consult
-   committed since the plan is one of them, nothing more); two lines
-   carried word for word on every build task: that `orchestrator` reviews
-   the result (so the skill's final review is skipped), and that chunks
-   are committed (so the skill's "Committing a chunk" applies: the chunk
-   ends with one commit whose subject is the chunk's title, the report
-   section appended in the same commit, nothing pushed). Nothing about
-   reviewers, other chunks' findings, scope rules, or the flow's state.
-   Wait for it.
-
-   **Stall rule.** If the agent returns at its turn cap, or returns saying
-   it is not done, with no new commit on the branch (`git log --oneline
-   <previous>..HEAD` is empty), send it one message with `SendMessage`:
-   commit what passes its done check, report the rest as not built, stop.
-   If it returns again with no commit, record the stall on the C line,
-   leave the working tree as it is (discard nothing), and launch a fresh
-   implementer for the same chunk with the stalled agent's report section
-   as handover and one line saying the tree may hold uncommitted work from
-   a previous attempt that it should read before writing. A second stall
-   on the same chunk ends the flow: C line, step 5.
-
-   **Shell edits.** The builder's and the fixer's hand-back line carries
-   `shell edits <n>`: the files it changed through the shell (`sed -i`, a
-   heredoc, `python -c`, `node -e`, `cp`) instead of `Edit` or `Write`,
-   each also a `Shell edit` line in its report section (the skills say
-   so). Each counts as a deviation on the C line, which also records
-   `shell edits <n>` when there are any, and that is all a shell edit
-   does: never a stall, never a relaunch, never a question to the owner
-   (0.13.1's "three in one chunk is a stall" produced an owner question
-   nobody wanted; dropped 2026-11-08). A formatter run through the
-   manifest's `format` script is not a shell edit. The number on the C
-   line is the agent's reported count until the gate counts it from the
-   transcript (`validation_gate.py --agent-transcript`, planned), after
-   which the counted number is the one written. Run 3's fixer mangled a
-   seam test's name and rewrote a function with one `sed -i`; slice 2's
-   chunk 2 builder reported 1 and made 9: the count is there for the
-   audit to find, not for the loop to act on.
-2. **Gate**, inline with Bash, on the chunk's commit range:
-
-   ```
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<previous commit>' --test-cmd '<the project'''s documented test command>' --allow '<each path from the chunk'''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory the design names>' --deviation-zone '<each composition root and entry point the design or the plan layout names: src/compose.ts, src/main.ts, src/start.ts or their equivalents>' --expect-tests-from '<implementation report path>' --chunk <k> --protect '<every other document in the target directory>' [--coverage]
-   ```
-
-   (`python -I` where that is the interpreter's name; every project path
-   in single quotes; a quote inside a path as `'\''`.) The log is allowed
-   because it is this flow's own file, appended to at every step and never
-   committed inside the loop, so the scope check would otherwise fail
-   every chunk on it. `--base` is the
-   commit before this chunk's first commit (the base at chunk 1, the
-   previous chunk's last accepted commit after). It checks the full suite
-   is green, the project's `typecheck` and `lint` scripts pass when the
-   manifest has them, the change set is not empty, every `--protect`
-   document is unchanged, and, with `--coverage` (pass it when the project
-   runs on Node's test runner), coverage holds on the changed source. Its
-   scope check is three-way: a changed file on the Files line or in the
-   records directory is in scope; a file inside a design module but off
-   the Files line, a test file off it, or a file under a deviation zone
-   (the composition root and entry points, which almost every chunk
-   wires into) is a **deviation**, printed on the `scope` line and
-   recorded on the C line as `deviations <n>`, not a failure (the builder
-   names it in its report section; nobody edits the plan entry); a file
-   outside all of these is the `FAIL` that goes to the fixer. It also
-   prints report-only `INFO` lines (comment density, files over 300
-   lines, functions over 40, lines at depth 4 or more); read them, log
-   nothing from them, and let D act on the slice's figures. Its `tests`
-   check reads the chunk's Done when line from the report itself (plan
-   text is repository text and never goes through a shell command line)
-   and fails the gate when a Done-when test name is registered in no
-   test file, on a build's gate and on a fix's alike: a build has not met
-   its own Done when, and a fix that renamed a seam test away is that
-   fix's failure; either goes to a fixer the way a scope failure does. Save the output as
-   the gate file. Read its last line; read the rest only on `FAIL`. On
-   `FAIL`, hand the failing checks to a fresh fixer (`model: "sonnet"`,
-   `tdd-implementation-lite`, its "Applying a fix handed back from review" path,
-   the gate's output verbatim, chunks are committed), once; run the gate
-   again on the fix's range with the same `--base`. A second `FAIL` ends
-   the flow: the branch stays as it is, the C line says which checks
-   failed, step 5 says what is built. Don't widen `--allow`, don't drop a
-   `--protect`, don't fix it yourself.
-3. **Review and smoke: two launches, never more.** Sandbox check. Then,
-   in parallel, real async `Agent` calls, `model: "opus"`, each handed
-   nothing of the flow's own state (no finding from the other, no
-   severity, no escalation, nothing the user has been told, no "check
-   whether X"):
-   - **The combined reviewer**: `kad-dev-team:code-reviewer:AGENT`, told to
-     invoke `kad-dev-team:code-review` first and follow its "Cold pass
-     first" and then its "Combined chunk review": the whole of the modules
-     the range touches read, the checks run, suspected bugs probed by
-     execution, the cold findings written, then `code-review`,
-     `test-quality-review`, and `reliability-review` when the range
-     touches HTTP, storage or error handling, with the reliability
-     criteria checked last under their own heading, and **one** report in
-     the shared finding format, Critical, High, Medium and
-     `needs-decision` only, at most eight findings, ranked. **It is handed
-     five things and nothing else**: the project root, the documented
-     test command, the chunk's commit range (`<previous>..HEAD`), the
-     report path `chunk-<k>-r0-review.md`, and the path of this chunk's
-     last gate output (`gate-chunk-<k>-r<i>.txt`), which is the suite's
-     run on this commit: the reviewer reads the suite's result there and
-     runs the typecheck, lint and format check itself, never the suite,
-     since the smoke agent is starting the app on the same checkout at
-     the same time. Plus the instruction to hand back counts and the
-     path. No slice document, no Touches line, no file list: the reviewer
-     finds the planning documents for its second pass from the report
-     path (the owner's decision, 2026-11-01, after run 3's document-first
-     reviewers read past the seam). The tree is installed (the gate just
-     ran on it); reviewers never install.
-   - **The smoke agent**: `kad-dev-team:accessibility-engineer:AGENT` when
-     Touches includes UI, else `kad-dev-team:tdd-coach:AGENT`. Its task:
-     start the app the way the README (or, before a README exists, the
-     project's manifest) says, wait for it to answer, drive the chunk's
-     **Done when** through the real interface (the browser via the Chrome
-     tools for UI, HTTP requests otherwise), stop the app and leave no
-     process behind, and write `chunk-<k>-r0-smoke.md` in the shared
-     finding format: a `## Result` of `PASS` and no findings, or one
-     finding per thing that broke, each a `###` heading with
-     `**Severity:**` on the line directly under it; an app that does not
-     start is one Critical titled "the app does not start from the
-     documented command". The accessibility agent additionally invokes
-     `kad-dev-team:accessibility-review` in its "Smoke run" mode and checks
-     the chunk's accessibility criteria on the built screen, in the same
-     report. It is handed the Done when line, the criteria by path, the
-     report path, and nothing else. A UI smoke agent whose first Chrome
-     tool call finds no browser (the skill's "Smoke run" says so) checks
-     what HTTP and the served markup can show and writes, for the rest,
-     one Medium finding titled `browser checks not run` that names each
-     Done when item and each criterion it could not drive; its Result is
-     never `PASS` then. `rounds_record.py` records that finding as
-     `owed`: printed as an `owed:` line, counted on the C line as `owed
-     <n>`, never handed to a fixer (no fix makes a browser appear), and
-     carried like a standing Medium into the pull request body and its
-     issue, as the owner's checklist.
-
-   Wait for both. Their hand-backs are the counts and the paths. Then,
-   inline with Bash:
-
-   ```
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/rounds_record.py" --sidecar '<records dir>/rounds-slice-<nnn>.jsonl' --report '<review report>' --report '<smoke report>' --chunk <k> --round 0
-   ```
-
-   It writes one sidecar row per finding and prints the round's C-line
-   fragment (`r0 <C/H/M> ... ; smoke PASS|<n> findings`) and one line per
-   `needs-decision` finding; a Low in a chunk report is dropped before
-   anything is recorded (`lows dropped <n>`), since Lows are the slice
-   review's. **Only its printed counts reach the log**:
-   you never parse a report yourself, never tally severities by reading,
-   and never write a script to do either.
-4. **One fix round, then a regressions-only re-review.** If round 0
-   raised any Critical, High, Medium or smoke finding (after C.5 for any
-   `needs-decision`): sandbox check, then one fresh fixer (`model:
-   "sonnet"`, `maxTurns: 120`, `tdd-implementation-lite`, its handed-back path,
-   chunks are committed) with every finding of both reports verbatim, as
-   the paths of the two report files to read plus the list of which
-   findings in them are handed back (and the decision commit from C.5, if
-   any); it commits, one commit per fix or one for the batch, its call,
-   and appends a `Fix r1` line to the chunk's report section. Then the
-   gate on the fix's range (`--base` the commit before the fix). Then the
-   **re-review**: the same combined reviewer kind, `model: "opus"`, on
-   the fix's diff only (`<before fix>..HEAD`) and the files it touched
-   (handed as before: the range, the files, the report path; no cold
-   pass, diff-scoped by the owner's decision of 2026-11-01), with the
-   report path `chunk-<k>-r1-review.md` and nothing of round 0;
-   and the smoke agent again only when round 0's smoke report had
-   findings (`chunk-<k>-r1-smoke.md`). Then:
-
-   ```
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/rounds_record.py" --sidecar '<sidecar>' --report '<r1 review>' [--report '<r1 smoke>'] --chunk <k> --round 1 --project '<project root>' --range '<before fix>..HEAD' --fix '<sha>' --fixer '<agent id>' --turns <n>
-   ```
-
-   It classifies each finding by hunk: **regression** when its line is
-   inside the fix's diff (a smoke finding always is), **pre-existing**
-   otherwise, and prints the `(reg <r>, pre <p>)` split and one
-   `standing:` line per pre-existing Critical, High or Medium. Regressions
-   go to a **second and last** fixer (a fresh launch, the same shape,
-   `Fix r2` line), then the gate; the chunk is done: **no third review**.
-   Pre-existing findings are never fixed in this scope: they stand. A
-   standing Critical or High ends the flow before the next chunk (C line,
-   step 5, the owner decides); standing Mediums go to the pull request
-   body's "Standing" list at E. A round 0 with nothing to fix is clean
-   and the chunk is done.
-5. **A gap that stops a fix.** When a report rates a finding
-   `needs-decision (<persona>)` (no planning document states the rule it
-   would need), or the fixer's report says so of a finding it was handed,
-   the decision is made before that fixer runs, or before the second one:
+1. **Launch the runner.** Sandbox check (as A.1; logged). Then the data
+   hash (`scratch_run.py --hash '<data dir>'`, the data rule above).
+   Then one `kad-dev-team:chunk-runner:AGENT`, `model: "opus"`,
+   `maxTurns: 200`, a real async `Agent` call, with: `kad-dev-team:chunk-runner`
+   to invoke first, by name; chunk k of n; the chunk's five plan lines
+   verbatim; the report's path; the slice documents by absolute path (a
+   decision document a consult committed since the plan is one of them,
+   nothing more); the project root, the records directory, the sidecar,
+   the base commit (the plan commit for chunk 1, the previous chunk's
+   last accepted commit after), the documented test command, the module
+   directories and deviation zones as B noted them, the protect list,
+   this skill's `scripts/` directory by absolute path, `scratch_run.py`'s
+   path and the chunk's scratch folder, the cadence, whether a browser
+   answered at A, whether the slice touches UI, and the A line's sandbox
+   field (`PASS` under the launcher, or that the owner opted to continue
+   unsandboxed, so the runner knows whether a later `FAIL` ends the round
+   or is information). Nothing about other
+   chunks' findings, the owner, the budget or the flow's state. Wait for
+   it. The runner launches the builder, runs the gate (with `--agent
+   <builder id>`, so the C line's `shell edits` is the counted number,
+   `reported <m>` beside it), launches the reviewer and the smoke agent,
+   records the rounds with `rounds_record.py`, launches the fixer and the
+   regressions re-review, and never asks the owner, never consults a
+   persona, never writes the log and never commits the records.
+2. **The hand-back** is one line in the C line's own field order, as far
+   as the runner's work went, plus `builder <agent id>` and `reviews <n>
+   fixers <m>` for the budget. Three endings need you:
+   - `needs-decision <persona>: <report path> — <title>` (round 0 is
+     recorded; the fixer has not run): C.5 below, then relaunch a runner
+     for the same chunk with the hand-back line and the decision commit,
+     telling it to resume at the fix round (its resume rule).
+   - `gate FAIL: <checks>; ended`, `stall: ended` or a standing Critical
+     or High: the flow ends there, the C line says why, step 5 says what
+     is built; the branch stays as it is.
+   - `flaky: <test>`: information on the C line; the runner already
+     handled it (one re-run, then one fixer at the cause on the second
+     sighting, counted as the gate fixer).
+   You never open a report the hand-back names and never run
+   `rounds_record.py` yourself at C: the counts on the line are the
+   script's as the runner printed them (its rows are already in the
+   sidecar), and the fixer read the reports itself.
+3. **Data check.** `scratch_run.py --hash '<data dir>'` again; `data
+   unchanged` or `data CHANGED` on the C line; `CHANGED` ends the flow
+   before the next chunk and is reported to the owner.
+4. **Light cadence.** Under `light` the runner runs the build, the gate
+   and the smoke run only and hands back with `review none` and no fix
+   round: every finding waits for D, where the chunk's own builder fixes
+   it (D.3). Everything else in this step is the same.
+5. **A gap that stops a fix.** When the runner hands back a
+   `needs-decision (<persona>)` finding (no planning document states the
+   rule it would need), the decision is made before the fixer runs:
    - **With a delegation file**: sandbox check; launch the owning persona
      once per persona per round, `model: "opus"`, a real `Agent` call:
      `kad-dev-team:software-architect:AGENT` (structure and interfaces,
@@ -894,9 +901,9 @@ B line: the chunk titles in order.
      document in place, commits `Decision <n>: <title>` (the number
      continuing the document's own numbering) and hands back the hash and
      one sentence. Write one indented line under the C line, `decision
-     <n> <sha> (<persona>)`, and pass the hash to the fixer. Consults
-     are counted for the E line's `consults` field, never capped; one per
-     persona per round.
+     <n> <sha> (<persona>)`, and pass the hash to the relaunched runner.
+     Consults are counted for the E line's `consults` field, never
+     capped; one per persona per round.
    - **Without a delegation file**: launch the persona the same way; it
      hands back a recommendation and writes nothing (its skill says so).
      Save what it handed back, as given, to `<records
@@ -927,10 +934,12 @@ B line: the chunk titles in order.
    <reason>`, each with `; snapshot FAILED: <why>` appended when the
    snapshot failed; a FAILED of either kind also goes into the report to
    the owner and never stops the loop. Without an audit repository the field says `not configured`,
-   with `KAD_AUDIT` unset `off`, and nothing runs. **Then the C line**,
-   then the budget check, then the next chunk. Between launches the only thing you say to the user is one
-   short paragraph per event, with the hashes; you never restate a
-   finding, keep a digest, or narrate an agent's turns.
+   with `KAD_AUDIT` unset `off`, and nothing runs. **Then the C line**
+   (the runner's fields, then `records`, `audit`, `data`), then the
+   budget check (the hand-back's `reviews` and `fixers` counts and the
+   clock), then the next chunk. Between launches the only thing you say
+   to the user is one short paragraph per event, with the hashes; you
+   never restate a finding, keep a digest, or narrate an agent's turns.
 
 **D. Slice review.** When the last chunk is done:
 
@@ -990,25 +999,72 @@ B line: the chunk titles in order.
    `devsecops-engineer:security-review`,
    `devsecops-engineer:reliability-review`, and
    `accessibility-engineer:accessibility-review` only if the slice is
-   UI-touching. Lows are allowed here and only here: they go to the pull
-   request body under "Known Lows", grouped by theme, and are not filed.
-   `rounds_record.py` with `--chunk D --round 0` on all the reports. Then
-   one fix round exactly as C.4: one fixer for every Critical, High and
-   Medium (and any `needs-decision` through C.5 first), the gate, a
+   UI-touching. Each criteria reviewer also restates every accepted
+   deferral of the slice file (its `Usable without it` items) as a
+   finding under `## Against the criteria` ("the slice ships with X
+   undecided; consequence Y"), so a deferral reaches the pull request
+   instead of being dropped. Lows are allowed here and only here: they go
+   to the pull request body under "Known Lows", grouped by theme, and are
+   not filed.
+
+   **The criteria walk** (P2.1), a seventh launch when the slice touches
+   UI, with the six: `kad-dev-team:accessibility-engineer:AGENT`,
+   `model: "opus"`, invoking `kad-dev-team:accessibility-review` in its
+   "Criteria walk" mode, handed: the project root, the README's start
+   command, the slice's criteria by path (the slice file's Given/When/Then
+   list, the accessibility criteria, and the security and reliability
+   criteria), the scratch launcher and its folder (the data rule), the
+   report path `slice-r0-walk.md`. It opens the built app in the real
+   browser, drives every criterion a browser can reach and writes the
+   table `rounds_record.py` reads (criterion, PASS / FAIL / NOT
+   REACHABLE, how it was driven, a screenshot per state under
+   `<records dir>/walk/`); a FAIL is a finding in the shared format and
+   goes to the fix round like any other; NOT REACHABLE names why; the
+   screen-reader announcements are the owner's manual checks, listed as
+   such, and nothing else is. With no browser answering (the owner chose
+   to continue at A) every row is NOT REACHABLE with that reason and the
+   owed finding stands as in C. The data hash runs around this launch as
+   around a smoke run.
+
+   `rounds_record.py` with `--chunk D --round 0` on all the reports (the
+   walk's among them; its fragment carries `walk <pass>/<fail>/<not
+   reachable>`). Then one fix round: one fixer for every Critical, High
+   and Medium (and any `needs-decision` through C.5 first), the gate, a
    regressions-only re-review by the same reviewers on the fix's diff
-   (`slice-r1-<reviewer>.md`), `rounds_record.py` with `--range`, a
-   second and last fixer for the regressions, the gate, no third review;
-   standing Criticals and Highs stop the flow before E, standing Mediums
-   go to the body.
+   (`slice-r1-<reviewer>.md`; the walk re-driven only for its FAIL rows,
+   `slice-r1-walk.md`), `rounds_record.py` with `--range`, a second and
+   last fixer for the regressions, the gate, no third review; standing
+   Criticals and Highs stop the flow before E, standing Mediums go to the
+   body, NOT REACHABLE rows go to the owner's checklist issue.
+
+   **Who fixes, by cadence.** Under `loop`, the fixer is one fresh
+   Sonnet agent as always (`model: "sonnet"`, `maxTurns: 160`,
+   `tdd-implementation-lite`, its handed-back path, chunks are committed).
+   Under `light` (P3.2's third change, aimed at the fixer being a stranger
+   to the code: a quarter of every run's findings since run 2 are the
+   fixer's own regressions) the findings are grouped by the chunk whose
+   Files line holds their file, and each group goes by `SendMessage` to
+   that chunk's own builder (the agent id on the chunk's C line, `builder
+   <id>`), with the same handed-back task; a builder that cannot be
+   reached (the send fails, or it returns nothing) leaves its group to
+   **one** Opus fixer (`model: "opus"`, `tdd-implementation-lite`) for
+   everything no builder cleared; then the gate, the regressions-only
+   re-review and the second fixer as above. The D line records `fixes
+   builders <n> opus <m>`, and the review measures regressions per
+   actionable finding against slice 2 (25%).
 4. **The stranger test**, once, in D's last review round (round 1 when
    there was a fix round, round 0 otherwise, launched alongside that
    round's reviewers): the smoke agent (`accessibility-engineer` if
    UI-touching, else `tdd-coach`, `model: "opus"`) clones the repository
    into a fresh temporary directory (`git clone <project root> <tmp>` at
    the branch), follows the README and nothing else from clone to
-   running, drives the slice's thin path once, removes the clone, and
-   writes `slice-r<i>-smoke.md` (with no browser, the same owed finding
-   as C.3, for the slice's thin path, which goes to no fixer here either).
+   running (the app started through `scratch_run.py`, handed by path with
+   its own scratch folder: the data rule holds on a clone too), drives
+   the slice's thin path once in the real browser, removes the clone and
+   the scratch folder, and writes `slice-r<i>-smoke.md` (with no browser,
+   the same owed finding as the chunk smoke run, for the slice's thin
+   path, which goes to no fixer here either). The data hash runs around
+   it and goes on the D line.
    What else it raises goes to that round's
    fixer (as a round-0 finding when it ran with round 0, as a regression
    when with round 1); a README that does not get a stranger to a running
@@ -1067,13 +1123,15 @@ finishes its last action.
 4. **External review triage, until nothing to fix, capped at five
    rounds.** `delivery` waits for the pull request's checks to finish
    (polling `gh pr checks` and the reviews, up to the bound its skill
-   states), then reads every review comment not left by this flow. If
-   there are any: sandbox check; launch `kad-dev-team:code-reviewer:AGENT`,
+   states), then reads every review comment not left by this flow (the
+   ones that carry the plugin's footer line; the author is never the
+   test, since the owner may write from the account the session pushes
+   as). If there are any: sandbox check; launch `kad-dev-team:code-reviewer:AGENT`,
    `model: "opus"`, to invoke `code-reviewer:external-review-triage` with
    the pull request number, the slice documents by path, the records
    directory (the plugin's own findings on the same files) and a report
    path; it returns a verdict per comment: **fix**, **decline** with the
-   reason, or **defer**. Fixes go to a fresh fixer as in C.4 (one batch,
+   reason, or **defer**. Fixes go to a fresh fixer as in the runner's fix round (one batch,
    commits), then the gate on the fix's range, then `delivery` pushes,
    posts each decline's reason as a reply on its comment and files each
    deferral as an issue. The push brings the external reviewer back; its
@@ -1120,8 +1178,10 @@ invoking the next step's skill directly; the A–E state (which step, which
 chunk, which round), the next action, the standing list, the budget
 counters (start time, reviewer launches, consults), the environment facts
 a successor needs (test command, module directories, records directory,
-whether the owner opted out of the sandbox), and the owner's standing
-directions; commit it with the records; and write a memory pointer to it.
+whether the owner opted out of the sandbox, the cadence, each finished
+chunk's `builder <id>`, and a runner's hand-back line when a chunk ended
+mid-round), and the owner's standing directions; commit it with the
+records; and write a memory pointer to it.
 On invocation with a handoff file present for the slice, resume from it:
 no new A step; run A's snapshot check (`audit.sh --snapshot`) and append
 `Resumed <date> at <step>, session <this session's id>, transcript <kept |
@@ -1150,11 +1210,11 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
+- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re]>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
-- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`
+- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
 - **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`
   - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```

@@ -1,0 +1,25 @@
+# Slice 1: A member pays an outstanding fine from the portal
+
+## Thin path
+
+A signed-in member opens the portal, sees their outstanding fines, picks
+one and pays it by card. The fine then shows as paid.
+
+## Acceptance criteria
+
+- Given a signed-in member with outstanding fines, when they open their
+  fines in the portal, they see each one and its amount.
+- Given the member pays a fine and the payment succeeds, the fine shows as
+  paid.
+- Given the payment is declined, the fine stays outstanding and the member
+  is told.
+- Security: given a signed-in member, when they open their fines or pay
+  one, only their own fines are shown or payable; a fine belonging to
+  another member is refused.
+- Security: given the member enters their card, the card number goes
+  straight to the payment provider's field and never reaches the library's
+  server or its logs.
+- Reliability: given the member submits payment for the same fine twice (a
+  double click, a retry after a slow response), the card is charged at most
+  once.
+- Accessibility: see `accessibility-review-001.md` (A1 to A4).

@@ -54,12 +54,19 @@ skills/
                        # secrets unreadable, no direct network, writes only where the approved set allows
                        # (the launcher's own folders named); a FAIL under the launcher stops the flow with
                        # no question, since the cause is outside the session (see below)
-  orchestrator/scripts/readiness_check.py  # the design-readiness gate before the first builder: eight
+  orchestrator/scripts/readiness_check.py  # the design-readiness gate before the first builder: nine
                        # mechanical checks over the planning documents, each failure routed to the
-                       # persona that owns the document
+                       # persona that owns the document (a slice's blocking open item to the owner)
+  orchestrator/scripts/scratch_run.py      # the data rule: every agent that starts the app starts it through
+                       # this, HOME and every data path inside a scratch folder outside the project,
+                       # a path that resolves outside refused; --hash digests the owner's real data
+                       # directory for the before-and-after check around a launch
   orchestrator/scripts/rounds_record.py    # a review or smoke report in the shared finding format into the
                        # fix-round sidecar, classified regression or pre-existing against the fix's
-                       # diff, and the counts for the log line; --standing lists what is carried
+                       # diff, and the counts for the log line; the criteria walk's per-criterion
+                       # table into the sidecar too; --standing lists what is carried
+  test-quality-review/scripts/test_measures.py # at the slice review: helpers copied across test files and
+                       # the share of assertions on markup, CSS, regexes or prose, with a bar
   orchestrator/scripts/done_check.py       # the Definition of Done at the slice review: README, lint and
                        # formatter, typecheck, no code in strings, no planning references, comment
                        # density, persisted names, env defaults, test padding
@@ -297,25 +304,38 @@ the money moves upstream into design completeness and to the seam and the
 finish, and the review loop keeps only what the data said earned its
 place. In order:
 
+- **Before A, the open work:** the orchestrator asks the tracker (`gh`)
+  what is open before it reads a planning document. A pull request from a
+  slice branch routes to the external-review triage on every unresolved
+  comment, whoever wrote it (the flow's own posts carry the footer line
+  `— kad-dev-team` and are the only ones skipped), and nothing newer
+  starts until it is merged; each open Critical or High issue is one
+  question to the owner (fix it in the open slice's round, fix it first
+  on its own branch, accept it as known; a Critical never the third).
 - **A. Start:** a repository and an `origin` must exist (otherwise
   `release-engineer:repo-bootstrap`, decided with the owner); the sandbox
-  check (below); then up to three questions, **one per `AskUserQuestion`
-  call**, in order: settings, sandbox, delegation. On "yes" to the
-  delegation question the orchestrator writes
-  `planning/delegation-slice-<nnn>.md` (the owner's words, what it covers,
-  what it never covers), which is what lets a persona settle a mid-build
-  decision without the owner. The **budget line** is written: 8 h of loop
-  time for a UI-touching slice and 5 h otherwise, 2 reviewer launches per
-  chunk, 1 fixer per scope plus 1 for regressions, 8 consults; counted at every chunk boundary, and the flow
+  check (below); the browser check on a UI slice; then at most two
+  questions, **one per `AskUserQuestion` call**: browser, delegation. On
+  "yes" to the delegation question the orchestrator writes
+  `planning/delegation.md` and the per-slice file (the owner's words, what
+  it covers, what it never covers), which is what lets a persona settle a
+  mid-build decision without the owner. The cadence (`loop`, or `light`
+  when the owner's message names it) and the **budget line** are written:
+  8 h of loop time for a UI-touching slice and 5 h otherwise, 2 reviewer
+  launches per chunk, 1 fixer per scope plus 1 for regressions; consults
+  counted, never capped; counted at every chunk boundary, and the flow
   ends at the boundary that exceeds one. A `slice-<nnn>-<slug>` branch
   (uncommitted planning documents are committed on it first), the base
   commit recorded. Then the **design-readiness gate**
   (`readiness_check.py`): every criterion homed in the design, every
   failure path homed, a number on every retry, wait and give-up, security
   and reliability agreeing, a mockup for every named state, no question
-  routed to "the implementer", a "Kept for later slices" line, a row for
-  an external provider's unusable reply. Each failure is a backward route
-  to the persona that owns the document before any builder launches.
+  routed to "the implementer", a "Kept for later slices" line, every open
+  or deferred item of the slice triaged (`Usable without it: <how>` or a
+  blocker, which goes to the owner before any build), a row for an
+  external provider's unusable reply. Each failure is a backward route to
+  the persona that owns the document before any builder launches; after
+  the last route a new chunk-loop entry carries the A line.
 - **B. Plan:** one implementer (Sonnet) reads the slice, consults the map
   and writes a **chunk plan** into the implementation report: two to
   eight vertical chunks, each with a title, the criteria it delivers, its
@@ -323,41 +343,72 @@ place. In order:
   composition root, the real adapters and the real local store, only the
   external service faked at its wire boundary) and the territories it
   touches. The orchestrator checks the plan mechanically and commits it.
-- **C. Chunks:** for each chunk a fresh implementer (Sonnet, short
-  context, `maxTurns` 120) builds it test-first, the seam test first,
-  comments only where `why-comments` would keep one, and commits it with
-  the chunk's title. The gate runs on the commit range: suite, typecheck,
-  lint, scope (the chunk's files plus the design's module directories; a
-  file inside a module but off the list is a recorded deviation, not a
-  failure), protected documents, coverage, and report-only comment
-  density and size figures. Then **two launches, never more**: one
-  combined reviewer (`code-reviewer`, Opus: `code-review`,
-  `test-quality-review` and, when the chunk touches HTTP, storage or
-  error handling, `reliability-review`, one report, at most eight
-  findings, Critical/High/Medium only) and one **smoke run** (the app
-  started as the README says, the chunk's done check driven through the
-  real interface; `accessibility-engineer` in the browser when the chunk
-  touches UI, else `tdd-coach` over HTTP). Then **one fix round**: a
-  fresh fixer (Sonnet) for every finding, the gate, a regressions-only
-  re-review on the fix's diff, a second and last fixer for the
-  regressions, the gate, done. Pre-existing findings the re-review raises
-  stand: a standing Critical or High stops the loop for the owner, a
-  standing Medium goes to the pull request body. A finding no planning
-  document can settle is `needs-decision (<persona>)`: with the
-  delegation file the owning persona is launched once, writes its own
-  document, commits `Decision <n>`, and the orchestrator logs one line;
-  without it the flow stops for the owner. `rounds_record.py` is the only
+- **C. Chunks:** for each chunk the orchestrator launches one **chunk
+  runner** (`agents/chunk-runner`, Opus, `skills/chunk-runner`), which
+  carries the chunk's whole round on a context of its own and hands back
+  one line (0.14.1, the v4 design's D9 phase 2: slice 2's orchestrator
+  thread averaged about 427k cache-read tokens per call and was 44% of
+  the cost). Inside the runner: a fresh implementer (Sonnet, short
+  context, `maxTurns` 120) builds the chunk test-first, the seam test
+  first, comments only where `why-comments` would keep one, and commits
+  it with the chunk's title. The gate runs on the commit range: suite,
+  typecheck, lint, scope (the chunk's files plus the design's module
+  directories; a file inside a module but off the list is a recorded
+  deviation, not a failure), protected documents, coverage, report-only
+  comment density and size figures, and the builder's transcript replayed
+  (`--agent`): the shell edits counted beside the number the builder
+  reported, and a commit chained to its test run named. Then **two
+  launches, never more**: one combined reviewer (`code-reviewer`, Opus:
+  `code-review`, `test-quality-review` and, when the chunk touches HTTP,
+  storage or error handling, `reliability-review`, one report, at most
+  eight findings, Critical/High/Medium only) and one **smoke run** (the
+  app started through `scratch_run.py`, every data path inside a scratch
+  folder, never the owner's data; the chunk's done check driven through
+  the real interface: `accessibility-engineer` in the real browser with a
+  screenshot per state when the chunk touches UI, else `tdd-coach` over
+  HTTP). Then **one fix round**: a fresh fixer (Sonnet) for every
+  finding, the gate, a regressions-only re-review on the fix's diff, a
+  second and last fixer for the regressions, the gate, done. Pre-existing
+  findings the re-review raises stand: a standing Critical or High stops
+  the loop for the owner, a standing Medium goes to the pull request
+  body. A finding no planning document can settle is `needs-decision
+  (<persona>)`: the runner hands it back; with the delegation file the
+  orchestrator launches the owning persona once, which writes its own
+  document and commits `Decision <n>`, then relaunches the runner for the
+  fix round; without it the flow stops for the owner. A gate failure on
+  a test that passed on the same range before is `flaky: <test>`: one
+  re-run, then one fixer at the cause. `rounds_record.py` is the only
   thing that parses a report; it writes the sidecar and prints the C
-  line's counts. No Lows per chunk.
-- **D. Slice review:** the map is regenerated with the shipped extractor;
-  the **Definition of Done** runs (`done_check.py`: README, linter and
-  formatter clean, typecheck, no code in strings, no planning reference in
-  code, comment density at or under 5%, the next slice's names persisted,
-  env defaults not production, tests not padding), with
-  `docs-writer:readme` for the README and one Sonnet fixer for the batch;
-  then the six reviewers once on the whole slice diff (Lows allowed here),
-  one fix round as in C, and the **stranger test**: the smoke agent
-  follows the README on a fresh clone in the last round.
+  line's counts. No Lows per chunk. The orchestrator keeps the records
+  commit, the audit sync, the C line (the hand-back's fields plus
+  `builder`, `data unchanged|CHANGED` from the hash of the owner's data
+  directory around the launch, `records`, `audit`) and the budget check.
+  Under the `light` cadence (one measured arm, named in the owner's
+  message for the slice: `cadence — light` on the A line) the runner does
+  the build, the gate and the smoke run only, and every finding waits
+  for D.
+- **D. Slice review:** the map is regenerated with the shipped extractor
+  (the suite's shared helpers listed under a `test-support` tier, so a
+  builder's `map-query` finds an existing helper); the **Definition of
+  Done** runs (`done_check.py`: README, linter and formatter clean,
+  typecheck, no code in strings, no planning reference in code, comment
+  density at or under 5%, the next slice's names persisted, env defaults
+  not production, tests not padding), with `docs-writer:readme` for the
+  README and one Sonnet fixer for the batch; then the six reviewers once
+  on the whole slice diff (Lows allowed here; each criteria reviewer
+  restates the slice's accepted deferrals as findings so they reach the
+  pull request; `test-quality-review` measures duplicated helpers and
+  brittle assertions with `test_measures.py`) and, for a UI slice, the
+  **criteria walk**: `accessibility-engineer` opens the built app in the
+  real browser, drives every acceptance criterion a browser can reach and
+  writes a table (PASS / FAIL / NOT REACHABLE, how, a screenshot), the
+  screen-reader announcements the owner's only manual item; a FAIL is a
+  finding for the fix round, a NOT REACHABLE row goes to the owner's
+  checklist issue. One fix round as in C (under `light`, each chunk's
+  findings go back to that chunk's own builder by message, an Opus fixer
+  for what it cannot clear), and the **stranger test**: the smoke agent
+  follows the README on a fresh clone in the last round, the app again
+  through `scratch_run.py`.
 - **E. Delivery, all in the foreground:** the log and the records are
   committed first (`Records: slice <nnn> delivery`, the handoff file
   removed), since `delivery` refuses a dirty tree; CI is written if the

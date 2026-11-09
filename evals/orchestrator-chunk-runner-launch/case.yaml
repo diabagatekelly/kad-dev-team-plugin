@@ -1,0 +1,67 @@
+schema_version: "1.0"
+name: orchestrator-chunk-runner-launch
+description: "The chunk loop's C.1 step with the chunk runner (handoff-slice2 P3.1): resumed with A and B done, the orchestrator runs the sandbox check and the data hash, then launches exactly one chunk-runner agent for chunk 1 (not a builder, not a reviewer), handing it the chunk's five plan lines, the report and documents by path, the records directory, the sidecar, the base commit, the test command, the module directories, the scripts directory, the scratch launcher, the cadence and the browser state, and hands off right after the launch as told."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off as soon as chunk 1's runner has been launched: don't wait for it to return; write the handoff file saying the runner is in flight and stop.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: one-chunk-runner-launched
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner'
+    min: 1
+    max: 1
+  # No grader on builder or reviewer launches: the trace holds the
+  # runner's own nested launches too (seen on 2026-11-09: the runner's
+  # builder, reviewer and smoke agent appear as Agent calls), so a count
+  # of them says nothing about who launched them. The handoff judge below
+  # and the single runner launch are the check.
+  - type: tool_used
+    name: runner-told-to-invoke-its-skill
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner)(?=[\s\S]*kad-dev-team:chunk-runner)'
+    min: 1
+  - type: tool_used
+    name: runner-handed-the-plan-lines-and-paths
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner)(?=[\s\S]*Done when)(?=[\s\S]*implementation-report-slice-001\.md)(?=[\s\S]*rounds-slice-001\.jsonl)(?=[\s\S]*npm test)(?=[\s\S]*scratch_run)(?=[\s\S]*[Cc]adence)'
+    min: 1
+  - type: tool_used
+    name: runner-launched-as-opus
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner)(?=[\s\S]*"model"\s*:\s*"opus")'
+    min: 1
+  - type: tool_used
+    name: sandbox-checked-before-the-launch
+    tool: Bash
+    input_match: 'sandbox_check\.py'
+    min: 1
+  - type: tool_order
+    name: check-before-the-runner
+    before: {tool: Bash, input_match: 'sandbox_check\.py'}
+    after: {tool: Agent, input_match: 'chunk-runner'}
+  - type: llm
+    name: handoff-says-the-runner-is-in-flight
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/handoff-slice-001.md
+    weight: 1
+    criteria: |
+      The owner asked for a hand-off as soon as chunk 1's runner was launched, without waiting for it. The handoff file holds the step, chunk and round, the next action, the budget counters and the environment facts.
+
+      PASS if the file says chunk 1's chunk runner has been launched (in flight, or returned if it did return in time) and names the next action as taking its hand-back line (the records commit, the C line) or, if it returned, what follows; and no builder, reviewer or smoke agent was launched by the orchestrator itself.
+
+      FAIL if the file says a builder was launched directly, names B or A as the next action, or lacks the next action.

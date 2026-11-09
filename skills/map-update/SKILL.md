@@ -98,6 +98,17 @@ this skill derives. When updating the map:
   tier from the import graph is circular: a module that already violates
   the Dependency Rule would corrupt the very inference meant to catch that
   violation.
+- **The suite's shared helpers are their own tier, `test-support`.** The
+  extractor lists every non-test source file under a test directory's
+  `support/`, `helpers/`, `utils/`, `fixtures/` or `lib/` folder
+  (`test/support/persistent-app.ts`) with that tier and its exports, so
+  an implementation-level `map-query` can answer "is there already a
+  helper that starts the app" before a builder writes a fourth one
+  (slice 2's builders consulted the map every chunk and still redefined
+  `openPage`, `startApp` and `choose` across ten files, because the map
+  indexed `src/` only). Test files themselves stay out of the map; a
+  `test-support` module importing the source is the expected direction
+  and never a wrong-direction candidate.
 
 ## Diffing against the prior map
 

@@ -10,7 +10,11 @@ transcripts audit mode kept for it, and prints a markdown report of:
   routed to `none (<reason>)`), the implementation entry (routed to the
   chunk loop, or to the quarantine flow in logs written before 0.6.0) with
   its A-E sub-entries in order and never repeated (one bold line per step;
-  anything else under the entry is an indented plain bullet);
+  anything else under the entry is an indented plain bullet); step lines
+  appended under a later entry (the readiness gate's backward routes,
+  written while the loop's entry stays open) are read as the latest
+  chunk-loop entry's, with a WARN saying so (0.14.1: the skill opens a new
+  chunk-loop entry after the last route, and both forms are accepted);
 - the chunk loop's own lines, in the 0.6.0 (v3) form or the 0.7.0 (v4)
   form, told apart by the A line's `budget`/`readiness`/`delegation`
   fields or a C line's `smoke`/`standing`: the A line opens with the
@@ -156,8 +160,9 @@ def stage_key(names):
     return sorted(n for n in names if "-" in n)[0] if any("-" in n for n in names) else sorted(names)[0]
 
 
-def parse_log(text):
-    """(entries, malformed headings). A heading is `## <n>. <title>`; any other `## ` line is malformed."""
+def parse_log(text, attach=True):
+    """(entries, malformed headings). A heading is `## <n>. <title>`; any other `## ` line is malformed.
+    With `attach`, the chunk loop's step lines appended under a later entry are read as the loop entry's."""
     entries, malformed = [], []
     for m in re.finditer(r"^## (.*)$", text, re.M):
         if not re.match(r"\d+\.\s", m.group(1) + " "):
@@ -172,9 +177,43 @@ def parse_log(text):
             "n": int(m.group(1)), "heading": m.group(2).strip(), "body": body,
             "routed": routed[0].strip() if routed else None, "routed_lines": len(routed),
             "artifact": artifact[0].strip() if artifact else None, "artifact_lines": len(artifact),
-            "subs": subs,
+            "subs": subs, "attached_from": [],
         })
+    if attach:
+        attach_loop_lines(entries)
     return entries, malformed
+
+
+STEP_LINE = re.compile(r"^- \*\*[A-E]\. [^\n]*$(?:\n(?![-#]|\S)[^\n]*|\n\s{2,}[-*] [^\n]*)*", re.M)
+
+
+def attach_loop_lines(entries):
+    """The chunk loop's A to E lines belong to the latest chunk-loop entry even
+    when they were appended under a later entry: the readiness gate's
+    backward routes are written as entries of their own while the loop's
+    entry stays open, and slice 2 appended A to E under the second of them
+    (entry 60), which read as sixty unlogged calls. The skill now says to
+    open a new chunk-loop entry after the last route (0.14.1), and this
+    check accepts either: a step line under a non-loop entry is moved, with
+    its indented bullets, to the body of the nearest chunk-loop entry
+    before it, and that entry's `subs` and the donor's are recomputed. The
+    donor keeps an `attached_from` note on the receiver so the report can
+    say so."""
+    last_loop = None
+    for e in entries:
+        if is_loop(e):
+            last_loop = e
+            continue
+        if last_loop is None or not e["subs"]:
+            continue
+        moved = STEP_LINE.findall(e["body"])
+        if not moved:
+            continue
+        e["body"] = STEP_LINE.sub("", e["body"])
+        e["subs"] = re.findall(r"^- \*\*([A-E])\.", e["body"], re.M)
+        last_loop["body"] = last_loop["body"].rstrip("\n") + "\n" + "\n".join(moved) + "\n"
+        last_loop["subs"] = re.findall(r"^- \*\*([A-E])\.", last_loop["body"], re.M)
+        last_loop["attached_from"].append(e["n"])
 
 
 def is_loop(entry):
@@ -447,6 +486,11 @@ def check_chunk_loop(e, findings):
             for part in ("delegation", "budget", "readiness"):
                 if field(a_text, part) is None:
                     findings.append(("WARN", tag, f"A line has no {part} (a 0.7.0 field)"))
+            cadence = field(a_text, "cadence")
+            if cadence and cadence.split()[0] not in ("loop", "light"):
+                findings.append(("ERROR", tag, f"A line's cadence is `{cadence}`; it is `loop` or `light`"))
+            elif cadence:
+                findings.append(("INFO", tag, f"cadence {cadence.split()[0]}"))
         sidecar = field(a_text, "records") or field(a_text, "reviews")
         m = re.search(r"slice-(\d{3})", field(a_text, "branch") or "")
         nnn = m.group(1) if m else None
@@ -639,6 +683,9 @@ def check_loop(entries, findings, project=None, log_dir=None, sidecar_arg=None):
         tag = f"entry {e['n']}"
         subs = e["subs"]
         chunk_loop = is_chunk_loop(e)
+        if e.get("attached_from"):
+            findings.append(("WARN", tag, "its A to E lines were appended under " + ", ".join(f"entry {n}" for n in e["attached_from"])
+                             + " (a readiness backward route) and are read as this entry's; since 0.14.1 the skill opens a new chunk-loop entry after the last route"))
         if subs != sorted(subs):
             findings.append(("ERROR", tag, f"sub-entries out of order: {', '.join(subs)}"))
         repeated = sorted({s for s in subs if subs.count(s) > 1 and not (chunk_loop and s == "C")})
@@ -714,8 +761,8 @@ def clean(text):
 
 
 def entry_shapes(text):
-    """Per entry: its fixed lines (number, heading, Routed to, Artifact) and its non-blank body lines."""
-    entries, _ = parse_log(text)
+    """Per entry: its fixed lines (number, heading, Routed to, Artifact) and its non-blank body lines, as written."""
+    entries, _ = parse_log(text, attach=False)
     return [((e["n"], e["heading"], e["routed"], e["artifact"]),
              [l.rstrip() for l in e["body"].splitlines() if l.strip() and not re.match(r"^\*\*(Routed to|Artifact):\*\*", l.strip())])
             for e in entries]
@@ -736,12 +783,14 @@ def only_added(old, new):
     if clean(old.split("\n## ", 1)[0]) != clean(new.split("\n## ", 1)[0]):
         return "the text before the first entry changed"
     o, n = entry_shapes(old), entry_shapes(new)
+    loop_seen = False  # step lines may be appended under an entry after the chunk loop's (a readiness route's)
     if len(n) < len(o):
         return f"{len(o) - len(n)} entr{'y' if len(o) - len(n) == 1 else 'ies'} removed"
     for (fixed_o, body_o), (fixed_n, body_n) in zip(o, n):
         if fixed_o != fixed_n:
             return f"entry {fixed_o[0]}'s heading, Routed to or Artifact line changed"
-        loop = "chunk loop" in (fixed_o[2] or "").lower() or "quarantine" in (fixed_o[2] or "").lower()
+        loop = loop_seen or "chunk loop" in (fixed_o[2] or "").lower() or "quarantine" in (fixed_o[2] or "").lower()
+        loop_seen = loop
         j, added = 0, []
         for line in body_o:
             while j < len(body_n) and body_n[j] != line:
@@ -984,6 +1033,16 @@ def check_transcripts(project, log_abs, entries, table, calls, findings):
                 latest = max(latest or 0, current[s])
                 ran.setdefault(current[s], [])
                 writes.setdefault(current[s], [])
+            elif re.search(r"^- \*\*[A-E]\. ", added, re.M):
+                # A step line written with no new heading: the chunk loop's
+                # entry is the one running, whatever entry the line sits
+                # under in the file (slice 2 wrote A to E under entry 60).
+                loop_n = max((e["n"] for e in entries if is_loop(e) and e["n"] <= (latest or e["n"])), default=None)
+                if loop_n is not None:
+                    current[s] = loop_n
+                    latest = max(latest or 0, loop_n)
+                    ran.setdefault(loop_n, [])
+                    writes.setdefault(loop_n, [])
             if re.search(r"^- \*\*E\. Delivery[^*\n]*:\*\*", added, re.M) and (current.get(s) or latest) is not None:
                 closed.add(current.get(s) or latest)
             continue

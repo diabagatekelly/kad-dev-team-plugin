@@ -1,0 +1,113 @@
+schema_version: "1.0"
+name: chunk-runner-review-round
+description: "The chunk runner's step 3 (the orchestrator's old C.3, design §11 case 3): resumed with chunk 1 built and gated, the runner launches exactly one combined reviewer (code-reviewer, Opus) and one smoke agent (tdd-coach, since the chunk is not UI; handed the scratch launcher) and nothing else, records round 0 with rounds_record.py, writes no log and commits nothing, and hands back one line with the script's counts."
+tags: [chunk-runner, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the chunk runner the orchestrator launched for chunk 1 of 3 of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:chunk-runner` first and follow it.
+
+    What the orchestrator hands you. Chunk 1 of 3: **Title**: Cancel a member's hold on a title. **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes". **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts. **Done when**: seam "cancels a member's hold through the real in-memory queue", `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green. **Touches**: storage.
+
+    The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
+
+    Resume point: the round stopped after the gate: chunk 1 is committed and its gate PASS is saved as `docs/cancel-hold/implementation/gate-chunk-1-r0.txt`; next is step 3, the review and smoke launches. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Stop once round 0 is recorded (hand back the line as far as it goes, with `stopped at step 3` appended; don't start the fix round).
+  model: opus
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: chunk-runner-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:chunk-runner"'
+    min: 1
+  - type: tool_used
+    name: orchestrator-not-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 0
+    max: 0
+  - type: regex
+    name: log-not-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
+    match: not_contains
+  - type: regex
+    name: no-records-commit
+    target: trace
+    pattern: 'git commit[\s\S]{0,300}?Records:'
+    match: not_contains
+  - type: tool_used
+    name: one-combined-reviewer
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: one-smoke-agent
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*[Ss]moke)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: two-launches-never-more
+    tool: Agent
+    min: 2
+    max: 2
+  - type: tool_used
+    name: smoke-agent-handed-the-launcher
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*scratch_run)'
+    min: 1
+  - type: tool_used
+    name: round-recorded-by-the-script
+    tool: Bash
+    input_match: 'rounds_record\.py'
+    min: 1
+  - type: file_exists
+    name: review-report-written
+    path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+  - type: file_exists
+    name: smoke-report-written
+    path: docs/cancel-hold/implementation/chunk-1-r0-smoke.md
+  - type: llm
+    name: review-report-in-the-shared-shape
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    weight: 1
+    criteria: |
+      The combined chunk review writes one report in the shared finding format: each finding is a `###` heading with a `**Severity:**` line directly under it, the severity one of Critical, High, Medium or `needs-decision (<persona>)`; at most eight findings; no Low (a Low noticed per chunk is dropped, the slice review collects them later).
+
+      PASS if the report has at most eight findings, every finding carries a Severity line with one of those values, and no finding is rated Low. A report that says it has no findings passes.
+
+      FAIL if any finding is rated Low, if there are more than eight, or if findings lack Severity lines.
+  - type: regex
+    name: report-names-the-suite-run
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    pattern: '## Checks run[\s\S]*?(npm (run )?test|node [^\n]*--test|gate-chunk-1-r0\.txt)'
+  - type: regex
+    name: cold-findings-cite-no-planning-document
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/chunk-1-r0-review.md
+    pattern: '## Findings(?:(?!## Against the criteria)[\s\S])*?(slice-001\.md|design\.md|design-doc|security-criteria|reliability-criteria|screen-design|accessibility-criteria)'
+    match: not_contains
+  - type: tool_used
+    name: reviewer-handed-no-planning-document
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*(?:slice-001\.md|design[^"]{0,40}\.md|criteria[^"]{0,40}\.md))'
+    min: 0
+    max: 0
+  - type: regex
+    name: hand-back-line-carries-the-script-counts
+    # The line's shape, checked mechanically: the judge on last_message
+    # failed replies that were exactly the prescribed line (three votes in
+    # three, twice). The skill's own template has `<C/H/M>`, not digits.
+    target: trace
+    pattern: 'r0 `?\d+/\d+/\d+`?[^\n]{0,80}smoke `?(?:PASS|\d+ findings?)[^\n]*(?:stopped at step 3|needs-decision)'

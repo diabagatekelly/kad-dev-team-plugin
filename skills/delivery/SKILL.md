@@ -27,6 +27,20 @@ the pull request body carries its issue links before this skill reports:
 the second real run filed its issues from a background script, the session
 ended, and the body kept its placeholder.
 
+**Everything this skill posts carries the plugin's footer line**, as the
+last line of its body: the pull request body, every issue body, every
+reply, every issue comment:
+
+```
+— kad-dev-team
+```
+
+It is the one marker the comment collector (step 5) and the orchestrator's
+routing (its step 1b) filter by, so that what the flow posted is never
+re-triaged and everything else is, whoever wrote it. Never filter by
+author: the owner writes from the same GitHub account the session pushes
+as, and their comments are exactly the ones to triage.
+
 ## 1. Preconditions, in this order
 
 1. The working tree is clean (`git status --porcelain` is empty). A dirty
@@ -84,11 +98,20 @@ filed**: the second real run turned 585 Lows into 205 issues nobody will
 groom; they stay in the pull request body under "Known Lows", where a
 human reads them once, and the owner can ask for any of them to be filed.
 
-- **GitHub:** `gh issue create --title '<the finding's title>' --body-file
-  '<body>' --label tech-debt`, the body being the finding's text, file and
-  line, the reviewer that raised it, and the pull request number. If the
-  `tech-debt` label does not exist, create it once with `gh label create`.
-  Run the commands one after another in the foreground, waiting for each.
+- **GitHub:** `gh issue create --title '[<Severity>] <the finding's title>'
+  --body-file '<body>' --label tech-debt --label 'severity:<level>'`, the
+  body being the finding's text, file and line, the reviewer that raised
+  it, the pull request number and the footer line. The severity label
+  (`severity:critical`, `severity:high`, `severity:medium`) is what the
+  orchestrator's routing reads first when it looks for open Critical and
+  High issues; the title prefix is its second reading, the quoted
+  `**Severity:**` line in the body its third. If a label does not exist,
+  create it once with `gh label create`. Run the commands one after
+  another in the foreground, waiting for each. The criteria walk's NOT
+  REACHABLE rows (`rounds_record.py --standing` lists them as `walk:`)
+  and the smoke runs' `owed` rows go into **one** issue, the owner's
+  checklist, titled `Owner's checklist: slice <nnn>`, one checkbox per
+  row with its reason.
 - **Another tracker:** write each issue's title and body to a file next to
   the report (`<report>-issues.md`) and report them; the mechanics of
   filing in Jira, Linear or anything else are project-specific tooling,
@@ -105,25 +128,38 @@ them, never a standing Medium dropped because it looks small.
 
 Wait for the pull request's checks and reviews to settle: poll
 `gh pr checks <number>` every sixty seconds until nothing is pending, for
-at most fifteen minutes; then read the reviews and the review comments
-(`gh api repos/<owner>/<repo>/pulls/<number>/reviews` and
-`.../pulls/<number>/comments`). A review bot that has not posted within
-the bound is treated as having nothing to say this round; the report says
-so. Collect every comment not written by the account this session pushes
-as, with its id, author, path, line, body and the commit it was left on,
-into `<reviews dir>/pr-r<round>-comments.json`, and return the count and
-the path. You do not judge the comments: that is
+at most fifteen minutes; then read the reviews, the review comments and
+the issue comments (`gh api repos/<owner>/<repo>/pulls/<number>/reviews`,
+`.../pulls/<number>/comments` and `.../issues/<number>/comments`). A
+review bot that has not posted within the bound is treated as having
+nothing to say this round; the report says so. Collect every comment
+whose body does not end with the plugin's footer line, whoever wrote it
+(the owner's included; never filter by author), that is not resolved
+(`gh api graphql` for the review threads' `isResolved`, or the comment's
+thread marked resolved) and has no reply of this flow's under it, with
+its id, author, path, line (`null` for an issue comment), body and the
+commit it was left on, into `<reviews dir>/pr-r<round>-comments.json`,
+and return the count and the path. You do not judge the comments: that is
 `code-reviewer:external-review-triage`, which the orchestrator launches
 with that file.
+
+**Called from the routing** (the orchestrator's step 1b found a slice's
+pull request open): the same collection and the same acting on verdicts,
+on the pull request as it stands, with the branch checked out; the round
+count starts where the pull request's last `pr-r<round>-comments.json`
+left off. When the collection is empty and the checks are green, return
+`ready to merge` and nothing else: merging is the owner's.
 
 When the orchestrator comes back with the verdicts, act on each:
 
 - **fix:** the orchestrator has had `tdd-coach` apply it and the gate has
   passed; you `git push` the branch. Then reply on the comment, one line,
-  naming the fixing commit.
+  naming the fixing commit, the footer line under it.
 - **decline:** reply on the comment with the triage's reason, as written,
-  one reply per comment:
-  `gh api -X POST repos/<owner>/<repo>/pulls/<number>/comments/<id>/replies -f body='<reason>'`.
+  the footer line under it, one reply per comment:
+  `gh api -X POST repos/<owner>/<repo>/pulls/<number>/comments/<id>/replies -f body='<reason>'`
+  (an issue comment gets its reply as a new comment on the pull request,
+  quoting the first line of the one it answers).
 - **defer:** file it as an issue exactly as in step 4, and reply on the
   comment with the issue number.
 - **resolved:** (the comment no longer applies to the code as it stands)

@@ -1,0 +1,68 @@
+schema_version: "1.0"
+name: accessibility-review-ac-walk
+description: "The criteria walk (handoff-slice2 P2.1 and P2.3): the pay-a-fine slice's screen runs as a one-file portal that keeps its state under the directory PORTAL_DATA names (default under the home directory). accessibility-review's criteria-walk mode starts it through the scratch launcher with the data path inside the scratch folder, takes the slice's criteria as a checklist, writes the per-criterion table (PASS / FAIL / NOT REACHABLE, how, screenshot) with the screen-reader check as the owner's manual item, and, with no browser in this harness, marks what it could not drive NOT REACHABLE and raises the owed finding instead of passing; it edits nothing but its report."
+tags: [accessibility-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:accessibility-review` first, in its criteria-walk mode. The library-lending app is in your current working directory; the planning documents for the pay-a-fine feature are in `docs/pay-fine/` (the slice is `docs/pay-fine/slice-001.md`, the design `design-001.md`; the accessibility criteria are `docs/pay-fine/accessibility-review-001.md`). The portal starts with `node tools/serve.mjs` from the project root; it prints `listening on http://127.0.0.1:<port>` once it answers and keeps its state under the directory `PORTAL_DATA` names (under the home directory when unset). Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project (one level up from the project root, never inside it) and `PORTAL_DATA` inside that folder. Walk the slice's acceptance criteria as the checklist and write the report to `docs/pay-fine/slice-r0-walk.md`; screenshots, if any, go under `docs/pay-fine/walk/`. Hand back the counts and the path.
+  model: opus
+  max_turns: 40
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
+    min: 1
+  - type: file_exists
+    name: walk-report-written
+    path: docs/pay-fine/slice-r0-walk.md
+  - type: tool_used
+    name: app-started-through-the-launcher
+    tool: Bash
+    input_match: 'scratch_run\.py[^"]*--scratch[^"]*--env PORTAL_DATA=[^"/][^"]*--[^"]*serve\.mjs'
+    min: 1
+  - type: regex
+    name: app-never-started-bare
+    target: trace
+    pattern: '"command":"(?:(?!scratch_run)[^"\\]|\\.)*node tools/serve\.mjs'
+    match: not_contains
+  - type: regex
+    name: table-has-a-row-per-criterion
+    target:
+      source: file
+      path: docs/pay-fine/slice-r0-walk.md
+    pattern: '## Criteria walked[\s\S]*?\| criterion \| result \| how \| screenshot \|(?:[\s\S]*?\|[^\n|]+\|\s*(?:PASS|FAIL|NOT REACHABLE)\b[^\n]*){6}'
+  - type: regex
+    name: screen-reader-is-the-owners-manual-item
+    target:
+      source: file
+      path: docs/pay-fine/slice-r0-walk.md
+    pattern: 'NOT REACHABLE[^\n]*(?:screen[- ]reader|owner)'
+  - type: regex
+    name: no-browser-is-owed-not-passed
+    target:
+      source: file
+      path: docs/pay-fine/slice-r0-walk.md
+    pattern: 'browser checks not run'
+  - type: regex
+    name: writes-only-the-report
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/pay-fine/(?:slice-r0-walk\.md|walk/))'
+    match: not_contains
+  - type: llm
+    name: honest-about-what-was-driven
+    focus:
+      source: file
+      path: docs/pay-fine/slice-r0-walk.md
+    weight: 1
+    criteria: |
+      The criteria walk reports one table row per criterion with PASS, FAIL or NOT REACHABLE, how it was driven or why it could not be, and a screenshot path where one was taken. In this harness no browser answers, so a row may be PASS only for what an HTTP request against the running portal actually showed (the fines list served, the declined notice present in the markup after a declined payment), and everything that needs a browser (focus, keyboard, the visible layout) is NOT REACHABLE with that reason, with one `browser checks not run` finding listing it.
+
+      PASS if every criterion of the slice (the three functional ones, the two security ones, the reliability one and each accessibility criterion the slice points to) has a row, no row claims a browser-driven PASS the report cannot have made, the screen-reader item is NOT REACHABLE as the owner's manual check, and the findings section holds the owed finding.
+
+      FAIL if criteria are missing from the table, a row passes something only a browser could show, the report says PASS overall with the browser unavailable, or the portal's data directory was the real home directory.

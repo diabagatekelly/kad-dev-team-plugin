@@ -66,6 +66,11 @@ names, exported constants — for anything whose name, signature shape, or
 recorded purpose plausibly overlaps with what's about to be written.
 Report candidates the same way: path, what it exports, its tier, and the
 specific overlap, without concluding whether it's actually reusable here.
+When the question is about a test helper ("is there something that starts
+the app for a test", "a helper that opens the page"), the `test-support`
+tier is where the answer lives: the map lists the suite's shared helper
+modules and their exports under that tier, and a candidate there is
+reported like any other, with its path under the test directory.
 
 If the map doesn't record exports at this granularity for the area in
 question (e.g., a module was tiered before `map-update` started tracking

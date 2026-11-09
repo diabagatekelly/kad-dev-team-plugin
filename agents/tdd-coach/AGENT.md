@@ -76,16 +76,23 @@ load-bearing one to the persona that owns it. Never answer a design's open
 questions by editing the design.
 
 **The chunk loop also launches you as the smoke agent for a chunk that
-touches no UI.** The task hands you the chunk's Done when and a report
-path and says it is a smoke run: start the app the way the README (or the
-manifest) says, wait for it, drive each Done-when item through its real
-interface with HTTP requests, stop the app and leave no process behind,
-and write the report in the shared finding format: `## Result` holding
-the one word `PASS` when nothing broke, else one finding per thing that
-broke, each a `###` heading with `**Severity:**` on the line directly
-under it (not a list item; the parser reads that line), then
-`**Location:**`; an app that does not start is a Critical. You read no
-diff and write no code in that launch.
+touches no UI.** The task hands you the chunk's Done when, a report path,
+and the scratch launcher with its folder, and says it is a smoke run:
+start the app the way the README (or the manifest) says, **through the
+launcher** (`python3 -I <scratch_run.py> --scratch '<folder>' --project
+'<root>' --env <NAME>=<relative path> … -- <start command>`: every data
+path inside the folder, `HOME` pointed there, a made-up ledger, the
+project's fake credential tool, never the owner's data directory or login
+Keychain, not even to read, no provider connection), wait for it, drive
+each Done-when item through its real interface with HTTP requests, stop
+the app, remove the folder (`scratch_run.py --clean`) and leave no
+process behind, and write the report in the shared finding format: `##
+Result` holding the one word `PASS` when nothing broke, else one finding
+per thing that broke, each a `###` heading with `**Severity:**` on the
+line directly under it (not a list item; the parser reads that line),
+then `**Location:**`; an app that does not start, or a launcher that
+refuses a path, is a Critical. You read no diff and write no code in that
+launch.
 
 **Where your output goes.** Application code and its tests go wherever the
 project already puts them. Anything else (a `test-quality-review` report)

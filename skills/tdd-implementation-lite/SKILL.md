@@ -254,15 +254,41 @@ Two more things that hold throughout:
   tests genuinely can't run, say so and stop: "I couldn't run them" never
   becomes "done".
 - **Change files with the `Write` and `Edit` tools, never through the
-  shell.** A file written by shell redirection, a heredoc, `tee`, `sed -i`
-  or `cp`/`mv` hides what changed and in what order from the reviewer, the
-  orchestrator's grader and the trace. Bash is for running things: the
-  test runner, `git`, listing and reading files. If you did change a file
-  through the shell anyway, say so: one `- **Shell edit**: <file>` line in
-  your report section per file, and `shell edits <n>` on your hand-back
-  line; each counts as a deviation, and three in one chunk or fix end your
-  turn as a stall (the orchestrator relaunches with your section as the
-  handover).
+  shell.** A file written by shell redirection, a heredoc, `tee`, `sed -i`,
+  a `python3 -`/`node -e` script or `cp`/`mv` hides what changed and in
+  what order from the reviewer, the orchestrator's grader and the trace.
+  Bash is for running things: the test runner, `git`, listing and reading
+  files. If you did change a file through the shell anyway, say so: one
+  `- **Shell edit**: <file>` line in your report section per file, and
+  `shell edits <n>` on your hand-back line. Each is a deviation on the
+  record, audited against the transcript: the gate replays what you
+  actually ran and writes the counted number beside the one you reported
+  (slice 2's chunk 2 builder reported 1 and had made 9). A formatter run
+  through the manifest's `format` script is not a shell edit. Nothing
+  stalls or asks the owner over the count.
+- **The suite runs as its own command, and its result is read before
+  `git commit`.** Never `npm test | grep … && git commit`, never the test
+  run and the commit on one line: a chain runs on the last command's exit
+  code, and slice 2's chunk 4 went in on a red run (`fail 1` in the
+  output, "suite green" in the report) through a grep that exited 0. The
+  last test run before the commit is one Bash call whose output you read
+  whole; the commit is the next call. The gate's transcript replay names
+  a commit chained to its test run on the record.
+- **Before writing a helper, grep the suite's support folder** (`test/support/`,
+  `helpers/`, `fixtures/`, wherever this project keeps shared test code)
+  and the map (`map-query` at the implementation level indexes that
+  folder as the `test-support` tier). A helper that exists is imported,
+  not retyped: slice 2's builders consulted the map every chunk and still
+  redefined `openPage`, `startApp` and `choose` across ten files. One you
+  write that a second test file will need goes in that folder, not in
+  the test file.
+- **The page's user-facing strings come from one module.** A message,
+  label or heading the page shows is an exported constant (one module of
+  strings per screen or per app, as the design names it), the markup
+  reads it, and a test asserts on the constant, never on the sentence
+  retyped: a test that matches the words or the markup breaks on a wording
+  change that changed no behaviour (run 3 and slice 2 both measured about
+  0.6 such assertions per test; run 2's suite 0.1).
 
 ## Where things go
 

@@ -1,0 +1,82 @@
+schema_version: "1.0"
+name: chunk-runner-one-fix-round
+description: "The chunk runner's step 4 (the orchestrator's old C.4, design §11 case 4): resumed after fix r1 was re-reviewed, with one regression and one pre-existing Medium in the re-review, the runner records round 1 with --range so the script classifies by hunk, sends only the regression to a second and last fixer, runs the gate on the fix, launches no third review, writes no log and commits no records, and hands back the line with the (reg 1, pre 1) split and the pre-existing Medium standing."
+tags: [chunk-runner, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the chunk runner the orchestrator launched for chunk 1 of 3 of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:chunk-runner` first and follow it.
+
+    What the orchestrator hands you. Chunk 1 of 3: **Title**: Cancel a member's hold on a title. **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes". **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts. **Done when**: seam "cancels a member's hold through the real in-memory queue", `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green. **Touches**: storage.
+
+    The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
+
+    Resume point: the round stopped in step 4: round 0 is recorded (0/0/2, smoke PASS), the fixer committed fix r1, the gate on it passed (`gate-chunk-1-r1.txt`), and the regressions-only re-reviewer wrote `chunk-1-r1-review.md`; next is recording round 1 with `--range`, then acting on the split. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Finish the round and hand back the line.
+  model: opus
+  max_turns: 70
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: chunk-runner-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:chunk-runner"'
+    min: 1
+  - type: tool_used
+    name: orchestrator-not-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 0
+    max: 0
+  - type: regex
+    name: log-not-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
+    match: not_contains
+  - type: regex
+    name: no-records-commit
+    target: trace
+    pattern: 'git commit[\s\S]{0,300}?Records:'
+    match: not_contains
+  - type: tool_used
+    name: round-one-recorded-with-the-range
+    tool: Bash
+    input_match: 'rounds_record\.py[\s\S]*--range'
+    min: 1
+  - type: tool_used
+    name: second-and-last-fixer
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: no-third-review
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: gate-on-the-fix
+    tool: Bash
+    input_match: 'validation_gate\.py'
+    min: 1
+  - type: regex
+    name: hand-back-carries-the-split
+    target: trace
+    pattern: '\(reg `?1`?, pre `?1`?\)'
+  - type: regex
+    name: hand-back-leaves-the-medium-standing
+    target: trace
+    pattern: 'standing `?0/0/1'
+  - type: llm
+    name: hand-back-is-the-one-line
+    focus: last_message
+    weight: 1
+    criteria: |
+      The chunk runner ends with one hand-back line in the C line's field order: the chunk's commits, the gate result, round 0's counts, the r1 fix with its `(reg 1, pre 1)` split, the r2 fix for the regression with its gate PASS, `standing 0/0/1` for the pre-existing Medium, the builder's or fixer's ids and the launch counts; and nothing else.
+
+      PASS if the final reply is essentially that line: it carries the split (one regression, one pre-existing), says the second fixer handled the regression and the gate passed, and leaves the pre-existing Medium standing, without restating any finding's text and without a third review.
+
+      FAIL if it fixes the pre-existing Medium, launches a third review, writes the log, commits records, or narrates findings instead of handing back counts.

@@ -1,0 +1,85 @@
+schema_version: "1.0"
+name: chunk-runner-gate-outside
+description: "The chunk runner's step 2, the failure half of design §11 case 5: chunk 1's commit adds utils/card-number.ts, outside every design module. The gate fails on scope; the runner hands the gate's output to one fresh fixer, runs the gate again on the fix, never widens --allow or edits the code itself, launches no reviewer before the gate passes, and stops as told."
+tags: [chunk-runner, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the chunk runner the orchestrator launched for chunk 1 of 3 of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:chunk-runner` first and follow it.
+
+    What the orchestrator hands you. Chunk 1 of 3: **Title**: Cancel a member's hold on a title. **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes". **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts. **Done when**: seam "cancels a member's hold through the real in-memory queue", `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green. **Touches**: storage.
+
+    The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
+
+    Resume point: the round stopped after the build: the implementer committed chunk 1 (the handoff names the commit and the agent); next is step 2, the gate. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Stop once the gate has passed, before any reviewer is launched: hand back the line as far as it goes with `stopped at step 2` appended.
+  model: opus
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: chunk-runner-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:chunk-runner"'
+    min: 1
+  - type: tool_used
+    name: orchestrator-not-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 0
+    max: 0
+  - type: regex
+    name: log-not-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
+    match: not_contains
+  - type: regex
+    name: no-records-commit
+    target: trace
+    pattern: 'git commit[\s\S]{0,300}?Records:'
+    match: not_contains
+  - type: tool_used
+    name: gate-run-twice
+    tool: Bash
+    input_match: 'validation_gate\.py'
+    min: 2
+  - type: tool_used
+    name: failure-handed-to-the-fixer-once
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: no-reviewer-before-the-pass
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 0
+    max: 0
+  - type: regex
+    name: first-gate-fails-on-scope
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+    pattern: 'FAIL  scope[^\n]*utils/card-number\.ts'
+  - type: regex
+    name: allow-list-not-widened
+    target: trace
+    pattern: '--allow[ =]+[\x27"]?utils/'
+    match: not_contains
+  - type: regex
+    name: runner-edits-no-code
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{{[^{{}}]*"(?:file_path|path)":"[^"]*\.(?:ts|js|json)"'
+    match: not_contains
+  - type: llm
+    name: gate-passes-after-the-fix
+    focus: last_message
+    weight: 1
+    criteria: |
+      A file outside every design module fails the gate's scope check once; the runner hands the gate's output to a fresh fixer, runs the gate again on the fix, and only a second failure ends the round. It never widens `--allow`, never drops a `--protect`, never moves the file itself.
+
+      PASS if the reply hands back the gate as PASS after the fix (`gate PASS after <sha>`), says one fixer was launched for the scope failure and the gate run again, and stops before any reviewer.
+
+      FAIL if the runner edits the code itself, widens the gate's allow list, launches a reviewer before the gate passes, or ends the round on the first failure.
