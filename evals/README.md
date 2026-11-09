@@ -577,11 +577,17 @@ real cases and deleted (the table is in git history).
   documents (category names and the like), which is one batch question
   to the owner and then lines under "Allowed by the owner". The literal
   rule of the handoff (`--strict`: no listed-commit rule, every amount
-  counted) gave about 7,000 hits on the scrubbed planning. Known gaps of
-  the scan itself, in its docstring: a word taken out of a longer cell
-  is not matched; a file listed after something has read it must carry a
-  dash under `Listed at` or the leak is taken as already there; an image
-  or a PDF is listed and not scanned. Grader lessons of these rounds: a
+  counted) gave about 7,000 hits on the scrubbed planning. The owner
+  confirmed the two rules on 2026-11-09 and asked for the partial-cell
+  gap closed: a single word of a longer cell (a surname, a brand) is
+  matched since, and counted only when it is a word of 1% of the rows or
+  fewer and something else of its row is in the same file (a whole cell
+  of as few rows, or an amount of that row); measured the same way it
+  adds five cells to the scrubbed planning's 48 and keeps the pre-scrub
+  failure. Known gaps of the scan itself, in its docstring: a file
+  listed after something has read it must carry a dash under `Listed
+  at` or the leak is taken as already there; an image or a PDF is listed
+  and not scanned. Grader lessons of these rounds: a
   regex grader on a file a run may never write throws and voids the run
   instead of failing, so the scaffold creates the file empty and the
   grader asks for content (`orchestrator-delivery-removal`'s

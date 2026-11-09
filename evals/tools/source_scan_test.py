@@ -37,7 +37,10 @@ fee rows.
 17. the map and an extract are created with mode 0600 and never through a
     symlink;
 18. a transcript's keys and numbers are scanned, and one that cannot be
-    read is not reported clean.
+    read is not reported clean;
+19. a word of a longer cell (a surname) counts beside an amount of its own
+    row and not alone, not beside another row's amount, and not when it is
+    a word of many rows.
 
 Usage: python3 -I evals/tools/source_scan_test.py
 """
@@ -415,6 +418,28 @@ class SourceScan(unittest.TestCase):
         hits, entries = source_scan.scan_transcript(cat, transcript)
         self.assertEqual((len(hits), entries), (2, 1))
         self.assertEqual(source_scan.scan_transcript(cat, os.path.join(self.tmp, "missing.jsonl")), (None, None))
+
+    def test_19_a_word_of_a_longer_cell_counts_beside_its_row(self):
+        self.sources()
+        self.write("planning/a.md", "Vantongeren asked about her fine.\n")
+        r = self.scan()
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertIn("matched and not counted: 1 — a word of a longer cell, with nothing else of its row in the file", r.stdout)
+        self.write("planning/a.md", "Vantongeren asked about her 3.45 fine.\n")
+        r = self.scan()
+        self.assertRegex(r.stdout, r"hit: planning/a\.md:1 col 1-11 — word, desk fees B4")
+        self.assertRegex(r.stdout, r"hit: planning/a\.md:1 col 29-32 — amount, desk fees D4")
+        self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 2, r.stdout)
+        self.write("planning/a.md", "Vantongeren owes 12.80 (another row's fee), and Brennecke's title is The Quennock Salt Road Atlas.\n")
+        r = self.scan()
+        self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 3, r.stdout)  # the title and Brennecke (row 2) and 12.80 (alone counts in a sparse sheet); not Vantongeren
+        self.assertNotRegex(r.stdout, r"hit: [^\n]*— word, desk fees B4")
+        with open(self.sheet, "a", encoding="utf-8") as f:
+            for i in range(400):
+                f.write(f"LC-3{i:05d},Card payment {i},Payment to desk,{(i % 90) + 1}.{(i * 7) % 100:02d},2026-11-01,TMD\n")
+        self.write("planning/a.md", "A payment of 1.00 at the desk.\n")
+        r = self.scan()
+        self.assertEqual(r.returncode, 0, r.stdout)  # `payment` is a word of hundreds of rows: no pairing with an amount
 
     def test_13_the_five_planning_skills_carry_the_rule_in_the_same_words(self):
         blocks = {}

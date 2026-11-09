@@ -62,12 +62,16 @@ needs from the P4 build, beyond the items' own notes below:
      ever typed into a command; `rewrite` is `git filter-branch` with
      the map as its filter and removes nothing but filter-branch's own
      backup refs.
-  Not built, and the owner's to ask for: a dictionary of ordinary words
-  as stop-words (the Mac's 235,000-word list would cut the 48 to about
-  4, but it is not on WSL and too large to ship; one derived from this
-  repository's own prose cut it to 19); matching a word taken out of a
-  longer cell (a surname from a full name), which without a dictionary
-  matches the language.
+  The owner confirmed the two rules on 2026-11-09 and asked for the
+  partial-cell gap closed (PR #46): a single word of a longer cell (a
+  surname from a full name, a brand from a card line) is matched, and
+  counted only when it is a word of 1% of the source's rows or fewer and
+  something else of its row is in the same file (a whole cell of as few
+  rows, or an amount of that row); on the scrubbed planning it adds five
+  cells to the 48. Not built, and the owner's to ask for: a dictionary of
+  ordinary words as stop-words (the Mac's 235,000-word list would cut
+  the 48 to about 4, but it is not on WSL and too large to ship; one
+  derived from this repository's own prose cut it to 19).
 - **How to list the workbook for slice 3.** The rule's row needs a
   commit under `Listed at` for the first rule above to apply: the skill
   writes `git rev-parse --short HEAD` when it lists a file nothing has

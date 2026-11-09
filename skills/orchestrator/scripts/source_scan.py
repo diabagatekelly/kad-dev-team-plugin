@@ -42,11 +42,15 @@ What is matched, from every tab of each source:
 - **Text cells**, as whole words whatever their length: a cell's words
   (runs of letters and digits, case folded) found in the same order with
   nothing but punctuation or space between them. `netflixFee`,
-  `NETFLIX_FEE` and `Netflix fee` all hold the word `netflix`. The cell is
-  the unit: a word taken out of a longer cell (a surname from a full
-  name, a brand from a card statement line) is found only when the source
-  also holds it as a cell of its own. Matching every word of every cell
-  would match the language: the gap is known and stated.
+  `NETFLIX_FEE` and `Netflix fee` all hold the word `netflix`. A single
+  **word of a longer cell** (a surname from a full name, a brand from a
+  card statement line; three letters or more, letters only, not a
+  stop-word) is matched too, and counted only when it is a word of 1% of
+  the source's rows or fewer (a name, not a descriptor like `payment`)
+  and something else of its own row is in the same file: a whole cell of
+  as few rows, or an amount of that row. A word alone is printed as not
+  counted. Matching every word of every cell on its own would match the
+  language.
 - **Numeric cells**, as amounts: in cents and in their formatted forms.
   12.5 is found as `12.50`, `12.5`, `12,50` and `1250`; 1234.5 also as
   `1,234.50` and `1.234,50`. A whole amount (15) is found only where it is
@@ -504,7 +508,9 @@ class Catalog:
         self.long_ints = {}    # whole number of 5+ digits -> ref
         self.allowed_words = set()
         self.allowed_cents = set()
-        self.rows = {}         # ("text", words joined) or ("amount", cents) -> {(source index, tab, row)}
+        self.rows = {}         # ("text", words joined), ("word", word) or ("amount", cents) -> {(source index, tab, row)}
+        self.partials = {}     # a word of a multi-word cell -> ref (the surname of a full name, the brand of a card line)
+        self.total_rows = 0
         self.owner = {}        # the same key -> index of the first source that holds it
         self.baseline = {}     # source index -> keys already in the tree when it was listed
         self.strict = False    # every match counts
@@ -527,6 +533,11 @@ class Catalog:
         if key not in self.rows:
             self.phrases.setdefault(w[0], []).append((w, ref))
         self._place(key, row)
+        if len(w) > 1:
+            for x in w:
+                if len(x) >= 3 and x.isalpha() and x not in STOPWORDS and (x,) not in self.allowed_words:
+                    self.partials.setdefault(x, ref)
+                    self._place(("word", x), row)
         return True
 
     def add_number(self, value, ref, row=None):
@@ -566,25 +577,45 @@ class Catalog:
             key = h["key"][:2]
             return key in self.baseline.get(self.owner.get(key), ())
 
+        def skip(reason):
+            skipped[reason] = skipped.get(reason, 0) + 1
+
+        few = max(3, self.total_rows // 100)  # a word of 1% of the rows or fewer: a name, not a descriptor
         for file_hits in by_file(hits).values():
-            rows_here = set()
-            for h in file_hits:
-                if h["kind"] != "amount":
-                    if listed_before(h):
-                        skipped["already in the tree when the source was listed"] = skipped.get("already in the tree when the source was listed", 0) + 1
-                    else:
-                        counted.append(h)
-                        rows_here |= self.rows.get(h["key"][:2], set())
-            for h in file_hits:
-                if h["kind"] != "amount":
-                    continue
-                key = h["key"][:2]
-                if listed_before(h):
-                    skipped["already in the tree when the source was listed"] = skipped.get("already in the tree when the source was listed", 0) + 1
-                elif not self.dense(key[1]) or self.rows.get(key, set()) & rows_here:
+            live = [h for h in file_hits if not (listed_before(h) and skip("already in the tree when the source was listed") is None)]
+            texts = [h for h in live if h["kind"] == "text"]
+            amounts = [h for h in live if h["kind"] == "amount"]
+            wordhits = [h for h in live if h["kind"] == "word"]
+            counted += texts
+            rows_here = set().union(*(self.rows.get(h["key"][:2], set()) for h in texts)) if texts else set()
+            # A word of a longer cell counts beside a whole cell of its row, or,
+            # when it is a word of few rows, beside an amount of its row.
+            # Only a word of few rows pairs, and only with a whole cell of few
+            # rows or an amount of its row: a label in hundreds of rows pairs
+            # with everything and says nothing.
+            named_rows = set().union(*(self.rows.get(h["key"][:2], set()) for h in texts
+                                       if len(self.rows.get(h["key"][:2], set())) <= few)) if texts else set()
+            word_rows, taken = set(), set()
+            for h in wordhits:
+                rows = self.rows.get(h["key"][:2], set())
+                paired = len(rows) <= few and bool(rows & named_rows)
+                if not paired and len(rows) <= few:
+                    for a in amounts:
+                        if self.rows.get(a["key"][:2], set()) & rows:
+                            paired = True
+                            taken.add(id(a))
+                if paired:
                     counted.append(h)
+                    word_rows |= rows
                 else:
-                    skipped["an amount alone, in a source too dense for one to mean anything"] = skipped.get("an amount alone, in a source too dense for one to mean anything", 0) + 1
+                    skip("a word of a longer cell, with nothing else of its row in the file")
+            rows_here |= word_rows
+            for a in amounts:
+                key = a["key"][:2]
+                if id(a) in taken or not self.dense(key[1]) or self.rows.get(key, set()) & rows_here:
+                    counted.append(a)
+                else:
+                    skip("an amount alone, in a source too dense for one to mean anything")
         counted.sort(key=lambda h: (h["file"], h["line"], h["col"]))
         return counted, skipped
 
@@ -599,7 +630,7 @@ class Catalog:
         wrapped over a line break, as prose is, never over a blank line."""
         found, seen = [], set()
         for toks in text_tokens(line):
-            for i, (start, _, word) in enumerate(toks):
+            for i, (start, end, word) in enumerate(toks):
                 for phrase, ref in self.phrases.get(word, ()):
                     n = len(phrase)
                     if i + n <= len(toks) and all(toks[i + k][2] == phrase[k] for k in range(1, n)) \
@@ -608,6 +639,12 @@ class Catalog:
                         if span not in seen:
                             seen.add(span)
                             found.append((span[0], span[1], "text", ref, ("text", " ".join(phrase))))
+                if word in self.partials and (start, end) not in seen:
+                    seen.add((start, end))
+                    found.append((start, end, "word", self.partials[word], ("word", word)))
+        # A word inside a matched whole cell is that cell's hit, not its own.
+        spans = [(a, b) for a, b, kind, _, _ in found if kind == "text"]
+        found = [f for f in found if f[2] != "word" or not any(a <= f[0] and f[1] <= b for a, b in spans)]
         for m in NUMBER.finditer(line):
             parsed = to_cents(m.group("num"))
             if parsed is None:
@@ -662,6 +699,7 @@ def load(planning, project=None, sources_file=None, strict=False):
         counts = {"tabs": len(tabs), "text": 0, "amounts": 0, "dates": 0, "column names": 0, "excluded": 0}
         for tab, cells in tabs.items():
             head = header_row(cells)
+            cat.total_rows += len({r for r, _, _, _ in cells if r != head})
             for row, col, kind, value in cells:
                 ref = f"{src['name']} {tab + '!' if tab else ''}{col_letter(col)}{row}"
                 if row == head:
@@ -1058,7 +1096,7 @@ def invent_amount(cents, taken):
 def build_map(cat, hits):
     """{"text": {words: replacement}, "amount": {cents: replacement cents}}
     for the values the hits name."""
-    text_keys = sorted({h["key"][1] for h in hits if h["key"][0] == "text"})
+    text_keys = sorted({h["key"][1] for h in hits if h["key"][0] in ("text", "word")})
     amount_keys = sorted({h["key"][1] for h in hits if h["key"][0] == "amount"})
     known = {w for entries in cat.phrases.values() for phrase, _ in entries for w in phrase}
     names = (n + s for s in SUFFIXES for n in NAMES)
@@ -1101,7 +1139,7 @@ def apply_text(cat, data, text):
     for start, end, kind, _, key in reversed(cat.find(text)):
         if end > last:
             continue  # overlaps the replacement to its right
-        if kind == "text":
+        if kind in ("text", "word"):
             new = shaped(data["text"][key[1]], text[start:end])
         else:
             new = amount_text(text[start:end], int(data["amount"][str(key[1])]), key[2])
