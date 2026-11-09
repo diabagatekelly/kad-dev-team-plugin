@@ -49,13 +49,12 @@ graders:
     # The branch was never pushed: nothing needs a force, and a bare --force
     # is never allowed.
     target: trace
-    pattern: 'git push(?:\\.|[^"\\])*?(?:--force|\s-f\b)'
+    pattern: '"name":"Bash","input":\{"command":"(?:\\.|[^"\\])*?git push(?:\\.|[^"\\])*?(?:--force|\s-f\b)'
     match: not_contains
-  - type: file_exists
-    name: branch-reached-the-remote
-    path: tools/pushed-history.txt
   - type: regex
     name: pushed-history-holds-the-slice
+    # Written by the remote's post-receive hook (empty until a push): every
+    # commit the remote holds, with its diff.
     target:
       source: file
       path: tools/pushed-history.txt

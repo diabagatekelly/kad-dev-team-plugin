@@ -456,6 +456,10 @@ EOF
 git log -p --all > ../../tools/pushed-history.txt 2>&1
 HOOK
         chmod +x .git/origin.git/hooks/post-receive
+        # Empty until a push and a `gh` call: a grader reading a missing
+        # file throws, which voids the run instead of failing the grader.
+        : > tools/pushed-history.txt
+        : > tools/gh-calls.log
       fi
       reviews=11 fixers=2 handoff "D done: D line written, records committed as $rec_sha; the fix round at D changed nothing the map lists (the notice's escaping only)" \
         "E: delivery" \

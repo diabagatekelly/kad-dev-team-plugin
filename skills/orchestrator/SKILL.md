@@ -786,9 +786,11 @@ is built. The dollar figure is not estimated during the run;
    document or in the code, and only the owner can say whether
    `Groceries` on a line is a row of their file or the app's own word.
    The gate's output names files, lines and cells, never a value, and is
-   safe in the log. For the question, run the scan once more with
-   `--show`, inline, its output never saved to a file and never quoted in
-   the log:
+   safe in the log. **The log never holds a value**, not as the sheet
+   has it and not as the document writes it: the log is committed, and
+   its entry for this reads `no-source-values: <n> places in <file>,
+   put to the owner`, nothing more. For the question, run the scan once
+   more with `--show`, inline, its output never saved to a file:
 
    ```
    python3 -I "${CLAUDE_SKILL_DIR}/scripts/source_scan.py" scan --planning '<target directory>' --show
@@ -1120,6 +1122,20 @@ orchestrator's side.
 one. **Nothing in this step runs in the background**: every command and
 every launch is waited for, and the step ends in the same turn that
 finishes its last action.
+
+**A value of the owner's in the branch's commits** (the owner says one
+got in, a reviewer's finding says so, or `delivery`'s scan before the
+push refuses on it) is removed by `delivery`'s "Removing a value from
+history" and by nothing else, at this step or at any other: invoke
+`release-engineer:delivery` with the owner's words for the rewrite
+quoted as they gave them, and it writes the map, rewrites the branch
+and scans every commit. You never open a file `sources.md` lists, never
+put a value or a pattern of values into a command, never run
+`filter-branch`, `sed` or a rebase over the commits yourself, never
+expire a reflog, and the log's line for it is delivery's record line
+(counts and files). Without the owner's words for a rewrite the flow
+stops at step 5 with delivery's refusal. Slice 2's orchestrator
+improvised this removal, and its own log bullet put the values back.
 
 1. **Records.** If D's fix rounds changed anything, `map-update` again and
    commit the map. Then commit the log and the records directory, with the

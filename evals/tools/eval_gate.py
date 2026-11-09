@@ -213,8 +213,11 @@ def keep_traces(case, out):
         # kept for this copy; drop it so --keep-temp doesn't fill the disk,
         # unless the run is wanted whole: freeze-history.sh reads the
         # session transcript under its config/ to chain the next phase.
+        # The CLI named it `claude-eval-XXXX` until 2.1.29x and `e-XXXX`
+        # since; with only the old name matched, every run's directory was
+        # left in the temp directory and `scaffoldDir` was never recorded.
         scaffold = os.path.dirname(os.path.dirname(src))
-        if os.path.basename(scaffold).startswith("claude-eval-"):
+        if os.path.basename(os.path.dirname(src)) == "out" and re.match(r"(claude-eval-|e-)\w+$", os.path.basename(scaffold)):
             # --keep-temp seals home/ and tmp/ at mode 000 and makes the
             # kept dir read-only; rmtree would leave them behind.
             for root, dirs, _ in os.walk(scaffold):

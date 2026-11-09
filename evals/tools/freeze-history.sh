@@ -82,7 +82,11 @@ if not kept or kept[-1]["type"] != "assistant":
 # The frozen run's sandbox working directory is absolute and will not exist
 # for the run that resumes it: a path into it would point outside the new
 # sandbox (a write there is refused). Make those paths relative.
-cwds = {e.get("cwd") for e in kept if e.get("cwd")}
+# Only absolute ones: the entries a resumed phase inherits from its own
+# history carry the "." an earlier freeze wrote, and replacing "./" in every
+# string turned the skill text's `/../` into `/.` (found re-freezing a skill
+# that names a script by `${CLAUDE_SKILL_DIR}/../`).
+cwds = {e.get("cwd") for e in kept if e.get("cwd") and os.path.isabs(e["cwd"])}
 def relativize(text):
     for cwd in cwds:
         text = text.replace(cwd + "/", "").replace(cwd, ".")

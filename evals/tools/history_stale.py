@@ -4,8 +4,9 @@ A `history.jsonl` holds every skill's SKILL.md as it was loaded in the
 frozen turn; a later phase keeps running that text until the earlier
 phase is re-run and re-frozen. For each `evals/*/history.jsonl` this
 prints the skills it loaded and whether each still matches
-`skills/<name>/SKILL.md` (frontmatter and the CLI's appended
-`ARGUMENTS:` line aside), with the number of differing lines when not.
+`skills/<name>/SKILL.md` (frontmatter, the CLI's appended `ARGUMENTS:`
+line and its substitution of `${CLAUDE_SKILL_DIR}` aside), with the number
+of differing lines when not.
 
 Usage: python3 -I evals/tools/history_stale.py [case ...]
 Exit 1 if any history is stale.
@@ -42,6 +43,11 @@ def texts(entry):
 def current(name):
     path = os.path.join(ROOT, "skills", name, "SKILL.md")
     text = open(path, encoding="utf-8").read().replace("\r\n", "\n")
+    # The CLI loads a skill with `${CLAUDE_SKILL_DIR}` already replaced by the
+    # skill's directory, which freeze-history.sh then writes as
+    # `<plugin-root>/skills/<name>`: compare with the same substitution, or
+    # every skill that names a script reads as stale the moment it is frozen.
+    text = text.replace("${CLAUDE_SKILL_DIR}", f"<plugin-root>/skills/{name}")
     return re.sub(r"^---[\s\S]*?---\s*\n", "", text).strip()
 
 
