@@ -383,7 +383,21 @@ rather than accumulating here.
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
 lives in `evals/example/`, which is tracked.)
 
-### Current: implementation flow v4 merged (PR 1 to PR 3, the launcher, the no-screen slice rule); slice 2 on 0.8.1 next
+### Current (2026-11-09): 0.14.1 merged; P4 next
+
+The work list is `.synthesis/handoff-slice2.md`; its first section,
+"Where the list stands", is the state. P1 (the launcher as the one way
+in, 0.14.0, PR #41) and P2 with P3 (the criteria walk in a real browser,
+the data rule, the chunk runner, the open-work routing, the triaged
+deferrals, the counted shell edits, the light cadence text; 0.14.1, PR
+#42) are merged. Next: P4 (planning data: nothing of the owner's by
+value), then P5 (audit: transcripts by session id, the cold read and the
+mutation pass as tools), then slice 2's fix round on
+`personal-finance-tracker-3` and slice 3 under `kad` with Chrome, the
+`light` cadence and the chunk runner. The section below is the history
+up to slice 2.
+
+### Earlier: implementation flow v4 merged (PR 1 to PR 3, the launcher, the no-screen slice rule); slice 2 on 0.8.1 next
 
 The audit of the second real run (`audit-docs`,
 `personal-finance-tracker-2-slice-1/plugin-review/2026-10-25-*`) produced

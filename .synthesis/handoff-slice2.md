@@ -6,9 +6,81 @@ only what an item points at. It replaces what was left of
 carried here with their numbers). `TODO.md` points here under "After
 slice 2".
 
+## Where the list stands (2026-11-09)
+
+| Section | State |
+|---|---|
+| P1 Start | **Merged** as kad 0.14.0, PR #41 (2026-11-08) |
+| P2 Screen checks and P3 The loop | **Merged** as kad 0.14.1, PR #42 (2026-11-09, merge `4fc83e4`), one PR as decided |
+| P4 Planning data | **Next.** One PR, branch `p4-planning-data`, kad 0.14.2 |
+| P5 Audit and measurement | After P4. One PR, branch `p5-audit`, kad 0.14.3 |
+| Slice 2's fix round, then slice 3 | After P5, on `personal-finance-tracker-3` (see "After this list") |
+
+`main` is at 0.14.1. What a session starting P4 needs from the P2+P3
+build, beyond the items' own notes below:
+
+- **New pieces P4 and P5 touch.** `skills/chunk-runner/SKILL.md` and
+  `agents/chunk-runner/AGENT.md` carry the old C.1 to C.4 (the gate
+  command lives there now, so P4.2's gate-side check is called from the
+  runner's step 2 as well as from D); `readiness_check.py` has nine
+  checks (`open-items-triaged` is the one 0.14.1 added: the script's
+  docstring numbers it 9, and it runs and prints eighth, before
+  `unusable-reply-row`; P4.2's source scan would be the tenth and is the
+  moment to put the docstring's numbers in the printed order; the
+  orchestrator's A.4 text and the README count the checks);
+  `validation_gate.py` has the `transcript` replay (`--agent`), which is
+  where a P4.2 scan of what an agent wrote would sit beside the scope
+  check; `cost_by_role.py` has the `runner` and `walk` classes (P5);
+  `delivery` posts everything with the footer line `— kad-dev-team` and
+  filters by it (P4.3's record and replies carry it too).
+- **The gate, as it ran for PR #42.** 98 cases were reached; a full pass
+  takes about 25 minutes of wall clock when the account's usage window
+  allows it, and two rounds were cut by the 5-hour limit: every run then
+  errors with "You've hit your 5-hour limit", and **a case that errors
+  loses its evidence entry**. Check the window before a large gate, and
+  resume with `bash evals/tools/gate.sh --base main --stale`, which runs
+  only the affected cases whose evidence is missing, stale (something
+  the case loads changed since its run), below its bar, or without a bar
+  at all. New cases: run them with `bash evals/tools/gate.sh --base main
+  --runs 3 --cases <cases>`, record the bar with `python3 -I
+  evals/tools/record_thresholds.py --gate-only <cases>` from the
+  repository root, then `--stale` once more (the bar's `skills_invoked`
+  widens the fingerprint). A renamed case's old entry
+  stays in `evidence.json` until removed by hand.
+- **Grader lessons** from those rounds are in `evals/README.md` under
+  "Known coverage gaps" (a nested agent's launches do appear in the main
+  trace; `tool_order` fails when its "after" tool is never called; a
+  trace regex on a script's name matches the loaded skill's own text; a
+  commit-message regex must cross the escaped quote; a one-line reply is
+  graded by regex, not by a judge on `last_message`).
+- **Two defects the gate found in the new text, fixed before merge:**
+  the runner ended its round on a sandbox FAIL the owner had opted out of
+  at A (it applies the orchestrator's rule now), and the open-work step
+  stopped every routing where `gh` could not reach GitHub (it asks only
+  when `origin` is on `github.com`, decided from the remote, never from a
+  planning read; a failed `gh` on a GitHub remote still stops).
+- **Sourcery skipped PR #42**: its diff was over Sourcery's review limit
+  of 300,000 characters (the bot said so in a comment), so no triage
+  round ran. The rule stands for the next PR: §2's first bullet (its
+  comments are triaged: fix, decline with the reason on the thread,
+  defer). A PR that large gets no external review at all, which is one
+  more reason to keep P4 and P5 as separate PRs.
+- **Known and left:** `evals/orchestrator-log-format/check.sh` prints one
+  order error on entry 9 of the committed fixture ("skips
+  vertical-slicing": the checker's reading of entry 4's route to
+  `product-slicer` (`vertical-slicing` + `acceptance-criteria`)). It is
+  printed as KNOWN and counted apart; fixing the checker's reading of a
+  persona-plus-skills route is a small item for P5's PR.
+- **Checked at slice 3, not before:** P1.2 and P1.4 (zero questions at
+  A, a browser that answers), P2.1 to P2.4 (the walk's table from a real
+  browser, smoke screenshots, no agent reading the owner's data, mockup
+  screenshots), P3.1 (the main thread under 150k tokens per call at chunk
+  8), P3.2 (the `light` arm: say "light" in the message that starts the
+  slice), P3.5 (the counted shell edits on real C lines).
+
 ## 0. Where things are
 
-- **This repository** (`kad-dev-team-plugin`, github.com/diabagatekelly/kad-dev-team-plugin): the plugin. Version `0.13.1` in `.claude-plugin/plugin.json`; each PR below bumps it (0.14.0 for the first, then 0.14.1, 0.14.2 and so on). Skills under `skills/<name>/SKILL.md`; the orchestrator's scripts under `skills/orchestrator/scripts/` (`validation_gate.py`, `rounds_record.py`, `readiness_check.py`, `done_check.py`, `sandbox_check.py`, `audit_sync.py`); the launcher `bin/kad`; the audit hook `hooks/audit.sh`; the eval suite under `evals/` (`evals/README.md` is the playbook; `evals/tools/gate.sh` runs the gate; `evals/tools/cost_by_role.py`, `audit_report.py`, `orchestrator_log_check.py` are the audit tools). The design the loop implements is `.synthesis/implementation-flow-v4.md` (D1 to D14; D9 phase 2 is item P3.1 here); the review-cadence reading is `.synthesis/review-cadence-survey.md`.
+- **This repository** (`kad-dev-team-plugin`, github.com/diabagatekelly/kad-dev-team-plugin): the plugin. Version `0.14.1` in `.claude-plugin/plugin.json` on `main` (0.13.1 when this list was written); each PR below bumps it (P1 was 0.14.0, P2+P3 0.14.1; P4 is 0.14.2, P5 0.14.3). Skills under `skills/<name>/SKILL.md`; the orchestrator's scripts under `skills/orchestrator/scripts/` (`validation_gate.py`, `rounds_record.py`, `readiness_check.py`, `done_check.py`, `sandbox_check.py`, `audit_sync.py`, and since 0.14.1 `scratch_run.py`); the launcher `bin/kad`; the audit hook `hooks/audit.sh`; the eval suite under `evals/` (`evals/README.md` is the playbook; `evals/tools/gate.sh` runs the gate; `evals/tools/cost_by_role.py`, `audit_report.py`, `orchestrator_log_check.py` are the audit tools). The design the loop implements is `.synthesis/implementation-flow-v4.md` (D1 to D14; D9 phase 2 is item P3.1 here); the review-cadence reading is `.synthesis/review-cadence-survey.md`.
 - **The project the plugin is measured on**: `personal-finance-tracker-3` (github.com/diabagatekelly/personal-finance-tracker-3, local `~/Documents/portfolio/personal-finance-tracker-3`). Slice 1 merged as PR #2; slice 2 is open as PR #20 on branch `slice-002-give-any-transaction-one-of-my-categories` at `77f4477`, with eleven slice 2 findings and seven open slice 1 issues posted as comments on 2026-11-08. Those are addressed with the updated plugin, after this list, as slice 2's fix round; then slice 3 of the unit (seed the rules from the owner's sheet) is the next real run.
 - **The audit material**: github.com/diabagatekelly/audit-docs (local `~/Documents/portfolio/audit-docs`; the plugin's own clone for syncing is `~/.claude/kad-audit/repo`). Slice 2's review is `personal-finance-tracker-3-slice-2/plugin-review/2026-11-08-slice-2-review.md`, with six companion files beside it (the cold code read, the H5.1 transcript audit, the mutation pass, the test measures and their script, the cost table, the log check). Slice 1's is `personal-finance-tracker-3-slice-1/plugin-review/2026-11-01-slice-1-review.md`. The audit directory on the Mac is `~/.claude/kad-audit/` (session logs, kept transcripts, `last-review`).
 - **Owner**: Kelly Diabagate, works from a Mac (this list was written there) and from Windows through WSL2; the plugin must stay system-agnostic.
@@ -50,7 +122,7 @@ This list's aim, in one sentence: make the flow catch what the cold reads catch 
 - H6's fourth question (review cadence): one measured arm on slice 3 that also changes who fixes (P3.2).
 - Screen checks: the acceptance criteria walked in a real browser by an agent, every UI slice, screen-reader announcements the only manual item (P2).
 - TODO 4.3 (run 2 leftovers in `personal-finance-tracker-2`): won't do.
-- Order of the PRs: P1; then P2 and P3 as one PR; then P4; then P5.
+- Order of the PRs: P1; then P2 and P3 as one PR; then P4; then P5. (2026-11-09: P1 and P2+P3 are merged; P4 is next.)
 
 ## P1. Start: one word, no questions, Chrome on
 
@@ -70,7 +142,7 @@ Files: `bin/kad`, `skills/orchestrator/SKILL.md` (step 0 and A.1, A.2, the budge
 
 ## P2. Screen checks: the acceptance criteria walked in a real browser
 
-**Done 2026-11-08 as kad 0.14.1, branch `p2-p3-loop`, one PR with P3** (the "Done when" lines that name slice 3 are checked at slice 3).
+**Done 2026-11-08 as kad 0.14.1, branch `p2-p3-loop`, one PR with P3, merged as PR #42 on 2026-11-09** (the "Done when" lines that name slice 3 are checked at slice 3).
 
 **Why.** The owner's words: "Screen checks should happen for sure. In fact if the AC is a checklist, an agent should open the browser and check all AC points pass manual testing (maybe excluding screen reader)." Slice 2: eight smoke runs in happy-dom said the UI chunks worked; the owner's own real-browser review the next day found confirmations and failures drawn 2,000 px above the viewport (a failed save looked like a dropdown quietly reverting), three decisions, two fixes and a review round. Run 3: the same, with the Plaid connect only ever done by hand. Two smoke agents in slice 2 started the app on the owner's real ledger and Keychain (nothing changed; checksums compared), because the smoke-run text has no data rule. The owner's browser review (`personal-finance-tracker-3/planning/implementation/slice002-browser-review.md`, its "Isolation" section) is the template for doing it safely.
 
@@ -83,7 +155,7 @@ Files: `skills/accessibility-review/SKILL.md` (the smoke run and slice review mo
 
 ## P3. The loop
 
-**Done 2026-11-08 as kad 0.14.1 with P2** (P3.2's arm and the slice-3 "Done when" lines are measured at slice 3).
+**Done 2026-11-08 as kad 0.14.1 with P2, merged as PR #42 on 2026-11-09** (P3.2's arm and the slice-3 "Done when" lines are measured at slice 3).
 
 Files: `skills/orchestrator/SKILL.md` (the state table and step 1's inspection for P3.10; B, C, D, the log format, the chunk-loop entry), a new `agents/chunk-runner.md` or an orchestrator-side section, `skills/tdd-implementation-lite/SKILL.md`, `skills/vertical-slicing/SKILL.md` and `readiness_check.py` (P3.3), `validation_gate.py` (P3.5, P3.6), `evals/tools/cost_by_role.py` (P3.7), `evals/tools/orchestrator_log_check.py` (P3.4), `skills/map-update/` and `skills/test-quality-review/SKILL.md` (P3.8); eval: the loop cases (`orchestrator-chunk-review-round`, `orchestrator-one-fix-round`, `orchestrator-gate-deviation`, `orchestrator-readiness-gate`) re-frozen; a new case for P3.3; `tdd-implementation-lite-rename-fix` extended for the commit rule.
 
@@ -117,6 +189,9 @@ Files: `skills/orchestrator/scripts/audit_sync.py`, `evals/tools/audit_report.py
 - [ ] P5.2 **The review's two probes become tools.** The cold read with execution probes and the mutation pass (the briefs are in the slice 2 review's companion files and in the agents' prompts of 2026-11-08) become `evals/tools/cold_read.md` (the brief, launched as an Opus agent against a clone) and `evals/tools/mutation_pass.py` (the scripted exact-string mutants and the runner), so the next review and P3.2's D review run them the same way. Done when: `audit-review`'s SKILL.md names them and the slice 3 review uses them.
 
 ## After this list
+
+Both runs start with `kad` from the project's root (0.14.1 or later
+installed), never plain `claude`.
 
 1. Slice 2's fix round on `personal-finance-tracker-3` under the updated plugin: `/kad-dev-team:orchestrator` finds PR #20 open with the eleven slice 2 findings and the seven slice 1 issues as comments (P3.10) and routes to the triage and the fix round itself; #14 is the High it asks about; the "changing a merchant's general rule" question goes to `product-manager:requirements-refinement` before anything else in that unit.
 2. Slice 3 of the unit (seed the starting rules from the owner's sheet; `planning/slice-002.md`'s slice set) under `kad` with Chrome, the `light` cadence arm and the chunk runner, audited the same way plus the new tools; the review decides P3.2's keep list and the default cadence.
