@@ -750,14 +750,16 @@ is built. The dollar figure is not estimated during the run;
    python3 -I "${CLAUDE_SKILL_DIR}/scripts/readiness_check.py" --planning '<target directory>' --slice <nnn>
    ```
 
-   Nine mechanical checks over the planning documents: every criterion
+   Ten mechanical checks over the planning documents: every criterion
    quoted under a design component; every failure path homed; a number on
    every retry, wait, poll and give-up; security and reliability agreeing
    on shared failure paths; a mockup for every named state; no open
    question routed to the implementer; a "Kept for later slices" line;
    every open or deferred item in the slice file triaged (`usable without
    it`, with how, or a blocker); a failure-mode row for an external
-   provider's unusable reply. Its last line is `readiness: PASS` or
+   provider's unusable reply; no value of a file the owner provided
+   (`sources.md` in the target directory lists them by location) in the
+   planning directory or anywhere in the code. Its last line is `readiness: PASS` or
    `FAIL`, with a `route:` line per failed check naming the persona. On
    FAIL, each failed check is a backward route (step 3's rule): write its
    own log entry naming the check and the document, run the named skill
@@ -777,6 +779,40 @@ is built. The dollar figure is not estimated during the run;
    2 deferred "changing a merchant's general rule" to requirements, six
    reviewers accepted the deferral, and a cold read found the first pick
    permanent and a misclick without undo.
+
+   **A source value** (`route: no-source-values -> the owner (source
+   values)`) is the other readiness failure that goes to the owner
+   first: the check found a text or an amount of a listed source in a
+   document or in the code, and only the owner can say whether
+   `Groceries` on a line is a row of their file or the app's own word.
+   The gate's output names files, lines and cells, never a value, and is
+   safe in the log. For the question, run the scan once more with
+   `--show`, inline, its output never saved to a file and never quoted in
+   the log:
+
+   ```
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/source_scan.py" scan --planning '<target directory>' --show
+   ```
+
+   Its `value:` lines give each distinct value as the documents write
+   it, with its places. Put them to the owner in **one**
+   `AskUserQuestion`, the list in the question, three answers: **none of
+   these is from my file** (add each under `## Allowed by the owner` in
+   `sources.md`, as the document writes it, with the owner's words and
+   the date; these lines are the one edit of a planning document that is
+   yours, and they are the owner's sentence, not your judgment), **these
+   are** (the owner names which: each document that holds one is a
+   backward route to its owner, told the file and the lines and to
+   rewrite them with invented values, step 3's rule; a value in code from
+   an earlier slice is the owner's next decision, a fix or `delivery`'s
+   "Removing a value from history"; everything the owner did not name is
+   allowed as above), or **stop**. Then the gate again. A listed source
+   the scan could not read (`not readable`) stops the flow for the owner
+   in one line naming the row: the file put back at its location, or the
+   row corrected; the scan is never skipped. You never open a listed
+   source yourself, with any tool: slice 2's orchestrator dumped every
+   tab of the owner's workbook into the scratchpad, and the whole sheet
+   is in that session's transcript.
 
    **The log after the routes.** The backward routes are entries of
    their own, so once the gate passes after one or more of them, write a
@@ -869,7 +905,12 @@ orchestrator's side.
      telling it to resume at the fix round (its resume rule).
    - `gate FAIL: <checks>; ended`, `stall: ended` or a standing Critical
      or High: the flow ends there, the C line says why, step 5 says what
-     is built; the branch stays as it is.
+     is built; the branch stays as it is. `gate FAIL: sources; ended` (a
+     changed file still holds a value of a file the owner provided after
+     the runner's one fixer) ends it the same way, and step 5 carries
+     A.4's source question over the chunk's files (the scan with
+     `--show`, the same three answers): the owner's answer resumes the
+     chunk.
    - `flaky: <test>`: information on the C line; the runner already
      handled it (one re-run, then one fixer at the cause on the second
      sighting, counted as the gate fixer).

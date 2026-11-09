@@ -201,6 +201,32 @@ Returning `error.message` (or the error itself) from a catch-all is the
 usual case, and it leaks even when every *expected* error in that path has
 a deliberately friendly message.
 
+## A value of the owner's in the repository
+
+A row of a file the owner provided (a sheet or an export the planning
+directory's `sources.md` lists by location) that turns up in a test, a
+fixture, a planning document or a commit message is a finding, and it is
+found with the scan, never by opening the source or grepping for a value
+(either puts the value into your transcript and your command line):
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py" scan --planning '<the planning directory>' --history '<the range under review>'
+```
+
+and the same without `--history` for the tree. The finding names the
+file, the line and the cell the scan printed and **never quotes the
+value or describes it closely enough to identify it**: your report is
+committed with the records, and slice 2's removal had to be done twice
+because its own record named what it had removed. Severity is by what
+the value is: High for a credential, an account or card number, Medium
+for a name or an amount. The **Suggested fix** names the procedure, not
+a `sed`: replace it in the tree with an invented value, and for the
+commits that already hold it, `release-engineer:delivery`'s "Removing a
+value from history" (the owner's words, a replacement map outside the
+repository, every commit scanned before the push, a lease on any
+force-push). With no `sources.md`, a real-looking value in a fixture is
+the Medium the severity list already names.
+
 ## Before you report a Critical or High
 
 Go back and verify the specific claim. Confirm the input really is

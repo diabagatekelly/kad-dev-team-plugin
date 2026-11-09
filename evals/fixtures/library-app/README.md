@@ -28,6 +28,7 @@ app/
   types/          ambient declarations for the fictional third-party packages
 docs-plants/      case-only overlays for docs-writer cases (D, DT)
 code-plants/      case-only overlays for the code personas: tdd/ (an in-place test runner and an approved design), test-quality/ (Q, QT), code-review/ (C, CT), map/ (generated architecture maps), reliability-review/ (portal-pay/: R14, R15, RT10, RT11, a PR whose defect only shows across files; refund/: R16, RT12, RT13, a remote resource created, then a timeout, then a retry)
+source-plants/    case-only overlays for the planning-data rule (PD): an invented "sheet" the owner provides, its `sources.md` listing, and the places a row of it has been written down by value
 answer-key.md     every V (planted violation) and T (trap), with the principle each exercises
 verify.sh         type-checks, proves the runtime cycle crashes and the type-only one doesn't, runs test/
 scaffold.sh       copies app/ into an eval run's working directory; each case has a stub that execs it

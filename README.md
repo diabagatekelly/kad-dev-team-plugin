@@ -54,9 +54,16 @@ skills/
                        # secrets unreadable, no direct network, writes only where the approved set allows
                        # (the launcher's own folders named); a FAIL under the launcher stops the flow with
                        # no question, since the cause is outside the session (see below)
-  orchestrator/scripts/readiness_check.py  # the design-readiness gate before the first builder: nine
+  orchestrator/scripts/readiness_check.py  # the design-readiness gate before the first builder: ten
                        # mechanical checks over the planning documents, each failure routed to the
-                       # persona that owns the document (a slice's blocking open item to the owner)
+                       # persona that owns the document (a slice's blocking open item, and a value of a
+                       # file the owner provided, to the owner)
+  orchestrator/scripts/source_scan.py      # the planning-data rule's mechanical half: reads each file the
+                       # owner provided (listed by location in the target directory's sources.md) where it
+                       # is and finds its text and numeric cells in the planning documents, the code or
+                       # every commit of a branch, printing files, lines and cells and never a value;
+                       # `describe` gives a planning stage a file's shape without a cell; `map`, `rewrite`
+                       # and `scan --map` are delivery's removal of a value from history
   orchestrator/scripts/scratch_run.py      # the data rule: every agent that starts the app starts it through
                        # this, HOME and every data path inside a scratch folder outside the project,
                        # a path that resolves outside refused; --hash digests the owner's real data
@@ -467,7 +474,9 @@ line is `sandbox check: PASS` or `FAIL`; the exit code is 0, 1 for a
 failing check, 2 when the platform has no sandbox. Under the launcher a
 `FAIL` is reported and the flow stops with no question: the cause is
 outside the session. `python3 -I evals/tools/sandbox_check_test.py`
-covers the write check against the launcher's folders.
+covers the write check against the launcher's folders, and `python3 -I
+evals/tools/source_scan_test.py` the source scan, its two gates and the
+planning rule's wording in the five skills that carry it.
 
 The runtime (`npm install -g @anthropic-ai/sandbox-runtime`) wraps the
 whole Claude Code process in the platform's boundary, Seatbelt on macOS

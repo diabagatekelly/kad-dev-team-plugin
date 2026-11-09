@@ -899,6 +899,15 @@
     "claude_version": "2.1.316",
     "recorded": "2026-10-31T16:59:17Z"
   },
+  "requirements-refinement-owner-sheet": {
+    "inputs": "6cbaf7155d748e62dc8824140793b8dadaeb670f798dc410da03427137f46238",
+    "score": 1.0,
+    "bar": null,
+    "runs": 3,
+    "source": "results/gate-20261109T123803-requirements-refinement-owner-sheet.json",
+    "claude_version": "2.1.319",
+    "recorded": "2026-11-09T12:39:41Z"
+  },
   "requirements-refinement-payfine-phase1": {
     "inputs": "6c3ebb347549d8031130dceeac4ed94001538c145206beef40776436b62739d1",
     "score": 0.933,
@@ -1321,6 +1330,15 @@
     "source": "results/gate-20261109T015233-vertical-slicing-no-screen.json",
     "claude_version": "2.1.319",
     "recorded": "2026-11-09T02:16:41Z"
+  },
+  "vertical-slicing-owner-sheet": {
+    "inputs": "cfc1eeb854ab5f676f93ea7ed982d6ebb30b3c568e3a0a90a7d01b5b248a8e19",
+    "score": 1.0,
+    "bar": null,
+    "runs": 3,
+    "source": "results/gate-20261109T123803-vertical-slicing-owner-sheet.json",
+    "claude_version": "2.1.319",
+    "recorded": "2026-11-09T12:39:41Z"
   },
   "vertical-slicing-payfine-phase1": {
     "inputs": "450aad03e625c3e4332226204f5d76813641758d2a7a35e8d6da8c6b65e517b5",

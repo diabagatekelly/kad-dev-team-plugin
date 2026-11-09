@@ -166,7 +166,10 @@ and failure path homed in the design, a number on every wait, security
 and reliability agreeing, a mockup per named state, no question routed to
 the implementer, a "Kept for later slices" line, every open or deferred
 item of the slice triaged as usable-without-it or a blocker that goes to
-the owner, an unusable-reply row) routes each failure back to the owning
+the owner, an unusable-reply row, and since 0.14.2 no value of a file the
+owner provided anywhere in the documents or the code, which
+`source_scan.py` finds from the `sources.md` listing and which goes to
+the owner first) routes each failure back to the owning
 persona before any builder is launched, and a new chunk-loop entry
 carries the A line after the last route. One implementer (`model: sonnet`, since a plugin agent's own
 `model:` line is not applied in practice) writes the chunk plan into the

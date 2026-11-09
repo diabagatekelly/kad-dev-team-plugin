@@ -93,7 +93,7 @@ quotes (`'\''` for a quote inside one).
 2. **Gate**, inline with Bash, on the chunk's commit range:
 
    ```
-   python3 -I '<scripts>/validation_gate.py' --project '<project root>' --base '<base>' --test-cmd '<the documented test command>' --allow '<each path from the chunk'\''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory>' --deviation-zone '<each composition root and entry point>' --expect-tests-from '<implementation report path>' --chunk <k> --protect '<every other document in the target directory>' --agent '<builder agent id>' [--coverage]
+   python3 -I '<scripts>/validation_gate.py' --project '<project root>' --base '<base>' --test-cmd '<the documented test command>' --allow '<each path from the chunk'\''s Files line>' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory>' --deviation-zone '<each composition root and entry point>' --expect-tests-from '<implementation report path>' --chunk <k> --protect '<every other document in the target directory>' --planning '<target directory>' --agent '<builder agent id>' [--coverage]
    ```
 
    The log is allowed because it is the orchestrator's own file,
@@ -117,9 +117,13 @@ quotes (`'\''` for a quote inside one).
    `transcript` lines (`--agent`) are the counted shell edits and the
    commit rule: `committed on a red run: <sha>` when the builder's commit
    shared a command with its test run and the run showed a failure; put
-   `red commit <sha>` on the hand-back line when it says so. Save the
-   output as `gate-chunk-<k>-r0.txt` in the records directory. Read its
-   last line; read the rest only on `FAIL`.
+   `red commit <sha>` on the hand-back line when it says so. Its
+   `sources` check (`--planning`; a `SKIP` line when the target directory
+   lists no file of the owner's in a `sources.md`) fails when a changed
+   file holds a value of a listed source: the `hit:` lines name the file,
+   the line and the cell, never the value, so the output is safe in the
+   records. Save the output as `gate-chunk-<k>-r0.txt` in the records
+   directory. Read its last line; read the rest only on `FAIL`.
 
    **The flaky rule.** A `FAIL` whose only failing test passed on the same
    range in an earlier gate file of this chunk (compare the suite's
@@ -139,6 +143,19 @@ quotes (`'\''` for a quote inside one).
    ends the round: `gate FAIL: <checks>; ended` on the hand-back line, the
    branch as it is. Don't widen `--allow`, don't drop a `--protect`, don't
    fix it yourself.
+
+   **A `sources` failure** goes to that one fixer with one line added to
+   its task: the lines the gate names hold values of a file the owner
+   provided; replace each one that is an example (a name, an amount, a
+   row of made-up data that is not made up) with an invented value, the
+   same one everywhere it recurs, and leave an ordinary word of the code
+   where it is, naming it in the Fix line. What still fails after the fix
+   ends the round as `gate FAIL: sources; ended`: only the owner can say
+   whether what is left is theirs, and the orchestrator asks. A `sources`
+   failure that names a source the scan could not read (`not readable`)
+   goes to no fixer: `gate FAIL: sources (not readable); ended`. You
+   never open a listed source, never run the scan with `--show`, and
+   never copy a value into the hand-back.
 3. **Review and smoke: two launches, never more** (under `light`, the
    smoke agent alone). Sandbox check. Then, in parallel, `model: "opus"`,
    each handed nothing of the flow's own state (no finding from the

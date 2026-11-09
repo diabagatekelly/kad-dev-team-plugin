@@ -264,6 +264,66 @@ the mockup concrete enough that someone could build from it directly, but
 keep it a design artifact, not the final styled component wired into the
 real codebase — implementing it is a later step, `tdd-coach`'s.
 
+## A file the owner provides
+
+**A file the owner provides is described, never quoted.** A sheet, an
+export or a screenshot the owner points at stays where it is, outside the
+repository, and nothing in it is written down by value: not in this
+document, not in a question, not in a reply. In this order:
+
+1. **List it before anything opens it**, as a row of `sources.md` in the
+   target directory (create the file in this shape when it is not there).
+   `Listed at` is `git rev-parse --short HEAD` at that moment: what was
+   in the tree at that commit cannot have come from a file nobody had
+   read, and the scan does not count it. Write a dash instead when there
+   is no commit or no shell, and whenever the file was read, or a value
+   of it may already be written down, before this row existed: with a
+   dash everything counts.
+
+   ```markdown
+   # Sources
+
+   Files the owner provided. Locations only: no value from any of them
+   is written here or anywhere else in the repository.
+
+   | Source | Location | Tab or range | Read on | Listed at |
+   |---|---|---|---|---|
+   | <what it is> | `<its path, outside the repository>` | <the tab or range the owner named> | <date> | `<commit>` |
+
+   ## Allowed by the owner
+
+   Values a source also holds that the owner has said may be written,
+   in their words, dated. Nobody else adds a line.
+   ```
+2. **Read its shape, not its rows**, and only the tab or range the owner
+   named: `python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py"
+   describe '<path>' --tab '<tab>'` prints the column names, the row count
+   and what kind of cell each column holds, and never a cell (add
+   `--extract '<a scratch file outside every repository>'` when rows have
+   to be counted by a script: the session never prints that file). With
+   no shell: the first line alone for the column names (`Read` with
+   `limit: 1`) and a count-only search for the rows. Never `cat`, `head`,
+   `Read` in full or load the file with a library to look inside:
+   whatever a command prints stays in the session's transcript for good,
+   and slice 2's transcript holds a whole workbook because one command
+   dumped every tab. A file `describe` cannot read (a screenshot, a PDF)
+   is listed the same way and looked at for its layout alone.
+3. **Invent every example** (the names, the amounts, the dates) and say
+   so once in the document ("examples are invented; none is a row of the
+   sheet"), however much better a real row would make the point. Slice
+   2's requirements took one real merchant and its fee as an example; the
+   slice, the design, the story, the plan's test names and thirteen test
+   files carried it.
+4. **Check what you build on before you repeat it.** When `sources.md`
+   lists a source, `python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py"
+   scan --planning '<target directory>'` prints the file, line and cell of
+   every value of a listed source it finds, never the value. A hit in
+   your own document is rewritten with an invented value; a hit in a
+   document that is not yours is reported as a backward route to its
+   owner, not edited; a hit that is the app's own word and no row of the
+   file is the owner's to allow, never yours. The readiness gate and the
+   chunk gate run the same scan.
+
 ## Output format
 
 ```markdown

@@ -1,7 +1,7 @@
 """Mechanical checks on an implementation change, before any reviewer reads it.
 
 Run inside a project after a chunk (or a fix) has been committed. It
-answers seven questions that need no judgment, and prints a JSON verdict so
+answers eight questions that need no judgment, and prints a JSON verdict so
 the orchestrator's chunk loop can send a failing chunk back to a fixer
 without spending reviewers on it (the skill's "The chunk loop" section says
 when it runs and with which arguments: `--base` is the commit before the
@@ -82,7 +82,23 @@ module directories as the orchestrator's B step lists them):
    (a builder that titled its test `seam "cancels…"` and a plan that
    wrote `seam "cancels…"` name the same test). Slice 2 failed this check
    three times on exactly those three shapes.
-7. transcript (report-only, with `--agent-transcript <path>` or `--agent
+7. sources: when the planning directory (`--planning <target directory>`;
+   without the flag, `planning/` under the project) has a `sources.md`,
+   the files the owner provided by location, no changed file holds a
+   value of one of them. `source_scan.py` beside this script reads each
+   source where it is and looks for its text and numeric cells in the
+   files this change touched; its docstring says what is matched, what is
+   not, and what is matched and not counted. The `FAIL` line names the
+   files, `hit:` lines the line, column span and cell of each place, and
+   `INFO  sources:` lines what was read and not counted: never a value,
+   since this output is saved in the records directory and committed. A
+   listed source that cannot be read fails too (`not readable`): a scan
+   that could not run is not a pass, and no fixer can mend it. No
+   `sources.md`: a `SKIP` line. Slice 2's builders inherited a real
+   merchant and its fee from the plan and wrote them into thirteen test
+   files; the security reviewer found them at D, two and a half hours
+   after the first commit.
+8. transcript (report-only, with `--agent-transcript <path>` or `--agent
    <id>`): the builder's or fixer's own transcript, replayed. Counts the
    **shell edits**: every Bash command that wrote a file inside the tree
    (`>` and `>>` redirections, `tee`, `sed -i`, `perl -i`, `cp`, `mv`,
@@ -104,7 +120,12 @@ module directories as the orchestrator's B step lists them):
    run: <sha> (fail <n>)`. Slice 2's chunk 2 builder reported 1 shell
    edit and made 9; its chunk 4 builder committed on a red run through a
    grep chain and reported green. Neither fails the gate (the suite check
-   judges the tree as it is); both reach the C line.
+   judges the tree as it is); both reach the C line. When `sources.md`
+   lists a source, one more line: `source values <n> in <m> entries` of
+   the agent's transcript (an agent that opened the owner's file has its
+   cells in its tool results, whatever it then wrote); a transcript that
+   holds one is a copy the owner decides about, and the audit sync
+   withholds it.
 
 After the checks, two report-only `INFO` lines (never part of the
 verdict; also under `metrics` in the JSON), computed over the changed
@@ -166,7 +187,7 @@ Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/validation_gate.py [--project DIR]
            [--module-dir src/lending ...] [--protect docs/x/design.md ...]
            [--test-cmd "npm test"] [--typecheck-cmd CMD] [--lint-cmd CMD] [--timeout 600]
            [--coverage] [--min-line 90] [--min-branch 80] [--json out.json]
-           [--agent-transcript PATH | --agent ID [--projects-dir DIR] [--session ID]]
+           [--planning DIR] [--agent-transcript PATH | --agent ID [--projects-dir DIR] [--session ID]]
        python3 -I .../validation_gate.py [--project DIR] --record-baseline FILE
        python3 -I .../validation_gate.py [--project DIR] --baseline FILE --protect PATH ... --accept-protected PATH
        (from this repository: python3 -I skills/orchestrator/scripts/validation_gate.py ...)
@@ -980,8 +1001,35 @@ def shell_writes(project, command, tracked):
     return sorted(files)
 
 
-def check_transcript(project, path, base, test_cmd):
-    """The report-only replay of one agent transcript (docstring point 7)."""
+def source_scanner():
+    """`source_scan.py`, beside this script; `-I` leaves the script's own
+    directory off `sys.path`."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import source_scan
+    return source_scan
+
+
+def check_sources(project, planning, files):
+    """(check, catalog): docstring point 7. Nothing in the check holds a
+    value of a source."""
+    scan = source_scanner()
+    planning = os.path.abspath(planning) if planning else os.path.join(project, "planning")
+    cat = scan.load(planning, project)
+    if cat is None:
+        where = os.path.relpath(planning, project).replace(os.sep, "/")
+        return {"passed": True, "skipped": True, "reason": f"no sources.md under {where}"}, None
+    found, scanned = scan.scan_tree(cat, project, planning, only=files)
+    hits, not_counted = cat.judge(found)
+    by = scan.by_file(hits)
+    return {"passed": not hits and not cat.problems, "scanned": scanned, "hits": scan.public(hits),
+            "files": {name: len(h) for name, h in by.items()}, "problems": list(cat.problems),
+            "lines": scan.hit_lines(hits), "info": scan.exclusion_lines(cat, not_counted)}, cat
+
+
+def check_transcript(project, path, base, test_cmd, catalog=None):
+    """The report-only replay of one agent transcript (docstring point 8)."""
     calls, results, last_text = tool_calls_of(path)
     try:
         tracked = set(git(project, "ls-files").stdout.splitlines())
@@ -1027,8 +1075,13 @@ def check_transcript(project, path, base, test_cmd):
         if chained or red:
             commits.append({"sha": sha, "chained": chained, "red": bool(red), "fail": fails[-1] if fails else None,
                             "command": text.strip().split("\n")[0][:80]})
+    source_values = None
+    if catalog is not None:
+        counted, entries = source_scanner().scan_transcript(catalog, path)
+        source_values = {"hits": len(counted), "entries": entries}
     return {"passed": True, "report_only": True, "transcript": path, "shell_edits": len(edits) + len(catch_all),
-            "edits": edits, "catch_all": catch_all, "reported": reported, "commits": commits}
+            "edits": edits, "catch_all": catch_all, "reported": reported, "commits": commits,
+            "source_values": source_values}
 
 
 def transcript_lines(c):
@@ -1042,6 +1095,12 @@ def transcript_lines(c):
             lines.append(f"INFO  committed on a red run: {k['sha']} (fail {k['fail']}; {k['command']})")
         else:
             lines.append(f"INFO  commit chained to its test run: {k['sha']} ({k['command']})")
+    sv = c.get("source_values")
+    if sv and sv["hits"]:
+        lines.append(f"INFO  transcript: source values {sv['hits']} in {sv['entries']} entries of the agent's transcript; "
+                     "a copy the owner decides about")
+    elif sv:
+        lines.append("INFO  transcript: no value of a listed source in the agent's transcript")
     return lines
 
 
@@ -1171,6 +1230,7 @@ def main():
     p.add_argument("--coverage", action="store_true")
     p.add_argument("--min-line", type=float, default=90)
     p.add_argument("--min-branch", type=float, default=80)
+    p.add_argument("--planning", metavar="DIR", help="the target directory, whose sources.md lists the owner's files for the `sources` check (default: planning/ under the project)")
     p.add_argument("--agent-transcript", metavar="PATH", help="the builder's or fixer's transcript, replayed for shell edits and the commit rule (report-only)")
     p.add_argument("--agent", metavar="ID", help="the agent id instead of its path: resolved under --projects-dir / this project / $CLAUDE_CODE_SESSION_ID / subagents/")
     p.add_argument("--projects-dir", default=os.path.expanduser("~/.claude/projects"))
@@ -1230,10 +1290,11 @@ def main():
         expected += [n for n in done_when_tests(a.expect_tests_from, a.chunk) if n not in expected]
     if expected:
         report["checks"]["tests"] = check_expected_tests(project, expected)
+    report["checks"]["sources"], catalog = check_sources(project, a.planning, sorted(files))
     transcript = a.agent_transcript or (agent_transcript_path(a.agent, project, a.projects_dir, a.session) if a.agent else None)
     if transcript:
         if os.path.isfile(transcript):
-            report["transcript"] = check_transcript(project, transcript, base, a.test_cmd)
+            report["transcript"] = check_transcript(project, transcript, base, a.test_cmd, catalog)
         else:
             report["transcript"] = {"missing": transcript}
     report["passed"] = all(c["passed"] for c in report["checks"].values())
@@ -1282,7 +1343,20 @@ def main():
             detail = f" ({c['command']})" if c["passed"] else (
                 f" timed out after {c['timeout']:g}s ({c['command']})" if c["timed_out"]
                 else f" exit {c['exit_code']} ({c['command']})")
+        elif name == "sources":
+            if c["passed"]:
+                detail = f" no value of a listed source in the {c['scanned']} changed file(s) scanned"
+            else:
+                parts = []
+                if c["files"]:
+                    parts.append(f"{len(c['hits'])} place(s) in {len(c['files'])} changed file(s) hold a value of a listed source: "
+                                 + ", ".join(f"{f} ({n})" for f, n in c["files"].items()))
+                parts += c["problems"]
+                detail = " " + "; ".join(parts)
         print(f"{'PASS' if c['passed'] else 'FAIL'}  {name}{detail}")
+        if name == "sources":
+            for line in ([] if c["passed"] else c["lines"]) + c["info"]:
+                print(line if line.startswith("hit:") or line.startswith("in:") else f"INFO  sources: {line}")
     for name in ("suite", "typecheck", "lint"):
         if not report["checks"][name]["passed"]:
             tail = "\n".join(outputs[name].splitlines()[-30:])

@@ -1,0 +1,62 @@
+schema_version: "1.0"
+name: security-review-source-value
+description: "A value of the owner's in the repository (handoff-slice2 P4.3's pointer in security-review, answer key PD3): a new test and its fixture carry two card numbers and two fees of the fee export sources.md lists. security-review finds them with source_scan.py (never by opening the export), names the file, lines and cells, quotes no value in the report it saves, and its suggested fix names invented values in the tree and delivery's removal procedure for the commits."
+tags: [security-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory (its root holds `package.json`, `.github/`, `catalog/`, `members/`, `lending/`, `fines/`, `notifications/`, `reporting/`, `services/`, `utils/`, `infra/`, `main/`, `test/`). Read whatever you need; don't change the code.
+
+    Security-review the change that adds the outstanding-fines tests: `test/outstanding-fines.test.ts` and `test/fixtures/desk-fees.ts`, both new. The planning documents for the feature are in `docs/pay-fine/`.
+
+    Save the review as `docs/reviews/security-review-outstanding-fines.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Bash]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:security-review"'
+    min: 1
+  - type: tool_used
+    name: found-with-the-scan
+    tool: Bash
+    input_match: 'source_scan\.py[^\n]*\bscan\b'
+    min: 1
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/security-review-outstanding-fines.md
+  - type: regex
+    name: review-quotes-no-value
+    target:
+      source: file
+      path: docs/reviews/security-review-outstanding-fines.md
+    pattern: 'LC-?204417|LC-?198032|\b204417\b|\b198032\b'
+    match: not_contains
+  - type: regex
+    name: source-never-opened
+    # Members and titles are in the export and in neither reviewed file.
+    target: trace
+    pattern: 'Brennecke|Okonkwo|Vantongeren|Nkemelu|Salt Road Atlas|Glassmaking for Beginners|Field Guide to Lichens|Tidewater Almanac'
+    match: not_contains
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*\.ts"'
+    match: not_contains
+  - type: llm
+    name: finds-the-owners-values-and-names-the-procedure
+    focus:
+      source: file
+      path: docs/reviews/security-review-outstanding-fines.md
+    weight: 1
+    criteria: |
+      `docs/pay-fine/sources.md` lists a file the owner provided (an export of real desk fees). The new fixture `test/fixtures/desk-fees.ts` holds two rows whose card numbers and amounts are values of that export. The skill's rule: a value of the owner's in the repository is a finding, found with `source_scan.py`; the finding names the file, the line and the cell and never quotes the value; its suggested fix is to replace the values in the tree with invented ones and, for commits that already hold them, the delivery skill's "Removing a value from history" procedure (on the owner's words).
+
+      PASS if the review has a finding that `test/fixtures/desk-fees.ts` carries values of the owner's listed file (naming the fixture file; lines, cells or fields are enough to locate them), and its suggested fix says to replace them with invented values and names removing them from history through delivery's procedure, or says in words that the commits that hold them need the owner's go-ahead and a history rewrite. It must not quote the card numbers.
+
+      FAIL if the review does not connect the fixture's values to the owner's listed file, treats them only as generic "real-looking test data" with no mention of the listed source, suggests only editing the file with nothing about history, or quotes the values.
