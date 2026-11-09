@@ -352,7 +352,7 @@ case "$state" in
         "the runner records round 0 with rounds_record.py and acts on the needs-decision as its skill says"
     else
       record0
-      reviews=2 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\` (reported \`0\`); review \`co tq re\` r0 \`0/0/1\` nd \`1\`; smoke \`PASS\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`0\`; sandbox \`3\` PASS; needs-decision devsecops-engineer: $records/chunk-1-r0-review.md — What a cancel does when the queue throws mid-remove is undecided" \
+      reviews=2 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\` (reported \`0\`); review \`co tq re\` r0 \`0/0/1\` nd \`1\`; smoke \`PASS\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`0\`; sandbox \`3\` PASS; needs-decision devsecops-engineer: $records/chunk-1-r0-review.md — What a cancel does when the queue throws mid-remove is undecided. Round 0 is recorded in the sidecar (the runner ran rounds_record.py: 2 rows); the reports are in the records directory, uncommitted" \
         "C.5: the gap step for the needs-decision finding (no delegation file), before any fixer or a relaunched runner"
     fi ;;
   chunk1-r1)

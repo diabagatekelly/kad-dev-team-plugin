@@ -44,10 +44,17 @@ them, and the fixer reads the reports itself.
 Every launch is a real async `Agent` call with `model` and `maxTurns`
 passed explicitly, waited for; before each one run the sandbox check
 inline (`python3 -I <scripts>/sandbox_check.py --project '<project
-root>'`), and count the checks on the hand-back as `sandbox <n> PASS`; a
-`FAIL` ends the round with `sandbox FAIL: <checks>; ended` on the line.
-Every project path in a command goes in single quotes (`'\''` for a quote
-inside one).
+root>'`), and count the checks on the hand-back as `sandbox <n> PASS`.
+What a `FAIL` means depends on what the orchestrator's task says the A
+line recorded: under the launcher (`PASS` at A) a `FAIL` here ends the
+round with `sandbox FAIL: <checks>; ended` on the line, since the fence
+changed under the flow; when the A line says the owner opted to continue
+unsandboxed (`none on <platform>`, or `owner opted to continue
+unsandboxed`, the task says so) every check in the round is information,
+the round goes on, and the hand-back says `sandbox <n> checked, FAIL on
+<checks> (owner opted out at A)`. The same rule the orchestrator applies
+to its own later checks. Every project path in a command goes in single
+quotes (`'\''` for a quote inside one).
 
 1. **Build.** One fresh implementer, `kad-dev-team:tdd-coach:AGENT`,
    `model: "sonnet"`, `maxTurns: 120`, with: `kad-dev-team:tdd-implementation-lite`
@@ -251,7 +258,11 @@ an eval's bound) ends there with the line for what ran and `stopped at
 
 One line, the C line's fields in the orchestrator's order, as far as the
 round went, and nothing else: no finding's text, no path but the ones the
-fields hold, no narration.
+fields hold, no narration, no notes or bullets before it on what you
+could not find or what the orchestrator should know. A fact the fields
+cannot hold (a transcript not found, a builder's turns unknown) is a `?`
+in its field; a finding's title belongs in the report, not in your
+reply. Your whole reply is the line.
 
 ```
 `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>

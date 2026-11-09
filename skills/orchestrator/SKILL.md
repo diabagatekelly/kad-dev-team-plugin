@@ -104,20 +104,27 @@ a parameter, or not:
   handed to you, ask.
 
 **1b. Open work first.** Before any planning document is read, inline
-with Bash, two questions to the tracker, with `gh` (the project's
-recorded tracker is GitHub; another tracker's equivalent when the
-project recorded one; none recorded, skip this step and say so in step
-5):
+with Bash, one read of the repository decides whether there is a tracker
+to ask: `git remote get-url origin` from the target. When the session
+has Bash and that URL is on `github.com`, two questions to GitHub, with
+`gh`:
 
 ```
 gh pr list --state open --limit 500 --json number,headRefName,url
 gh issue list --state open --limit 500 --json number,title,labels,body
 ```
 
-A `gh` call that fails (not installed, not signed in, no network) stops
-the routing with the command's error on the line, as one log entry
+A `gh` call that fails there (not installed, not signed in, no network)
+stops the routing with the command's error on the line, as one log entry
 (`**Routed to:** none (tracker unreachable)`, `**Artifact:** this log`)
 and a report in step 5; the flow never proceeds as if nothing were open.
+When there is nothing to ask (no Bash in the session, no repository, no
+`origin`, or an `origin` that is not on `github.com`: a local path, a
+bare repository, another host) the step is one indented bullet under the
+next entry written (`tracker: no shell`, `tracker: no repository`,
+`tracker: not GitHub (<url>)`) and the routing goes on: no question, no
+stop, no planning document opened to find out. Another tracker's
+equivalent of these two calls waits for a project that records one.
 Then:
 
 - **An open pull request from a slice branch** (`headRefName` matching
@@ -155,8 +162,9 @@ Then:
   one issue per call, the log entry written before each.
 
 Only then does the planning-document inspection below run; both checks
-are entries in the log like any route, and a project with nothing open
-gets one indented bullet under its next entry: `tracker: nothing open`.
+are entries in the log like any route, and a GitHub project with nothing
+open gets one indented bullet under its next entry: `tracker: nothing
+open`.
 Why: on 2026-11-08 PR #20 of the project this plugin is measured on sat
 open with eighteen findings as comments while the next slice would have
 been cut on a branch behind it, and a High open since 2026-11-02 had never
@@ -841,7 +849,10 @@ orchestrator's side.
    directories and deviation zones as B noted them, the protect list,
    this skill's `scripts/` directory by absolute path, `scratch_run.py`'s
    path and the chunk's scratch folder, the cadence, whether a browser
-   answered at A, and whether the slice touches UI. Nothing about other
+   answered at A, whether the slice touches UI, and the A line's sandbox
+   field (`PASS` under the launcher, or that the owner opted to continue
+   unsandboxed, so the runner knows whether a later `FAIL` ends the round
+   or is information). Nothing about other
    chunks' findings, the owner, the budget or the flow's state. Wait for
    it. The runner launches the builder, runs the gate (with `--agent
    <builder id>`, so the C line's `shell edits` is the counted number,
@@ -862,9 +873,10 @@ orchestrator's side.
    - `flaky: <test>`: information on the C line; the runner already
      handled it (one re-run, then one fixer at the cause on the second
      sighting, counted as the gate fixer).
-   You never open a report the hand-back names: the counts on the line
-   are `rounds_record.py`'s as the runner printed them, and the fixer
-   read the reports itself.
+   You never open a report the hand-back names and never run
+   `rounds_record.py` yourself at C: the counts on the line are the
+   script's as the runner printed them (its rows are already in the
+   sidecar), and the fixer read the reports itself.
 3. **Data check.** `scratch_run.py --hash '<data dir>'` again; `data
    unchanged` or `data CHANGED` on the C line; `CHANGED` ends the flow
    before the next chunk and is reported to the owner.

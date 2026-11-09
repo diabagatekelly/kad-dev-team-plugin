@@ -8,6 +8,9 @@
 set -euo pipefail
 here="$(dirname "${BASH_SOURCE[0]}")"
 bash "$here/../fixtures/library-app/code-plants/loop/base.sh" "$here/../fixtures/library-app/route-plants/cancel-hold"
+# The remote must look like GitHub for the open-work step to ask the
+# tracker; nothing here fetches or pushes.
+git remote set-url origin https://github.com/example/library-lending.git
 mkdir -p tools
 cp "$here/../fixtures/library-app/route-plants/open-work/gh" tools/gh
 chmod +x tools/gh
