@@ -23,8 +23,11 @@ build, beyond the items' own notes below:
   `agents/chunk-runner/AGENT.md` carry the old C.1 to C.4 (the gate
   command lives there now, so P4.2's gate-side check is called from the
   runner's step 2 as well as from D); `readiness_check.py` has nine
-  checks (`open-items-triaged` is the ninth; P4.2's source scan would be
-  the tenth, and the orchestrator's A.4 text and the README count them);
+  checks (`open-items-triaged` is the one 0.14.1 added: the script's
+  docstring numbers it 9, and it runs and prints eighth, before
+  `unusable-reply-row`; P4.2's source scan would be the tenth and is the
+  moment to put the docstring's numbers in the printed order; the
+  orchestrator's A.4 text and the README count the checks);
   `validation_gate.py` has the `transcript` replay (`--agent`), which is
   where a P4.2 scan of what an agent wrote would sit beside the scope
   check; `cost_by_role.py` has the `runner` and `walk` classes (P5);
@@ -36,10 +39,13 @@ build, beyond the items' own notes below:
   errors with "You've hit your 5-hour limit", and **a case that errors
   loses its evidence entry**. Check the window before a large gate, and
   resume with `bash evals/tools/gate.sh --base main --stale`, which runs
-  only the cases without current evidence. New cases: run them at
-  `--runs 3 --cases …`, record the bar with `record_thresholds.py
-  --gate-only <cases>`, then `--stale` once more (the bar's
-  `skills_invoked` widens the fingerprint). A renamed case's old entry
+  only the affected cases whose evidence is missing, stale (something
+  the case loads changed since its run), below its bar, or without a bar
+  at all. New cases: run them with `bash evals/tools/gate.sh --base main
+  --runs 3 --cases <cases>`, record the bar with `python3 -I
+  evals/tools/record_thresholds.py --gate-only <cases>` from the
+  repository root, then `--stale` once more (the bar's `skills_invoked`
+  widens the fingerprint). A renamed case's old entry
   stays in `evidence.json` until removed by hand.
 - **Grader lessons** from those rounds are in `evals/README.md` under
   "Known coverage gaps" (a nested agent's launches do appear in the main
@@ -53,8 +59,12 @@ build, beyond the items' own notes below:
   stopped every routing where `gh` could not reach GitHub (it asks only
   when `origin` is on `github.com`, decided from the remote, never from a
   planning read; a failed `gh` on a GitHub remote still stops).
-- **Sourcery skipped PR #42** (its check reported "skipping"), so no
-  triage round ran; the rule in §2 stands for the next PR.
+- **Sourcery skipped PR #42**: its diff was over Sourcery's review limit
+  of 300,000 characters (the bot said so in a comment), so no triage
+  round ran. The rule stands for the next PR: §2's first bullet (its
+  comments are triaged: fix, decline with the reason on the thread,
+  defer). A PR that large gets no external review at all, which is one
+  more reason to keep P4 and P5 as separate PRs.
 - **Known and left:** `evals/orchestrator-log-format/check.sh` prints one
   order error on entry 9 of the committed fixture ("skips
   vertical-slicing": the checker's reading of entry 4's route to
