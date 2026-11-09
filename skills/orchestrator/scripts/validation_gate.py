@@ -1078,7 +1078,7 @@ def check_transcript(project, path, base, test_cmd, catalog=None):
     source_values = None
     if catalog is not None:
         counted, entries = source_scanner().scan_transcript(catalog, path)
-        source_values = {"hits": len(counted), "entries": entries}
+        source_values = {"hits": len(counted), "entries": entries} if counted is not None else {"unreadable": True}
     return {"passed": True, "report_only": True, "transcript": path, "shell_edits": len(edits) + len(catch_all),
             "edits": edits, "catch_all": catch_all, "reported": reported, "commits": commits,
             "source_values": source_values}
@@ -1096,7 +1096,9 @@ def transcript_lines(c):
         else:
             lines.append(f"INFO  commit chained to its test run: {k['sha']} ({k['command']})")
     sv = c.get("source_values")
-    if sv and sv["hits"]:
+    if sv and sv.get("unreadable"):
+        lines.append("INFO  transcript: could not be read for source values; not a clean transcript")
+    elif sv and sv["hits"]:
         lines.append(f"INFO  transcript: source values {sv['hits']} in {sv['entries']} entries of the agent's transcript; "
                      "a copy the owner decides about")
     elif sv:

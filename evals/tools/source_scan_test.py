@@ -28,7 +28,16 @@ fee rows.
 13. the five planning skills carry the rule in the same words;
 14. a value wrapped over a line break is found and one split by a blank
     line is not; a relative location resolves outside a repository, where
-    the working directory is the project.
+    the working directory is the project;
+15. a value in a path is found in history and renamed by the rewrite,
+    which is refused while earlier backup refs exist;
+16. a UTF-16 export is read; a byte-for-byte copy of a source in the tree
+    is a problem, and so is a listed source git would commit, in a history
+    scan too;
+17. the map and an extract are created with mode 0600 and never through a
+    symlink;
+18. a transcript's keys and numbers are scanned, and one that cannot be
+    read is not reported clean.
 
 Usage: python3 -I evals/tools/source_scan_test.py
 """
@@ -336,6 +345,76 @@ class SourceScan(unittest.TestCase):
         self.assertRegex(r.stdout, r"hit: test/a\.test\.ts:1 col 13-15 — amount, desk fees D6")
         self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 2, r.stdout)
         self.assertNotIn("problem:", r.stdout)
+
+    def test_15_paths_are_scanned_and_renamed_and_only_this_rewrites_backups_go(self):
+        self.sources()
+        self.write("test/bartholomew-nkemelu-fees.test.ts", "const x = 1;\n")
+        self.commit("a test named after Nkemelu")
+        r = self.scan("--history", "main")
+        self.assertRegex(r.stdout, r"hit: [0-9a-f]{7}:test/bartholomew-nkemelu-fees\.test\.ts \(the path itself\)")
+        mapfile = os.path.join(self.tmp, "map.json")
+        run("map", "--planning", self.planning, "--history", "main", "--out", mapfile, cwd=self.project)
+        rw = run("rewrite", "--project", self.project, "--map", mapfile, "--range", "main")
+        self.assertEqual(rw.returncode, 0, rw.stdout + rw.stderr)
+        self.assertFalse(os.path.exists(os.path.join(self.project, "test", "bartholomew-nkemelu-fees.test.ts")))
+        self.assertEqual(len([f for f in os.listdir(os.path.join(self.project, "test")) if f.endswith("-fees.test.ts")]), 1)
+        self.assertEqual(self.scan("--history", "main").returncode, 0)
+        self.assertEqual(git(self.project, "for-each-ref", "--format=%(refname)", "refs/original/"), "")
+        git(self.project, "update-ref", "refs/original/refs/heads/keep-me", "HEAD")
+        rw = run("rewrite", "--project", self.project, "--map", mapfile, "--range", "main")
+        self.assertEqual(rw.returncode, 1)
+        self.assertIn("refused: earlier backup refs exist", rw.stdout)
+        self.assertEqual(git(self.project, "for-each-ref", "--format=%(refname)", "refs/original/"), "refs/original/refs/heads/keep-me")
+
+    def test_16_utf16_source_and_a_copy_of_the_source_in_the_tree(self):
+        with open(self.sheet, "rb") as f:
+            raw = f.read()
+        with open(self.sheet, "wb") as f:
+            f.write(raw.decode("utf-8").encode("utf-16"))
+        self.sources()
+        self.write("planning/a.md", "Bartholomew Nkemelu again.\n")
+        r = self.scan()
+        self.assertRegex(r.stdout, r"hit: planning/a\.md:1 col 1-19 — text, desk fees B7")
+        shutil.copy(self.sheet, os.path.join(self.project, "test", "export.bin"))
+        r = self.scan()
+        self.assertIn("problem: a copy of the source desk fees is in the repository as test/export.bin", r.stdout)
+        self.assertIn("not read as text, so not matched: 1 file(s)", r.stdout)
+        os.remove(os.path.join(self.project, "test", "export.bin"))
+        inside = os.path.join(self.project, "owner-files")
+        os.makedirs(inside)
+        shutil.copy(self.sheet, os.path.join(inside, "desk-fees.csv"))
+        self.sources(location="owner-files/desk-fees.csv")
+        self.commit("the export committed by mistake")
+        r = self.scan("--history", "main")
+        self.assertIn("problem: source inside the repository and not ignored: owner-files/desk-fees.csv", r.stdout)
+        self.assertEqual(r.returncode, 1)
+
+    def test_17_outputs_are_private_and_never_through_a_symlink(self):
+        self.sources()
+        mapfile = os.path.join(self.tmp, "map.json")
+        run("map", "--planning", self.planning, "--out", mapfile, cwd=self.project)
+        self.assertEqual(oct(os.stat(mapfile).st_mode & 0o777), "0o600")
+        link = os.path.join(self.tmp, "link.json")
+        os.symlink(os.path.join(self.project, "inner.json"), link)
+        r = run("map", "--planning", self.planning, "--out", link, cwd=self.project)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("refused", r.stdout)
+        self.assertFalse(os.path.exists(os.path.join(self.project, "inner.json")))
+        extract = os.path.join(self.tmp, "rows.csv")
+        run("describe", self.sheet, "--extract", extract)
+        self.assertEqual(oct(os.stat(extract).st_mode & 0o777), "0o600")
+
+    def test_18_transcript_keys_numbers_and_an_unreadable_one(self):
+        self.sources()
+        sys.path.insert(0, SCRIPTS)
+        import source_scan
+        cat = source_scan.load(self.planning, self.project)
+        transcript = os.path.join(self.tmp, "t.jsonl")
+        with open(transcript, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"type": "user", "message": {"content": {"Odalys Brennecke": 7.35}}}) + "\n")
+        hits, entries = source_scan.scan_transcript(cat, transcript)
+        self.assertEqual((len(hits), entries), (2, 1))
+        self.assertEqual(source_scan.scan_transcript(cat, os.path.join(self.tmp, "missing.jsonl")), (None, None))
 
     def test_13_the_five_planning_skills_carry_the_rule_in_the_same_words(self):
         blocks = {}

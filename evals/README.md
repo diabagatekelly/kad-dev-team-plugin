@@ -604,6 +604,28 @@ real cases and deleted (the table is in git history).
   `/../` into `/.`; and `eval_gate.py` matched only the CLI's old name
   for a run's kept directory, so since the CLI renamed it no directory
   was removed after a run and `--keep-scaffold` recorded none.
+  Sourcery's round on PR #44 (25 comments; one opengrep rule four times
+  on list-form `subprocess.run`, declined) fixed ten things in the
+  scanner: a value in a file or directory name is found in history and
+  renamed by the rewrite; a listed source git would commit, and a
+  byte-for-byte copy of one (a workbook is binary and never matches as
+  text), are problems in a history scan too; files not read as text are
+  counted and said; the map and an extract are created with mode 0600
+  and never through a symlink (the destination resolved first); a
+  UTF-16 export is read; a transcript's keys and numbers are scanned and
+  an unreadable one is not reported clean; a rewrite is refused while
+  earlier backups exist under `refs/original/` instead of deleting them;
+  delivery notes the head its scan passed and rescans a head that moved.
+  Declined by design, each with its reason on the thread: the
+  listed-commit rule is about the value, not the occurrence; the whole
+  workbook is scanned whatever tab was named; a whole amount is not
+  matched as a bare count of cents; each tab's first row is its column
+  names; the transcript count applies the same two rules as the tree.
+  Deferred to P5.1: withholding a transcript that holds a value from the
+  audit sync. `orchestrator-delivery-foreground` lost one run to the
+  missing-file throw (`tools/gh-calls.log`, which the `delivery-ready`
+  state does not create empty as `delivery-ready-source` does): a fixture
+  fix for P5's PR.
 - **Persona rules the orchestrator can't reach.** The orchestrator now
   invokes a routed skill and never reads the persona's `AGENT.md`, so any
   rule a routed step needs must be in the skill. `devsecops-engineer`,

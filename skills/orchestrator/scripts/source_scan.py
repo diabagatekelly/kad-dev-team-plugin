@@ -32,7 +32,10 @@ is a zip of XML; no `openpyxl` is needed, and under `python3 -I` a user
 install of it would not be visible anyway). Anything else (a screenshot, a
 PDF) is listed as `not scannable`. A listed source that cannot be read is
 a failure, never a pass: a scan that could not run must not read as
-"nothing found".
+"nothing found". So is a listed source that git tracks or would track,
+and a byte-for-byte copy of one anywhere in the tree or in a commit
+(found by digest, since a workbook is binary and never matches as text).
+Files the scan cannot read as text are counted and said.
 
 What is matched, from every tab of each source:
 
@@ -119,8 +122,10 @@ Commands (every path in single quotes; `python3 -I` throughout):
             file under DIR, or in standard input. Prints counts only.
   rewrite   --project DIR --map MAP --range RANGE
             `git filter-branch` over the range with `apply` as the tree
-            and message filter, then removes filter-branch's backup refs.
-            Needs a clean tree. The old commits stay in the local reflog
+            and message filter (file and directory names holding a value are
+            renamed too), then removes the backup refs this rewrite made
+            under `refs/original/`; refused when backups already exist
+            there. Needs a clean tree. The old commits stay in the local reflog
             until the owner expires it, and in every copy made before
             (a remote, a transcript, an audit repository): the script says
             so and removes nothing else.
@@ -141,6 +146,7 @@ import subprocess
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
+import hashlib
 
 STOPWORDS = set("""
 a an and are as at be been but by can did do does for from had has have he her his i if in into is it its
@@ -289,8 +295,12 @@ def parse_range(rng):
 
 
 def read_delimited(path):
-    with open(path, encoding="utf-8-sig", errors="replace", newline="") as f:
-        text = f.read()
+    with open(path, "rb") as f:
+        raw = f.read()
+    # A spreadsheet's "Unicode text" export is UTF-16 with a byte-order mark;
+    # read as UTF-8 its cells would be NUL-ridden and never match.
+    encoding = "utf-16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig"
+    text = raw.decode(encoding, errors="replace")
     try:
         dialect = csv.Sniffer().sniff(text[:8192], delimiters=",;\t|")
     except csv.Error:
@@ -498,6 +508,7 @@ class Catalog:
         self.owner = {}        # the same key -> index of the first source that holds it
         self.baseline = {}     # source index -> keys already in the tree when it was listed
         self.strict = False    # every match counts
+        self.skipped = 0       # files or blobs not read as text (binary, over the size limit)
 
     def allow(self, entry):
         self.allowed.append(entry)
@@ -811,10 +822,36 @@ def scan_text(cat, text, where):
     return hits
 
 
+def source_digests(cat):
+    """sha256 and size of every readable source, to recognise a copy of the
+    file itself (a workbook committed whole is binary and never matched by
+    text)."""
+    out = {}
+    for src in cat.sources:
+        if src.get("status") != "read":
+            continue
+        try:
+            with open(src["path"], "rb") as f:
+                raw = f.read()
+        except OSError:
+            continue
+        out[(hashlib.sha256(raw).hexdigest(), len(raw))] = src["name"]
+    return out
+
+
+def copy_of_source(cat, digests, raw):
+    if not digests or raw is None:
+        return None
+    return digests.get((hashlib.sha256(raw).hexdigest(), len(raw)))
+
+
 def scan_tree(cat, project, planning, only=None):
     """(hits, files scanned). A source that sits inside the tree is never
-    scanned against itself; one git would commit is a problem of its own."""
+    scanned against itself; one git would commit is a problem of its own,
+    and so is a copy of it under another name. Files the scan cannot read
+    as text (binary, over the size limit) are counted on `cat.skipped`."""
     own = {os.path.realpath(s["path"]) for s in cat.sources}
+    digests = source_digests(cat)
     candidates, tracked = tree_files(project, planning)
     if only is not None:
         wanted = {f.replace(os.sep, "/") for f in only}
@@ -823,10 +860,21 @@ def scan_tree(cat, project, planning, only=None):
     for rel, full in candidates:
         if os.path.realpath(full) in own:
             if tracked:
-                cat.problems.append(f"source inside the repository and not ignored: {rel}; one `git add` from being committed")
+                msg = f"source inside the repository and not ignored: {rel}; one `git add` from being committed"
+                if msg not in cat.problems:
+                    cat.problems.append(msg)
             continue
         text = read_text(full)
         if text is None:
+            try:
+                with open(full, "rb") as f:
+                    raw = f.read(MAX_BYTES + 1)
+            except OSError:
+                raw = None
+            name = copy_of_source(cat, digests, raw)
+            if name:
+                cat.problems.append(f"a copy of the source {name} is in the repository as {rel}")
+            cat.skipped += 1
             continue
         scanned += 1
         hits += scan_text(cat, text, rel)
@@ -841,12 +889,17 @@ def scan_history(cat, project, rng):
     introduced, each blob once."""
     listed = git(project, "rev-list", rng, check=True)
     commits = [c for c in listed.split() if c]
+    source_in_tree(cat, project)
+    digests = source_digests(cat)
     hits, seen = [], set()
     for commit in commits:
         short = commit[:7]
         hits += scan_text(cat, git(project, "log", "-1", "--format=%B", commit) or "", f"{short} (message)")
         names = git(project, "diff-tree", "--root", "-m", "-r", "-z", "--no-commit-id", "--name-only", commit) or ""
         for rel in sorted({n for n in names.split("\0") if n}):
+            for start, end, kind, ref, key in cat.find(rel):
+                hits.append({"file": f"{short}:{rel}", "line": 0, "col": start + 1, "end": end, "to_line": None,
+                             "kind": kind, "cell": ref, "key": key, "_text": rel[start:end]})
             if skipped(rel):
                 continue
             blob = git(project, "rev-parse", "--verify", "--quiet", f"{commit}:{rel}")
@@ -857,14 +910,43 @@ def scan_history(cat, project, rng):
             text = decode(raw) if raw is not None and len(raw) <= MAX_BYTES else None
             if text is not None:
                 hits += scan_text(cat, text, f"{short}:{rel}")
+            else:
+                name = copy_of_source(cat, digests, raw)
+                if name:
+                    cat.problems.append(f"a copy of the source {name} is in commit {short} as {rel}")
+                cat.skipped += 1
     return hits, len(commits)
 
 
+def source_in_tree(cat, project):
+    """A listed source that git tracks, or would track, is a problem on its
+    own, whichever way the scan runs."""
+    if not project:
+        return
+    listed = git(project, "ls-files", "-z", "-co", "--exclude-standard")
+    if listed is None:
+        return
+    tracked = {os.path.realpath(os.path.join(project, p)) for p in listed.split("\0") if p}
+    for src in cat.sources:
+        if os.path.realpath(src["path"]) in tracked:
+            rel = os.path.relpath(src["path"], project).replace(os.sep, "/")
+            msg = f"source inside the repository and not ignored: {rel}; one `git add` from being committed"
+            if msg not in cat.problems:
+                cat.problems.append(msg)
+
+
 def strings_of(value):
+    """Every string of a JSON value, keys and numbers included (a value
+    serialised as a number or used as a key is a value all the same)."""
     if isinstance(value, str):
         yield value
+    elif isinstance(value, bool) or value is None:
+        return
+    elif isinstance(value, (int, float)):
+        yield repr(value)
     elif isinstance(value, dict):
-        for v in value.values():
+        for k, v in value.items():
+            yield str(k)
             yield from strings_of(v)
     elif isinstance(value, list):
         for v in value:
@@ -873,9 +955,10 @@ def strings_of(value):
 
 def scan_transcript(cat, path):
     """(counted hits, entries holding one) over a session or agent
-    transcript: every string of every JSON line, decoded first, since a raw
-    line glues an escaped newline's `n` to the word after it. The audit
-    sync's "withheld" rule reads the same answer."""
+    transcript, or (None, None) when it cannot be read: every string of
+    every JSON line, decoded first, since a raw line glues an escaped
+    newline's `n` to the word after it. The audit sync's "withheld" rule
+    reads the same answer."""
     hits = []
     try:
         with open(path, encoding="utf-8", errors="replace") as f:
@@ -887,7 +970,7 @@ def scan_transcript(cat, path):
                 for text in strings_of(entry):
                     hits += scan_text(cat, text, f"entry {n}")
     except OSError:
-        return [], 0
+        return None, None
     counted, _ = cat.judge(hits)
     return counted, len(by_file(counted))
 
@@ -934,6 +1017,9 @@ def exclusion_lines(cat, skipped=None):
     lines.append("allowed by the owner (" + str(len(cat.allowed)) + ")" + (": " + "; ".join(cat.allowed) if cat.allowed else ""))
     for reason, n in sorted((skipped or {}).items()):
         lines.append(f"matched and not counted: {n} — {reason}")
+    if cat.skipped:
+        lines.append(f"not read as text, so not matched: {cat.skipped} file(s) or blob(s) (binary, or over {MAX_BYTES // (1024 * 1024)} MB); "
+                     "a byte-for-byte copy of a source among them is a problem line")
     return lines
 
 
@@ -1023,11 +1109,41 @@ def apply_text(cat, data, text):
     return text, count
 
 
+def rename_if_hit(cat, data, full):
+    """A file or directory whose own name holds a value is renamed with the
+    same map (a value in a path survives every content rewrite otherwise)."""
+    name = os.path.basename(full)
+    new, count = apply_text(cat, data, name)
+    if not count or new == name or not new.strip():
+        return 0
+    target = os.path.join(os.path.dirname(full), new)
+    if os.path.exists(target):
+        return 0
+    os.rename(full, target)
+    return 1
+
+
 def inside_work_tree(path):
-    d = os.path.dirname(os.path.abspath(path)) or "."
+    """The git root the path's real destination lies in, symlinks resolved
+    on the path and on its parents, or None."""
+    d = os.path.dirname(os.path.realpath(path)) or "."
     while not os.path.isdir(d) and os.path.dirname(d) != d:
         d = os.path.dirname(d)
     return repo_root(d)
+
+
+def private_file(path):
+    """Open a file for writing that only this user can read, created with
+    mode 0600 before a byte is written, never through a symlink."""
+    if os.path.islink(path):
+        raise SystemExit(f"refused: {path} is a symbolic link")
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        os.chmod(path, 0o600)
+    except OSError as e:
+        os.close(fd)
+        raise SystemExit(f"refused: cannot make {path} private: {e}")
+    return os.fdopen(fd, "w", encoding="utf-8", newline="")
 
 
 # ---- commands ------------------------------------------------------------------------
@@ -1118,7 +1234,7 @@ def cmd_describe(a):
         if inside_work_tree(a.extract):
             print(f"refused: {a.extract} is inside a git work tree; a scratch copy of a source goes outside every repository")
             return 1
-        with open(a.extract, "w", encoding="utf-8", newline="") as f:
+        with private_file(a.extract) as f:
             w = csv.writer(f)
             for tab, cells in chosen.items():
                 if rng:
@@ -1150,12 +1266,8 @@ def cmd_map(a):
         hits += more
     hits, _ = cat.judge(hits)
     data = build_map(cat, hits)
-    with open(a.out, "w", encoding="utf-8") as f:
+    with private_file(a.out) as f:
         json.dump(data, f, indent=1, ensure_ascii=False)
-    try:
-        os.chmod(a.out, 0o600)
-    except OSError:
-        pass
     for p in cat.problems:
         print("problem:", p)
     print(f"map: {len(data['text'])} text value(s) and {len(data['amount'])} amount(s) from {len(hits)} hit(s) in "
@@ -1175,22 +1287,25 @@ def cmd_apply(a):
         new, _ = apply_text(cat, data, text)
         sys.stdout.buffer.write(new.encode("utf-8"))
         return 0
-    total = files = 0
-    for dirpath, dirnames, filenames in os.walk(a.tree):
-        dirnames[:] = [d for d in dirnames if d != ".git"]
+    total = files = renamed = 0
+    for dirpath, dirnames, filenames in os.walk(a.tree, topdown=False):
+        # Bottom-up, so a directory is renamed after everything in it.
         for name in filenames:
             full = os.path.join(dirpath, name)
             if os.path.islink(full):
                 continue
             text = read_text(full)
-            if text is None:
-                continue
-            new, count = apply_text(cat, data, text)
-            if count:
-                with open(full, "w", encoding="utf-8", newline="") as f:
-                    f.write(new)
-                total, files = total + count, files + 1
-    print(f"apply: {total} replacement(s) in {files} file(s)")
+            if text is not None:
+                new, count = apply_text(cat, data, text)
+                if count:
+                    with open(full, "w", encoding="utf-8", newline="") as f:
+                        f.write(new)
+                    total, files = total + count, files + 1
+            renamed += rename_if_hit(cat, data, full)
+        for name in dirnames:
+            if name != ".git":
+                renamed += rename_if_hit(cat, data, os.path.join(dirpath, name))
+    print(f"apply: {total} replacement(s) in {files} file(s); {renamed} path(s) renamed")
     return 0
 
 
@@ -1204,6 +1319,13 @@ def cmd_rewrite(a):
         print("refused: the working tree is not clean; commit or set aside what is there first")
         return 1
     before = (git(project, "rev-list", "--count", a.range, check=True) or "0").strip()
+    earlier_backups = (git(project, "for-each-ref", "--format=%(refname)", "refs/original/") or "").split()
+    if earlier_backups:
+        # filter-branch -f would delete these; without -f it refuses. Either
+        # way they are someone's recovery points, so the owner moves them.
+        print("refused: earlier backup refs exist under refs/original/ (" + ", ".join(earlier_backups)
+              + "); the owner moves or drops them first, this script deletes none of them")
+        return 1
     me = " ".join(shlex.quote(x) for x in (sys.executable, "-I", os.path.abspath(__file__), "apply", "--map", mapfile))
     env = dict(os.environ, FILTER_BRANCH_SQUELCH_WARNING="1")
     r = subprocess.run([find_git(), "-C", project, "filter-branch", "-f", "--tree-filter", me + " --tree . >/dev/null",
@@ -1212,7 +1334,7 @@ def cmd_rewrite(a):
         print("rewrite: git filter-branch failed:\n" + r.stderr.decode("utf-8", "replace")[-1500:])
         return 1
     for ref in (git(project, "for-each-ref", "--format=%(refname)", "refs/original/") or "").split():
-        git(project, "update-ref", "-d", ref)
+        git(project, "update-ref", "-d", ref)  # only this rewrite's: none existed before (checked above)
     head = (git(project, "rev-parse", "--short", "HEAD") or "").strip()
     print(f"rewrite: {before} commit(s) in {a.range} rewritten; HEAD is now {head}")
     print("left as they are, for the owner to decide: the old commits in this clone's reflog (until `git reflog expire "

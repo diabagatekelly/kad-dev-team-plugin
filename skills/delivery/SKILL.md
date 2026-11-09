@@ -68,8 +68,10 @@ as, and their comments are exactly the ones to triage.
    PASS`: go on. `sources: FAIL` stops this skill before anything is
    pushed, since a value in a pushed commit is in every clone from then
    on: report the counts and the files under **Refused**, and that
-   "Removing a value from history" below needs the owner's words. No
-   `sources.md`: nothing to scan, go on.
+   "Removing a value from history" below needs the owner's words. Note
+   the head the scan passed (`git rev-parse HEAD`); a head that has moved
+   by the time of the push is scanned again first. No `sources.md`:
+   nothing to scan, go on.
 
 ## 2. Push
 
