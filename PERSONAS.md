@@ -166,7 +166,10 @@ and failure path homed in the design, a number on every wait, security
 and reliability agreeing, a mockup per named state, no question routed to
 the implementer, a "Kept for later slices" line, every open or deferred
 item of the slice triaged as usable-without-it or a blocker that goes to
-the owner, an unusable-reply row) routes each failure back to the owning
+the owner, an unusable-reply row, and since 0.14.2 no value of a file the
+owner provided anywhere in the documents or the code, which
+`source_scan.py` finds from the `sources.md` listing and which goes to
+the owner first) routes each failure back to the owning
 persona before any builder is launched, and a new chunk-loop entry
 carries the A line after the last route. One implementer (`model: sonnet`, since a plugin agent's own
 `model:` line is not applied in practice) writes the chunk plan into the
@@ -383,15 +386,23 @@ rather than accumulating here.
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
 lives in `evals/example/`, which is tracked.)
 
-### Current (2026-11-09): 0.14.1 merged; P4 next
+### Current (2026-11-09): 0.14.1 merged; P4 built as 0.14.2, its PR open; P5 next
 
 The work list is `.synthesis/handoff-slice2.md`; its first section,
 "Where the list stands", is the state. P1 (the launcher as the one way
 in, 0.14.0, PR #41) and P2 with P3 (the criteria walk in a real browser,
 the data rule, the chunk runner, the open-work routing, the triaged
 deferrals, the counted shell edits, the light cadence text; 0.14.1, PR
-#42) are merged. Next: P4 (planning data: nothing of the owner's by
-value), then P5 (audit: transcripts by session id, the cold read and the
+#42) are merged. P4 (planning data: nothing of the owner's by value) is
+built as 0.14.2 and waits for the owner's merge (PR #44): a planning
+stage pointed at a file of the owner's lists it in `sources.md`, reads
+its shape through `source_scan.py describe` and never a cell, and
+invents every example; the same script finds a listed file's values in
+the documents, the code or a branch's commits without printing one, as
+the readiness gate's tenth check, the chunk gate's `sources` check and
+`delivery`'s scan before every push; and `delivery` owns the one
+procedure for taking a value out of history. Next: P5 (audit:
+transcripts by session id, the cold read and the
 mutation pass as tools), then slice 2's fix round on
 `personal-finance-tracker-3` and slice 3 under `kad` with Chrome, the
 `light` cadence and the chunk runner. The section below is the history

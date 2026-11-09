@@ -161,6 +161,45 @@ strongest security property is that the credential was never in scope.
 Prefer a criterion that asserts absence over one that asserts careful
 handling.
 
+## A "nothing from the source" criterion is checked where it is written
+
+When the slice has a file of the owner's behind it (`sources.md` in the
+target directory lists it; or the owner names one now, and you list it
+there first, a location and no value, in the shape the planning skills
+use), "nothing from it reaches the repository" is a criterion of yours,
+and it is already true or already false the moment you write it. So
+before the criterion goes into your file, run the scan, then and there:
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py" scan --planning '<target directory>'
+```
+
+It reads each listed source where it is and prints the file, the line
+and the cell of every value it finds in the planning directory and the
+code, never the value. You never open the source yourself: what a
+command prints stays in the session's transcript.
+
+- **`sources: PASS`**: write the criterion, and say in the document that
+  the scan was run and on which date.
+- **`sources: FAIL`**: every hit is a finding under Open questions, by
+  file and line, as a backward route to the owner of the document it is
+  in (`product-manager:requirements-refinement` for a requirements file,
+  `product-slicer:vertical-slicing` for a slice, `software-architect` for
+  a design, and so on), to be rewritten with invented values. You edit
+  none of them and you quote none of them: a value copied into your
+  finding is one more place it has to be removed from. A hit that is the
+  app's own word and no row of the file is the owner's to allow in
+  `sources.md`, never yours.
+
+Write the criterion in both cases, with the scan as its check ("Given
+the slice's branch, when `source_scan.py scan` is run over it, then it
+reports no value of a listed source"), so the readiness gate, every
+chunk's gate and the delivery's scan before a push are that same check.
+Slice 2's criterion said nothing from the workbook was in the repository
+five minutes after the requirements and the slice file had put a
+merchant and its fee there; the slice review found them two and a half
+hours later, in thirteen test files.
+
 ## Write criteria in the same form as the rest of the slice
 
 Use Given/When/Then, matching what `acceptance-criteria` already applies —

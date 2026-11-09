@@ -6,81 +6,128 @@ only what an item points at. It replaces what was left of
 carried here with their numbers). `TODO.md` points here under "After
 slice 2".
 
-## Where the list stands (2026-11-09)
+## Where the list stands (2026-11-09, after P4's build)
 
 | Section | State |
 |---|---|
 | P1 Start | **Merged** as kad 0.14.0, PR #41 (2026-11-08) |
 | P2 Screen checks and P3 The loop | **Merged** as kad 0.14.1, PR #42 (2026-11-09, merge `4fc83e4`), one PR as decided |
-| P4 Planning data | **Next.** One PR, branch `p4-planning-data`, kad 0.14.2 |
-| P5 Audit and measurement | After P4. One PR, branch `p5-audit`, kad 0.14.3 |
+| P4 Planning data | **Built** as kad 0.14.2, PR #44 open from `p4-planning-data`, gate green; merging is the owner's |
+| P5 Audit and measurement | **Next.** One PR, branch `p5-audit`, kad 0.14.3, from `main` once P4 is merged |
 | Slice 2's fix round, then slice 3 | After P5, on `personal-finance-tracker-3` (see "After this list") |
 
-`main` is at 0.14.1. What a session starting P4 needs from the P2+P3
-build, beyond the items' own notes below:
+`main` is at 0.14.1 until PR #44 merges. What a session starting P5
+needs from the P4 build, beyond the items' own notes below:
 
-- **New pieces P4 and P5 touch.** `skills/chunk-runner/SKILL.md` and
-  `agents/chunk-runner/AGENT.md` carry the old C.1 to C.4 (the gate
-  command lives there now, so P4.2's gate-side check is called from the
-  runner's step 2 as well as from D); `readiness_check.py` has nine
-  checks (`open-items-triaged` is the one 0.14.1 added: the script's
-  docstring numbers it 9, and it runs and prints eighth, before
-  `unusable-reply-row`; P4.2's source scan would be the tenth and is the
-  moment to put the docstring's numbers in the printed order; the
-  orchestrator's A.4 text and the README count the checks);
-  `validation_gate.py` has the `transcript` replay (`--agent`), which is
-  where a P4.2 scan of what an agent wrote would sit beside the scope
-  check; `cost_by_role.py` has the `runner` and `walk` classes (P5);
-  `delivery` posts everything with the footer line `— kad-dev-team` and
-  filters by it (P4.3's record and replies carry it too).
-- **The gate, as it ran for PR #42.** 98 cases were reached; a full pass
-  takes about 25 minutes of wall clock when the account's usage window
-  allows it, and two rounds were cut by the 5-hour limit: every run then
-  errors with "You've hit your 5-hour limit", and **a case that errors
-  loses its evidence entry**. Check the window before a large gate, and
-  resume with `bash evals/tools/gate.sh --base main --stale`, which runs
-  only the affected cases whose evidence is missing, stale (something
-  the case loads changed since its run), below its bar, or without a bar
-  at all. New cases: run them with `bash evals/tools/gate.sh --base main
-  --runs 3 --cases <cases>`, record the bar with `python3 -I
+- **New pieces P5 touches.** `skills/orchestrator/scripts/source_scan.py`
+  is P4.2's scanner (its docstring is the reference): `load(planning,
+  project)` gives the catalog for `<planning>/sources.md`, and
+  `scan_transcript(catalog, path)` returns the counted hits and the
+  number of entries that hold one, with every JSON string decoded first.
+  That function is what P5.1's "withheld" rule calls for a transcript
+  and for the hook's snapshot; `validation_gate.py --agent` already
+  prints its answer for a builder's transcript as `source values <n> in
+  <m> entries`. `readiness_check.py` has ten checks, numbered in the
+  order they print; the tenth, `no-source-values`, routes to the owner.
+  The chunk gate's `sources` check needs `--planning '<target
+  directory>'` (the runner's command has it).
+- **Three decisions of the build the owner has not seen**, each
+  reversible, each measured on the real workbook on the owner's Mac
+  (counts only; nothing of it quoted, kept or committed):
+  1. *The scan does not count everything it matches.* P4.2 as written
+     ("every amount … every text value … the only exclusions are a
+     stop-word list") gave about 7,000 hits on slice 2's planning
+     **after** the scrub, every one a coincidence: the workbook holds
+     tens of thousands of cells, nearly half of all three-digit amounts
+     of cents among them, and its labels are a finance app's vocabulary.
+     Two rules were added, both printed with every result, both off
+     under `--strict`: a value already in the tree at the commit the
+     source was listed at is not counted (`Listed at`, a new column of
+     `sources.md`); an amount alone is not counted when the sources hold
+     1% or more of all amounts of its length, and is counted beside a
+     text value of its own row in the same file. With them: the
+     pre-scrub planning fails on the merchant and its fee (39 cells),
+     and the scrubbed planning raises 48 cells in 44 files, all words
+     the workbook shares with the documents.
+  2. *A source value goes to the owner first, not to a persona.* Only
+     the owner can say whether a word on a line is a row of their sheet
+     or the app's own. The orchestrator's A.4 runs the scan with
+     `--show` and asks once, three answers; what the owner allows is
+     written under `## Allowed by the owner` in `sources.md`; what they
+     say is theirs goes back to each document's owner to be rewritten.
+     Expect that one question, with some tens of words in it, the first
+     time slice 3 lists the workbook; it is not a defect.
+  3. *The removal is a script, not a recipe.* `source_scan.py map`,
+     `rewrite` and `scan --map` are P4.3's procedure, so no value is
+     ever typed into a command; `rewrite` is `git filter-branch` with
+     the map as its filter and removes nothing but filter-branch's own
+     backup refs.
+  Not built, and the owner's to ask for: a dictionary of ordinary words
+  as stop-words (the Mac's 235,000-word list would cut the 48 to about
+  4, but it is not on WSL and too large to ship; one derived from this
+  repository's own prose cut it to 19); matching a word taken out of a
+  longer cell (a surname from a full name), which without a dictionary
+  matches the language.
+- **How to list the workbook for slice 3.** The rule's row needs a
+  commit under `Listed at` for the first rule above to apply: the skill
+  writes `git rev-parse --short HEAD` when it lists a file nothing has
+  read. For `personal-finance-tracker-3` the workbook *was* read, in
+  slice 2, and scrubbed since; listing it at the current head takes the
+  scrubbed tree as clean, which is what the scrub's own checks say it
+  is. A dash there counts everything, which is the 48-cell question on
+  the whole repository instead of on slice 3's new text.
+- **What the first rounds of the new cases found, fixed before the
+  gate.** The removal case reproduced slice 2's improvisation three
+  runs in three: before any skill was loaded the session printed the
+  export with `cat`, wrote its values into a pattern file, ran its own
+  `filter-branch`, and once expired the reflog; two reports quoted the
+  values. No skill text governs a session that has not loaded it, so
+  the fix is in what such a session reads anyway: the `sources.md`
+  template now says nothing opens a listed file but `source_scan.py`
+  and that a removal is `delivery`'s; `delivery`'s description (always
+  in context) names the removal and says a flow reaches it through the
+  orchestrator; the orchestrator's E has the paragraph. Three runs in
+  three then went through the orchestrator and the scripts. The
+  readiness case wrote the values into its log line once in three: the
+  skill now gives the line's wording.
+- **Tool fixes that came with the re-freezes** (six phase histories,
+  since three planning skills changed): `history_stale.py` and
+  `freeze-history.sh` read `${CLAUDE_SKILL_DIR}` and a relative working
+  directory correctly, and `eval_gate.py` recognises the CLI's current
+  name for a run's kept directory (`/private/tmp/e-XXXX`). About 1,900
+  such directories from earlier gates are still in `/private/tmp` on
+  the Mac; nothing here removed them.
+- **Unchanged from the P2+P3 notes, still true:** the gate shares the
+  account's usage window (P4's first round of nine new cases was cut by
+  the 5-hour limit after two of them; resume with `bash
+  evals/tools/gate.sh --base main --stale`); new cases are run with
+  `--runs 3 --cases <cases>`, their bars recorded with `python3 -I
   evals/tools/record_thresholds.py --gate-only <cases>` from the
-  repository root, then `--stale` once more (the bar's `skills_invoked`
-  widens the fingerprint). A renamed case's old entry
-  stays in `evidence.json` until removed by hand.
-- **Grader lessons** from those rounds are in `evals/README.md` under
-  "Known coverage gaps" (a nested agent's launches do appear in the main
-  trace; `tool_order` fails when its "after" tool is never called; a
-  trace regex on a script's name matches the loaded skill's own text; a
-  commit-message regex must cross the escaped quote; a one-line reply is
-  graded by regex, not by a judge on `last_message`).
-- **Two defects the gate found in the new text, fixed before merge:**
-  the runner ended its round on a sandbox FAIL the owner had opted out of
-  at A (it applies the orchestrator's rule now), and the open-work step
-  stopped every routing where `gh` could not reach GitHub (it asks only
-  when `origin` is on `github.com`, decided from the remote, never from a
-  planning read; a failed `gh` on a GitHub remote still stops).
-- **Sourcery skipped PR #42**: its diff was over Sourcery's review limit
-  of 300,000 characters (the bot said so in a comment), so no triage
-  round ran. The rule stands for the next PR: §2's first bullet (its
-  comments are triaged: fix, decline with the reason on the thread,
-  defer). A PR that large gets no external review at all, which is one
-  more reason to keep P4 and P5 as separate PRs.
-- **Known and left:** `evals/orchestrator-log-format/check.sh` prints one
-  order error on entry 9 of the committed fixture ("skips
-  vertical-slicing": the checker's reading of entry 4's route to
-  `product-slicer` (`vertical-slicing` + `acceptance-criteria`)). It is
-  printed as KNOWN and counted apart; fixing the checker's reading of a
-  persona-plus-skills route is a small item for P5's PR.
+  repository root, then `--stale` once more; `cost_by_role.py` has the
+  `runner` and `walk` classes; `delivery` posts everything with the
+  footer line `— kad-dev-team` and filters by it. Sourcery skips a diff
+  over 300,000 characters (PR #42); the triage rule is §2's first
+  bullet.
+- **Known and left for P5's PR:** `evals/orchestrator-log-format/check.sh`
+  prints one KNOWN order error on entry 9 of the committed fixture (the
+  checker's reading of a persona-plus-skills route);
+  `chunk-runner-gate-outside`'s `runner-edits-no-code` grader is written
+  with doubled braces and matches nothing, and cannot be a trace regex
+  anyway, since a nested fixer's edits are in the runner's trace.
 - **Checked at slice 3, not before:** P1.2 and P1.4 (zero questions at
   A, a browser that answers), P2.1 to P2.4 (the walk's table from a real
   browser, smoke screenshots, no agent reading the owner's data, mockup
   screenshots), P3.1 (the main thread under 150k tokens per call at chunk
   8), P3.2 (the `light` arm: say "light" in the message that starts the
-  slice), P3.5 (the counted shell edits on real C lines).
+  slice), P3.5 (the counted shell edits on real C lines), and now P4:
+  no cell of the workbook in the slice 3 transcripts (the requirements
+  stage reads it through `describe`), `sources.md` written by the stage
+  the owner points at the sheet, the owner's one question at A.4, and
+  every chunk's gate printing a `sources` line.
 
 ## 0. Where things are
 
-- **This repository** (`kad-dev-team-plugin`, github.com/diabagatekelly/kad-dev-team-plugin): the plugin. Version `0.14.1` in `.claude-plugin/plugin.json` on `main` (0.13.1 when this list was written); each PR below bumps it (P1 was 0.14.0, P2+P3 0.14.1; P4 is 0.14.2, P5 0.14.3). Skills under `skills/<name>/SKILL.md`; the orchestrator's scripts under `skills/orchestrator/scripts/` (`validation_gate.py`, `rounds_record.py`, `readiness_check.py`, `done_check.py`, `sandbox_check.py`, `audit_sync.py`, and since 0.14.1 `scratch_run.py`); the launcher `bin/kad`; the audit hook `hooks/audit.sh`; the eval suite under `evals/` (`evals/README.md` is the playbook; `evals/tools/gate.sh` runs the gate; `evals/tools/cost_by_role.py`, `audit_report.py`, `orchestrator_log_check.py` are the audit tools). The design the loop implements is `.synthesis/implementation-flow-v4.md` (D1 to D14; D9 phase 2 is item P3.1 here); the review-cadence reading is `.synthesis/review-cadence-survey.md`.
+- **This repository** (`kad-dev-team-plugin`, github.com/diabagatekelly/kad-dev-team-plugin): the plugin. Version `0.14.1` in `.claude-plugin/plugin.json` on `main` (0.13.1 when this list was written; 0.14.2 once P4's PR merges); each PR below bumps it (P1 was 0.14.0, P2+P3 0.14.1, P4 0.14.2; P5 is 0.14.3). Skills under `skills/<name>/SKILL.md`; the orchestrator's scripts under `skills/orchestrator/scripts/` (`validation_gate.py`, `rounds_record.py`, `readiness_check.py`, `done_check.py`, `sandbox_check.py`, `audit_sync.py`, since 0.14.1 `scratch_run.py`, and since 0.14.2 `source_scan.py`); the launcher `bin/kad`; the audit hook `hooks/audit.sh`; the eval suite under `evals/` (`evals/README.md` is the playbook; `evals/tools/gate.sh` runs the gate; `evals/tools/cost_by_role.py`, `audit_report.py`, `orchestrator_log_check.py` are the audit tools). The design the loop implements is `.synthesis/implementation-flow-v4.md` (D1 to D14; D9 phase 2 is item P3.1 here); the review-cadence reading is `.synthesis/review-cadence-survey.md`.
 - **The project the plugin is measured on**: `personal-finance-tracker-3` (github.com/diabagatekelly/personal-finance-tracker-3, local `~/Documents/portfolio/personal-finance-tracker-3`). Slice 1 merged as PR #2; slice 2 is open as PR #20 on branch `slice-002-give-any-transaction-one-of-my-categories` at `77f4477`, with eleven slice 2 findings and seven open slice 1 issues posted as comments on 2026-11-08. Those are addressed with the updated plugin, after this list, as slice 2's fix round; then slice 3 of the unit (seed the rules from the owner's sheet) is the next real run.
 - **The audit material**: github.com/diabagatekelly/audit-docs (local `~/Documents/portfolio/audit-docs`; the plugin's own clone for syncing is `~/.claude/kad-audit/repo`). Slice 2's review is `personal-finance-tracker-3-slice-2/plugin-review/2026-11-08-slice-2-review.md`, with six companion files beside it (the cold code read, the H5.1 transcript audit, the mutation pass, the test measures and their script, the cost table, the log check). Slice 1's is `personal-finance-tracker-3-slice-1/plugin-review/2026-11-01-slice-1-review.md`. The audit directory on the Mac is `~/.claude/kad-audit/` (session logs, kept transcripts, `last-review`).
 - **Owner**: Kelly Diabagate, works from a Mac (this list was written there) and from Windows through WSL2; the plugin must stay system-agnostic.
@@ -122,7 +169,7 @@ This list's aim, in one sentence: make the flow catch what the cold reads catch 
 - H6's fourth question (review cadence): one measured arm on slice 3 that also changes who fixes (P3.2).
 - Screen checks: the acceptance criteria walked in a real browser by an agent, every UI slice, screen-reader announcements the only manual item (P2).
 - TODO 4.3 (run 2 leftovers in `personal-finance-tracker-2`): won't do.
-- Order of the PRs: P1; then P2 and P3 as one PR; then P4; then P5. (2026-11-09: P1 and P2+P3 are merged; P4 is next.)
+- Order of the PRs: P1; then P2 and P3 as one PR; then P4; then P5. (2026-11-09: P1 and P2+P3 are merged; P4 is built and its PR open; P5 is next.)
 
 ## P1. Start: one word, no questions, Chrome on
 
@@ -177,9 +224,9 @@ Files: `skills/orchestrator/SKILL.md` (the state table and step 1's inspection f
 
 Files: `skills/requirements-refinement/SKILL.md`, `skills/vertical-slicing/SKILL.md`, `skills/acceptance-criteria/SKILL.md`, `skills/screen-design/SKILL.md`, `skills/architecture-design/SKILL.md`, `skills/security-requirements/SKILL.md`, `skills/orchestrator/scripts/readiness_check.py` and `validation_gate.py`, `skills/delivery/SKILL.md`, `skills/security-review/SKILL.md`; eval: a fixture overlay with a provided "sheet" (a CSV of invented rows) and a slice whose criteria must quote none of it; a case for the pre-push grep.
 
-- [ ] P4.1 **Examples are invented at the point of writing.** A file the owner provides (a sheet, an export, a screenshot) is read where it is, only the tab or range the owner names, into a scratch file the session never prints (the transcript carries the column names and the row count, never a cell), its location, tab and date recorded in `planning/sources.md` (a path outside the repository, no values), and every example in the document written with invented names and amounts and said to be so. Done when: the overlay case's criteria quote nothing from the sheet; the five skills carry the rule in the same words.
-- [ ] P4.2 **A "nothing from the source" criterion checks the documents it is written into.** `security-requirements`, when it writes an S26-kind criterion, greps the planning directory for the source's distinctive values then and there; a hit is a backward route to the document's owner. `readiness_check.py` and `validation_gate.py` read `planning/sources.md` (so the check does not depend on an A line naming anything) and, for each source, its text and numeric cells (openpyxl or csv, `python3 -I`): every amount is matched in cents and in its formatted forms, every text value is matched as a whole word whatever its length, and the only exclusions are a stop-word list the check prints with its result; a hit under `planning/`, `src/` or `test/` fails the check. Done when: slice 2's planning at the pre-scrub commit (in the audit repository's history) fails the check, the fixture's does not, and the overlay's sheet carries a numeric amount cell that the check catches.
-- [ ] P4.3 **A removal from history is a procedure.** In `delivery` (and named by `security-review`'s suggested-fix text): the replacement map lives outside the repository; the record names counts and files, never values; the map's keys are grepped over every commit reachable from the branch (`git rev-list` and `git grep <key> <commit>`, or `git log -S`), not only the working tree, plus the log, the report and the PR body, before every push, and again over the remote's branch after a force-push; a force-push needs the owner's words and `--force-with-lease`; the transcripts and the audit repository are named in the report as copies the owner decides about. Done when: the text is in and an eval case plants a value to remove and grades the record.
+- [x] P4.1 (built, 0.14.2: the rule is one block, "A file the owner provides is described, never quoted", in the same words in `requirements-refinement`, `vertical-slicing`, `acceptance-criteria`, `screen-design` and `architecture-design`, which `evals/tools/source_scan_test.py` compares; `source_scan.py describe` is how a stage reads a file's shape without a cell; `sources.md` gained a `Listed at` column and an "Allowed by the owner" section; four cases, one per planning stage, each with a trace regex that one full read of the sheet fails) **Examples are invented at the point of writing.** A file the owner provides (a sheet, an export, a screenshot) is read where it is, only the tab or range the owner names, into a scratch file the session never prints (the transcript carries the column names and the row count, never a cell), its location, tab and date recorded in `planning/sources.md` (a path outside the repository, no values), and every example in the document written with invented names and amounts and said to be so. Done when: the overlay case's criteria quote nothing from the sheet; the five skills carry the rule in the same words.
+- [x] P4.2 (built, 0.14.2, with the two counting rules of "Where the list stands": `source_scan.py`, the readiness gate's tenth check `no-source-values`, the chunk gate's `sources` check and its transcript line, `security-requirements`' scan at the moment the criterion is written; the workbook is read with the standard library, since `openpyxl` is not visible under `python3 -I`; the done-when's three checks hold: slice 2's pre-scrub planning fails, the fixture's passes, the invented sheet's `fee` column is caught in decimal and in cents) **A "nothing from the source" criterion checks the documents it is written into.** `security-requirements`, when it writes an S26-kind criterion, greps the planning directory for the source's distinctive values then and there; a hit is a backward route to the document's owner. `readiness_check.py` and `validation_gate.py` read `planning/sources.md` (so the check does not depend on an A line naming anything) and, for each source, its text and numeric cells (openpyxl or csv, `python3 -I`): every amount is matched in cents and in its formatted forms, every text value is matched as a whole word whatever its length, and the only exclusions are a stop-word list the check prints with its result; a hit under `planning/`, `src/` or `test/` fails the check. Done when: slice 2's planning at the pre-scrub commit (in the audit repository's history) fails the check, the fixture's does not, and the overlay's sheet carries a numeric amount cell that the check catches.
+- [x] P4.3 (built, 0.14.2: `delivery`'s "Removing a value from history" and its scan of every commit before every push, `security-review`'s section that names it, the orchestrator's E paragraph, `source_scan.py map`, `rewrite` and `scan --map`; `orchestrator-delivery-removal` plants two values in one commit of a clean tree and grades what the remote received, the log and the report) **A removal from history is a procedure.** In `delivery` (and named by `security-review`'s suggested-fix text): the replacement map lives outside the repository; the record names counts and files, never values; the map's keys are grepped over every commit reachable from the branch (`git rev-list` and `git grep <key> <commit>`, or `git log -S`), not only the working tree, plus the log, the report and the PR body, before every push, and again over the remote's branch after a force-push; a force-push needs the owner's words and `--force-with-lease`; the transcripts and the audit repository are named in the report as copies the owner decides about. Done when: the text is in and an eval case plants a value to remove and grades the record.
 
 ## P5. Audit and measurement
 

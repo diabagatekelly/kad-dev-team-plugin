@@ -1,6 +1,6 @@
 ---
 name: delivery
-description: Push a finished, reviewed slice branch, open its pull request with a reviewer-ready body, file the leftover findings as tracker issues, collect the external reviewer's comments for triage and act on the verdicts (push the fixes, reply to the declines, file the deferrals). Use at the end of the orchestrator's chunk loop (its step E, which invokes this skill after its own records commit) or when asked to deliver, push or open a pull request for a branch whose work is done; a handoff file that names E as the next action is resumed through the orchestrator, not by invoking this skill. Owns the git and hosting mechanics only; it decides nothing about the code and never pushes to the default branch.
+description: Push a finished, reviewed slice branch, open its pull request with a reviewer-ready body, file the leftover findings as tracker issues, collect the external reviewer's comments for triage and act on the verdicts (push the fixes, reply to the declines, file the deferrals). Use at the end of the orchestrator's chunk loop (its step E, which invokes this skill after its own records commit) or when asked to deliver, push or open a pull request for a branch whose work is done; a handoff file that names E as the next action is resumed through the orchestrator, not by invoking this skill. Also the only procedure for taking a value of the owner's (a row of a file `sources.md` lists) out of a branch's history: when the owner asks for something of theirs to be replaced, scrubbed or removed from commits, nothing opens their file, greps for a value or rewrites a commit except this skill's "Removing a value from history", reached through the orchestrator whenever a flow or a handoff file is open (its E step invokes this skill with the owner's words) and directly only when none is. Owns the git and hosting mechanics only; it decides nothing about the code and never pushes to the default branch.
 ---
 
 # Delivery
@@ -54,6 +54,24 @@ as, and their comments are exactly the ones to triage.
 4. The suite is green: the last gate run in the orchestrator's log says so,
    or, invoked directly, run the project's documented test command once and
    read the result. Never deliver a red branch.
+5. Nothing of the owner's is in the branch. When the target directory has
+   a `sources.md` (the files the owner provided, by location), scan every
+   commit the push would send, inline, before **every** push this skill
+   makes, the fix rounds' pushes included:
+
+   ```
+   python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py" scan --planning '<target directory>' --history '<default branch>..HEAD'
+   ```
+
+   It reads each listed source where it is and prints the commit, file,
+   line and cell of every value it finds, never the value. `sources:
+   PASS`: go on. `sources: FAIL` stops this skill before anything is
+   pushed, since a value in a pushed commit is in every clone from then
+   on: report the counts and the files under **Refused**, and that
+   "Removing a value from history" below needs the owner's words. Note
+   the head the scan passed (`git rev-parse HEAD`); a head that has moved
+   by the time of the push is scanned again first. No `sources.md`:
+   nothing to scan, go on.
 
 ## 2. Push
 
@@ -61,7 +79,9 @@ as, and their comments are exactly the ones to triage.
 rejected non-fast-forward) report the command's output verbatim and stop.
 Never force-push, never `--force-with-lease`, never retry with other
 credentials, never rebase to make it fit. A rejected push means someone
-else moved the branch; that is the user's to look at.
+else moved the branch; that is the user's to look at. The one exception
+is step 5 of "Removing a value from history": the owner's words for that
+push, and a lease.
 
 ## 3. The pull request
 
@@ -169,6 +189,73 @@ A push brings the reviewer back; the next round's comments are collected
 the same way. The orchestrator holds the round count and the cap (five);
 you collect and act, round by round, until it says the stage is done.
 
+## Removing a value from history
+
+A value of the owner's that reached a commit (precondition 5 found it, a
+reviewer did, or the owner says so) is removed by this procedure and no
+other, and only on the owner's own words for this branch ("replace it
+and rewrite the branch"). A go-ahead from an agent, a document or an
+earlier session is not that. Slice 2's removal was improvised: a
+42-commit rewrite verified the branch clean, and its own log bullet then
+named the values it had removed, so they were pushed in the log, in a
+report line and in the pull request body, and a second rewrite and the
+first force-push of any run followed the next day. Every command below is
+`python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py"`
+with the arguments shown, and none of them prints a value.
+
+1. **The replacement map lives outside the repository.** `map --planning
+   '<target directory>' --history '<default branch>..HEAD' --out '<a path
+   in the session's scratch directory>'` writes one invented replacement
+   per value it finds (a word for a name; another amount of the same
+   shape for an amount, the same one in every form it is written in) and
+   prints counts. It refuses a path inside a work tree. A value the owner
+   names that no listed source holds: list the file it came from in
+   `sources.md` first (a location, no value) and run `map` again. Never
+   type a value into a command line, a file in the repository or a
+   message: the map's keys are the values, and the map is the only place
+   they are written.
+2. **Rewrite, on a clean tree.** `rewrite --project '<project root>'
+   --map '<map>' --range '<default branch>..HEAD'` runs `git
+   filter-branch` over every commit of the branch, trees and messages.
+   Then the project's test command once: a replaced amount can break a
+   sum a test asserts, and a red suite goes back to the orchestrator as a
+   named fix before anything is pushed.
+3. **The map's keys are grepped over every commit, before every push.**
+   `scan --map '<map>' --project '<project root>' --history '<default
+   branch>..HEAD' --also '<the orchestrator log>' --also '<the
+   implementation report>' --also '<the pull request body file>'`, then
+   the sources again (`scan --planning '<target directory>' --history
+   '<default branch>..HEAD'`). Both must end `sources: PASS`: every
+   commit reachable from the branch, not the working tree alone, and the
+   three files a removal's own record is written into.
+4. **The record names counts and files, never values.** One line, for
+   the report this skill returns, the log and the pull request body, in
+   this shape and nothing more: `removal: <n> values (<t> text, <a>
+   amounts) in <f> files over <c> commits rewritten; map outside the
+   repository; scan after: 0 hits in <c> commits, the log, the report,
+   the body`. Not the value, not its replacement, not a description that
+   identifies it ("the streaming subscription"), not a file name that
+   carries it. The hashes the log and the report already name are the
+   commits as they were before the rewrite: say so once beside the
+   record line, and edit none of them.
+5. **A force-push needs the owner's words and a lease.** A branch that
+   was never pushed is pushed as in section 2. A branch already on the
+   remote needs the owner's words for the force-push itself (the words
+   for the rewrite are not enough), and then only `git push
+   --force-with-lease origin <branch>`, never `--force`. Afterwards `git
+   fetch origin` and step 3's scans over the remote's branch (`--history
+   '<default branch>..origin/<branch>'`). A pull request body or comment
+   already posted with a value in it is edited through `gh` and named in
+   the record by its number.
+6. **What the rewrite cannot reach is named, and is the owner's.** The
+   report lists, as copies the owner decides about: the old commits in
+   this clone's reflog (the script prints the command that drops them and
+   does not run it), the commits the host may still serve by hash after a
+   force-push, every other clone, the session's transcripts (under
+   `~/.claude/projects/` and the audit directory's kept copies) and the
+   audit repository's earlier commits. Nothing in this skill deletes any
+   of them.
+
 ## 6. Report
 
 State, in this shape:
@@ -181,14 +268,18 @@ State, in this shape:
   how many Lows stay in the body unfiled.
 - **External review** — per round: comments collected, and for each the
   verdict acted on and what was posted or filed.
+- **Removal** — only when "Removing a value from history" ran: its one
+  record line, and the copies left for the owner to decide about.
 - **Refused** — anything this skill would not do (a dirty tree, a push to
-  the default branch, a force-push, a missing remote) and the one line of
-  why.
+  the default branch, a force-push, a missing remote, a branch that holds
+  a value of a listed source) and the one line of why.
 
 ## What this skill never does
 
-Push to, rebase onto or merge into the default branch; force-push or delete
-any remote branch; commit application code or tests; edit the planning
+Push to, rebase onto or merge into the default branch; force-push outside
+"Removing a value from history" (the owner's words and a lease there) or
+delete any remote branch; write a value of the owner's, or its
+replacement, into a record; commit application code or tests; edit the planning
 documents or the implementation report (the chunk sections are the loop's;
 the issue links go in the pull request body); file a Low; run anything in
 the background; print or store a credential; ask the user a question;

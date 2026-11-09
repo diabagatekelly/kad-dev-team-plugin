@@ -31,7 +31,8 @@ item or table cell that starts with `Given` (continuation lines joined
 until the next bullet or blank line), or one that carries an identifier
 like `AC-1`, `S1`, `SEC-3`, `R2`, `REL-4`, `A11Y-2`.
 
-The nine checks, how each decides, and where a failure routes:
+The ten checks, in the order they run and print, how each decides, and
+where a failure routes:
 
 1. criteria-homed -> software-architect:architecture-design. Every
    criterion in the slice, security, reliability and accessibility files
@@ -95,7 +96,7 @@ The nine checks, how each decides, and where a failure routes:
 7. kept-for-later-slices -> software-architect:architecture-design. The
    design document has a line or heading containing `kept for later
    slices` (also `kept for the next slice`, `persisted for later slices`).
-9. open-items-triaged -> product-slicer:vertical-slicing, or the owner.
+8. open-items-triaged -> product-slicer:vertical-slicing, or the owner.
    Every item under the slice file's `Still open` and `Explicitly
    deferred` headings is triaged: it says the slice is usable without it
    and how (the words `usable without` on the item, followed by the
@@ -108,17 +109,40 @@ The nine checks, how each decides, and where a failure routes:
    reviewers accepted the deferral, and the cold read found the first
    pick permanent with no undo. The four criteria reviewers restate each
    accepted deferral as a finding at D, so it reaches the pull request.
-8. unusable-reply-row -> devsecops-engineer:reliability-requirements. When
+9. unusable-reply-row -> devsecops-engineer:reliability-requirements. When
    the design names an adapter to an external service (`adapter` within 80
    characters of HTTP, API, provider, external, third-party, SDK, vendor,
    bank, Plaid or Stripe), the reliability document must name the
    unusable-reply case (`unusable`, `malformed`, `missing field`, `invalid
    reply`, `unexpected shape`, `lies`, `garbage`, `cannot be parsed`,
    `can't use`). No external adapter named: pass with a note.
+10. no-source-values -> the owner. When the planning directory has a
+   `sources.md` (the files the owner provided, by location; the planning
+   skills write it), `source_scan.py` beside this script reads each listed
+   source where it is and looks for its text and numeric cells in the
+   planning directory and in every file of the repository git tracks or
+   would track. Its docstring says what is matched, what is not, and what
+   is matched and not counted (a value already in the tree at the commit
+   the source was listed at; an amount alone in a source too dense for
+   one to mean anything); those lines are printed here as `INFO` under
+   the check. A counted value anywhere fails, and so does a listed source
+   that cannot be read (a scan that could not run is not a pass). The
+   output names files, lines and cells, never a value. The route is the
+   owner because only the owner can say whether `Groceries` on a line is
+   a row of their sheet or the app's own word: the orchestrator puts the
+   places to them once, routes what they say is theirs back to each
+   document's owner to be rewritten with invented values, and records
+   what they allow in `sources.md`. Why: slice 2's requirements took one
+   real merchant and its fee from the owner's workbook as an example, the
+   criterion "nothing from the workbook in the repository" was written
+   five minutes later, and nothing checked the documents until D. No
+   `sources.md`: pass with a note.
 
 Output: one `PASS`/`FAIL` line per check (a FAIL line ends with
-`-> <persona:skill>`), then `route: <check> -> <persona:skill>` for each
-failure, then `readiness: PASS` or `readiness: FAIL` as the last line.
+`-> <persona:skill>`; the tenth is followed by `INFO  no-source-values:`
+lines, what the scan read and what it did not count), then `route: <check>
+-> <persona:skill>` for each failure, then `readiness: PASS` or
+`readiness: FAIL` as the last line.
 Exit 0 on PASS, 1 on FAIL, 2 when the slice or design document cannot be
 found. `--json FILE` writes {"checks": {name: {passed, detail, route}},
 "passed": bool}.
@@ -464,6 +488,30 @@ def check_unusable(docs, design):
     return False, "the design names an external adapter and the reliability document has no unusable-reply row"
 
 
+def check_sources(planning):
+    """(passed, detail, info lines): the tenth check, by `source_scan.py`.
+    Nothing it returns holds a value of a source."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # `-I` leaves the script's directory out
+    import source_scan
+    project = source_scan.project_of(planning)
+    cat = source_scan.load(planning, project)
+    if cat is None:
+        return True, "no sources.md in the planning directory: no file of the owner's is listed", []
+    found, scanned = source_scan.scan_tree(cat, project, planning)
+    hits, not_counted = cat.judge(found)
+    info = source_scan.exclusion_lines(cat, not_counted)
+    if not hits and not cat.problems:
+        return True, f"no value of a listed source in {scanned} file(s) ({len(cat.sources)} source(s) listed)", info
+    files = source_scan.by_file(hits)
+    what = []
+    if hits:
+        what.append(f"{len(hits)} place(s) in {len(files)} file(s) hold a value of a listed source: "
+                    + ", ".join(f"{name} ({len(h)})" for name, h in list(files.items())[:12])
+                    + (f" and {len(files) - 12} more file(s)" if len(files) > 12 else ""))
+    what += cat.problems
+    return False, "; ".join(what), info + source_scan.hit_lines(hits)
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--planning", required=True)
@@ -514,10 +562,15 @@ def main():
     results.append(("open-items-triaged", *check_open_items(docs["slice"])))
     if "reliability" in docs:
         results.append(("unusable-reply-row", *check_unusable(docs, docs["design"]), rel))
+    sources_ok, sources_detail, sources_info = check_sources(planning)
+    results.append(("no-source-values", sources_ok, sources_detail, "the owner (source values)"))
 
     table = {}
     for name, ok, detail, route in results:
         print(f"{'PASS' if ok else 'FAIL'}  {name}: {detail}" + ("" if ok else f" -> {route}"))
+        if name == "no-source-values":
+            for line in sources_info:
+                print(f"INFO  no-source-values: {line}")
         entry = table.setdefault(name, {"passed": True, "detail": [], "route": route})
         entry["passed"] = entry["passed"] and ok
         entry["detail"].append(detail)
