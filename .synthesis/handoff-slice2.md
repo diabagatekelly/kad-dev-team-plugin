@@ -6,18 +6,18 @@ only what an item points at. It replaces what was left of
 carried here with their numbers). `TODO.md` points here under "After
 slice 2".
 
-## Where the list stands (2026-11-09, after P4's build)
+## Where the list stands (2026-11-09, P4 merged)
 
 | Section | State |
 |---|---|
 | P1 Start | **Merged** as kad 0.14.0, PR #41 (2026-11-08) |
 | P2 Screen checks and P3 The loop | **Merged** as kad 0.14.1, PR #42 (2026-11-09, merge `4fc83e4`), one PR as decided |
-| P4 Planning data | **Built** as kad 0.14.2, PR #44 open from `p4-planning-data`, gate green; merging is the owner's |
-| P5 Audit and measurement | **Next.** One PR, branch `p5-audit`, kad 0.14.3, from `main` once P4 is merged |
+| P4 Planning data | **Merged** as kad 0.14.2, PR #44 (2026-11-09, merge `2ed1b36`), one PR as decided |
+| P5 Audit and measurement | **Next.** One PR, branch `p5-audit`, kad 0.14.3, from `main` |
 | Slice 2's fix round, then slice 3 | After P5, on `personal-finance-tracker-3` (see "After this list") |
 
-`main` is at 0.14.1 until PR #44 merges. What a session starting P5
-needs from the P4 build, beyond the items' own notes below:
+`main` is at 0.14.2. What a session starting P5 needs from the P4
+build, beyond the items' own notes below:
 
 - **New pieces P5 touches.** `skills/orchestrator/scripts/source_scan.py`
   is P4.2's scanner (its docstring is the reference): `load(planning,
@@ -108,12 +108,32 @@ needs from the P4 build, beyond the items' own notes below:
   footer line `— kad-dev-team` and filters by it. Sourcery skips a diff
   over 300,000 characters (PR #42); the triage rule is §2's first
   bullet.
+- **Sourcery's round on PR #44** (the rule stands: fix, decline with the
+  reason, defer): 25 comments. Ten fixed in `13bac00` (a value in a path
+  found in history and renamed by the rewrite; a listed source git would
+  commit, and a byte-for-byte copy of one, problems in a history scan
+  too; files not read as text counted; the map and an extract private
+  and never through a symlink; UTF-16 exports; transcript keys and
+  numbers; an unreadable transcript not reported clean; a rewrite
+  refused while earlier `refs/original/` backups exist; delivery
+  rescans a head that moved). Nine declined, each with its reason on
+  the thread, five of them the design calls above. One deferred: it is
+  P5.1 (the audit sync withholding a transcript that holds a value).
+  The four opengrep hits (one audit rule on list-form `subprocess.run`)
+  were declined and the owner ignored that rule for this repository in
+  Sourcery's dashboard (2026-11-09), so the check no longer fails on
+  `source_scan.py`; `evals/README.md`'s planning-data bullet has the
+  detail.
 - **Known and left for P5's PR:** `evals/orchestrator-log-format/check.sh`
   prints one KNOWN order error on entry 9 of the committed fixture (the
   checker's reading of a persona-plus-skills route);
   `chunk-runner-gate-outside`'s `runner-edits-no-code` grader is written
   with doubled braces and matches nothing, and cannot be a trace regex
-  anyway, since a nested fixer's edits are in the runner's trace.
+  anyway, since a nested fixer's edits are in the runner's trace; the
+  `delivery-ready` loop state does not create `tools/gh-calls.log` empty
+  as `delivery-ready-source` does, so a run that never calls the
+  stand-in voids itself with a grader throw instead of failing a grader
+  (`orchestrator-delivery-foreground` lost one run to it).
 - **Checked at slice 3, not before:** P1.2 and P1.4 (zero questions at
   A, a browser that answers), P2.1 to P2.4 (the walk's table from a real
   browser, smoke screenshots, no agent reading the owner's data, mockup
@@ -127,7 +147,7 @@ needs from the P4 build, beyond the items' own notes below:
 
 ## 0. Where things are
 
-- **This repository** (`kad-dev-team-plugin`, github.com/diabagatekelly/kad-dev-team-plugin): the plugin. Version `0.14.1` in `.claude-plugin/plugin.json` on `main` (0.13.1 when this list was written; 0.14.2 once P4's PR merges); each PR below bumps it (P1 was 0.14.0, P2+P3 0.14.1, P4 0.14.2; P5 is 0.14.3). Skills under `skills/<name>/SKILL.md`; the orchestrator's scripts under `skills/orchestrator/scripts/` (`validation_gate.py`, `rounds_record.py`, `readiness_check.py`, `done_check.py`, `sandbox_check.py`, `audit_sync.py`, since 0.14.1 `scratch_run.py`, and since 0.14.2 `source_scan.py`); the launcher `bin/kad`; the audit hook `hooks/audit.sh`; the eval suite under `evals/` (`evals/README.md` is the playbook; `evals/tools/gate.sh` runs the gate; `evals/tools/cost_by_role.py`, `audit_report.py`, `orchestrator_log_check.py` are the audit tools). The design the loop implements is `.synthesis/implementation-flow-v4.md` (D1 to D14; D9 phase 2 is item P3.1 here); the review-cadence reading is `.synthesis/review-cadence-survey.md`.
+- **This repository** (`kad-dev-team-plugin`, github.com/diabagatekelly/kad-dev-team-plugin): the plugin. Version `0.14.2` in `.claude-plugin/plugin.json` on `main` (0.13.1 when this list was written); each PR below bumps it (P1 was 0.14.0, P2+P3 0.14.1, P4 0.14.2; P5 is 0.14.3). Skills under `skills/<name>/SKILL.md`; the orchestrator's scripts under `skills/orchestrator/scripts/` (`validation_gate.py`, `rounds_record.py`, `readiness_check.py`, `done_check.py`, `sandbox_check.py`, `audit_sync.py`, since 0.14.1 `scratch_run.py`, and since 0.14.2 `source_scan.py`); the launcher `bin/kad`; the audit hook `hooks/audit.sh`; the eval suite under `evals/` (`evals/README.md` is the playbook; `evals/tools/gate.sh` runs the gate; `evals/tools/cost_by_role.py`, `audit_report.py`, `orchestrator_log_check.py` are the audit tools). The design the loop implements is `.synthesis/implementation-flow-v4.md` (D1 to D14; D9 phase 2 is item P3.1 here); the review-cadence reading is `.synthesis/review-cadence-survey.md`.
 - **The project the plugin is measured on**: `personal-finance-tracker-3` (github.com/diabagatekelly/personal-finance-tracker-3, local `~/Documents/portfolio/personal-finance-tracker-3`). Slice 1 merged as PR #2; slice 2 is open as PR #20 on branch `slice-002-give-any-transaction-one-of-my-categories` at `77f4477`, with eleven slice 2 findings and seven open slice 1 issues posted as comments on 2026-11-08. Those are addressed with the updated plugin, after this list, as slice 2's fix round; then slice 3 of the unit (seed the rules from the owner's sheet) is the next real run.
 - **The audit material**: github.com/diabagatekelly/audit-docs (local `~/Documents/portfolio/audit-docs`; the plugin's own clone for syncing is `~/.claude/kad-audit/repo`). Slice 2's review is `personal-finance-tracker-3-slice-2/plugin-review/2026-11-08-slice-2-review.md`, with six companion files beside it (the cold code read, the H5.1 transcript audit, the mutation pass, the test measures and their script, the cost table, the log check). Slice 1's is `personal-finance-tracker-3-slice-1/plugin-review/2026-11-01-slice-1-review.md`. The audit directory on the Mac is `~/.claude/kad-audit/` (session logs, kept transcripts, `last-review`).
 - **Owner**: Kelly Diabagate, works from a Mac (this list was written there) and from Windows through WSL2; the plugin must stay system-agnostic.
@@ -169,7 +189,7 @@ This list's aim, in one sentence: make the flow catch what the cold reads catch 
 - H6's fourth question (review cadence): one measured arm on slice 3 that also changes who fixes (P3.2).
 - Screen checks: the acceptance criteria walked in a real browser by an agent, every UI slice, screen-reader announcements the only manual item (P2).
 - TODO 4.3 (run 2 leftovers in `personal-finance-tracker-2`): won't do.
-- Order of the PRs: P1; then P2 and P3 as one PR; then P4; then P5. (2026-11-09: P1 and P2+P3 are merged; P4 is built and its PR open; P5 is next.)
+- Order of the PRs: P1; then P2 and P3 as one PR; then P4; then P5. (2026-11-09: P1, P2+P3 and P4 are merged; P5 is next.)
 
 ## P1. Start: one word, no questions, Chrome on
 
