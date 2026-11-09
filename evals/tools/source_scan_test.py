@@ -46,8 +46,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 SCRIPTS = os.path.join(ROOT, "skills", "orchestrator", "scripts")
 SCAN = os.path.join(SCRIPTS, "source_scan.py")
 SHEET = os.path.join(ROOT, "evals", "fixtures", "library-app", "source-plants", "desk-fees.csv")
-VALUES = ["Odalys", "Brennecke", "Tavish", "Okonkwo", "Vantongeren", "Marchetti", "Nkemelu", "Salt Road", "Harbour Lights",
-          "Winter Bees", "Tidewater", "7.35", "12.80", "18.60", "RKV", "LC-204417"]
+VALUES = ["Odalys", "Brennecke", "Tavish", "Quennell", "Vantongeren", "Marchetti", "Nkemelu", "Salt Road", "Skelder Harbour Lights",
+          "Winter Bees of Thrupp", "Tidewater", "7.35", "12.80", "18.60", "RKV", "LC-204417"]
 RULE_SKILLS = ["requirements-refinement", "vertical-slicing", "acceptance-criteria", "screen-design", "architecture-design"]
 RULE_START = "**A file the owner provides is described, never quoted.**"
 RULE_END = "chunk gate run the same scan."
@@ -116,7 +116,7 @@ class SourceScan(unittest.TestCase):
     def test_02_text_amount_forms_and_identifiers_are_found_and_never_printed(self):
         self.sources()
         self.write("planning/slice-001.md", "# Slice\n\n- Given Odalys Brennecke owes 7.35, when she pays, then it is paid.\n")
-        self.write("test/fee.test.ts", "const rkvTotal = 735;\nconst other = '12,80';\ntest('charges TAVISH_OKONKWO_REYES', () => {});\n")
+        self.write("test/fee.test.ts", "const rkvTotal = 735;\nconst other = '12,80';\ntest('charges TAVISH_QUENNELL_ODUYA', () => {});\n")
         r = self.scan()
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertRegex(r.stdout, r"hit: planning/slice-001\.md:3 col \d+-\d+ — text, desk fees B2")
@@ -141,13 +141,13 @@ class SourceScan(unittest.TestCase):
         self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 3, r.stdout)
 
     def test_04_allowed_by_the_owner_and_the_printed_stop_words(self):
-        self.sources(allowed=["Winter Bees", "9.15"])
-        self.write("planning/a.md", "Winter bees appear in winter, at 9.15 a jar.\n")
+        self.sources(allowed=["Winter Bees of Thrupp", "9.15"])
+        self.write("planning/a.md", "Winter bees of Thrupp appear in winter, at 9.15 a jar.\n")
         r = self.scan()
         self.assertEqual(r.returncode, 0, r.stdout)
-        self.assertIn("allowed by the owner (2): Winter Bees; 9.15", r.stdout)
+        self.assertIn("allowed by the owner (2): Winter Bees of Thrupp; 9.15", r.stdout)
         self.assertRegex(r.stdout, r"stop-words \(\d+\): a all an and")
-        self.write("planning/a.md", "Harbour lights on the water.\n")
+        self.write("planning/a.md", "Skelder Harbour lights on the water.\n")
         self.assertEqual(self.scan().returncode, 1)
 
     def test_05_unreadable_source_fails_and_no_sources_is_exit_2(self):
@@ -194,10 +194,10 @@ class SourceScan(unittest.TestCase):
         self.assertIn("1 dates", r.stdout)
 
     def test_07_already_in_the_tree_when_listed_is_not_counted(self):
-        self.write("planning/problem.md", "The desk closes at Harbour Lights.\n")
+        self.write("planning/problem.md", "The desk closes at Skelder Harbour Lights.\n")
         listed = self.commit("before the sheet was listed")
         self.sources(listed=f"`{listed}`")
-        self.write("planning/slice-001.md", "Harbour lights again, and Winter Bees.\n")
+        self.write("planning/slice-001.md", "Skelder Harbour lights again, and Winter Bees of Thrupp.\n")
         r = self.scan()
         self.assertEqual(r.returncode, 1)
         self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 1, r.stdout)
@@ -222,7 +222,7 @@ class SourceScan(unittest.TestCase):
     def test_09_history_finds_what_the_tree_no_longer_holds(self):
         self.sources()
         self.write("test/fee.test.ts", "const fee = 1860;\n")
-        self.commit("the Tidewater Almanac fee")
+        self.commit("the Vesk Tidewater Almanac fee")
         self.write("test/fee.test.ts", "const fee = 4410;\n")
         self.commit("an invented fee")
         self.assertEqual(self.scan().returncode, 0)
@@ -326,7 +326,7 @@ class SourceScan(unittest.TestCase):
             f.write("# Sources\n\n| Source | Location | Tab or range | Read on | Listed at |\n|---|---|---|---|---|\n"
                     "| desk fees | `owner-files/desk-fees.csv` | all | 2026-11-09 | — |\n")
         with open(os.path.join(plain, "docs", "x", "slice-001.md"), "w", encoding="utf-8") as f:
-            f.write("She asks about The Salt\nRoad Atlas today.\n\nGlassmaking for\n\nBeginners is two paragraphs.\n")
+            f.write("She asks about The Quennock Salt\nRoad Atlas today.\n\nGlassmaking at\n\nHembry Forge is two paragraphs.\n")
         os.makedirs(os.path.join(plain, "test"))
         with open(os.path.join(plain, "test", "a.test.ts"), "w", encoding="utf-8") as f:
             f.write("const fee = 915;\n")

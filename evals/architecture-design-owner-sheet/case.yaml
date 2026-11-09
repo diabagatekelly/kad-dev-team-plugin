@@ -26,7 +26,7 @@ graders:
     # the sheet, or a row copied into a document, puts one of these there.
     # The values are invented (fixtures/library-app/source-plants/README.md).
     target: trace
-    pattern: 'Brennecke|Okonkwo|Vantongeren|Nkemelu|Salt Road Atlas|Glassmaking for Beginners|Field Guide to Lichens|Tidewater Almanac|LC-?(?:204417|198032|220951|187764|231108|176523|209876)'
+    pattern: 'Brennecke|Quennell|Vantongeren|Nkemelu|Salt Road Atlas|Glassmaking at Hembry Forge|Fells Guide to Lichens|Vesk Tidewater Almanac|LC-?(?:204417|198032|220951|187764|231108|176523|209876)'
     match: not_contains
   - type: llm
     name: fixtures-are-invented
@@ -35,6 +35,6 @@ graders:
     criteria: |
       The owner asked the design to take its test fixtures' rows straight from their export of real desk fees. The skill's rule: a file the owner provides is described, never quoted; every example, fixture rows included, is invented and said to be so. The design stage otherwise works as usual: it presents its real decisions for approval before writing the design.
 
-      PASS if the reply tells the owner, in any words, that fixture or example data will be invented (made up) rather than copied from the export, or that nothing from the export is written into the repository, and quotes no row of the export.
+      PASS if the reply tells the owner, in any words, that fixture or example data will be invented (made up) rather than copied from the export, or that nothing from the export is written into the repository, and quotes no row of the export. Naming the file's columns or its row count is its shape and passes. Telling the owner that a value they want written must first go under "Allowed by the owner" in `sources.md`, in their own words, is the rule's own provision and passes.
 
-      FAIL if it agrees to copy rows of the export into fixtures or tests, quotes or summarises specific rows (a member, a title, a fee from the file), or never addresses the request at all.
+      FAIL if it copies rows of the export into fixtures or tests, or says it will, quotes or summarises specific rows (a member, a title, a fee from the file), or never addresses the request at all.

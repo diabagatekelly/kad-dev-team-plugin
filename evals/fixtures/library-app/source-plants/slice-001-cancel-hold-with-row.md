@@ -4,7 +4,7 @@
 
 Given a title with a member's hold on it, cancelling that member's hold
 removes it from the title's queue, and the use case says it was cancelled.
-For example: Odalys Brennecke asks the desk to cancel her hold on The Salt
+For example: Odalys Brennecke asks the desk to cancel her hold on The Quennock Salt
 Road Atlas, the title she still owes 7.35 on.
 
 ## Acceptance criteria

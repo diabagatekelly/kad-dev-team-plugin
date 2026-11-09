@@ -142,6 +142,22 @@
       "architecture-review"
     ]
   },
+  "architecture-design-owner-sheet": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T214304-architecture-design-owner-sheet.json",
+    "graders": {
+      "fixtures-are-invented": 1.0,
+      "no-cell-of-the-sheet-in-the-session": 1.0,
+      "skill-invoked": 1.0
+    },
+    "skills_invoked": [
+      "architecture-design",
+      "map-query"
+    ]
+  },
   "architecture-design-payfine-phase1": {
     "score": 1.0,
     "runs": 3,
@@ -305,6 +321,29 @@
       "no-reviewer-before-the-pass": 1.0,
       "orchestrator-not-invoked": 1.0,
       "runner-edits-no-code": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "tdd-implementation-lite"
+    ]
+  },
+  "chunk-runner-gate-sources": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T213507-chunk-runner-gate-sources.json",
+    "graders": {
+      "chunk-runner-invoked": 1.0,
+      "failure-handed-to-the-fixer-once": 1.0,
+      "first-gate-fails-on-sources": 1.0,
+      "gate-file-holds-no-value": 1.0,
+      "gate-run-with-the-planning-directory": 1.0,
+      "hands-back-pass-after-the-fix-and-stops": 1.0,
+      "log-not-written": 1.0,
+      "no-reviewer-before-the-pass": 1.0,
+      "scan-never-run-with-show": 1.0,
+      "test-rewritten-with-invented-cards": 1.0
     },
     "skills_invoked": [
       "chunk-runner",
@@ -1119,6 +1158,33 @@
       "pr-writeup"
     ]
   },
+  "orchestrator-delivery-removal": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T213507-orchestrator-delivery-removal.json",
+    "graders": {
+      "branch-rewritten-by-the-script": 1.0,
+      "delivery-skill-invoked": 1.0,
+      "every-commit-scanned-before-and-after": 1.0,
+      "log-holds-no-value": 1.0,
+      "map-written-by-the-script": 1.0,
+      "no-forced-push": 1.0,
+      "nothing-in-the-background": 1.0,
+      "orchestrator-invoked": 1.0,
+      "pull-request-opened": 1.0,
+      "pushed-history-holds-no-value": 1.0,
+      "pushed-history-holds-the-slice": 1.0,
+      "record-names-counts-and-files-never-values": 1.0,
+      "rewrite-before-the-push": 1.0
+    },
+    "skills_invoked": [
+      "delivery",
+      "orchestrator",
+      "pr-writeup"
+    ]
+  },
   "orchestrator-gap-without-delegation": {
     "score": 1.0,
     "runs": 3,
@@ -1201,6 +1267,27 @@
       "puts-the-blocker-to-the-owner": 1.0,
       "readiness-gate-run-by-the-script": 1.0,
       "slice-file-not-edited-by-the-orchestrator": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-readiness-sources": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T213507-orchestrator-readiness-sources.json",
+    "graders": {
+      "check-named-in-the-log": 1.0,
+      "log-holds-no-value": 1.0,
+      "no-planning-document-edited": 1.0,
+      "nothing-launched-while-it-stands": 1.0,
+      "orchestrator-invoked": 1.0,
+      "places-read-with-show-for-the-question": 1.0,
+      "puts-the-places-to-the-owner": 1.0,
+      "readiness-gate-run-by-the-script": 1.0,
+      "source-never-opened": 1.0
     },
     "skills_invoked": [
       "orchestrator"
@@ -1893,6 +1980,23 @@
       "requirements-refinement"
     ]
   },
+  "requirements-refinement-owner-sheet": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T213507-requirements-refinement-owner-sheet.json",
+    "graders": {
+      "asks-and-quotes-nothing": 1.0,
+      "listing-names-the-location": 1.0,
+      "no-cell-of-the-sheet-in-the-session": 1.0,
+      "skill-invoked": 1.0,
+      "source-listed": 1.0
+    },
+    "skills_invoked": [
+      "requirements-refinement"
+    ]
+  },
   "requirements-refinement-payfine-phase1": {
     "score": 0.933,
     "runs": 3,
@@ -1943,6 +2047,22 @@
     },
     "skills_invoked": [
       "scope-map"
+    ]
+  },
+  "screen-design-owner-sheet": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T213507-screen-design-owner-sheet.json",
+    "graders": {
+      "mockup-rows-are-invented": 1.0,
+      "no-cell-of-the-sheet-in-the-session": 1.0,
+      "screen-design-written": 1.0,
+      "skill-invoked": 1.0
+    },
+    "skills_invoked": [
+      "screen-design"
     ]
   },
   "screen-design-payfine": {
@@ -2075,6 +2195,25 @@
       "security-requirements"
     ]
   },
+  "security-requirements-source-criterion": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T213507-security-requirements-source-criterion.json",
+    "graders": {
+      "criteria-written-to-its-own-file": 1.0,
+      "hit-routed-back-and-criterion-checked-by-the-scan": 1.0,
+      "own-document-quotes-nothing": 1.0,
+      "scan-run-then-and-there": 1.0,
+      "skill-invoked": 1.0,
+      "slice-example-left-for-its-owner": 1.0,
+      "source-never-opened": 1.0
+    },
+    "skills_invoked": [
+      "security-requirements"
+    ]
+  },
   "security-review-catalog": {
     "score": 1.0,
     "runs": 3,
@@ -2191,6 +2330,25 @@
       "no-false-alarm-identifier-only-log": 1.0,
       "review-written": 1.0,
       "skill-invoked-display": 1.0
+    },
+    "skills_invoked": [
+      "security-review"
+    ]
+  },
+  "security-review-source-value": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T213507-security-review-source-value.json",
+    "graders": {
+      "finds-the-owners-values-and-names-the-procedure": 1.0,
+      "found-with-the-scan": 1.0,
+      "leaves-the-code-alone": 1.0,
+      "review-quotes-no-value": 1.0,
+      "review-written": 1.0,
+      "skill-invoked": 1.0,
+      "source-never-opened": 1.0
     },
     "skills_invoked": [
       "security-review"
@@ -2776,6 +2934,27 @@
     },
     "skills_invoked": [
       "acceptance-criteria",
+      "vertical-slicing"
+    ]
+  },
+  "vertical-slicing-owner-sheet": {
+    "score": 0.952,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.321",
+    "source": "results/gate-20261109T213507-vertical-slicing-owner-sheet.json",
+    "graders": {
+      "consults-acceptance-criteria": 0.667,
+      "examples-are-invented-and-said-so": 1.0,
+      "no-cell-of-the-sheet-in-the-session": 1.0,
+      "says-why-not-real-rows": 1.0,
+      "skill-invoked": 1.0,
+      "slice-quotes-nothing-from-the-sheet": 1.0,
+      "slice-written": 1.0
+    },
+    "skills_invoked": [
+      "acceptance-criteria",
+      "orchestrator",
       "vertical-slicing"
     ]
   },

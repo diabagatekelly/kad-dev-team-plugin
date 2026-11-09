@@ -41,7 +41,7 @@ graders:
     name: source-never-opened
     # Members and titles are in the export and in neither reviewed file.
     target: trace
-    pattern: 'Brennecke|Okonkwo|Vantongeren|Nkemelu|Salt Road Atlas|Glassmaking for Beginners|Field Guide to Lichens|Tidewater Almanac'
+    pattern: 'Brennecke|Quennell|Vantongeren|Nkemelu|Salt Road Atlas|Glassmaking at Hembry Forge|Fells Guide to Lichens|Vesk Tidewater Almanac'
     match: not_contains
   - type: regex
     name: leaves-the-code-alone

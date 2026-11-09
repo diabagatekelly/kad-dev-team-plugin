@@ -9,7 +9,7 @@ one and pays it by card. The fine then shows as paid.
 
 - Given a signed-in member with outstanding fines, when they open their
   fines in the portal, they see each one and its amount (for example
-  Tavish Okonkwo-Reyes sees 12.80 for Glassmaking for Beginners).
+  Tavish Quennell-Oduya sees 12.80 for Glassmaking at Hembry Forge).
 - Given the member pays a fine and the payment succeeds, the fine shows as
   paid.
 - Given the payment is declined, the fine stays outstanding and the member

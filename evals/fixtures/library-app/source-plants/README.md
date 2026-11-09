@@ -10,8 +10,12 @@ rows (a card number, a member, a title, a fee, a date, a clerk's
 initials), chosen so that nothing in it collides with the rest of the
 fixture: no name, title or card number occurs anywhere in `app/`,
 `planning/`, `route-plants/`, `ui-plants/` or `code-plants/`, and its
-seven amounts are too few for the scan to treat one alone as noise. No
-real export, transcript or project file was used to make it.
+seven amounts are too few for the scan to treat one alone as noise. The
+titles and the hyphenated surname carry invented place names (Quennock,
+Hembry, Varrow, Skelder, Orrin, Thrupp, Vesk) because a model asked for
+realistic mockup rows invented "The Tidewater Almanac" on its own once
+and tripped a grader that had never seen the sheet opened. No real
+export, transcript or project file was used to make it.
 
 | File | What it is | Used by |
 |---|---|---|
