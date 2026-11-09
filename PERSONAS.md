@@ -386,15 +386,23 @@ rather than accumulating here.
 in `.gitignore` — anything placed there never gets tracked. Real dogfooding
 lives in `evals/example/`, which is tracked.)
 
-### Current (2026-11-09): 0.14.1 merged; P4 next
+### Current (2026-11-09): 0.14.1 merged; P4 built as 0.14.2, its PR open; P5 next
 
 The work list is `.synthesis/handoff-slice2.md`; its first section,
 "Where the list stands", is the state. P1 (the launcher as the one way
 in, 0.14.0, PR #41) and P2 with P3 (the criteria walk in a real browser,
 the data rule, the chunk runner, the open-work routing, the triaged
 deferrals, the counted shell edits, the light cadence text; 0.14.1, PR
-#42) are merged. Next: P4 (planning data: nothing of the owner's by
-value), then P5 (audit: transcripts by session id, the cold read and the
+#42) are merged. P4 (planning data: nothing of the owner's by value) is
+built as 0.14.2 and waits for the owner's merge (PR #@PR@): a planning
+stage pointed at a file of the owner's lists it in `sources.md`, reads
+its shape through `source_scan.py describe` and never a cell, and
+invents every example; the same script finds a listed file's values in
+the documents, the code or a branch's commits without printing one, as
+the readiness gate's tenth check, the chunk gate's `sources` check and
+`delivery`'s scan before every push; and `delivery` owns the one
+procedure for taking a value out of history. Next: P5 (audit:
+transcripts by session id, the cold read and the
 mutation pass as tools), then slice 2's fix round on
 `personal-finance-tracker-3` and slice 3 under `kad` with Chrome, the
 `light` cadence and the chunk runner. The section below is the history
