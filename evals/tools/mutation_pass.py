@@ -57,6 +57,7 @@ import json
 import os
 import re
 import shlex
+import signal
 import subprocess
 import sys
 import time
@@ -103,9 +104,26 @@ def load_mutants(path):
     return data
 
 
+def mutant_path(repo, m):
+    """The mutant's file, resolved, or None and why: it must be inside the
+    clone (no absolute path, no `..`, no symlink out) and tracked by git,
+    since `git checkout --` is what restores it."""
+    if os.path.isabs(m["file"]):
+        return None, f"{m['file']} is an absolute path; name the file relative to the clone"
+    path = os.path.realpath(os.path.join(repo, m["file"]))
+    root = os.path.realpath(repo)
+    if path != root and not path.startswith(root + os.sep):
+        return None, f"{m['file']} resolves outside the clone"
+    if git(repo, "ls-files", "--error-unmatch", "--", m["file"]).returncode != 0:
+        return None, f"{m['file']} is not tracked by git, so it could not be restored"
+    return path, None
+
+
 def locate(repo, m):
     """(line number, problem): where `old` is in the file, once."""
-    path = os.path.join(repo, m["file"])
+    path, problem = mutant_path(repo, m)
+    if problem:
+        return None, problem
     try:
         text = open(path, encoding="utf-8").read()
     except OSError as e:
@@ -144,7 +162,11 @@ def run_cmd(cmd, repo, timeout):
 
 
 def read_result(code, output):
-    """(caught, failing count or None, failing test names)."""
+    """(verdict, failing count or None, failing test names): `caught` when
+    the output names a failing test or counts one, `survived` on exit 0
+    with none, `error` on a non-zero exit with no test failure read (the
+    runner itself failed: a timeout, a missing module, a broken install),
+    which is neither a kill nor a survivor."""
     names = []
     for line in output.splitlines():
         m = FAIL_LINE.match(line)
@@ -160,8 +182,9 @@ def read_result(code, output):
             break
     if count is None and names:
         count = len(names)
-    caught = code != 0 or bool(count)
-    return caught, count, names
+    if count:
+        return "caught", count, names
+    return ("survived" if code == 0 else "error"), count, names
 
 
 def diff_files(repo, base):
@@ -193,8 +216,8 @@ def run(a, mutants):
 
     say(f"mutation_pass: baseline `{a.test}` in {repo} at {head}")
     code, out, secs = run_cmd(a.test, repo, a.timeout)
-    caught, count, names = read_result(code, out)
-    if caught:
+    verdict, count, names = read_result(code, out)
+    if verdict != "survived":
         say(f"mutation_pass: the baseline fails (exit {code}{', ' + str(count) + ' failed' if count else ''}); nothing mutated")
         record({"mutant": 0, "baseline": True, "exit": code, "failed": count, "names": names[:3]})
         return 2
@@ -206,30 +229,37 @@ def run(a, mutants):
     record({"mutant": 0, "baseline": True, "exit": 0, "tests": base_count, "seconds": round(secs, 1)})
 
     results = []
+    # A termination (Ctrl-C, a kill) raises through the `finally` below, so
+    # the mutant in flight is restored before the runner exits.
+    signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     for i, m in enumerate(mutants, 1):
         line, _ = locate(repo, m)
-        path = os.path.join(repo, m["file"])
+        path, _ = mutant_path(repo, m)
         text = open(path, encoding="utf-8").read()
         with open(path, "w", encoding="utf-8") as f:
             f.write(text.replace(m["old"], m["new"], 1))
-        type_caught = False
-        if a.typecheck:
-            tcode, _, _ = run_cmd(a.typecheck, repo, a.timeout)
-            type_caught = tcode != 0
-        code, out, secs = run_cmd(a.test, repo, a.timeout)
-        caught, count, names = read_result(code, out)
-        git(repo, "checkout", "--", m["file"])
+        try:
+            type_caught = False
+            if a.typecheck:
+                tcode, _, _ = run_cmd(a.typecheck, repo, a.timeout)
+                type_caught = tcode != 0
+            code, out, secs = run_cmd(a.test, repo, a.timeout)
+        finally:
+            git(repo, "checkout", "--", m["file"])
+        verdict, count, names = read_result(code, out)
         if git(repo, "status", "--porcelain").stdout.strip():
             say(f"mutation_pass: the tree is not clean after mutant {i} ({m['file']}); stopped")
             record({"mutant": i, "file": m["file"], "line": line, "restored": False})
             return 3
         res = {"mutant": i, "file": m["file"], "line": line, "note": m["note"], "area": m["area"],
-               "caught": caught, "failed": count, "names": names[:3], "exit": code, "typecheck_caught": type_caught,
+               "verdict": verdict, "caught": verdict == "caught", "failed": count, "names": names[:3], "exit": code,
+               "typecheck_caught": type_caught,
                "in_diff": (m["file"] in changed) if changed is not None else None, "seconds": round(secs, 1)}
         results.append(res)
         record(res)
-        verdict = f"CAUGHT ({count if count is not None else 'exit ' + str(code)} failed)" if caught else "SURVIVED"
-        say(f"{i:>3}  {verdict:<22} {m['file']}:{line}  {m['note']}")
+        shown = {"caught": f"CAUGHT ({count} failed)", "survived": "SURVIVED",
+                 "error": f"ERROR (exit {code}, no test failure read)"}[verdict]
+        say(f"{i:>3}  {shown:<36} {m['file']}:{line}  {m['note']}")
     if log:
         log.close()
     report = render(a, repo, head, base_count, results, changed is not None)
@@ -243,6 +273,8 @@ def run(a, mutants):
 
 
 def render(a, repo, head, base_count, results, have_diff):
+    errors = [r for r in results if r["verdict"] == "error"]
+    results = [r for r in results if r["verdict"] != "error"]
     n = len(results)
     caught = [r for r in results if r["caught"]]
     rate = f"{100 * len(caught) / n:.1f}%" if n else "n/a"
@@ -257,17 +289,19 @@ def render(a, repo, head, base_count, results, have_diff):
              "total in brackets. \"In the diff\" means the file is in `git diff --name-only <base>...HEAD`.", "",
              "## Results", "",
              "| # | file:line | the break | result | in the diff? |", "|---|---|---|---|---|"]
-    for r in results:
-        if r["caught"]:
-            by = "; ".join(r["names"]) if r["names"] else "the runner's exit code"
-            count = r["failed"] if r["failed"] is not None else f"exit {r['exit']}"
-            verdict = f"CAUGHT ({count} failed) by {by}" + (" [typecheck also fails]" if r["typecheck_caught"] else "")
-        else:
+    for r in sorted(results + errors, key=lambda r: r["mutant"]):
+        if r["verdict"] == "caught":
+            by = "; ".join(r["names"]) if r["names"] else "the runner's failure count"
+            verdict = f"CAUGHT ({r['failed']} failed) by {by}" + (" [typecheck also fails]" if r["typecheck_caught"] else "")
+        elif r["verdict"] == "survived":
             verdict = "SURVIVED" + (" [typecheck fails]" if r["typecheck_caught"] else "")
+        else:
+            verdict = f"ERROR (exit {r['exit']}, no test failure read; not counted)"
         in_diff = "yes" if r["in_diff"] else "no" if r["in_diff"] is False else "n/a"
         lines.append(f"| {r['mutant']} | {r['file']}:{r['line']} | {r['note']} | {verdict} | {in_diff} |")
     lines += ["", "## Summary", "",
-              f"- Mutants: **{n}**. Caught: **{len(caught)}**. Survived: **{n - len(caught)}**. Kill rate **{rate}**."]
+              f"- Mutants: **{n}**. Caught: **{len(caught)}**. Survived: **{n - len(caught)}**. Kill rate **{rate}**."
+              + (f" Not counted, the runner itself failed: {', '.join(str(r['mutant']) for r in errors)}." if errors else "")]
     if have_diff:
         d = [r for r in results if r["in_diff"]]
         dc = [r for r in d if r["caught"]]

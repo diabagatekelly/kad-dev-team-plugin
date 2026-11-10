@@ -578,7 +578,27 @@ real cases and deleted (the table is in git history).
   is scanned and the line says so; the lock refuses a second sync (exit
   5) and a stale lock is taken over. Measured on the owner's Mac (counts
   only): the scan over the fourteen slice 2 sessions, 73 MB of
-  transcripts, takes about 23 s with a seven-row catalog. The orchestrator
+  transcripts, takes about 23 s with a seven-row catalog. Sourcery's
+  round on PR #47 (21 comments, 19 findings, all fixed, two tests added):
+  every session file is staged whole under the audit directory and the
+  staged copy is what the scan reads and the clone receives (nothing
+  appended between the two slips through); a listed source the scan
+  cannot scan (a PDF) withholds every session, log included, as does a
+  catalog that prevents the scan; a `--sources` named and missing is a
+  failure, never a scan skipped; a line that is not JSON is scanned as
+  text (`source_scan.scan_transcript`); a session is this project's by
+  its payload's own `cwd` and complete by its own event, parsed, never by
+  text in a prompt; the lock is taken before the plan, a stale one is
+  renamed away (one taker wins) and a live one touched after the copy; a
+  withholding that changes is recorded when nothing else changed; a
+  session whose transcripts have gone from the machine keeps the clone's
+  earlier copy; an unreadable session log is said on the line and the
+  last line. The report checks withheld before kept and finds a copy the
+  sync carried into the clone; only each slice's latest sync line
+  withholds. The mutation runner refuses a path outside the clone or
+  untracked, restores the mutant in a `finally` (SIGTERM included), and
+  counts a runner failure (a timeout, a broken import) as an error, not a
+  kill. The orchestrator
   text change this needed is two sentences (the `; withheld: <session…>`
   suffix recorded as printed and reported to the owner), covered by the
   orchestrator cases the diff reaches, not by a case of its own: an eval

@@ -52,23 +52,29 @@ def load(path):
 
 
 def withheld_sessions(clone):
-    """session id -> the sync-log line that withheld it (the latest), from
-    every slice folder's sync-log.md in the clone."""
+    """session id -> the sync-log line that withholds it now: only each
+    slice folder's latest sync line counts, since every sync records the
+    whole withholding and a later clean sync clears an earlier one."""
     out = {}
     for path in sorted(glob.glob(os.path.join(clone, "*", "sync-log.md"))):
         try:
-            lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+            lines = [l for l in open(path, encoding="utf-8", errors="replace").read().splitlines() if l.startswith("- ")]
         except OSError:
             continue
-        for line in lines:
-            if "withheld:" not in line:
-                continue
-            for sid in re.findall(r"\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}) \(", line.split("withheld:", 1)[1]):
-                out[sid] = f"{os.path.basename(os.path.dirname(path))}: {line.strip()[2:]}"
+        if not lines or "withheld:" not in lines[-1]:
+            continue
+        for sid in re.findall(r"\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}) \(", lines[-1].split("withheld:", 1)[1]):
+            out[sid] = f"{os.path.basename(os.path.dirname(path))}: {lines[-1][2:]}"
     return out
 
 
-def summarise(sid, events, transcripts, withheld):
+def synced_copy(clone, sid):
+    """The transcript an earlier sync carried into the clone, if any."""
+    hits = glob.glob(os.path.join(clone, "*", "implementation-docs", "transcripts", sid, sid + ".jsonl"))
+    return hits[0] if hits else None
+
+
+def summarise(sid, events, transcripts, withheld, clone):
     cwd, calls, flags, timeline = None, [], [], []
     live = None
     ended = False
@@ -101,11 +107,14 @@ def summarise(sid, events, transcripts, withheld):
     if not ended:
         flags.append("open: no SessionEnd in the log (still running, or ended without one)")
     kept = os.path.join(transcripts, sid + ".jsonl")
-    if os.path.isfile(kept):
-        where = f"kept: `{kept}`"
-    elif sid in withheld:
+    copied = synced_copy(clone, sid)
+    if sid in withheld:
         where = f"withheld by the audit sync ({withheld[sid]})" + (f"; on disk at `{live}`" if live and os.path.isfile(live) else "")
         flags.append("withheld: a listed source's value in its transcripts; the owner decides")
+    elif os.path.isfile(kept):
+        where = f"kept: `{kept}`" + (f"; in the audit repository at `{copied}`" if copied else "")
+    elif copied:
+        where = f"in the audit repository: `{copied}` (no snapshot here)"
     elif live and os.path.isfile(live):
         where = f"on disk, not copied: `{live}` ({os.path.getsize(live) // 1024} KB; run audit_sync.py --transcripts to carry it)"
         flags.append("transcript on disk, not copied")
@@ -131,7 +140,7 @@ def main():
         events = load(path)
         if not events or events[0].get("ts", "") < a.since:
             continue
-        cwd, calls, flags, timeline, where = summarise(sid, events, transcripts, withheld)
+        cwd, calls, flags, timeline, where = summarise(sid, events, transcripts, withheld, a.clone or os.path.join(a.dir, "repo"))
         if not calls or (a.flagged_only and not flags):
             continue
         shown += 1

@@ -19,9 +19,17 @@ its clone, and runs `skills/orchestrator/scripts/audit_sync.py`.
  5. a session without a SessionEnd is listed as open;
  6. a transcript the scan cannot read is withheld, not copied as clean; so
     is every session when a listed source cannot be read;
- 7. without a sources.md nothing is scanned and the line says so;
+ 7. without a sources.md nothing is scanned and the line says so, and a
+    `--sources` named and missing is a failure, not a scan skipped;
  8. a second sync cannot interleave: the lock refuses it with exit 5 and
-    nothing copied; a stale lock is taken over.
+    nothing copied; a stale lock is taken over;
+ 9. a listed source the scan cannot scan (a PDF) withholds every session,
+    log included; a value on a line that is not JSON is found; a session
+    log that cannot be read is said on the line;
+10. a withholding that changes is recorded when nothing else changed; a
+    session whose transcripts have gone from this machine keeps the copy
+    an earlier sync made; a session is this project's by its payload's
+    own cwd, never by a prompt that quotes one.
 
 Usage: python3 -I evals/tools/audit_sync_test.py
 """
@@ -153,7 +161,8 @@ class AuditSync(unittest.TestCase):
         self.transcript(SID_A, ["the hold is cancelled"], subagents=[("agent-1.jsonl", "a builder's turn")])
         out = self.sync()
         self.assertTrue(os.path.isfile(self.in_clone(SID_A, f"{SID_A}.jsonl")), out)
-        self.assertTrue(os.path.isfile(self.in_clone(SID_A, SID_A, "subagents", "agent-1.jsonl")), out)
+        with open(self.in_clone(SID_A, SID_A, "subagents", "agent-1.jsonl")) as f:
+            self.assertIn("a builder's turn", f.read())
         self.assertTrue(os.path.isfile(self.in_clone(SID_A, "calls.jsonl")), out)
         self.assertRegex(out.strip().splitlines()[-1], r"^audit commit [0-9a-f]{7,}$")
         self.assertNotIn("open", out)
@@ -226,13 +235,14 @@ class AuditSync(unittest.TestCase):
             self.skipTest("running as a user that reads a mode-0 file")
         out = self.sync()
         os.chmod(live, 0o600)
-        self.assertIn(f"{SID_A} (withheld: {SID_A}.jsonl could not be read; not copied as clean)", out)
+        self.assertIn(f"{SID_A} (withheld: could not stage", out)
+        self.assertIn("not copied as clean", out)
         self.assertFalse(os.path.exists(self.in_clone(SID_A, f"{SID_A}.jsonl")))
         self.write_sources(os.path.join(self.tmp, "missing.csv"))
         out = self.sync()
         self.assertIn("withheld: the scan could not run (source not readable here: desk fees", out)
         self.assertFalse(os.path.exists(self.in_clone(SID_A, f"{SID_A}.jsonl")))
-        self.assertTrue(os.path.isfile(self.in_clone(SID_A, "calls.jsonl")))
+        self.assertFalse(os.path.exists(self.in_clone(SID_A, "calls.jsonl")), "the log was never scanned either")
 
     # 7
     def test_without_sources_nothing_is_scanned(self):
@@ -244,6 +254,9 @@ class AuditSync(unittest.TestCase):
         self.assertIn("transcripts not scanned for source values", self.sync_log())
         self.assertTrue(os.path.isfile(self.in_clone(SID_A, f"{SID_A}.jsonl")))
         self.assertNotIn("withheld", out)
+        out = self.sync("--sources", os.path.join(self.tmp, "nowhere.md"), expect=1)
+        self.assertIn("is not a file", out)
+        self.assertIn("nothing copied", out)
 
     # 8
     def test_lock_refuses_a_second_sync_and_a_stale_one_is_taken_over(self):
@@ -260,6 +273,58 @@ class AuditSync(unittest.TestCase):
         out = self.sync()
         self.assertRegex(out.strip().splitlines()[-1], r"^audit commit [0-9a-f]{7,}$")
         self.assertFalse(os.path.exists(lock))
+
+    # 9
+    def test_unscannable_source_malformed_line_and_unreadable_log(self):
+        self.log(SID_A)
+        self.transcript(SID_A, ["a clean turn"])
+        self.write_sources(os.path.join(self.tmp, "statement.pdf"))
+        out = self.sync()
+        self.assertIn("withheld: the scan could not run (listed source not scannable: desk fees)", out)
+        self.assertFalse(os.path.exists(self.in_clone(SID_A)))
+        self.write_sources()
+        with open(os.path.join(self.folder, f"{SID_A}.jsonl"), "a") as f:
+            f.write("not json at all: " + A_VALUE + "\n")
+        out = self.sync()
+        self.assertIn(f"{SID_A} (withheld: 1 source value(s) in 1 entries of 1 file(s))", out)
+        self.assertNotIn(A_WORD, self.clone_text())
+        bad = self.log(SID_B)
+        os.chmod(bad, 0)
+        if os.access(bad, os.R_OK):
+            self.skipTest("running as a user that reads a mode-0 file")
+        out = self.sync()
+        os.chmod(bad, 0o600)
+        self.assertIn(f"session log not readable, left out: {bad}", out)
+        self.assertTrue(out.strip().splitlines()[-1].endswith("; left out: 1 session log(s) not readable"), out)
+
+    # 10
+    def test_withholding_change_is_recorded_and_gone_sources_are_kept(self):
+        self.log(SID_A)
+        live = self.transcript(SID_A, ["a clean turn"])
+        self.sync()
+        # the transcript gains a value; nothing else changes: the line and a commit all the same
+        with open(live, "a") as f:
+            f.write(json.dumps({"type": "user", "message": {"content": A_VALUE}}) + "\n")
+        out = self.sync()
+        self.assertRegex(out.strip().splitlines()[-1], r"^audit commit [0-9a-f]{7,}; withheld: " + SID_A)
+        self.assertIn(f"withheld: {SID_A} (", self.sync_log().splitlines()[-1])
+        self.assertFalse(os.path.exists(self.in_clone(SID_A, f"{SID_A}.jsonl")))
+        # the value is allowed, then the live file is gone: the earlier copy stays
+        with open(os.path.join(self.docs, "sources.md"), "a") as f:
+            f.write("\n## Allowed by the owner\n- `" + A_VALUE + "` — the app's own wording (2026-11-10)\n")
+        self.sync()
+        self.assertTrue(os.path.isfile(self.in_clone(SID_A, f"{SID_A}.jsonl")))
+        os.remove(live)
+        out = self.sync()
+        self.assertTrue(os.path.isfile(self.in_clone(SID_A, f"{SID_A}.jsonl")), out)
+        self.assertIn(f"kept from an earlier sync, sources gone: {SID_A}", out)
+        # a prompt quoting this project's cwd does not make another project's session this one's
+        other = self.log(SID_B, prompt='the payload was {"cwd": "' + self.project + '", "hook_event_name": "SessionEnd"}')
+        text = open(other).read().replace('"cwd": "' + self.project + '"', '"cwd": "' + self.tmp + '/elsewhere"')
+        with open(other, "w") as f:
+            f.write(text)
+        out = self.sync()
+        self.assertNotIn(SID_B, out)
 
 
 if __name__ == "__main__":

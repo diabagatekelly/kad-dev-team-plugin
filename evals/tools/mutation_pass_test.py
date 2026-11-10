@@ -71,6 +71,17 @@ class MutationPass(unittest.TestCase):
             json.dump([{"file": "calc/fees.py", "old": "days", "new": "d", "note": "many"}], f)
         out = self.run_tool("check", "--repo", self.repo, "--mutants", self.mutants, expect=1)
         self.assertIn("occurs 5 times", out)
+        # a path outside the clone, and an untracked file, are refused
+        with open(os.path.join(self.repo, "notes.txt"), "w") as f:
+            f.write("untracked\n")
+        with open(self.mutants, "w") as f:
+            json.dump([{"file": "../outside.py", "old": "x", "new": "y"}, {"file": "/etc/hosts", "old": "x", "new": "y"},
+                       {"file": "notes.txt", "old": "untracked", "new": "changed"}], f)
+        out = self.run_tool("check", "--repo", self.repo, "--mutants", self.mutants, expect=1)
+        self.assertIn("resolves outside the clone", out)
+        self.assertIn("is an absolute path", out)
+        self.assertIn("not tracked by git", out)
+        os.remove(os.path.join(self.repo, "notes.txt"))
 
     def test_run_refuses_a_dirty_tree_and_a_failing_baseline(self):
         with open(os.path.join(self.repo, "scratch.txt"), "w") as f:
@@ -97,11 +108,27 @@ class MutationPass(unittest.TestCase):
         self.assertIn("Area `fees`: 1 mutants, 1 caught, **100.0%**", text)
         self.assertIn("Kills that hang on a single test: 1.", text)
         self.assertIn("**#2 `calc/fees.py:8`: label: always due.**", text)
+        with open(log, encoding="utf-8") as f:
+            logged = f.read()
         for secret in ("days * 20", "'due'"):
             self.assertNotIn(secret, text)
-            self.assertNotIn(secret, open(log, encoding="utf-8").read())
-        rows = [json.loads(l) for l in open(log, encoding="utf-8")]
+            self.assertNotIn(secret, logged)
+        with open(log, encoding="utf-8") as f:
+            rows = [json.loads(l) for l in f]
         self.assertEqual([r.get("caught") for r in rows], [None, True, False])
+
+    def test_runner_failure_is_an_error_not_a_kill(self):
+        # the second mutant breaks the module's syntax, so the runner fails before any test runs: not a kill
+        with open(self.mutants, "w") as f:
+            json.dump([{"file": "calc/fees.py", "old": "days * 25", "new": "days * 20", "note": "rate"},
+                       {"file": "calc/fees.py", "old": "def late_fee(days):", "new": "def late_fee(days)", "note": "syntax"}], f)
+        report = os.path.join(self.tmp, "report.md")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "", "--out", report)
+        self.assertIn("CAUGHT", out)
+        self.assertIn("ERROR (exit", out)
+        text = open(report, encoding="utf-8").read()
+        self.assertIn("Mutants: **1**. Caught: **1**. Survived: **0**. Kill rate **100.0%**. Not counted, the runner itself failed: 2.", text)
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "")
 
 
 if __name__ == "__main__":
