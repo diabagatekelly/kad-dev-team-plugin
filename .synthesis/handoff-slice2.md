@@ -184,16 +184,19 @@ record):
   Sourcery's dashboard (2026-11-09), so the check no longer fails on
   `source_scan.py`. `evals/README.md`'s planning-data bullet has the
   detail.
-- **Known and left for P5's PR (done there, 0.14.3):** `evals/orchestrator-log-format/check.sh`
-  prints one KNOWN order error on entry 9 of the committed fixture (the
-  checker's reading of a persona-plus-skills route);
-  `chunk-runner-gate-outside`'s `runner-edits-no-code` grader is written
-  with doubled braces and matches nothing, and cannot be a trace regex
-  anyway, since a nested fixer's edits are in the runner's trace; the
-  `delivery-ready` loop state does not create `tools/gh-calls.log` empty
-  as `delivery-ready-source` does, so a run that never calls the
-  stand-in voids itself with a grader throw instead of failing a grader
-  (`orchestrator-delivery-foreground` lost one run to it).
+- **Three small defects, fixed in P5's PR (0.14.3):**
+  `evals/orchestrator-log-format/check.sh` printed one KNOWN order error
+  on entry 9 of its fixture because the checker counted the state table's
+  accessibility-line repair row (a hand-back to `product-slicer`) as a
+  stage the implementation entry skipped; a row that routes back to a
+  stage an earlier row names is now a hand-back, and the check counts
+  every error. `chunk-runner-gate-outside`'s `runner-edits-no-code`
+  grader (doubled braces, matched nothing, and could not be a trace regex
+  since a nested fixer's edits are in the runner's trace) is removed; the
+  judge's FAIL clause carries it. The `delivery-ready` loop state creates
+  `tools/gh-calls.log` empty, as `delivery-ready-source` did, so a run
+  that never calls the stand-in fails that grader instead of voiding the
+  run. Nothing of the three remains open.
 - **Checked at slice 3, not before:** P1.2 and P1.4 (zero questions at
   A, a browser that answers), P2.1 to P2.4 (the walk's table from a real
   browser, smoke screenshots, no agent reading the owner's data, mockup
@@ -317,8 +320,9 @@ Files: `skills/orchestrator/scripts/audit_sync.py`, `evals/tools/audit_report.py
 
 ## After this list
 
-Both runs start with `kad` from the project's root (0.14.1 or later
-installed), never plain `claude`.
+Both runs start with `kad` from the project's root (0.14.3 installed:
+`claude plugin update kad-dev-team@kad-dev-team-marketplace`, then a
+restart), never plain `claude`.
 
 1. Slice 2's fix round on `personal-finance-tracker-3` under the updated plugin: `/kad-dev-team:orchestrator` finds PR #20 open with the eleven slice 2 findings and the seven slice 1 issues as comments (P3.10) and routes to the triage and the fix round itself; #14 is the High it asks about; the "changing a merchant's general rule" question goes to `product-manager:requirements-refinement` before anything else in that unit.
 2. Slice 3 of the unit (seed the starting rules from the owner's sheet; `planning/slice-002.md`'s slice set) under `kad` with Chrome, the `light` cadence arm and the chunk runner, audited the same way plus the new tools; the review decides P3.2's keep list and the default cadence.
