@@ -683,6 +683,15 @@
     "claude_version": "2.1.322",
     "recorded": "2026-11-10T11:55:51Z"
   },
+  "orchestrator-route-scope-decision": {
+    "inputs": "c2c33d4695ec4979e975ef9314f53b822a14b5ef67f767fad792021e2d60c307",
+    "score": 0.889,
+    "bar": 0.944,
+    "runs": 3,
+    "source": "results/gate-20261110T115640-orchestrator-route-scope-decision.json",
+    "claude_version": "2.1.322",
+    "recorded": "2026-11-10T11:57:51Z"
+  },
   "orchestrator-route-screen-design": {
     "inputs": "3e89376ddc4183791dc72149cbddc3e70c5d42f7e55042f5da41efd4188910ec",
     "score": 1.0,

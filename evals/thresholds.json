@@ -305,10 +305,10 @@
   },
   "chunk-runner-gate-outside": {
     "score": 1.0,
-    "runs": 3,
+    "runs": 1,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261109T111044-chunk-runner-gate-outside.json",
+    "claude_version": "2.1.322",
+    "source": "results/gate-20261110T113956-chunk-runner-gate-outside.json",
     "graders": {
       "allow-list-not-widened": 1.0,
       "chunk-runner-invoked": 1.0,
@@ -319,8 +319,7 @@
       "log-not-written": 1.0,
       "no-records-commit": 1.0,
       "no-reviewer-before-the-pass": 1.0,
-      "orchestrator-not-invoked": 1.0,
-      "runner-edits-no-code": 1.0
+      "orchestrator-not-invoked": 1.0
     },
     "skills_invoked": [
       "chunk-runner",
