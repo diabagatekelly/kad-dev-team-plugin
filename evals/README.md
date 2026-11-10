@@ -598,7 +598,30 @@ real cases and deleted (the table is in git history).
   withholds. The mutation runner refuses a path outside the clone or
   untracked, restores the mutant in a `finally` (SIGTERM included), and
   counts a runner failure (a timeout, a broken import) as an error, not a
-  kill. The orchestrator
+  kill. Its third round (22 comments) fixed: a transcript path a payload
+  names is read only under the projects directory or the audit
+  directory's snapshots (a planted log cannot make the sync copy any
+  readable file); paths compare resolved and case-folded only where the
+  system folds them; each run stages under a folder of its own; the lock
+  file is removed if its details cannot be written; a transcript already
+  in the clone is never replaced by a smaller copy, and a session folder
+  is no longer rebuilt from scratch; a copy kept after its sources went
+  is rescanned against today's `sources.md` and withheld if it now holds
+  a listed value; the whole withheld text, not the id set, decides
+  whether the sync log gets a line, and a sync without `--transcripts`
+  says so on its line so the report never reads it as a clean scan; the
+  report takes the chronologically latest transcript-syncing line across
+  slice folders and uses the sync's projects-directory fallback; the
+  mutation runner refuses a symlink, runs the typecheck on the baseline
+  first, reports a command that cannot start or times out as an error,
+  writes the mutant inside the restoring block, and holds a lock in the
+  clone's `.git`; the audit-review skill says a withheld transcript is
+  not opened in a model session. Declined with the reason on the thread:
+  a project with no `sources.md` has nothing listed to scan (the line
+  says so); a session's cwd is one directory, so a mixed-project session
+  does not arise; the lock's stale rule (an hour, an atomic rename) is
+  the accepted window for a sync that takes about a minute; the opengrep
+  audit rule on the runner's one command call, as on PR #44. The orchestrator
   text change this needed is two sentences (the `; withheld: <session…>`
   suffix recorded as printed and reported to the owner), covered by the
   orchestrator cases the diff reaches, not by a case of its own: an eval

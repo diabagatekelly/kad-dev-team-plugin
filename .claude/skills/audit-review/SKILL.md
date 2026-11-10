@@ -22,8 +22,10 @@ wrong thing and the user fixed it later by hand. Each section says where
 the session's transcript is: kept (the hook's snapshot), on disk and not
 copied (the live file Claude Code wrote; `audit_sync.py --transcripts`
 carries it), withheld by the sync (it holds a value of a source listed in
-`sources.md`; read it on this machine, quote nothing from it, and put the
-decision to the owner), or none. A session without a SessionEnd is
+`sources.md`: do not open it in this session, since reading it would put
+the owner's values in front of the model; record the withholding and put
+the decision to the owner, who reads the file themselves or runs
+`source_scan.py scan --show` on their own), or none. A session without a SessionEnd is
 `open`: still running, or ended without one.
 
 ## 2. Read each one against the rules that applied

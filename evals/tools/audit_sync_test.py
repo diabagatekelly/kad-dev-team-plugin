@@ -174,7 +174,7 @@ class AuditSync(unittest.TestCase):
         self.log(SID_A)
         self.log(SID_B)
         self.transcript(SID_A, ["a clean turn"])
-        self.transcript(SID_B, ["the member is " + A_VALUE + ", fee 7.35"], subagents=[("agent-2.jsonl", "clean")])
+        self.transcript(SID_B, ["a clean main transcript"], subagents=[("agent-2.jsonl", "the member is " + A_VALUE + ", fee 7.35")])
         out = self.sync()
         self.assertTrue(os.path.isfile(self.in_clone(SID_A, f"{SID_A}.jsonl")))
         self.assertFalse(os.path.exists(self.in_clone(SID_B, f"{SID_B}.jsonl")), out)
@@ -320,11 +320,37 @@ class AuditSync(unittest.TestCase):
         self.assertIn(f"kept from an earlier sync, sources gone: {SID_A}", out)
         # a prompt quoting this project's cwd does not make another project's session this one's
         other = self.log(SID_B, prompt='the payload was {"cwd": "' + self.project + '", "hook_event_name": "SessionEnd"}')
-        text = open(other).read().replace('"cwd": "' + self.project + '"', '"cwd": "' + self.tmp + '/elsewhere"')
+        with open(other) as f:
+            text = f.read().replace('"cwd": "' + self.project + '"', '"cwd": "' + self.tmp + '/elsewhere"')
         with open(other, "w") as f:
             f.write(text)
         out = self.sync()
         self.assertNotIn(SID_B, out)
+        os.remove(other)
+        # the allowed line goes: the kept copy is read against today's sources and withheld
+        with open(os.path.join(self.docs, "sources.md")) as f:
+            text = f.read().split("## Allowed by the owner")[0]
+        with open(os.path.join(self.docs, "sources.md"), "w") as f:
+            f.write(text)
+        out = self.sync()
+        self.assertFalse(os.path.exists(self.in_clone(SID_A, f"{SID_A}.jsonl")), out)
+        self.assertIn(f"withheld: {SID_A} (1 source value(s) in an earlier copy; the earlier copy removed)", self.sync_log().splitlines()[-1])
+        self.assertNotIn(A_WORD, self.clone_text())
+
+    # 11
+    def test_transcript_path_outside_the_projects_directory_is_not_read(self):
+        self.log(SID_A)
+        elsewhere = os.path.join(self.tmp, "elsewhere.jsonl")
+        with open(elsewhere, "w") as f:
+            f.write(json.dumps({"type": "assistant", "message": {"content": "a private file"}}) + "\n")
+        path = os.path.join(self.audit, "sessions", f"{SID_A}.jsonl")
+        with open(path) as f:
+            text = f.read().replace(os.path.join(self.folder, f"{SID_A}.jsonl"), elsewhere)
+        with open(path, "w") as f:
+            f.write(text)
+        out = self.sync()
+        self.assertIn(f"{SID_A} (calls only, no transcript on disk)", out)
+        self.assertNotIn("a private file", self.clone_text())
 
 
 if __name__ == "__main__":

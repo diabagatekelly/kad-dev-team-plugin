@@ -52,20 +52,30 @@ def load(path):
 
 
 def withheld_sessions(clone):
-    """session id -> the sync-log line that withholds it now: only each
-    slice folder's latest sync line counts, since every sync records the
-    whole withholding and a later clean sync clears an earlier one."""
-    out = {}
+    """session id -> the sync-log line that withholds it now: across every
+    slice folder, the chronologically latest line that synced transcripts
+    (a sync without `--transcripts` says `transcripts: not synced` and
+    settles nothing), since every such line records the whole withholding
+    and a later clean one clears an earlier one."""
+    latest = {}  # slice folder -> (stamp, line)
     for path in sorted(glob.glob(os.path.join(clone, "*", "sync-log.md"))):
         try:
-            lines = [l for l in open(path, encoding="utf-8", errors="replace").read().splitlines() if l.startswith("- ")]
+            lines = [l for l in open(path, encoding="utf-8", errors="replace").read().splitlines()
+                     if l.startswith("- ") and "transcripts: not synced" not in l]
         except OSError:
             continue
-        if not lines or "withheld:" not in lines[-1]:
-            continue
-        for sid in re.findall(r"\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}) \(", lines[-1].split("withheld:", 1)[1]):
-            out[sid] = f"{os.path.basename(os.path.dirname(path))}: {lines[-1][2:]}"
-    return out
+        if lines:
+            latest[os.path.basename(os.path.dirname(path))] = (lines[-1][2:21], lines[-1])
+    out = {}
+    for folder, (stamp, line) in sorted(latest.items(), key=lambda kv: kv[1][0]):
+        for sid in re.findall(r"\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}) \(",
+                              line.split("withheld:", 1)[1] if "withheld:" in line else ""):
+            out[sid] = (stamp, f"{folder}: {line[2:]}")
+        # the latest line that names a session without withholding it clears it
+        for sid in list(out):
+            if sid in line and sid not in (line.split("withheld:", 1)[1] if "withheld:" in line else "") and out[sid][0] <= stamp:
+                del out[sid]
+    return {sid: v[1] for sid, v in out.items()}
 
 
 def synced_copy(clone, sid):
@@ -74,7 +84,7 @@ def synced_copy(clone, sid):
     return hits[0] if hits else None
 
 
-def summarise(sid, events, transcripts, withheld, clone):
+def summarise(sid, events, transcripts, withheld, clone, projects_dir):
     cwd, calls, flags, timeline = None, [], [], []
     live = None
     ended = False
@@ -106,6 +116,11 @@ def summarise(sid, events, transcripts, withheld, clone):
                 flags.append(f"repeat: {name} invoked more than once")
     if not ended:
         flags.append("open: no SessionEnd in the log (still running, or ended without one)")
+    if (not live or not os.path.isfile(live)) and cwd:
+        # the same fallback the sync uses: the project's folder under the projects directory
+        fallback = os.path.join(projects_dir, re.sub(r"[^A-Za-z0-9]", "-", os.path.abspath(cwd)), sid + ".jsonl")
+        if os.path.isfile(fallback):
+            live = fallback
     kept = os.path.join(transcripts, sid + ".jsonl")
     copied = synced_copy(clone, sid)
     if sid in withheld:
@@ -128,6 +143,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default=os.environ.get("KAD_AUDIT_DIR", os.path.expanduser("~/.claude/kad-audit")))
     ap.add_argument("--clone", help="the audit repository's clone, whose sync logs name the withheld sessions (default: <dir>/repo)")
+    ap.add_argument("--projects-dir", default=os.path.expanduser("~/.claude/projects"), help="where Claude Code writes transcripts")
     ap.add_argument("--since", default="")
     ap.add_argument("--flagged-only", action="store_true")
     a = ap.parse_args()
@@ -140,7 +156,7 @@ def main():
         events = load(path)
         if not events or events[0].get("ts", "") < a.since:
             continue
-        cwd, calls, flags, timeline, where = summarise(sid, events, transcripts, withheld, a.clone or os.path.join(a.dir, "repo"))
+        cwd, calls, flags, timeline, where = summarise(sid, events, transcripts, withheld, a.clone or os.path.join(a.dir, "repo"), a.projects_dir)
         if not calls or (a.flagged_only and not flags):
             continue
         shown += 1

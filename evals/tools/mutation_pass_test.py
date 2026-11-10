@@ -82,6 +82,14 @@ class MutationPass(unittest.TestCase):
         self.assertIn("is an absolute path", out)
         self.assertIn("not tracked by git", out)
         os.remove(os.path.join(self.repo, "notes.txt"))
+        # a tracked symlink is refused: git checkout restores the link, not its target
+        os.symlink("calc/fees.py", os.path.join(self.repo, "fees-link.py"))
+        git(self.repo, "add", "fees-link.py")
+        git(self.repo, "commit", "-qm", "link")
+        with open(self.mutants, "w") as f:
+            json.dump([{"file": "fees-link.py", "old": "days * 25", "new": "days * 20"}], f)
+        out = self.run_tool("check", "--repo", self.repo, "--mutants", self.mutants, expect=1)
+        self.assertIn("is a symlink", out)
 
     def test_run_refuses_a_dirty_tree_and_a_failing_baseline(self):
         with open(os.path.join(self.repo, "scratch.txt"), "w") as f:
@@ -92,6 +100,14 @@ class MutationPass(unittest.TestCase):
         out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", f"{sys.executable} -c 'raise SystemExit(1)'", "--base", "", expect=2)
         self.assertIn("baseline fails", out)
         self.assertEqual(git(self.repo, "status", "--porcelain"), "")
+        # a command that cannot start is a runner error, said plainly, not a traceback
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", "no-such-runner-here --quiet", "--base", "", expect=2)
+        self.assertIn("could not run", out)
+        self.assertNotIn("Traceback", out)
+        # a typecheck that fails on the baseline refuses the run
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--typecheck", f"{sys.executable} -c 'raise SystemExit(3)'", "--base", "", expect=2)
+        self.assertIn("typecheck fails on the baseline", out)
+        self.assertFalse(os.path.exists(os.path.join(self.repo, ".git", "mutation-pass.lock")))
 
     def test_run_reports_caught_and_survived_and_restores(self):
         report = os.path.join(self.tmp, "report.md")
@@ -101,7 +117,8 @@ class MutationPass(unittest.TestCase):
         self.assertIn("CAUGHT (1 failed)", out)
         self.assertIn("SURVIVED", out)
         self.assertEqual(git(self.repo, "status", "--porcelain"), "")
-        text = open(report, encoding="utf-8").read()
+        with open(report, encoding="utf-8") as f:
+            text = f.read()
         self.assertIn("| 1 | calc/fees.py:4 | late_fee: the daily rate | CAUGHT (1 failed) by test_charges_per_day (tests.test_calc.Fees) | n/a |", text)
         self.assertIn("| 2 | calc/fees.py:8 | label: always due | SURVIVED | n/a |", text)
         self.assertIn("Kill rate **50.0%**", text)
@@ -126,7 +143,8 @@ class MutationPass(unittest.TestCase):
         out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "", "--out", report)
         self.assertIn("CAUGHT", out)
         self.assertIn("ERROR (exit", out)
-        text = open(report, encoding="utf-8").read()
+        with open(report, encoding="utf-8") as f:
+            text = f.read()
         self.assertIn("Mutants: **1**. Caught: **1**. Survived: **0**. Kill rate **100.0%**. Not counted, the runner itself failed: 2.", text)
         self.assertEqual(git(self.repo, "status", "--porcelain"), "")
 

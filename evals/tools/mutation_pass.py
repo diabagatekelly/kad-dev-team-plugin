@@ -110,6 +110,8 @@ def mutant_path(repo, m):
     since `git checkout --` is what restores it."""
     if os.path.isabs(m["file"]):
         return None, f"{m['file']} is an absolute path; name the file relative to the clone"
+    if os.path.islink(os.path.join(repo, m["file"])):
+        return None, f"{m['file']} is a symlink; name its target"
     path = os.path.realpath(os.path.join(repo, m["file"]))
     root = os.path.realpath(repo)
     if path != root and not path.startswith(root + os.sep):
@@ -147,7 +149,12 @@ def check(repo, mutants):
     return 1 if bad else 0
 
 
+TIMED_OUT, NOT_RUN = -1, -2  # exit codes of the runner's own, never a test's
+
+
 def run_cmd(cmd, repo, timeout):
+    """(exit code, output, seconds); TIMED_OUT and NOT_RUN (the command
+    could not start) are the runner's failures and never a kill."""
     start = time.monotonic()
     try:
         # Split as a shell would and run without one: no shell settings
@@ -158,7 +165,9 @@ def run_cmd(cmd, repo, timeout):
         out = (e.stdout or b"") if isinstance(e.stdout, bytes) else (e.stdout or "")
         if isinstance(out, bytes):
             out = out.decode("utf-8", "replace")
-        return -1, out + f"\n[timed out after {timeout} s]", time.monotonic() - start
+        return TIMED_OUT, out + f"\n[timed out after {timeout} s]", time.monotonic() - start
+    except (OSError, ValueError) as e:
+        return NOT_RUN, f"[could not run `{cmd}`: {e}]", time.monotonic() - start
 
 
 def read_result(code, output):
@@ -182,6 +191,8 @@ def read_result(code, output):
             break
     if count is None and names:
         count = len(names)
+    if code in (TIMED_OUT, NOT_RUN):
+        return "error", count, names
     if count:
         return "caught", count, names
     return ("survived" if code == 0 else "error"), count, names
@@ -214,11 +225,38 @@ def run(a, mutants):
             log.write(json.dumps(obj) + "\n")
             log.flush()
 
+    lock = os.path.join(repo, ".git", "mutation-pass.lock")
+    try:
+        fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        os.close(fd)
+    except FileExistsError:
+        say(f"mutation_pass: another run holds {lock}; one run per clone at a time (remove it if that run is gone)")
+        return 1
+    except OSError as e:
+        say(f"mutation_pass: cannot create {lock}: {e}")
+        return 1
+    try:
+        return run_locked(a, repo, mutants, head, changed, log, record)
+    finally:
+        try:
+            os.unlink(lock)
+        except OSError:
+            pass
+
+
+def run_locked(a, repo, mutants, head, changed, log, record):
+    if a.typecheck:
+        tcode, tout, _ = run_cmd(a.typecheck, repo, a.timeout)
+        if tcode != 0:
+            say(f"mutation_pass: the typecheck fails on the baseline (exit {tcode}); nothing mutated")
+            say(tout.strip().splitlines()[-1] if tout.strip() else "")
+            return 2
     say(f"mutation_pass: baseline `{a.test}` in {repo} at {head}")
     code, out, secs = run_cmd(a.test, repo, a.timeout)
     verdict, count, names = read_result(code, out)
     if verdict != "survived":
-        say(f"mutation_pass: the baseline fails (exit {code}{', ' + str(count) + ' failed' if count else ''}); nothing mutated")
+        why = out.strip().splitlines()[-1] if code in (TIMED_OUT, NOT_RUN) and out.strip() else ""
+        say(f"mutation_pass: the baseline fails (exit {code}{', ' + str(count) + ' failed' if count else ''}){': ' + why if why else ''}; nothing mutated")
         record({"mutant": 0, "baseline": True, "exit": code, "failed": count, "names": names[:3]})
         return 2
     base_count = None
@@ -235,14 +273,16 @@ def run(a, mutants):
     for i, m in enumerate(mutants, 1):
         line, _ = locate(repo, m)
         path, _ = mutant_path(repo, m)
-        text = open(path, encoding="utf-8").read()
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(text.replace(m["old"], m["new"], 1))
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
         try:
+            # the write is inside the block, so an interrupted write is restored too
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text.replace(m["old"], m["new"], 1))
             type_caught = False
             if a.typecheck:
                 tcode, _, _ = run_cmd(a.typecheck, repo, a.timeout)
-                type_caught = tcode != 0
+                type_caught = tcode not in (0, TIMED_OUT, NOT_RUN)
             code, out, secs = run_cmd(a.test, repo, a.timeout)
         finally:
             git(repo, "checkout", "--", m["file"])
