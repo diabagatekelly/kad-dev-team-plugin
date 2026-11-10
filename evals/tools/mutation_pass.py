@@ -159,6 +159,10 @@ def run_cmd(cmd, repo, timeout):
     try:
         # Split as a shell would and run without one: no shell settings
         # propagate, and nothing in the mutants file reaches a shell.
+        # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+        # (accepted 2026-11-10: `cmd` is the test or typecheck command the
+        # reviewer gave on this tool's own command line, nothing read from a
+        # file or the network; the mutants file never reaches a command)
         r = subprocess.run(shlex.split(cmd), cwd=repo, capture_output=True, text=True, errors="replace", timeout=timeout)
         return r.returncode, r.stdout + r.stderr, time.monotonic() - start
     except subprocess.TimeoutExpired as e:
