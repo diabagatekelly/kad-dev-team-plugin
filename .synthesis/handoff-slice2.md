@@ -13,7 +13,7 @@ slice 2".
 | P1 Start | **Merged** as kad 0.14.0, PR #41 (2026-11-08) |
 | P2 Screen checks and P3 The loop | **Merged** as kad 0.14.1, PR #42 (2026-11-09, merge `4fc83e4`), one PR as decided |
 | P4 Planning data | **Merged** as kad 0.14.2, PR #44 (2026-11-09, merge `2ed1b36`), one PR as decided |
-| P5 Audit and measurement | **Built** as kad 0.14.3 on branch `p5-audit` (2026-11-10), one PR as decided, with the three small items below; its gate and PR are noted under "What P5 built" |
+| P5 Audit and measurement | **PR #47 open**, kad 0.14.3 on branch `p5-audit` (2026-11-10), one PR as decided, with the three small items; gate green on the 42 affected cases (41 first pass, `orchestrator-route-scope-decision` 0.89 on its three-run re-run, the known judge flip); Sourcery's round in progress; merging is the owner's |
 | Slice 2's fix round, then slice 3 | **Next**, on `personal-finance-tracker-3` (see "After this list") |
 
 `main` is at 0.14.2; `p5-audit` carries 0.14.3. What P5 built, for the
