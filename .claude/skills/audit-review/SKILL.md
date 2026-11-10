@@ -18,7 +18,13 @@ Run `python3 -I evals/tools/audit_report.py --since <last review>` (the date
 is in `$KAD_AUDIT_DIR/last-review` if a previous review wrote one). Read
 every session with flags first, then a sample of the unflagged ones: a
 session with no pushback can still be one where the skill quietly did the
-wrong thing and the user fixed it later by hand.
+wrong thing and the user fixed it later by hand. Each section says where
+the session's transcript is: kept (the hook's snapshot), on disk and not
+copied (the live file Claude Code wrote; `audit_sync.py --transcripts`
+carries it), withheld by the sync (it holds a value of a source listed in
+`sources.md`; read it on this machine, quote nothing from it, and put the
+decision to the owner), or none. A session without a SessionEnd is
+`open`: still running, or ended without one.
 
 ## 2. Read each one against the rules that applied
 
@@ -83,6 +89,35 @@ Every confirmed miss should end as a case, so it can't come back unseen.
 - Follow the playbook in `evals/README.md`: calibrate with and without
   the plugin, and record the case's bar with
   `evals/tools/record_thresholds.py` once the result is accepted.
+
+## 3b. The two probes of a slice review
+
+A slice review (the one written beside the audit material, like
+`2026-11-08-slice-2-review.md`) runs two probes that no reviewer inside
+the loop runs, with the two tools in `evals/tools/`, the same way every
+time so the numbers compare across runs:
+
+- **The cold read with execution probes**: `evals/tools/cold_read.md` is
+  the brief. Clone the project at the delivered commit into the
+  scratchpad, launch one Opus agent with the brief and its parameters
+  filled in (clone, commit, base, the manifest's commands, the output
+  path, the probes folder), and save its assessment beside the review.
+  The reader gets no planning document and no reviewer report; its six
+  scores and its bug list are the control the loop's reviewers are
+  measured against.
+- **The mutation pass**: write the mutants as a JSON list (one break per
+  module, two per module of the slice's subject; `old` must match once),
+  `python3 -I evals/tools/mutation_pass.py check --repo <clone> --mutants
+  <file>` until every one matches, then `run` with the manifest's test
+  and typecheck commands, `--base origin/main`, `--out` beside the review
+  and `--log` in the scratchpad. The report carries the kill rate overall,
+  over the diff's files and per area, the kills that hang on one test,
+  and the survivors, each a project finding (a missing assertion or a
+  missing test).
+
+Both run on a clone, never the owner's working copy, and quote nothing
+that looks like a person's data; a mutants file is written over the
+code's own lines and stays in the scratchpad.
 
 ## 4. Report
 

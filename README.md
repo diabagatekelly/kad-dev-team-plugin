@@ -79,10 +79,11 @@ skills/
                        # density, persisted names, env defaults, test padding
   orchestrator/scripts/audit_sync.py       # after every records commit of the loop when KAD_AUDIT_REPO is set: a
                        # slice's planning documents, log, report, map, reviewer reports, fix-round
-                       # sidecar and kept transcripts copied into the audit repository's clone
-                       # ($KAD_AUDIT_DIR/repo/), refused on a credential-shaped string, committed
-                       # under the project's identity and pushed; --check reports the clone's state
-                       # for the A line
+                       # sidecar and every session's transcripts (found by session id, scanned
+                       # for listed sources' values first and withheld on a hit) copied into
+                       # the audit repository's clone ($KAD_AUDIT_DIR/repo/) under a lock,
+                       # refused on a credential-shaped string, committed under the project's
+                       # identity and pushed; --check reports the clone's state for the A line
   map-update/scripts/extract_map.py        # the architecture map extractor (TypeScript, JavaScript, Python):
                        # modules, import edges, externals, exports, tiers carried from the prior map,
                        # the diff and the two candidate flags; a language without one is listed with
@@ -98,7 +99,10 @@ evals/
   thresholds.json      # each case's bar for the eval gate
   tools/               # eval_gate.py, affected_cases.py, record_thresholds.py, rejudge.py,
                        # freeze-history.sh, audit_report.py, orchestrator_log_check.py (a real
-                       # project's log against the orchestrator's rules), implementation_judge.py (the
+                       # project's log against the orchestrator's rules), cold_read.md and
+                       # mutation_pass.py (a slice review's two probes: the stranger's assessment
+                       # with execution probes, and scripted exact-string mutants against the
+                       # suite), implementation_judge.py (the
                        # blind pairwise judge of two implementations, kept for the evals), pairwise_judge.py
                        # (with/without arms, over that judge), new-case.sh,
                        # summarize_results.py and report_evidence.py (read a results dir or CI artifact),
@@ -269,21 +273,34 @@ being written (`transcript — kept | MISSING: <why>`, from an `audit.sh
 commit (each chunk's, the slice review's, the delivery's), snapshots the
 session's transcript and runs `audit_sync.py`, which copies that slice's
 planning documents, orchestrator log, implementation report, architecture
-map, reviewer reports, fix-round sidecar and kept transcripts into
-`<clone>/<project>-slice-<n>/`, refuses if anything it would copy looks
-like a credential, and commits (under the project's git identity) and
-pushes in the clone; its result goes on the log line as printed, a failure
-included, never as a skip. Run it by hand with `python3 -I
-skills/orchestrator/scripts/audit_sync.py --project <root> --slice <n>`
-(add `--snapshot` to copy this session's transcript first, `--transcripts`
-to include the kept session transcripts, `--no-push` to only commit,
-`--clone <dir>` for a clone elsewhere). In this repo, ask Claude to "review the audit logs"
+map, reviewer reports, fix-round sidecar and every session's transcripts
+into `<clone>/<project>-slice-<n>/`, refuses if anything it would copy
+looks like a credential, and commits (under the project's git identity)
+and pushes in the clone, under a lock so two sessions cannot interleave;
+its result goes on the log line as printed, a failure included, never as
+a skip. A session's transcript is found by its id (the live file Claude
+Code writes, or the hook's snapshot, whichever is larger; a copy that
+grew is refreshed on the next sync), a session counts as complete only
+once its SessionEnd is in the log, and with a `sources.md` in the
+planning directory every transcript is read by the source scan first: a
+session holding a listed source's value is *withheld* (`withheld:
+<session>` on the line; the transcript stays on disk and the owner
+decides), and one the scan cannot read is never copied as clean. Run it
+by hand with `python3 -I skills/orchestrator/scripts/audit_sync.py
+--project <root> --slice <n>` (add `--snapshot` to copy this session's
+transcript first, `--transcripts` to include the sessions' transcripts,
+`--no-push` to only commit, `--clone <dir>` for a clone elsewhere,
+`--sources <file>` to scan against another `sources.md`). In this repo, ask Claude to "review the audit logs"
 (the `audit-review` skill): it reads the flagged sessions against the
 skills' own rules and proposes fixes and eval cases.
-`evals/tools/audit_report.py` gives the raw overview, and
-`evals/tools/orchestrator_log_check.py <project dir>` checks a project's
-`orchestrator-log.md` against the orchestrator's rules and the kept
-transcripts.
+`evals/tools/audit_report.py` gives the raw overview (where each
+session's transcript is: kept, on disk and not copied, withheld, or
+none), `evals/tools/orchestrator_log_check.py <project dir>` checks a
+project's `orchestrator-log.md` against the orchestrator's rules and the
+kept transcripts, and a slice review's two probes are
+`evals/tools/cold_read.md` (the stranger's assessment, launched as an
+Opus agent against a clone) and `evals/tools/mutation_pass.py` (scripted
+exact-string mutants against the suite).
 
 ## The implementation skill
 
@@ -474,9 +491,11 @@ line is `sandbox check: PASS` or `FAIL`; the exit code is 0, 1 for a
 failing check, 2 when the platform has no sandbox. Under the launcher a
 `FAIL` is reported and the flow stops with no question: the cause is
 outside the session. `python3 -I evals/tools/sandbox_check_test.py`
-covers the write check against the launcher's folders, and `python3 -I
+covers the write check against the launcher's folders, `python3 -I
 evals/tools/source_scan_test.py` the source scan, its two gates and the
-planning rule's wording in the five skills that carry it.
+planning rule's wording in the five skills that carry it, `python3 -I
+evals/tools/audit_sync_test.py` the audit sync's transcript rules, and
+`python3 -I evals/tools/mutation_pass_test.py` the mutation runner.
 
 The runtime (`npm install -g @anthropic-ai/sandbox-runtime`) wraps the
 whole Claude Code process in the platform's boundary, Seatbelt on macOS

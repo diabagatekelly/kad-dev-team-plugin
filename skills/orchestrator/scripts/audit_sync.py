@@ -28,13 +28,44 @@ hand on 2026-10-24:
         transcripts/<session>/       only with --transcripts: every session
                                      whose audit log ran in this project,
                                      its log as calls.jsonl, and its
-                                     transcript and subagents' when audit
-                                     mode kept them (snapshotted by
-                                     `hooks/audit.sh --snapshot` at A, after
-                                     each records commit and at session end);
+                                     transcript and subagents' (below);
                                      the sync-log line counts the two apart
       sync-log.md                    one line per sync: when, from which
-                                     project commit, what was copied
+                                     project commit, what was copied, which
+                                     sessions were withheld and why (counts)
+
+A session's transcript is found by its id, from `$KAD_AUDIT_DIR/sessions/
+<id>.jsonl` (the path every hook payload names, else the project's folder
+under `--projects-dir`, `~/.claude/projects` by default), and from the
+snapshot `hooks/audit.sh --snapshot` kept under `$KAD_AUDIT_DIR/
+transcripts/`; of the two copies of a file the larger is taken, the newer
+on a tie, so a session the hook never snapshotted (the owner's browser
+review, `4e0e20ec`, ended without a SessionEnd and sat on disk as "no
+transcript kept") is carried too, and a copy whose source has grown since
+is refreshed on the next sync. Three rules govern the copy:
+
+- **Nothing of a listed source goes in.** With `<docs>/sources.md` present
+  (or `--sources <file>`), every transcript file of a session, its log
+  included, is read by `source_scan.py`'s transcript scan first (every
+  JSON string decoded, the same two counting rules as the tree). A
+  session with a counted hit in any of them is *withheld*: its transcripts
+  stay on disk and are not copied, its log is copied unless the hit is in
+  the log itself, the sync line says `withheld: <session> (<n> source
+  values in <m> entries of <k> files)`, the last line carries `; withheld:
+  <session>`, and the owner decides (allow the words under `## Allowed by
+  the owner`, or leave the session out). Slice 2's loop transcripts, which
+  hold the owner's workbook, would have been withheld. A transcript the
+  scan cannot read is withheld, never copied as clean; a listed source the
+  scan cannot read withholds every session (a scan that could not run is
+  no pass). Without a `sources.md` nothing is scanned and the line says so.
+- **A session is complete only with its SessionEnd in the log.** One
+  without is copied as it stands and listed as `open`; the next sync
+  refreshes it.
+- **One sync at a time.** The sync takes `<clone>/.kad-sync.lock` (created
+  exclusively) for the fast-forward, the copy, the commit and the push, so
+  two sessions syncing the same clone cannot interleave; a second sync
+  fails with exit 5 and copies nothing. A lock older than an hour is a
+  crashed sync's and is taken over.
 
 Before copying anything it reads every file it would copy for
 credential-shaped strings (cloud and hosting tokens, private keys, Plaid
@@ -52,6 +83,7 @@ copying, so a clone another machine pushed to is not left behind.
 Usage:
   python3 -I audit_sync.py --project <root> --slice <n> [--docs <dir>]
       [--name <project name>] [--audit-dir <dir>] [--clone <dir>] [--transcripts]
+      [--projects-dir <dir>] [--sources <sources.md>]
       [--allow <fragment>]... [--no-push] [--dry-run]
   python3 -I audit_sync.py --check [--audit-dir <dir>] [--clone <dir>] [--session <id>]
 
@@ -75,10 +107,13 @@ a failed snapshot is appended to the last line (`…; snapshot FAILED:
 Exit codes: 0 synced (or nothing had changed); 1 usage or a missing input;
 3 a credential-shaped string was found and nothing was copied; 4 git
 failed in the clone (a fast-forward refused before anything was copied,
-or the commit or push after; the copy stays).
+or the commit or push after; the copy stays); 5 another sync holds the
+clone's lock and nothing was copied.
 The last line of output names the audit commit (`audit commit <sha>`),
 `audit commit none` when there was nothing new, or `audit sync FAILED:
-<reason>` on any failure; the orchestrator's line records it as it is.
+<reason>` on any failure, with `; withheld: <session>…` appended when a
+session's transcripts were kept back; the orchestrator's line records it
+as it is.
 """
 from __future__ import annotations
 
@@ -88,8 +123,10 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 SKIP_DIRS = {".git", "node_modules", "audit-docs", "dist", "build", ".next", "coverage", "__pycache__", ".venv", "venv"}
@@ -119,10 +156,167 @@ def say(msg: str) -> None:
 
 
 SNAPSHOT_NOTE = ""  # "; snapshot FAILED: <why>" once a --snapshot has failed, appended to the last line
+WITHHELD_NOTE = ""  # "; withheld: <session>, …" once a session's transcripts were kept back
 
 
 def last(msg: str) -> None:
-    say(msg + SNAPSHOT_NOTE)
+    say(msg + WITHHELD_NOTE + SNAPSHOT_NOTE)
+
+
+def source_scanner():
+    """`source_scan.py`, beside this script; `-I` leaves this directory off
+    `sys.path`, so it is added here."""
+    here = str(Path(__file__).resolve().parent)
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import source_scan
+    return source_scan
+
+
+SESSION_END = re.compile(r'"hook_event_name"\s*:\s*"SessionEnd"')
+TRANSCRIPT_PATH = re.compile(r'"transcript_path"\s*:\s*"((?:[^"\\]|\\.)*)"')
+LOCK_STALE_S = 3600
+
+
+class Session:
+    """One session of this project: its audit log, the transcript files
+    found for it on this machine, and what the scan decided."""
+
+    def __init__(self, sid: str, log: Path):
+        self.sid = sid
+        self.log = log
+        self.complete = False          # its SessionEnd is in the log
+        self.files: list[tuple[Path, str]] = []  # (source, path under transcripts/<sid>/)
+        self.withheld: str | None = None         # why its transcripts are not copied (counts only)
+        self.log_withheld = False      # the hit is in the log itself: nothing of the session is copied
+
+
+def project_sessions(audit_dir: Path, projects_dir: Path, project: Path) -> list[Session]:
+    """Every session whose audit log ran in this project, with its transcript
+    files: a session is this project's when a hook payload's cwd is the
+    project root or below it (the whole path, never a prefix of a sibling's,
+    never a mention in a prompt). The transcript is the one the payloads
+    name, else `<projects dir>/<project folder>/<id>.jsonl`; the snapshot is
+    the audit directory's; of each file's two copies the larger is taken,
+    the newer on a tie."""
+    sessions = audit_dir / "sessions"
+    root = str(project).replace("\\", "/").rstrip("/").lower()
+    cwd_here = re.compile(r'"cwd"\s*:\s*"' + re.escape(root) + r'(?:/|")')
+    folder = projects_dir / re.sub(r"[^A-Za-z0-9]", "-", str(project))
+    out: list[Session] = []
+    for log in sorted(sessions.glob("*.jsonl")) if sessions.is_dir() else []:
+        try:
+            raw = log.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if not cwd_here.search(raw.replace("\\\\", "/").replace("\\", "/").lower()):
+            continue
+        s = Session(log.stem, log)
+        s.complete = bool(SESSION_END.search(raw))
+        live = None
+        m = TRANSCRIPT_PATH.search(raw)
+        if m:
+            try:
+                live = Path(json.loads('"' + m.group(1) + '"'))
+            except ValueError:
+                live = None
+        if live is None or not live.is_file():
+            live = folder / f"{s.sid}.jsonl"
+        s.files = transcript_files(s.sid, live, audit_dir / "transcripts" / f"{s.sid}.jsonl")
+        out.append(s)
+    return out
+
+
+def transcript_files(sid: str, live: Path, snapshot: Path) -> list[tuple[Path, str]]:
+    """(source, destination path under transcripts/<sid>/) for the session's
+    transcript and its subagents', from the live copy and the snapshot,
+    the larger of the two for each file, the newer on a tie."""
+    choices: dict[str, list[Path]] = {}
+    for main in (live, snapshot):
+        if main.is_file():
+            choices.setdefault(f"{sid}.jsonl", []).append(main)
+        sub = main.with_suffix("") / "subagents"
+        if sub.is_dir():
+            for f in files_under(sub):
+                choices.setdefault(f"{sid}/subagents/{f.relative_to(sub).as_posix()}", []).append(f)
+
+    def rank(p: Path):
+        try:
+            st = p.stat()
+        except OSError:
+            return (-1, -1)
+        return (st.st_size, st.st_mtime)
+    return [(max(cands, key=rank), rel) for rel, cands in sorted(choices.items())]
+
+
+def transcript_catalog(docs: Path, project: Path, sources_file: str | None):
+    """(catalog, note): the listed sources' values to look for in the
+    transcripts, or None and why nothing is scanned."""
+    path = Path(sources_file).expanduser().resolve() if sources_file else docs / "sources.md"
+    if not path.is_file():
+        return None, f"no {path.name} in {path.parent}: transcripts not scanned for source values"
+    return source_scanner().load(str(docs), str(project), sources_file=str(path)), None
+
+
+def judge_session(s: Session, cat) -> None:
+    """Sets `withheld` (and `log_withheld`) from the transcript scan: a
+    counted hit in any file of the session, a file the scan cannot read,
+    or a listed source it cannot read. Counts only; no value is kept."""
+    if cat.problems:
+        s.withheld = f"the scan could not run ({cat.problems[0]}); not copied as clean"
+        return
+    scanner = source_scanner()
+    files_hit = values = entries = 0
+    for src, rel in [(s.log, "calls.jsonl")] + s.files:
+        counted, n = scanner.scan_transcript(cat, str(src))
+        if counted is None:
+            s.withheld = f"{rel} could not be read; not copied as clean"
+            s.log_withheld = s.log_withheld or rel == "calls.jsonl"
+            return
+        if counted:
+            files_hit += 1
+            values += len(counted)
+            entries += n
+            if rel == "calls.jsonl":
+                s.log_withheld = True
+    if files_hit:
+        s.withheld = f"{values} source value(s) in {entries} entries of {files_hit} file(s)"
+
+
+def newer_or_larger(src: Path, dest: Path) -> bool:
+    try:
+        a, b = src.stat(), dest.stat()
+    except OSError:
+        return True
+    return a.st_size > b.st_size or a.st_mtime > b.st_mtime + 1
+
+
+def take_lock(clone: Path) -> tuple[Path | None, str | None]:
+    """`<clone>/.kad-sync.lock`, created exclusively, or None and why. A
+    lock older than an hour is a crashed sync's and is taken over once."""
+    lock = clone / ".kad-sync.lock"
+    for attempt in (1, 2):
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        except FileExistsError:
+            try:
+                age = time.time() - lock.stat().st_mtime
+                held = lock.read_text(encoding="utf-8", errors="replace").strip()
+            except OSError:
+                age, held = 0.0, ""
+            if age > LOCK_STALE_S and attempt == 1:
+                try:
+                    lock.unlink()
+                except OSError:
+                    pass
+                continue
+            return None, f"another sync holds {lock} ({held or 'no details'}; {int(age)} s old)"
+        except OSError as e:
+            return None, f"cannot create {lock}: {e}"
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(f"pid {os.getpid()} on {socket.gethostname()} since {dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')}\n")
+        return lock, None
+    return None, f"another sync holds {lock}"
 
 
 def fail(msg: str, code: int) -> int:
@@ -301,13 +495,16 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--docs", help="the orchestrator's target directory; default: the one holding orchestrator-log.md")
     ap.add_argument("--name", help="the project's name in the audit repository; default: the root's basename")
     ap.add_argument("--audit-dir", default=os.environ.get("KAD_AUDIT_DIR") or str(Path.home() / ".claude" / "kad-audit"))
-    ap.add_argument("--transcripts", action="store_true", help="also copy the kept session transcripts that mention this project")
+    ap.add_argument("--transcripts", action="store_true", help="also copy every session's log and transcripts (found by session id, scanned for listed sources' values first)")
+    ap.add_argument("--projects-dir", default=str(Path.home() / ".claude" / "projects"),
+                    help="where Claude Code writes transcripts (default ~/.claude/projects), for a session whose log names no readable path")
+    ap.add_argument("--sources", help="the sources.md to scan the transcripts against; default: <docs>/sources.md")
     ap.add_argument("--allow", action="append", default=[], metavar="FRAGMENT",
                     help="skip the credential scan for files whose path contains this (a reviewed fixture)")
     ap.add_argument("--no-push", action="store_true", help="commit in the clone but do not push")
     ap.add_argument("--dry-run", action="store_true", help="list what would be copied and scanned; change nothing")
     a = ap.parse_args(argv)
-    global SNAPSHOT_NOTE
+    global SNAPSHOT_NOTE, WITHHELD_NOTE
     if a.check:
         return check(a)
     if not a.project or a.slice is None:
@@ -360,34 +557,25 @@ def main(argv: list[str]) -> int:
     for rd in review_dirs:
         for src in files_under(rd):
             plan.append((src, slice_dir / "implementation-docs" / f"reviews-slice-{nnn}" / src.relative_to(rd)))
-    transcripts_taken: list[str] = []   # every session log copied (calls.jsonl)
-    with_transcript: list[str] = []     # those whose transcript audit mode kept
+    sessions_here: list[Session] = []   # every session of this project (its log is calls.jsonl)
+    with_transcript: list[Session] = []  # those whose transcript is copied
+    scan_note: str | None = None
     if a.transcripts:
-        sessions = Path(a.audit_dir) / "sessions"
-        # A session is this project's when a hook payload's cwd is the project
-        # root or below it: the whole path, never a prefix of a sibling's
-        # (`/x/app` is not `/x/app-2`) and never a mention in a prompt.
-        root = str(project).replace("\\", "/").rstrip("/").lower()
-        cwd_here = re.compile(r'"cwd"\s*:\s*"' + re.escape(root) + r'(?:/|")')
-        for log in sorted(sessions.glob("*.jsonl")) if sessions.is_dir() else []:
-            try:
-                body = log.read_text(encoding="utf-8", errors="replace").replace("\\\\", "/").replace("\\", "/").lower()
-            except OSError:
-                continue
-            if not cwd_here.search(body):
-                continue
-            sid = log.stem
-            dest = slice_dir / "implementation-docs" / "transcripts" / sid
-            plan.append((log, dest / "calls.jsonl"))
-            t = Path(a.audit_dir) / "transcripts" / f"{sid}.jsonl"
-            if t.exists():
-                plan.append((t, dest / f"{sid}.jsonl"))
-                with_transcript.append(sid)
-            tdir = Path(a.audit_dir) / "transcripts" / sid
-            if tdir.is_dir():
-                for src in files_under(tdir):
-                    plan.append((src, dest / sid / src.relative_to(tdir)))
-            transcripts_taken.append(sid)
+        sessions_here = project_sessions(Path(a.audit_dir), Path(a.projects_dir).expanduser(), project)
+        catalog, scan_note = transcript_catalog(docs, project, a.sources)
+        for s in sessions_here:
+            if catalog is not None:
+                judge_session(s, catalog)
+            dest = slice_dir / "implementation-docs" / "transcripts" / s.sid
+            if not s.log_withheld:
+                plan.append((s.log, dest / "calls.jsonl"))
+            if s.files and not s.withheld:
+                with_transcript.append(s)
+                for src, rel in s.files:
+                    plan.append((src, dest / rel))
+        withheld = [s.sid for s in sessions_here if s.withheld]
+        if withheld:
+            WITHHELD_NOTE = "; withheld: " + ", ".join(withheld)
 
     skipped: list[str] = []
     kept: list[tuple[Path, Path]] = []
@@ -427,10 +615,25 @@ def main(argv: list[str]) -> int:
         last(f"audit sync FAILED: {len(findings)} credential-shaped string(s) in what would be copied; nothing copied")
         return 3
 
+    transcripts_dir = slice_dir / "implementation-docs" / "transcripts"
+    refreshed = [src for src, dest in kept
+                 if transcripts_dir in dest.parents and dest.name != "calls.jsonl" and dest.exists() and newer_or_larger(src, dest)]
+
+    def session_line(s: Session) -> str:
+        notes = []
+        if not s.complete:
+            notes.append("open: no SessionEnd yet")
+        if s.withheld:
+            notes.append("withheld: " + s.withheld)
+        elif not s.files:
+            notes.append("calls only, no transcript on disk")
+        return s.sid + (" (" + "; ".join(notes) + ")" if notes else "")
     say(f"audit_sync: {len(kept)} files for {slice_dir.relative_to(clone).as_posix()}/ "
         f"(planning from {docs}, {'map, ' if maps else 'no map, '}"
         f"{'reviews from ' + ', '.join(str(r) for r in review_dirs) if review_dirs else 'no reviews directory'}"
-        f"{', sessions: ' + ', '.join(s if s in with_transcript else s + ' (calls only, no transcript kept)' for s in transcripts_taken) if transcripts_taken else ''})")
+        f"{', sessions: ' + ', '.join(session_line(s) for s in sessions_here) if sessions_here else ''})")
+    if a.transcripts and scan_note:
+        say(f"audit_sync: {scan_note}")
     for s in skipped:
         say(f"  skipped {s}")
     for p in allowed:
@@ -438,6 +641,22 @@ def main(argv: list[str]) -> int:
     if a.dry_run:
         last("audit commit none")
         return 0
+
+    lock, why = take_lock(clone)
+    if lock is None:
+        return fail(f"{why}; nothing copied", 5)
+    try:
+        return copy_and_commit(a, kept, skipped, allowed, project, clone, slice_dir, docs, maps, review_dirs,
+                               sessions_here, with_transcript, refreshed, scan_note, name, inside_project)
+    finally:
+        try:
+            lock.unlink()
+        except OSError:
+            pass
+
+
+def copy_and_commit(a, kept, skipped, allowed, project, clone, slice_dir, docs, maps, review_dirs,
+                    sessions_here, with_transcript, refreshed, scan_note, name, inside_project) -> int:
 
     # 3. Fast-forward the clone first (a sync from another machine, or a
     #    clone the launcher made days ago), then copy (the slice folder is
@@ -493,8 +712,13 @@ def main(argv: list[str]) -> int:
             return 0
         # Something did change: record the sync in the slice's log, then commit both.
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        open_sessions = sum(1 for s in sessions_here if not s.complete)
+        withheld = [s for s in sessions_here if s.withheld]
         line = (f"- {stamp}: {len(kept)} files from `{branch}` at {head}; "
-                f"{len(review_dirs)} reviews dir(s), {len(transcripts_taken)} session log(s), {len(with_transcript)} with a transcript"
+                f"{len(review_dirs)} reviews dir(s), {len(sessions_here)} session log(s), {len(with_transcript)} with a transcript"
+                f"{' (' + str(len(refreshed)) + ' refreshed, ' + str(open_sessions) + ' open)' if sessions_here else ''}"
+                f"{'; withheld: ' + ', '.join(s.sid + ' (' + s.withheld + ')' for s in withheld) if withheld else ''}"
+                f"{'; ' + scan_note if a.transcripts and scan_note else ''}"
                 f"{'; scan skipped by --allow for ' + ', '.join(p.name for p in allowed) if allowed else ''}"
                 f"{'; skipped ' + str(len(skipped)) + ' file(s)' if skipped else ''}\n")
         sync_log = slice_dir / "sync-log.md"

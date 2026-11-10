@@ -3,19 +3,26 @@
 Reads the session logs `hooks/audit.sh` writes (KAD_AUDIT=1) and prints one
 markdown section per session that used the plugin: where it ran, the
 user's prompts in order, every kad-dev-team skill and agent called and
-with what arguments, and flags worth a look:
+with what arguments, where its transcript is, and flags worth a look:
 
 - pushback: a prompt right after a plugin call that reads as a correction
   ("no", "wrong", "undo", "that's not", "didn't ask", ...);
 - repeat: the same skill invoked again in the same session;
-- no transcript: the session ended without a kept transcript (it may
-  still be running, or SessionEnd never fired).
+- open: no SessionEnd in the log (still running, or ended without one);
+- withheld: the audit sync (`audit_sync.py --transcripts`) found a value
+  of a listed source in the session's transcripts and kept them back,
+  read from the sync logs in the audit repository's clone;
+- on disk, not copied: the transcript Claude Code writes is there (the
+  path the hook payloads name) but no snapshot was kept and the sync has
+  not carried it, so it is only on this machine;
+- no transcript: not on disk and none kept (deleted, or transcript saving
+  was off for the session).
 
 Flags are heuristics to choose which transcripts to read, not verdicts;
 the `audit-review` skill does the reading.
 
 Usage: python3 -I evals/tools/audit_report.py [--dir ~/.claude/kad-audit]
-           [--since 2026-10-01] [--flagged-only]
+           [--clone <dir>] [--since 2026-10-01] [--flagged-only]
 """
 import argparse
 import glob
@@ -36,7 +43,7 @@ def short(value, n=160):
 
 def load(path):
     events = []
-    for line in open(path):
+    for line in open(path, encoding="utf-8", errors="replace"):
         try:
             events.append(json.loads(line))
         except ValueError:
@@ -44,15 +51,37 @@ def load(path):
     return events
 
 
-def summarise(sid, events, transcripts):
+def withheld_sessions(clone):
+    """session id -> the sync-log line that withheld it (the latest), from
+    every slice folder's sync-log.md in the clone."""
+    out = {}
+    for path in sorted(glob.glob(os.path.join(clone, "*", "sync-log.md"))):
+        try:
+            lines = open(path, encoding="utf-8", errors="replace").read().splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            if "withheld:" not in line:
+                continue
+            for sid in re.findall(r"\b([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}) \(", line.split("withheld:", 1)[1]):
+                out[sid] = f"{os.path.basename(os.path.dirname(path))}: {line.strip()[2:]}"
+    return out
+
+
+def summarise(sid, events, transcripts, withheld):
     cwd, calls, flags, timeline = None, [], [], []
+    live = None
+    ended = False
     seen_skills = {}
     last_was_call = False
     for e in events:
         p = e.get("payload", {})
         cwd = cwd or p.get("cwd")
+        live = live or p.get("transcript_path")
         kind = p.get("hook_event_name")
-        if kind == "UserPromptSubmit":
+        if kind == "SessionEnd":
+            ended = True
+        elif kind == "UserPromptSubmit":
             prompt = p.get("prompt", "")
             timeline.append(f"- {e['ts']} > {short(prompt)}")
             if last_was_call and PUSHBACK.search(prompt):
@@ -69,18 +98,32 @@ def summarise(sid, events, transcripts):
             seen_skills[name] = seen_skills.get(name, 0) + 1
             if seen_skills[name] == 2:
                 flags.append(f"repeat: {name} invoked more than once")
-    if not os.path.isfile(os.path.join(transcripts, sid + ".jsonl")):
-        flags.append("no transcript kept")
-    return cwd, calls, flags, timeline
+    if not ended:
+        flags.append("open: no SessionEnd in the log (still running, or ended without one)")
+    kept = os.path.join(transcripts, sid + ".jsonl")
+    if os.path.isfile(kept):
+        where = f"kept: `{kept}`"
+    elif sid in withheld:
+        where = f"withheld by the audit sync ({withheld[sid]})" + (f"; on disk at `{live}`" if live and os.path.isfile(live) else "")
+        flags.append("withheld: a listed source's value in its transcripts; the owner decides")
+    elif live and os.path.isfile(live):
+        where = f"on disk, not copied: `{live}` ({os.path.getsize(live) // 1024} KB; run audit_sync.py --transcripts to carry it)"
+        flags.append("transcript on disk, not copied")
+    else:
+        where = "none: not on disk and none kept"
+        flags.append("no transcript: not on disk and none kept (deleted, or saving was off)")
+    return cwd, calls, flags, timeline, where
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default=os.environ.get("KAD_AUDIT_DIR", os.path.expanduser("~/.claude/kad-audit")))
+    ap.add_argument("--clone", help="the audit repository's clone, whose sync logs name the withheld sessions (default: <dir>/repo)")
     ap.add_argument("--since", default="")
     ap.add_argument("--flagged-only", action="store_true")
     a = ap.parse_args()
     transcripts = os.path.join(a.dir, "transcripts")
+    withheld = withheld_sessions(a.clone or os.path.join(a.dir, "repo"))
     logs = sorted(glob.glob(os.path.join(a.dir, "sessions", "*.jsonl")), key=os.path.getmtime)
     shown = 0
     for path in logs:
@@ -88,15 +131,13 @@ def main():
         events = load(path)
         if not events or events[0].get("ts", "") < a.since:
             continue
-        cwd, calls, flags, timeline = summarise(sid, events, transcripts)
+        cwd, calls, flags, timeline, where = summarise(sid, events, transcripts, withheld)
         if not calls or (a.flagged_only and not flags):
             continue
         shown += 1
         print(f"## {events[0]['ts']} — session `{sid}`")
         print(f"- Directory: `{cwd}`")
-        tp = os.path.join(transcripts, sid + ".jsonl")
-        if os.path.isfile(tp):
-            print(f"- Transcript: `{tp}`")
+        print(f"- Transcript: {where}")
         print("- Flags: " + ("; ".join(flags) if flags else "none"))
         print("\nTimeline:")
         print("\n".join(timeline))

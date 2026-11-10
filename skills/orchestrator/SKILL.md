@@ -970,13 +970,21 @@ orchestrator's side.
    `--snapshot` first copies this session's transcript and its
    subagents' to the audit directory, now, not at a session end that may
    never come (run 3's loop session has none on disk); the sync then
-   copies the whole slice folder, the records directory and the kept
-   transcripts into the audit repository's clone, commits and pushes. Its
+   copies the whole slice folder, the records directory and every
+   session's transcripts, found by session id (the live file Claude Code
+   writes or the snapshot, whichever is larger), into the audit
+   repository's clone, commits and pushes. With a `sources.md` in the
+   target directory it reads every transcript with the source scan first,
+   and a session holding a listed source's value is withheld: its
+   transcripts stay on disk, uncopied, and the owner decides. Its
    last line goes on the C line's `audit` field as printed: `audit commit
    <sha>`, `audit commit none` (nothing new), or `audit sync FAILED:
-   <reason>`, each with `; snapshot FAILED: <why>` appended when the
-   snapshot failed; a FAILED of either kind also goes into the report to
-   the owner and never stops the loop. Without an audit repository the field says `not configured`,
+   <reason>`, each with `; withheld: <session…>` appended when a
+   session was withheld and `; snapshot FAILED: <why>` when the
+   snapshot failed; a FAILED of either kind, and a withheld session (the
+   owner allows the words under `## Allowed by the owner` or leaves the
+   session out), also go into the report to the owner and never stop the
+   loop. Without an audit repository the field says `not configured`,
    with `KAD_AUDIT` unset `off`, and nothing runs. **Then the C line**
    (the runner's fields, then `records`, `audit`, `data`), then the
    budget check (the hand-back's `reviews` and `fixers` counts and the
@@ -1214,10 +1222,12 @@ improvised this removal, and its own log bullet put the values back.
    sessions is never written (run 3's E line carried the planning
    session's figure as if it were the run's).
 6. **Audit sync.** With `KAD_AUDIT=1`, the snapshot and the sync exactly
-   as C.6 (the sync's `--transcripts` carries every kept session), its
+   as C.6 (the sync's `--transcripts` carries every session of the
+   project, withholding one that holds a listed source's value), its
    last line on the E line's `audit` field: `audit commit <sha>`, `audit
-   commit none`, or `audit sync FAILED: <reason>`, the last also in the
-   report to the owner; `not configured` without an audit repository,
+   commit none`, or `audit sync FAILED: <reason>`, with `; withheld:
+   <session…>` when one was, the FAILED and the withheld sessions also in
+   the report to the owner; `not configured` without an audit repository,
    `off` without audit mode. A configured repository with no clone is
    that FAILED line, never a skip.
 7. The E line (its `consults` field is the number of persona consults
@@ -1269,10 +1279,10 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 **Artifact:** see sub-entries below
 - **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
 - **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
-- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off>`
+- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
   - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```
 

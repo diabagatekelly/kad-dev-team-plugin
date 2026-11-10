@@ -564,6 +564,38 @@ real cases and deleted (the table is in git history).
 
 ### Known coverage gaps
 
+- **The audit sync's transcript rules are checked without a model
+  (0.14.3, 2026-11-10, handoff-slice2 P5).** `tools/audit_sync_test.py`
+  (8 tests) builds a project, an audit directory with session logs and
+  transcripts, a bare audit remote and its clone, and shows: a transcript
+  the hook never snapshotted is carried by session id with its subagents';
+  one holding a value of the invented sheet is withheld (the log still
+  copied, the line and the last line saying so, no value printed or
+  written); a hit in the log withholds the whole session; the larger of
+  the live copy and the snapshot wins and a copy that grew is refreshed;
+  a session without a SessionEnd is `open`; an unreadable transcript, or
+  an unreadable listed source, withholds; without a `sources.md` nothing
+  is scanned and the line says so; the lock refuses a second sync (exit
+  5) and a stale lock is taken over. Measured on the owner's Mac (counts
+  only): the scan over the fourteen slice 2 sessions, 73 MB of
+  transcripts, takes about 23 s with a seven-row catalog. The orchestrator
+  text change this needed is two sentences (the `; withheld: <session…>`
+  suffix recorded as printed and reported to the owner), covered by the
+  orchestrator cases the diff reaches, not by a case of its own: an eval
+  cannot stage an audit clone inside the sandbox. `tools/mutation_pass_test.py`
+  (3 tests) covers the mutation runner on a scratch Python repository
+  (a mutant that matches once and one that does not; a dirty tree and a
+  failing baseline refused; a caught and a surviving mutant, the file
+  restored, the report and the log carrying names and counts and never
+  the replaced text); `tools/cold_read.md` is a brief and has no test.
+  Also in this PR: `orchestrator_log_check.py`'s order check no longer
+  counts the state table's accessibility-line repair row (a hand-back to
+  `product-slicer`) as a stage the implementation entry skipped, so
+  `orchestrator-log-format/check.sh` counts every error again;
+  `chunk-runner-gate-outside`'s `runner-edits-no-code` grader is gone
+  (the judge's FAIL clause carries it); and the `delivery-ready` loop
+  state creates `tools/gh-calls.log` empty, so a run that never calls the
+  stand-in fails that grader instead of voiding the run.
 - **The planning-data rule is checked on an invented sheet (0.14.2,
   2026-11-09).** Nine cases and `tools/source_scan_test.py` (14 tests,
   no model) use `fixtures/library-app/source-plants/desk-fees.csv`,
@@ -691,7 +723,8 @@ real cases and deleted (the table is in git history).
   native-messaging files written when missing, `--reset` and
   `--no-chrome`), and `python3 -I tools/sandbox_check_test.py` reproduces
   the write check's false FAIL on the launcher's own folders and shows it
-  fixed.
+  fixed; since 0.14.3, `python3 -I tools/audit_sync_test.py` and `python3
+  -I tools/mutation_pass_test.py` (above).
   J4 in `TODO.md` lists what each real run must show.
 - ~~**The main agent acts before `tdd-implementation` loads.**~~ **Closed
   for the parent.** It used to write its own answers to a design's open

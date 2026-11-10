@@ -68,11 +68,8 @@ graders:
     target: trace
     pattern: '--allow[ =]+[\x27"]?utils/'
     match: not_contains
-  - type: regex
-    name: runner-edits-no-code
-    target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{{[^{{}}]*"(?:file_path|path)":"[^"]*\.(?:ts|js|json)"'
-    match: not_contains
+  # "The runner edits no code" is the judge's below, not a trace regex: a
+  # nested fixer's own Edit calls are in the runner's trace too (0.14.3).
   - type: llm
     name: gate-passes-after-the-fix
     focus: last_message
