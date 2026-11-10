@@ -21,7 +21,9 @@ anything); `note` is the break in words, as the table prints it; `area`
 is free text for grouping (the subject modules against the rest).
 
 `run`, in order: refuses a tree that is not clean; runs the test command
-once as the baseline and refuses if it fails; then for each mutant applies
+(split as a shell would, run without one; a command that needs a shell's
+features is written `sh -c '…'`) once as the baseline and refuses if it
+fails; then for each mutant applies
 the replacement, runs the typecheck command if given, runs the test
 command, reads the result (the failing tests' names where the runner
 prints them: node's `not ok … - name`, jest's `✕ name`, vitest's `× name`
@@ -130,7 +132,9 @@ def check(repo, mutants):
 def run_cmd(cmd, repo, timeout):
     start = time.monotonic()
     try:
-        r = subprocess.run(cmd, shell=True, cwd=repo, capture_output=True, text=True, errors="replace", timeout=timeout)
+        # Split as a shell would and run without one: no shell settings
+        # propagate, and nothing in the mutants file reaches a shell.
+        r = subprocess.run(shlex.split(cmd), cwd=repo, capture_output=True, text=True, errors="replace", timeout=timeout)
         return r.returncode, r.stdout + r.stderr, time.monotonic() - start
     except subprocess.TimeoutExpired as e:
         out = (e.stdout or b"") if isinstance(e.stdout, bytes) else (e.stdout or "")
@@ -299,8 +303,8 @@ def main():
     r = sub.add_parser("run", help="apply each mutant, run the suite, restore, report")
     r.add_argument("--repo", required=True)
     r.add_argument("--mutants", required=True)
-    r.add_argument("--test", required=True, help="the test command, run through the shell in the repo")
-    r.add_argument("--typecheck", help="a typecheck command, run before the suite on every mutant")
+    r.add_argument("--test", required=True, help="the test command, split as a shell would and run in the repo without one (wrap one that needs a shell in sh -c '…')")
+    r.add_argument("--typecheck", help="a typecheck command, the same way, run before the suite on every mutant")
     r.add_argument("--base", default="origin/main", help="the diff base for the 'in the diff' column ('' for none)")
     r.add_argument("--out", help="the markdown report (default: printed)")
     r.add_argument("--log", help="a JSON-lines log, one line per mutant as it finishes")
