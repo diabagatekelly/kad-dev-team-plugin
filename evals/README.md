@@ -679,8 +679,8 @@ real cases and deleted (the table is in git history).
   about itself; and a nested agent's own tool calls are in the main
   trace too, so "the runner edits no code" cannot be a trace regex
   (`chunk-runner-gate-outside`'s grader of that name is written with
-  doubled braces and matches nothing: noted for P5's PR, not changed
-  here). Three tool defects found re-freezing the phase histories and
+  doubled braces and matches nothing: removed in 0.14.3, the judge
+  carries it). Three tool defects found re-freezing the phase histories and
   fixed: `history_stale.py` read every skill that names a script by
   `${CLAUDE_SKILL_DIR}` as stale the moment it was frozen (the CLI
   substitutes the variable on load); `freeze-history.sh`, freezing a
@@ -706,11 +706,11 @@ real cases and deleted (the table is in git history).
   workbook is scanned whatever tab was named; a whole amount is not
   matched as a bare count of cents; each tab's first row is its column
   names; the transcript count applies the same two rules as the tree.
-  Deferred to P5.1: withholding a transcript that holds a value from the
-  audit sync. `orchestrator-delivery-foreground` lost one run to the
+  Deferred to P5.1 and done there (0.14.3): withholding a transcript that
+  holds a value from the audit sync. `orchestrator-delivery-foreground` lost one run to the
   missing-file throw (`tools/gh-calls.log`, which the `delivery-ready`
-  state does not create empty as `delivery-ready-source` does): a fixture
-  fix for P5's PR.
+  state did not create empty as `delivery-ready-source` does): fixed in
+  0.14.3.
 - **Persona rules the orchestrator can't reach.** The orchestrator now
   invokes a routed skill and never reads the persona's `AGENT.md`, so any
   rule a routed step needs must be in the skill. `devsecops-engineer`,
