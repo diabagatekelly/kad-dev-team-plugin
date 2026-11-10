@@ -28,8 +28,12 @@ the replacement, runs the typecheck command if given, runs the test
 command, reads the result (the failing tests' names where the runner
 prints them: node's `not ok … - name`, jest's `✕ name`, vitest's `× name`
 and `FAIL file > name`, pytest's `FAILED path::name`, unittest's `FAIL:
-name`; a non-zero exit with no names read is still a catch, reported as
-`exit <code>`), restores the file with `git checkout --` and checks that
+name`; colour escapes are stripped first, so a forced-colour run reads
+the same; a `✖` or `not ok` line indented less than the result line
+before it is the summary of a suite or a parent test, not a test, and is
+not named; a non-zero exit with no names read is still a catch, reported
+as `exit <code>`; a run that times out after naming a failure is a catch
+too, since the tests caught the break before the hang), restores the file with `git checkout --` and checks that
 `git status --porcelain` is empty again, stopping if it is not. Every
 mutant's outcome goes to the JSON-lines log as it finishes, and the
 markdown report is written at the end: the table (number, file:line, the
@@ -197,10 +201,10 @@ def read_result(code, output):
             break
     if count is None and names:
         count = len(names)
-    if code in (TIMED_OUT, NOT_RUN):
-        return "error", count, names
     if count:
         return "caught", count, names
+    if code in (TIMED_OUT, NOT_RUN):
+        return "error", count, names
     return ("survived" if code == 0 else "error"), count, names
 
 

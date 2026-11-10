@@ -167,6 +167,12 @@ class ReadResult(unittest.TestCase):
         self.assertEqual(self.read(1, output), ("caught", 2, ["multiplies, 3 x 3", "inner fails", "group"]))
         self.assertEqual(self.read(0, "✔ adds (0.28ms)\nℹ tests 1\nℹ pass 1\nℹ fail 0\n"), ("survived", 0, []))
 
+    def test_a_timeout_after_a_named_failure_is_a_catch(self):
+        # the tests caught the break, then the run hung: a kill, not a runner error
+        out = "✖ refuses at open (1ms)\n[timed out after 1800 s]"
+        self.assertEqual(self.read(-1, out), ("caught", 1, ["refuses at open"]))
+        self.assertEqual(self.read(-1, "✔ adds (1ms)\n[timed out after 1800 s]"), ("error", None, []))
+
     def test_node_tap_reporter_still_reads(self):
         self.assertEqual(self.read(1, "not ok 1 - multiplies\n# tests 2\n# pass 1\n# fail 1\n"), ("caught", 1, ["multiplies"]))
 
