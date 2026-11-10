@@ -232,7 +232,11 @@ light cadence arm (measured at slice 3). P4 (planning data) shipped as
 0.14.2 (PR #44, merged 2026-11-09): the "described, never quoted"
 rule in five planning skills, `source_scan.py` behind the readiness
 gate's tenth check, the chunk gate's `sources` check and delivery's scan
-before a push, and delivery's removal procedure. Next, in order: P5
-(audit and measurement, 0.14.3), slice 2's fix round on
-`personal-finance-tracker-3`, slice 3. The handoff's first section,
-"Where the list stands", is the current state.
+before a push, and delivery's removal procedure. P5 (audit and
+measurement) shipped as 0.14.3 (PR #47, merged 2026-11-10): transcripts
+by session id, withheld when they hold a listed source's value, the
+sync's lock, the cold-read brief and the mutation runner for the slice
+reviews. The list is done. Next: slice 2's fix round on
+`personal-finance-tracker-3`, then slice 3, both under `kad` with 0.14.3
+installed. The handoff's first section, "Where the list stands", is the
+current state.
