@@ -13,7 +13,7 @@ slice 2".
 | P1 Start | **Merged** as kad 0.14.0, PR #41 (2026-11-08) |
 | P2 Screen checks and P3 The loop | **Merged** as kad 0.14.1, PR #42 (2026-11-09, merge `4fc83e4`), one PR as decided |
 | P4 Planning data | **Merged** as kad 0.14.2, PR #44 (2026-11-09, merge `2ed1b36`), one PR as decided |
-| P5 Audit and measurement | **PR #47 open**, kad 0.14.3 on branch `p5-audit` (2026-11-10), one PR as decided, with the three small items; first gate green on the 42 affected cases (41 first pass, `orchestrator-route-scope-decision` 0.89 on its three-run re-run, the known judge flip); Sourcery's round (21 comments, 19 findings) fixed in `9e18fa2`, every thread answered; the gate after it green on all 32 staled cases (22 in one run, the other ten after a usage-limit cut); every affected case has evidence; merging is the owner's |
+| P5 Audit and measurement | **PR #47 open, every check green** (2026-11-10), kad 0.14.3 on branch `p5-audit`, one PR as decided, with the three small items; gate green on all 42 affected cases after each of Sourcery's rounds (three rounds, 45 comments: 39 fixed with tests, 6 declined with the reason on the thread; the opengrep audit rule on the mutation runner's one command call accepted in code with its reason, as `eval_gate.py` and `rejudge.py` carry it); merging is the owner's |
 | Slice 2's fix round, then slice 3 | **Next**, on `personal-finance-tracker-3` (see "After this list") |
 
 `main` is at 0.14.2; `p5-audit` carries 0.14.3. What P5 built, for the
