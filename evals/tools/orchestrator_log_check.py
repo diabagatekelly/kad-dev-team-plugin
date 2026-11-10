@@ -729,7 +729,11 @@ def check_order(entries, table, findings):
             if rank != 0:
                 findings.append(("INFO", tag, f"log starts at `{key}`, not the first row (fine if earlier stages predate the plugin)"))
         elif rank > prev + 1:
-            skipped = [stage_key(table[r][1]) for r in range(prev + 1, rank)]
+            # A row that routes back to a stage an earlier row already names (the
+            # accessibility-line repair, `product-slicer` (`vertical-slicing`)) is a
+            # hand-back, never a step on the way forward, so it is not "skipped".
+            repairs = {r for r in range(len(table)) if stage_key(table[r][1]) in {stage_key(n) for _, n in table[:r]}}
+            skipped = [stage_key(table[r][1]) for r in range(prev + 1, rank) if r not in repairs]
             hard = [s for s in skipped if s not in SKIPPABLE | UI_ONLY]
             ui = [s for s in skipped if s in UI_ONLY]
             if hard:

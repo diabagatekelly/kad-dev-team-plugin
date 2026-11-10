@@ -395,7 +395,7 @@ score is history, not a claim about today.
 | `orchestrator-asks-for-target` | real, Sonnet: 2/2 runs all pass; baseline 0/1 — no folder given, it asks where the artifacts are before anything else and doesn't search the project | yes |
 | `orchestrator-session-setup` | step 0 (0.9.0): a session not started by the launcher, with Bash granted, is asked about audit mode and the restart under the sandbox runtime before the target question; no planning skill invoked. Recorded on the Mac. 2026-11-08 (0.14.0, handoff-slice2 P1): rewritten for the opposite behaviour. The launcher is the one way in and step 0 asks nothing: a session fenced by something other than the launcher (this harness) is told so in one line and routed; a plain session would be given the one command and stopped, which the harness cannot stage (it fences every run). Graders: no `bin/kad` run from the session, routes to `problem-framing-doc`, a judge on the absence of every old question | yes |
 | `orchestrator-route-problem-framing` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — a new, empty planning folder: routes to `problem-framing-doc`. The first version left the folder empty on disk; an empty directory doesn't reach the sandbox, so the orchestrator searched for it and stopped. The prompt now says the folder is new | yes |
-| `orchestrator-route-scope-decision` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — a problem doc and nothing else: routes to `scope-map` to decide whether a map is needed. Known miss 1/2: once `scope-map` decided no map, the orchestrator went straight on to `requirements-refinement` without asking, against step 5's never-chain-silently rule. Four attempted fixes each caused a worse regression elsewhere and were reverted (see findings). 2026-10-31: two graders still encoded v3's one-step-per-invocation rule, while the v4 skill continues to the next row and asks only when the owner is needed; they now say so. 0.94 (one judge loss in three runs), bar re-recorded. 2026-11-01 (0.9.0): 0.89 over 3 runs after step 0 landed; every run had requirements-refinement read `collect-fine.ts` and the fines routes before asking, as its own rule says to, and the judge read "I read the code first" as answering from the repository. The grader now says reading and reporting what was found is that rule, and the FAIL is a question settled without the owner. 2026-11-08 (0.14.0, P1): 0.83 in 3/3 at the gate (the `stops-after-the-routed-step` judge FAIL FAIL FAIL each run: the orchestrator went from scope-map straight into requirements-refinement's questions without reporting the scope-map result in its reply, the same miss as above); the history of this grader since 0.7.0 is a flip on nearly every gate, with three misses in a row twice before, so the case was re-run alone at three runs and scored 0.89 (2 of 3), within tolerance; evidence recorded from that run, bar unchanged | yes |
+| `orchestrator-route-scope-decision` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — a problem doc and nothing else: routes to `scope-map` to decide whether a map is needed. Known miss 1/2: once `scope-map` decided no map, the orchestrator went straight on to `requirements-refinement` without asking, against step 5's never-chain-silently rule. Four attempted fixes each caused a worse regression elsewhere and were reverted (see findings). 2026-10-31: two graders still encoded v3's one-step-per-invocation rule, while the v4 skill continues to the next row and asks only when the owner is needed; they now say so. 0.94 (one judge loss in three runs), bar re-recorded. 2026-11-01 (0.9.0): 0.89 over 3 runs after step 0 landed; every run had requirements-refinement read `collect-fine.ts` and the fines routes before asking, as its own rule says to, and the judge read "I read the code first" as answering from the repository. The grader now says reading and reporting what was found is that rule, and the FAIL is a question settled without the owner. 2026-11-08 (0.14.0, P1): 0.83 in 3/3 at the gate (the `stops-after-the-routed-step` judge FAIL FAIL FAIL each run: the orchestrator went from scope-map straight into requirements-refinement's questions without reporting the scope-map result in its reply, the same miss as above); the history of this grader since 0.7.0 is a flip on nearly every gate, with three misses in a row twice before, so the case was re-run alone at three runs and scored 0.89 (2 of 3), within tolerance; evidence recorded from that run, bar unchanged. 2026-11-10 (0.14.3, P5, which changed nothing on this path): the same judge FAIL FAIL FAIL in both runs that finished at the gate (0.83), 0.89 (2 of 3) re-run alone, within tolerance; evidence from that run, bar unchanged. The miss is real and the same each time: the reply goes from scope-map's decision straight into requirements refinement's questions without reporting the decision in its own words first | yes |
 | `orchestrator-route-slicing` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — problem plus an Active requirements doc: routes to `vertical-slicing`. 2026-11-01 (0.9.0): 0.86 over 3 runs; one run went on from the slice into `user-story-writeup` and stopped at its own question (where to file), which the v4 skill allows and this case's two graders, still on v3's one-step rule, did not; aligned the way `route-scope-decision`'s were on 2026-10-31, and `not-user-story-writeup` became `not-architecture-design` | yes |
 | `orchestrator-route-user-story` | real, Sonnet: 10/10 over 2 runs (`results/g8-*`) — a slice not yet written up: routes to `user-story-writeup` | yes |
 | `orchestrator-route-design` | real, Sonnet: 9/10 over 2 runs (`results/g8-*`) — a user story and no design: routes to `architecture-design`. The miss was the grader: it forbade any `security-requirements` call, and `architecture-design` legitimately consults it inline; that check is now `not-tdd-implementation`, which both runs pass | yes |
@@ -411,7 +411,7 @@ score is history, not a claim about today.
 | `orchestrator-readiness-gate` | real, Sonnet: 1.00 in 3/3 (`results/gate-20261031T2*`, the Mac). The first one-run pass went past A and built chunk 1 (12 minutes, $2.76): the skill rightly continues once the gate passes, so the prompt now hands off at the A line. The next pass lost a `file_exists` the harness resolved against the shell's last `cd` (the content grader on the same file passed) and a judge that read an inline skill run as the orchestrator deciding for itself; both reworded. Every run then: the gate run by the script, two backward routes to `reliability-requirements` and `screen-design` inline, the gate again, the A line, the handoff, no builder; v4 PR 3, design §11 case 1): the A step's design-readiness gate on a fully planned UI slice whose reliability document says "retries the cancel a few times" and whose screen design has no mockup for the unreachable-queue state (answer key P1, P2): `readiness_check.py` before any builder, one backward-route entry per failed check, the first routed skill run inline with the check named, no builder while the gate fails. 2026-11-03 (0.12.0, H3.2): the fixture's design homes both failure paths under `### Strategic` and `### Tactical` only, its Decisions one line each, and `readiness_check.py` reads those headings by name; the old check failed both paths on that fixture, the new one passes them, and the `no-failure-paths-route` regex proves no route to architecture-design. 1.00 in 1/1, bar re-recorded. 2026-11-07 (0.13.1, H1.6): the A-line regex also requires the `transcript` field (`kept | MISSING | not checked`); 0.93 in 3/3 (`results/gate-20261107T191402`, about $1.70 a run), the field present in every run as `not checked (audit off)`. The loss is `backward-routes-name-the-checks` in two runs (judge votes FAIL FAIL PASS and FAIL FAIL FAIL): every log had the chunk-loop entry and both backward routes naming the check, the persona and the document, but two runs hung the A line under the second backward-route entry instead of the chunk-loop entry and the third wrote a second chunk-loop entry to carry it. Where the A line goes after backward routes is a candidate for the orchestrator's next text change; the gate passed within tolerance and the bar is not re-recorded | yes |
 | `orchestrator-plan-check-seam` | real, Sonnet: 0.86 in 3/3 then 1.00 in 3/3 (the Mac). The one loss was the commit regex, which did not allow the JSON-escaped quotes the trace holds around the message; the behaviour was right every time: the plan sent back once to a fresh planner, the passing plan committed as `Plan: slice 001 in <n> chunks`, the B line, the handoff; v4 PR 3, case 6, plan half): resumed just after the planner returned a plan whose chunk 2 names no seam test (L5): the mechanical check fails, the plan goes back once to a fresh planner, the orchestrator never edits it, commits the one that passes, writes the B line, hands off | yes |
 | `chunk-runner-gate-deviation` (until 0.14.1 `orchestrator-gate-deviation`; 2026-11-08: the step moved into the chunk runner, so the case invokes `kad-dev-team:chunk-runner` directly from the same fixture state, runs as Opus like the real runner, grades the same launches and files, and grades the hand-back line instead of a handoff file; 1.00 in 3/3 at the gate of 2026-11-09, bar re-recorded from it) | real, Sonnet: 0.71 in 3/3 then 1.00 in 3/3 (the Mac). The first pass found a real defect: the skill's gate command never allowed the slice's own uncommitted log, so the scope check failed every chunk on it (fixed in the command), and the deviation file's untested method failed coverage (the snapshot now covers it). Then every run: gate PASS with `lending/hold.ts` named as the deviation, recorded, no fixer, no plan edit; v4 PR 3, case 5, deviation half): chunk 1's commit touches `lending/hold.ts`, inside a design module but off the Files line (L1): the gate with `--module-dir` passes and prints the deviation; recorded, no fixer, no plan edit | yes |
-| `chunk-runner-gate-outside` (until 0.14.1 `orchestrator-gate-outside`; 2026-11-08: the step moved into the chunk runner, so the case invokes `kad-dev-team:chunk-runner` directly from the same fixture state, runs as Opus like the real runner, grades the same launches and files, and grades the hand-back line instead of a handoff file; 1.00 in 3/3 at the gate of 2026-11-09, bar re-recorded from it) | real, Sonnet: 0.95 then 1.00 in 3/3 (the Mac): the gate fails on scope for `utils/card-number.ts`, one fresh fixer, the gate again, `--allow` never widened, no reviewer before the pass; the first pass lost one `failure-handed-to-the-fixer-once` judge vote; v4 PR 3, case 5, failure half): the commit adds `utils/card-number.ts`, outside every design module (L2): the gate fails on scope, one fresh fixer, the gate again on the fix, `--allow` never widened, no reviewer before the gate passes | yes |
+| `chunk-runner-gate-outside` (until 0.14.1 `orchestrator-gate-outside`; 2026-11-08: the step moved into the chunk runner, so the case invokes `kad-dev-team:chunk-runner` directly from the same fixture state, runs as Opus like the real runner, grades the same launches and files, and grades the hand-back line instead of a handoff file; 1.00 in 3/3 at the gate of 2026-11-09, bar re-recorded from it; 2026-11-10 (0.14.3): the `runner-edits-no-code` grader removed, the judge carries it, 1.00 at the gate, bar re-recorded) | real, Sonnet: 0.95 then 1.00 in 3/3 (the Mac): the gate fails on scope for `utils/card-number.ts`, one fresh fixer, the gate again, `--allow` never widened, no reviewer before the pass; the first pass lost one `failure-handed-to-the-fixer-once` judge vote; v4 PR 3, case 5, failure half): the commit adds `utils/card-number.ts`, outside every design module (L2): the gate fails on scope, one fresh fixer, the gate again on the fix, `--allow` never widened, no reviewer before the gate passes | yes |
 | `chunk-runner-review-round` (until 0.14.1 `orchestrator-chunk-review-round`; 2026-11-08: the step moved into the chunk runner, so the case invokes `kad-dev-team:chunk-runner` directly from the same fixture state, runs as Opus like the real runner, grades the same launches and files, and grades the hand-back line instead of a handoff file; 1.00 in 3/3 at the gate of 2026-11-09, bar re-recorded from it) | real, Sonnet: 0.90 in 3/3 on the first passes, every loss the reply tallying the smoke report itself because `rounds_record.py` had read the smoke agent's bulleted Severity as no finding (the recorder defect fixed in this PR), then 0.97 (the Mac): one combined reviewer and one smoke agent, two launches and no more, the round recorded by the script, the handoff; the reply may now carry a one-line title per needs-decision finding; v4 PR 3, case 3): resumed with chunk 1 built and gated: exactly one combined reviewer (`code-reviewer`, Opus) and one smoke agent (`tdd-coach`, the chunk is not UI), two launches and no more, the round recorded with `rounds_record.py`, the report at most eight findings and no Low, the handoff written once round 0 is recorded | yes |
 | `chunk-runner-one-fix-round` (until 0.14.1 `orchestrator-one-fix-round`; 2026-11-08: the step moved into the chunk runner, so the case invokes `kad-dev-team:chunk-runner` directly from the same fixture state, runs as Opus like the real runner, grades the same launches and files, and grades the hand-back line instead of a handoff file; 1.00 in 3/3 at the gate of 2026-11-09, bar re-recorded from it) | real, Sonnet: 0.44 (git unusable in the Mac sandbox), 0.81, 0.70, then 1.00 in 3/3. The losses on the way: a regex that matched the pre-existing finding's words in a fixer prompt that named it to exclude it, replaced by a judge that then failed replies saying exactly what it asked, so dropped (the C line's standing entry and the single second fixer are checked mechanically); backticks on the split's numbers; and one run stopped on a secrets check under the runtime that the planted opt-out covered (the skill's bullet now yields to the opt-out). Then every run: round 1 recorded with `--range`, only the regression to the second and last fixer, the gate on it, no third review, the (reg 1, pre 1) split and the standing Medium on the C line; v4 PR 3, case 4): resumed after fix r1 was re-reviewed with one regression and one pre-existing Medium (L3): round 1 recorded with `--range`, only the regression to a second and last fixer, the gate on the fix, no third review, the C line with the (reg 1, pre 1) split and the pre-existing Medium standing | yes |
 | `orchestrator-gap-without-delegation` (2026-11-08, 0.14.1: the runner now records round 0 and hands back the needs-decision, so the state is `chunk1-gap-handback` and the case grades the orchestrator's C.5 from the hand-back line: the persona launched once, no fixer and no runner, round 0 not recorded again; the runner's half is `chunk-runner-gap-handback`) | real, Sonnet: 0.88, 0.92, then 1.00 in 3/3 (the Mac). The skill told the persona to write nothing but asked the C line for a recommendation path; the orchestrator now saves the hand-back to its own records file and names it, and the state carries the reliability document the planted review cites. Every run: round 0 recorded, one consult, a recommendation back, no fixer, the flow stopped for the owner; v4 PR 3, case 2, orchestrator half): a `needs-decision` finding with no delegation file (L4): round 0 recorded, the owning persona launched once, a recommendation back with nothing written, `needs-decision devsecops-engineer: <path>` on the C line, no fixer, the flow stops for the owner | yes |
@@ -564,6 +564,81 @@ real cases and deleted (the table is in git history).
 
 ### Known coverage gaps
 
+- **The audit sync's transcript rules are checked without a model
+  (0.14.3, 2026-11-10, handoff-slice2 P5).** `tools/audit_sync_test.py`
+  (8 tests) builds a project, an audit directory with session logs and
+  transcripts, a bare audit remote and its clone, and shows: a transcript
+  the hook never snapshotted is carried by session id with its subagents';
+  one holding a value of the invented sheet is withheld (the log still
+  copied, the line and the last line saying so, no value printed or
+  written); a hit in the log withholds the whole session; the larger of
+  the live copy and the snapshot wins and a copy that grew is refreshed;
+  a session without a SessionEnd is `open`; an unreadable transcript, or
+  an unreadable listed source, withholds; without a `sources.md` nothing
+  is scanned and the line says so; the lock refuses a second sync (exit
+  5) and a stale lock is taken over. Measured on the owner's Mac (counts
+  only): the scan over the fourteen slice 2 sessions, 73 MB of
+  transcripts, takes about 23 s with a seven-row catalog. Sourcery's
+  round on PR #47 (21 comments, 19 findings, all fixed, two tests added):
+  every session file is staged whole under the audit directory and the
+  staged copy is what the scan reads and the clone receives (nothing
+  appended between the two slips through); a listed source the scan
+  cannot scan (a PDF) withholds every session, log included, as does a
+  catalog that prevents the scan; a `--sources` named and missing is a
+  failure, never a scan skipped; a line that is not JSON is scanned as
+  text (`source_scan.scan_transcript`); a session is this project's by
+  its payload's own `cwd` and complete by its own event, parsed, never by
+  text in a prompt; the lock is taken before the plan, a stale one is
+  renamed away (one taker wins) and a live one touched after the copy; a
+  withholding that changes is recorded when nothing else changed; a
+  session whose transcripts have gone from the machine keeps the clone's
+  earlier copy; an unreadable session log is said on the line and the
+  last line. The report checks withheld before kept and finds a copy the
+  sync carried into the clone; only each slice's latest sync line
+  withholds. The mutation runner refuses a path outside the clone or
+  untracked, restores the mutant in a `finally` (SIGTERM included), and
+  counts a runner failure (a timeout, a broken import) as an error, not a
+  kill. Its third round (22 comments) fixed: a transcript path a payload
+  names is read only under the projects directory or the audit
+  directory's snapshots (a planted log cannot make the sync copy any
+  readable file); paths compare resolved and case-folded only where the
+  system folds them; each run stages under a folder of its own; the lock
+  file is removed if its details cannot be written; a transcript already
+  in the clone is never replaced by a smaller copy, and a session folder
+  is no longer rebuilt from scratch; a copy kept after its sources went
+  is rescanned against today's `sources.md` and withheld if it now holds
+  a listed value; the whole withheld text, not the id set, decides
+  whether the sync log gets a line, and a sync without `--transcripts`
+  says so on its line so the report never reads it as a clean scan; the
+  report takes the chronologically latest transcript-syncing line across
+  slice folders and uses the sync's projects-directory fallback; the
+  mutation runner refuses a symlink, runs the typecheck on the baseline
+  first, reports a command that cannot start or times out as an error,
+  writes the mutant inside the restoring block, and holds a lock in the
+  clone's `.git`; the audit-review skill says a withheld transcript is
+  not opened in a model session. Declined with the reason on the thread:
+  a project with no `sources.md` has nothing listed to scan (the line
+  says so); a session's cwd is one directory, so a mixed-project session
+  does not arise; the lock's stale rule (an hour, an atomic rename) is
+  the accepted window for a sync that takes about a minute; the opengrep
+  audit rule on the runner's one command call, as on PR #44. The orchestrator
+  text change this needed is two sentences (the `; withheld: <session…>`
+  suffix recorded as printed and reported to the owner), covered by the
+  orchestrator cases the diff reaches, not by a case of its own: an eval
+  cannot stage an audit clone inside the sandbox. `tools/mutation_pass_test.py`
+  (3 tests) covers the mutation runner on a scratch Python repository
+  (a mutant that matches once and one that does not; a dirty tree and a
+  failing baseline refused; a caught and a surviving mutant, the file
+  restored, the report and the log carrying names and counts and never
+  the replaced text); `tools/cold_read.md` is a brief and has no test.
+  Also in this PR: `orchestrator_log_check.py`'s order check no longer
+  counts the state table's accessibility-line repair row (a hand-back to
+  `product-slicer`) as a stage the implementation entry skipped, so
+  `orchestrator-log-format/check.sh` counts every error again;
+  `chunk-runner-gate-outside`'s `runner-edits-no-code` grader is gone
+  (the judge's FAIL clause carries it); and the `delivery-ready` loop
+  state creates `tools/gh-calls.log` empty, so a run that never calls the
+  stand-in fails that grader instead of voiding the run.
 - **The planning-data rule is checked on an invented sheet (0.14.2,
   2026-11-09).** Nine cases and `tools/source_scan_test.py` (14 tests,
   no model) use `fixtures/library-app/source-plants/desk-fees.csv`,
@@ -691,7 +766,8 @@ real cases and deleted (the table is in git history).
   native-messaging files written when missing, `--reset` and
   `--no-chrome`), and `python3 -I tools/sandbox_check_test.py` reproduces
   the write check's false FAIL on the launcher's own folders and shows it
-  fixed.
+  fixed; since 0.14.3, `python3 -I tools/audit_sync_test.py` and `python3
+  -I tools/mutation_pass_test.py` (above).
   J4 in `TODO.md` lists what each real run must show.
 - ~~**The main agent acts before `tdd-implementation` loads.**~~ **Closed
   for the parent.** It used to write its own answers to a design's open

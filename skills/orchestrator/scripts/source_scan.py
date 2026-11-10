@@ -1007,8 +1007,9 @@ def scan_transcript(cat, path):
     """(counted hits, entries holding one) over a session or agent
     transcript, or (None, None) when it cannot be read: every string of
     every JSON line, decoded first, since a raw line glues an escaped
-    newline's `n` to the word after it. The audit sync's "withheld" rule
-    reads the same answer."""
+    newline's `n` to the word after it; a line that is not JSON is scanned
+    as it is, so nothing in the file goes unread. The audit sync's
+    "withheld" rule reads the same answer."""
     hits = []
     try:
         with open(path, encoding="utf-8", errors="replace") as f:
@@ -1016,6 +1017,7 @@ def scan_transcript(cat, path):
                 try:
                     entry = json.loads(raw)
                 except ValueError:
+                    hits += scan_text(cat, raw, f"entry {n}")
                     continue
                 for text in strings_of(entry):
                     hits += scan_text(cat, text, f"entry {n}")

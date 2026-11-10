@@ -447,6 +447,10 @@ EOF
       cp "$loop/tools/gh" tools/gh
       chmod +x tools/gh
       printf 'tools/\n' >> .git/info/exclude
+      # Empty until a `gh` call: a grader reading a missing file throws,
+      # which voids the run instead of failing the grader
+      # (orchestrator-delivery-foreground lost a run to it before 0.14.3).
+      : > tools/gh-calls.log
       if [ "$state" = delivery-ready-source ]; then
         list_source
         # What a push delivers, for the graders: every commit the remote
@@ -456,10 +460,8 @@ EOF
 git log -p --all > ../../tools/pushed-history.txt 2>&1
 HOOK
         chmod +x .git/origin.git/hooks/post-receive
-        # Empty until a push and a `gh` call: a grader reading a missing
-        # file throws, which voids the run instead of failing the grader.
+        # Empty until a push, for the same reason as gh-calls.log above.
         : > tools/pushed-history.txt
-        : > tools/gh-calls.log
       fi
       reviews=11 fixers=2 handoff "D done: D line written, records committed as $rec_sha; the fix round at D changed nothing the map lists (the notice's escaping only)" \
         "E: delivery" \

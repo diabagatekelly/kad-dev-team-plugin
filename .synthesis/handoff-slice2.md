@@ -6,18 +6,69 @@ only what an item points at. It replaces what was left of
 carried here with their numbers). `TODO.md` points here under "After
 slice 2".
 
-## Where the list stands (2026-11-09, P4 merged)
+## Where the list stands (2026-11-10, P5 built)
 
 | Section | State |
 |---|---|
 | P1 Start | **Merged** as kad 0.14.0, PR #41 (2026-11-08) |
 | P2 Screen checks and P3 The loop | **Merged** as kad 0.14.1, PR #42 (2026-11-09, merge `4fc83e4`), one PR as decided |
 | P4 Planning data | **Merged** as kad 0.14.2, PR #44 (2026-11-09, merge `2ed1b36`), one PR as decided |
-| P5 Audit and measurement | **Next.** One PR, branch `p5-audit`, kad 0.14.3, from `main` |
-| Slice 2's fix round, then slice 3 | After P5, on `personal-finance-tracker-3` (see "After this list") |
+| P5 Audit and measurement | **PR #47 open, every check green** (2026-11-10), kad 0.14.3 on branch `p5-audit`, one PR as decided, with the three small items; gate green on all 42 affected cases after each of Sourcery's rounds (three rounds, 45 comments: 39 fixed with tests, 6 declined with the reason on the thread; the opengrep audit rule on the mutation runner's one command call accepted in code with its reason, as `eval_gate.py` and `rejudge.py` carry it); merging is the owner's |
+| Slice 2's fix round, then slice 3 | **Next**, on `personal-finance-tracker-3` (see "After this list") |
 
-`main` is at 0.14.2. What a session starting P5 needs from the P4
-build, beyond the items' own notes below:
+`main` is at 0.14.2; `p5-audit` carries 0.14.3. What P5 built, for the
+session that runs slice 2's fix round and slice 3:
+
+- **The audit sync's transcript rules (P5.1).** `audit_sync.py
+  --transcripts` finds each session's transcript by its id (the live file
+  Claude Code writes, named in the hook payloads, or the hook's snapshot,
+  whichever is larger; subagents' the same way), scans every transcript
+  file and the session log with `source_scan.scan_transcript` when the
+  target directory has a `sources.md` (or `--sources <file>`), and
+  withholds a session with a counted hit: transcripts kept on disk, the
+  log still copied unless the hit is in it, `withheld: <session> (<n>
+  source values in <m> entries of <k> files)` in the sync log and `;
+  withheld: <session…>` on the last line, which the C and E lines record
+  as printed and the report to the owner names. A transcript the scan
+  cannot read, or a listed source it cannot read, withholds too. A copy
+  whose source grew is refreshed; a session is `open` until its SessionEnd;
+  `<clone>/.kad-sync.lock` serialises syncs (exit 5 when held, a lock over
+  an hour old taken over). `audit_report.py` says where each transcript
+  is (kept; on disk, not copied; withheld; none) and flags open sessions.
+  Measured on the Mac: 23 s to scan slice 2's 73 MB of transcripts with a
+  seven-row catalog. **Not done**: the sync of slice 2 itself (P5.1's
+  "done when": the session `4e0e20ec` in the audit repository). The dry
+  run shows it would carry that transcript and about 88 new subagent
+  files and refresh the loop session's; the project has no `sources.md`
+  yet, so nothing is withheld until slice 3 lists the workbook. The
+  owner runs it: `KAD_AUDIT_REPO="$(git -C ~/.claude/kad-audit/repo
+  remote get-url origin)" python3 -I
+  skills/orchestrator/scripts/audit_sync.py --project
+  ~/Documents/portfolio/personal-finance-tracker-3 --slice 2
+  --transcripts`.
+- **The two probes as tools (P5.2).** `evals/tools/cold_read.md` is the
+  brief: a clone at the delivered commit in the scratchpad, one Opus agent
+  with the brief and its parameters, no planning document or reviewer
+  report, the six scores, the bug list probed by execution, the format
+  the slice 2 assessment used. `evals/tools/mutation_pass.py check | run`
+  takes a JSON list of exact-string mutants (each must match once), runs
+  the baseline, applies each, runs the typecheck and the suite, restores
+  with `git checkout --`, and writes the table, the kill rates (overall,
+  the diff's files, per area), the single-test kills and the survivors;
+  the report never prints the replaced text. `audit-review` §3b names
+  both; the slice 3 review uses them.
+- **The three small items**: `orchestrator_log_check.py`'s order check
+  no longer counts the state table's accessibility-line repair row as a
+  skipped stage (`orchestrator-log-format/check.sh` counts every error,
+  no KNOWN line); `chunk-runner-gate-outside`'s `runner-edits-no-code`
+  grader is gone (the judge carries it; the case's bar re-recorded);
+  the `delivery-ready` state creates `tools/gh-calls.log` empty.
+- **Tests without a model**: `evals/tools/audit_sync_test.py` (8) and
+  `evals/tools/mutation_pass_test.py` (3); `evals/README.md`'s first gap
+  bullet has the detail.
+
+What a session starting P5 needed from the P4 build (kept for the
+record):
 
 - **New pieces P5 touches.** `skills/orchestrator/scripts/source_scan.py`
   is P4.2's scanner (its docstring is the reference): `load(planning,
@@ -195,7 +246,7 @@ This list's aim, in one sentence: make the flow catch what the cold reads catch 
 - H6's fourth question (review cadence): one measured arm on slice 3 that also changes who fixes (P3.2).
 - Screen checks: the acceptance criteria walked in a real browser by an agent, every UI slice, screen-reader announcements the only manual item (P2).
 - TODO 4.3 (run 2 leftovers in `personal-finance-tracker-2`): won't do.
-- Order of the PRs: P1; then P2 and P3 as one PR; then P4; then P5. (2026-11-09: P1, P2+P3 and P4 are merged; P5 is next.)
+- Order of the PRs: P1; then P2 and P3 as one PR; then P4; then P5. (2026-11-10: P1, P2+P3 and P4 are merged; P5 is built on `p5-audit`.)
 
 ## P1. Start: one word, no questions, Chrome on
 
@@ -258,8 +309,8 @@ Files: `skills/requirements-refinement/SKILL.md`, `skills/vertical-slicing/SKILL
 
 Files: `skills/orchestrator/scripts/audit_sync.py`, `evals/tools/audit_report.py`, `evals/tools/` (two new scripts), `.claude/skills/audit-review/SKILL.md`.
 
-- [ ] P5.1 **Transcripts picked up by session id.** `audit_sync.py --transcripts` also copies, by session id from `$KAD_AUDIT_DIR/sessions/*.jsonl`, any project transcript under `~/.claude/projects/` not yet in `transcripts/`, with three rules: a transcript (and the hook's snapshot) is copied only after P4.2's scanner found none of `planning/sources.md`'s values in it, otherwise the sync line says `withheld: <session>` and the owner decides (slice 2's transcripts, which hold the workbook dump, would have been withheld); a copy whose source is newer or larger is refreshed on the next sync, and a session counts as complete only when its SessionEnd is in the session log; each sync takes a lock file in the clone so two sessions cannot interleave. `audit_report.py` says "on disk, not copied" or "withheld" instead of "no transcript kept". Why: the owner's browser-review session (`4e0e20ec`, 3.7 MB on disk) shows as "no transcript kept" because the hook copies only at SessionEnd or at an orchestrator snapshot. Done when: that session is in the audit repository.
-- [ ] P5.2 **The review's two probes become tools.** The cold read with execution probes and the mutation pass (the briefs are in the slice 2 review's companion files and in the agents' prompts of 2026-11-08) become `evals/tools/cold_read.md` (the brief, launched as an Opus agent against a clone) and `evals/tools/mutation_pass.py` (the scripted exact-string mutants and the runner), so the next review and P3.2's D review run them the same way. Done when: `audit-review`'s SKILL.md names them and the slice 3 review uses them.
+- [x] P5.1 (0.14.3, 2026-11-10; the slice 2 sync itself is the owner's to run, see "Where the list stands") **Transcripts picked up by session id.** `audit_sync.py --transcripts` also copies, by session id from `$KAD_AUDIT_DIR/sessions/*.jsonl`, any project transcript under `~/.claude/projects/` not yet in `transcripts/`, with three rules: a transcript (and the hook's snapshot) is copied only after P4.2's scanner found none of `planning/sources.md`'s values in it, otherwise the sync line says `withheld: <session>` and the owner decides (slice 2's transcripts, which hold the workbook dump, would have been withheld); a copy whose source is newer or larger is refreshed on the next sync, and a session counts as complete only when its SessionEnd is in the session log; each sync takes a lock file in the clone so two sessions cannot interleave. `audit_report.py` says "on disk, not copied" or "withheld" instead of "no transcript kept". Why: the owner's browser-review session (`4e0e20ec`, 3.7 MB on disk) shows as "no transcript kept" because the hook copies only at SessionEnd or at an orchestrator snapshot. Done when: that session is in the audit repository.
+- [x] P5.2 (0.14.3, 2026-11-10) **The review's two probes become tools.** The cold read with execution probes and the mutation pass (the briefs are in the slice 2 review's companion files and in the agents' prompts of 2026-11-08) become `evals/tools/cold_read.md` (the brief, launched as an Opus agent against a clone) and `evals/tools/mutation_pass.py` (the scripted exact-string mutants and the runner), so the next review and P3.2's D review run them the same way. Done when: `audit-review`'s SKILL.md names them and the slice 3 review uses them.
 
 ## After this list
 
