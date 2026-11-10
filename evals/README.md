@@ -605,8 +605,8 @@ real cases and deleted (the table is in git history).
   for a run's kept directory, so since the CLI renamed it no directory
   was removed after a run and `--keep-scaffold` recorded none.
   Sourcery's round on PR #44 (25 comments; one opengrep rule four times
-  on list-form `subprocess.run`, declined) fixed ten things in the
-  scanner: a value in a file or directory name is found in history and
+  on list-form `subprocess.run`, declined) fixed eleven things in the
+  scanner and delivery: a value in a file or directory name is found in history and
   renamed by the rewrite; a listed source git would commit, and a
   byte-for-byte copy of one (a workbook is binary and never matches as
   text), are problems in a history scan too; files not read as text are
