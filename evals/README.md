@@ -584,7 +584,11 @@ real cases and deleted (the table is in git history).
   fewer and something else of its row is in the same file (a whole cell
   of as few rows, or an amount of that row); measured the same way it
   adds five cells to the scrubbed planning's 48 and keeps the pre-scrub
-  failure. Known gaps of the scan itself, in its docstring: a file
+  failure. Sourcery's round on that PR (#46) fixed a real rewrite
+  bug (a map holding a whole cell and a word of it replaced the word
+  and skipped the cell: the longer hit now wins, test 20), made the
+  cutoff and the listed-commit baseline per source, split camel-case
+  runs in a cell as scanned text is split, and strengthened test 19. Known gaps of the scan itself, in its docstring: a file
   listed after something has read it must carry a dash under `Listed
   at` or the leak is taken as already there; an image or a PDF is listed
   and not scanned. Grader lessons of these rounds: a

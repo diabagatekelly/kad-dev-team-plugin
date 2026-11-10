@@ -40,7 +40,9 @@ fee rows.
     read is not reported clean;
 19. a word of a longer cell (a surname) counts beside an amount of its own
     row and not alone, not beside another row's amount, and not when it is
-    a word of many rows.
+    a word of many rows; a camel-case run in a cell holds words of its own;
+20. a rewrite whose map holds a whole cell and a word of it replaces the
+    whole cell, never the word inside it alone.
 
 Usage: python3 -I evals/tools/source_scan_test.py
 """
@@ -440,6 +442,31 @@ class SourceScan(unittest.TestCase):
         self.write("planning/a.md", "A payment of 1.00 at the desk.\n")
         r = self.scan()
         self.assertEqual(r.returncode, 0, r.stdout)  # `payment` is a word of hundreds of rows: no pairing with an amount
+        self.assertNotRegex(r.stdout, r"^hit: [^\n]*— word,")
+        self.assertRegex(r.stdout, r"matched and not counted: \d+ — a word of a longer cell")
+        # A camel-case run in a cell holds words of its own, as scanned text does.
+        with open(self.sheet, "a", encoding="utf-8") as f:
+            f.write("LC-400001,Zillah Kettering-Vosk,BrambleQuayPress monthly,6.60,2026-11-02,RKV\n")
+        self.write("planning/a.md", "Bramble sent 6.60.\n")
+        r = self.scan()
+        self.assertRegex(r.stdout, r"hit: planning/a\.md:1 col 1-7 — word, desk fees C\d+")
+
+    def test_20_a_rewrite_replaces_the_whole_cell_where_the_map_also_holds_its_word(self):
+        self.sources()
+        self.write("planning/a.md", "Mirela Vantongeren, and Vantongeren again with 3.45.\n")
+        self.commit("the row")
+        mapfile = os.path.join(self.tmp, "map.json")
+        run("map", "--planning", self.planning, "--history", "main", "--out", mapfile, cwd=self.project)
+        with open(mapfile, encoding="utf-8") as f:
+            keys = set(json.load(f)["text"])
+        self.assertEqual(keys, {"mirela vantongeren", "vantongeren"})
+        rw = run("rewrite", "--project", self.project, "--map", mapfile, "--range", "main")
+        self.assertEqual(rw.returncode, 0, rw.stdout + rw.stderr)
+        with open(os.path.join(self.planning, "a.md"), encoding="utf-8") as f:
+            text = f.read()
+        self.assertNotIn("Mirela", text)
+        self.assertNotIn("Vantongeren", text)
+        self.assertEqual(run("scan", "--map", mapfile, "--project", self.project, "--history", "main", cwd=self.project).returncode, 0)
 
     def test_13_the_five_planning_skills_carry_the_rule_in_the_same_words(self):
         blocks = {}

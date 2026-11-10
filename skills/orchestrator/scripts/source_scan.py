@@ -510,7 +510,7 @@ class Catalog:
         self.allowed_cents = set()
         self.rows = {}         # ("text", words joined), ("word", word) or ("amount", cents) -> {(source index, tab, row)}
         self.partials = {}     # a word of a multi-word cell -> ref (the surname of a full name, the brand of a card line)
-        self.total_rows = 0
+        self.rows_per_source = {}  # source index -> rows under its column names
         self.owner = {}        # the same key -> index of the first source that holds it
         self.baseline = {}     # source index -> keys already in the tree when it was listed
         self.strict = False    # every match counts
@@ -533,8 +533,9 @@ class Catalog:
         if key not in self.rows:
             self.phrases.setdefault(w[0], []).append((w, ref))
         self._place(key, row)
-        if len(w) > 1:
-            for x in w:
+        parts = [tok[2] for tok in text_tokens(text)[-1]]  # camel-case runs split, as scanned text is
+        if len(parts) > 1:
+            for x in parts:
                 if len(x) >= 3 and x.isalpha() and x not in STOPWORDS and (x,) not in self.allowed_words:
                     self.partials.setdefault(x, ref)
                     self._place(("word", x), row)
@@ -573,14 +574,22 @@ class Catalog:
             return list(hits), {}
         counted, skipped = [], {}
 
+        def sources_of(key):
+            return {r[0] for r in self.rows.get(key, ())} or {self.owner.get(key)}
+
         def listed_before(h):
+            # Already there for every source that holds the value: a source
+            # listed earlier, before the value appeared, keeps its claim.
             key = h["key"][:2]
-            return key in self.baseline.get(self.owner.get(key), ())
+            return all(key in self.baseline.get(src, ()) for src in sources_of(key))
 
         def skip(reason):
             skipped[reason] = skipped.get(reason, 0) + 1
 
-        few = max(3, self.total_rows // 100)  # a word of 1% of the rows or fewer: a name, not a descriptor
+        def few(key):
+            # A word of 1% of its source's rows or fewer is a name, not a
+            # descriptor; a floor of three keeps a seven-row sheet's names in.
+            return max(3, min(self.rows_per_source.get(src, 0) for src in sources_of(key)) // 100)
         for file_hits in by_file(hits).values():
             live = [h for h in file_hits if not (listed_before(h) and skip("already in the tree when the source was listed") is None)]
             texts = [h for h in live if h["kind"] == "text"]
@@ -594,12 +603,13 @@ class Catalog:
             # rows or an amount of its row: a label in hundreds of rows pairs
             # with everything and says nothing.
             named_rows = set().union(*(self.rows.get(h["key"][:2], set()) for h in texts
-                                       if len(self.rows.get(h["key"][:2], set())) <= few)) if texts else set()
+                                       if len(self.rows.get(h["key"][:2], set())) <= few(h["key"][:2]))) if texts else set()
             word_rows, taken = set(), set()
             for h in wordhits:
                 rows = self.rows.get(h["key"][:2], set())
-                paired = len(rows) <= few and bool(rows & named_rows)
-                if not paired and len(rows) <= few:
+                rare = len(rows) <= few(h["key"][:2])
+                paired = rare and bool(rows & named_rows)
+                if not paired and rare:
                     for a in amounts:
                         if self.rows.get(a["key"][:2], set()) & rows:
                             paired = True
@@ -642,9 +652,11 @@ class Catalog:
                 if word in self.partials and (start, end) not in seen:
                     seen.add((start, end))
                     found.append((start, end, "word", self.partials[word], ("word", word)))
-        # A word inside a matched whole cell is that cell's hit, not its own.
-        spans = [(a, b) for a, b, kind, _, _ in found if kind == "text"]
-        found = [f for f in found if f[2] != "word" or not any(a <= f[0] and f[1] <= b for a, b in spans)]
+        # A hit inside a longer one is the longer one's (a word inside its
+        # whole cell; a map's one-word key inside its two-word key), so a
+        # rewrite never replaces the part and skips the whole.
+        found = [f for f in found if not any((a < f[0] or f[1] < b) and a <= f[0] and f[1] <= b
+                                              for a, b, _, _, _ in found)]
         for m in NUMBER.finditer(line):
             parsed = to_cents(m.group("num"))
             if parsed is None:
@@ -699,7 +711,7 @@ def load(planning, project=None, sources_file=None, strict=False):
         counts = {"tabs": len(tabs), "text": 0, "amounts": 0, "dates": 0, "column names": 0, "excluded": 0}
         for tab, cells in tabs.items():
             head = header_row(cells)
-            cat.total_rows += len({r for r, _, _, _ in cells if r != head})
+            cat.rows_per_source[index] = cat.rows_per_source.get(index, 0) + len({r for r, _, _, _ in cells if r != head})
             for row, col, kind, value in cells:
                 ref = f"{src['name']} {tab + '!' if tab else ''}{col_letter(col)}{row}"
                 if row == head:
