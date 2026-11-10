@@ -65,13 +65,15 @@ import time
 FAIL_LINE = re.compile(
     r"^\s*(?:"
     r"not ok \d+ - (?P<node>.+?)(?: # .*)?"          # node --test (TAP)
+    r"|✖ (?P<nodespec>.+?) \(\d+(?:\.\d+)?ms\)"       # node --test (spec, the default off a TTY since Node 20)
     r"|[✕✗×] (?P<jest>.+?)(?: \(\d+ ?ms\))?"          # jest, vitest
     r"|FAIL +\S+ > (?P<vitest>.+)"                     # vitest's file > name
     r"|FAILED (?P<pytest>\S+::\S+)"                   # pytest
     r"|FAIL: (?P<unittest>\S+(?: \([^)]*\))?)"        # unittest
     r")\s*$")
 COUNT_LINES = [
-    re.compile(r"^# fail (\d+)", re.M),                           # node --test
+    re.compile(r"^# fail (\d+)", re.M),                           # node --test (TAP)
+    re.compile(r"^ℹ fail (\d+)", re.M),                            # node --test (spec)
     re.compile(r"^Tests:\s+(\d+) failed", re.M),                   # jest
     re.compile(r"^\s*Tests\s+(\d+) failed", re.M),                 # vitest
     re.compile(r"(\d+) failed", re.M),                             # pytest's summary
@@ -264,7 +266,7 @@ def run_locked(a, repo, mutants, head, changed, log, record):
         record({"mutant": 0, "baseline": True, "exit": code, "failed": count, "names": names[:3]})
         return 2
     base_count = None
-    m = re.search(r"^# (?:pass|tests) (\d+)|^Tests:\s+(\d+) passed|^\s*Tests\s+(\d+) passed|(\d+) passed|Ran (\d+) tests?", out, re.M)
+    m = re.search(r"^# (?:pass|tests) (\d+)|^ℹ (?:pass|tests) (\d+)|^Tests:\s+(\d+) passed|^\s*Tests\s+(\d+) passed|(\d+) passed|Ran (\d+) tests?", out, re.M)
     if m:
         base_count = next(g for g in m.groups() if g)
     say(f"mutation_pass: baseline passes ({base_count or 'count not read'} tests, {secs:.0f} s)")

@@ -149,5 +149,27 @@ class MutationPass(unittest.TestCase):
         self.assertEqual(git(self.repo, "status", "--porcelain"), "")
 
 
+class ReadResult(unittest.TestCase):
+    """The runners' outputs, read without running anything."""
+
+    def read(self, code, output):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("mutation_pass", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.read_result(code, output)
+
+    def test_node_spec_reporter_counts_fails_and_names_tests(self):
+        # node --test prints the spec reporter off a TTY since Node 20: no `not ok` or `# fail` lines
+        output = ("✔ adds (one passes) (0.28ms)\n✖ multiplies, 3 x 3 (0.29ms)\n▶ group\n  ✖ inner fails (4.3ms)\n✖ group (4.4ms)\n"
+                  "ℹ tests 3\nℹ suites 1\nℹ pass 1\nℹ fail 2\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 51.4\n\n"
+                  "✖ failing tests:\n\ntest at s.test.cjs:4:1\n✖ multiplies, 3 x 3 (0.29ms)\n  AssertionError\n")
+        self.assertEqual(self.read(1, output), ("caught", 2, ["multiplies, 3 x 3", "inner fails", "group"]))
+        self.assertEqual(self.read(0, "✔ adds (0.28ms)\nℹ tests 1\nℹ pass 1\nℹ fail 0\n"), ("survived", 0, []))
+
+    def test_node_tap_reporter_still_reads(self):
+        self.assertEqual(self.read(1, "not ok 1 - multiplies\n# tests 2\n# pass 1\n# fail 1\n"), ("caught", 1, ["multiplies"]))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)
