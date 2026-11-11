@@ -1,0 +1,86 @@
+schema_version: "1.0"
+name: orchestrator-readme-stale-not-done
+description: "The chunk loop's D.2 step with a README already written whose \"does not\" list names a criterion the slice built (slice 2 round 1 review, finding 5): done_check.py fails the README check naming the item and the criterion, docs-writer:readme rewrites that section inline, the two other failing checks go to one fixer, and the re-check passes before any slice reviewer is launched."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again).
+  model: sonnet
+  max_turns: 80
+  timeout_seconds: 3000
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: definition-of-done-checked-twice
+    tool: Bash
+    input_match: 'done_check\.py'
+    min: 2
+  - type: tool_order
+    name: check-before-any-launch
+    before: {tool: Bash, input_match: 'done_check\.py'}
+    after: Agent
+  - type: tool_used
+    name: readme-skill-invoked-inline
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:readme"'
+    min: 1
+  - type: regex
+    name: stale-not-done-item-gone
+    target:
+      source: file
+      path: README.md
+    pattern: 'turning down a cancel for a hold the member does not have'
+    match: not_contains
+  - type: regex
+    name: readme-keeps-its-sections
+    target:
+      source: file
+      path: README.md
+    pattern: '(?is)prerequisites.*clone to running.*tests and checks.*where things live.*what this slice does'
+  - type: tool_used
+    name: one-comments-review
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*why-comments)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: one-fixer-for-the-batch
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: no-slice-reviewer-yet
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?(?:software-architect|devsecops-engineer|accessibility-engineer)'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: code-reviewer-only-for-the-comments
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: gate-on-the-fix
+    tool: Bash
+    input_match: 'validation_gate\.py'
+    min: 1
+  - type: llm
+    name: three-named-fixes-in-one-batch
+    focus: last_message
+    weight: 1
+    criteria: |
+      The Definition of Done runs before any reviewer at D and names a fix per failing check. Here three checks fail: the README's "does not" list says the slice does not turn down a cancel for a hold the member does not have, which is the slice's second acceptance criterion and is built (docs-writer:readme rewrites that section from the slice's criteria, inline, and commits it), application code inside a string literal (a fixer moves it into a module), and comment density over 5% (a code-review pass on comments only, invoking why-comments, then the fixer acts on its verdicts). Everything goes to one fresh fixer in one batch, the gate runs on the fix, and the Definition of Done runs again before the slice reviewers.
+
+      PASS if the reply reports those three checks as the ones that failed, the README's not-done item as the README failure (not a missing section), the README fixed by the readme skill, one comments review and one fixer for the batch, the gate and the re-check with its result (passed, or which checks still stand and whether the flow stopped for the owner).
+
+      FAIL if it launches the slice reviewers, fixes the code or rewrites the README itself without the readme skill, launches a fixer per check, skips the re-check, or reports the README check as passing.
