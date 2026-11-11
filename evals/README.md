@@ -626,7 +626,8 @@ real cases and deleted (the table is in git history).
   suffix recorded as printed and reported to the owner), covered by the
   orchestrator cases the diff reaches, not by a case of its own: an eval
   cannot stage an audit clone inside the sandbox. `tools/mutation_pass_test.py`
-  (3 tests) covers the mutation runner on a scratch Python repository
+  (8 tests) covers the mutation runner on a scratch Python repository
+  and the reading of node's TAP and spec reporters, under forced colour, with a suite summary and after a timeout; a base that is not a ref said, not swallowed
   (a mutant that matches once and one that does not; a dirty tree and a
   failing baseline refused; a caught and a surviving mutant, the file
   restored, the report and the log carrying names and counts and never

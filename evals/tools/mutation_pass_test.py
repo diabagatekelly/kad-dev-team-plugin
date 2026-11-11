@@ -134,6 +134,13 @@ class MutationPass(unittest.TestCase):
             rows = [json.loads(l) for l in f]
         self.assertEqual([r.get("caught") for r in rows], [None, True, False])
 
+    def test_a_base_that_is_not_a_ref_is_said_not_swallowed(self):
+        report = os.path.join(self.tmp, "report.md")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD,
+                            "--base", "no-such-ref", "--out", report)
+        self.assertIn("`no-such-ref` is not a ref", out)
+        self.assertNotIn("In the diff against", open(report, encoding="utf-8").read())
+
     def test_runner_failure_is_an_error_not_a_kill(self):
         # the second mutant breaks the module's syntax, so the runner fails before any test runs: not a kill
         with open(self.mutants, "w") as f:
@@ -147,6 +154,34 @@ class MutationPass(unittest.TestCase):
             text = f.read()
         self.assertIn("Mutants: **1**. Caught: **1**. Survived: **0**. Kill rate **100.0%**. Not counted, the runner itself failed: 2.", text)
         self.assertEqual(git(self.repo, "status", "--porcelain"), "")
+
+
+class ReadResult(unittest.TestCase):
+    """The runners' outputs, read without running anything."""
+
+    def read(self, code, output):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("mutation_pass", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.read_result(code, output)
+
+    def test_node_spec_reporter_counts_fails_and_names_tests(self):
+        # node --test prints the spec reporter off a TTY since Node 20: no `not ok` or `# fail` lines
+        output = ("✔ adds (one passes) (0.28ms)\n✖ multiplies, 3 x 3 (0.29ms)\n▶ group\n  ✖ inner fails (4.3ms)\n✖ group (4.4ms)\n"
+                  "ℹ tests 3\nℹ suites 1\nℹ pass 1\nℹ fail 2\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 51.4\n\n"
+                  "✖ failing tests:\n\ntest at s.test.cjs:4:1\n✖ multiplies, 3 x 3 (0.29ms)\n  AssertionError\n")
+        self.assertEqual(self.read(1, output), ("caught", 2, ["multiplies, 3 x 3", "inner fails", "group"]))
+        self.assertEqual(self.read(0, "✔ adds (0.28ms)\nℹ tests 1\nℹ pass 1\nℹ fail 0\n"), ("survived", 0, []))
+
+    def test_a_timeout_after_a_named_failure_is_a_catch(self):
+        # the tests caught the break, then the run hung: a kill, not a runner error
+        out = "✖ refuses at open (1ms)\n[timed out after 1800 s]"
+        self.assertEqual(self.read(-1, out), ("caught", 1, ["refuses at open"]))
+        self.assertEqual(self.read(-1, "✔ adds (1ms)\n[timed out after 1800 s]"), ("error", None, []))
+
+    def test_node_tap_reporter_still_reads(self):
+        self.assertEqual(self.read(1, "not ok 1 - multiplies\n# tests 2\n# pass 1\n# fail 1\n"), ("caught", 1, ["multiplies"]))
 
 
 if __name__ == "__main__":

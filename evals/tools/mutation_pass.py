@@ -28,8 +28,12 @@ the replacement, runs the typecheck command if given, runs the test
 command, reads the result (the failing tests' names where the runner
 prints them: node's `not ok … - name`, jest's `✕ name`, vitest's `× name`
 and `FAIL file > name`, pytest's `FAILED path::name`, unittest's `FAIL:
-name`; a non-zero exit with no names read is still a catch, reported as
-`exit <code>`), restores the file with `git checkout --` and checks that
+name`; colour escapes are stripped first, so a forced-colour run reads
+the same; a `✖` or `not ok` line indented less than the result line
+before it is the summary of a suite or a parent test, not a test, and is
+not named; a non-zero exit with no names read is still a catch, reported
+as `exit <code>`; a run that times out after naming a failure is a catch
+too, since the tests caught the break before the hang), restores the file with `git checkout --` and checks that
 `git status --porcelain` is empty again, stopping if it is not. Every
 mutant's outcome goes to the JSON-lines log as it finishes, and the
 markdown report is written at the end: the table (number, file:line, the
@@ -65,13 +69,15 @@ import time
 FAIL_LINE = re.compile(
     r"^\s*(?:"
     r"not ok \d+ - (?P<node>.+?)(?: # .*)?"          # node --test (TAP)
+    r"|✖ (?P<nodespec>.+?) \(\d+(?:\.\d+)?ms\)"       # node --test (spec, the default off a TTY since Node 20)
     r"|[✕✗×] (?P<jest>.+?)(?: \(\d+ ?ms\))?"          # jest, vitest
     r"|FAIL +\S+ > (?P<vitest>.+)"                     # vitest's file > name
     r"|FAILED (?P<pytest>\S+::\S+)"                   # pytest
     r"|FAIL: (?P<unittest>\S+(?: \([^)]*\))?)"        # unittest
     r")\s*$")
 COUNT_LINES = [
-    re.compile(r"^# fail (\d+)", re.M),                           # node --test
+    re.compile(r"^# fail (\d+)", re.M),                           # node --test (TAP)
+    re.compile(r"^ℹ fail (\d+)", re.M),                            # node --test (spec)
     re.compile(r"^Tests:\s+(\d+) failed", re.M),                   # jest
     re.compile(r"^\s*Tests\s+(\d+) failed", re.M),                 # vitest
     re.compile(r"(\d+) failed", re.M),                             # pytest's summary
@@ -195,10 +201,10 @@ def read_result(code, output):
             break
     if count is None and names:
         count = len(names)
-    if code in (TIMED_OUT, NOT_RUN):
-        return "error", count, names
     if count:
         return "caught", count, names
+    if code in (TIMED_OUT, NOT_RUN):
+        return "error", count, names
     return ("survived" if code == 0 else "error"), count, names
 
 
@@ -222,6 +228,8 @@ def run(a, mutants):
         return 1
     head = git(repo, "rev-parse", "--short", "HEAD").stdout.strip()
     changed = diff_files(repo, a.base) if a.base else None
+    if a.base and changed is None:
+        say(f"mutation_pass: `{a.base}` is not a ref in {repo} (a clone of one branch has no origin/main); the report will carry no in-diff column")
     log = open(a.log, "a", encoding="utf-8") if a.log else None
 
     def record(obj):
@@ -264,7 +272,7 @@ def run_locked(a, repo, mutants, head, changed, log, record):
         record({"mutant": 0, "baseline": True, "exit": code, "failed": count, "names": names[:3]})
         return 2
     base_count = None
-    m = re.search(r"^# (?:pass|tests) (\d+)|^Tests:\s+(\d+) passed|^\s*Tests\s+(\d+) passed|(\d+) passed|Ran (\d+) tests?", out, re.M)
+    m = re.search(r"^# (?:pass|tests) (\d+)|^ℹ (?:pass|tests) (\d+)|^Tests:\s+(\d+) passed|^\s*Tests\s+(\d+) passed|(\d+) passed|Ran (\d+) tests?", out, re.M)
     if m:
         base_count = next(g for g in m.groups() if g)
     say(f"mutation_pass: baseline passes ({base_count or 'count not read'} tests, {secs:.0f} s)")
