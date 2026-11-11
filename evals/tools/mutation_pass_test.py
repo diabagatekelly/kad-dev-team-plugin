@@ -134,6 +134,13 @@ class MutationPass(unittest.TestCase):
             rows = [json.loads(l) for l in f]
         self.assertEqual([r.get("caught") for r in rows], [None, True, False])
 
+    def test_a_base_that_is_not_a_ref_is_said_not_swallowed(self):
+        report = os.path.join(self.tmp, "report.md")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD,
+                            "--base", "no-such-ref", "--out", report)
+        self.assertIn("`no-such-ref` is not a ref", out)
+        self.assertNotIn("In the diff against", open(report, encoding="utf-8").read())
+
     def test_runner_failure_is_an_error_not_a_kill(self):
         # the second mutant breaks the module's syntax, so the runner fails before any test runs: not a kill
         with open(self.mutants, "w") as f:

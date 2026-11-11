@@ -228,6 +228,8 @@ def run(a, mutants):
         return 1
     head = git(repo, "rev-parse", "--short", "HEAD").stdout.strip()
     changed = diff_files(repo, a.base) if a.base else None
+    if a.base and changed is None:
+        say(f"mutation_pass: `{a.base}` is not a ref in {repo} (a clone of one branch has no origin/main); the report will carry no in-diff column")
     log = open(a.log, "a", encoding="utf-8") if a.log else None
 
     def record(obj):
