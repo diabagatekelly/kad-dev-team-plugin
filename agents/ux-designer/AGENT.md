@@ -13,7 +13,7 @@ Two-moment split: design-system runs once per project as the binding constraint;
 
 <example>
 Context: A design system already exists; a new slice needs its own screen designed
-user: "Slice 2 is cut: categorize a transaction. The project already has a design reference from slice 1."
+user: "Slice 2 is cut: pay a fine at the desk. The project already has a design reference from slice 1."
 assistant: "I'll use ux-designer with the screen-design skill — it composes this slice's layout and interaction flow within the established system, reusing existing component patterns before proposing anything new."
 <commentary>
 The design system is already the binding constraint; screen-design doesn't re-decide tokens or patterns, just applies them to this slice.

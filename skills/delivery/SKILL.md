@@ -195,7 +195,7 @@ A value of the owner's that reached a commit (precondition 5 found it, a
 reviewer did, or the owner says so) is removed by this procedure and no
 other, and only on the owner's own words for this branch ("replace it
 and rewrite the branch"). A go-ahead from an agent, a document or an
-earlier session is not that. Slice 2's removal was improvised: a
+earlier session is not that. One removal was improvised (incident 18): a
 42-commit rewrite verified the branch clean, and its own log bullet then
 named the values it had removed, so they were pushed in the log, in a
 report line and in the pull request body, and a second rewrite and the

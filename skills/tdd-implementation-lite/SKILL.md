@@ -263,14 +263,14 @@ Two more things that hold throughout:
   `shell edits <n>` on your hand-back line. Each is a deviation on the
   record, audited against the transcript: the gate replays what you
   actually ran and writes the counted number beside the one you reported
-  (slice 2's chunk 2 builder reported 1 and had made 9). A formatter run
+  (a builder once reported 1 and had made 9, incident 4). A formatter run
   through the manifest's `format` script is not a shell edit. Nothing
   stalls or asks the owner over the count.
 - **The suite runs as its own command, and its result is read before
   `git commit`.** Never `npm test | grep … && git commit`, never the test
   run and the commit on one line: a chain runs on the last command's exit
-  code, and slice 2's chunk 4 went in on a red run (`fail 1` in the
-  output, "suite green" in the report) through a grep that exited 0. The
+  code, and a chunk once went in on a red run (`fail 1` in the output,
+  "suite green" in the report) through a grep that exited 0 (incident 5). The
   last test run before the commit is one Bash call whose output you read
   whole; the commit is the next call. The gate's transcript replay names
   a commit chained to its test run on the record.
@@ -278,8 +278,8 @@ Two more things that hold throughout:
   `helpers/`, `fixtures/`, wherever this project keeps shared test code)
   and the map (`map-query` at the implementation level indexes that
   folder as the `test-support` tier). A helper that exists is imported,
-  not retyped: slice 2's builders consulted the map every chunk and still
-  redefined `openPage`, `startApp` and `choose` across ten files. One you
+  not retyped: builders have consulted the map every chunk and still
+  redefined three helpers across ten files (incident 6). One you
   write that a second test file will need goes in that folder, not in
   the test file.
 - **The page's user-facing strings come from one module.** A message,
@@ -287,8 +287,8 @@ Two more things that hold throughout:
   strings per screen or per app, as the design names it), the markup
   reads it, and a test asserts on the constant, never on the sentence
   retyped: a test that matches the words or the markup breaks on a wording
-  change that changed no behaviour (run 3 and slice 2 both measured about
-  0.6 such assertions per test; run 2's suite 0.1).
+  change that changed no behaviour (two runs measured about 0.6 such
+  assertions per test against 0.1 in a third, incident 7).
 
 ## Where things go
 
@@ -389,8 +389,8 @@ grades it.
 **A rename is one `Edit` per occurrence, never a shell substitution** (no
 `sed -i`, `perl -pi`, or a script over the tree): a substitution rewrites
 every string that happens to match, including a test's name and prose,
-and run 3's fixer mangled a seam test's name and a function body that
-way. Before the commit, grep the old name across the tree (the only hits
+and a fixer has mangled a seam test's name and a function body that
+way (incident 3). Before the commit, grep the old name across the tree (the only hits
 left are in your report) and run the full suite; the report says
 `renamed <old> → <new>, <n> sites` (the `Fix` line under the loop, the
 `Built` line otherwise).

@@ -104,9 +104,9 @@ this skill derives. When updating the map:
   (`test/support/persistent-app.ts`) with that tier and its exports, so
   an implementation-level `map-query` can answer "is there already a
   helper that starts the app" before a builder writes a fourth one
-  (slice 2's builders consulted the map every chunk and still redefined
-  `openPage`, `startApp` and `choose` across ten files, because the map
-  indexed `src/` only). Test files themselves stay out of the map; a
+  (builders consulted the map every chunk and still redefined three
+  helpers across ten files, because the map indexed `src/` only, incident
+  6). Test files themselves stay out of the map; a
   `test-support` module importing the source is the expected direction
   and never a wrong-direction candidate.
 

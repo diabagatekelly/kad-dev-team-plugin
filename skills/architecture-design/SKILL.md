@@ -218,11 +218,11 @@ failure path's words in the sections whose headings contain `Structure`,
 `Boundaries`, `Components`, `Decisions`, `Strategic` or `Tactical`, case
 ignored, and nowhere else. So write the components under `## Structure`
 as `### Strategic` and `### Tactical`, exactly those words (a qualifier
-after the word, `### Strategic (no knowledge of Plaid, the database or
-HTTP)`, is fine; a heading that drops the word is not), and home every
-failure path under one of those headings or under `## Decisions`. Run 3's
-design kept its failure paths under `### Strategic` and `### Tactical`
-and failed the gate until the headings were renamed; the gate now reads
+after the word, `### Strategic (no knowledge of the provider, the
+database or HTTP)`, is fine; a heading that drops the word is not), and
+home every failure path under one of those headings or under `##
+Decisions`. A design kept its failure paths under other headings and
+failed the gate until they were renamed (incident 23); the gate now reads
 those names, and this template names what it writes.
 
 Name what the next slice needs kept from this one. Identifiers, cursors,
@@ -246,9 +246,9 @@ allowed only for a branch the seam test cannot reach, and each one is
 named in the builder's report with that branch; made-up data throughout,
 never a real token, secret, key or record. Name the slice's own
 boundaries in that line (which external service, which store); never
-widen the fakes. Run 3's design wrote "tests run against in-memory
-implementations of the Transaction source and the stores", the builder
-followed it, and the slice review's fake inventory was the finding: the
+widen the fakes. A design wrote "tests run against in-memory
+implementations of the source and the stores", the builder followed it,
+and the slice review's fake inventory was the finding (incident 24): the
 design is the one document the builder reads before the policy, so a
 test line that contradicts the policy is followed, not caught.
 
@@ -301,15 +301,15 @@ document, not in a question, not in a reply. In this order:
    `limit: 1`) and a count-only search for the rows. Never `cat`, `head`,
    `Read` in full or load the file with a library to look inside:
    whatever a command prints stays in the session's transcript for good,
-   and slice 2's transcript holds a whole workbook because one command
-   dumped every tab. A file `describe` cannot read (a screenshot, a PDF)
+   and one command that dumps a file puts the whole of it there (incident
+   15). A file `describe` cannot read (a screenshot, a PDF)
    is listed the same way and looked at for its layout alone.
 3. **Invent every example** (the names, the amounts, the dates) and say
    so once in the document ("examples are invented; none is a row of the
-   sheet"), however much better a real row would make the point. Slice
-   2's requirements took one real merchant and its fee as an example; the
+   sheet"), however much better a real row would make the point. One real
+   row taken as an example in a requirements document was carried by the
    slice, the design, the story, the plan's test names and thirteen test
-   files carried it.
+   files (incident 16).
 4. **Check what you build on before you repeat it.** When `sources.md`
    lists a source, `python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py"
    scan --planning '<target directory>'` prints the file, line and cell of
@@ -337,7 +337,7 @@ pick one and mention it in passing.
 ## Get approval for every real decision, one at a time
 
 A "decision" is any point where more than one reasonable structure was
-possible and something had to be picked — which Plaid plan to request,
+possible and something had to be picked — which provider plan to request,
 whether export runs synchronously or via a background job, whether to
 build the interface an engineer proposed or reject it as premature.
 Applying a rule mechanically isn't a decision in this sense: "this crosses

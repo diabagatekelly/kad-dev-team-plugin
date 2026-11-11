@@ -241,8 +241,8 @@ this for real, not aspirationally:
    more with the mockup's data multiplied to a long list (forty rows, or
    whatever a month of the real thing would be), since a layout that
    holds for three rows and breaks for forty is the layout problem the
-   built screen will have (slice 2's mockups were never rendered and
-   that problem was invisible until the owner's browser review).
+   built screen will have (mockups that were never rendered hid that
+   problem until the owner's browser review, incident 22).
    Screenshot each of those views and save the screenshots in
    `visual-ux/` beside the mockup (`<mockup>.png`, `<mockup>-narrow.png`,
    `<mockup>-long.png`); don't assume the markup looks like what you
@@ -313,15 +313,15 @@ document, not in a question, not in a reply. In this order:
    `limit: 1`) and a count-only search for the rows. Never `cat`, `head`,
    `Read` in full or load the file with a library to look inside:
    whatever a command prints stays in the session's transcript for good,
-   and slice 2's transcript holds a whole workbook because one command
-   dumped every tab. A file `describe` cannot read (a screenshot, a PDF)
+   and one command that dumps a file puts the whole of it there (incident
+   15). A file `describe` cannot read (a screenshot, a PDF)
    is listed the same way and looked at for its layout alone.
 3. **Invent every example** (the names, the amounts, the dates) and say
    so once in the document ("examples are invented; none is a row of the
-   sheet"), however much better a real row would make the point. Slice
-   2's requirements took one real merchant and its fee as an example; the
+   sheet"), however much better a real row would make the point. One real
+   row taken as an example in a requirements document was carried by the
    slice, the design, the story, the plan's test names and thirteen test
-   files carried it.
+   files (incident 16).
 4. **Check what you build on before you repeat it.** When `sources.md`
    lists a source, `python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py"
    scan --planning '<target directory>'` prints the file, line and cell of

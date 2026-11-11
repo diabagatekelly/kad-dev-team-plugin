@@ -21,14 +21,14 @@ slice's criteria by path, the start command and a report path ending in
 **Every mode that starts the app starts it through the launcher the task
 hands you** (`scratch_run.py`, by path, with a scratch folder): the
 app's data paths given explicitly inside that folder, `HOME` pointed
-there, a made-up ledger (the project's fixture or one you build), the
+there, made-up data (the project's fixture or data you build), the
 project's fake credential tool or a disposable store, never the owner's
-login Keychain, not even to read, no provider connection started, and
+login credential store, not even to read, no provider connection started, and
 the folder removed after (`scratch_run.py --clean`). You never open the
 owner's data directory; the launcher refuses a path outside the folder,
-and the orchestrator hashes the real data around your launch. Two of
-slice 2's smoke runs started the app on the owner's real ledger and
-Keychain, and nothing in the text then said not to.
+and the orchestrator hashes the real data around your launch. Two smoke
+runs once started the app on the owner's real data and credential store,
+and nothing in the text then said not to (incident 10).
 
 At design time, two things from one pass: a findings report on the artifact
 in front of you, and the slice's actual accessibility acceptance criteria —
@@ -94,8 +94,8 @@ code, in this order.
    the modules the range touches; read every file of each of those
    modules in full, and every test file that exercises them (at D, all of
    `src/` and `test/`, and the built screens driven in the browser). The diff says what moved; the module says whether
-   it is right. Run 3's slice reviewers, each reading one side of the
-   exchange-once seam, missed an orphaned Plaid Item three runs running.
+   it is right. Reviewers each reading one side of a seam missed an
+   orphaned provider record three runs running (incident 1).
 2. **Run the checks** from the project root with the manifest's own
    scripts: the typecheck, the lint and the format check where each
    exists. The full suite you do not run: the gate ran it on this very
@@ -130,8 +130,8 @@ with <X> undecided; consequence <Y>", Medium when the consequence is
 something a person meets on the screen (a permanent state, an action
 with no way back), Low otherwise: an accepted deferral is a fact about
 what ships, not something a review drops because a document accepted it
-(slice 2's deferred "changing a merchant's general rule" was accepted by
-six reviewers and found by a cold read as a misclick with no undo). The
+(a deferral accepted by six reviewers was found by a cold read to be a
+misclick with no undo, incident 14). The
 regressions-only re-review at round 1 is different and stays as it is:
 handed the fix's diff range and the files it touched, it reads those.
 
@@ -165,9 +165,9 @@ browser-driving launch per round:
    headless substitute: each runnable item in turn, with one screenshot
    per state reached, saved under the records directory
    (`smoke/chunk-<k>-r<i>/<n>-<state>.png`) and named in the report.
-   Slice 2's eight happy-dom smoke runs said the UI chunks worked; the
+   Eight smoke runs in a test DOM once said the UI chunks worked; the
    owner's real browser the next day found confirmations drawn 2,000 px
-   above the viewport. Each item that does not hold is one finding,
+   above the viewport (incident 21). Each item that does not hold is one finding,
    Critical when the chunk's main path does not work, High otherwise,
    with what you did, what you saw and the screenshot. **No browser is a
    finding, never a pass.** When a Chrome tool call answers that no
@@ -180,7 +180,7 @@ browser-driving launch per round:
    as owed, hands it to no fixer, and carries it into the pull request as
    the owner's checklist. Its `## Result` is then `FAIL`. A report that
    says `PASS` with a note that the browser was unavailable hides what
-   was not checked (run 3, every UI chunk).
+   was not checked (incident 12).
 3. **Check the chunk's accessibility criteria** (the task hands you the
    file) on the built screen, as the eight checks say, in every state the
    chunk's Done when reaches; each failure is a finding at the severity
@@ -207,9 +207,9 @@ The chunk loop's D step launches you once per UI-touching slice as the
 **criteria walker**: the owner's own check, done by an agent before the
 owner has to ("if the AC is a checklist, an agent should open the browser
 and check all AC points pass manual testing, maybe excluding screen
-reader"). Slice 2's eight smoke runs and six reviewers passed a screen
+reader"). Eight smoke runs and six reviewers once passed a screen
 whose confirmations and failures drew 2,000 px above the viewport; the
-owner found it in the first real browser session.
+owner found it in the first real browser session (incident 21).
 
 1. **The checklist** is every criterion the task hands you by path: the
    slice file's Given/When/Then list, the accessibility criteria (A), and
@@ -221,8 +221,8 @@ owner found it in the first real browser session.
    with the reason `the owner's manual screen-reader check`, and nothing
    else is deferred to the owner.
 2. **Start the app** through the launcher as the smoke run does (the data
-   rule), seed the made-up ledger with what the criteria need (a row to
-   categorize, a hold to cancel), and open it in the real browser with
+   rule), seed the made-up data with what the criteria need (a record to
+   act on, a hold to cancel), and open it in the real browser with
    the Chrome tools.
 3. **Drive each criterion** as a person would, at the default width and
    again at the narrow width (360 px) when the criterion shows a layout,
@@ -278,8 +278,8 @@ copy), take the measurements from the rendered page (computed styles for
 contrast, `document.activeElement` after each Tab, the bounding boxes for
 touch targets), at the default width and at 360 px, and keep one
 screenshot per mockup beside `screen-design`'s under `visual-ux/`
-(`<mockup>-a11y.png`). Slice 2's mockups were never rendered and the
-layout a long table forces was invisible until the built screen.
+(`<mockup>-a11y.png`). Mockups that were never rendered hid the layout
+a long table forces until the built screen (incident 22).
 
 Fall back to a markup-only read only when nothing in this session can
 actually load the artifact, and say so explicitly in the report rather

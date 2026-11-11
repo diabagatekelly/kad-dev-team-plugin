@@ -48,8 +48,8 @@ code, in this order.
    the modules the range touches; read every file of each of those
    modules in full, and every test file that exercises them (at D, all of
    `src/` and `test/`). The diff says what moved; the module says whether
-   it is right. Run 3's slice reviewers, each reading one side of the
-   exchange-once seam, missed an orphaned Plaid Item three runs running.
+   it is right. Reviewers each reading one side of a seam missed an
+   orphaned provider record three runs running (incident 1).
 2. **Run the checks** from the project root with the manifest's own
    scripts: the typecheck, the lint and the format check where each
    exists. The full suite you do not run: the gate ran it on this very
@@ -84,9 +84,9 @@ with <X> undecided; consequence <Y>", Medium when the consequence is one
 a person meets (data kept that a decision would have removed, an action
 with no way back), Low otherwise: an accepted deferral is a fact about
 what ships, not something a review drops because a document accepted it
-(slice 2's six reviewers accepted "changing a merchant's general rule"
-as deferred; a cold read found the first pick permanent). The
-regressions-only re-review at round 1 is different and stays as it is:
+(six reviewers accepted a deferral a cold read then found to leave a
+first choice permanent, incident 14). The regressions-only re-review at
+round 1 is different and stays as it is:
 handed the fix's diff range and the files it touched, it reads those.
 
 Why the order: a reviewer handed nothing traced the seam in one pass and
@@ -216,8 +216,8 @@ python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py" scan --p
 and the same without `--history` for the tree. The finding names the
 file, the line and the cell the scan printed and **never quotes the
 value or describes it closely enough to identify it**: your report is
-committed with the records, and slice 2's removal had to be done twice
-because its own record named what it had removed. Severity is by what
+committed with the records, and a removal has had to be done twice
+because its own record named what it had removed (incident 18). Severity is by what
 the value is: High for a credential, an account or card number, Medium
 for a name or an amount. The **Suggested fix** names the procedure, not
 a `sed`: replace it in the tree with an invented value, and for the

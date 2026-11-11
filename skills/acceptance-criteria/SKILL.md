@@ -15,10 +15,10 @@ When <a single action>
 Then <an outcome someone could verify by looking, with no ambiguity>
 ```
 
-Bad: "The app categorizes transactions correctly."
-Good: "Given a transaction with the same merchant name as one in the
-provided sample data, when it's imported, then it is assigned that sample's
-category automatically."
+Bad: "The app assesses fines correctly."
+Good: "Given a loan returned three days after its due date, when it is
+checked in, then a fine of three days at the board's daily rate is
+assessed to that member's account."
 
 A slice with acceptance criteria that all read like the "bad" example isn't
 ready to hand to `tdd-coach` or `code-reviewer` yet — send it back.
@@ -89,15 +89,15 @@ document, not in a question, not in a reply. In this order:
    `limit: 1`) and a count-only search for the rows. Never `cat`, `head`,
    `Read` in full or load the file with a library to look inside:
    whatever a command prints stays in the session's transcript for good,
-   and slice 2's transcript holds a whole workbook because one command
-   dumped every tab. A file `describe` cannot read (a screenshot, a PDF)
+   and one command that dumps a file puts the whole of it there (incident
+   15). A file `describe` cannot read (a screenshot, a PDF)
    is listed the same way and looked at for its layout alone.
 3. **Invent every example** (the names, the amounts, the dates) and say
    so once in the document ("examples are invented; none is a row of the
-   sheet"), however much better a real row would make the point. Slice
-   2's requirements took one real merchant and its fee as an example; the
+   sheet"), however much better a real row would make the point. One real
+   row taken as an example in a requirements document was carried by the
    slice, the design, the story, the plan's test names and thirteen test
-   files carried it.
+   files (incident 16).
 4. **Check what you build on before you repeat it.** When `sources.md`
    lists a source, `python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py"
    scan --planning '<target directory>'` prints the file, line and cell of
