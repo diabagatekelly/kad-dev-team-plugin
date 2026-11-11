@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { produceMonthlyStatements } from "../reporting/monthly-statement.ts";
-import { renderTable } from "../reporting/statement-table.ts";
+import { describeEntry } from "../reporting/statement-table.ts";
 
 test("writes one statement per member with activity and tells the desk", async () => {
   const written: string[] = [];
@@ -22,7 +22,8 @@ test("writes one statement per member with activity and tells the desk", async (
   assert.deepEqual(sent, ["Monthly statements 2026-10"]);
 });
 
-test("renders a table that fits the width", () => {
-  const text = renderTable([{ cells: ["Lichens", "1.50"] }], { headers: ["title", "owed"], align: ["left", "right"], maxWidth: 20 });
-  assert.ok(text.split("\n").every((l) => l.length <= 20));
+test("describes each kind of entry in one printed line", () => {
+  assert.equal(describeEntry({ kind: "fine", reason: "late", cents: 150, assessedOn: "2026-10-12" }), "Fine of $1.50 assessed on 2026-10-12: late.");
+  assert.equal(describeEntry({ kind: "return", title: "Lichens", returnedOn: "2026-10-12", daysLate: 1 }), 'Returned "Lichens" on 2026-10-12, 1 day late.');
+  assert.equal(describeEntry({ kind: "payment", cents: 150, paidOn: "2026-10-13", method: "cash" }), "Paid $1.50 in cash at the desk on 2026-10-13.");
 });

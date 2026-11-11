@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: code-review-structural-high-at-d
-description: "The slice review's size rule (slice 2 round 1 review, finding 4): a 110-line use case doing four jobs is the architect's decision, not a High for a fixer; a 90-line single-job formatter stays a plain Medium."
+description: "The slice review's size rule (slice 2 round 1 review, finding 4): a 110-line use case doing four jobs is the architect's decision, not a High for a fixer; an 85-line single-job entry formatter stays a plain Medium."
 tags: [code-review, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -47,8 +47,8 @@ graders:
       path: docs/reviews/code-review-structural-high-at-d.md
     weight: 1
     criteria: |
-      Judge substance only. `renderTable` in `reporting/statement-table.ts` is about 90 lines and does one job: lay out a fixed-width table (measure, shrink to the page width, pad or truncate, header rule, footer). It is long, not several things at once.
+      Judge substance only. `describeEntry` in `reporting/statement-table.ts` is a switch of about 60 lines over eleven kinds of statement entry, each case returning that entry's one printed sentence; the whole function does one job (turn an entry into its line) and is long because there are eleven kinds, not because it does several things.
 
-      PASS if the review reports it as a size finding of ordinary weight (a Medium, or its words for a real but narrower finding) that a fixer could act on or leave, or says in so many words that its length is one job and lets it stand; either way it is not sent to the architect as a decision.
+      PASS if the review either reports it as a size finding of ordinary weight (a Medium, or its words for a real but narrower finding) that a fixer could act on or leave, or says in so many words that its length is one job and lets it stand; either way it is not sent to the architect as a decision.
 
-      FAIL if the review hands `renderTable` to the architect as a design decision, rates it as a High or Critical structural problem, or does not look at it.
+      FAIL if the review hands `describeEntry` to the architect as a design decision, rates it as a High or Critical structural problem, or does not look at it.

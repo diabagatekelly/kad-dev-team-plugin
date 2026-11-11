@@ -52,11 +52,12 @@ graders:
     min: 1
     max: 1
   - type: tool_used
-    name: one-fixer-for-the-batch
+    name: one-fixer-for-the-batch-plus-at-most-a-gate-fixer
+    # one fixer for the three checks; a second tdd-coach launch is allowed only as the gate fixer when the gate fails on the fix
     tool: Agent
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
     min: 1
-    max: 1
+    max: 2
   - type: tool_used
     name: no-slice-reviewer-yet
     tool: Agent
@@ -81,6 +82,6 @@ graders:
     criteria: |
       The Definition of Done runs before any reviewer at D and names a fix per failing check. Here three checks fail: the README's "does not" list says the slice does not turn down a cancel for a hold the member does not have, which is the slice's second acceptance criterion and is built (docs-writer:readme rewrites that section from the slice's criteria, inline, and commits it), application code inside a string literal (a fixer moves it into a module), and comment density over 5% (a code-review pass on comments only, invoking why-comments, then the fixer acts on its verdicts). Everything goes to one fresh fixer in one batch, the gate runs on the fix, and the Definition of Done runs again before the slice reviewers.
 
-      PASS if the reply reports those three checks as the ones that failed, the README's not-done item as the README failure (not a missing section), the README fixed by the readme skill, one comments review and one fixer for the batch, the gate and the re-check with its result (passed, or which checks still stand and whether the flow stopped for the owner).
+      PASS if the reply reports those three checks as the ones that failed, the README's not-done item as the README failure (not a missing section), the README fixed by the readme skill, one comments review and one fixer for the batch, the gate and the re-check with its result (passed, or which checks still stand and whether the flow stopped for the owner). A gate fixer launched because the gate failed on the batch's fix (a new file no test loaded, a lint error) is the procedure's own step and does not count against the one fixer.
 
-      FAIL if it launches the slice reviewers, fixes the code or rewrites the README itself without the readme skill, launches a fixer per check, skips the re-check, or reports the README check as passing.
+      FAIL if it launches the slice reviewers, fixes the code or rewrites the README itself without the readme skill, launches a separate fixer per failing check (three fixers for three checks, as opposed to one batch fixer and a gate fixer), skips the re-check, or reports the README check as passing.

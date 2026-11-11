@@ -1,85 +1,81 @@
-// A fixed-width table of statement rows for the desk's printed copy.
+// One printed line per statement entry, for the desk's paper copy.
 
-export interface TableRow {
-  cells: string[];
+export type StatementEntry =
+  | { kind: "loan"; title: string; dueOn: string }
+  | { kind: "return"; title: string; returnedOn: string; daysLate: number }
+  | { kind: "renewal"; title: string; newDueOn: string; renewalsLeft: number }
+  | { kind: "hold-placed"; title: string; position: number }
+  | { kind: "hold-ready"; title: string; holdUntil: string }
+  | { kind: "hold-cancelled"; title: string; byStaff: boolean }
+  | { kind: "fine"; reason: string; cents: number; assessedOn: string }
+  | { kind: "payment"; cents: number; paidOn: string; method: "card" | "cash" | "waived" }
+  | { kind: "waiver"; cents: number; reason: string; staffInitials: string }
+  | { kind: "card-replaced"; oldCardNumber: string; newCardNumber: string }
+  | { kind: "note"; text: string };
+
+function money(cents: number): string {
+  const sign = cents < 0 ? "-" : "";
+  const abs = Math.abs(cents);
+  return `${sign}$${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
 }
 
-export interface TableOptions {
-  headers: string[];
-  maxWidth?: number;
-  align?: ("left" | "right")[];
-  gutter?: number;
+function plural(n: number, word: string): string {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
 
-export function renderTable(rows: TableRow[], options: TableOptions): string {
-  const headers = options.headers;
-  const columns = headers.length;
-  const gutter = " ".repeat(options.gutter ?? 2);
-  const align = options.align ?? headers.map(() => "left" as const);
-  const maxWidth = options.maxWidth ?? 120;
-
-  // Measure every column by its widest cell, header included.
-  const widths: number[] = headers.map((h) => h.length);
-  for (const row of rows) {
-    for (let i = 0; i < columns; i += 1) {
-      const cell = row.cells[i] ?? "";
-      if (cell.length > widths[i]) {
-        widths[i] = cell.length;
+export function describeEntry(entry: StatementEntry): string {
+  switch (entry.kind) {
+    case "loan":
+      return `Borrowed "${entry.title}", due ${entry.dueOn}.`;
+    case "return": {
+      if (entry.daysLate <= 0) {
+        return `Returned "${entry.title}" on ${entry.returnedOn}, on time.`;
       }
+      return `Returned "${entry.title}" on ${entry.returnedOn}, ${plural(entry.daysLate, "day")} late.`;
     }
-  }
-
-  // Shrink the widest columns first until the line fits the page.
-  let lineWidth = widths.reduce((a, b) => a + b, 0) + gutter.length * (columns - 1);
-  while (lineWidth > maxWidth) {
-    let widest = 0;
-    for (let i = 1; i < columns; i += 1) {
-      if (widths[i] > widths[widest]) {
-        widest = i;
+    case "renewal": {
+      const left =
+        entry.renewalsLeft === 0
+          ? "no renewals left"
+          : `${plural(entry.renewalsLeft, "renewal")} left`;
+      return `Renewed "${entry.title}" until ${entry.newDueOn} (${left}).`;
+    }
+    case "hold-placed": {
+      if (entry.position === 1) {
+        return `Placed a hold on "${entry.title}", next in line.`;
       }
+      return `Placed a hold on "${entry.title}", position ${entry.position} in the queue.`;
     }
-    if (widths[widest] <= 4) {
+    case "hold-ready":
+      return `"${entry.title}" is ready to collect, held until ${entry.holdUntil}.`;
+    case "hold-cancelled": {
+      if (entry.byStaff) {
+        return `Hold on "${entry.title}" cancelled at the desk.`;
+      }
+      return `Hold on "${entry.title}" cancelled by you.`;
+    }
+    case "fine":
+      return `Fine of ${money(entry.cents)} assessed on ${entry.assessedOn}: ${entry.reason}.`;
+    case "payment": {
+      switch (entry.method) {
+        case "card":
+          return `Paid ${money(entry.cents)} by card on ${entry.paidOn}.`;
+        case "cash":
+          return `Paid ${money(entry.cents)} in cash at the desk on ${entry.paidOn}.`;
+        case "waived":
+          return `${money(entry.cents)} cleared by waiver on ${entry.paidOn}.`;
+      }
       break;
     }
-    widths[widest] -= 1;
-    lineWidth -= 1;
-  }
-
-  // Lay out one line, padding or truncating each cell to its column.
-  const layout = (cells: string[]): string => {
-    const parts: string[] = [];
-    for (let i = 0; i < columns; i += 1) {
-      let cell = cells[i] ?? "";
-      if (cell.length > widths[i]) {
-        cell = widths[i] > 1 ? `${cell.slice(0, widths[i] - 1)}…` : cell.slice(0, widths[i]);
-      }
-      if (align[i] === "right") {
-        parts.push(cell.padStart(widths[i]));
-      } else {
-        parts.push(cell.padEnd(widths[i]));
-      }
+    case "waiver":
+      return `Waived ${money(entry.cents)} (${entry.reason}), approved by ${entry.staffInitials}.`;
+    case "card-replaced": {
+      const oldTail = entry.oldCardNumber.slice(-4);
+      const newTail = entry.newCardNumber.slice(-4);
+      return `Library card ending ${oldTail} replaced by one ending ${newTail}.`;
     }
-    return parts.join(gutter).trimEnd();
-  };
-
-  const out: string[] = [];
-  out.push(layout(headers));
-  const rule: string[] = [];
-  for (let i = 0; i < columns; i += 1) {
-    rule.push("-".repeat(widths[i]));
+    case "note":
+      return entry.text.endsWith(".") ? entry.text : `${entry.text}.`;
   }
-  out.push(rule.join(gutter));
-  for (const row of rows) {
-    out.push(layout(row.cells));
-  }
-
-  // A footer with the row count, right-aligned to the table's width.
-  const count = `${rows.length} row${rows.length === 1 ? "" : "s"}`;
-  const tableWidth = out[1].length;
-  if (count.length < tableWidth) {
-    out.push(count.padStart(tableWidth));
-  } else {
-    out.push(count);
-  }
-  return out.join("\n");
+  return "";
 }
