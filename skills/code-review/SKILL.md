@@ -113,11 +113,19 @@ but nothing of round 0 is re-litigated.
 
 At the slice review (the task says it is the whole slice) size is
 measured, not only judged: every function over 80 lines and every file
-over 300 non-blank lines is a finding (High when the function does more
-than one job or the file has more than one reason to change, Medium
-otherwise), and a share of lines at nesting depth four or more above 10%
-(the gate's figure, which the task may hand you) is a Medium naming the
-deepest functions. Per chunk those are the "closer look" prompts below.
+over 300 non-blank lines is a finding. Long and doing one job, it is a
+Medium, a fixer's row. Doing more than one job, or a file with more than
+one reason to change, it is `needs-decision (software-architect)`, not
+a High: the fix is a split, and a split's shape (which pieces, their
+names, which side owns the interface between them) is a design decision
+for `architecture-design` to record in the design document, not a
+fixer's call in the last round with a regressions-only re-review behind
+it. Carry the evidence a High would carry (the count, the jobs or the
+reasons to change you see) and name the decision the architect has to
+make; propose no split of your own. A share of lines at nesting depth
+four or more above 10% (the gate's figure, which the task may hand you)
+is a Medium naming the deepest functions. Per chunk those are the
+"closer look" prompts below.
 
 Test files get the same read as any other file for naming, comments, and
 duplication. Over-mocking, false positives, and coverage-as-theater are a
@@ -270,8 +278,9 @@ how urgent it feels to whoever's mid-task right now.
   silently misses the other.
 - **High** — an unambiguous violation with a known fix and real, growing
   cost if left: a substantial duplicated block, a function or class that's
-  outgrown what a reader can hold in their head at once, an unclear name on
-  a widely-used symbol.
+  outgrown what a reader can hold in their head at once (at the slice
+  review, when the fix is a split, the architect's decision instead; see
+  "At the slice review" above), an unclear name on a widely-used symbol.
 - **Medium** — real but narrower or more of a judgment call: an isolated
   smell, a mildly-too-long function, an unclear name in a tightly-scoped
   variable, a WHAT-comment, a comment citing a planning reference.
