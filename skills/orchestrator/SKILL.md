@@ -1095,8 +1095,8 @@ orchestrator's side.
    Sonnet agent as always (`model: "sonnet"`, `maxTurns: 160`,
    `tdd-implementation-lite`, its handed-back path, chunks are committed).
    Under `light` (P3.2's third change, aimed at the fixer being a stranger
-   to the code: a quarter of every run's findings since run 2 are the
-   fixer's own regressions) the findings are grouped by the chunk whose
+   to the code: a quarter of every run's findings have been the fixer's
+   own regressions, incident 19) the findings are grouped by the chunk whose
    Files line holds their file, and each group goes by `SendMessage` to
    that chunk's own builder (the agent id on the chunk's C line, `builder
    <id>`), with the same handed-back task; a builder that cannot be

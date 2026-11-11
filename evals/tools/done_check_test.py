@@ -109,6 +109,23 @@ class ReadmeCheck(unittest.TestCase):
         ok, detail, _ = self.mod.check_readme(self.tmp, self.slice)
         self.assertFalse(ok, detail)
 
+    def test_a_deferred_interface_to_a_built_behaviour_is_not_stale(self):
+        self.readme(stale=", the staff HTTP route for cancelling a member's hold")
+        ok, detail, _ = self.mod.check_readme(self.tmp, self.slice)
+        self.assertTrue(ok, detail)
+
+    def test_the_not_done_list_is_found_under_a_later_heading(self):
+        with open(os.path.join(self.tmp, "README.md"), "w", encoding="utf-8") as f:
+            f.write(README.format(stale="").replace("## What this slice does and does not", "## What this slice does")
+                    + "\n## What it does not yet\n\n- Not yet: turning down a cancel for a hold the member does not have.\n")
+        ok, detail, _ = self.mod.check_readme(self.tmp, self.slice)
+        self.assertFalse(ok, detail)
+
+    def test_the_slice_file_itself_is_preferred_over_a_companion(self):
+        with open(os.path.join(self.tmp, "slice-001-with-row.md"), "w", encoding="utf-8") as f:
+            f.write("# companion\n\n## Acceptance criteria\n\n- Given nothing, when nothing, then nothing.\n")
+        self.assertEqual(self.mod.find_slice(self.tmp, "001"), self.slice)
+
     def test_a_short_item_fails_only_when_every_word_matches(self):
         self.readme(stale=", a hold queue that cannot be reached")
         ok, detail, _ = self.mod.check_readme(self.tmp, self.slice)

@@ -20,7 +20,7 @@ FILES = (glob.glob(os.path.join(ROOT, "skills", "*", "SKILL.md"))
 # Words of the projects the plugin has been run on, and runs by their number.
 ANCHORED = re.compile(
     r"\b(?:merchants?|Plaid|ledgers?|Keychain|Chime|Amex|Bank of America|personal-finance|tracker-3"
-    r"|[Rr]un [123]'s|[Rr]un [123] (?:learned|left|did|wrote|measured|needed|kept)|[Rr]epo [123]'s"
+    r"|[Rr]un [123]\b(?! of)|[Rr]epo [123]\b"
     r"|[Ss]lice 2's|[Ss]lice 2 (?:measured|needed|deferred|ran|appended|took))\b")
 
 

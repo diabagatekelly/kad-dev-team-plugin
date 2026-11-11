@@ -137,7 +137,7 @@ class SourceScan(unittest.TestCase):
         self.assertRegex(r.stdout, r"hit: planning/slice-001\.md:3 col \d+-\d+ — amount, desk fees D2")
         # `rkv` (F2, a three-letter code in four of the seven rows) is a label, not a name: matched, not counted
         self.assertNotRegex(r.stdout, r"hit: test/fee\.test\.ts:1 col 7-9 — text, desk fees F2")
-        self.assertIn("matched and not counted: 1 — a one-word cell, a label of many rows or short, with nothing else of its row in the file", r.stdout)
+        self.assertIn("matched and not counted: 1 — a one-word cell, a label or a short code, with nothing else of its row in the file", r.stdout)
         self.assertRegex(r.stdout, r"hit: test/fee\.test\.ts:1 col \d+-\d+ — amount, desk fees D2")
         self.assertRegex(r.stdout, r"hit: test/fee\.test\.ts:2 col \d+-\d+ — amount, desk fees D3")
         self.assertRegex(r.stdout, r"hit: test/fee\.test\.ts:3 col \d+-\d+ — text, desk fees B3")
@@ -487,17 +487,20 @@ class SourceScan(unittest.TestCase):
         r = self.scan()
         self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 1, r.stdout)
         self.assertRegex(r.stdout, r"hit: planning/a\.md:1 col 1-8 — text, desk fees C9")
-        self.assertIn("matched and not counted: 2 — a one-word cell, a label of many rows or short", r.stdout)
+        self.assertIn("matched and not counted: 2 — a one-word cell, a label or a short code", r.stdout)
         self.write("planning/a.md", "Ivo costs 6.25.\n")
         r = self.scan()
         self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 2, r.stdout)  # short, but beside its row's amount
-        # A one-word cell in more than a tenth of the rows is a label even beside an amount of its row.
+        # A one-word cell of a label column (few distinct values over many rows) is a label even beside an amount of its row,
+        # and a rare alphanumeric code is not a name.
         with open(self.sheet, "a", encoding="utf-8") as f:
-            for i in range(40):
-                f.write(f"LC-31{i:04d},Odalys Brennecke,Almanac,{(i % 9) + 1}.{(i * 3) % 100:02d},2026-11-03,RKV\n")
-        self.write("planning/a.md", "The Almanac costs 1.00.\n")
+            for i in range(60):
+                f.write(f"LC-31{i:04d},Odalys Brennecke,{'Almanac' if i % 3 else 'Gazetteer'},{(i % 9) + 1}.{(i * 3) % 100:02d},2026-11-03,RKV\n")
+            f.write("LC-320000,Odalys Brennecke,Q7X9,4.40,2026-11-04,RKV\n")
+        self.write("planning/a.md", "The Almanac costs 1.00. Q7X9 on the shelf.\n")
         r = self.scan()
         self.assertNotRegex(r.stdout, r"^hit: [^\n]*— text, desk fees C", r.stdout)
+        self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 0, r.stdout)  # and 1.00 alone says nothing in a sheet this dense
 
     def test_22_the_tab_column_reads_one_tab_of_a_workbook(self):
         book = self.workbook(second=True)
@@ -516,9 +519,11 @@ class SourceScan(unittest.TestCase):
         self.assertIn("no tab named 'Nope'", r.stdout)
         self.assertIn("2 tab(s)", r.stdout)
         self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 2, r.stdout)
-        self.sources(location=book, tab="A1:C3")
-        r = self.scan()
-        self.assertIn("2 tab(s)", r.stdout)
+        for rng in ("A1:C3", "A1", "$A$1:$C$3", "Fees!A1:C3"):
+            self.sources(location=book, tab=rng)
+            r = self.scan()
+            self.assertIn("2 tab(s)", r.stdout, rng)
+            self.assertNotIn("no tab named", r.stdout, rng)
 
     def test_13_the_five_planning_skills_carry_the_rule_in_the_same_words(self):
         blocks = {}
