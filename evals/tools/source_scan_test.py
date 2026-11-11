@@ -93,10 +93,10 @@ class SourceScan(unittest.TestCase):
         shutil.copy(SHEET, self.sheet)
         git(self.project, "init", "-q", "-b", "main", ".")
 
-    def sources(self, location=None, listed="—", allowed=()):
+    def sources(self, location=None, listed="—", allowed=(), tab="all"):
         with open(os.path.join(self.planning, "sources.md"), "w", encoding="utf-8") as f:
             f.write("# Sources\n\n| Source | Location | Tab or range | Read on | Listed at |\n|---|---|---|---|---|\n"
-                    f"| desk fees | `{location or self.sheet}` | all | 2026-11-09 | {listed} |\n\n## Allowed by the owner\n\n")
+                    f"| desk fees | `{location or self.sheet}` | {tab} | 2026-11-09 | {listed} |\n\n## Allowed by the owner\n\n")
             for a in allowed:
                 f.write(f"- `{a}` — \"that is ours\" (2026-11-09)\n")
 
@@ -135,11 +135,13 @@ class SourceScan(unittest.TestCase):
         self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
         self.assertRegex(r.stdout, r"hit: planning/slice-001\.md:3 col \d+-\d+ — text, desk fees B2")
         self.assertRegex(r.stdout, r"hit: planning/slice-001\.md:3 col \d+-\d+ — amount, desk fees D2")
-        self.assertRegex(r.stdout, r"hit: test/fee\.test\.ts:1 col 7-9 — text, desk fees F2")
+        # `rkv` (F2, a three-letter code in four of the seven rows) is a label, not a name: matched, not counted
+        self.assertNotRegex(r.stdout, r"hit: test/fee\.test\.ts:1 col 7-9 — text, desk fees F2")
+        self.assertIn("matched and not counted: 1 — a one-word cell, a label of many rows or short, with nothing else of its row in the file", r.stdout)
         self.assertRegex(r.stdout, r"hit: test/fee\.test\.ts:1 col \d+-\d+ — amount, desk fees D2")
         self.assertRegex(r.stdout, r"hit: test/fee\.test\.ts:2 col \d+-\d+ — amount, desk fees D3")
         self.assertRegex(r.stdout, r"hit: test/fee\.test\.ts:3 col \d+-\d+ — text, desk fees B3")
-        self.assertIn("sources: FAIL — 6 hit(s) in 2 place(s)", r.stdout)
+        self.assertIn("sources: FAIL — 5 hit(s) in 2 place(s)", r.stdout)
         self.assertNoValue(r.stdout)
         shown = self.scan("--show")
         self.assertIn("written there as: Odalys Brennecke", shown.stdout)
@@ -175,14 +177,22 @@ class SourceScan(unittest.TestCase):
         self.assertEqual(r.returncode, 0)
         self.assertIn("not scannable", r.stdout)
 
-    def workbook(self):
+    def workbook(self, second=False):
         path = os.path.join(self.owner, "fees.xlsx")
         ns = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
         with zipfile.ZipFile(path, "w") as z:
+            more = '<sheet name="Memo" sheetId="2" r:id="rId2"/>' if second else ""
             z.writestr("xl/workbook.xml", f'<workbook {ns} xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-                       '<sheets><sheet name="Fees" sheetId="1" r:id="rId1"/></sheets></workbook>')
+                       f'<sheets><sheet name="Fees" sheetId="1" r:id="rId1"/>{more}</sheets></workbook>')
             z.writestr("xl/_rels/workbook.xml.rels", '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-                       '<Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>')
+                       '<Relationship Id="rId1" Target="worksheets/sheet1.xml"/>'
+                       + ('<Relationship Id="rId2" Target="worksheets/sheet2.xml"/>' if second else "") + '</Relationships>')
+            if second:
+                z.writestr("xl/worksheets/sheet2.xml", f'<worksheet {ns}><sheetData>'
+                           '<row r="1"><c r="A1" t="inlineStr"><is><t>note</t></is></c></row>'
+                           '<row r="2"><c r="A2" t="inlineStr"><is><t>Thackerwood</t></is></c></row>'
+                           '<row r="3"><c r="A3" t="inlineStr"><is><t>Pellingbrook</t></is></c></row>'
+                           '</sheetData></worksheet>')
             z.writestr("xl/sharedStrings.xml", f'<sst {ns}><si><t>member</t></si><si><t>fee</t></si><si><t>paid</t></si>'
                        '<si><r><t>Zebedee </t></r><r><t>Quillfeather</t></r></si></sst>')
             z.writestr("xl/styles.xml", f'<styleSheet {ns}><cellXfs count="2"><xf numFmtId="0"/><xf numFmtId="14"/></cellXfs></styleSheet>')
@@ -467,6 +477,48 @@ class SourceScan(unittest.TestCase):
         self.assertNotIn("Mirela", text)
         self.assertNotIn("Vantongeren", text)
         self.assertEqual(run("scan", "--map", mapfile, "--project", self.project, "--history", "main", cwd=self.project).returncode, 0)
+
+    def test_21_a_one_word_cell_counts_alone_only_as_a_name(self):
+        # Titles of one word: `Pemberly` (four letters or more, one row) is a name; `Ivo` is short.
+        with open(self.sheet, "a", encoding="utf-8") as f:
+            f.write("LC-300001,Odalys Brennecke,Pemberly,5.10,2026-11-01,RKV\nLC-300002,Odalys Brennecke,Ivo,6.25,2026-11-02,TMD\n")
+        self.sources()
+        self.write("planning/a.md", "Pemberly is on the shelf. Ivo too. Collected by RKV.\n")
+        r = self.scan()
+        self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 1, r.stdout)
+        self.assertRegex(r.stdout, r"hit: planning/a\.md:1 col 1-8 — text, desk fees C9")
+        self.assertIn("matched and not counted: 2 — a one-word cell, a label of many rows or short", r.stdout)
+        self.write("planning/a.md", "Ivo costs 6.25.\n")
+        r = self.scan()
+        self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 2, r.stdout)  # short, but beside its row's amount
+        # A one-word cell in more than a tenth of the rows is a label even beside an amount of its row.
+        with open(self.sheet, "a", encoding="utf-8") as f:
+            for i in range(40):
+                f.write(f"LC-31{i:04d},Odalys Brennecke,Almanac,{(i % 9) + 1}.{(i * 3) % 100:02d},2026-11-03,RKV\n")
+        self.write("planning/a.md", "The Almanac costs 1.00.\n")
+        r = self.scan()
+        self.assertNotRegex(r.stdout, r"^hit: [^\n]*— text, desk fees C", r.stdout)
+
+    def test_22_the_tab_column_reads_one_tab_of_a_workbook(self):
+        book = self.workbook(second=True)
+        self.write("planning/a.md", "Thackerwood owes 41.07.\n")
+        self.sources(location=book, tab="Fees")
+        r = self.scan()
+        self.assertIn("1 tab(s)", r.stdout)
+        self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 1, r.stdout)
+        self.assertNotIn("Memo!", r.stdout)
+        self.sources(location=book, tab="Memo")
+        r = self.scan()
+        self.assertRegex(r.stdout, r"hit: planning/a\.md:1 col 1-11 — text, desk fees Memo!A2")
+        self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 1, r.stdout)
+        self.sources(location=book, tab="Nope")
+        r = self.scan()
+        self.assertIn("no tab named 'Nope'", r.stdout)
+        self.assertIn("2 tab(s)", r.stdout)
+        self.assertEqual(len(re.findall(r"^hit: ", r.stdout, re.M)), 2, r.stdout)
+        self.sources(location=book, tab="A1:C3")
+        r = self.scan()
+        self.assertIn("2 tab(s)", r.stdout)
 
     def test_13_the_five_planning_skills_carry_the_rule_in_the_same_words(self):
         blocks = {}

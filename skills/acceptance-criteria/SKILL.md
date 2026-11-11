@@ -54,7 +54,10 @@ document, not in a question, not in a reply. In this order:
    read, and the scan does not count it. Write a dash instead when there
    is no commit or no shell, and whenever the file was read, or a value
    of it may already be written down, before this row existed: with a
-   dash everything counts.
+   dash everything counts. In `Tab or range`, name the one tab the stage
+   reads when the file has several, never `all` for a workbook of many:
+   the scan reads the tab named and nothing else, and every cell of
+   every tab of a large workbook matches the language of any repository.
 
    ```markdown
    # Sources

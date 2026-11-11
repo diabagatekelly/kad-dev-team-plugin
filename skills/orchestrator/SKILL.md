@@ -798,7 +798,11 @@ is built. The dollar figure is not estimated during the run;
 
    Its `value:` lines give each distinct value as the documents write
    it, with its places. Put them to the owner in **one**
-   `AskUserQuestion`, the list in the question, three answers: **none of
+   `AskUserQuestion`, the list in the question, the source named as its
+   `sources.md` row names it (the Source cell, its tab, the `Read on`
+   date and the stage that listed it; never "your file" or "the
+   workbook" alone, which an owner asked cold cannot place), three
+   answers: **none of
    these is from my file** (add each under `## Allowed by the owner` in
    `sources.md`, as the document writes it, with the owner's words and
    the date; these lines are the one edit of a planning document that is
