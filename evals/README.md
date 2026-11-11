@@ -566,6 +566,13 @@ real cases and deleted (the table is in git history).
 
 ### Known coverage gaps
 
+- **The skills name no project (0.14.4, 2026-11-10).** `tools/skill_words_test.py`
+  (2 tests, no model) fails a skill, agent or hook that carries a word of a
+  project the plugin ran on (a payee, a provider, an account store, a run by
+  its number) and checks every `(incident n)` it cites exists in
+  `INCIDENTS.md`; the owner's coupling check of 2026-11-10 found about a
+  hundred such passages, each a war story beside a rule, and the pass moved
+  the stories there.
 - **The Definition of Done's README check is held by `tools/done_check_test.py`
   (6 tests, no model; 0.14.4, 2026-11-10): the sections, and the "does not"
   list read against the slice's acceptance criteria (an item sharing three
