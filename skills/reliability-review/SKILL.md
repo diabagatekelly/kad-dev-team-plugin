@@ -126,11 +126,15 @@ happy one:
   the use case's own store, one claim per thing so two overlapping
   requests share it and a repeat can find it; the refused repeat
   reconciled against what the provider holds before it is reported as a
-  failure. An exchange that timed out after the provider had completed
-  it, whose retry was refused as already used, left the provider's
-  record orphaned with nothing revoked; three runs' reviewers read the
-  success path and the failure path one at a time and missed it
-  (incident 2).
+  failure. Severity follows what the duplicate or the orphan costs: a
+  charge, a refund or a provider record that money or access hangs on
+  is High; a notification sent twice (a text or an email repeated after
+  a lost reply, inside the adapter's own bounded retry of transient
+  statuses) is a Low note, not a finding against the retry. An exchange
+  that timed out after the provider had completed it, whose retry was
+  refused as already used, left the provider's record orphaned with
+  nothing revoked; three runs' reviewers read the success path and the
+  failure path one at a time and missed it (incident 2).
 - **State that has to outlive the process doesn't live only in it.** Check
   each store the code writes to: one backed by process memory loses
   everything on every deploy, restart and crash, and each instance has its

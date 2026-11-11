@@ -44,7 +44,7 @@ graders:
     target:
       source: file
       path: README.md
-    pattern: '(?is)prerequisites.*clone to running.*tests and checks.*where things live.*what this slice does'
+    pattern: '[Pp]rerequisites[\s\S]*[Cc]lone to running[\s\S]*[Tt]ests and checks[\s\S]*[Ww]here things live[\s\S]*[Ww]hat this slice does'
   - type: tool_used
     name: one-comments-review
     tool: Agent
