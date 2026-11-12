@@ -46,8 +46,8 @@ code, in this order.
    the modules the range touches; read every file of each of those
    modules in full, and every test file that exercises them (at D, all of
    `src/` and `test/`). The diff says what moved; the module says whether
-   it is right. Run 3's slice reviewers, each reading one side of the
-   exchange-once seam, missed an orphaned Plaid Item three runs running.
+   it is right. Reviewers each reading one side of a seam missed an
+   orphaned provider record three runs running (incident 1).
 2. **Run the checks** from the project root with the manifest's own
    scripts: the typecheck, the lint and the format check where each
    exists. The full suite you do not run: the gate ran it on this very
@@ -142,7 +142,8 @@ in the reply is read twice and acted on once.
   prose), the ten worst files under it. Each duplicated helper is one
   **Medium** ("helper copied across <k> files; move it into the support
   folder"), and a brittle share above the bar the script prints (0.30
-  per test; run 3 and slice 2 measured 0.61 and 0.57, run 2's suite 0.11)
+  per test; two runs measured 0.61 and 0.57 against 0.11 in a third,
+  incident 7)
   is one **Medium** naming the ten files and the fix the lite skill
   prescribes: the page's user-facing strings exported from one module so
   the tests assert on the constant. Quote the script's lines under `##

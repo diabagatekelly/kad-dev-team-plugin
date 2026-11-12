@@ -8,9 +8,9 @@ description: Run one chunk's whole round of the orchestrator's chunk loop as a s
 **What you are.** The orchestrator's C step, run outside the
 orchestrator's own context. The v4 design (`.synthesis/implementation-flow-v4.md`,
 D9 phase 2) said to build this once the orchestrator's thread exceeded
-about 250k tokens on a slice; slice 2 measured about 427k cache-read
-tokens per call over 396 calls, 44% of the slice's cost, nearly all of it
-the per-chunk mechanics this skill now carries. You hold one chunk's
+about 250k tokens on a slice; one slice measured about 427k cache-read
+tokens per call over 396 calls, 44% of its cost, nearly all of it the
+per-chunk mechanics this skill now carries (incident 8). You hold one chunk's
 round on a short context, hand back one line, and end. Everything you
 decide is mechanical; everything that needs the owner or a persona goes
 back on the hand-back line.
@@ -88,8 +88,8 @@ quotes (`'\''` for a quote inside one).
    one that goes on the line, `reported <m>` beside it. A formatter run
    through the manifest's `format` script is not a shell edit. Never a
    stall, never a relaunch, never a question: the count is there for the
-   audit to find (run 3's fixer mangled a seam test's name with one `sed
-   -i`; slice 2's chunk 2 builder reported 1 and made 9).
+   audit to find (a fixer mangled a seam test's name with one `sed -i`,
+   incident 3; a builder reported 1 and made 9, incident 4).
 2. **Gate**, inline with Bash, on the chunk's commit range:
 
    ```
@@ -132,8 +132,8 @@ quotes (`'\''` for a quote inside one).
    the second sighting send one fresh fixer (`model: "sonnet"`,
    `tdd-implementation-lite`, its handed-back path, the two gate outputs,
    "find the cause of the intermittent failure, not the symptom") counted
-   as the gate fixer below. Slice 2 needed four sightings before anyone
-   improvised exactly this.
+   as the gate fixer below. One flake took four sightings before anyone
+   improvised exactly this (incident 9).
 
    On any other `FAIL`, hand the failing checks to a fresh fixer (`model:
    "sonnet"`, `maxTurns: 120`, `tdd-implementation-lite`, its "Applying a
@@ -184,8 +184,8 @@ quotes (`'\''` for a quote inside one).
      Touches includes UI, else `kad-dev-team:tdd-coach:AGENT`. Its task:
      start the app through `scratch_run.py` (handed by path, with the
      scratch folder and the data-path variables the README names, each
-     inside the folder; a made-up ledger; never the owner's data or login
-     Keychain; the data rule in the orchestrator's text), wait for it to
+     inside the folder; made-up data; never the owner's data or login
+     credential store; the data rule in the orchestrator's text), wait for it to
      answer, drive the chunk's **Done when** through the real interface
      (the browser via the Chrome tools for UI, with a screenshot per
      state under `<records dir>/smoke/chunk-<k>-r0/`; HTTP requests

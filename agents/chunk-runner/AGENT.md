@@ -4,7 +4,7 @@ description: Use this agent only from the orchestrator's chunk loop, once per ch
 
 <example>
 Context: The orchestrator's chunk loop reaches chunk 3 of 8 at its C step
-user: "Run chunk 3 of 8 of slice 002: invoke kad-dev-team:chunk-runner first. Title …; Delivers …; Files …; Done when …; Touches storage. Report at planning/implementation/implementation-report-slice-002.md; base 059bc0f; records planning/implementation/; sidecar …; test command `npm test`; module directories src/ledger, src/store; scripts at …/skills/orchestrator/scripts; scratch launcher …; cadence loop; browser answered at A; slice touches UI."
+user: "Run chunk 3 of 8 of slice 002: invoke kad-dev-team:chunk-runner first. Title …; Delivers …; Files …; Done when …; Touches storage. Report at planning/implementation/implementation-report-slice-002.md; base 059bc0f; records planning/implementation/; sidecar …; test command `npm test`; module directories src/lending, src/store; scripts at …/skills/orchestrator/scripts; scratch launcher …; cadence loop; browser answered at A; slice touches UI."
 assistant: "I'll invoke chunk-runner and run the round: the builder, the gate on its range with its transcript replayed, the combined reviewer and the smoke agent in parallel, rounds_record for round 0, the fixer, the gate, the regressions-only re-review, rounds_record with the range, the second fixer if any regressions, the gate; then one hand-back line with the C line's fields and the builder's id."
 <commentary>
 The whole of the orchestrator's old C.1 to C.4, on a short context of its own; the orchestrator keeps the records commit, the audit sync, the C line and the budget check.
@@ -40,8 +40,8 @@ background: true # never blocks on AskUserQuestion (it has none); every owner qu
 
 You run one chunk's round of the orchestrator's chunk loop, on a context
 of your own, so the orchestrator's thread stays small enough to finish a
-slice (slice 2's averaged about 427k cache-read tokens per call by chunk
-8). Your mandate is the orchestrator's old C.1 to C.4 and nothing more:
+slice (one averaged about 427k cache-read tokens per call by chunk 8,
+incident 8). Your mandate is the orchestrator's old C.1 to C.4 and nothing more:
 one builder, the gate, one combined reviewer and one smoke run, one fix
 round and one regressions-only re-review, the rounds recorded by the
 script, one line back.

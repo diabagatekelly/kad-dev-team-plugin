@@ -242,8 +242,9 @@ doesn't need one: the log is the history.
 
 ## Matching and detection criteria need a named key
 
-Any criterion built on comparing two things — matching a transaction to
-sample data, detecting a duplicate, matching a merchant to a category —
+Any criterion built on comparing two things — matching an imported
+record to a reference list, detecting a duplicate, matching a title to a
+catalogue entry —
 needs the concrete key it matches on, not just the asserted outcome.
 "Transactions don't appear twice" without saying what makes two
 transactions "the same" is exactly as untestable as "categorizes
@@ -275,7 +276,10 @@ document, not in a question, not in a reply. In this order:
    read, and the scan does not count it. Write a dash instead when there
    is no commit or no shell, and whenever the file was read, or a value
    of it may already be written down, before this row existed: with a
-   dash everything counts.
+   dash everything counts. In `Tab or range`, name the one tab the stage
+   reads when the file has several, never `all` for a workbook of many:
+   the scan reads the tab named and nothing else, and every cell of
+   every tab of a large workbook matches the language of any repository.
 
    ```markdown
    # Sources
@@ -307,15 +311,15 @@ document, not in a question, not in a reply. In this order:
    `limit: 1`) and a count-only search for the rows. Never `cat`, `head`,
    `Read` in full or load the file with a library to look inside:
    whatever a command prints stays in the session's transcript for good,
-   and slice 2's transcript holds a whole workbook because one command
-   dumped every tab. A file `describe` cannot read (a screenshot, a PDF)
+   and one command that dumps a file puts the whole of it there (incident
+   15). A file `describe` cannot read (a screenshot, a PDF)
    is listed the same way and looked at for its layout alone.
 3. **Invent every example** (the names, the amounts, the dates) and say
    so once in the document ("examples are invented; none is a row of the
-   sheet"), however much better a real row would make the point. Slice
-   2's requirements took one real merchant and its fee as an example; the
+   sheet"), however much better a real row would make the point. One real
+   row taken as an example in a requirements document was carried by the
    slice, the design, the story, the plan's test names and thirteen test
-   files carried it.
+   files (incident 16).
 4. **Check what you build on before you repeat it.** When `sources.md`
    lists a source, `python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/source_scan.py"
    scan --planning '<target directory>'` prints the file, line and cell of
@@ -378,10 +382,10 @@ using the slice as shipped meet the open question and have no way out
 nobody designed)? Then it is a blocker, and the readiness gate puts it to
 the owner before any build; otherwise the slice is usable without it and
 the sentence says how. An item with neither sentence fails the readiness
-gate back to this skill. Why: slice 2 deferred "changing a merchant's
-general rule" to requirements, six reviewers accepted the deferral as the
-document's, and a cold read found that the first pick for a merchant was
-permanent and a misclick had no undo. The criteria reviewers restate
+gate back to this skill. Why: a slice deferred a change to a stored
+rule, six reviewers accepted the deferral as the document's, and a cold
+read found that a first choice was permanent and a misclick had no undo
+(incident 14). The criteria reviewers restate
 every accepted deferral as a finding at the slice review, so what ships
 undecided reaches the pull request.
 

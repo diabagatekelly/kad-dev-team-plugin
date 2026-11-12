@@ -1,7 +1,7 @@
 {
   "name": "kad-dev-team",
   "description": "Personal roster of narrow-focus developer personas (agents) and their backing skills, encoding the principles I rely on for clean, robust, option-enabling, maintainable, well-tested software.",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "author": {
     "name": "Kelly Diabagate"
   },

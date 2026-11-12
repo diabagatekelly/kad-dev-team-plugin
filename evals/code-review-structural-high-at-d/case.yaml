@@ -1,0 +1,54 @@
+schema_version: "1.0"
+name: code-review-structural-high-at-d
+description: "The slice review's size rule (slice 2 round 1 review, finding 4): a 110-line use case doing four jobs is the architect's decision, not a High for a fixer; an 85-line single-job entry formatter stays a plain Medium."
+tags: [code-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. This is the slice review of the whole `statements` slice, after its last chunk landed: `reporting/monthly-statement.ts`, `reporting/statement-table.ts` and `test/monthly-statement.test.ts`. Review it for readability (naming, duplication, comments, size), the way the slice review does. Report only; don't change anything.
+
+    Save your review as `docs/reviews/code-review-structural-high-at-d.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write]
+runs: 3
+graders:
+  - type: file_exists
+    name: review-written
+    path: docs/reviews/code-review-structural-high-at-d.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/code-review-structural-high-at-d\.md")[^"]*"'
+    match: not_contains
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:code-review"'
+    min: 1
+  - type: llm
+    name: the-split-is-the-architects-decision
+    focus:
+      source: file
+      path: docs/reviews/code-review-structural-high-at-d.md
+    weight: 1
+    criteria: |
+      Judge substance only; rule names and category labels do not matter. `produceMonthlyStatements` in `reporting/monthly-statement.ts` is about 110 lines and does four jobs in one body: it groups loans and fines by member, works out each member's standing, renders and writes a CSV per member, and composes and sends the desk's email. At the slice review that is a size finding whose fix is a split, and the shape of that split (which pieces, their names, which side owns the interface between them) is a design decision for the software architect, not a fixer's call.
+
+      PASS if the review raises this function's size and its several jobs, carries the evidence (its length, the jobs it names), and hands the decision to the software architect (a needs-decision for the architect, or words to that effect: a design decision to record before anyone splits it), without prescribing its own split as the change to make.
+
+      FAIL if it reports the function as a High or Critical finding with a split for a fixer to carry out, prescribes the pieces itself as the fix, or does not raise the function's size at all.
+  - type: llm
+    name: a-long-single-job-function-stays-a-plain-finding
+    focus:
+      source: file
+      path: docs/reviews/code-review-structural-high-at-d.md
+    weight: 1
+    criteria: |
+      Judge substance only. `describeEntry` in `reporting/statement-table.ts` is a switch of about 60 lines over eleven kinds of statement entry, each case returning that entry's one printed sentence; the whole function does one job (turn an entry into its line) and is long because there are eleven kinds, not because it does several things.
+
+      PASS if the review either reports it as a size finding of ordinary weight (a Medium, or its words for a real but narrower finding) that a fixer could act on or leave, or says in so many words that its length is one job and lets it stand; either way it is not sent to the architect as a decision.
+
+      FAIL if the review hands `describeEntry` to the architect as a design decision, rates it as a High or Critical structural problem, or does not look at it.

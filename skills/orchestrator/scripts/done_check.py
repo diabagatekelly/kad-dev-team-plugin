@@ -31,6 +31,11 @@ The nine checks, how each decides, and the fix a failure names:
    live (`data`, `logs`, `where things live`, `storage`) and what this
    slice does and does not (`what this does`, `scope`, `this slice`, `does
    not`, `limitations`, `not yet`). Lists the missing sections.
+   Its "does not" list is read against the slice's acceptance criteria
+   (`slice-<nnn>*.md` under `--planning`): an item there that shares three
+   meaning-carrying words with a criterion (or every word of a short item)
+   is the README saying the slice does not do what the criteria say it
+   does, and the check fails naming the item and the criterion.
 2. lint-and-format -> a tdd-coach fixer. A linter configuration exists
    (`eslint.config.*`, `.eslintrc*`, `biome.json*`, `[tool.ruff]` in
    `pyproject.toml`, `ruff.toml`, `.golangci.yml`), a formatter does too
@@ -245,7 +250,89 @@ README_SECTIONS = [
 ]
 
 
-def check_readme(project):
+# A bullet that opens with the not-done marker ("Not yet: a, b", "Does not:
+# …", "Deferred: …"); "does not" inside a bullet is the slice's behaviour
+# ("turns down a cancel for a hold the member does not have"), not the list.
+NOT_DONE = re.compile(r"^(?:not yet|not in this slice|not done|not built|does not(?: yet)?|doesn't(?: yet)?|deferred|later|left for (?:a )?later slices?)\b", re.I)
+# A deferred interface to a behaviour the slice builds ("the staff HTTP route for cancelling a hold") shares the
+# behaviour's words with its criterion and is not stale; an item naming one of these is left alone.
+INTERFACE_WORDS = {"route", "endpoint", "screen", "page", "button", "form", "command", "cli", "api", "http", "portal",
+                   "self-service", "export", "import", "email", "notification", "webhook", "dashboard", "report"}
+SMALL_WORDS = set("""a an and are as at be been by for from has have in into is it its of on or that the then this to
+   was when with will yet not does doesn its their there which who whom""".split())
+
+
+def stems(text):
+    """The words of a line that carry meaning, lightly stemmed, so `cancelling`
+    and `cancelled` are the same word and `a`, `the`, `when` are none."""
+    out = set()
+    for w in re.findall(r"[A-Za-z][A-Za-z'-]{2,}", text.lower()):
+        w = w.replace("'s", "").strip("'-")
+        if w in SMALL_WORDS or len(w) < 4:
+            continue
+        for suf in ("ling", "ing", "ies", "ied", "ed", "es", "s"):
+            if w.endswith(suf) and len(w) - len(suf) >= 4:
+                w = w[: -len(suf)] + ("y" if suf in ("ies", "ied") else "")
+                break
+        out.add(w)
+    return out
+
+
+def sections(lines, pattern):
+    """The lines under every heading matching `pattern`, each up to the next
+    heading (a README can have "What this slice does" and, later, "What it
+    does not yet"; the list is wherever it is)."""
+    body, inside = [], False
+    for l in lines:
+        if re.match(r"^#{1,6}\s", l):
+            inside = bool(re.search(pattern, l.lower()))
+            continue
+        if inside:
+            body.append(l)
+    return body
+
+
+def bullets(lines):
+    """Bullets with their continuation lines joined."""
+    out = []
+    for l in lines:
+        if re.match(r"^\s*[-*+]\s+|^\s*\d+\.\s+", l):
+            out.append(re.sub(r"^\s*(?:[-*+]|\d+\.)\s+", "", l).strip())
+        elif out and l.strip() and not l.startswith("#"):
+            out[-1] += " " + l.strip()
+    return out
+
+
+def stale_not_done(readme_lines, slice_text):
+    """[(item, criterion)]: items the README says the slice does not do that
+    one of the slice's acceptance criteria covers (three meaning-carrying
+    words in common, or every word of a short item). The README's not-done
+    list is written from the slice's non-goals; a criterion that moved into
+    the slice after the README was written leaves the list saying the
+    opposite of what the code does, and a stranger reads the README first."""
+    criteria = bullets(sections(slice_text.splitlines(), r"acceptance criteria"))
+    if not criteria:
+        return []
+    found = []
+    for b in bullets(sections(readme_lines, README_SECTIONS[-1][1])):
+        if not NOT_DONE.match(b):
+            continue
+        tail = b.split(":", 1)[1] if ":" in b else NOT_DONE.sub("", b, count=1)
+        for item in re.split(r"[;,]\s+|\s+and\s+(?=[a-z])", tail):
+            item = item.strip(" .")
+            words = stems(item)
+            if len(words) < 2 or words & INTERFACE_WORDS:
+                # a way in (a route, a screen, a command) is deferred while the behaviour behind it is built; not compared
+                continue
+            for c in criteria:
+                shared = words & stems(c)
+                if len(shared) >= 3 or (len(shared) >= 2 and shared == words):
+                    found.append((item, c))
+                    break
+    return found
+
+
+def check_readme(project, slice_doc=None):
     path = os.path.join(project, "README.md")
     if not os.path.isfile(path):
         return False, "no README.md at the project root", "docs-writer:readme — write the README from the manifest, the design and the slice"
@@ -261,7 +348,21 @@ def check_readme(project):
             missing.append(name)
     if missing:
         return False, "README.md lacks sections: " + "; ".join(missing), "docs-writer:readme — add the missing sections"
-    return True, f"README.md has every section ({len(headings)} headings)", None
+    stale = stale_not_done(lines, read(slice_doc)) if slice_doc else []
+    if stale:
+        shown = "; ".join(f"\"{item}\" (criterion: {c[:70].rstrip()}…)" for item, c in stale[:3])
+        return (False, f"README.md says the slice does not do what its criteria cover: {shown}",
+                "docs-writer:readme — rewrite \"What this slice does and does not\" from the slice's criteria as they stand")
+    return True, f"README.md has every section ({len(headings)} headings)" + ("; its not-done list names no criterion" if slice_doc else ""), None
+
+
+def find_slice(planning, nnn):
+    """`slice-<nnn>.md` itself first; a companion (`slice-<nnn>-with-row.md`) only when the slice file is not there."""
+    exact = os.path.join(planning, f"slice-{nnn}.md")
+    if os.path.isfile(exact):
+        return exact
+    hits = [h for h in sorted(glob.glob(os.path.join(planning, f"slice-{nnn}*.md"), key=len)) if not re.search(r"-v\d+\.md$", h)]
+    return hits[0] if hits else None
 
 
 def check_lint(project, runner, timeout):
@@ -502,9 +603,10 @@ def main():
     runner = runner_from(a.test_cmd)
     src, tests = source_files(project), test_files(project)
     design = find_design(os.path.abspath(a.planning), a.slice, a.design)
+    slice_doc = find_slice(os.path.abspath(a.planning), a.slice)
 
     results = [
-        ("readme", *check_readme(project)),
+        ("readme", *check_readme(project, slice_doc)),
         ("lint-and-format", *check_lint(project, runner, a.timeout)),
         ("typecheck", *check_typecheck(project, runner, a.timeout)),
         ("no-code-in-strings", *check_code_in_strings(project, src)),

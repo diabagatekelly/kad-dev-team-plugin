@@ -81,9 +81,9 @@ and the scratch launcher with its folder, and says it is a smoke run:
 start the app the way the README (or the manifest) says, **through the
 launcher** (`python3 -I <scratch_run.py> --scratch '<folder>' --project
 '<root>' --env <NAME>=<relative path> … -- <start command>`: every data
-path inside the folder, `HOME` pointed there, a made-up ledger, the
+path inside the folder, `HOME` pointed there, made-up data, the
 project's fake credential tool, never the owner's data directory or login
-Keychain, not even to read, no provider connection), wait for it, drive
+credential store, not even to read, no provider connection), wait for it, drive
 each Done-when item through its real interface with HTTP requests, stop
 the app, remove the folder (`scratch_run.py --clean`) and leave no
 process behind, and write the report in the shared finding format: `##

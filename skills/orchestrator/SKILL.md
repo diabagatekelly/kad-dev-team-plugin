@@ -511,8 +511,8 @@ the chunk runner is handed that directory by absolute path (its own
 `CLAUDE_SKILL_DIR` is another skill's), and so is every agent that starts
 the app (`scratch_run.py`, the data rule below).
 
-**The data rule** (P2.3; two of slice 2's smoke agents started the app on
-the owner's real ledger and login Keychain). Every agent that starts the
+**The data rule** (P2.3; two smoke agents once started the app on the
+owner's real data and login credential store, incident 10). Every agent that starts the
 app (a smoke run, the criteria walk, the slice accessibility review, the
 stranger test) starts it through `scratch_run.py`, handed by absolute
 path with a scratch folder outside the project
@@ -520,9 +520,9 @@ path with a scratch folder outside the project
 given explicitly inside that folder (`--env NAME=<relative path>` for each
 variable the README or the design names), `HOME` is pointed there as
 well, the script refuses to start when any resolved path is outside the
-folder, a made-up ledger (the fixture's or one the agent builds), the
+folder, made-up data (the fixture's or data the agent builds), the
 project's fake credential tool or a disposable store, never the owner's
-login Keychain, not even for reading, no provider connection started,
+login credential store, not even for reading, no provider connection started,
 and `scratch_run.py --clean <folder>` after. The agent never opens the
 owner's data directory, so the before-and-after check of the real data
 files is the launcher's step around the launch, not the agent's:
@@ -549,8 +549,8 @@ reads them itself, and `rounds_record.py` (the runner's step 3) is the only thin
 parses one.
 
 **Budget** (the A line records it; counted at every chunk boundary):
-loop time 8 h for a UI-touching slice and 5 h otherwise (run 3's UI
-slice reached 5 h at chunk 7 of 8 and the owner lifted it; decided
+loop time 8 h for a UI-touching slice and 5 h otherwise (a UI slice
+reached 5 h at chunk 7 of 8 and the owner lifted it, incident 11; decided
 2026-11-06), 2 reviewer launches per chunk, 1 fixer per scope plus 1
 for regressions, unless the owner's message named other numbers.
 Consults are counted, never capped: the count goes on the E line
@@ -641,10 +641,10 @@ is built. The dollar figure is not estimated during the run;
    record). Skip the question when the owner's message already chose. On
    a slice with no screen the field says `PASS (<platform>; browser not
    needed)`, no Chrome tool is called, and `--no-chrome` costs nothing.
-   Run 3 learned at its first UI smoke run that no browser had ever
-   answered, and its smoke reports said `PASS`; slice 2 ran with no
+   One run learned at its first UI smoke run that no browser had ever
+   answered while its smoke reports said `PASS`; the next ran with no
    browser because the field said `no Chrome` and the flow was allowed to
-   go on.
+   go on (incident 12).
 
    **Cadence**, never a question: `light` when the owner's message for
    this slice names it (the word `light`, or "no per-chunk review"), else
@@ -685,9 +685,9 @@ is built. The dollar figure is not estimated during the run;
    checked (audit off)`. Claude Code saves no transcript for a session
    started from a shell that carries another session's
    `CLAUDE_CODE_CHILD_SESSION` (its start screen says "Transcript saving
-   is off"; the launcher drops the marker since 0.13.1): run 3's loop
-   session and the 2026-11-07 fix session each reached E with `cost not
-   measured: transcript missing` and nothing for the audit to read. A
+   is off"; the launcher drops the marker since 0.13.1): two sessions
+   reached E with `cost not measured: transcript missing` and nothing for
+   the audit to read (incident 13). A
    MISSING transcript is a fact for the record, reported to the owner in
    step 5 and asked about nowhere: the launcher drops the marker, so
    nothing a restart could change is left, the flow goes on, and the E
@@ -775,10 +775,9 @@ is built. The dollar figure is not estimated during the run;
    which records it), **cut it into its own slice first** (a backward
    route to `product-slicer:vertical-slicing`), or **the slice is usable
    without it** (the owner's words, recorded on the item by
-   `vertical-slicing` as its `Usable without it:` sentence). Why: slice
-   2 deferred "changing a merchant's general rule" to requirements, six
-   reviewers accepted the deferral, and a cold read found the first pick
-   permanent and a misclick without undo.
+   `vertical-slicing` as its `Usable without it:` sentence). Why: a
+   deferral six reviewers accepted left a first choice permanent and a
+   misclick without undo, which a cold read found (incident 14).
 
    **A source value** (`route: no-source-values -> the owner (source
    values)`) is the other readiness failure that goes to the owner
@@ -798,7 +797,11 @@ is built. The dollar figure is not estimated during the run;
 
    Its `value:` lines give each distinct value as the documents write
    it, with its places. Put them to the owner in **one**
-   `AskUserQuestion`, the list in the question, three answers: **none of
+   `AskUserQuestion`, the list in the question, the source named as its
+   `sources.md` row names it (the Source cell, its tab, the `Read on`
+   date and the stage that listed it; never "your file" or "the
+   workbook" alone, which an owner asked cold cannot place), three
+   answers: **none of
    these is from my file** (add each under `## Allowed by the owner` in
    `sources.md`, as the document writes it, with the owner's words and
    the date; these lines are the one edit of a planning document that is
@@ -812,9 +815,8 @@ is built. The dollar figure is not estimated during the run;
    the scan could not read (`not readable`) stops the flow for the owner
    in one line naming the row: the file put back at its location, or the
    row corrected; the scan is never skipped. You never open a listed
-   source yourself, with any tool: slice 2's orchestrator dumped every
-   tab of the owner's workbook into the scratchpad, and the whole sheet
-   is in that session's transcript.
+   source yourself, with any tool: one command that dumps a file puts
+   the whole of it in the session's transcript for good (incident 15).
 
    **The log after the routes.** The backward routes are entries of
    their own, so once the gate passes after one or more of them, write a
@@ -824,9 +826,9 @@ is built. The dollar figure is not estimated during the run;
    and put the A line and everything after it under that entry; the
    first chunk-loop entry gets one indented bullet, `readiness routed
    back (entries <n>, <m>); the loop continues under entry <new>`, and
-   nothing else. Run 3 did this (its entry 34); slice 2 appended A to E
-   under its second backward route and the log checker read all sixty
-   loop calls as unlogged (the checker now reads either form; the skill
+   nothing else. A run that appended A to E under its second backward
+   route had all sixty of its loop calls read as unlogged by the checker
+   (incident 17; the checker now reads either form; the skill
    says this one). When the gate passed first time the entry already
    written is the one. Then write the A line: `readiness — PASS` when it
    passed first time, otherwise `readiness — PASS after <check> (entry
@@ -868,9 +870,10 @@ B line: the chunk titles in order.
 
 **C. Chunks, one at a time.** For chunk k of n, in the plan's order, one
 chunk runner carries the round and the orchestrator keeps the records.
-Why: slice 2's orchestrator thread averaged about 427k cache-read tokens
-per call over 396 calls and was 44% of the slice's cost; the v4 design
-(D9) said to build the runner above about 250k. The runner's own
+Why: an orchestrator thread that carried the mechanics itself averaged
+about 427k cache-read tokens per call over 396 calls and was 44% of the
+slice's cost (incident 8); the v4 design (D9) said to build the runner
+above about 250k. The runner's own
 procedure is `skills/chunk-runner/SKILL.md`; what follows is the
 orchestrator's side.
 
@@ -969,7 +972,7 @@ orchestrator's side.
 
    `--snapshot` first copies this session's transcript and its
    subagents' to the audit directory, now, not at a session end that may
-   never come (run 3's loop session has none on disk); the sync then
+   never come (incident 13); the sync then
    copies the whole slice folder, the records directory and every
    session's transcripts, found by session id (the live file Claude Code
    writes or the snapshot, whichever is larger), into the audit
@@ -1092,8 +1095,8 @@ orchestrator's side.
    Sonnet agent as always (`model: "sonnet"`, `maxTurns: 160`,
    `tdd-implementation-lite`, its handed-back path, chunks are committed).
    Under `light` (P3.2's third change, aimed at the fixer being a stranger
-   to the code: a quarter of every run's findings since run 2 are the
-   fixer's own regressions) the findings are grouped by the chunk whose
+   to the code: a quarter of every run's findings have been the fixer's
+   own regressions, incident 19) the findings are grouped by the chunk whose
    Files line holds their file, and each group goes by `SendMessage` to
    that chunk's own builder (the agent id on the chunk's C line, `builder
    <id>`), with the same handed-back task; a builder that cannot be
@@ -1102,7 +1105,7 @@ orchestrator's side.
    everything no builder cleared; then the gate, the regressions-only
    re-review and the second fixer as above. The D line records `fixes
    builders <n> opus <m>`, and the review measures regressions per
-   actionable finding against slice 2 (25%).
+   actionable finding against the 25% of incident 19.
 4. **The stranger test**, once, in D's last review round (round 1 when
    there was a fix round, round 0 otherwise, launched alongside that
    round's reviewers): the smoke agent (`accessibility-engineer` if
@@ -1142,8 +1145,8 @@ put a value or a pattern of values into a command, never run
 `filter-branch`, `sed` or a rebase over the commits yourself, never
 expire a reflog, and the log's line for it is delivery's record line
 (counts and files). Without the owner's words for a rewrite the flow
-stops at step 5 with delivery's refusal. Slice 2's orchestrator
-improvised this removal, and its own log bullet put the values back.
+stops at step 5 with delivery's refusal. An improvised removal once put
+the values back in its own log bullet (incident 18).
 
 1. **Records.** If D's fix rounds changed anything, `map-update` again and
    commit the map. Then commit the log and the records directory, with the
@@ -1219,8 +1222,7 @@ improvised this removal, and its own log bullet put the values back.
    and prints the total by role class, or `cost not measured: transcript
    missing for <id>` and no total when one is absent. Its last line goes
    on the E line as printed: a total that does not cover the loop's own
-   sessions is never written (run 3's E line carried the planning
-   session's figure as if it were the run's).
+   sessions is never written (incident 20).
 6. **Audit sync.** With `KAD_AUDIT=1`, the snapshot and the sync exactly
    as C.6 (the sync's `--transcripts` carries every session of the
    project, withholding one that holds a listed source's value), its

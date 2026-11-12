@@ -37,6 +37,9 @@ orchestrator prints this one command and stops. The details are under
 .claude-plugin/
   plugin.json        # plugin manifest
   marketplace.json    # self-hosting marketplace entry, for local install/testing
+INCIDENTS.md          # what a real run did that a rule now prevents, numbered; the skills cite the
+                      # number and state the rule in general terms (evals/tools/skill_words_test.py keeps
+                      # the projects' own words out of them)
 agents/
   <persona>/AGENT.md  # persona definition: frontmatter + system prompt
 skills/

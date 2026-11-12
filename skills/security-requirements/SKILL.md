@@ -195,10 +195,10 @@ Write the criterion in both cases, with the scan as its check ("Given
 the slice's branch, when `source_scan.py scan` is run over it, then it
 reports no value of a listed source"), so the readiness gate, every
 chunk's gate and the delivery's scan before a push are that same check.
-Slice 2's criterion said nothing from the workbook was in the repository
-five minutes after the requirements and the slice file had put a
-merchant and its fee there; the slice review found them two and a half
-hours later, in thirteen test files.
+A criterion once said nothing from the owner's file was in the
+repository five minutes after the requirements and the slice file had put
+a row of it there; the slice review found it two and a half hours later,
+in thirteen test files (incident 16).
 
 ## Write criteria in the same form as the rest of the slice
 

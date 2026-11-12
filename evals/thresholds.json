@@ -555,6 +555,24 @@
       "architecture-review"
     ]
   },
+  "code-review-structural-high-at-d": {
+    "score": 0.8,
+    "runs": 1,
+    "mode": "gate",
+    "claude_version": "2.1.322",
+    "source": "results/gate-20261111T104713-code-review-structural-high-at-d.json",
+    "graders": {
+      "a-long-single-job-function-stays-a-plain-finding": 0.0,
+      "leaves-the-code-alone": 1.0,
+      "review-written": 1.0,
+      "skill-invoked-display": 1.0,
+      "the-split-is-the-architects-decision": 1.0
+    },
+    "skills_invoked": [
+      "code-review",
+      "why-comments"
+    ]
+  },
   "delegation-consult-with-file": {
     "score": 0.905,
     "runs": 3,
@@ -1290,6 +1308,33 @@
     },
     "skills_invoked": [
       "orchestrator"
+    ]
+  },
+  "orchestrator-readme-stale-not-done": {
+    "score": 0.833,
+    "runs": 1,
+    "mode": "gate",
+    "claude_version": "2.1.322",
+    "source": "results/gate-20261111T104713-orchestrator-readme-stale-not-done.json",
+    "graders": {
+      "check-before-any-launch": 1.0,
+      "code-reviewer-only-for-the-comments": 1.0,
+      "definition-of-done-checked-twice": 1.0,
+      "gate-on-the-fix": 1.0,
+      "no-slice-reviewer-yet": 1.0,
+      "one-comments-review": 1.0,
+      "one-fixer-for-the-batch": 0.0,
+      "orchestrator-invoked": 1.0,
+      "readme-keeps-its-sections": 1.0,
+      "readme-skill-invoked-inline": 1.0,
+      "stale-not-done-item-gone": 1.0,
+      "three-named-fixes-in-one-batch": 0.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "readme",
+      "tdd-implementation-lite",
+      "why-comments"
     ]
   },
   "orchestrator-route-accessibility": {

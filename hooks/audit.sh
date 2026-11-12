@@ -13,9 +13,9 @@
 # A session's end is not the only time the transcript is copied: the
 # orchestrator's chunk loop runs `audit.sh --snapshot [<session-id>]` after
 # every records commit (the id defaults to CLAUDE_CODE_SESSION_ID), which
-# copies the same files there and then. Run 3's loop session ended without
-# a SessionEnd and its main transcript was never found; a snapshot per
-# chunk does not wait for an end.
+# copies the same files there and then. A loop session once ended without
+# a SessionEnd and its main transcript was never found (incident 13); a
+# snapshot per chunk does not wait for an end.
 #
 # With KAD_AUDIT_REPO also set (a clone URL), the audit repository's clone
 # lives at $KAD_AUDIT_DIR/repo/, never inside the project tree. The

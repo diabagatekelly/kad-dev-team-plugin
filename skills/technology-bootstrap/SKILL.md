@@ -179,9 +179,9 @@ The first failing test forces three or four choices. The build forces
 more, one chunk at a time: the chunk whose seam test goes over HTTP needs
 a server; the chunk that talks to the external service needs a client;
 the chunk whose data must outlive a restart needs a store on disk; a
-chunk may need the machine's keychain, a log, a rendered page, a test
-DOM, a linter. Run 3 left each of those "not yet decided" and re-entered
-this skill six times mid-build (`node:http`, the vendor SDK's exact pin,
+chunk may need the machine's credential store, a log, a rendered page,
+a test DOM, a linter. One run left each of those "not yet decided" and
+re-entered this skill six times mid-build (incident 25: `node:http`, the vendor SDK's exact pin,
 `node:crypto`, `/usr/bin/security`, a JSON-lines writer on `node:fs`,
 server-rendered HTML), each an interruption of the loop for a choice that
 came out as the runtime's own built-in.
@@ -195,8 +195,8 @@ default:
 - the runtime's own module where it has one (on Node, `node:http` for a
   server, `node:crypto` for encryption and randomness, `node:fs` for a
   file store or a JSON-lines log);
-- the operating system's own tool for an OS facility (the macOS
-  `security` command for the Keychain), called without a shell;
+- the operating system's own tool for an OS facility (its command for
+  the credential store), called without a shell;
 - the vendor's official client, exact-pinned, for the one external
   service the slice exists to integrate with (the design's third-party
   isolation names it), or plain `fetch` where the vendor has none;

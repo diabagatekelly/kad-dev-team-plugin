@@ -49,8 +49,8 @@ beside it.
    `CI: see .github/workflows/<file>` (or the host's equivalent) when a
    workflow file exists, else exactly `No CI runs these yet.`, the
    sentence `ci-pipeline` replaces when it adds one. Never write "no CI"
-   when a workflow is there (run 3's README said it one commit after CI
-   landed).
+   when a workflow is there (a README said it one commit after CI
+   landed, incident 26).
 5. **Where things live** — where the data is stored locally, where the
    logs go, which files hold local secrets and are ignored by git.
 6. **What this slice does and does not** — the slice's behaviour in a few

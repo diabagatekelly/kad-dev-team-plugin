@@ -37,7 +37,9 @@ and a byte-for-byte copy of one anywhere in the tree or in a commit
 (found by digest, since a workbook is binary and never matches as text).
 Files the scan cannot read as text are counted and said.
 
-What is matched, from every tab of each source:
+What is matched, from the tab each source's row names (`all`, a range or
+an empty cell: every tab; a tab name the file does not have is reported
+and every tab is read):
 
 - **Text cells**, as whole words whatever their length: a cell's words
   (runs of letters and digits, case folded) found in the same order with
@@ -49,8 +51,13 @@ What is matched, from every tab of each source:
   the source's rows or fewer (a name, not a descriptor like `payment`)
   and something else of its own row is in the same file: a whole cell of
   as few rows, or an amount of that row. A word alone is printed as not
-  counted. Matching every word of every cell on its own would match the
-  language.
+  counted. A **cell of one word** counts on its own only when it is a
+  name: four letters or more, from a column whose values are mostly
+  distinct (a payee, a title). A cell of a label column (a category, a
+  status, initials: five text cells or more and a fifth or fewer of them
+  distinct) or a code shorter than four letters is counted like a word of
+  a longer cell, beside something else of its row. Matching every word of every cell on its
+  own would match the language.
 - **Numeric cells**, as amounts: in cents and in their formatted forms.
   12.5 is found as `12.50`, `12.5`, `12,50` and `1250`; 1234.5 also as
   `1,234.50` and `1.234,50`. A whole amount (15) is found only where it is
@@ -435,6 +442,25 @@ def read_source(path):
     return read_delimited(path)
 
 
+def is_range(text):
+    """`A1:D40`, `A1`, `$A$1:$D$40` or `Sheet!A1:D40`: a range the row names,
+    which means the whole file to the scan (the tab filter takes a tab name)."""
+    return bool(re.fullmatch(r"(?:[^!]+!)?\$?[A-Za-z]{1,3}\$?\d+(?::\$?[A-Za-z]{1,3}\$?\d+)?", text.strip()))
+
+
+def label_columns(cells, head):
+    """The columns of a tab whose text values are labels rather than names: at
+    least five text cells and a fifth or fewer of them distinct, two distinct
+    values always counting as labels (a category column, a status, a set of
+    initials). A payee or title column, where most values differ, is a
+    column of names."""
+    seen = {}
+    for row, col, kind, value in cells:
+        if row != head and kind == "text":
+            seen.setdefault(col, []).append(words(value))
+    return {col for col, vals in seen.items() if len(vals) >= 5 and len(set(vals)) <= max(2, len(vals) // 5)}
+
+
 def header_row(cells):
     return min((r for r, _, _, _ in cells), default=None)
 
@@ -510,6 +536,7 @@ class Catalog:
         self.allowed_cents = set()
         self.rows = {}         # ("text", words joined), ("word", word) or ("amount", cents) -> {(source index, tab, row)}
         self.partials = {}     # a word of a multi-word cell -> ref (the surname of a full name, the brand of a card line)
+        self.name_keys = set()  # ("text", one word) seen in a column of names (many distinct values), not a column of labels
         self.rows_per_source = {}  # source index -> rows under its column names
         self.owner = {}        # the same key -> index of the first source that holds it
         self.baseline = {}     # source index -> keys already in the tree when it was listed
@@ -525,11 +552,13 @@ class Catalog:
         if n is not None:
             self.allowed_cents.add(int(round(abs(n) * 100)))
 
-    def add_text(self, text, ref, row=None):
+    def add_text(self, text, ref, row=None, name_column=True):
         w = words(text)
         if not w or all(x in STOPWORDS for x in w) or w in self.allowed_words:
             return False
         key = ("text", " ".join(w))
+        if len(w) == 1 and name_column:
+            self.name_keys.add(key)
         if key not in self.rows:
             self.phrases.setdefault(w[0], []).append((w, ref))
         self._place(key, row)
@@ -590,11 +619,23 @@ class Catalog:
             # A word of 1% of its source's rows or fewer is a name, not a
             # descriptor; a floor of three keeps a seven-row sheet's names in.
             return max(3, min(self.rows_per_source.get(src, 0) for src in sources_of(key)) // 100)
+
         for file_hits in by_file(hits).values():
             live = [h for h in file_hits if not (listed_before(h) and skip("already in the tree when the source was listed") is None)]
             texts = [h for h in live if h["kind"] == "text"]
             amounts = [h for h in live if h["kind"] == "amount"]
             wordhits = [h for h in live if h["kind"] == "word"]
+            # A cell of one word counts on its own only when it is a name:
+            # four letters or more, from a column of names (one whose values
+            # are mostly distinct: a payee column, a title column). A cell of
+            # a label column (a category, a status, a collector's initials:
+            # few distinct values over many rows), or a code shorter than four
+            # letters, matches the language of any repository and counts like
+            # a word of a longer cell: beside something else of its row.
+            loose = [h for h in texts if " " not in h["key"][1]
+                     and (sum(c.isalpha() for c in h["key"][1]) < 4 or h["key"][:2] not in self.name_keys)]
+            loose_ids = {id(h) for h in loose}
+            texts = [h for h in texts if id(h) not in loose_ids]
             counted += texts
             rows_here = set().union(*(self.rows.get(h["key"][:2], set()) for h in texts)) if texts else set()
             # A word of a longer cell counts beside a whole cell of its row, or,
@@ -605,9 +646,10 @@ class Catalog:
             named_rows = set().union(*(self.rows.get(h["key"][:2], set()) for h in texts
                                        if len(self.rows.get(h["key"][:2], set())) <= few(h["key"][:2]))) if texts else set()
             word_rows, taken = set(), set()
-            for h in wordhits:
+            for h in wordhits + loose:
                 rows = self.rows.get(h["key"][:2], set())
-                rare = len(rows) <= few(h["key"][:2])
+                # a short name pairs with its row; a label pairs with nothing (it is in too many rows to mean one)
+                rare = (h["key"][:2] in self.name_keys) if id(h) in loose_ids else len(rows) <= few(h["key"][:2])
                 paired = rare and bool(rows & named_rows)
                 if not paired and rare:
                     for a in amounts:
@@ -617,6 +659,8 @@ class Catalog:
                 if paired:
                     counted.append(h)
                     word_rows |= rows
+                elif id(h) in loose_ids:
+                    skip("a one-word cell, a label or a short code, with nothing else of its row in the file")
                 else:
                     skip("a word of a longer cell, with nothing else of its row in the file")
             rows_here |= word_rows
@@ -708,10 +752,20 @@ def load(planning, project=None, sources_file=None, strict=False):
             cat.problems.append(f"source not readable: {src['name']} ({src['location']}): {e}")
             continue
         info["status"] = "read"
+        wanted = (src.get("tab") or "").strip()
+        if wanted and wanted.lower() != "all" and not is_range(wanted):
+            # The row names a tab: only that tab is read. A workbook of many
+            # tabs listed as `all` matches the language of the repository.
+            named = next((t for t in tabs if t == wanted), None) or next((t for t in tabs if t.lower() == wanted.lower()), None)
+            if named is not None:
+                tabs = {named: tabs[named]}
+            else:
+                cat.problems.append(f"source {src['name']}: no tab named {wanted!r} (tabs: {', '.join(repr(t) for t in tabs)}); every tab read")
         counts = {"tabs": len(tabs), "text": 0, "amounts": 0, "dates": 0, "column names": 0, "excluded": 0}
         for tab, cells in tabs.items():
             head = header_row(cells)
             cat.rows_per_source[index] = cat.rows_per_source.get(index, 0) + len({r for r, _, _, _ in cells if r != head})
+            label_cols = label_columns(cells, head)
             for row, col, kind, value in cells:
                 ref = f"{src['name']} {tab + '!' if tab else ''}{col_letter(col)}{row}"
                 if row == head:
@@ -719,7 +773,7 @@ def load(planning, project=None, sources_file=None, strict=False):
                 elif kind == "date":
                     counts["dates"] += 1
                 elif kind == "text":
-                    counts["text" if cat.add_text(value, ref, (index, tab, row)) else "excluded"] += 1
+                    counts["text" if cat.add_text(value, ref, (index, tab, row), name_column=col not in label_cols) else "excluded"] += 1
                 else:
                     counts["amounts" if cat.add_number(value, ref, (index, tab, row)) else "excluded"] += 1
         info["counts"] = counts

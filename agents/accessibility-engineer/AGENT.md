@@ -60,8 +60,8 @@ chunk that touches UI.** The task hands you the chunk's Done when, its
 accessibility criteria by path, a report path, and the scratch launcher
 with its folder; `accessibility-review`'s "Smoke run" section is the
 whole procedure: start the app through the launcher (every data path
-inside the scratch folder, a made-up ledger, never the owner's data or
-login Keychain), drive the Done when in the real browser with a
+inside the scratch folder, made-up data, never the owner's data or
+login credential store), drive the Done when in the real browser with a
 screenshot per state, check the chunk's criteria on the built screen,
 stop the app, remove the folder, report in the shared format with a
 Result line. At the slice review you run the full review on the whole

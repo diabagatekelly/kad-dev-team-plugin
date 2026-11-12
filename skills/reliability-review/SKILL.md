@@ -43,8 +43,8 @@ code, in this order.
    the modules the range touches; read every file of each of those
    modules in full, and every test file that exercises them (at D, all of
    `src/` and `test/`). The diff says what moved; the module says whether
-   it is right. Run 3's slice reviewers, each reading one side of the
-   exchange-once seam, missed an orphaned Plaid Item three runs running.
+   it is right. Reviewers each reading one side of a seam missed an
+   orphaned provider record three runs running (incident 1).
 2. **Run the checks** from the project root with the manifest's own
    scripts: the typecheck, the lint and the format check where each
    exists. The full suite you do not run: the gate ran it on this very
@@ -79,9 +79,9 @@ with <X> undecided; consequence <Y>", Medium when the consequence is one
 a person meets (a permanent state, an action with no way back, a failure
 nobody designed a path out of), Low otherwise: an accepted deferral is a
 fact about what ships, not something a review drops because a document
-accepted it (slice 2's six reviewers accepted "changing a merchant's
-general rule" as deferred; a cold read found the first pick permanent
-with no undo). The regressions-only re-review at round 1 is different and stays
+accepted it (six reviewers accepted a deferral a cold read then found
+to leave a first choice permanent with no undo, incident 14). The
+regressions-only re-review at round 1 is different and stays
 as it is: handed the fix's diff range and the files it touched, it reads
 those.
 
@@ -126,10 +126,15 @@ happy one:
   the use case's own store, one claim per thing so two overlapping
   requests share it and a repeat can find it; the refused repeat
   reconciled against what the provider holds before it is reported as a
-  failure. Run 3's exchange timed out after
-  Plaid had created the Item, the retry got `INVALID_PUBLIC_TOKEN`, and
-  the Item was orphaned with nothing revoked; three runs' reviewers read
-  the success path and the failure path one at a time and missed it.
+  failure. Severity follows what the duplicate or the orphan costs: a
+  charge, a refund or a provider record that money or access hangs on
+  is High; a notification sent twice (a text or an email repeated after
+  a lost reply, inside the adapter's own bounded retry of transient
+  statuses) is a Low note, not a finding against the retry. An exchange
+  that timed out after the provider had completed it, whose retry was
+  refused as already used, left the provider's record orphaned with
+  nothing revoked; three runs' reviewers read the success path and the
+  failure path one at a time and missed it (incident 2).
 - **State that has to outlive the process doesn't live only in it.** Check
   each store the code writes to: one backed by process memory loses
   everything on every deploy, restart and crash, and each instance has its
