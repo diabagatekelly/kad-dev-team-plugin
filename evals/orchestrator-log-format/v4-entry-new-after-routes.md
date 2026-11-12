@@ -27,4 +27,4 @@
 - **C. Chunk 3/3:** `Reject a second cancel and give the desk its notice`; sonnet 29t 4m; commits `00500cc`; gate `PASS`; deviations `0`; review `co tq` r0 `0/0/0`; smoke `PASS`; standing `0/0/0`; budget `1.2h 6r`; records `c07373e`
   - Resumed 2026-10-26 at C, chunk 3
 - **D. Slice review:** map `docs/architecture-map.md` (`74c5496`); done `PASS after e49dc55`; reviewers `tq co ar se re`; r0 `0/0/3/3`; stranger `PASS`; r1 fix `013a295` → `0/0/2` (reg 0, pre 2); standing `0/0/2`; records `6a703fe`; audit `off`; data `not named`
-- **E. Delivery:** CI `present`; pushed `6a703fe`; PR `#7`; issues `#41 #42` (M `2`, deferred `0`); Lows `3` in body; ext r1 `0`c; `clean r1`; consults `1`; cost `not measured`; audit `not configured`
+- **E. Delivery:** CI `present`; pushed `6a703fe`; PR `#7`; checks `CI green 6a703fe`; issues `#41 #42` (M `2`, deferred `0`); Lows `3` in body; ext r1 `0`c; `clean r1`; consults `1`; cost `not measured`; audit `not configured`

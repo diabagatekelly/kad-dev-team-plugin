@@ -56,6 +56,36 @@ the round goes on, and the hand-back says `sandbox <n> checked, FAIL on
 to its own later checks. Every project path in a command goes in single
 quotes (`'\''` for a quote inside one).
 
+**Waiting, and what a result is.** An agent you launched has returned
+only when its hand-back is in front of you: the `Agent` call's own result
+when the call blocks until the agent ends, or, when the harness runs the
+launch in the background, the message that names that agent's id and
+carries its report. Until then you know nothing of its work, however long
+it takes; a build of ten minutes is ordinary.
+
+- **Waiting is ending your turn with no tool call** (one short sentence
+  on what you are waiting for, or nothing). The hand-back wakes you.
+  Never start a background command, a sleep, a poll or a monitor to wait,
+  and never watch the branch for a commit: a notice that a command of
+  your own finished is not an agent's hand-back, and nothing else that
+  arrives while you wait is either.
+- **Nothing you expect an agent to say is its result.** You never write
+  an agent's report, notification or hash yourself, in a reply or in your
+  own reasoning, and you act on no result that is not in a hand-back.
+- **A hash is real only when the repository says so.** Before a commit
+  goes into a command, a message or your line, `git cat-file -e
+  '<sha>^{commit}'` exits 0 on it, the hashes a hand-back names included.
+  The `commits` on your line are read from `git log --oneline
+  <base>..HEAD` after the hand-back, never copied from a report. A
+  hand-back naming a commit the repository does not hold is a hand-back
+  with no commit.
+- **Never hand back while an agent you launched has not returned.** A
+  round that has to end waits for the hand-back first, then ends.
+
+A runner that could not wait wrote its builder's result itself, with a
+commit nobody made, and sent the stall message to agents that were still
+working (incident 31).
+
 1. **Build.** One fresh implementer, `kad-dev-team:tdd-coach:AGENT`,
    `model: "sonnet"`, `maxTurns: 120`, with: `kad-dev-team:tdd-implementation-lite`
    to invoke first, by name; the chunk's five plan lines verbatim; the
@@ -67,13 +97,18 @@ quotes (`'\''` for a quote inside one).
    chunk" applies: the chunk ends with one commit whose subject is the
    chunk's title, the report section appended in the same commit, nothing
    pushed). Nothing about reviewers, other chunks' findings, scope rules,
-   or the flow's state. Wait for it. Keep its agent id: the gate and the
-   hand-back need it.
+   or the flow's state. Wait for its hand-back, as above. Keep its agent
+   id: the gate and the hand-back need it.
 
-   **Stall rule.** If the agent returns at its turn cap, or returns saying
-   it is not done, with no new commit on the branch (`git log --oneline
-   <base>..HEAD` is empty), send it one message with `SendMessage`:
-   commit what passes its done check, report the rest as not built, stop.
+   **Stall rule.** It reads a hand-back, never the branch. When the
+   agent's hand-back is in front of you and says it is not done (or it
+   returned at its turn cap), and there is then no new commit on the
+   branch (`git log --oneline <base>..HEAD` is empty, or the commit the
+   hand-back names does not exist), send it one message with
+   `SendMessage`: commit what passes its done check, report the rest as
+   not built, stop. An empty `git log` before the hand-back means the
+   agent is working: wait. The message is never sent to an agent that
+   has not handed back.
    If it returns again with no commit, note `stall: relaunched` for the
    hand-back, leave the working tree as it is (discard nothing), and
    launch a fresh implementer for the same chunk with the stalled agent's
@@ -206,8 +241,9 @@ quotes (`'\''` for a quote inside one).
      handed to a fixer. When no browser answered at A (the owner chose to
      continue) every UI smoke run raises that one owed finding.
 
-   Wait for both. Their hand-backs are the counts and the paths. Then,
-   inline with Bash:
+   Wait for both hand-backs (as above: two launches in flight are two
+   hand-backs to wait for, and the first to arrive ends nothing). They
+   are the counts and the paths. Then, inline with Bash:
 
    ```
    python3 -I '<scripts>/rounds_record.py' --sidecar '<records dir>/rounds-slice-<nnn>.jsonl' --report '<review report>' --report '<smoke report>' --chunk <k> --round 0
@@ -235,7 +271,9 @@ quotes (`'\''` for a quote inside one).
    the list of which findings in them are handed back (and the decision
    commit, if any); it commits, one commit per fix or one for the batch,
    its call, and appends a `Fix r1` line to the chunk's report section.
-   Then the gate on the fix's range (`--base` the commit before the fix,
+   Wait for its hand-back; a fixer that hands back with no commit the
+   repository holds gets the stall rule's one message, and a second such
+   hand-back ends the round with `stall: ended`. Then the gate on the fix's range (`--base` the commit before the fix,
    `--agent` the fixer's id, saved as `gate-chunk-<k>-r1.txt`). Then the
    **re-review**: the same combined reviewer kind, `model: "opus"`, on
    the fix's diff only (`<before fix>..HEAD`) and the files it touched
@@ -279,7 +317,9 @@ fields hold, no narration, no notes or bullets before it on what you
 could not find or what the orchestrator should know. A fact the fields
 cannot hold (a transcript not found, a builder's turns unknown) is a `?`
 in its field; a finding's title belongs in the report, not in your
-reply. Your whole reply is the line.
+reply. Every hash on it is one `git cat-file -e` confirmed in this run,
+and no agent you launched is still working when you send it. Your whole
+reply is the line.
 
 ```
 `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>

@@ -141,7 +141,11 @@ Then:
   the triage, the fixes under the loop's fix-round rules (one fixer plus
   one regressions round per round of comments, the gate before each),
   `delivery` to push, reply and file, until a round has nothing to fix or
-  round 5 is done; then report that the pull request is clean. A pull
+  round 5 is done; then report that the pull request is clean. **Its
+  checks come first**: a pull request whose checks are red or have no
+  result gets `delivery`'s "CI watch" before any comment is triaged (the
+  chunk loop's E.4 says how a red check is fixed), and is never reported
+  as clean or ready while one is. A pull
   request whose comments are all resolved and whose checks are green is
   reported as `ready to merge` in one line, and the flow waits for the
   merge before any slice work: merging is the owner's. Two open slice
@@ -561,6 +565,44 @@ it is, the C line says `budget exceeded: <which>`, and step 5 says what
 is built. The dollar figure is not estimated during the run;
 `cost_by_role.py` computes it at E.
 
+**An issue fix** (the owner answered "fix it first on its own branch"
+at step 1b, or asked for one issue to be fixed) is this same loop on the
+slice the issue belongs to, after the backward routes that revised that
+slice's documents for it, with four differences and no others:
+
+- **The branch** is `slice-<nnn>-issue<n>-<slug>` (A.3; the slug from the
+  issue's title), so step 1b still reads its pull request as a slice's.
+- **The records carry the prefix `issue<n>-`**, in the slice's own
+  records directory, wherever a name in this procedure says
+  `slice-<nnn>` or begins a record: `implementation-report-issue<n>.md`,
+  `issue<n>-chunk-<k>-r<i>-review.md` and `-smoke.md`,
+  `gate-issue<n>-chunk-<k>-r<i>.txt`, `issue<n>-slice-r<i>-<reviewer>.md`,
+  `gate-issue<n>-slice-r<i>.txt`, `issue<n>-pr-r<i>-…`,
+  `rounds-issue<n>.jsonl`, `handoff-issue<n>.md`; the commits read
+  `Planning: issue <n> ready for implementation`, `Plan: issue <n> in <k>
+  chunks`, `Records: slice <nnn> issue<n> chunk <k>`. Nothing of the
+  slice's own records is renamed, appended to or overwritten, and every
+  launch is told the prefix with its report path. The entry's heading
+  reads `issue <n> ready for implementation`.
+- **The fix base** is the commit the branch grows from, read at A.3
+  before the planning commit (`git rev-parse --short HEAD`) and written
+  on the A line as `fix base <sha>`. The readiness gate takes it
+  (`--fix-base '<sha>'`, A.4) and judges what the fix revised: a gap the
+  slice's documents already had at that commit is an older gap, printed
+  as `INFO  older-gap:` and never a route.
+- **Older gaps are filed once, as one issue.** When the gate's `older
+  gaps: <n>` line is above zero: if `gh issue list` shows no open issue
+  titled `Older planning gaps: slice <nnn>`, file one with that title
+  (`delivery`'s issue form: the `tech-debt` label, the footer line), its
+  body one checkbox per `older-gap` line as printed, and write `older
+  gaps <n> → #<issue>` on the A line; an issue that exists is named
+  there, never filed twice. No backward route, no persona and no
+  question for any of them.
+
+A fix once had no such rule: its records' names were improvised, and the
+gate sent it back four times over documents it had not touched
+(incident 35).
+
 **A. Start.** In this order:
 
 0. **Repository.** Inline with Bash: `git rev-parse --show-toplevel` from
@@ -733,7 +775,9 @@ is built. The dollar figure is not estimated during the run;
      this slice and leaves the standing file as it is. The per-slice file
      stays the record C.5 reads and the planning commit carries.
 3. **Branch and base.** Inline with Bash: `git status --porcelain` on the
-   target directory. Then `git switch -c slice-<nnn>-<slug>` from the
+   target directory. Then `git switch -c slice-<nnn>-<slug>` (an issue
+   fix: `slice-<nnn>-issue<n>-<slug>`, and the current commit is its fix
+   base) from the
    current commit, the number from the slice file's name and the slug from
    its title, lower-case, hyphens. If any planning document is modified or
    untracked (the delegation file is), commit them now on this branch, by
@@ -759,7 +803,11 @@ is built. The dollar figure is not estimated during the run;
    it`, with how, or a blocker); a failure-mode row for an external
    provider's unusable reply; no value of a file the owner provided
    (`sources.md` in the target directory lists them by location) in the
-   planning directory or anywhere in the code. Its last line is `readiness: PASS` or
+   planning directory or anywhere in the code. An issue fix adds
+   `--fix-base '<fix base>'`: the checks then fail only on what the fix
+   added or reworded, and what already failed at that commit is listed
+   (`INFO  older-gap:`, then `older gaps: <n>`), for the one issue the
+   issue-fix rule above files. Its last line is `readiness: PASS` or
    `FAIL`, with a `route:` line per failed check naming the persona. On
    FAIL, each failed check is a backward route (step 3's rule): write its
    own log entry naming the check and the document, run the named skill
@@ -895,7 +943,10 @@ orchestrator's side.
    unsandboxed, so the runner knows whether a later `FAIL` ends the round
    or is information). Nothing about other
    chunks' findings, the owner, the budget or the flow's state. Wait for
-   it. The runner launches the builder, runs the gate (with `--agent
+   its hand-back, and by the runner's own rule: waiting is ending the
+   turn with no tool call, never a background command, a poll or a
+   monitor, and nothing of the runner's result exists until the
+   hand-back is in front of you. The runner launches the builder, runs the gate (with `--agent
    <builder id>`, so the C line's `shell edits` is the counted number,
    `reported <m>` beside it), launches the reviewer and the smoke agent,
    records the rounds with `rounds_record.py`, launches the fixer and the
@@ -919,6 +970,25 @@ orchestrator's side.
    - `flaky: <test>`: information on the C line; the runner already
      handled it (one re-run, then one fixer at the cause on the second
      sighting, counted as the gate fixer).
+   **Check the line before anything rests on it.** Every hash the
+   hand-back names (`commits`, `PASS after`, `red commit`, `r1 fix`, `r2
+   fix`) goes through `git cat-file -e '<sha>^{commit}'`, inline, before
+   the C line is written, the records are committed, or the owner is
+   told or asked anything built on the line. All of them exist: go on.
+   One does not: the line is not a result. Nothing is written from it
+   and none of it is put to the owner as fact; relaunch a runner for the
+   same chunk, once, with the line, the hash the repository does not
+   hold, and what `git log --oneline <base>..HEAD` and `git status
+   --short` print, telling it to resume from what the tree holds (its
+   resume rule). A second line with a hash that does not exist ends the
+   flow: the C line carries the fields `git log` confirms, `?` in the
+   others and `hand-back unverified: <sha>`, and step 5 reports what the
+   tree holds, never what the line said. Before any question that would
+   discard, revert or rewrite work, read `git log` and `git status`
+   again: the question describes what they show now. An owner once
+   answered "discard" on a runner's report of commits nobody had made
+   (incident 31).
+
    You never open a report the hand-back names and never run
    `rounds_record.py` yourself at C: the counts on the line are the
    script's as the runner printed them (its rows are already in the
@@ -1188,10 +1258,37 @@ the values back in its own log bullet (incident 18).
    the pull request number and the issue numbers. With no tracker
    recorded, the standing Mediums stay listed in the body and the E line
    says so; nothing is asked.
-4. **External review triage, until nothing to fix, capped at five
-   rounds.** `delivery` waits for the pull request's checks to finish
-   (polling `gh pr checks` and the reviews, up to the bound its skill
-   states), then reads every review comment not left by this flow (the
+4. **The CI watch after every push; then the external review triage,
+   until nothing to fix, capped at five rounds.** A pushed branch is not
+   delivered until its checks are green. After E.3's push, and after
+   every later push of this step, `delivery`'s "CI watch" runs before
+   anything else and returns one of three states:
+   - `CI green <sha>`: go on to the comments.
+   - `CI red r<i>: <path>` (the failing tests are in `<records
+     dir>/pr-ci-r<i>.md`, with the platform difference): sandbox check;
+     one fresh fixer (`model: "sonnet"`, `maxTurns: 120`,
+     `tdd-implementation-lite`, its handed-back path, chunks are
+     committed) handed that file by path and two lines word for word:
+     the tests failed on the platform the file names and passed on this
+     one, so the cause is that difference; and the failing tests are not
+     weakened (no skip, no platform guard around an assertion, no
+     loosened expectation, no retry). Then the gate on the fix's range,
+     saved as `gate-pr-ci-r<i>.txt`; on PASS `delivery` pushes and the
+     watch runs again. Three rounds at most; every round goes to the
+     sidecar with `"chunk": "pr"`.
+   - `CI no result`, or red after the third fix: the flow stops at step
+     5. Nothing after this point runs.
+
+   **A red or unsettled check is never reported as built.** Whenever
+   the last watch did not say green, the report at step 5 opens with the
+   CI state and the run's URL, before anything about what was built, and
+   says the pull request is not ready; nothing is pushed "to see", and
+   merging is never suggested. A pull request once went to the owner as
+   built while its checks were failing on a real defect the local gate
+   could not see (incident 33).
+
+   Then the comments: `delivery` waits for the reviews (up to the bound
+   its skill states), then reads every review comment not left by this flow (the
    ones that carry the plugin's footer line; the author is never the
    test, since the owner may write from the account the session pushes
    as). If there are any: sandbox check; launch `kad-dev-team:code-reviewer:AGENT`,
@@ -1202,7 +1299,8 @@ the values back in its own log bullet (incident 18).
    reason, or **defer**. Fixes go to a fresh fixer as in the runner's fix round (one batch,
    commits), then the gate on the fix's range, then `delivery` pushes,
    posts each decline's reason as a reply on its comment and files each
-   deferral as an issue. The push brings the external reviewer back; its
+   deferral as an issue. The push brings the checks and the external
+   reviewer back: the CI watch first, as above, then its
    new comments on the fix are the next round, through the same triage,
    until a round has no comment to fix or round 5 is done. Comments that
    arrive after that are the user's. Every comment and verdict goes to
@@ -1233,11 +1331,14 @@ the values back in its own log bullet (incident 18).
    `off` without audit mode. A configured repository with no clone is
    that FAILED line, never a skip.
 7. The E line (its `consults` field is the number of persona consults
-   this flow launched, at C.5 and D), in this same turn, then step 5
+   this flow launched, at C.5 and D; its `checks` field is the last
+   watch's state, and only `CI green <sha>` on the pushed head lets the
+   line say `clean`), in this same turn, then step 5
    below: report what happened
-   at each of the five steps, with the pull request and issue numbers, the
-   standing findings if any, and the open external comments if the cap was
-   hit; the slice has reached the terminal row.
+   at each of the five steps, the CI state first, with the pull request
+   and issue numbers, the standing findings if any, and the open external
+   comments if the cap was hit; with `CI green` the slice has reached the
+   terminal row, and without it the slice has not.
 
 **Pausing and resuming.** On a context clear, a rate limit, a session end
 or an owner's "hand off" mid-loop, before anything else write
@@ -1279,12 +1380,12 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`
+- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
 - **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
-- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
+- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; checks `<CI green <sha> | CI red r<i>: <jobs> | CI no result>`<; ci r<i> fix `<sha>`>; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
   - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```
 

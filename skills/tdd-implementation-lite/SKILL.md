@@ -315,7 +315,9 @@ the implementation level: does a comparable function, class or helper
 already exist. Invoke it with the `Skill` tool, under that name, before
 the first file of code is written, stubs included; reading the map file
 or grepping the code yourself is not the consult. It returns an answer, not
-the turn, so carry on with this skill in the same response. If it reports
+the turn: what it tells you is a note for your own use, never a reply to
+write out and stop on, so carry on with this skill in the same response
+(the same holds for any skill you invoke inside a build). If it reports
 that no map exists yet, say so once in your report and carry on. A candidate it returns is a fact, not a verdict:
 reuse it yourself if there's no real alternative to weigh; escalate to
 `architecture-design` if there's a genuine fork (reuse this vs. build new,
@@ -412,7 +414,12 @@ that built it, five to ten lines:
 ```
 
 Your hand-back to the orchestrator is one line: the commit, the test
-count, `deviations <n>`, `shell edits <n>`, and the report path. A fix
+count, `deviations <n>`, `shell edits <n>`, and the report path. It is
+the only message you end on: a turn that ends on anything else (a
+consult's answer, a progress note, a plan for the next step) is taken as
+your hand-back, and the chunk comes back unfinished (incident 32). The
+commit on it is the one `git rev-parse --short HEAD` printed after your
+commit, never one written from memory. A fix
 applied under the loop appends one line to that chunk's section,
 **directly after the `Commit` line** (or after the previous `Fix` line),
 never at the end of the file: `- **Fix r<i>**: <short sha>; <finding

@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""The validation gate's scope check and the flow's own records, without a
+model: the orchestrator's log and the rounds sidecar are appended to at
+every step and committed outside the chunk, so a gate that no `--allow`
+names them for must not fail scope on them, and a file that really is
+outside the slice must still fail.
+
+Usage: python3 -I evals/tools/validation_gate_test.py
+"""
+import importlib.util
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import unittest
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SCRIPT = os.path.join(ROOT, "skills", "orchestrator", "scripts", "validation_gate.py")
+
+spec = importlib.util.spec_from_file_location("validation_gate", SCRIPT)
+gate = importlib.util.module_from_spec(spec)
+sys.path.insert(0, os.path.dirname(SCRIPT))
+spec.loader.exec_module(gate)
+
+
+def git(cwd, *args):
+    subprocess.run([gate.find_git(), "-C", cwd, *args], check=True, capture_output=True)
+
+
+class ScopeAndTheFlowsRecords(unittest.TestCase):
+    def test_the_log_and_the_sidecar_are_in_scope_without_an_allow(self):
+        files = ["lending/cancel-hold.ts", "docs/cancel-hold/orchestrator-log.md",
+                 "docs/cancel-hold/implementation/rounds-slice-001.jsonl", "planning/implementation/rounds-issue14.jsonl"]
+        r = gate.check_scope(files, ["lending/cancel-hold.ts"])
+        self.assertTrue(r["passed"], r)
+        self.assertEqual(r["outside"], [])
+        self.assertEqual(len(r["records"]), 3)
+
+    def test_a_file_outside_the_slice_still_fails(self):
+        files = ["lending/cancel-hold.ts", "docs/cancel-hold/orchestrator-log.md", "utils/card-number.ts"]
+        r = gate.check_scope(files, ["lending/cancel-hold.ts"], module_dirs=["lending/"])
+        self.assertFalse(r["passed"])
+        self.assertEqual(r["outside"], ["utils/card-number.ts"])
+
+    def test_a_name_that_only_resembles_a_record_is_outside(self):
+        for name in ("docs/orchestrator-log.md.bak", "docs/my-orchestrator-log.md", "src/rounds.jsonl",
+                     "src/rounds-slice-001.json", "docs/orchestrator-log.md/notes.txt"):
+            r = gate.check_scope([name], ["lending/"])
+            self.assertEqual(r["outside"], [name], name)
+
+    def test_another_planning_document_is_not_a_record(self):
+        r = gate.check_scope(["docs/cancel-hold/design-001.md"], ["lending/"])
+        self.assertEqual(r["outside"], ["docs/cancel-hold/design-001.md"])
+
+    def test_the_whole_gate_passes_on_a_dirty_log_and_fails_on_a_stray_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            git(tmp, "init", "-q")
+            git(tmp, "config", "user.name", "t")
+            git(tmp, "config", "user.email", "t@example.test")
+            git(tmp, "config", "commit.gpgsign", "false")
+            os.makedirs(os.path.join(tmp, "lending"))
+            os.makedirs(os.path.join(tmp, "docs", "feature", "implementation"))
+            log = os.path.join(tmp, "docs", "feature", "orchestrator-log.md")
+            sidecar = os.path.join(tmp, "docs", "feature", "implementation", "rounds-slice-001.jsonl")
+            for path, text in ((os.path.join(tmp, "lending", "hold.py"), "A = 1\n"), (log, "# Log\n"), (sidecar, "")):
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(text)
+            git(tmp, "add", "-A")
+            git(tmp, "commit", "-qm", "base")
+            with open(os.path.join(tmp, "lending", "hold.py"), "a", encoding="utf-8") as f:
+                f.write("B = 2\n")
+            with open(log, "a", encoding="utf-8") as f:
+                f.write("- **C. Chunk 1/3:** a line the orchestrator appended\n")
+            with open(sidecar, "a", encoding="utf-8") as f:
+                f.write("{}\n")
+
+            def run(out):
+                r = subprocess.run([sys.executable, "-I", SCRIPT, "--project", tmp, "--base", "HEAD", "--test-cmd", "true",
+                                    "--allow", "lending/hold.py", "--json", out], capture_output=True, text=True)
+                with open(out, encoding="utf-8") as f:
+                    return r, json.load(f)["checks"]["scope"]
+
+            out = os.path.join(tempfile.gettempdir(), f"kad-gate-test-{os.getpid()}.json")
+            try:
+                r, scope = run(out)
+                self.assertTrue(scope["passed"], r.stdout)
+                self.assertIn("PASS  scope", r.stdout)
+                with open(os.path.join(tmp, "stray.py"), "w", encoding="utf-8") as f:
+                    f.write("C = 3\n")
+                r, scope = run(out)
+                self.assertFalse(scope["passed"], r.stdout)
+                self.assertEqual(scope["outside"], ["stray.py"])
+                self.assertEqual(r.returncode, 1)
+            finally:
+                if os.path.exists(out):
+                    os.remove(out)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=1)

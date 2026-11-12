@@ -1,0 +1,15 @@
+checks	Run npm test	2026-11-12T10:02:09.4410000Z > library-lending@1.0.0 test
+checks	Run npm test	2026-11-12T10:02:11.9020000Z ✔ cancels the member's hold and says cancelled (1.48ms)
+checks	Run npm test	2026-11-12T10:02:11.9030000Z ✖ removes only that member's hold on that title (2.07ms)
+checks	Run npm test	2026-11-12T10:02:11.9030000Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+checks	Run npm test	2026-11-12T10:02:11.9030000Z   [ '2002', '3003' ] !== [ '3003', '2002' ]
+checks	Run npm test	2026-11-12T10:02:11.9030000Z       at TestContext.<anonymous> (file:///home/runner/work/library-lending/library-lending/test/cancel-hold.test.ts:61:10)
+checks	Run npm test	2026-11-12T10:02:11.9040000Z ✖ in-memory queue removes one member's hold and says whether it was there (1.12ms)
+checks	Run npm test	2026-11-12T10:02:11.9040000Z   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+checks	Run npm test	2026-11-12T10:02:11.9040000Z   [ '2002', '3003' ] !== [ '3003', '2002' ]
+checks	Run npm test	2026-11-12T10:02:11.9040000Z       at TestContext.<anonymous> (file:///home/runner/work/library-lending/library-lending/test/in-memory-hold-queue.test.ts:38:10)
+checks	Run npm test	2026-11-12T10:02:12.0110000Z ℹ tests 14
+checks	Run npm test	2026-11-12T10:02:12.0110000Z ℹ pass 12
+checks	Run npm test	2026-11-12T10:02:12.0110000Z ℹ fail 2
+checks	Run npm test	2026-11-12T10:02:12.0320000Z ##[error]Process completed with exit code 1.
+checks	Set up job	2026-11-12T10:00:02.1000000Z Runner Image: ubuntu-24.04, Node 24.11.0, a fresh checkout and `npm ci`

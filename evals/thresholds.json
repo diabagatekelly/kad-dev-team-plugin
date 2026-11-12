@@ -404,6 +404,31 @@
       "test-quality-review"
     ]
   },
+  "chunk-runner-waits-for-handback": {
+    "score": 0.97,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.323",
+    "source": "results/gate-20261112T224223-chunk-runner-waits-for-handback.json",
+    "graders": {
+      "chunk-runner-invoked": 1.0,
+      "commit-confirmed-by-the-repository": 1.0,
+      "gate-on-the-builders-commit": 1.0,
+      "hand-back-is-the-one-line-for-what-ran": 0.667,
+      "log-not-written": 1.0,
+      "no-monitor": 1.0,
+      "no-poll-of-the-branch": 1.0,
+      "no-reviewer-launched": 1.0,
+      "no-stall-message": 1.0,
+      "nothing-started-in-the-background-to-wait": 1.0,
+      "one-builder-launched": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "map-query",
+      "tdd-implementation-lite"
+    ]
+  },
   "code-review-catalog": {
     "score": 0.889,
     "runs": 3,
@@ -606,6 +631,29 @@
     },
     "skills_invoked": [
       "reliability-requirements"
+    ]
+  },
+  "delivery-ci-red-not-done": {
+    "score": 0.967,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.323",
+    "source": "results/gate-20261112T224223-delivery-ci-red-not-done.json",
+    "graders": {
+      "checks-read": 1.0,
+      "delivery-skill-invoked": 1.0,
+      "failing-job-read": 1.0,
+      "failing-tests-written-to-the-records": 1.0,
+      "handoff-briefs-the-fixer": 1.0,
+      "no-e-line-that-says-clean-or-green": 1.0,
+      "nothing-in-the-background": 1.0,
+      "nothing-launched": 1.0,
+      "orchestrator-invoked": 1.0,
+      "report-leads-with-red-ci-and-not-ready": 0.667
+    },
+    "skills_invoked": [
+      "delivery",
+      "orchestrator"
     ]
   },
   "design-system-payfine-phase1": {
@@ -1223,6 +1271,29 @@
       "reliability-requirements"
     ]
   },
+  "orchestrator-issue-fix-records": {
+    "score": 0.97,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.323",
+    "source": "results/gate-20261112T224223-orchestrator-issue-fix-records.json",
+    "graders": {
+      "a-line-carries-the-fix-base-and-the-older-gaps": 1.0,
+      "branch-names-the-slice-and-the-issue": 0.667,
+      "handoff-carries-the-issue-prefix": 1.0,
+      "no-backward-route-for-an-older-gap": 1.0,
+      "nothing-launched": 1.0,
+      "older-gaps-filed-as-one-issue": 1.0,
+      "older-gaps-filed-once": 1.0,
+      "orchestrator-invoked": 1.0,
+      "planning-commit-names-the-issue": 1.0,
+      "readiness-gate-scoped-to-the-fix": 1.0,
+      "reports-the-fix-started-and-the-gaps-filed": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
   "orchestrator-plan-check-seam": {
     "score": 1.0,
     "runs": 3,
@@ -1645,6 +1716,25 @@
     "skills_invoked": [
       "orchestrator",
       "user-story-writeup"
+    ]
+  },
+  "orchestrator-runner-handback-unverified": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.323",
+    "source": "results/gate-20261112T224223-orchestrator-runner-handback-unverified.json",
+    "graders": {
+      "handoff-says-the-line-is-unverified-and-relaunches": 1.0,
+      "hashes-checked-against-the-repository": 1.0,
+      "no-c-line-written-from-the-line": 1.0,
+      "no-records-commit-from-the-line": 1.0,
+      "nothing-launched": 1.0,
+      "orchestrator-invoked": 1.0,
+      "owner-is-told-what-the-tree-holds": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
     ]
   },
   "orchestrator-security-stage": {
@@ -2683,14 +2773,15 @@
   },
   "tdd-implementation-lite-one-chunk": {
     "score": 1.0,
-    "runs": 1,
+    "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261107T112137-tdd-implementation-lite-one-chunk.json",
+    "claude_version": "2.1.323",
+    "source": "results/gate-20261112T223847-tdd-implementation-lite-one-chunk.json",
     "graders": {
       "builds-this-chunk-and-not-chunk-two": 1.0,
       "comments-earn-their-place": 1.0,
       "commits": 1.0,
+      "ends-on-the-hand-back-line": 1.0,
       "last-test-run-green": 1.0,
       "no-bash-writes": 1.0,
       "no-planning-reference-in-the-code": 1.0,

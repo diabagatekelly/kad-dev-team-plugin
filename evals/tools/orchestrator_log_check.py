@@ -594,6 +594,12 @@ def check_chunk_loop(e, findings):
                 findings.append(("WARN", tag, "E line has no `cost` field (`$<n>` or `not measured`)"))
             if not re.search(r"\bLows\s+`?\d+", text):
                 findings.append(("WARN", tag, "E line has no `Lows <n> in body` field"))
+        # 0.14.5: a delivery is done only on green checks.
+        checks = re.search(r"\bchecks\s+`?(CI green " + SHA + r"|CI red|CI no result|no checks)", text)
+        if not checks:
+            findings.append(("WARN", tag, "E line has no `checks` field (a 0.14.5 field: `CI green <sha>`, `CI red r<i>: <jobs>` or `CI no result`)"))
+        elif not checks.group(1).startswith(("CI green", "no checks")) and re.search(r"\bclean r\d+", text):
+            findings.append(("ERROR", tag, f"E line says `clean` while its checks say `{checks.group(1)}`: a pull request with a red or unsettled check is not done"))
         ext = [int(m.group(1)) for m in re.finditer(r"\bext r(\d+)\s+`?\d+`?c:", text)]
         if ext != list(range(1, len(ext) + 1)):
             findings.append(("ERROR", tag, f"E line: external rounds are not r1, r2, … in order: {', '.join('r%d' % n for n in ext)}"))

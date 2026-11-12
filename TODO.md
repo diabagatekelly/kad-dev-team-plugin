@@ -408,6 +408,31 @@ The light cadence arm, decided by the owner 2026-11-12: slice 3 runs on
 0.15.0 under the normal cadence, and the light arm is measured on the slice
 after, so the two changes are not measured at once.
 
+### The eval suite itself (the owner, 2026-11-12: both agreed)
+
+Asked while phase A's gate ran: how do we know the suite is not garbage,
+too little or overkill. The chunk runner had six cases at 1.00 when two
+real runners invented their agents' results, because a launch blocks under
+`claude plugin eval` and runs in the background in a real session.
+
+- [ ] E1 **Which cases have ever failed.** From the results history (the
+  flat `gate-*.json` files and the archive), per case: runs, failures since
+  its bar was recorded, and the graders that failed. A case that never
+  failed is a candidate to merge or drop; no model time. Done when: the
+  table is in `evals/README.md` and the candidates are listed for the
+  owner.
+- [ ] E2 **Mutation on the skills.** Delete one rule at a time from a
+  skill and run the cases the skill reaches: a rule no case notices is
+  unguarded, a case no deletion fails is dead weight. Start with
+  `chunk-runner` and `delivery` (short, recently changed). Costs gate
+  runs, so one skill per usage window. Done when: both skills have a
+  survivors list and each survivor is a new grader, a dropped rule, or an
+  accepted gap.
+- [ ] E3 **What others do.** Survey of how comparable orchestrators and
+  the wider field evaluate skills and agents:
+  `.synthesis/eval-methods-survey.md`; its recommendations are for the
+  owner to pick from before E2 is built.
+
 ### Open on the project
 
 Issues #49 to #56 from this review (filed 2026-11-12); #43 to #47 from the
