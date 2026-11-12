@@ -14,12 +14,13 @@ slice 2".
 | P2 Screen checks and P3 The loop | **Merged** as kad 0.14.1, PR #42 (2026-11-09, merge `4fc83e4`), one PR as decided |
 | P4 Planning data | **Merged** as kad 0.14.2, PR #44 (2026-11-09, merge `2ed1b36`), one PR as decided |
 | P5 Audit and measurement | **Merged** as kad 0.14.3, PR #47 (2026-11-10, merge `f748a85`), one PR as decided, with the three small items; Sourcery's three rounds (45 comments: 39 fixed with tests, 6 declined with the reason on the thread; the opengrep audit rule on the mutation runner's one command call accepted in code with its reason, as `eval_gate.py` and `rejudge.py` carry it); gate green on all 42 affected cases after each round |
-| Slice 2's fix round, then slice 3 | **Next**, on `personal-finance-tracker-3` (see "After this list") |
+| Slice 2's fix round | **Done** 2026-11-10 on `personal-finance-tracker-3` (PR #20 round 1, kad 0.14.3): reviewed the same day (audit repository, `2026-11-10-slice-2-round-1-review.md`); the review's fixes merged as kad 0.14.4, PRs #49 and #50 (2026-11-11/12): the mutation runner reads node's spec reporter, the source scan classifies a one-word cell by its column and reads the tab a row names, the Definition of Done reads the README's not-done list against the criteria, a structural size finding at the slice review is the architect's decision, and the anchoring pass (`INCIDENTS.md`, `skill_words_test.py`: no skill names a project) |
+| Slice 3 | **Next**, on `personal-finance-tracker-3` (see "After this list") |
 
-`main` is at 0.14.3; every section of this list is merged. Before the
+`main` is at 0.14.4; every section of this list and the fix round's review are merged. Before the
 next real run, update the installed plugin on the machine that runs it
 (`claude plugin update kad-dev-team@kad-dev-team-marketplace`, then
-restart; the Mac had 0.13.1 installed on 2026-11-10). What P5 built, for
+restart; the Mac has 0.14.4 since 2026-11-12). What P5 built, for
 the session that runs slice 2's fix round and slice 3:
 
 - **The audit sync's transcript rules (P5.1).** `audit_sync.py
@@ -320,11 +321,11 @@ Files: `skills/orchestrator/scripts/audit_sync.py`, `evals/tools/audit_report.py
 
 ## After this list
 
-Both runs start with `kad` from the project's root (0.14.3 installed:
+Both runs start with `kad` from the project's root (0.14.4 installed:
 `claude plugin update kad-dev-team@kad-dev-team-marketplace`, then a
 restart), never plain `claude`.
 
-1. Slice 2's fix round on `personal-finance-tracker-3` under the updated plugin: `/kad-dev-team:orchestrator` finds PR #20 open with the eleven slice 2 findings and the seven slice 1 issues as comments (P3.10) and routes to the triage and the fix round itself; #14 is the High it asks about; the "changing a merchant's general rule" question goes to `product-manager:requirements-refinement` before anything else in that unit.
+1. Slice 2's fix round: done 2026-11-10 (see the table). What its review measured against the 2026-11-08 run: orchestrator thread $49.74 to $20.03 (44% to 18% of the session), session $111.96 to $109.68, loop 3 h 54 m to 3 h 39 m, four Highs found in the browser inside the loop, regressions 25% to 19%, the owner's turns in the loop six questions to one, cold read 4/4/4/4/3/4 to 4/3/4/4/3/3, mutation pass 95% to 93%. The cold read's project findings are issues #33 to #41.
 2. Slice 3 of the unit (seed the starting rules from the owner's sheet; `planning/slice-002.md`'s slice set) under `kad` with Chrome, the `light` cadence arm and the chunk runner, audited the same way plus the new tools; the review decides P3.2's keep list and the default cadence.
 
 ## Dropped
