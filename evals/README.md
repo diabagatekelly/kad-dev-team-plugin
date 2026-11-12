@@ -273,6 +273,16 @@ create it and never writes into a system directory itself. Nothing
 documented for `claude plugin eval` widens its sandbox (2026-10-31). The
 plugin's own scripts fall back to a working git regardless. Windows
 itself cannot run the gate (below).
+
+`claude plugin eval` refuses an eval directory of more than 20,000
+entries ("move large fixtures out of it"), and every run leaves its
+output directory under `evals/results/` (about 100 entries each, ignored
+by git): after some 2,000 runs the gate stops starting. Move the run
+directories older than the current review out of the repository
+(`mv evals/results/2026-1*/ ~/kad-eval-results-archive/`, keeping the
+flat `gate-*.json` and `.log` files that `thresholds.json` and the
+evidence name); 2026-11-12 moved 1,935 of them there after the gate hit
+the limit mid-review.
 What the gate does:
 
 1. `tools/affected_cases.py` picks the cases the diff can reach: a changed
