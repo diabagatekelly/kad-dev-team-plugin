@@ -240,3 +240,13 @@ reviews. The list is done. Next: slice 2's fix round on
 `personal-finance-tracker-3`, then slice 3, both under `kad` with 0.14.3
 installed. The handoff's first section, "Where the list stands", is the
 current state.
+
+## After slice 2's fix round (2026-11-12)
+
+The fix round ran 2026-11-10 on 0.14.3 (PR #20 round 1) and was reviewed the
+same day; its review's fixes merged as 0.14.4 (PRs #49 and #50: the mutation
+runner's reporters, the source scan's one-word cells and tab column, the
+Definition of Done's README list, a structural size finding as the architect's
+decision, the anchoring pass with `INCIDENTS.md`). Next: slice 3 on 0.14.4
+under the light cadence, as `.synthesis/handoff-slice2.md` "After this list"
+says; nothing of the fix round is left to run.
