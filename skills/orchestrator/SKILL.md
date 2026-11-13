@@ -582,7 +582,12 @@ slice's documents for it, with four differences and no others:
   `Planning: issue <n> ready for implementation`, `Plan: issue <n> in <k>
   chunks`, `Records: slice <nnn> issue<n> chunk <k>`. Nothing of the
   slice's own records is renamed, appended to or overwritten, and every
-  launch is told the prefix with its report path. The entry's heading
+  launch is told the prefix with its report path, the chunk runner
+  first (its records are the prefixed ones), and every script that takes
+  a records file takes the fix's by path: `rounds_record.py --sidecar`,
+  the gate's `--expect-tests-from`, `cost_by_role.py --sidecar` at E.
+  The audit sync copies the records directory whole, so the fix's files
+  travel with the slice's. The entry's heading
   reads `issue <n> ready for implementation`.
 - **The fix base** is the commit the branch grows from, read at A.3
   before the planning commit (`git rev-parse --short HEAD`) and written
@@ -972,10 +977,12 @@ orchestrator's side.
      sighting, counted as the gate fixer).
    **Check the line before anything rests on it.** Every hash the
    hand-back names (`commits`, `PASS after`, `red commit`, `r1 fix`, `r2
-   fix`) goes through `git cat-file -e '<sha>^{commit}'`, inline, before
+   fix`) goes through `git cat-file -e '<sha>^{commit}'` and is looked
+   for in `git rev-list <base>..HEAD` (a commit that exists outside the
+   chunk's range is not the chunk's), inline, before
    the C line is written, the records are committed, or the owner is
    told or asked anything built on the line. All of them exist: go on.
-   One does not: the line is not a result. Nothing is written from it
+   One does not, or is not in the range: the line is not a result. Nothing is written from it
    and none of it is put to the owner as fact; relaunch a runner for the
    same chunk, once, with the line, the hash the repository does not
    hold, and what `git log --oneline <base>..HEAD` and `git status

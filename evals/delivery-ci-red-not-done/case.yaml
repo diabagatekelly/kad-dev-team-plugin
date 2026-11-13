@@ -39,6 +39,9 @@ graders:
     name: failing-tests-written-to-the-records
     target: trace
     pattern: '"name":"(?:Write|Bash)","input":\{[\s\S]{0,400}?pr-ci-r1\.md[\s\S]{0,6000}?removes only that member'
+  - type: file_exists
+    name: ci-report-exists
+    path: docs/cancel-hold/implementation/pr-ci-r1.md
   - type: tool_used
     name: nothing-launched
     tool: Agent

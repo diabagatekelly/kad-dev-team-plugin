@@ -634,13 +634,14 @@
     ]
   },
   "delivery-ci-red-not-done": {
-    "score": 0.967,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.323",
-    "source": "results/gate-20261112T224223-delivery-ci-red-not-done.json",
+    "source": "results/gate-20261113T012105-rerun-delivery-ci-red-not-done.json",
     "graders": {
       "checks-read": 1.0,
+      "ci-report-exists": 1.0,
       "delivery-skill-invoked": 1.0,
       "failing-job-read": 1.0,
       "failing-tests-written-to-the-records": 1.0,
@@ -649,7 +650,7 @@
       "nothing-in-the-background": 1.0,
       "nothing-launched": 1.0,
       "orchestrator-invoked": 1.0,
-      "report-leads-with-red-ci-and-not-ready": 0.667
+      "report-leads-with-red-ci-and-not-ready": 1.0
     },
     "skills_invoked": [
       "delivery",
@@ -1720,10 +1721,10 @@
   },
   "orchestrator-runner-handback-unverified": {
     "score": 1.0,
-    "runs": 3,
+    "runs": 1,
     "mode": "gate",
     "claude_version": "2.1.323",
-    "source": "results/gate-20261112T224223-orchestrator-runner-handback-unverified.json",
+    "source": "results/gate-20261113T012105-orchestrator-runner-handback-unverified.json",
     "graders": {
       "handoff-says-the-line-is-unverified-and-relaunches": 1.0,
       "hashes-checked-against-the-repository": 1.0,
@@ -2776,7 +2777,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.323",
-    "source": "results/gate-20261112T223847-tdd-implementation-lite-one-chunk.json",
+    "source": "results/gate-20261113T013422-tdd-implementation-lite-one-chunk.json",
     "graders": {
       "builds-this-chunk-and-not-chunk-two": 1.0,
       "comments-earn-their-place": 1.0,

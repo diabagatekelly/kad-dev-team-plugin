@@ -156,6 +156,43 @@ class ReadinessForAnIssueFix(unittest.TestCase):
         self.assertIn("FAIL  fix-base: no-such-ref is not a commit", out)
         self.assertTrue(out.rstrip().endswith("readiness: FAIL"))
 
+    def test_a_base_the_branch_did_not_grow_from_is_refused(self):
+        tree = subprocess.run([source_scan.find_git(), "-C", self.project.root, "rev-parse", "HEAD^{tree}"],
+                              check=True, capture_output=True, text=True).stdout.strip()
+        other = subprocess.run([source_scan.find_git(), "-C", self.project.root, "commit-tree", tree, "-m", "an unrelated history"],
+                               check=True, capture_output=True, text=True).stdout.strip()
+        git(self.project.root, "branch", "elsewhere", other)
+        code, out = self.project.gate("--fix-base", "elsewhere")
+        self.assertEqual(code, 2, out)
+        self.assertIn("is not an ancestor of HEAD", out)
+
+    def test_a_document_named_outside_the_planning_directory_is_refused(self):
+        outside = os.path.join(self.project.root, "design-elsewhere.md")
+        shutil.copy(os.path.join(self.project.planning, "design-001.md"), outside)
+        code, out = self.project.gate("--fix-base", "HEAD", "--design", outside)
+        self.assertEqual(code, 2, out)
+        self.assertIn("outside the planning directory", out)
+
+    def test_a_routed_question_the_fix_rewords_past_sixty_characters_is_the_fixes(self):
+        long = "- Whether the desk sees the member's other holds on the same title when one is cancelled: "
+        self.project.edit("design-001.md", "None recorded.", long + "left to the implementer.")
+        git(self.project.root, "add", "-A")
+        git(self.project.root, "commit", "-qm", "an old routed question")
+        self.project.edit("design-001.md", "left to the implementer.", "left to the builder, during implementation.")
+        code, out = self.project.gate("--fix-base", "HEAD")
+        self.assertEqual(code, 1, out)
+        self.assertIn("route: no-question-to-implementer", out)
+
+    def test_a_planning_directory_with_pathspec_characters_reads_only_itself(self):
+        odd = os.path.join(self.project.root, "docs", "plan[s]*")
+        os.rename(self.project.planning, odd)
+        self.project.planning = odd
+        git(self.project.root, "add", "-A")
+        git(self.project.root, "commit", "-qm", "moved")
+        code, out = self.project.gate("--fix-base", "HEAD")
+        self.assertEqual(code, 0, out)
+        self.assertIn("older gaps: 3", out)
+
     def test_a_slice_with_no_documents_at_the_base_has_no_older_gap(self):
         git(self.project.root, "rm", "-rq", "--cached", "docs")
         git(self.project.root, "commit", "-qm", "before the slice was planned")
@@ -186,6 +223,15 @@ class ALabelIsNotAWait(unittest.TestCase):
                                     "then the route retries a few times and the hold is as it was.")
         self.assertFalse(ok)
         self.assertEqual(len(items), 1)
+
+    def test_a_quoted_wait_that_is_no_label_is_still_read(self):
+        ok, _, _ = self.numbers('- R5: Given the queue cannot be reached, then the route will "retry a few times" and the hold is as it was.')
+        self.assertFalse(ok)
+
+    def test_a_number_inside_a_label_excuses_no_wait(self):
+        ok, _, _ = self.numbers('- R5: Given the queue cannot be reached, when staff press the "Try again 2" button, '
+                                "then the route retries a few times and the hold is as it was.")
+        self.assertFalse(ok)
 
     def test_a_wait_with_its_number_passes_as_before(self):
         ok, _, _ = self.numbers('- R5: Given the queue cannot be reached, when staff press the "Try again" button, '

@@ -55,11 +55,14 @@ module directories as the orchestrator's B step lists them):
    a test it needs is doing its job; and a file under a `--deviation-zone` entry (repeatable;
    the design's composition root and entry points, `src/compose.ts`,
    `src/main.ts`, `src/start.ts` or their equivalents, which almost every
-   chunk wires into). The flow's own records are never in question: a
-   changed file named `orchestrator-log.md`, or a rounds sidecar
-   (`rounds-<anything>.jsonl`), is the orchestrator's, appended to at
-   every step and committed outside the chunk, so it is in scope whether
-   or not an `--allow` names it (listed in the JSON as `scope.records`).
+   chunk wires into). The flow's own records are never in question:
+   `orchestrator-log.md` directly in the target directory (`--planning`,
+   or `planning/` under the project), and a rounds sidecar
+   (`rounds-<anything>.jsonl`) anywhere under it, are the orchestrator's,
+   appended to at every step and committed outside the chunk, so they are
+   in scope whether or not an `--allow` names them (listed in the JSON as
+   `scope.records`). A file of either name anywhere else is judged like
+   any other file.
    A changed file under none of these is `outside` and
    fails the check: that is the one the fixer moves. Untracked files
    count as changed; so do both sides of a rename. Claude Code's own
@@ -342,18 +345,29 @@ def under(path, directory):
     return path.startswith(directory.rstrip("/") + "/")
 
 
-# The flow's own records: the orchestrator's log and the rounds sidecar,
-# by name, wherever the target directory is.
-FLOW_RECORDS = re.compile(r"(?:^|/)(?:orchestrator-log\.md|rounds-[\w.-]+\.jsonl)$")
+SIDECAR = re.compile(r"rounds-[\w.-]+\.jsonl$")
 
 
-def check_scope(files, allow, module_dirs=(), zones=()):
+def flow_record(path, planning):
+    """Is this the flow's own log (directly in the target directory) or a
+    rounds sidecar (anywhere under it)? `planning` is the target directory
+    relative to the project, `/`-separated."""
+    if not planning or planning.startswith(".."):
+        return False
+    root = "" if planning in (".", "") else planning.rstrip("/") + "/"
+    if not path.startswith(root):
+        return False
+    inside = path[len(root):]
+    return inside == "orchestrator-log.md" or bool(SIDECAR.fullmatch(inside.rsplit("/", 1)[-1]))
+
+
+def check_scope(files, allow, module_dirs=(), zones=(), planning=None):
     """Three-way: on an `--allow` entry, fine; off the list but inside a
     `--module-dir`, a test file, or under a `--deviation-zone` entry, a
     deviation the chunk plan did not foresee (reported, not failed); under
     none of these, outside the slice, which fails. The flow's own log and
-    sidecar are in scope without an `--allow`."""
-    records = [f for f in files if FLOW_RECORDS.search(f) and not any(allowed(f, e) for e in allow)]
+    sidecar, inside the target directory, are in scope without an `--allow`."""
+    records = [f for f in files if flow_record(f, planning) and not any(allowed(f, e) for e in allow)]
     unlisted = [f for f in files if f not in records and not any(allowed(f, e) for e in allow)]
     deviations = [f for f in unlisted
                   if any(under(f, d) for d in module_dirs)
@@ -1295,7 +1309,9 @@ def main():
                                    "files": sorted(files)}
     module_dirs = [d.replace("\\", "/") for d in a.module_dir]
     if a.allow:
-        report["checks"]["scope"] = check_scope(files, a.allow, module_dirs, [z.replace("\\", "/") for z in a.deviation_zone])
+        target = os.path.abspath(a.planning) if a.planning else os.path.join(project, "planning")
+        report["checks"]["scope"] = check_scope(files, a.allow, module_dirs, [z.replace("\\", "/") for z in a.deviation_zone],
+                                                os.path.relpath(os.path.realpath(target), os.path.realpath(project)).replace(os.sep, "/"))
     if a.protect:
         report["checks"]["protected"] = check_protected(project, a.protect, files)
     expected = list(a.expect_test)

@@ -601,6 +601,23 @@ real cases and deleted (the table is in git history).
   four new cases at three runs): 0.88, 0.86, 0.77 and 0.30, all below
   their bars; the runner case and the unverified-line case lose only
   their `git cat-file -e` grader there.
+  Sourcery's round on PR #52 (16 comments, 14 fixed, 2 declined with the
+  reason on the thread; tests now 6 and 20): the gate's exemption holds
+  only inside the target directory (a file named like the log anywhere
+  else is outside); the readiness base must be an ancestor of `HEAD`, is
+  read through a literal pathspec and written only under its temp
+  directory, a document named outside the planning directory is refused,
+  a routed question is compared by its whole line; a quoted span is a
+  label only beside a word that says so, and a number inside a label
+  excuses no wait; the log checker reads an issue fix's own sidecar and
+  fails checks that are green on a commit the E line did not push; the
+  skills say a chunk's commit is in `<base>..HEAD`, the runner carries
+  the records prefix, each watch call has a timeout and the head is read
+  again before the report. Declined: failing a builder's hand-back for
+  notes beside it (three correct runs failed that grader; the rule is
+  about ending on something else), and counting an older item as the
+  fix's because the fix edited the same document (that is the four
+  routes of incident 35 again).
   `orchestrator_log_check.py` warns on an E line with no `checks` field
   and fails one that says `clean` over red checks.
 - **The skills name no project (0.14.4, 2026-11-10).** `tools/skill_words_test.py`

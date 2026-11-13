@@ -67,10 +67,14 @@ where a failure routes:
    retry`, `retry
    with its attempt number` (the log's content, not a wait). So is a
    control's label or a text the screen shows: a span in double quotes or
-   backticks of at most six words, and a capitalised label directly
-   before `button`, `link` or `control` (a button labelled Try again is
-   not a wait with no number; the wait the criterion itself states, in
-   its own words, still is).
+   backticks of at most six words that stands within three words of a
+   word saying so (`button`, `link`, `control`, `label`, `labelled`,
+   `heading`, `message`, `notice`, `text`, `says`, `shows`, `reads`,
+   `offers`, `titled`), and a capitalised label directly before `button`,
+   `link` or `control` (a button labelled Try again is not a wait with no
+   number). Any other quoted span is the criterion's own words. Both the
+   vague word and the number are looked for in what is left, so a number
+   inside a label excuses nothing.
 4. security-reliability-agree -> devsecops-engineer:reliability-requirements.
    For each failure term both the security and the reliability document
    use (`cancel`, `decline`, `exchange fail`, `token`, `unreachable`,
@@ -152,11 +156,16 @@ on the planning directory as that commit holds it, and a failing item
 (a criterion, a failure path, a state, an open item, a routed question,
 compared by its whole text) that fails there too is an **older gap**:
 printed as `INFO  older-gap: <check>: <item> -> <persona:skill>`, never
-routed, and counted on one `older gaps: <n>` line before the last, for
+routed (an item is the fix's only when the fix added or reworded it: a
+fix that edits a document and leaves an older item failing has not made
+that item its own), and counted on one `older gaps: <n>` line before the last, for
 the orchestrator to file once as one issue. An item the fix added or
 reworded is not in the base's failures, so it fails as usual; a check
 whose only failures are older gaps passes. The tenth check is never
-scoped: a value of the owner's is a failure whatever its age.
+scoped: a value of the owner's is a failure whatever its age. The base
+must be an ancestor of `HEAD`, and every document named by flag must be
+inside the planning directory, or the gate refuses (exit 2): a baseline
+from somewhere else would excuse gaps it has no claim on.
 
 Output: one `PASS`/`FAIL` line per check (a FAIL line ends with
 `-> <persona:skill>`; the tenth is followed by `INFO  no-source-values:`
@@ -194,6 +203,9 @@ NOT_A_WAIT = re.compile(r"try again later|again later|no (immediate )?retry|not 
                         r"retry with its attempt|attempt number", re.I)
 # A control's label or on-screen text, which names no wait of the criterion's own.
 LABEL = re.compile(r"[\"“][^\"“”\n]*[\"”]|`[^`\n]*`")
+SHOWN = r"(?:buttons?|links?|controls?|labels?|labell?ed|headings?|messages?|notices?|text|says?|shows?|reads?|offers?|titled)"
+SHOWN_BEFORE = re.compile(r"\b" + SHOWN + r"\W+(?:\w+\W+){0,3}$", re.I)
+SHOWN_AFTER = re.compile(r"^\W*(?:\w+\W+){0,3}" + SHOWN + r"\b", re.I)
 LABELLED_CONTROL = re.compile(r"\b[A-Z][a-z]+(?: [a-z]+){0,3}(?= (?:button|link|control)s?\b)")
 IDENT = re.compile(r"\b(AC|S|SEC|R|REL|A11Y|ACC)-?\d+[a-z]?\b")
 SHARED_TERMS = ["cancel", "decline", "exchange fail", "token", "unreachable", "timeout", "times out",
@@ -221,7 +233,7 @@ def find(planning, patterns, exact=None):
     if exact and os.path.isfile(os.path.join(planning, exact)):
         return os.path.join(planning, exact)
     for pat in patterns:
-        hits = sorted(glob.glob(os.path.join(planning, pat))) + sorted(glob.glob(os.path.join(planning, "visual-ux", pat)))
+        hits = sorted(glob.glob(os.path.join(glob.escape(planning), pat))) + sorted(glob.glob(os.path.join(glob.escape(planning), "visual-ux", pat)))
         hits = [h for h in hits if not re.search(r"-v\d+\.md$", h)]
         if hits:
             return hits[0]
@@ -361,8 +373,13 @@ def wait_words(criterion):
     phrases that deny one, a quoted or code-formatted label or on-screen
     text of at most six words, and a capitalised label before its control."""
     text = NOT_A_WAIT.sub(" ", criterion)
-    text = LABEL.sub(lambda m: " " if len(m.group(0).split()) <= 6 else m.group(0), text)
-    return LABELLED_CONTROL.sub(" ", text)
+
+    def shown(m):
+        if len(m.group(0).split()) > 6:
+            return m.group(0)
+        near = SHOWN_BEFORE.search(text[:m.start()]) or SHOWN_AFTER.search(text[m.end():])
+        return " " if near else m.group(0)
+    return LABELLED_CONTROL.sub(" ", LABEL.sub(shown, text))
 
 
 def check_numbers(docs):
@@ -371,11 +388,13 @@ def check_numbers(docs):
         if "criteria" not in heading.lower() and "acceptance" not in heading.lower():
             continue
         for c in criteria(body):
-            if not VAGUE.search(wait_words(c)):
+            own = wait_words(c)
+            if not VAGUE.search(own):
                 continue
             # The criterion's own identifier (`R1`, `REL-4`) is not a number
             # on the wait; without this every identified criterion passed.
-            unlabelled = IDENT.sub(" ", c)
+            # Nor is a number inside a label, which `own` no longer holds.
+            unlabelled = IDENT.sub(" ", own)
             if re.search(r"\d", unlabelled) or re.search(NUMBER_WORDS, unlabelled, re.I) or "unbounded, owner approved" in c.lower():
                 continue
             vague.append((c, c[:60]))
@@ -498,12 +517,12 @@ def owner_of(filename):
 
 def check_questions(planning):
     fails = []
-    files = sorted(glob.glob(os.path.join(planning, "*.md")) + glob.glob(os.path.join(planning, "visual-ux", "*.md")))
+    files = sorted(glob.glob(os.path.join(glob.escape(planning), "*.md")) + glob.glob(os.path.join(glob.escape(planning), "visual-ux", "*.md")))
     for f in files:
         hits = []
         for heading, body in sections(read(f)):
             if re.search(r"open question|still open|unresolved|questions", heading, re.I):
-                hits += [l.strip()[:60] for l in body.splitlines() if IMPLEMENTER.search(l)]
+                hits += [l.strip() for l in body.splitlines() if IMPLEMENTER.search(l)]
         if hits:
             fails.append((os.path.relpath(f, planning).replace(os.sep, "/"), hits))
     return fails
@@ -573,7 +592,7 @@ def evaluate(planning, names):
         if not names[kind] or not os.path.isfile(names[kind]):
             return None
     docs = {k: read(v) for k, v in names.items() if v and os.path.isfile(v)}
-    mockups = [os.path.basename(f) for f in glob.glob(os.path.join(planning, "visual-ux", "*.html"))]
+    mockups = [os.path.basename(f) for f in glob.glob(os.path.join(glob.escape(planning), "visual-ux", "*.html"))]
     arch, rel, ux = "software-architect:architecture-design", "devsecops-engineer:reliability-requirements", "ux-designer:screen-design"
     results = []
     results.append(("criteria-homed", *check_criteria_homed(docs, docs["design"]), arch))
@@ -587,7 +606,7 @@ def evaluate(planning, names):
     for doc, hits in check_questions(planning):
         asked = True
         results.append(("no-question-to-implementer", False, f"{doc} routes an open question to the implementer",
-                        [(f"{doc}: {h}", h) for h in hits], owner_of(doc)))
+                        [(f"{doc}: {h}", h[:60]) for h in hits], owner_of(doc)))
     if not asked:
         results.append(("no-question-to-implementer", True, "no open question is routed to the implementer", [], "the document's owner"))
     results.append(("kept-for-later-slices", *check_kept(docs["design"]), arch))
@@ -608,13 +627,20 @@ def planning_at(planning, commit, into):
         return f"{planning} is not inside a git repository"
     if source_scan.git(project, "rev-parse", "--verify", "--quiet", commit + "^{commit}") is None:
         return f"{commit} is not a commit of this repository"
+    if source_scan.git(project, "merge-base", "--is-ancestor", commit, "HEAD") is None:
+        return f"{commit} is not an ancestor of HEAD: the fix's branch did not grow from it"
     rel = os.path.relpath(os.path.realpath(planning), os.path.realpath(project)).replace(os.sep, "/")
-    listing = source_scan.git(project, "ls-tree", "-r", "--name-only", "-z", commit, "--", rel + "/") or ""
+    # A literal pathspec: a directory name with `*` or `[` in it must not
+    # match files elsewhere in the tree.
+    listing = source_scan.git(project, "ls-tree", "-r", "--name-only", "-z", commit, "--", ":(literal)" + rel + "/") or ""
+    root = os.path.realpath(into)
     for path in [p for p in listing.split("\0") if p]:
-        inside = os.path.relpath(path, rel)
-        if not path.endswith((".md", ".html")):
+        if not path.startswith(rel + "/") or not path.endswith((".md", ".html")):
             continue
-        out = os.path.join(into, inside)
+        inside = path[len(rel) + 1:]
+        out = os.path.realpath(os.path.join(root, inside))
+        if os.path.commonpath([root, out]) != root:
+            continue
         os.makedirs(os.path.dirname(out), exist_ok=True)
         body = source_scan.git(project, "show", f"{commit}:{path}", binary=True) if path.endswith(".md") else b""
         with open(out, "wb") as f:
@@ -625,6 +651,11 @@ def planning_at(planning, commit, into):
 def base_failures(planning, nnn, given, commit):
     """{check: {keys of the items failing at the fix's base}}, an INFO line,
     and an error line (or None)."""
+    outside = [f"--{kind.replace('slice', 'slice-file')} {path}" for kind, path in given.items()
+               if path and os.path.relpath(os.path.realpath(path), os.path.realpath(planning)).startswith("..")]
+    if outside:
+        return {}, None, ("a document named outside the planning directory has no version at the base to compare with: "
+                          + ", ".join(outside))
     with tempfile.TemporaryDirectory(prefix="kad-readiness-") as tmp:
         error = planning_at(planning, commit, tmp)
         if error:

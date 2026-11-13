@@ -154,7 +154,10 @@ of this skill goes on, and nothing is reported as built, clean or ready
 to merge.
 
 1. **Wait, bounded.** `gh pr checks <number> --watch --interval 60`, in
-   the foreground, called again while anything is still pending, for at
+   the foreground, each call under a command timeout of ten minutes at
+   most (a watch has no limit of its own), called again while anything is
+   still pending and never once the bound has passed (note the time
+   before the first call), for at
    most the workflow's own limit plus five minutes: the largest
    `timeout-minutes` among the jobs of the workflows that run on pull
    requests, or 30 minutes when no job states one. A check that has not
@@ -168,7 +171,11 @@ to merge.
 2. **Green.** Every check passed or was skipped, on the commit that was
    pushed (`gh pr view <number> --json headRefOid` against `git
    rev-parse HEAD`; a result on an older head is not this push's). The
-   state is `CI green <sha>`; go on to the comments.
+   state is `CI green <sha>`; go on to the comments. The head is read
+   once more just before the report: a pull request whose head has moved
+   since the watch (a push from elsewhere) is watched again on the new
+   head, and green is never reported for a commit the pull request no
+   longer points at.
 3. **Red.** Read the failing job before anything else, by the first of
    these that gives the failing tests: `gh run view <run id>
    --log-failed` (the run id is in the failing check's link); the job's

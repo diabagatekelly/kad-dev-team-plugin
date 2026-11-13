@@ -425,6 +425,15 @@ too little or overkill. The chunk runner had six cases at 1.00 when two
 real runners invented their agents' results, because a launch blocks under
 `claude plugin eval` and runs in the background in a real session.
 
+Decided by the owner 2026-11-12: no overhaul before the work list goes on
+and no second eval folder; the suite is changed in place. The order:
+phase A merged and tested on issue #49; E1; E2 on `chunk-runner` and
+`delivery` with the replay case; phase B, its new cases written with a
+known-bad reference and a regression-or-capability tag; suite tiers and
+judge calibration after 0.15.0. Not taken from the survey: whole-loop
+fixture runs per release (the audited real runs are that) and trajectory
+matching against a reference path.
+
 - [ ] E1 **Which cases have ever failed.** From the results history (the
   flat `gate-*.json` files and the archive), per case: runs, failures since
   its bar was recorded, and the graders that failed. A case that never

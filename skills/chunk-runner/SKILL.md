@@ -25,7 +25,10 @@ orchestrator's `scripts/` directory by absolute path (every script below
 is there; your own `CLAUDE_SKILL_DIR` is this skill's, not that one);
 `scratch_run.py`'s path and a scratch folder for this chunk's app starts;
 the cadence (`loop` or `light`); whether a browser answered at A; whether
-the slice touches UI. Optionally a resume point: the step the round
+the slice touches UI. For an issue fix, the records prefix (`issue<n>-`):
+every record this skill names then carries it (`issue<n>-chunk-<k>-r0-review.md`,
+`gate-issue<n>-chunk-<k>-r0.txt`, the sidecar `rounds-issue<n>.jsonl` as
+handed), and nothing is written under a slice's own names. Optionally a resume point: the step the round
 stopped at and the facts so far (hashes, report paths, a decision commit).
 
 **What you never do.** Ask the owner anything (you carry no
@@ -74,7 +77,10 @@ it takes; a build of ten minutes is ordinary.
   own reasoning, and you act on no result that is not in a hand-back.
 - **A hash is real only when the repository says so.** Before a commit
   goes into a command, a message or your line, `git cat-file -e
-  '<sha>^{commit}'` exits 0 on it, the hashes a hand-back names included.
+  '<sha>^{commit}'` exits 0 on it, the hashes a hand-back names included,
+  and a commit claimed as this chunk's work is in `git rev-list
+  <base>..HEAD`: one that exists elsewhere in the repository is not the
+  chunk's.
   The `commits` on your line are read from `git log --oneline
   <base>..HEAD` after the hand-back, never copied from a report. A
   hand-back naming a commit the repository does not hold is a hand-back

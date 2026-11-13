@@ -32,25 +32,33 @@ class ScopeAndTheFlowsRecords(unittest.TestCase):
     def test_the_log_and_the_sidecar_are_in_scope_without_an_allow(self):
         files = ["lending/cancel-hold.ts", "docs/cancel-hold/orchestrator-log.md",
                  "docs/cancel-hold/implementation/rounds-slice-001.jsonl", "planning/implementation/rounds-issue14.jsonl"]
-        r = gate.check_scope(files, ["lending/cancel-hold.ts"])
+        r = gate.check_scope(files[:3], ["lending/cancel-hold.ts"], planning="docs/cancel-hold")
         self.assertTrue(r["passed"], r)
-        self.assertEqual(r["outside"], [])
-        self.assertEqual(len(r["records"]), 3)
+        self.assertEqual(len(r["records"]), 2)
+        r = gate.check_scope(files[3:], ["lending/"], planning="planning")
+        self.assertTrue(r["passed"], r)
+
+    def test_a_record_name_outside_the_target_directory_is_outside(self):
+        for name in ("src/orchestrator-log.md", "orchestrator-log.md", "lib/rounds-slice-001.jsonl",
+                     "docs/cancel-hold/implementation/orchestrator-log.md", "docs/other/orchestrator-log.md"):
+            r = gate.check_scope([name], ["lending/"], planning="docs/cancel-hold")
+            self.assertEqual(r["outside"], [name], name)
+        self.assertEqual(gate.check_scope(["docs/orchestrator-log.md"], ["lending/"])["outside"], ["docs/orchestrator-log.md"])
 
     def test_a_file_outside_the_slice_still_fails(self):
         files = ["lending/cancel-hold.ts", "docs/cancel-hold/orchestrator-log.md", "utils/card-number.ts"]
-        r = gate.check_scope(files, ["lending/cancel-hold.ts"], module_dirs=["lending/"])
+        r = gate.check_scope(files, ["lending/cancel-hold.ts"], module_dirs=["lending/"], planning="docs/cancel-hold")
         self.assertFalse(r["passed"])
         self.assertEqual(r["outside"], ["utils/card-number.ts"])
 
     def test_a_name_that_only_resembles_a_record_is_outside(self):
         for name in ("docs/orchestrator-log.md.bak", "docs/my-orchestrator-log.md", "src/rounds.jsonl",
                      "src/rounds-slice-001.json", "docs/orchestrator-log.md/notes.txt"):
-            r = gate.check_scope([name], ["lending/"])
+            r = gate.check_scope([name], ["lending/"], planning="docs")
             self.assertEqual(r["outside"], [name], name)
 
     def test_another_planning_document_is_not_a_record(self):
-        r = gate.check_scope(["docs/cancel-hold/design-001.md"], ["lending/"])
+        r = gate.check_scope(["docs/cancel-hold/design-001.md"], ["lending/"], planning="docs/cancel-hold")
         self.assertEqual(r["outside"], ["docs/cancel-hold/design-001.md"])
 
     def test_the_whole_gate_passes_on_a_dirty_log_and_fails_on_a_stray_file(self):
@@ -77,7 +85,7 @@ class ScopeAndTheFlowsRecords(unittest.TestCase):
 
             def run(out):
                 r = subprocess.run([sys.executable, "-I", SCRIPT, "--project", tmp, "--base", "HEAD", "--test-cmd", "true",
-                                    "--allow", "lending/hold.py", "--json", out], capture_output=True, text=True)
+                                    "--allow", "lending/hold.py", "--planning", os.path.join(tmp, "docs", "feature"), "--json", out], capture_output=True, text=True)
                 with open(out, encoding="utf-8") as f:
                     return r, json.load(f)["checks"]["scope"]
 
