@@ -1,0 +1,24 @@
+{
+ "skill": "chunk-runner",
+ "rule": "the smoke agent's kind (tdd-coach when not UI)",
+ "edits": [
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "`kad-dev-team:accessibility-engineer:AGENT` when\n     Touches includes UI, else `kad-dev-team:tdd-coach:AGENT`. ",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "one-smoke-agent",
+  "smoke-agent-handed-the-launcher"
+ ],
+ "observed": {
+  "date": "2026-11-13",
+  "runs": 3,
+  "claude_version": "2.1.323",
+  "rates": {
+   "one-smoke-agent": 0.0,
+   "smoke-agent-handed-the-launcher": 0.0
+  }
+ }
+}

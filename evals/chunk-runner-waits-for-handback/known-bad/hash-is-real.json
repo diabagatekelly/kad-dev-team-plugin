@@ -1,0 +1,27 @@
+{
+ "skill": "chunk-runner",
+ "rule": "a hash is real only when the repository says so",
+ "edits": [
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "- **A hash is real only when the repository says so.** Before a commit\n  goes into a command, a message or your line, `git cat-file -e\n  '<sha>^{commit}'` exits 0 on it, the hashes a hand-back names included,\n  and a commit claimed as this chunk's work is in `git rev-list\n  <base>..HEAD`: one that exists elsewhere in the repository is not the\n  chunk's.\n  The `commits` on your line are read from `git log --oneline\n  <base>..HEAD` after the hand-back, never copied from a report. A\n  hand-back naming a commit the repository does not hold is a hand-back\n  with no commit.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "Every hash on it is one `git cat-file -e` confirmed in this run,\nand no agent",
+   "new": "No agent"
+  }
+ ],
+ "fails": [
+  "commit-confirmed-by-the-repository"
+ ],
+ "observed": {
+  "date": "2026-11-13",
+  "runs": 3,
+  "claude_version": "2.1.323",
+  "rates": {
+   "commit-confirmed-by-the-repository": 0.0
+  }
+ }
+}

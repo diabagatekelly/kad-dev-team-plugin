@@ -8,3 +8,6 @@ __pycache__/
 
 # Nested clone of the audit-docs repo (its own git history, not tracked here)
 audit-docs/
+# The same for a replay case (history captured from a real session)
+evals/*-replay-*/*-*-*-*-*.jsonl
+evals/*-replay-*/*-*-*-*-*/

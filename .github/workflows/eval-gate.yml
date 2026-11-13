@@ -35,6 +35,12 @@ jobs:
         env:
           BASE: ${{ github.base_ref || 'main' }}
         run: python3 -I evals/tools/eval_evidence.py --base "origin/$BASE"
+      # The known-bad references (evals/<case>/known-bad/): the rule each one
+      # removes is still in its skill, word for word, and the graders it
+      # names are still the case's. No model; a skill edit that touches a
+      # guarded rule fails here until the reference is re-written and re-run.
+      - name: Check the known-bad references
+        run: python3 -I evals/tools/skill_mutation.py check
 
   run:
     if: github.event_name == 'workflow_dispatch'
