@@ -328,6 +328,67 @@ message to a working agent, no readiness route about an untouched
 document, the pull request never reported as built while a check is red,
 and the owner's questions in the loop (7 last time). About $30 to $60.
 
+**Run and reviewed 2026-11-13** (`~/.claude/kad-audit/reviews/2026-11-13.md`;
+$33.17, 1 h 28 m to green CI, 34 launches). Held: no runner named a result
+before its hand-back or started anything to wait (12 launches, five
+wake-ups that were not the hand-back, one of them a 12-minute platform
+stall); no stall message; no readiness route about an untouched document;
+the pull request reported only after `CI green`; no owner question in the
+loop; every record prefixed. **Not exercised, so not shown:** the stall
+rule (no agent stalled), a false hash refused (none appeared), the CI
+watch's red path (CI was green), older gaps filed as one issue (there
+were none). The cold read's reliability score went from 3 to 4.
+
+### After the issue #49 fix (2026-11-13), from its review
+
+Small and mechanical, for the next plugin change that reaches each file:
+
+- [ ] F1 **The gate reads an absolute `--allow` inside the project as the
+  path relative to it** (finding 1): two of three runners passed the
+  records directory as handed, absolute, and the gate failed scope on the
+  run's own records; `--module-dir` and `--deviation-zone` the same way.
+  Done when: a tool test in `validation_gate_test.py` shows it.
+- [ ] F2 **The fixer cap says whether a gate fixer counts** (finding 4): a
+  gate that fails after the r1 fix has no rule, and a runner that sent a
+  gate fixer then left a regression unfixed under "no third fixer".
+  Proposed: the cap counts review fixers; each gate gets its one fixer.
+  Done when: a `chunk-runner` case with a gate failure after r1 passes.
+- [ ] F3 **The log checker reads an r2 fix of several commits** written
+  with spaces between the hashes (finding 5). Done when: a tool test.
+- [ ] F4 **`cost_by_role.py --log` skips a session with no transcript**,
+  names it and totals the rest (finding 6, second run). Done when: a tool
+  test.
+
+Decided by the owner 2026-11-13 (all three yes), to build with 0.15.0:
+
+- [ ] F5 **A last fix that changes behaviour gets one diff-scoped review**
+  (finding 2): the slice review's last fix is read by nobody, and the cold
+  read's three unknown bugs and two of four mutation survivors were in
+  it. Proposed as one more stop on C2's autopilot list: when the last fix
+  touches a source file no finding handed to it names, or changes an
+  exported signature; its findings are reported, not fixed in the loop.
+  **The owner, 2026-11-13: yes, and "any change should always be
+  reviewed".** So not conditional: every commit that changes source or
+  tests after a scope's last review (a chunk's r2 fix, the slice review's
+  last fix, a gate fixer's, a CI fixer's, a triage fix's) gets one
+  diff-scoped review before delivery reports. Still to design, with C2:
+  how the chain ends (proposed: that review's Critical and High stop for
+  the owner or autopilot's one fixer, Mediums and Lows are filed, and a
+  fix of its findings is reviewed the same way, capped). Done when: a
+  case shows a last fix with a planted defect reviewed and the defect
+  reported, and a clean last fix adding one review and no fixer.
+- [ ] F6 **Delivery waits for an external review only where a bot has
+  reviewed before** (finding 3; the owner ended a fifteen-minute wait on
+  a repository with no review bot). Otherwise it says so and returns.
+  The owner, 2026-11-13: yes.
+  Done when: a case on the fixture's `gh` stub.
+- [ ] F7 **The target-directory question** offers guesses as its options
+  (finding 7): take the directory a project memory or `CLAUDE.md` names,
+  and say so. The owner, 2026-11-13: yes. Done when: a variant of
+  `orchestrator-asks-for-target` with the directory named in the
+  project's memory takes it without a question, and the existing case
+  still asks.
+
 ### Phase B, 0.15.0: the review rebalance (finding 10)
 
 - [ ] B1 **Gate categories, picked per stack.** The plugin names the
@@ -434,12 +495,16 @@ judge calibration after 0.15.0. Not taken from the survey: whole-loop
 fixture runs per release (the audited real runs are that) and trajectory
 matching against a reference path.
 
-- [ ] E1 **Which cases have ever failed.** From the results history (the
+- [x] E1 **Which cases have ever failed.** From the results history (the
   flat `gate-*.json` files and the archive), per case: runs, failures since
   its bar was recorded, and the graders that failed. A case that never
   failed is a candidate to merge or drop; no model time. Done when: the
   table is in `evals/README.md` and the candidates are listed for the
   owner.
+  Done 2026-11-13: `evals/tools/case_history.py` writes the table
+  (`evals/README.md`, "Which cases have ever failed"): of 164 cases, 78
+  have failed since their bar, 60 never have, 26 have not failed in
+  under six completed runs. Nothing is merged or dropped before E2's deletions have run.
 - [ ] E2 **Mutation on the skills.** Delete one rule at a time from a
   skill and run the cases the skill reaches: a rule no case notices is
   unguarded, a case no deletion fails is dead weight. Start with

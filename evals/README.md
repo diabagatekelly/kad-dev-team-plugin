@@ -573,6 +573,201 @@ harness output), and some graders are bound to their fixture's specifics and
 have to be adapted or skipped. **Passing there is not the same as the case
 passing** — it's real artifacts against adapted criteria.
 
+### Which cases have ever failed
+
+A case that has never failed since its bar was recorded has not yet shown
+it can catch anything: a candidate to merge or drop, once the rule
+deletions of `TODO.md`'s E2 have run against it (a deletion it catches
+keeps it). The table is written by `tools/case_history.py` from the
+results history, with no model time; run it again with `python3 -I
+evals/tools/case_history.py --readme evals/README.md`. Its definitions
+(errored, thrown, failed, since the bar) are in the script's header. Two
+limits: the history held on this machine starts 2026-10-31, so a bar
+recorded earlier has every held run counted and none of its older ones;
+the first column of counts is completed runs, the errored ones being
+in the last column; and a failure here is any completed run with a scored grader not passing,
+a judge's single flip included (marked `(judge)`), so "failed" is not
+"caught a regression".
+
+<!-- case-history:start -->
+Written by `tools/case_history.py` on 2026-11-13 from 6315 result files under `results/`, `kad-eval-results-archive/`: 3870 plugin-arm runs, 2026-10-31 to 2026-11-13. 675 of them errored before any grader ran (usage limit 665, sign-in 8, results folder over the entry limit 2); 126 grader results threw for a reason outside the run (usage limit 97, interrupted 16, grader pattern does not compile 13).
+
+| Case | Bar since | Completed runs | Since the bar | Failed | Graders that failed (runs) | Last failure | Errored, thrown |
+|---|---|---|---|---|---|---|---|
+| `acceptance-criteria-payfine` | 2026-10-11 | 11 | 11 | 0 |  |  | 1, 1 |
+| `accessibility-review-ac-walk` | 2026-11-09 | 18 | 14 | 1 | `honest-about-what-was-driven` (judge) ×1 | 2026-11-11 | 0, 0 |
+| `accessibility-review-neg-readability` | 2026-10-11 | 13 | 13 | 0 |  |  | 0, 0 |
+| `accessibility-review-payfine` | 2026-10-11 | 19 | 19 | 5 | `slice-placeholder-filled` (judge) ×4, `criteria-split-now-and-later` (judge) ×1 | 2026-11-11 | 3, 2 |
+| `accessibility-review-payfine-subtle` | 2026-10-11 | 19 | 19 | 5 | `slice-placeholder-filled` (judge) ×4, `no-false-alarm-card-number-label` (judge) ×1 | 2026-11-11 | 0, 4 |
+| `adr-neg-rename` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `adr-payment-gateway` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `architecture-design-neg-review` | 2026-10-11 | 17 | 17 | 0 |  |  | 0, 0 |
+| `architecture-design-owner-sheet` | 2026-11-09 | 27 | 13 | 0 |  |  | 3, 2 |
+| `architecture-design-payfine-phase1` | 2026-10-11 | 24 | 24 | 0 |  |  | 0, 2 |
+| `architecture-design-payfine-phase2` | 2026-10-11 | 25 | 25 | 20 | `decisions-show-approval` (judge) ×19, `stays-conceptual` (judge) ×2, `builds-on-the-existing-payment-path` (judge) ×1, `notes-the-leaky-payment-port` (judge) ×1, `keeps-the-one-implementation-port` (judge) ×1 | 2026-11-12 | 0, 6 |
+| `architecture-design-payfine-via-agent` | 2026-10-11 | 15 | 15 | 0 |  |  | 0, 4 |
+| `architecture-design-scope-consequence` | 2026-10-31 | 41 | 34 | 15 | `hands-back-to-the-requirements-owner` (judge) ×12, `does-not-approve-around-it` (judge) ×10 | 2026-11-11 | 0, 4 |
+| `architecture-review-neg-security-review` | 2026-10-12 | 12 | 12 | 0 |  |  | 0, 0 |
+| `architecture-review-neg-test-quality-review` | 2026-10-12 | 13 | 13 | 0 |  |  | 0, 0 |
+| `chunk-runner-gap-handback` | 2026-11-09 | 24 | 20 | 6 | `stops-with-the-decision-on-the-line` (judge) ×6 | 2026-11-11 | 3, 0 |
+| `chunk-runner-gate-deviation` | 2026-11-09 | 18 | 14 | 0 |  |  | 3, 0 |
+| `chunk-runner-gate-outside` | 2026-11-09 | 19 | 15 | 0 |  |  | 2, 0 |
+| `chunk-runner-gate-sources` | 2026-11-09 | 27 | 13 | 1 | `hands-back-pass-after-the-fix-and-stops` ×1 | 2026-11-11 | 8, 0 |
+| `chunk-runner-one-fix-round` | 2026-11-09 | 25 | 21 | 5 | `hand-back-is-the-one-line` (judge) ×5 | 2026-11-12 | 2, 0 |
+| `chunk-runner-review-round` | 2026-11-09 | 20 | 16 | 1 | `one-combined-reviewer` ×1, `review-report-written` ×1, `smoke-report-written` ×1, `round-recorded-by-the-script` ×1, `two-launches-never-more` ×1, `hand-back-line-carries-the-script-counts` ×1, and 5 more | 2026-11-11 | 2, 0 |
+| `chunk-runner-waits-for-handback` | 2026-11-12 | 8 | 5 | 2 | `hand-back-is-the-one-line-for-what-ran` (judge) ×2 | 2026-11-12 | 0, 0 |
+| `code-review-catalog` | 2026-10-11 | 19 | 19 | 9 | `nothing-above-low` (judge) ×9 | 2026-11-11 | 4, 2 |
+| `code-review-comments-chunk` | 2026-10-31 | 37 | 36 | 17 | `hands-back-counts-and-path` (judge) ×12, `reliability-lens-invoked-for-storage` ×9, `test-quality-lens-invoked` ×8, `why-comment-is-not-flagged` (judge) ×2, `no-low-per-chunk` ×1, `planning-reference-is-a-medium` ×1, and 2 more | 2026-11-12 | 8, 8 |
+| `code-review-days-left-pr` | 2026-10-11 | 10 | 10 | 0 |  |  | 1, 0 |
+| `code-review-fine-notices-pr` | 2026-10-11 | 13 | 13 | 7 | `leaves-mocking-to-test-quality-review` (judge) ×5, `consults-why-comments` ×2, `finds-wrong-name` (judge) ×1 | 2026-11-12 | 1, 0 |
+| `code-review-fine-notices-pr-via-agent` | 2026-10-11 | 20 | 20 | 19 | `consults-why-comments` ×18, `leaves-mocking-to-test-quality-review` (judge) ×16 | 2026-11-12 | 1, 7 |
+| `code-review-fines-report-pr` | 2026-10-11 | 13 | 13 | 2 | `hands-sdk-to-architecture-review` (judge) ×2, `finds-feature-envy` (judge) ×1 | 2026-11-11 | 4, 0 |
+| `code-review-neg-architecture` | 2026-10-11 | 11 | 11 | 0 |  |  | 1, 0 |
+| `code-review-structural-high-at-d` | 2026-11-11 | 7 | 5 | 4 | `a-long-single-job-function-stays-a-plain-finding` (judge) ×4 | 2026-11-12 | 1, 0 |
+| `delegation-consult-with-file` | 2026-10-31 | 18 | 11 | 4 | `hands-back-the-hash-and-one-sentence` (judge) ×3, `decision-written-in-place-under-the-delegation` (judge) ×1 | 2026-11-09 | 1, 0 |
+| `delegation-consult-without-file` | 2026-10-31 | 20 | 19 | 4 | `recommendation-only-named-as-undelegated` (judge) ×4 | 2026-11-12 | 4, 0 |
+| `delivery-ci-red-not-done` | 2026-11-12 | 10 | 7 | 2 | `report-leads-with-red-ci-and-not-ready` (judge) ×1, `handoff-briefs-the-fixer` (judge) ×1 | 2026-11-13 | 0, 6 |
+| `design-system-payfine-phase1` | 2026-10-11 | 7 | 7 | 0 |  |  | 1, 0 |
+| `design-system-payfine-phase2` | 2026-10-11 | 7 | 7 | 0 |  |  | 1, 2 |
+| `design-system-payfine-phase3` | 2026-10-11 | 12 | 12 | 5 | `accessibility-by-construction` (judge) ×5 | 2026-11-11 | 5, 0 |
+| `design-system-payfine-reference` | 2026-10-17 | 6 | 6 | 1 | `mock-carries-reference-brand` ×1 | 2026-11-11 | 5, 0 |
+| `design-system-payfine-review` | 2026-10-17 | 7 | 7 | 0 |  |  | 1, 4 |
+| `external-review-triage-cancel-hold` | 2026-10-24 | 6 | 6 | 0 |  |  | 0, 0 |
+| `library-app-catalog-review` | 2026-10-11 | 14 | 14 | 3 | `reports-nothing-above-low` (judge) ×3 | 2026-11-09 | 8, 0 |
+| `library-app-fines-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
+| `library-app-lending-review` | 2026-10-11 | 15 | 15 | 4 | `finds-orm-inside-checkout-use-case` (judge) ×4 | 2026-11-11 | 6, 0 |
+| `library-app-lending-review-via-agent` | 2026-10-11 | 12 | 12 | 1 | `finds-orm-inside-checkout-use-case` (judge) ×1 | 2026-11-09 | 3, 0 |
+| `library-app-members-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
+| `library-app-notifications-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
+| `library-app-reporting-pr` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
+| `library-app-reporting-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
+| `library-app-structure-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
+| `map-query-consults` | 2026-10-11 | 8 | 8 | 0 |  |  | 3, 0 |
+| `map-query-no-map` | 2026-10-11 | 2 | 2 | 0 |  |  | 1, 0 |
+| `map-update-cancel-hold` | 2026-10-11 | 18 | 18 | 17 | `pre-existing-flags-not-new` (judge) ×13, `no-bash-writes` ×6, `keeps-existing-rows-and-tiers` (judge) ×5 | 2026-11-11 | 3, 0 |
+| `operational-readiness-neg-reliability` | 2026-10-11 | 11 | 11 | 0 |  |  | 3, 0 |
+| `operational-readiness-neg-security` | 2026-10-11 | 10 | 10 | 0 |  |  | 3, 0 |
+| `operational-readiness-ops-phase1` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `operational-readiness-ops-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `operational-readiness-release-phase1` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `operational-readiness-release-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `orchestrator-asks-for-target` | 2026-10-11 | 38 | 38 | 0 |  |  | 4, 0 |
+| `orchestrator-backward-route` | 2026-10-11 | 49 | 49 | 19 | `routes-back-to-the-owner` (judge) ×14, `log-names-the-hand-back` (judge) ×8, `does-not-go-forward-to-reliability` ×3, `invokes-vertical-slicing` ×3 | 2026-11-12 | 11, 2 |
+| `orchestrator-budget-exceeded` | 2026-10-31 | 44 | 40 | 26 | `flow-ends-saying-what-is-built` (judge) ×26 | 2026-11-13 | 6, 1 |
+| `orchestrator-chunk-runner-handback` | 2026-11-09 | 22 | 19 | 0 |  |  | 5, 1 |
+| `orchestrator-chunk-runner-launch` | 2026-11-09 | 41 | 38 | 14 | `handoff-says-the-runner-is-in-flight` (judge) ×14 | 2026-11-12 | 12, 1 |
+| `orchestrator-definition-of-done` | 2026-10-31 | 65 | 58 | 51 | `three-named-fixes-in-one-batch` (judge) ×50, `one-fixer-for-the-batch` ×20, `no-slice-reviewer-yet` ×11, `gate-on-the-fix` ×11, `readme-written` ×3, `code-reviewer-only-for-the-comments` ×3, and 4 more | 2026-11-13 | 19, 0 |
+| `orchestrator-delivery-foreground` | 2026-10-31 | 70 | 66 | 26 | `cost-script-run` ×19, `reports-the-delivery-in-the-same-turn` (judge) ×11, `pr-writeup-invoked` ×7, `pull-request-then-issues-then-body-edit` ×6, `one-issue-per-standing-medium-none-for-a-low` (judge) ×5, `e-line-written` ×4 | 2026-11-12 | 6, 0 |
+| `orchestrator-delivery-removal` | 2026-11-09 | 34 | 20 | 2 | `record-names-counts-and-files-never-values` (judge) ×2 | 2026-11-10 | 7, 0 |
+| `orchestrator-gap-without-delegation` | 2026-10-31 | 59 | 55 | 12 | `round-zero-not-recorded-again` ×9, `stops-for-the-owner-with-the-recommendation` (judge) ×5, `needs-decision-on-the-c-line` ×2, `owning-persona-launched-once` ×2 | 2026-11-12 | 10, 0 |
+| `orchestrator-issue-fix-records` | 2026-11-12 | 7 | 4 | 1 | `branch-names-the-slice-and-the-issue` ×1 | 2026-11-12 | 0, 6 |
+| `orchestrator-plan-check-seam` | 2026-10-31 | 47 | 43 | 1 | `plan-sent-back-not-edited` (judge) ×1 | 2026-11-11 | 7, 0 |
+| `orchestrator-readiness-gate` | 2026-10-31 | 65 | 61 | 15 | `backward-routes-name-the-checks` (judge) ×13, `stops-at-the-routed-skill-or-reports-the-route` (judge) ×5, `first-failed-check-routed-inline` ×4, `readiness-gate-run-by-the-script` ×4, `gate-before-the-routed-skill` ×4, `a-line-carries-session-and-audit` ×4, and 1 more | 2026-11-11 | 8, 0 |
+| `orchestrator-readiness-open-item` | 2026-11-09 | 33 | 30 | 6 | `puts-the-blocker-to-the-owner` (judge) ×6 | 2026-11-11 | 5, 0 |
+| `orchestrator-readiness-sources` | 2026-11-09 | 30 | 17 | 0 |  |  | 7, 0 |
+| `orchestrator-readme-stale-not-done` | 2026-11-11 | 8 | 6 | 5 | `three-named-fixes-in-one-batch` (judge) ×5, `one-fixer-for-the-batch` ×1, `gate-on-the-fix` ×1 | 2026-11-13 | 5, 1 |
+| `orchestrator-route-accessibility` | 2026-10-11 | 54 | 54 | 11 | `log-names-row-and-artifact` (judge) ×6, `screen-design-only-after-the-review` ×3, `stops-after-the-routed-step` (judge) ×2, `not-screen-design` ×1 | 2026-11-11 | 12, 2 |
+| `orchestrator-route-backward-requirements` | 2026-10-11 | 40 | 40 | 4 | `log-names-row-and-artifact` (judge) ×4, `stops-after-the-routed-step` (judge) ×2, `routes-to-requirements-refinement` ×2 | 2026-11-13 | 8, 0 |
+| `orchestrator-route-design` | 2026-10-11 | 38 | 38 | 1 | `stops-after-the-routed-step` (judge) ×1 | 2026-10-31 | 8, 0 |
+| `orchestrator-route-design-system` | 2026-10-11 | 36 | 36 | 0 |  |  | 8, 0 |
+| `orchestrator-route-implementation` | 2026-10-11 | 42 | 42 | 2 | `stops-after-the-routed-step` (judge) ×2 | 2026-11-01 | 8, 0 |
+| `orchestrator-route-implementation-prenamed` | 2026-10-18 | 38 | 38 | 1 | `routes-to-tdd-implementation-lite` (judge) ×1 | 2026-11-09 | 8, 0 |
+| `orchestrator-route-open-pr` | 2026-11-09 | 21 | 18 | 0 |  |  | 5, 0 |
+| `orchestrator-route-problem-framing` | 2026-10-11 | 37 | 37 | 1 | `stops-after-the-routed-step` (judge) ×1 | 2026-11-11 | 9, 0 |
+| `orchestrator-route-reliability` | 2026-10-11 | 45 | 45 | 5 | `log-names-row-and-artifact` (judge) ×5, `stops-after-the-routed-step` (judge) ×2, `routes-to-reliability-requirements` ×2 | 2026-11-11 | 8, 1 |
+| `orchestrator-route-scope-decision` | 2026-10-11 | 111 | 111 | 63 | `stops-after-the-routed-step` (judge) ×63, `not-requirements-refinement` ×3 | 2026-11-12 | 17, 6 |
+| `orchestrator-route-screen-design` | 2026-10-11 | 51 | 51 | 13 | `stops-after-the-routed-step` (judge) ×6, `log-names-row-and-artifact` (judge) ×6, `not-accessibility-review` ×2, `accessibility-review-only-after-screen-design` ×1 | 2026-11-11 | 11, 0 |
+| `orchestrator-route-slicer-accessibility-mistake` | 2026-11-01 | 38 | 35 | 1 | `routes-back-to-the-slicer` ×1, `log-names-the-mismatch` (judge) ×1 | 2026-11-09 | 9, 0 |
+| `orchestrator-route-slicing` | 2026-10-11 | 50 | 50 | 6 | `stops-after-the-routed-step` (judge) ×6, `not-user-story-writeup` ×4 | 2026-11-01 | 9, 2 |
+| `orchestrator-route-tech-bootstrap` | 2026-10-11 | 39 | 39 | 2 | `log-names-row-and-artifact` (judge) ×2 | 2026-11-11 | 11, 1 |
+| `orchestrator-route-user-story` | 2026-10-11 | 41 | 41 | 4 | `stops-after-the-routed-step` (judge) ×3, `routes-to-user-story-writeup` ×3, `log-written` ×1, `log-names-row-and-artifact` ×1, `not-vertical-slicing` ×1 | 2026-11-11 | 10, 2 |
+| `orchestrator-runner-handback-unverified` | 2026-11-12 | 7 | 4 | 0 |  |  | 0, 0 |
+| `orchestrator-security-stage` | 2026-10-11 | 36 | 36 | 0 |  |  | 11, 0 |
+| `orchestrator-session-setup` | 2026-11-01 | 40 | 40 | 8 | `not-problem-framing-doc-yet` ×5, `asks-about-the-session-first` (judge) ×5, `routes-to-problem-framing-doc` ×3, `asks-nothing-about-the-session` (judge) ×3 | 2026-11-09 | 10, 0 |
+| `orchestrator-superseded-scope-map` | 2026-10-11 | 36 | 36 | 0 |  |  | 11, 0 |
+| `pr-writeup-portal-fines` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `problem-framing-doc-payfine` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `reliability-requirements-neg-review` | 2026-10-11 | 12 | 12 | 0 |  |  | 5, 0 |
+| `reliability-requirements-payfine-phase1` | 2026-10-11 | 4 | 4 | 0 |  |  | 0, 0 |
+| `reliability-requirements-payfine-phase2` | 2026-10-11 | 3 | 3 | 0 |  |  | 0, 0 |
+| `reliability-requirements-payfine-phase2-proceed` | 2026-10-18 | 3 | 3 | 0 |  |  | 0, 0 |
+| `reliability-requirements-payfine-phase2-stop` | 2026-10-17 | 3 | 3 | 1 | `does-not-lay-out-scope-options` (judge) ×1 | 2026-11-01 | 0, 0 |
+| `reliability-requirements-payfine-phase3` | 2026-10-11 | 3 | 3 | 0 |  |  | 0, 0 |
+| `reliability-review-alerts` | 2026-10-11 | 15 | 15 | 1 | `no-false-alarm-burn-rate-alerts` (judge) ×1 | 2026-11-11 | 5, 0 |
+| `reliability-review-catalog` | 2026-10-11 | 18 | 18 | 6 | `reports-nothing-above-low` (judge) ×6 | 2026-11-12 | 11, 0 |
+| `reliability-review-fine-payment` | 2026-10-11 | 15 | 15 | 1 | `no-false-alarm-settled-fine-guard` (judge) ×1 | 2026-11-12 | 5, 0 |
+| `reliability-review-http` | 2026-10-11 | 12 | 12 | 0 |  |  | 5, 0 |
+| `reliability-review-neg-architecture` | 2026-10-11 | 12 | 12 | 0 |  |  | 5, 0 |
+| `reliability-review-neg-security` | 2026-10-11 | 13 | 13 | 0 |  |  | 5, 0 |
+| `reliability-review-nightly` | 2026-10-11 | 21 | 21 | 7 | `no-false-alarm-sms-retry` (judge) ×6, `finds-no-isolation-in-fine-loop` (judge) ×1 | 2026-11-11 | 5, 0 |
+| `reliability-review-nightly-via-agent` | 2026-10-11 | 19 | 19 | 6 | `no-false-alarm-sms-retry` (judge) ×6 | 2026-11-11 | 8, 0 |
+| `reliability-review-portal-pay-pr` | 2026-10-18 | 12 | 12 | 0 |  |  | 5, 0 |
+| `reliability-review-refund-pr` | 2026-11-07 | 16 | 15 | 1 | `no-false-alarm-timeout-is-reported` (judge) ×1 | 2026-11-09 | 5, 0 |
+| `requirements-refinement-open-question` | 2026-10-31 | 11 | 10 | 0 |  |  | 2, 0 |
+| `requirements-refinement-owner-sheet` | 2026-11-09 | 22 | 9 | 0 |  |  | 2, 0 |
+| `requirements-refinement-payfine-phase1` | 2026-10-11 | 12 | 12 | 3 | `does-not-ask-what-the-sources-answer` (judge) ×3 | 2026-11-11 | 5, 0 |
+| `requirements-refinement-payfine-phase2` | 2026-10-11 | 9 | 9 | 8 | `finishes-without-reasking` (judge) ×8 | 2026-11-12 | 2, 0 |
+| `scope-map-self-service` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `screen-design-owner-sheet` | 2026-11-09 | 19 | 9 | 0 |  |  | 5, 0 |
+| `screen-design-payfine` | 2026-10-11 | 8 | 8 | 2 | `copy-rules` (judge) ×2 | 2026-11-11 | 3, 0 |
+| `security-requirements-neg-review` | 2026-10-11 | 10 | 10 | 0 |  |  | 3, 0 |
+| `security-requirements-payfine-phase1` | 2026-10-11 | 12 | 12 | 0 |  |  | 2, 0 |
+| `security-requirements-payfine-phase2` | 2026-10-11 | 14 | 14 | 3 | `does-not-decide-the-fork-itself` (judge) ×3 | 2026-11-12 | 5, 0 |
+| `security-requirements-payfine-phase2-proceed` | 2026-10-18 | 9 | 9 | 0 |  |  | 2, 0 |
+| `security-requirements-payfine-phase2-stop` | 2026-10-17 | 9 | 9 | 0 |  |  | 2, 0 |
+| `security-requirements-payfine-phase3` | 2026-10-11 | 15 | 15 | 13 | `decisions-all-approved` (judge) ×10, `criterion-card-details-never-reach-the-server` (judge) ×4 | 2026-11-12 | 5, 0 |
+| `security-requirements-placeholder-pointer` | 2026-10-31 | 11 | 10 | 0 |  |  | 2, 0 |
+| `security-requirements-source-criterion` | 2026-11-09 | 19 | 9 | 0 |  |  | 5, 0 |
+| `security-review-catalog` | 2026-10-11 | 13 | 13 | 1 | `reports-nothing-above-low` (judge) ×1 | 2026-11-09 | 3, 0 |
+| `security-review-config` | 2026-10-11 | 10 | 10 | 0 |  |  | 4, 0 |
+| `security-review-http` | 2026-10-11 | 10 | 10 | 0 |  |  | 4, 0 |
+| `security-review-neg-architecture` | 2026-10-11 | 10 | 10 | 0 |  |  | 3, 0 |
+| `security-review-neg-reliability` | 2026-10-11 | 13 | 13 | 0 |  |  | 5, 0 |
+| `security-review-portal-pr` | 2026-10-11 | 16 | 16 | 3 | `pre-existing-issues-not-blocking` (judge) ×3 | 2026-11-11 | 4, 0 |
+| `security-review-reminders` | 2026-10-11 | 10 | 10 | 0 |  |  | 4, 0 |
+| `security-review-source-value` | 2026-11-09 | 16 | 9 | 0 |  |  | 6, 0 |
+| `staleness-audit-docs` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `supply-chain-review-accept-phase1` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `supply-chain-review-accept-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `supply-chain-review-accepted` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `supply-chain-review-build` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `supply-chain-review-build-via-agent` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `supply-chain-review-neg-reliability` | 2026-10-11 | 11 | 11 | 0 |  |  | 5, 0 |
+| `supply-chain-review-neg-security` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `supply-chain-review-workflows` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `tdd-implementation-lite-cancel-hold` | 2026-10-18 | 15 | 15 | 15 | `test-run-after-each-test-edit` ×15, `tests-check-behaviour` (judge) ×1 | 2026-11-12 | 9, 0 |
+| `tdd-implementation-lite-cancel-hold-via-agent` | 2026-10-18 | 30 | 30 | 30 | `test-run-after-each-test-edit` ×30, `final-review-runs` ×11, `escalates-queue-question` (judge) ×7, `tests-check-behaviour` (judge) ×4, `break-and-restore-in-trace` ×2, `no-bash-writes` ×1, and 2 more | 2026-11-12 | 6, 0 |
+| `tdd-implementation-lite-chunk-plan` | 2026-10-24 | 19 | 19 | 11 | `plan-is-vertical-and-inside-the-slice` (judge) ×8, `plan-has-the-shape` (judge) ×5 | 2026-11-12 | 5, 0 |
+| `tdd-implementation-lite-named-fix` | 2026-10-18 | 25 | 25 | 7 | `final-review-runs` ×6, `no-bash-writes` ×1 | 2026-11-11 | 12, 0 |
+| `tdd-implementation-lite-one-chunk` | 2026-11-07 | 19 | 19 | 4 | `ends-on-the-hand-back-line` (judge) ×4, `no-bash-writes` ×1 | 2026-11-13 | 3, 0 |
+| `tdd-implementation-lite-rename-fix` | 2026-11-02 | 22 | 22 | 3 | `no-shell-writes-into-the-tree` ×3 | 2026-11-09 | 6, 0 |
+| `technology-bootstrap-phase1` | 2026-10-11 | 10 | 10 | 1 | `asks-only-what-the-first-test-forces` (judge) ×1 | 2026-11-11 | 7, 0 |
+| `technology-bootstrap-phase2` | 2026-10-11 | 19 | 19 | 7 | `asks-only-what-the-first-test-forces` (judge) ×5, `recommends-the-built-in-default-set-once` (judge) ×1, `recommends-ui-framework-and-waits` (judge) ×1 | 2026-11-11 | 4, 0 |
+| `technology-bootstrap-phase3` | 2026-10-11 | 16 | 16 | 9 | `records-non-choices-and-open-categories` (judge) ×9, `records-the-built-in-default-set` (judge) ×2, `writes-nothing-else` ×1 | 2026-11-11 | 4, 0 |
+| `technology-bootstrap-phase3-reject` | 2026-10-14 | 11 | 11 | 6 | `does-not-relitigate` (judge) ×5, `asks-only-what-the-first-test-forces` (judge) ×1 | 2026-11-11 | 4, 0 |
+| `test-quality-review-fines` | 2026-10-11 | 18 | 18 | 9 | `no-false-alarm-fake-ledger` (judge) ×6, `no-false-alarm-exact-tests` (judge) ×5 | 2026-11-12 | 6, 2 |
+| `test-quality-review-neg-code-review` | 2026-10-11 | 11 | 11 | 0 |  |  | 3, 0 |
+| `test-quality-review-reminders` | 2026-10-11 | 12 | 12 | 0 |  |  | 3, 1 |
+| `test-quality-review-seam-fake` | 2026-10-31 | 24 | 20 | 0 |  |  | 6, 4 |
+| `user-facing-docs-renewals` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `user-story-writeup-payfine-phase1` | 2026-10-11 | 7 | 7 | 0 |  |  | 3, 0 |
+| `user-story-writeup-payfine-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `vertical-slicing-handback` | 2026-10-11 | 11 | 11 | 0 |  |  | 4, 0 |
+| `vertical-slicing-no-requirements` | 2026-10-11 | 11 | 11 | 0 |  |  | 4, 0 |
+| `vertical-slicing-no-screen` | 2026-11-01 | 20 | 17 | 1 | `accessibility-line-matches-the-thin-path` (judge) ×1 | 2026-11-01 | 4, 0 |
+| `vertical-slicing-owner-sheet` | 2026-11-09 | 25 | 18 | 2 | `consults-acceptance-criteria` ×2 | 2026-11-11 | 6, 1 |
+| `vertical-slicing-payfine-phase1` | 2026-10-11 | 11 | 11 | 0 |  |  | 4, 1 |
+| `why-comments-collect-fine` | 2026-10-11 | 4 | 4 | 0 |  |  | 0, 3 |
+
+Of 164 cases, 78 have failed at least once since their bar (however few their runs), 60 never have over 6 or more completed runs, and 26 have not failed but have fewer than 6 runs to go by.
+
+**Never failed since the bar (60):** `acceptance-criteria-payfine`, `accessibility-review-neg-readability`, `architecture-design-neg-review`, `architecture-design-owner-sheet`, `architecture-design-payfine-phase1`, `architecture-design-payfine-via-agent`, `architecture-review-neg-security-review`, `architecture-review-neg-test-quality-review`, `chunk-runner-gate-deviation`, `chunk-runner-gate-outside`, `code-review-days-left-pr`, `code-review-neg-architecture`, `design-system-payfine-phase1`, `design-system-payfine-phase2`, `design-system-payfine-review`, `external-review-triage-cancel-hold`, `library-app-fines-review`, `library-app-members-review`, `library-app-notifications-review`, `library-app-reporting-pr`, `library-app-reporting-review`, `library-app-structure-review`, `map-query-consults`, `operational-readiness-neg-reliability`, `operational-readiness-neg-security`, `orchestrator-asks-for-target`, `orchestrator-chunk-runner-handback`, `orchestrator-readiness-sources`, `orchestrator-route-design-system`, `orchestrator-route-open-pr`, `orchestrator-security-stage`, `orchestrator-superseded-scope-map`, `reliability-requirements-neg-review`, `reliability-review-http`, `reliability-review-neg-architecture`, `reliability-review-neg-security`, `reliability-review-portal-pay-pr`, `requirements-refinement-open-question`, `requirements-refinement-owner-sheet`, `screen-design-owner-sheet`, `security-requirements-neg-review`, `security-requirements-payfine-phase1`, `security-requirements-payfine-phase2-proceed`, `security-requirements-payfine-phase2-stop`, `security-requirements-placeholder-pointer`, `security-requirements-source-criterion`, `security-review-config`, `security-review-http`, `security-review-neg-architecture`, `security-review-neg-reliability`, `security-review-reminders`, `security-review-source-value`, `supply-chain-review-neg-reliability`, `test-quality-review-neg-code-review`, `test-quality-review-reminders`, `test-quality-review-seam-fake`, `user-story-writeup-payfine-phase1`, `vertical-slicing-handback`, `vertical-slicing-no-requirements`, `vertical-slicing-payfine-phase1`.
+
+**Too few runs to say (26, no failure in under 6 runs):** `adr-neg-rename`, `adr-payment-gateway`, `map-query-no-map`, `operational-readiness-ops-phase1`, `operational-readiness-ops-phase2`, `operational-readiness-release-phase1`, `operational-readiness-release-phase2`, `orchestrator-runner-handback-unverified`, `pr-writeup-portal-fines`, `problem-framing-doc-payfine`, `reliability-requirements-payfine-phase1`, `reliability-requirements-payfine-phase2`, `reliability-requirements-payfine-phase2-proceed`, `reliability-requirements-payfine-phase3`, `scope-map-self-service`, `staleness-audit-docs`, `supply-chain-review-accept-phase1`, `supply-chain-review-accept-phase2`, `supply-chain-review-accepted`, `supply-chain-review-build`, `supply-chain-review-build-via-agent`, `supply-chain-review-neg-security`, `supply-chain-review-workflows`, `user-facing-docs-renewals`, `user-story-writeup-payfine-phase2`, `why-comments-collect-fine`.
+
+**In the history with no case directory now (10, retired or renamed, not in the table):** `orchestrator-chunk-review-round`, `orchestrator-gate-deviation`, `orchestrator-gate-outside`, `orchestrator-one-fix-round`, `probe-sandbox`, `tdd-implementation-cancel-hold`, `tdd-implementation-cancel-hold-via-agent`, `tdd-implementation-chunk-plan`, `tdd-implementation-named-fix`, `tdd-implementation-one-chunk`.
+<!-- case-history:end -->
+
 ### Run backlog
 
 Emptied: the eight emulated cases it listed were all run, then replaced by
