@@ -502,9 +502,9 @@ matching against a reference path.
   table is in `evals/README.md` and the candidates are listed for the
   owner.
   Done 2026-11-13: `evals/tools/case_history.py` writes the table
-  (`evals/README.md`, "Which cases have ever failed"): of 164 cases, 76
-  have failed since their bar, 60 never have, 28 have under six runs
-  held. Nothing is merged or dropped before E2's deletions have run.
+  (`evals/README.md`, "Which cases have ever failed"): of 164 cases, 78
+  have failed since their bar, 60 never have, 26 have not failed in
+  under six completed runs. Nothing is merged or dropped before E2's deletions have run.
 - [ ] E2 **Mutation on the skills.** Delete one rule at a time from a
   skill and run the cases the skill reaches: a rule no case notices is
   unguarded, a case no deletion fails is dead weight. Start with

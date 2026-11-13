@@ -10,8 +10,11 @@ Where the history is. `eval_gate.py` writes one flat
 plugin eval` leaves a directory per run with the same result as
 `aggregate-result.json`; the directories older than a review are moved to
 an archive (`evals/README.md`, "Eval gate"). Both are read, from every
-`--results` directory, and a run present in both is counted once (by case
-and start time). Only the plugin arm is counted.
+`--results` directory, and a run present in both is counted once (by case,
+start time and its place among the result's runs: a case's runs start
+together). Only the plugin arm is counted, in whatever mode the result
+was run: a calibration result's plugin arm is a run of the case like any
+other, and the graders it leaves unscored are left out.
 
 What counts as what:
 
@@ -27,10 +30,11 @@ What counts as what:
   failure of that grader (`file not written`): the run did not produce
   what the case asks for.
 
-"Since its bar was recorded" starts at the run the case's first bar was
+"Since its bar was recorded" starts at the runs the case's first bar was
 taken from: the `source` of the case's first entry in the history of
-`evals/thresholds.json` (read with `git log`), or that commit's date when
-the entry names no source. Runs before it are the case being written. A
+`evals/thresholds.json` (read with `git log`), by the start of that
+result's own runs when it is still held, else the time in its name, else
+that commit's date. Runs before it are the case being written. A
 case whose first bar is older than the oldest result held has every held
 run counted. Without git, or for a case with no bar, every run counts and
 the column says `none`.
@@ -134,12 +138,16 @@ def read_runs(dirs):
         for case in data.get("cases") or []:
             name = case.get("name")
             for i, run in enumerate((case.get("arms") or {}).get("with") or []):
-                key = run.get("startedAt") or f"{path}#{i}"
+                # A case's runs start together and can share a start time to the millisecond,
+                # so the run's place in its result is part of what it is; both copies of a
+                # result list the runs in the same order.
+                key = (run.get("startedAt") or os.path.basename(str(run.get("tracePath") or path)), i)
                 if key in runs[name]:
                     continue
-                graders = [g for g in run.get("graders") or [] if g.get("scored", True)]
+                results = run.get("graders") or []
+                graders = [g for g in results if g.get("scored", True)]
                 rec = {"at": parse_time(run.get("startedAt")), "errored": None, "failed": [], "thrown": []}
-                if not graders:
+                if not results:
                     rec["errored"] = error_kind(run.get("error") or "no grader result")
                 for g in graders:
                     outcome = grader_outcome(g)
@@ -152,9 +160,29 @@ def read_runs(dirs):
     return {k: list(v.values()) for k, v in runs.items()}, read, unreadable
 
 
-def first_bars(thresholds):
-    """{case: (time the first bar's run started, or its commit's date)} from
-    the git history of the thresholds file; {} when git cannot be asked."""
+def source_start(source, name, dirs):
+    """When the earliest run of `name` in the bar's source result started, if
+    one of `dirs` still holds that result; else None."""
+    for d in dirs:
+        try:
+            with open(os.path.join(d, os.path.basename(source or "-")), encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError):
+            continue
+        starts = [
+            parse_time(run.get("startedAt"))
+            for case in data.get("cases") or [] if case.get("name") == name
+            for run in (case.get("arms") or {}).get("with") or []
+        ]
+        return min((t for t in starts if t), default=None)
+    return None
+
+
+def first_bars(thresholds, dirs):
+    """{case: when its first bar's runs started} from the git history of the
+    thresholds file: read from the source result when it is still held,
+    else the time in the source's name, else the commit's date; {} when
+    git cannot be asked."""
     rel = os.path.relpath(thresholds, ROOT)
     try:
         log = subprocess.run(
@@ -175,7 +203,7 @@ def first_bars(thresholds):
             if name in firsts:
                 continue
             source = bar.get("source") if isinstance(bar, dict) else None
-            firsts[name] = stamp_time(source) or parse_time(when)
+            firsts[name] = source_start(source, name, dirs) or stamp_time(source) or parse_time(when)
     return firsts
 
 
@@ -237,7 +265,7 @@ def report(runs, firsts, few, read, unreadable, dirs):
         f" {len(every)} plugin-arm runs, {span}. {sum(lost.values())} of them errored before any grader ran"
         f" ({kinds(lost)}); {sum(thrown.values())} grader results threw for a reason outside the run ({kinds(thrown)}).",
         "",
-        "| Case | Bar since | Runs held | Since the bar | Failed | Graders that failed (runs) | Last failure | Errored, thrown |",
+        "| Case | Bar since | Completed runs | Since the bar | Failed | Graders that failed (runs) | Last failure | Errored, thrown |",
         "|---|---|---|---|---|---|---|---|",
     ]
     for name in present:
@@ -256,8 +284,9 @@ def report(runs, firsts, few, read, unreadable, dirs):
     names = lambda ns: ", ".join(f"`{n}`" for n in ns) if ns else "none"
     out += [
         "",
-        f"Of {len(present)} cases, {failed_cases} have failed at least once since their bar, {len(never)} never have"
-        f" over {few} or more completed runs, and {len(thin)} have fewer than {few} runs to go by.",
+        f"Of {len(present)} cases, {failed_cases} have failed at least once since their bar (however few their runs),"
+        f" {len(never)} never have over {few} or more completed runs, and {len(thin)} have not failed but have"
+        f" fewer than {few} runs to go by.",
         "",
         f"**Never failed since the bar ({len(never)}):** {names(never)}.",
         "",
@@ -275,8 +304,10 @@ def write_readme(path, text):
         return False
     head, rest = body.split(START, 1)
     tail = rest.split(END, 1)[1]
-    with open(path, "w", encoding="utf-8") as f:
+    scratch = f"{path}.case-history.tmp"
+    with open(scratch, "w", encoding="utf-8") as f:
         f.write(f"{head}{START}\n{text}{END}{tail}")
+    os.replace(scratch, path)  # never a half-written README
     return True
 
 
@@ -292,7 +323,7 @@ def main():
     if not runs:
         print(f"no result found under: {', '.join(dirs) or 'no directory'}", file=sys.stderr)
         return 1
-    text = report(runs, first_bars(args.thresholds), args.few, read, unreadable, dirs)
+    text = report(runs, first_bars(args.thresholds, dirs), args.few, read, unreadable, dirs)
     if not args.readme:
         sys.stdout.write(text)
         return 0
