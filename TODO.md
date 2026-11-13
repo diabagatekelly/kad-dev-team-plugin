@@ -270,7 +270,7 @@ when" holds.
 
 ### Phase A, 0.14.5: what broke the run
 
-- [ ] A1 **A runner waits, and a result is only a hand-back** (finding 1).
+- [x] A1 **A runner waits, and a result is only a hand-back** (finding 1).
   `chunk-runner`: waiting is ending the turn with no tool call; never a
   background command, a poll or a monitor to wait; an agent has returned
   only when its hand-back message is there; a hash is real only when `git
@@ -283,7 +283,7 @@ when" holds.
   when: cases `chunk-runner-waits-for-handback` and
   `orchestrator-runner-handback-unverified` pass and fail without the
   change.
-- [ ] A2 **Red CI is not done** (finding 2, the owner's draft of
+- [x] A2 **Red CI is not done** (finding 2, the owner's draft of
   2026-11-12). A "CI watch" section in `delivery`, called by the
   orchestrator's E step after every push and by step 1b for an open pull
   request with red checks: wait bounded by the workflow's timeout plus 5
@@ -295,17 +295,27 @@ when" holds.
   watch again; three rounds at most; the report leads with the CI state
   and the E line needs `CI green <sha>`. Done when: case
   `delivery-ci-red-not-done` passes.
-- [ ] A3 **The gate does not fail scope on the flow's own records**
+- [x] A3 **The gate does not fail scope on the flow's own records**
   (finding 8): `validation_gate.py` exempts the orchestrator log and the
   sidecar. Done when: a tool test shows it and a real out-of-scope file
   still fails.
-- [ ] A4 **An issue fix has a convention and a scoped readiness gate**
+- [x] A4 **An issue fix has a convention and a scoped readiness gate**
   (findings 4b and 5): records prefix `issue<n>-`; `readiness_check.py`
   checks the documents and criteria the fix revised, lists older gaps as
   INFO and the orchestrator files them once as one issue; the
   numbers-on-waits check stops matching a button label. Done when: case
   `orchestrator-issue-fix-records` passes and the readiness tool tests
   cover the scoped mode and the false match.
+
+Built 2026-11-12 on branch `phase-a-0.14.5`. The gate: 53 cases reached,
+all with current evidence. Against main's skill text the four new cases
+fail (0.88, 0.86, 0.77, 0.30 against bars of 0.97, 1.00, 0.97, 0.97), with
+two limits to know: `chunk-runner-waits-for-handback` and
+`orchestrator-runner-handback-unverified` fail there on the hash check
+alone (the old orchestrator also declined to write the C line from a line
+whose commit was missing, without the check), and no case can make a
+runner wait, since a launch blocks under the eval (E2's replay case).
+`delivery-ci-red-not-done` stops before the fixer.
 
 **Test of 0.14.5: one issue fix on `personal-finance-tracker-3`, before any
 of phase B is built.** Issue #49 (stopping soon after connecting waits the
@@ -425,7 +435,13 @@ real runners invented their agents' results, because a launch blocks under
   skill and run the cases the skill reaches: a rule no case notices is
   unguarded, a case no deletion fails is dead weight. Start with
   `chunk-runner` and `delivery` (short, recently changed). Costs gate
-  runs, so one skill per usage window. Done when: both skills have a
+  runs, so one skill per usage window. Each deletion that a case catches
+  is kept beside that case as its known-bad reference (the skill with
+  the rule removed must fail it), so "fails without the change" is a
+  property the suite keeps. The owner, 2026-11-12: three runs per
+  variant stay; a replay case for the runner's wait may be captured from
+  a real `kad` session on the library fixture, outside the eval (never
+  from a project's transcripts), and resumed with `history_file`. Done when: both skills have a
   survivors list and each survivor is a new grader, a dropped rule, or an
   accepted gap.
 - [ ] E3 **What others do.** Survey of how comparable orchestrators and

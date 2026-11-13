@@ -548,6 +548,24 @@
     "claude_version": "2.1.323",
     "recorded": "2026-11-12T22:56:19Z"
   },
+  "orchestrator-chunk-runner-launch": {
+    "inputs": "eec78dbbdf08748511571fc685c7bd7fc908bcab73ce5e4d01d942105f6018ad",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261113T010224-orchestrator-chunk-runner-launch.json",
+    "claude_version": "2.1.323",
+    "recorded": "2026-11-13T01:06:38Z"
+  },
+  "orchestrator-definition-of-done": {
+    "inputs": "0c4498aa85154311d07a6a94abc292e7845410209fe52bb05fb4c6d40b9a5f7c",
+    "score": 0.909,
+    "bar": 0.879,
+    "runs": 1,
+    "source": "results/gate-20261113T010224-orchestrator-definition-of-done.json",
+    "claude_version": "2.1.323",
+    "recorded": "2026-11-13T01:06:38Z"
+  },
   "orchestrator-delivery-foreground": {
     "inputs": "7554376a64a6dbc8d9eee84abf3e08ab38ad464373f9bd848b2052591e9a1024",
     "score": 0.889,
@@ -565,6 +583,15 @@
     "source": "results/gate-20261112T224502-orchestrator-delivery-removal.json",
     "claude_version": "2.1.323",
     "recorded": "2026-11-12T22:56:19Z"
+  },
+  "orchestrator-gap-without-delegation": {
+    "inputs": "dd9b9fd0f4b223019878227b0808f93f06eec8f6b5258331564dd1277c0fbe90",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261113T010224-orchestrator-gap-without-delegation.json",
+    "claude_version": "2.1.323",
+    "recorded": "2026-11-13T01:06:38Z"
   },
   "orchestrator-issue-fix-records": {
     "inputs": "1a2538e323a12bd219c5db01d6702fa1bb89d5d2d63edfd0d0c38b423f480e50",

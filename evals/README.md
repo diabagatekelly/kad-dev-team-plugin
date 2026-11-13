@@ -597,6 +597,10 @@ real cases and deleted (the table is in git history).
   gaps listed and never routed; a criterion the fix adds or rewords
   failing by name; a base that is not a commit refused; a control's label
   not read as a wait, the wait beside it still read).
+  Against main's skill text (a worktree with `skills/` from main, the
+  four new cases at three runs): 0.88, 0.86, 0.77 and 0.30, all below
+  their bars; the runner case and the unverified-line case lose only
+  their `git cat-file -e` grader there.
   `orchestrator_log_check.py` warns on an E line with no `checks` field
   and fails one that says `clean` over red checks.
 - **The skills name no project (0.14.4, 2026-11-10).** `tools/skill_words_test.py`
