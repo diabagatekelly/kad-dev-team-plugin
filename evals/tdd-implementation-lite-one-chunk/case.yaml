@@ -143,3 +143,13 @@ graders:
       PASS if the report still has its `## Chunk plan` with the three planted chunks unchanged (Chunk 1 cancel, Chunk 2 queue failure, Chunk 3 second cancel), and now also a `### Chunk 1: Cancel a member's hold on a title` section (or a heading clearly for chunk 1 with that title) with lines for what was built, what was decided, what was escalated (or none), any deviation from the Files line (or none), and the commit (a hash, or "see git log" if the hash was not read back; a line that exists but is honest is fine).
 
       FAIL if the plan was edited, reordered or chunks removed, the chunk section is missing, or it describes chunk 2 or chunk 3 work as built.
+  - type: llm
+    name: ends-on-the-hand-back-line
+    focus: last_message
+    weight: 1
+    criteria: |
+      A builder under the chunk loop ends on its hand-back and on nothing else: one line (or a few short lines) with the commit, the test count, `deviations <n>`, `shell edits <n>` and the report's path.
+
+      PASS if the final reply carries that hand-back: it names the commit hash and the report path and gives the test count, the deviations and the shell edits. Notes beside it on what was not run, what was verified or what was escalated are fine: the reply still ends the chunk.
+
+      FAIL if the final reply is the map query's answer, a plan for what to do next, or a progress note, with no committed chunk handed back.

@@ -1,0 +1,64 @@
+schema_version: "1.0"
+name: orchestrator-runner-handback-unverified
+description: "The orchestrator checks a runner's line before anything rests on it (0.14.5, review of 2026-11-12, finding 1): chunk 1's runner handed back a line whose `r1 fix` is a commit the repository does not hold (no fixer ever committed; only round 0 is recorded). The orchestrator runs `git cat-file -e` on the line's hashes, finds the one that does not exist, writes no C line and commits no records from the line, tells the owner nothing of the chunk as done, and hands off with the next action a relaunch of chunk 1's runner from what the tree holds (this run may launch no agent)."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. This session may launch no agent: when the next action is a launch, write the handoff file for it and stop there.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: hashes-checked-against-the-repository
+    tool: Bash
+    input_match: 'git[^|;&]*cat-file\s+-e'
+    min: 1
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: no-records-commit-from-the-line
+    target: trace
+    pattern: 'git commit[\s\S]{0,300}?Records: slice 001 chunk 1'
+    match: not_contains
+  - type: regex
+    name: no-c-line-written-from-the-line
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*C\. Chunk 1/3:\*\*'
+    match: not_contains
+  - type: llm
+    name: handoff-says-the-line-is-unverified-and-relaunches
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/handoff-slice-001.md
+    weight: 1
+    criteria: |
+      Chunk 1's runner handed back a line naming `3c9e1a7` as its r1 fix commit; no such commit exists in the repository (only the chunk's own commit and round 0's records do). The orchestrator may launch no agent in this session, so it writes the handoff for the next action.
+
+      PASS if the file says the runner's line named a commit the repository does not hold (the fix commit `3c9e1a7`, or "the r1 fix commit", does not exist or is unverified) and names the next action as relaunching chunk 1's chunk runner to resume from what the tree holds (at the fix round, or from round 0's records), with chunk 1 not done.
+
+      FAIL if it says chunk 1 is done, names chunk 2 as the next action, records `3c9e1a7` as chunk 1's fix without saying it does not exist, or leaves the previous session's next action (the records commit and the C line) standing.
+  - type: llm
+    name: owner-is-told-what-the-tree-holds
+    focus: last_message
+    weight: 1
+    criteria: |
+      The orchestrator found that a commit on the chunk runner's hand-back line does not exist in the repository.
+
+      PASS if the reply says so in plain words (the fix commit the runner named is not in the repository), reports what the tree does hold (chunk 1's build commit, round 0 recorded, no fix), and says chunk 1's runner will be relaunched or must be; it asks the owner nothing about discarding or reverting work.
+
+      FAIL if it reports chunk 1 as finished or its fix as committed, asks the owner whether to discard, revert or keep work on the strength of the line, or does not mention that the commit is missing.

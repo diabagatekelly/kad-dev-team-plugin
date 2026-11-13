@@ -38,6 +38,10 @@
 #                     and round 1 recorded, fix r1 committed and gated), its
 #                     hand-back line in the handoff, records uncommitted;
 #                     next: the records commit, the C line, the budget check
+#   chunk1-handback-phantom  as chunk1-handback up to round 0, but no fixer
+#                     ever committed: the runner's line in the handoff names
+#                     an r1 fix commit the repository does not hold; next:
+#                     the orchestrator checks the line before anything
 #   chunk1-r1         round 0 recorded, fix r1 committed and gated, the
 #                     re-review written; next: record round 1 with --range
 #   chunk1-done       chunk 1's C line written and records committed; the
@@ -54,6 +58,18 @@
 #                     commit still holds them); the export listed in
 #                     sources.md only after D; origin records what a push
 #                     delivers in tools/pushed-history.txt; next: E
+#   delivery-ci-red   as delivery-ready with E.1 to E.3 done: the records
+#                     committed, the branch pushed, pull request #7 open with
+#                     its two issues filed; the pull request's check is red
+#                     on the pushed commit (two tests fail on the runner);
+#                     next: E.4, the CI watch
+#   issue14-planned   slice 001 built and merged on main with the planning
+#                     as it was written (three gaps the readiness gate
+#                     would name today); issue #14 (High) open, the owner's
+#                     "fix it first on its own branch" logged, and the fix's
+#                     planning done and uncommitted: R3 in the reliability
+#                     document, its home in the design; next: the chunk
+#                     loop's A step for the issue fix
 # The log is never committed by the loop as the skill writes it (the C line
 # names the records commit, so it cannot be in it), so it is dirty in every
 # state, as it would be for real; the handoff file is committed, as the
@@ -394,6 +410,77 @@ case "$state" in
     round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review-clean; record1
     reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`2\` (reported \`1\`); review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg \`0\`, pre \`0\`); standing \`0/0/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted" \
       "C.6 for chunk 1: the records commit, the audit sync (audit off here), the C line from the hand-back, the budget check; then chunk 2's runner" ;;
+  chunk1-handback-phantom)
+    planning; plan; chunk1 chunk1 "none"
+    gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
+    round0 chunk-1-r0-review; record0
+    # No fixer committed anything: 3c9e1a7 is a hash the runner wrote and
+    # no object of this repository has.
+    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha 3c9e1a7\`; gate \`PASS\`; deviations \`0\`; shell edits \`2\` (reported \`1\`); review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`3c9e1a7\` → \`0/0/0\` (reg \`0\`, pre \`0\`); standing \`0/0/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted" \
+      "C.6 for chunk 1: the records commit, the audit sync (audit off here), the C line from the hand-back, the budget check; then chunk 2's runner" ;;
+  issue14-planned)
+    # Slice 001 as it was merged: the slice that points at its reliability
+    # document, the document, the built code, the slice's own report.
+    cp "$loop/docs/slice-001-with-pointer.md" "$target/slice-001.md"
+    cp "$loop/docs/reliability-slice-001.md" "$target/reliability-slice-001.md"
+    cp -R "$loop/snapshots/slice-built/." .
+    mkdir -p "$records"
+    cp "$loop/docs/implementation-report-plan.md" "$report"
+    cat >> "$log" <<LOG
+
+## 9. 2026-10-23 — slice ready for implementation
+
+**Routed to:** chunk loop
+**Artifact:** see sub-entries below
+- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; delegation — \`$target/delegation.md\`; cadence — \`loop\`; budget — \`5h, 2 reviews/chunk, 1 fix/scope (+1 regressions)\`; branch — \`slice-001-cancel-hold\`; base — \`0a1b2c3\`; records — \`$records\`; readiness — \`PASS\`
+- **E. Delivery:** CI \`present\`; pushed \`6a703fe\`; PR \`#7\`; checks \`CI green 6a703fe\`; issues \`#14\` (M \`0\`, deferred \`0\`); Lows \`3\` in body; ext r1 \`0\`c; \`clean r1\`; consults \`0\`; cost \`not measured\`; audit \`off\`
+  - Merged by the owner 2026-10-24 (the B to D lines are in the pull request's records).
+LOG
+    printf '# Delegation\n\nThe owner, 2026-10-23, asked on slice 001: "Yes: settle build decisions with the owning persona, log them, commit them under its name." Covers design decisions, security and reliability criteria, screen states, accessibility criteria. Never covers scope or requirements. Changed by the owner saying so or editing this file.\n' > "$target/delegation.md"
+    git add -A
+    git commit -qm "Slice 001: staff cancel a member's hold on a title (#7)"
+    git push -q origin main
+    # The fix's planning, done and uncommitted, as the backward routes left
+    # it: R3 before the reliability document's decisions, its home before
+    # the design's boundaries.
+    "$py" -I -c '
+import sys
+target, docs = sys.argv[1:3]
+def insert(path, before, addition):
+    text = open(path, encoding="utf-8").read()
+    assert text.count(before) == 1, (path, before)
+    open(path, "w", encoding="utf-8", newline="\n").write(text.replace(before, addition + "\n" + before))
+insert(target + "/reliability-slice-001.md", "## Decisions", open(docs + "/issue14-reliability-addition.md", encoding="utf-8").read())
+insert(target + "/design-001.md", "## Boundaries and interfaces", open(docs + "/issue14-design-addition.md", encoding="utf-8").read())
+' "$target" "$loop/docs"
+    cat >> "$log" <<LOG
+
+## 10. $today — the tracker has an open High issue, #14
+
+**Routed to:** the owner (open work, step 1b)
+**Artifact:** this log
+- tracker: no open pull request; issue #14, \`[High] A queue that comes back after a failure keeps the half-removed hold\`. The owner: "Fix it first on its own branch."
+
+## 11. $today — issue #14 needs a rule the reliability criteria do not state (backward)
+
+**Routed to:** \`devsecops-engineer:reliability-requirements\`
+**Artifact:** \`$target/reliability-slice-001.md\` (R3 added; R1 and R2 as they were)
+
+## 12. $today — R3 has no home in the design (backward)
+
+**Routed to:** \`software-architect:architecture-design\`
+**Artifact:** \`$target/design-001.md\` (decision 3: the removal is recorded before the queue answers)
+LOG
+    # The remote must look like GitHub for the open-work step to ask the
+    # tracker; nothing in the A step fetches or pushes.
+    git remote set-url origin https://github.com/example/library-lending.git
+    mkdir -p tools
+    cp "$loop/tools/gh" tools/gh
+    chmod +x tools/gh
+    cp "$loop/docs/issues-high-14.json" tools/issues.json
+    printf 'tools/\n' >> .git/info/exclude
+    # Empty until a `gh` call, so a grader reading it never finds it missing.
+    : > tools/gh-calls.log ;;
   chunk1-done)
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
@@ -401,7 +488,7 @@ case "$state" in
     records_commit "Records: slice 001 chunk 1"; budget_h=5.9 cline1
     started="$(hours_ago 6)" reviews=2 fixers=1 handoff "chunk 1 of 3 done: C line written, records committed as $rec_sha" \
       "the budget check at the chunk boundary, then chunk 2" ;;
-  slice-built|delivery-ready|delivery-ready-source)
+  slice-built|delivery-ready|delivery-ready-source|delivery-ci-red)
     planning; plan; chunk1 chunk1 "none"
     if [ "$state" = delivery-ready-source ]; then plant_cards; fi
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
@@ -463,10 +550,26 @@ HOOK
         # Empty until a push, for the same reason as gh-calls.log above.
         : > tools/pushed-history.txt
       fi
-      reviews=11 fixers=2 handoff "D done: D line written, records committed as $rec_sha; the fix round at D changed nothing the map lists (the notice's escaping only)" \
-        "E: delivery" \
-        "**Standing:** 2 Mediums (\`reason\` optional on both statuses, lending/cancel-hold.ts:32; \`slice(-4)\` on a short card number, lending/cancel-hold.ts:55); 3 Lows in the slice reports" \
-        "**Tracker:** GitHub issues in this repository (user-story-001.md); the \`gh\` CLI on this machine is the wrapper at \`tools/gh\`"
+      standing="**Standing:** 2 Mediums (\`reason\` optional on both statuses, lending/cancel-hold.ts:32; \`slice(-4)\` on a short card number, lending/cancel-hold.ts:55); 3 Lows in the slice reports"
+      tracker="**Tracker:** GitHub issues in this repository (user-story-001.md); the \`gh\` CLI on this machine is the wrapper at \`tools/gh\`"
+      if [ "$state" = delivery-ci-red ]; then
+        # E.1 to E.3 as the previous session did them: the log and the
+        # records committed, the branch pushed, the pull request open. The
+        # check is red on exactly the pushed commit (tools/ci-red).
+        git add "$log" "$records"
+        git commit -qm "Records: slice 001 delivery"
+        git push -q -u origin slice-001-cancel-hold
+        pushed_sha="$(git rev-parse --short HEAD)"
+        : > tools/pr-open
+        git rev-parse HEAD > tools/ci-red
+        cp "$loop/tools/ci-failed.log" tools/ci-failed.log
+        reviews=11 fixers=2 handoff "E.3 done: the records committed, the branch pushed at $pushed_sha, pull request #7 opened (https://github.com/example/library-lending/pull/7) with its body, the two standing Mediums filed as #41 and #42 and linked in the body; the session ended before the pull request's checks were looked at" \
+          "E.4 on pull request #7, then the cost and the E line" \
+          "$standing" "$tracker"
+      else
+        reviews=11 fixers=2 handoff "D done: D line written, records committed as $rec_sha; the fix round at D changed nothing the map lists (the notice's escaping only)" \
+          "E: delivery" "$standing" "$tracker"
+      fi
     fi ;;
   *) echo "unknown state: $state" >&2; exit 1 ;;
 esac

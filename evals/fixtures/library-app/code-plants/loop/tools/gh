@@ -1,20 +1,47 @@
 #!/usr/bin/env bash
-# Recording stand-in for the GitHub CLI, for the delivery case: the eval
-# sandbox has no network and no account, so every call is appended to
-# gh-calls.log next to this script and answered with the shape the real
-# command prints. The graders read the log; nothing here reaches GitHub.
-log="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/gh-calls.log"
+# Recording stand-in for the GitHub CLI, for the delivery and issue-fix
+# cases: the eval sandbox has no network and no account, so every call is
+# appended to gh-calls.log next to this script and answered with the shape
+# the real command prints. The graders read the log; nothing here reaches
+# GitHub. Three files beside this script, each written by a loop state,
+# change what it answers:
+#   pr-open       the slice branch has an open pull request (#7)
+#   ci-red        a commit hash: while the remote's slice branch is at that
+#                 commit the pull request's check fails (and `pr checks`
+#                 exits 1, as the real command does); a later push is green
+#   ci-failed.log what `run view --log-failed` prints
+#   issues.json   what `issue list` prints
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+log="$here/gh-calls.log"
 printf '%s\n' "$*" >> "$log"
 repo="example/library-lending"
+branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
+pushed="$(git rev-parse -q --verify "refs/remotes/origin/$branch" 2>/dev/null || true)"
+red=""
+if [ -f "$here/ci-red" ] && [ -n "$pushed" ] && [ "$pushed" = "$(cat "$here/ci-red")" ]; then red=yes; fi
 case "${1:-} ${2:-}" in
   "repo view") echo "{\"defaultBranchRef\":{\"name\":\"main\"},\"nameWithOwner\":\"$repo\"}" ;;
-  "pr list") echo "[]" ;;
+  "pr list")
+    if [ -f "$here/pr-open" ]; then
+      echo "[{\"number\":7,\"headRefName\":\"$branch\",\"url\":\"https://github.com/$repo/pull/7\",\"title\":\"Staff cancel a member's hold on a title\",\"state\":\"OPEN\"}]"
+    else
+      echo "[]"
+    fi ;;
   "pr create") echo "https://github.com/$repo/pull/7" ;;
   "pr edit") echo "https://github.com/$repo/pull/7" ;;
-  "pr view") echo "{\"number\":7,\"url\":\"https://github.com/$repo/pull/7\",\"state\":\"OPEN\",\"headRefName\":\"slice-001-cancel-hold\"}" ;;
-  "pr checks") echo "no checks reported on the 'slice-001-cancel-hold' branch" ;;
+  "pr view") echo "{\"number\":7,\"url\":\"https://github.com/$repo/pull/7\",\"state\":\"OPEN\",\"headRefName\":\"$branch\",\"baseRefName\":\"main\",\"headRefOid\":\"$pushed\"}" ;;
+  "pr checks")
+    if [ -n "$red" ]; then
+      printf 'X\tchecks\t2m14s\thttps://github.com/%s/actions/runs/9101/job/50177\n' "$repo"
+      exit 1
+    fi
+    printf '✓\tchecks\t1m52s\thttps://github.com/%s/actions/runs/9102/job/50190\n' "$repo" ;;
+  "run view")
+    if [ -f "$here/ci-failed.log" ]; then cat "$here/ci-failed.log"; else echo "run 9102: completed, success"; fi ;;
+  "run list") echo "[{\"databaseId\":$([ -n "$red" ] && echo 9101 || echo 9102),\"conclusion\":\"$([ -n "$red" ] && echo failure || echo success)\",\"status\":\"completed\",\"headSha\":\"$pushed\",\"workflowName\":\"ci\"}]" ;;
   "issue create") n=$((40 + $(grep -c '^issue create' "$log"))); echo "https://github.com/$repo/issues/$n" ;;
-  "issue list") echo "[]" ;;
+  "issue list") if [ -f "$here/issues.json" ]; then cat "$here/issues.json"; else echo "[]"; fi ;;
+  "issue comment") echo "https://github.com/$repo/issues/14#issuecomment-1" ;;
   "label create") echo "✓ Label \"tech-debt\" created in $repo" ;;
   "label list") echo "tech-debt" ;;
   "auth status") echo "Logged in to github.com account example" ;;

@@ -492,8 +492,8 @@ def check_chunk_loop(e, findings):
             elif cadence:
                 findings.append(("INFO", tag, f"cadence {cadence.split()[0]}"))
         sidecar = field(a_text, "records") or field(a_text, "reviews")
-        m = re.search(r"slice-(\d{3})", field(a_text, "branch") or "")
-        nnn = m.group(1) if m else None
+        m = re.search(r"slice-(\d{3})(?:-(issue\d+))?", field(a_text, "branch") or "")
+        nnn = (m.group(2) or m.group(1)) if m else None
     b = re.search(r"^- \*\*B\. Plan:\*\*\s*`?(\d+)`? chunks", body, re.M)
     planned = int(b.group(1)) if b else None
     if "B" in steps and planned is None:
@@ -594,6 +594,19 @@ def check_chunk_loop(e, findings):
                 findings.append(("WARN", tag, "E line has no `cost` field (`$<n>` or `not measured`)"))
             if not re.search(r"\bLows\s+`?\d+", text):
                 findings.append(("WARN", tag, "E line has no `Lows <n> in body` field"))
+        # 0.14.5: a delivery is done only on green checks.
+        checks = re.search(r"\bchecks\s+`?(CI green " + SHA + r"|CI red|CI no result|no checks)", text)
+        if not checks:
+            findings.append(("WARN", tag, "E line has no `checks` field (a 0.14.5 field: `CI green <sha>`, `CI red r<i>: <jobs>` or `CI no result`)"))
+        elif not checks.group(1).startswith(("CI green", "no checks")) and re.search(r"\bclean r\d+", text):
+            findings.append(("ERROR", tag, f"E line says `clean` while its checks say `{checks.group(1)}`: a pull request with a red or unsettled check is not done"))
+        elif checks.group(1).startswith("CI green"):
+            # Green on another commit says nothing of the one delivered: the
+            # last push on the line (a CI or review fix after `pushed`) is it.
+            green = checks.group(1).split()[-1]
+            heads = re.findall(r"(?:pushed|fix)\s+`?\(?`?(" + SHA + r")", text)
+            if heads and not any(h.startswith(green) or green.startswith(h) for h in heads):
+                findings.append(("ERROR", tag, f"E line: checks are green on `{green}`, which is neither the pushed commit nor a later fix on the line"))
         ext = [int(m.group(1)) for m in re.finditer(r"\bext r(\d+)\s+`?\d+`?c:", text)]
         if ext != list(range(1, len(ext) + 1)):
             findings.append(("ERROR", tag, f"E line: external rounds are not r1, r2, … in order: {', '.join('r%d' % n for n in ext)}"))
@@ -627,8 +640,9 @@ def check_sidecar(project, log_dir, e, sidecar_path, nnn, chunks_logged, log_tot
                 candidates = [base]
                 break
             if os.path.isdir(base):
-                all_files = sorted(glob.glob(os.path.join(base, "rounds-slice-*.jsonl")))
-                mine = [f for f in all_files if nnn and os.path.basename(f) == f"rounds-slice-{nnn}.jsonl"]
+                all_files = sorted(glob.glob(os.path.join(base, "rounds-slice-*.jsonl")) + glob.glob(os.path.join(base, "rounds-issue*.jsonl")))
+                # An issue fix (0.14.5) keeps its own sidecar, `rounds-issue<n>.jsonl`, beside the slice's.
+                mine = [f for f in all_files if nnn and os.path.basename(f) == (f"rounds-{nnn}.jsonl" if nnn.startswith("issue") else f"rounds-slice-{nnn}.jsonl")]
                 candidates = mine or all_files
                 if len(candidates) > 1:
                     findings.append(("WARN", tag, f"sidecar: {len(candidates)} rounds files in {sidecar_path} and the A line's branch names no slice; reading all of them"))

@@ -1,0 +1,83 @@
+schema_version: "1.0"
+name: delivery-ci-red-not-done
+description: "Red CI is not done (0.14.5, review of 2026-11-12, finding 2): resumed at E.4 with the branch pushed and pull request #7 open, the stand-in GitHub CLI answers a failing check on the pushed commit and a failing job's log (two tests fail on the runner, an Ubuntu image with a fresh install). The orchestrator runs delivery's CI watch: it reads the checks, reads the failing job with `gh run view --log-failed`, writes the failing tests and the platform difference to `pr-ci-r1.md`, writes no E line that says clean or green, reports the CI state first and the pull request as not ready, and (this run may launch no agent) hands off with the next action one fresh fixer told the platform difference and that the failing tests are not weakened."
+tags: [orchestrator, delivery, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command); the remote is already set up. This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there.
+  model: sonnet
+  max_turns: 50
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: delivery-skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:delivery"'
+    min: 1
+  - type: regex
+    name: checks-read
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)pr checks'
+  - type: regex
+    name: failing-job-read
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)run view[^\n]*--log-failed'
+  - type: regex
+    name: failing-tests-written-to-the-records
+    target: trace
+    pattern: '"name":"(?:Write|Bash)","input":\{[\s\S]{0,400}?pr-ci-r1\.md[\s\S]{0,6000}?removes only that member'
+  - type: file_exists
+    name: ci-report-exists
+    path: docs/cancel-hold/implementation/pr-ci-r1.md
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: nothing-in-the-background
+    target: trace
+    pattern: '"run_in_background"\s*:\s*true'
+    match: not_contains
+  - type: regex
+    name: no-e-line-that-says-clean-or-green
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*E\. Delivery:\*\*[^\n]*(?:clean r\d|CI green)'
+    match: not_contains
+  - type: llm
+    name: handoff-briefs-the-fixer
+    focus:
+      source: file
+      path: docs/cancel-hold/implementation/handoff-slice-001.md
+    weight: 1
+    criteria: |
+      Pull request #7's check is failing on the pushed commit: two tests (`removes only that member's hold on that title` and `in-memory queue removes one member's hold and says whether it was there`) fail on the CI runner, an Ubuntu image with a fresh install, and pass in the local gate. The orchestrator may launch no agent in this session, so it writes the handoff for the next action.
+
+      PASS if the file says the pull request's CI is red (round 1) and names the next action as one fresh fixer for the CI failure, handed the failing tests (the `pr-ci-r1.md` file or the tests by name), told that the tests fail on the runner's platform and pass on this machine (the platform difference), and told that the failing tests are not to be weakened (not skipped, guarded by platform, loosened or retried); then the gate, the push and the checks watched again.
+
+      FAIL if it says the delivery is done or the pull request is ready, names the external review, the cost or the E line as the next action, or briefs the fixer without both the platform difference and the rule that the failing tests are not weakened.
+  - type: llm
+    name: report-leads-with-red-ci-and-not-ready
+    focus: last_message
+    weight: 1
+    criteria: |
+      Pull request #7 is open and its check is failing on the pushed commit.
+
+      PASS if the reply states the CI state before anything about what was built or delivered (the checks are red or failing, with the failing tests or the failing job named), says the pull request is not ready or the delivery is not done, and says what comes next (a fixer for the CI failure, then the checks again).
+
+      FAIL if it opens with what was built or delivered, calls the slice or the pull request done, built, delivered, clean or ready to merge, omits that a check is failing, or suggests merging.

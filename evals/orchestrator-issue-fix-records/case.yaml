@@ -1,0 +1,77 @@
+schema_version: "1.0"
+name: orchestrator-issue-fix-records
+description: "An issue fix has a convention and a scoped readiness gate (0.14.5, review of 2026-11-12, findings 4b and 5): slice 001 is built and merged with planning written before three of the gate's checks existed; issue #14 (High) is open, the owner said to fix it first on its own branch, and the fix's planning is done (R3 in the reliability document, its home in the design, uncommitted). The orchestrator starts the chunk loop for the issue: the branch is `slice-001-issue14-…`, the planning commit names the issue, the readiness gate runs with `--fix-base` and passes on what the fix revised, the three older gaps are routed to no persona and filed once as one issue through the stand-in GitHub CLI, the A line carries the fix base and the older gaps, and the handoff written after the A line is `handoff-issue14.md`."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. Issue #14 is the one I told you to fix first on its own branch, and its planning is done (entries 10 to 12 of the log). What's next? On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command). If the sandbox check fails here, write no settings and continue unsandboxed; I won't be around to answer questions while you work. Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session).
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: readiness-gate-scoped-to-the-fix
+    tool: Bash
+    input_match: 'readiness_check\.py[\s\S]*--fix-base'
+    min: 1
+  - type: tool_used
+    name: no-backward-route-for-an-older-gap
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:(?:reliability-requirements|architecture-design|vertical-slicing|screen-design)"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: branch-names-the-slice-and-the-issue
+    target: trace
+    pattern: 'git (?:switch -c|checkout -b) [''"]?slice-001-issue14-'
+  - type: regex
+    name: planning-commit-names-the-issue
+    target: trace
+    pattern: 'git commit[\s\S]{0,300}?Planning: issue 14 ready for implementation'
+  - type: regex
+    name: older-gaps-filed-as-one-issue
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)issue create[^\n]*Older planning gaps: slice 001'
+  - type: regex
+    name: older-gaps-filed-once
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)issue create[\s\S]*\nissue create'
+    match: not_contains
+  - type: regex
+    name: a-line-carries-the-fix-base-and-the-older-gaps
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*A\. Start:\*\*[^\n]*fix base[^\n]*[0-9a-f]{7,40}[^\n]*older gaps[^\n0-9]*3\b[^\n]*#41'
+  - type: regex
+    name: handoff-carries-the-issue-prefix
+    target: trace
+    pattern: '"name":"(?:Write|Bash)","input":\{[\s\S]{0,1500}?implementation/handoff-issue14\.md'
+  - type: llm
+    name: reports-the-fix-started-and-the-gaps-filed
+    focus: last_message
+    weight: 1
+    criteria: |
+      The orchestrator started the chunk loop for the fix of issue #14 on slice 001 and was told to hand off once the A line is written. The readiness gate, scoped to what the fix revised, passed; three gaps in the slice's older planning (a criterion the design does not quote, a failure path with no home, a wait with no number) were listed, not routed.
+
+      PASS if the reply says the fix's loop started on its own branch with readiness passed, says the older gaps were filed as one issue (or names the issue, #41) rather than sent back to a planning stage, and says it handed off before the plan.
+
+      FAIL if it reports the readiness gate as failed, routes or proposes to route the older gaps back to a persona before the build, asks the owner what to do about them, or says a planner or builder was launched.

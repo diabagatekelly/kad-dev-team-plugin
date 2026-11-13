@@ -250,3 +250,215 @@ Definition of Done's README list, a structural size finding as the architect's
 decision, the anchoring pass with `INCIDENTS.md`). Next: slice 3 on 0.14.4
 under the light cadence, as `.synthesis/handoff-slice2.md` "After this list"
 says; nothing of the fix round is left to run.
+
+## Work list: 0.14.5 and 0.15.0 (written 2026-11-12, after the issue #33 fix)
+
+The sixth run (issue #33 on `personal-finance-tracker-3`, kad 0.14.4, PR #42)
+was reviewed 2026-11-12: `~/.claude/kad-audit/reviews/2026-11-12.md`, and in
+the audit repository as
+`personal-finance-tracker-3-slice-1/plugin-review/2026-11-12-issue33-fix-review.md`
+with the cold read (4/3/4/4/3/4) and the mutation pass (39 of 44). The finding
+numbers below are that review's. The tooling behind phase B is surveyed in
+`.synthesis/quality-tooling-survey.md`. Slice 3 has not run; it is the test
+of 0.15.0 below, not the next thing to do.
+
+Rules as before: one PR per phase; every skill change gets its eval case on
+the library fixture, never the project's content; the gate passes before the
+PR opens (a usage window sustains about 100 to 120 cases); Sourcery's
+comments are triaged without being asked. Tick an item only when its "done
+when" holds.
+
+### Phase A, 0.14.5: what broke the run
+
+- [x] A1 **A runner waits, and a result is only a hand-back** (finding 1).
+  `chunk-runner`: waiting is ending the turn with no tool call; never a
+  background command, a poll or a monitor to wait; an agent has returned
+  only when its hand-back message is there; a hash is real only when `git
+  cat-file -e` says so; the stall rule applies to a hand-back message,
+  never to an empty `git log`; never hand back while a launched agent has
+  not returned. `tdd-implementation-lite`: a skill invoked inside a build
+  (the map query) is a note, the turn goes on, the only final message is
+  the hand-back. The orchestrator checks every hash on a runner's line
+  before it writes the line or asks the owner anything built on it. Done
+  when: cases `chunk-runner-waits-for-handback` and
+  `orchestrator-runner-handback-unverified` pass and fail without the
+  change.
+- [x] A2 **Red CI is not done** (finding 2, the owner's draft of
+  2026-11-12). A "CI watch" section in `delivery`, called by the
+  orchestrator's E step after every push and by step 1b for an open pull
+  request with red checks: wait bounded by the workflow's timeout plus 5
+  minutes (no result is never green); green goes on to the comments; red
+  reads the failing job (`gh run view --log-failed`, then the job page in
+  Chrome, then the owner with the URL), writes the failing tests to
+  `<records>/pr-ci-r<i>.md`, one fresh fixer told the platform difference
+  and that the failing tests are not weakened, the gate, the push, the
+  watch again; three rounds at most; the report leads with the CI state
+  and the E line needs `CI green <sha>`. Done when: case
+  `delivery-ci-red-not-done` passes.
+- [x] A3 **The gate does not fail scope on the flow's own records**
+  (finding 8): `validation_gate.py` exempts the orchestrator log and the
+  sidecar. Done when: a tool test shows it and a real out-of-scope file
+  still fails.
+- [x] A4 **An issue fix has a convention and a scoped readiness gate**
+  (findings 4b and 5): records prefix `issue<n>-`; `readiness_check.py`
+  checks the documents and criteria the fix revised, lists older gaps as
+  INFO and the orchestrator files them once as one issue; the
+  numbers-on-waits check stops matching a button label. Done when: case
+  `orchestrator-issue-fix-records` passes and the readiness tool tests
+  cover the scoped mode and the false match.
+
+Built 2026-11-12 on branch `phase-a-0.14.5`. The gate: 53 cases reached,
+all with current evidence. Against main's skill text the four new cases
+fail (0.88, 0.86, 0.77, 0.30 against bars of 0.97, 1.00, 0.97, 0.97), with
+two limits to know: `chunk-runner-waits-for-handback` and
+`orchestrator-runner-handback-unverified` fail there on the hash check
+alone (the old orchestrator also declined to write the C line from a line
+whose commit was missing, without the check), and no case can make a
+runner wait, since a launch blocks under the eval (E2's replay case).
+`delivery-ci-red-not-done` stops before the fixer.
+
+**Test of 0.14.5: one issue fix on `personal-finance-tracker-3`, before any
+of phase B is built.** Issue #49 (stopping soon after connecting waits the
+full 10 s and leaves the claim), with #54 and #40 if the owner wants them
+in the same fix. It is the right size and shape: it needs a design
+decision, it touches the close and a wait (so the runner is exercised on
+the code that tripped it), and its tests must pass on Linux. Measured
+against the issue #33 run: no result named before its hand-back, no stall
+message to a working agent, no readiness route about an untouched
+document, the pull request never reported as built while a check is red,
+and the owner's questions in the loop (7 last time). About $30 to $60.
+
+### Phase B, 0.15.0: the review rebalance (finding 10)
+
+- [ ] B1 **Gate categories, picked per stack.** The plugin names the
+  categories (type-aware lint, stricter compiler flags, complexity and
+  length limits, duplication, unused code, changed-line coverage, test
+  timeouts and random order, secret and workflow scans);
+  `technology-bootstrap` picks the tool for the project's language from
+  the survey's lists (a) and (b) and records it; the gate runs what the
+  manifest names. Existing code is taken as the baseline so only new
+  violations fail. Done when: the library fixture carries the checks, a
+  planted violation of each category fails the gate, and a clean chunk
+  passes.
+- [ ] B2 **The chunk reviewer's brief is narrowed.** `code-review`,
+  `test-quality-review` and `reliability-review` in the combined chunk
+  review say what the gate already covers and do not report it; what is
+  left is behaviour, names and comments that tell the truth, and the
+  design. Done when: a case with a planted duplication and a planted
+  behaviour bug gets the bug reported and the duplication left to the
+  gate.
+- [ ] B3 **The cold read inside the slice review.** D's stranger test
+  becomes the full `cold_read.md` brief (whole app, no planning document,
+  every suspicion probed by execution), plus one instruction: for each
+  thing the slice adds, name the older code it runs alongside or depends
+  on and probe the pair. Its confirmed bugs go to D's fix round. The
+  audit's own cold read stays as a second reader. Done when: a case on the
+  fixture with a planted bug where new code meets old code is found by
+  execution.
+- [ ] B4 **Mutation on the changed lines at D**, with the plugin's own
+  `mutation_pass.py` (the survey could not verify Stryker on this stack);
+  the test-quality reviewer reads the survivors and says which matter.
+  Done when: a planted unguarded rule on the fixture comes back as a
+  survivor and a D finding.
+- [ ] B5 **Deferred items listed once, by a script**, in the pull
+  request's body; the security, reliability and architecture reviewers
+  stop restating them (25 of 83 findings last run). Done when: a case
+  shows none restated.
+- [ ] B6 **CI on a second operating system** in `ci-pipeline` (Linux and
+  macOS), since the gate runs on one. Done when: the generated workflow
+  has the matrix and the case passes.
+
+**Check of B1 without a run:** apply the picked checks to
+`personal-finance-tracker-3` at `main` on a scratch clone and record how
+many violations each finds. This sets the baseline and shows whether the
+readability findings of the last two cold reads (long functions, wide
+lines) are what the limits measure. No tokens beyond the session.
+
+### Phase C, 0.15.0: new capabilities
+
+- [ ] C1 **The screen-change check** (finding 9; the owner 2026-11-12:
+  pixel diff, hands-off, one fixed environment). At D for a UI-touching
+  slice: every state with a saved baseline is re-driven by a scripted
+  browser on made-up data and compared; a difference in a state the
+  screen design does not list as changed is a finding; listed states
+  replace their baseline. Baselines are made and compared in CI on Linux
+  only. Done when: on the fixture, a style change meant for one state
+  that moves another is reported, and the intended change is not.
+- [ ] C2 **Autopilot** (finding 3, and finding 6's standing-finding
+  verification; the owner 2026-11-12: as recommended). A standing
+  `planning/autopilot.md`, asked once per project like the delegation
+  file: the loop takes its own recommendation and logs "taken as
+  recommended" for a budget overrun caused by a relaunch, one extra
+  review to verify a standing Critical or High after the last fix, one
+  fixer for a finding that verification confirmed, and a readiness route
+  that changes no decision. It always asks when the recommendation
+  changes a number or decision the owner approved, deletes or rewrites
+  committed work, pushes anything red, or touches scope or requirements.
+  Planning forks that carry a recommendation stay questions. Done when:
+  cases show one stop taken without a question and one always-ask stop
+  still asked.
+- [ ] C3 **The concurrency pass in `architecture-design`** (finding 4a):
+  for a change about concurrency or more than one process, the
+  interleavings are listed and answered before the decision is final (two
+  starts at once, a crash at each step, a stop during each wait, a
+  leftover removed by hand, a reused process number). Done when: case
+  `architecture-design-concurrency-interleavings` passes.
+
+**Test of 0.15.0: slice 3 on `personal-finance-tracker-3`** (reconnect a
+lapsed login, #14), which is UI-touching and so exercises B and C1
+together. Baselines for C1 are captured from `main` before the slice
+starts. Measured against the issue #33 run and slice 2 round 1: the cold
+read's readability and reliability scores (3 and 3 for two runs), the
+bugs the audit's cold read finds that the loop's did not, findings per
+chunk, the share of added lines written by fixers (58%), reviewer and
+fixer cost, the owner's questions in the loop, and any screen difference
+outside the slice.
+
+The light cadence arm, decided by the owner 2026-11-12: slice 3 runs on
+0.15.0 under the normal cadence, and the light arm is measured on the slice
+after, so the two changes are not measured at once.
+
+### The eval suite itself (the owner, 2026-11-12: both agreed)
+
+Asked while phase A's gate ran: how do we know the suite is not garbage,
+too little or overkill. The chunk runner had six cases at 1.00 when two
+real runners invented their agents' results, because a launch blocks under
+`claude plugin eval` and runs in the background in a real session.
+
+Decided by the owner 2026-11-12: no overhaul before the work list goes on
+and no second eval folder; the suite is changed in place. The order:
+phase A merged and tested on issue #49; E1; E2 on `chunk-runner` and
+`delivery` with the replay case; phase B, its new cases written with a
+known-bad reference and a regression-or-capability tag; suite tiers and
+judge calibration after 0.15.0. Not taken from the survey: whole-loop
+fixture runs per release (the audited real runs are that) and trajectory
+matching against a reference path.
+
+- [ ] E1 **Which cases have ever failed.** From the results history (the
+  flat `gate-*.json` files and the archive), per case: runs, failures since
+  its bar was recorded, and the graders that failed. A case that never
+  failed is a candidate to merge or drop; no model time. Done when: the
+  table is in `evals/README.md` and the candidates are listed for the
+  owner.
+- [ ] E2 **Mutation on the skills.** Delete one rule at a time from a
+  skill and run the cases the skill reaches: a rule no case notices is
+  unguarded, a case no deletion fails is dead weight. Start with
+  `chunk-runner` and `delivery` (short, recently changed). Costs gate
+  runs, so one skill per usage window. Each deletion that a case catches
+  is kept beside that case as its known-bad reference (the skill with
+  the rule removed must fail it), so "fails without the change" is a
+  property the suite keeps. The owner, 2026-11-12: three runs per
+  variant stay; a replay case for the runner's wait may be captured from
+  a real `kad` session on the library fixture, outside the eval (never
+  from a project's transcripts), and resumed with `history_file`. Done when: both skills have a
+  survivors list and each survivor is a new grader, a dropped rule, or an
+  accepted gap.
+- [ ] E3 **What others do.** Survey of how comparable orchestrators and
+  the wider field evaluate skills and agents:
+  `.synthesis/eval-methods-survey.md`; its recommendations are for the
+  owner to pick from before E2 is built.
+
+### Open on the project
+
+Issues #49 to #56 from this review (filed 2026-11-12); #43 to #47 from the
+fix itself; pull request #48 (records only) to merge or close.

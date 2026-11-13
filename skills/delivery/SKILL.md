@@ -1,6 +1,6 @@
 ---
 name: delivery
-description: Push a finished, reviewed slice branch, open its pull request with a reviewer-ready body, file the leftover findings as tracker issues, collect the external reviewer's comments for triage and act on the verdicts (push the fixes, reply to the declines, file the deferrals). Use at the end of the orchestrator's chunk loop (its step E, which invokes this skill after its own records commit) or when asked to deliver, push or open a pull request for a branch whose work is done; a handoff file that names E as the next action is resumed through the orchestrator, not by invoking this skill. Also the only procedure for taking a value of the owner's (a row of a file `sources.md` lists) out of a branch's history: when the owner asks for something of theirs to be replaced, scrubbed or removed from commits, nothing opens their file, greps for a value or rewrites a commit except this skill's "Removing a value from history", reached through the orchestrator whenever a flow or a handoff file is open (its E step invokes this skill with the owner's words) and directly only when none is. Owns the git and hosting mechanics only; it decides nothing about the code and never pushes to the default branch.
+description: Push a finished, reviewed slice branch, open its pull request with a reviewer-ready body, file the leftover findings as tracker issues, watch the pull request's checks after every push (a red or unsettled check is never reported as built), collect the external reviewer's comments for triage and act on the verdicts (push the fixes, reply to the declines, file the deferrals). Use at the end of the orchestrator's chunk loop (its step E, which invokes this skill after its own records commit) or when asked to deliver, push or open a pull request for a branch whose work is done; a handoff file that names E as the next action is resumed through the orchestrator, not by invoking this skill. Also the only procedure for taking a value of the owner's (a row of a file `sources.md` lists) out of a branch's history: when the owner asks for something of theirs to be replaced, scrubbed or removed from commits, nothing opens their file, greps for a value or rewrites a commit except this skill's "Removing a value from history", reached through the orchestrator whenever a flow or a handoff file is open (its E step invokes this skill with the owner's words) and directly only when none is. Owns the git and hosting mechanics only; it decides nothing about the code and never pushes to the default branch.
 ---
 
 # Delivery
@@ -144,10 +144,71 @@ Then, in the same turn, edit the pull request body so each standing
 Medium links its issue. One issue per finding, never one issue for all of
 them, never a standing Medium dropped because it looks small.
 
+## CI watch
+
+A pushed branch is not delivered until its checks are green. This section
+runs after the push in section 2, after every later push this skill makes
+(a review fix's, a CI fix's), and first of all when the routing calls on
+an open pull request. While a check is red or has no result, nothing else
+of this skill goes on, and nothing is reported as built, clean or ready
+to merge.
+
+1. **Wait, bounded.** `gh pr checks <number> --watch --interval 60`, in
+   the foreground, each call under a command timeout of ten minutes at
+   most (a watch has no limit of its own), called again while anything is
+   still pending and never once the bound has passed (note the time
+   before the first call), for at
+   most the workflow's own limit plus five minutes: the largest
+   `timeout-minutes` among the jobs of the workflows that run on pull
+   requests, or 30 minutes when no job states one. A check that has not
+   been reported yet is pending, not absent. **No result is never
+   green**: when the bound passes with a check still pending, or with
+   none reported by a workflow that runs on pull requests, the state is
+   `CI no result`, the watch ends there, and the report opens with it
+   and the pull request's checks URL. Only a repository with no workflow
+   that runs on pull requests has nothing to wait for, and the state
+   then reads `no checks (no workflow runs on pull requests)`.
+2. **Green.** Every check passed or was skipped, on the commit that was
+   pushed (`gh pr view <number> --json headRefOid` against `git
+   rev-parse HEAD`; a result on an older head is not this push's). The
+   state is `CI green <sha>`; go on to the comments. The head is read
+   once more just before the report: a pull request whose head has moved
+   since the watch (a push from elsewhere) is watched again on the new
+   head, and green is never reported for a commit the pull request no
+   longer points at.
+3. **Red.** Read the failing job before anything else, by the first of
+   these that gives the failing tests: `gh run view <run id>
+   --log-failed` (the run id is in the failing check's link); the job's
+   page in the browser, when a browser answers; the owner, with the URL,
+   in the report. Write `<records dir>/pr-ci-r<i>.md`: the head; each
+   failing job with its runner's operating system; each failing test by
+   name with its assertion message; the last lines of the failing step;
+   and **the platform difference**, what the runner is that the machine
+   the gate ran on is not (operating system, file system, runtime
+   version, time zone, locale, a clean checkout with a fresh install),
+   since a test that is green in the gate and red in CI fails on one of
+   those. Return `CI red r<i>: <that path>` to the orchestrator. It has
+   one fresh fixer apply it, told the platform difference and that **the
+   failing tests are not weakened** (no skip, no platform guard around
+   an assertion, no loosened expectation, no retry: the code is made
+   right on both platforms, or a test's own mistake is corrected and
+   named), and runs the gate; on its PASS you push (preconditions 4 and
+   5 again) and this section runs again from 1.
+4. **Three rounds at most.** Red after the third fix ends the delivery
+   as `CI no result` does: no comment is collected, `ready to merge` is
+   not returned, and the report opens with the state. A job that failed
+   for a reason outside the code (cancelled, a runner that never
+   started) is still red; the file says so, with the URL, and it goes to
+   the owner, not to a fixer. Nothing here re-runs a job.
+
+A delivery once reported what it had built while the pull request's
+checks were failing on a defect only the runner's platform showed
+(incident 33).
+
 ## 5. The external reviewer's comments
 
-Wait for the pull request's checks and reviews to settle: poll
-`gh pr checks <number>` every sixty seconds until nothing is pending, for
+Once the CI watch says green, wait for the reviews to settle (a review
+bot posts after the checks start), for
 at most fifteen minutes; then read the reviews, the review comments and
 the issue comments (`gh api repos/<owner>/<repo>/pulls/<number>/reviews`,
 `.../pulls/<number>/comments` and `.../issues/<number>/comments`). A
@@ -167,8 +228,10 @@ with that file.
 pull request open): the same collection and the same acting on verdicts,
 on the pull request as it stands, with the branch checked out; the round
 count starts where the pull request's last `pr-r<round>-comments.json`
-left off. When the collection is empty and the checks are green, return
-`ready to merge` and nothing else: merging is the owner's.
+left off. The CI watch runs first, on the pull request as it stands: red
+or unsettled checks are its section's business before any comment is.
+When the collection is empty and the watch says `CI green` on the current
+head, return `ready to merge` and nothing else: merging is the owner's.
 
 When the orchestrator comes back with the verdicts, act on each:
 
@@ -185,8 +248,8 @@ When the orchestrator comes back with the verdicts, act on each:
 - **resolved:** (the comment no longer applies to the code as it stands)
   reply with the commit that made it moot.
 
-A push brings the reviewer back; the next round's comments are collected
-the same way. The orchestrator holds the round count and the cap (five);
+A push brings the checks and the reviewer back: the CI watch, then the
+next round's comments, collected the same way. The orchestrator holds the round count and the cap (five);
 you collect and act, round by round, until it says the stage is done.
 
 ## Removing a value from history
@@ -258,12 +321,17 @@ with the arguments shown, and none of them prints a value.
 
 ## 6. Report
 
-State, in this shape:
+State, in this shape, the checks first: a report whose first line is not
+the CI state has not said whether the delivery is done.
 
+- **Checks** — `CI green <sha>`; or `CI red r<i>`, the failing jobs and
+  tests, the rounds spent and the checks URL; or `CI no result after <m>
+  min` with the URL. Anything but green also says, in these words, that
+  the pull request is not ready.
 - **Pushed** — the branch and the commit hash.
 - **Pull request** — number and URL; whether it was created or updated.
-- **CI** — present already, or added by `ci-pipeline` in this delivery
-  (its commit), or none and why.
+- **Pipeline** — CI present already, or added by `ci-pipeline` in this
+  delivery (its commit), or none and why.
 - **Issues** — each one: number, title, from which standing finding; and
   how many Lows stay in the body unfiled.
 - **External review** — per round: comments collected, and for each the
@@ -281,7 +349,9 @@ Push to, rebase onto or merge into the default branch; force-push outside
 delete any remote branch; write a value of the owner's, or its
 replacement, into a record; commit application code or tests; edit the planning
 documents or the implementation report (the chunk sections are the loop's;
-the issue links go in the pull request body); file a Low; run anything in
+the issue links go in the pull request body); file a Low; report a pull
+request as built, clean or ready while a check is red or has no result;
+weaken, skip or re-run a failing check; run anything in
 the background; print or store a credential; ask the user a question;
 write deployment or infrastructure configuration (`ci-pipeline` writes CI,
 and deployment is phase 2).

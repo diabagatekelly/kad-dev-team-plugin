@@ -1,0 +1,83 @@
+schema_version: "1.0"
+name: chunk-runner-waits-for-handback
+description: "The chunk runner's waiting rule (0.14.5, review of 2026-11-12, finding 1): from the planned state the runner launches chunk 1's builder, a real build of several minutes, and is told to stop after the gate. It launches one builder and waits for that builder's hand-back: no background command, no sleep or poll on the branch, no monitor, no stall message to an agent that has not handed back; it confirms the builder's commit with `git cat-file -e` before the gate and before the line; and its hand-back is the one line, ending `stopped at`. Under `claude plugin eval` a launch blocks until the agent ends, so what this case can fail on without the rule is the hash check; the other graders hold the rule against a regression."
+tags: [chunk-runner, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the chunk runner the orchestrator launched for chunk 1 of 3 of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:chunk-runner` first and follow it.
+
+    What the orchestrator hands you. Chunk 1 of 3: **Title**: Cancel a member's hold on a title. **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes". **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts. **Done when**: seam "cancels a member's hold through the real in-memory queue", `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green. **Touches**: storage.
+
+    The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
+
+    Stopping point (this run's bound): end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent; hand back the line for what ran with `stopped at review` appended.
+  model: opus
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: chunk-runner-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:chunk-runner"'
+    min: 1
+  - type: tool_used
+    name: one-builder-launched
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 2
+  - type: tool_used
+    name: no-reviewer-launched
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?(?:code-reviewer|accessibility-engineer)'
+    min: 0
+    max: 0
+  - type: regex
+    name: nothing-started-in-the-background-to-wait
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"run_in_background"\s*:\s*true'
+    match: not_contains
+  - type: regex
+    name: no-poll-of-the-branch
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\b(?:sleep\s+\d|until\s|while\s)(?:[^"\\]|\\.)*?git\s+(?:log|rev-list|rev-parse)'
+    match: not_contains
+  - type: tool_used
+    name: no-monitor
+    tool: Monitor
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-stall-message
+    tool: SendMessage
+    min: 0
+    max: 0
+  - type: tool_used
+    name: commit-confirmed-by-the-repository
+    tool: Bash
+    input_match: 'git[^|;&]*cat-file\s+-e'
+    min: 1
+  - type: tool_used
+    name: gate-on-the-builders-commit
+    tool: Bash
+    input_match: 'validation_gate\.py'
+    min: 1
+  - type: regex
+    name: log-not-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
+    match: not_contains
+  - type: llm
+    name: hand-back-is-the-one-line-for-what-ran
+    focus: last_message
+    weight: 1
+    criteria: |
+      The chunk runner was told to stop after the gate on the builder's commit. Its final reply is one hand-back line in the C line's field order as far as the round went: the chunk's title, the builder's turns and minutes (or `?`), the commit or commits, the gate result, deviations, shell edits, the builder's agent id (or `?`), the launch counts, the sandbox checks, and `stopped at review` (or `stopped at` with the step named).
+
+      PASS if the final reply is essentially that one line: it names at least one commit hash, a gate result (`PASS`, `PASS after <sha>` or a `FAIL … ended`), and that it stopped before the review. Fields for steps that did not run may be absent or hold a placeholder (`review none`, `r0 ?`, `smoke ?`, `standing ?`): a placeholder is not a result.
+
+      FAIL if it reports counts or findings from a review or smoke run, says an agent is still working, names no commit although the gate passed, or is prose instead of the line.

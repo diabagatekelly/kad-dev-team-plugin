@@ -32,8 +32,15 @@ grade the one step they are about.
   exist and exit 0). They are Bash scripts, so this fixture runs on Linux,
   macOS and WSL, not on native Windows.
 - `tools/gh`: a recording stand-in for the GitHub CLI, for the delivery
-  state; it logs each call to `gh-calls.log` beside it and answers in the
-  real command's shape.
+  and issue-fix states; it logs each call to `gh-calls.log` beside it and
+  answers in the real command's shape. Files a state puts beside it change
+  its answers: `pr-open` (the slice branch has an open pull request),
+  `ci-red` (a commit: the check fails while the remote branch is at it),
+  `ci-failed.log` (what `run view --log-failed` prints, the fixture's
+  `tools/ci-failed.log`), `issues.json` (what `issue list` prints).
+- `docs/issue14-*.md`, `docs/issues-high-14.json`: the planning an issue
+  fix adds to the merged slice (a reliability criterion and its home in
+  the design) and the open High issue it answers.
 
 Plants, for `answer-key.md`'s `L` rows:
 
@@ -49,3 +56,6 @@ Plants, for `answer-key.md`'s `L` rows:
 | L8 | `slice-built` | no README; a `<script>` body in `lending/cancel-hold-notice.ts`'s template literal; comment density over 5% |
 | L9 | `chunk1-done`'s handoff | the loop's start time six hours before the scaffold ran: the 5 h budget is exceeded at the chunk boundary |
 | L10 | `delivery-ready` | two standing Mediums and three Lows in the sidecar; the tracker is GitHub; the `gh` stand-in records what gets filed |
+| L11 | `chunk1-handback-phantom`'s handoff | the runner's line names an r1 fix commit no object of the repository has; only round 0 is recorded |
+| L12 | `delivery-ci-red` | the branch pushed, pull request #7 open, its check failing on the pushed commit with two tests red on the runner |
+| L13 | `issue14-planned` | slice 001 merged with three gaps the readiness gate names today; issue #14 open and its fix's planning uncommitted |
