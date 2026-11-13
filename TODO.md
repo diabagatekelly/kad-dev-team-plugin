@@ -359,7 +359,7 @@ Small and mechanical, for the next plugin change that reaches each file:
   names it and totals the rest (finding 6, second run). Done when: a tool
   test.
 
-For the owner to decide:
+Decided by the owner 2026-11-13 (all three yes), to build with 0.15.0:
 
 - [ ] F5 **A last fix that changes behaviour gets one diff-scoped review**
   (finding 2): the slice review's last fix is read by nobody, and the cold
@@ -367,13 +367,27 @@ For the owner to decide:
   it. Proposed as one more stop on C2's autopilot list: when the last fix
   touches a source file no finding handed to it names, or changes an
   exported signature; its findings are reported, not fixed in the loop.
+  **The owner, 2026-11-13: yes, and "any change should always be
+  reviewed".** So not conditional: every commit that changes source or
+  tests after a scope's last review (a chunk's r2 fix, the slice review's
+  last fix, a gate fixer's, a CI fixer's, a triage fix's) gets one
+  diff-scoped review before delivery reports. Still to design, with C2:
+  how the chain ends (proposed: that review's Critical and High stop for
+  the owner or autopilot's one fixer, Mediums and Lows are filed, and a
+  fix of its findings is reviewed the same way, capped). Done when: a
+  case shows a last fix with a planted defect reviewed and the defect
+  reported, and a clean last fix adding one review and no fixer.
 - [ ] F6 **Delivery waits for an external review only where a bot has
   reviewed before** (finding 3; the owner ended a fifteen-minute wait on
   a repository with no review bot). Otherwise it says so and returns.
+  The owner, 2026-11-13: yes.
   Done when: a case on the fixture's `gh` stub.
 - [ ] F7 **The target-directory question** offers guesses as its options
   (finding 7): take the directory a project memory or `CLAUDE.md` names,
-  and say so. Only if the owner minds the question.
+  and say so. The owner, 2026-11-13: yes. Done when: a variant of
+  `orchestrator-asks-for-target` with the directory named in the
+  project's memory takes it without a question, and the existing case
+  still asks.
 
 ### Phase B, 0.15.0: the review rebalance (finding 10)
 
