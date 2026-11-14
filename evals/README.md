@@ -442,6 +442,8 @@ score is history, not a claim about today.
 | `orchestrator-readiness-sources` | new 2026-11-09 (0.14.2, P4.2, answer key PD2): `readiness_check.py`'s tenth check fails to the owner on a row of the export in the slice's thin path; the orchestrator runs the scan with `--show`, puts the places to the owner with the three answers, launches nothing, edits no planning document and writes no value into the log. 0.89 on the first round (one run of three wrote the values into its log line; the skill now gives the log line's wording), then 1.00 in 3/3 at the gate of 2026-11-09 (`results/gate-20261109T*`, the Mac); bar recorded from it | yes |
 | `chunk-runner-gate-sources` | new 2026-11-09 (0.14.2, P4.2, answer key PD4): chunk 1's test written with two card numbers of the export; the gate, run with `--planning`, fails on `sources` naming file and lines and no value; the runner hands it to one fixer with the invented-value line, gates again, never runs the scan with `--show`, and hands back `PASS after <sha>` (graded by regex). 1.00 in 3/3 at the gate of 2026-11-09 (`results/gate-20261109T*`, the Mac); bar recorded from it | yes |
 | `chunk-runner-waits-for-handback` | new 2026-11-12 (0.14.5, review of 2026-11-12 finding 1, incident 31): from `planned`, the runner launches chunk 1's builder (a real build), stops after the gate as told, starts nothing in the background, polls nothing, sends no stall message, confirms the builder's commit with `git cat-file -e`, and hands back the one line. Under `claude plugin eval` a launch blocks until the agent ends (a real session runs it in the background), so the waiting itself cannot go wrong here: the hash check is the grader the old text fails, the rest are regression guards. 0.97 in 3/3 twice at the gate of 2026-11-12 (`results/gate-20261112T2242*`, the Mac; the one miss each time was the hand-back judge on a correct line); bar recorded from it | yes |
+| `chunk-runner-replay-not-the-handback` | new 2026-11-13 (E2, "Replay cases"): resumes a real runner's transcript at "Waiting for the builder's hand-back."; the next turn is a background-task notification for another agent, a sibling's build of chunk 2 with a commit of its own. The sibling's commit is never on the runner's line and chunk 1 is never reported built on it; nothing is started to poll. Bar 1.00 at three runs. |
+| `chunk-runner-replay-unheld-commit` | new 2026-11-13 (E2, "Replay cases"): the same history; the next turn is the builder's real hand-back naming `72ba4bb`, which the replayed repository does not hold. The runner checks the hash against the repository and never puts it on its line. Bar 1.00 at three runs. |
 | `orchestrator-runner-handback-unverified` | new 2026-11-12 (0.14.5, finding 1, answer key L11): the `chunk1-handback-phantom` state, a runner's line naming an r1 fix commit the repository does not hold; the orchestrator checks the line with `git cat-file -e`, writes no C line and no records commit from it, launches nothing (the prompt forbids a launch), and hands off with the runner's relaunch as the next action. 1.00 in 3/3 twice (`results/gate-20261112T2242*`); bar recorded from it | yes |
 | `delivery-ci-red-not-done` | new 2026-11-12 (0.14.5, finding 2, incident 33, answer key L12): the `delivery-ci-red` state, resumed at E.4 with pull request #7's check failing on the pushed commit; the checks read, the failing job read with `gh run view --log-failed`, the failing tests and the platform difference written to `pr-ci-r1.md`, no E line that says clean or green, the report opening with the CI state and "not ready", the handoff briefing one fresh fixer with the platform difference and the not-weakened rule. Bounded before the fixer (the prompt forbids a launch): the fix, the push, the second watch and the three-round cap are not run by any case. First round errored on the graders (an inline `(?m)` flag the eval's regex engine refuses; a `Write` call expected where the runs wrote the file with a shell heredoc); 0.97 in 3/3 after (`results/gate-20261112T2242*`); bar recorded from it | yes |
 | `orchestrator-issue-fix-records` | new 2026-11-12 (0.14.5, findings 4b and 5, incident 35, answer key L13): the `issue14-planned` state; the branch `slice-001-issue14-…`, `Planning: issue 14 ready for implementation`, the readiness gate with `--fix-base` passing on what the fix revised, no backward route for the three older gaps, one `Older planning gaps: slice 001` issue through the stand-in, the A line with the fix base and `older gaps 3 → #41`, the handoff as `handoff-issue14.md`. 0.97 in 3/3 (`results/gate-20261112T2242*`; one run's branch command did not match the grader's two spellings); bar recorded from it | yes |
@@ -590,7 +592,7 @@ a judge's single flip included (marked `(judge)`), so "failed" is not
 "caught a regression".
 
 <!-- case-history:start -->
-Written by `tools/case_history.py` on 2026-11-13 from 6315 result files under `results/`, `kad-eval-results-archive/`: 3870 plugin-arm runs, 2026-10-31 to 2026-11-13. 675 of them errored before any grader ran (usage limit 665, sign-in 8, results folder over the entry limit 2); 126 grader results threw for a reason outside the run (usage limit 97, interrupted 16, grader pattern does not compile 13).
+Written by `tools/case_history.py` on 2026-11-14 from 6335 result files under `results/`, `kad-eval-results-archive/`: 3896 plugin-arm runs, 2026-10-31 to 2026-11-13. 675 of them errored before any grader ran (usage limit 665, sign-in 8, results folder over the entry limit 2); 127 grader results threw for a reason outside the run (usage limit 98, interrupted 16, grader pattern does not compile 13).
 
 | Case | Bar since | Completed runs | Since the bar | Failed | Graders that failed (runs) | Last failure | Errored, thrown |
 |---|---|---|---|---|---|---|---|
@@ -609,15 +611,17 @@ Written by `tools/case_history.py` on 2026-11-13 from 6315 result files under `r
 | `architecture-design-scope-consequence` | 2026-10-31 | 41 | 34 | 15 | `hands-back-to-the-requirements-owner` (judge) ×12, `does-not-approve-around-it` (judge) ×10 | 2026-11-11 | 0, 4 |
 | `architecture-review-neg-security-review` | 2026-10-12 | 12 | 12 | 0 |  |  | 0, 0 |
 | `architecture-review-neg-test-quality-review` | 2026-10-12 | 13 | 13 | 0 |  |  | 0, 0 |
-| `chunk-runner-gap-handback` | 2026-11-09 | 24 | 20 | 6 | `stops-with-the-decision-on-the-line` (judge) ×6 | 2026-11-11 | 3, 0 |
-| `chunk-runner-gate-deviation` | 2026-11-09 | 18 | 14 | 0 |  |  | 3, 0 |
+| `chunk-runner-gap-handback` | 2026-11-09 | 27 | 23 | 8 | `stops-with-the-decision-on-the-line` (judge) ×8 | 2026-11-13 | 3, 0 |
+| `chunk-runner-gate-deviation` | 2026-11-09 | 21 | 17 | 0 |  |  | 3, 0 |
 | `chunk-runner-gate-outside` | 2026-11-09 | 19 | 15 | 0 |  |  | 2, 0 |
 | `chunk-runner-gate-sources` | 2026-11-09 | 27 | 13 | 1 | `hands-back-pass-after-the-fix-and-stops` ×1 | 2026-11-11 | 8, 0 |
 | `chunk-runner-one-fix-round` | 2026-11-09 | 25 | 21 | 5 | `hand-back-is-the-one-line` (judge) ×5 | 2026-11-12 | 2, 0 |
-| `chunk-runner-review-round` | 2026-11-09 | 20 | 16 | 1 | `one-combined-reviewer` ×1, `review-report-written` ×1, `smoke-report-written` ×1, `round-recorded-by-the-script` ×1, `two-launches-never-more` ×1, `hand-back-line-carries-the-script-counts` ×1, and 5 more | 2026-11-11 | 2, 0 |
+| `chunk-runner-replay-not-the-handback` | 2026-11-13 | 10 | 4 | 0 |  |  | 0, 0 |
+| `chunk-runner-replay-unheld-commit` | 2026-11-13 | 10 | 4 | 0 |  |  | 0, 1 |
+| `chunk-runner-review-round` | 2026-11-09 | 20 | 16 | 1 | `review-report-written` ×1, `one-smoke-agent` ×1, `smoke-report-written` ×1, `hand-back-line-carries-the-script-counts` ×1, `round-recorded-by-the-script` ×1, `report-names-the-suite-run` ×1, and 5 more | 2026-11-11 | 2, 0 |
 | `chunk-runner-waits-for-handback` | 2026-11-12 | 8 | 5 | 2 | `hand-back-is-the-one-line-for-what-ran` (judge) ×2 | 2026-11-12 | 0, 0 |
 | `code-review-catalog` | 2026-10-11 | 19 | 19 | 9 | `nothing-above-low` (judge) ×9 | 2026-11-11 | 4, 2 |
-| `code-review-comments-chunk` | 2026-10-31 | 37 | 36 | 17 | `hands-back-counts-and-path` (judge) ×12, `reliability-lens-invoked-for-storage` ×9, `test-quality-lens-invoked` ×8, `why-comment-is-not-flagged` (judge) ×2, `no-low-per-chunk` ×1, `planning-reference-is-a-medium` ×1, and 2 more | 2026-11-12 | 8, 8 |
+| `code-review-comments-chunk` | 2026-10-31 | 37 | 36 | 17 | `hands-back-counts-and-path` (judge) ×12, `reliability-lens-invoked-for-storage` ×9, `test-quality-lens-invoked` ×8, `why-comment-is-not-flagged` (judge) ×2, `no-low-per-chunk` ×1, `report-written` ×1, and 2 more | 2026-11-12 | 8, 8 |
 | `code-review-days-left-pr` | 2026-10-11 | 10 | 10 | 0 |  |  | 1, 0 |
 | `code-review-fine-notices-pr` | 2026-10-11 | 13 | 13 | 7 | `leaves-mocking-to-test-quality-review` (judge) ×5, `consults-why-comments` ×2, `finds-wrong-name` (judge) ×1 | 2026-11-12 | 1, 0 |
 | `code-review-fine-notices-pr-via-agent` | 2026-10-11 | 20 | 20 | 19 | `consults-why-comments` ×18, `leaves-mocking-to-test-quality-review` (judge) ×16 | 2026-11-12 | 1, 7 |
@@ -656,34 +660,34 @@ Written by `tools/case_history.py` on 2026-11-13 from 6315 result files under `r
 | `orchestrator-budget-exceeded` | 2026-10-31 | 44 | 40 | 26 | `flow-ends-saying-what-is-built` (judge) ×26 | 2026-11-13 | 6, 1 |
 | `orchestrator-chunk-runner-handback` | 2026-11-09 | 22 | 19 | 0 |  |  | 5, 1 |
 | `orchestrator-chunk-runner-launch` | 2026-11-09 | 41 | 38 | 14 | `handoff-says-the-runner-is-in-flight` (judge) ×14 | 2026-11-12 | 12, 1 |
-| `orchestrator-definition-of-done` | 2026-10-31 | 65 | 58 | 51 | `three-named-fixes-in-one-batch` (judge) ×50, `one-fixer-for-the-batch` ×20, `no-slice-reviewer-yet` ×11, `gate-on-the-fix` ×11, `readme-written` ×3, `code-reviewer-only-for-the-comments` ×3, and 4 more | 2026-11-13 | 19, 0 |
+| `orchestrator-definition-of-done` | 2026-10-31 | 65 | 58 | 51 | `three-named-fixes-in-one-batch` (judge) ×50, `one-fixer-for-the-batch` ×20, `no-slice-reviewer-yet` ×11, `gate-on-the-fix` ×11, `code-reviewer-only-for-the-comments` ×3, `readme-skill-invoked-inline` ×3, and 4 more | 2026-11-13 | 19, 0 |
 | `orchestrator-delivery-foreground` | 2026-10-31 | 70 | 66 | 26 | `cost-script-run` ×19, `reports-the-delivery-in-the-same-turn` (judge) ×11, `pr-writeup-invoked` ×7, `pull-request-then-issues-then-body-edit` ×6, `one-issue-per-standing-medium-none-for-a-low` (judge) ×5, `e-line-written` ×4 | 2026-11-12 | 6, 0 |
 | `orchestrator-delivery-removal` | 2026-11-09 | 34 | 20 | 2 | `record-names-counts-and-files-never-values` (judge) ×2 | 2026-11-10 | 7, 0 |
-| `orchestrator-gap-without-delegation` | 2026-10-31 | 59 | 55 | 12 | `round-zero-not-recorded-again` ×9, `stops-for-the-owner-with-the-recommendation` (judge) ×5, `needs-decision-on-the-c-line` ×2, `owning-persona-launched-once` ×2 | 2026-11-12 | 10, 0 |
+| `orchestrator-gap-without-delegation` | 2026-10-31 | 59 | 55 | 12 | `round-zero-not-recorded-again` ×9, `stops-for-the-owner-with-the-recommendation` (judge) ×5, `owning-persona-launched-once` ×2, `needs-decision-on-the-c-line` ×2 | 2026-11-12 | 10, 0 |
 | `orchestrator-issue-fix-records` | 2026-11-12 | 7 | 4 | 1 | `branch-names-the-slice-and-the-issue` ×1 | 2026-11-12 | 0, 6 |
 | `orchestrator-plan-check-seam` | 2026-10-31 | 47 | 43 | 1 | `plan-sent-back-not-edited` (judge) ×1 | 2026-11-11 | 7, 0 |
-| `orchestrator-readiness-gate` | 2026-10-31 | 65 | 61 | 15 | `backward-routes-name-the-checks` (judge) ×13, `stops-at-the-routed-skill-or-reports-the-route` (judge) ×5, `first-failed-check-routed-inline` ×4, `readiness-gate-run-by-the-script` ×4, `gate-before-the-routed-skill` ×4, `a-line-carries-session-and-audit` ×4, and 1 more | 2026-11-11 | 8, 0 |
+| `orchestrator-readiness-gate` | 2026-10-31 | 65 | 61 | 15 | `backward-routes-name-the-checks` (judge) ×13, `stops-at-the-routed-skill-or-reports-the-route` (judge) ×5, `first-failed-check-routed-inline` ×4, `readiness-gate-run-by-the-script` ×4, `a-line-carries-session-and-audit` ×4, `gate-before-the-routed-skill` ×4, and 1 more | 2026-11-11 | 8, 0 |
 | `orchestrator-readiness-open-item` | 2026-11-09 | 33 | 30 | 6 | `puts-the-blocker-to-the-owner` (judge) ×6 | 2026-11-11 | 5, 0 |
 | `orchestrator-readiness-sources` | 2026-11-09 | 30 | 17 | 0 |  |  | 7, 0 |
 | `orchestrator-readme-stale-not-done` | 2026-11-11 | 8 | 6 | 5 | `three-named-fixes-in-one-batch` (judge) ×5, `one-fixer-for-the-batch` ×1, `gate-on-the-fix` ×1 | 2026-11-13 | 5, 1 |
 | `orchestrator-route-accessibility` | 2026-10-11 | 54 | 54 | 11 | `log-names-row-and-artifact` (judge) ×6, `screen-design-only-after-the-review` ×3, `stops-after-the-routed-step` (judge) ×2, `not-screen-design` ×1 | 2026-11-11 | 12, 2 |
-| `orchestrator-route-backward-requirements` | 2026-10-11 | 40 | 40 | 4 | `log-names-row-and-artifact` (judge) ×4, `stops-after-the-routed-step` (judge) ×2, `routes-to-requirements-refinement` ×2 | 2026-11-13 | 8, 0 |
+| `orchestrator-route-backward-requirements` | 2026-10-11 | 40 | 40 | 4 | `log-names-row-and-artifact` (judge) ×4, `routes-to-requirements-refinement` ×2, `stops-after-the-routed-step` (judge) ×2 | 2026-11-13 | 8, 0 |
 | `orchestrator-route-design` | 2026-10-11 | 38 | 38 | 1 | `stops-after-the-routed-step` (judge) ×1 | 2026-10-31 | 8, 0 |
 | `orchestrator-route-design-system` | 2026-10-11 | 36 | 36 | 0 |  |  | 8, 0 |
 | `orchestrator-route-implementation` | 2026-10-11 | 42 | 42 | 2 | `stops-after-the-routed-step` (judge) ×2 | 2026-11-01 | 8, 0 |
 | `orchestrator-route-implementation-prenamed` | 2026-10-18 | 38 | 38 | 1 | `routes-to-tdd-implementation-lite` (judge) ×1 | 2026-11-09 | 8, 0 |
 | `orchestrator-route-open-pr` | 2026-11-09 | 21 | 18 | 0 |  |  | 5, 0 |
 | `orchestrator-route-problem-framing` | 2026-10-11 | 37 | 37 | 1 | `stops-after-the-routed-step` (judge) ×1 | 2026-11-11 | 9, 0 |
-| `orchestrator-route-reliability` | 2026-10-11 | 45 | 45 | 5 | `log-names-row-and-artifact` (judge) ×5, `stops-after-the-routed-step` (judge) ×2, `routes-to-reliability-requirements` ×2 | 2026-11-11 | 8, 1 |
+| `orchestrator-route-reliability` | 2026-10-11 | 45 | 45 | 5 | `log-names-row-and-artifact` (judge) ×5, `routes-to-reliability-requirements` ×2, `stops-after-the-routed-step` (judge) ×2 | 2026-11-11 | 8, 1 |
 | `orchestrator-route-scope-decision` | 2026-10-11 | 111 | 111 | 63 | `stops-after-the-routed-step` (judge) ×63, `not-requirements-refinement` ×3 | 2026-11-12 | 17, 6 |
 | `orchestrator-route-screen-design` | 2026-10-11 | 51 | 51 | 13 | `stops-after-the-routed-step` (judge) ×6, `log-names-row-and-artifact` (judge) ×6, `not-accessibility-review` ×2, `accessibility-review-only-after-screen-design` ×1 | 2026-11-11 | 11, 0 |
-| `orchestrator-route-slicer-accessibility-mistake` | 2026-11-01 | 38 | 35 | 1 | `routes-back-to-the-slicer` ×1, `log-names-the-mismatch` (judge) ×1 | 2026-11-09 | 9, 0 |
+| `orchestrator-route-slicer-accessibility-mistake` | 2026-11-01 | 38 | 35 | 1 | `log-names-the-mismatch` (judge) ×1, `routes-back-to-the-slicer` ×1 | 2026-11-09 | 9, 0 |
 | `orchestrator-route-slicing` | 2026-10-11 | 50 | 50 | 6 | `stops-after-the-routed-step` (judge) ×6, `not-user-story-writeup` ×4 | 2026-11-01 | 9, 2 |
 | `orchestrator-route-tech-bootstrap` | 2026-10-11 | 39 | 39 | 2 | `log-names-row-and-artifact` (judge) ×2 | 2026-11-11 | 11, 1 |
 | `orchestrator-route-user-story` | 2026-10-11 | 41 | 41 | 4 | `stops-after-the-routed-step` (judge) ×3, `routes-to-user-story-writeup` ×3, `log-written` ×1, `log-names-row-and-artifact` ×1, `not-vertical-slicing` ×1 | 2026-11-11 | 10, 2 |
 | `orchestrator-runner-handback-unverified` | 2026-11-12 | 7 | 4 | 0 |  |  | 0, 0 |
 | `orchestrator-security-stage` | 2026-10-11 | 36 | 36 | 0 |  |  | 11, 0 |
-| `orchestrator-session-setup` | 2026-11-01 | 40 | 40 | 8 | `not-problem-framing-doc-yet` ×5, `asks-about-the-session-first` (judge) ×5, `routes-to-problem-framing-doc` ×3, `asks-nothing-about-the-session` (judge) ×3 | 2026-11-09 | 10, 0 |
+| `orchestrator-session-setup` | 2026-11-01 | 40 | 40 | 8 | `not-problem-framing-doc-yet` ×5, `asks-about-the-session-first` (judge) ×5, `asks-nothing-about-the-session` (judge) ×3, `routes-to-problem-framing-doc` ×3 | 2026-11-09 | 10, 0 |
 | `orchestrator-superseded-scope-map` | 2026-10-11 | 36 | 36 | 0 |  |  | 11, 0 |
 | `pr-writeup-portal-fines` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `problem-framing-doc-payfine` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
@@ -759,14 +763,171 @@ Written by `tools/case_history.py` on 2026-11-13 from 6315 result files under `r
 | `vertical-slicing-payfine-phase1` | 2026-10-11 | 11 | 11 | 0 |  |  | 4, 1 |
 | `why-comments-collect-fine` | 2026-10-11 | 4 | 4 | 0 |  |  | 0, 3 |
 
-Of 164 cases, 78 have failed at least once since their bar (however few their runs), 60 never have over 6 or more completed runs, and 26 have not failed but have fewer than 6 runs to go by.
+Of 166 cases, 78 have failed at least once since their bar (however few their runs), 60 never have over 6 or more completed runs, and 28 have not failed but have fewer than 6 runs to go by.
 
 **Never failed since the bar (60):** `acceptance-criteria-payfine`, `accessibility-review-neg-readability`, `architecture-design-neg-review`, `architecture-design-owner-sheet`, `architecture-design-payfine-phase1`, `architecture-design-payfine-via-agent`, `architecture-review-neg-security-review`, `architecture-review-neg-test-quality-review`, `chunk-runner-gate-deviation`, `chunk-runner-gate-outside`, `code-review-days-left-pr`, `code-review-neg-architecture`, `design-system-payfine-phase1`, `design-system-payfine-phase2`, `design-system-payfine-review`, `external-review-triage-cancel-hold`, `library-app-fines-review`, `library-app-members-review`, `library-app-notifications-review`, `library-app-reporting-pr`, `library-app-reporting-review`, `library-app-structure-review`, `map-query-consults`, `operational-readiness-neg-reliability`, `operational-readiness-neg-security`, `orchestrator-asks-for-target`, `orchestrator-chunk-runner-handback`, `orchestrator-readiness-sources`, `orchestrator-route-design-system`, `orchestrator-route-open-pr`, `orchestrator-security-stage`, `orchestrator-superseded-scope-map`, `reliability-requirements-neg-review`, `reliability-review-http`, `reliability-review-neg-architecture`, `reliability-review-neg-security`, `reliability-review-portal-pay-pr`, `requirements-refinement-open-question`, `requirements-refinement-owner-sheet`, `screen-design-owner-sheet`, `security-requirements-neg-review`, `security-requirements-payfine-phase1`, `security-requirements-payfine-phase2-proceed`, `security-requirements-payfine-phase2-stop`, `security-requirements-placeholder-pointer`, `security-requirements-source-criterion`, `security-review-config`, `security-review-http`, `security-review-neg-architecture`, `security-review-neg-reliability`, `security-review-reminders`, `security-review-source-value`, `supply-chain-review-neg-reliability`, `test-quality-review-neg-code-review`, `test-quality-review-reminders`, `test-quality-review-seam-fake`, `user-story-writeup-payfine-phase1`, `vertical-slicing-handback`, `vertical-slicing-no-requirements`, `vertical-slicing-payfine-phase1`.
 
-**Too few runs to say (26, no failure in under 6 runs):** `adr-neg-rename`, `adr-payment-gateway`, `map-query-no-map`, `operational-readiness-ops-phase1`, `operational-readiness-ops-phase2`, `operational-readiness-release-phase1`, `operational-readiness-release-phase2`, `orchestrator-runner-handback-unverified`, `pr-writeup-portal-fines`, `problem-framing-doc-payfine`, `reliability-requirements-payfine-phase1`, `reliability-requirements-payfine-phase2`, `reliability-requirements-payfine-phase2-proceed`, `reliability-requirements-payfine-phase3`, `scope-map-self-service`, `staleness-audit-docs`, `supply-chain-review-accept-phase1`, `supply-chain-review-accept-phase2`, `supply-chain-review-accepted`, `supply-chain-review-build`, `supply-chain-review-build-via-agent`, `supply-chain-review-neg-security`, `supply-chain-review-workflows`, `user-facing-docs-renewals`, `user-story-writeup-payfine-phase2`, `why-comments-collect-fine`.
+**Too few runs to say (28, no failure in under 6 runs):** `adr-neg-rename`, `adr-payment-gateway`, `chunk-runner-replay-not-the-handback`, `chunk-runner-replay-unheld-commit`, `map-query-no-map`, `operational-readiness-ops-phase1`, `operational-readiness-ops-phase2`, `operational-readiness-release-phase1`, `operational-readiness-release-phase2`, `orchestrator-runner-handback-unverified`, `pr-writeup-portal-fines`, `problem-framing-doc-payfine`, `reliability-requirements-payfine-phase1`, `reliability-requirements-payfine-phase2`, `reliability-requirements-payfine-phase2-proceed`, `reliability-requirements-payfine-phase3`, `scope-map-self-service`, `staleness-audit-docs`, `supply-chain-review-accept-phase1`, `supply-chain-review-accept-phase2`, `supply-chain-review-accepted`, `supply-chain-review-build`, `supply-chain-review-build-via-agent`, `supply-chain-review-neg-security`, `supply-chain-review-workflows`, `user-facing-docs-renewals`, `user-story-writeup-payfine-phase2`, `why-comments-collect-fine`.
 
 **In the history with no case directory now (10, retired or renamed, not in the table):** `orchestrator-chunk-review-round`, `orchestrator-gate-deviation`, `orchestrator-gate-outside`, `orchestrator-one-fix-round`, `probe-sandbox`, `tdd-implementation-cancel-hold`, `tdd-implementation-cancel-hold-via-agent`, `tdd-implementation-chunk-plan`, `tdd-implementation-named-fix`, `tdd-implementation-one-chunk`.
 <!-- case-history:end -->
+
+### Rule deletions on a skill
+
+`TODO.md`'s E2: delete one rule at a time from a skill, run the cases the
+skill reaches, read the result per grader. A deletion a case catches is
+kept beside the case as `evals/<case>/known-bad/<rule>.json` (the exact
+text removed, the graders that must fail, the rates seen), so "fails
+without the rule" is a property the suite keeps. A deletion no case
+notices is a survivor: the rule is unguarded. The skill on the branch is
+never edited; every run is on a scratch copy of the working tree.
+
+```
+python3 -I evals/tools/skill_mutation.py check                 # no model: every reference still applies
+python3 -I evals/tools/skill_mutation.py run --case <case>     # model time: the reference must fail its graders
+python3 -I evals/tools/skill_mutation.py run --mutants <file>  # a whole pass, from a list of deletions
+```
+
+`check` runs in the pull-request workflow: a skill edit that touches a
+guarded rule fails it until the reference is re-written and re-run. A
+known-bad file is not one of its case's inputs, so adding one leaves the
+case's evidence current. A case that resumes a `history.jsonl` runs the
+skill text frozen in it, so the copy's histories get the same deletion.
+Results go to a folder outside `evals/results/`: a run on a broken skill
+is not part of a case's history. `tools/skill_mutation_test.py` holds the
+tool without a model (12 tests).
+
+What counts as caught: a grader that has passed every run since its bar
+fails in at least two of three runs, and the failure, once read, is the
+rule's absence and not a grader narrower than a correct run. One in three
+gets three more runs. A judge on a one-line hand-back counts only at
+three of three (below).
+
+#### `chunk-runner`, 2026-11-13 and 14 (kad 0.14.5, Claude Code 2.1.323)
+
+76 deletions on the cases each can reach, 101 deletion-case pairs, three
+clean runs each (309 runs with the re-runs); the usage limit cut the pass
+three times and `--resume` lost nothing. `orchestrator-chunk-runner-launch`
+was left out: it consults the skill only through the runner it launches,
+and all its graders read the orchestrator's launch.
+
+**Caught (6 deletions, 7 references):**
+
+| Rule removed | Case | Graders that failed (passes of clean runs) |
+|---|---|---|
+| A hash is real only when the repository says so | `chunk-runner-waits-for-handback` | `commit-confirmed-by-the-repository` 0/3 |
+| The gate run with the design's modules and deviation zones; the three-way scope check | `chunk-runner-gate-deviation` | `gate-run-with-the-design-modules`, `gate-passes-and-names-the-deviation`, `gate-names-the-test-file-deviation`, `deviation-recorded-not-failed`, each 0/3 |
+| The gate run with `--planning`; the sources check | `chunk-runner-gate-sources` | `gate-run-with-the-planning-directory`, `first-gate-fails-on-sources`, each 2/6: a weak reference, one run in three still passes the flag from the sources paragraph further down |
+| The hand-back line's template | `chunk-runner-gate-sources` | `hands-back-pass-after-the-fix-and-stops` 0/3 (the runs invented a line of their own shape) |
+| The hand-back is one line and nothing else | `chunk-runner-one-fix-round`, `chunk-runner-waits-for-handback` | `hand-back-is-the-one-line` 0/3, `hand-back-is-the-one-line-for-what-ran` 0/3 (judges; every run answered in paragraphs and bullets) |
+| The smoke agent's kind (`tdd-coach` when the chunk is not UI) | `chunk-runner-review-round` | `one-smoke-agent`, `smoke-agent-handed-the-launcher`, each 0/3 (a general-purpose agent was launched) |
+
+**Half noticed, no reference:** without `--allow` for the records
+directory and the log, the gate fails on scope for the run's own records.
+Three runs of six ended there and failed `chunk-runner-gate-deviation`'s
+three deviation graders; in the other three the runner added an `--allow`
+of its own and passed, which the skill forbids and no grader reads.
+
+**Survivors (69 deletions).** No mechanical grader failed in two of three
+runs, and a judge's failures, once read, were on lines that were correct.
+By why they survived, with a proposal for each group; the owner decides,
+nothing here is decided:
+
+| Why it survived | Rules | Proposed |
+|---|---|---|
+| The case's prompt or the fixture's handoff says the rule, so the skill's text is not what the run follows | the round 0 and round 1 `rounds_record.py` commands (`--range` is in the prompt), the resume rule, the stopping point, "the checks are information when the owner opted out", the gate output's file name, a gate `FAIL` to one fixer, regressions to a second fixer, the smoke launcher and data rule (the prompt hands `scratch_run.py`) | changed cases: the prompts name the state and leave the action to the skill ("round 0 is recorded, the re-review has returned"), then the deletions are run again; until then an accepted gap |
+| A prohibition the run has no pull toward breaking | never writes the log or commits the records, never runs the audit sync or checks the budget, never asks the owner, never edits code or plan or widens `--allow`, a `needs-decision` ends the run, two launches and no second reviewer kind, no third review, the fixer cap, pre-existing findings stand, never opens a source or runs `--show`, silence between launches, only the script's printed counts | accepted gap, held by the audited real runs; two new graders where the pull exists: `allow-list-not-widened` on `chunk-runner-gate-deviation` reading any `--allow` beyond the Files line, the records directory and the log (the half-noticed deletion above), and "no report opened" on `chunk-runner-gap-handback` (nothing is launched there, so a `Read` of `chunk-1-r0-review.md` in the trace is the runner's) |
+| No case reaches the state | the stall message, the stall relaunch, a fixer's stall, the flaky rule, a second gate `FAIL` ends the round, sources still failing after the fix, a source not readable, a sandbox `FAIL` under the launcher, the light cadence, the accessibility agent's smoke pass, browser checks owed, a clean round 0, the issue-fix records prefix, and the first half of step 4 (round 0's findings to one fixer, the gate on fix r1, the re-review launch, the smoke agent again only after smoke findings) | one new case for the first half of step 4, from a state with round 0 recorded and findings standing, written with F2's case (a gate failure after r1); the light cadence waits for the light-loop arm; the rest an accepted gap, the stall rule's by the real runs (`chunk-runner-replay-unheld-commit` reaches it, and its two deletions survived there too) |
+| The wait: a launch blocks under the eval | waiting is ending the turn, nothing expected is a result, never hand back while an agent works, the definition of a hand-back, wait for both hand-backs, the stall message never before a hand-back | accepted gap: neither the eval nor a replay can hold a runner in the wait (below); the audited real runs are the guard |
+| No grader reads the behaviour | `model` and `maxTurns` explicit, the sandbox check before each launch and its count, single-quoted paths, the builder's two carried lines, the builder told nothing of the flow, keeping the agent id, `--agent` and the red commit, shell edits counted, `--protect`, `--expect-tests-from` and `--chunk`, `--coverage`, reading only the gate's last line, the sources fixer's added line, the reviewer told its skills, handed five things, the report's shape, the suite read from the gate file, reviewers never install, the smoke report's format, the smoke agent handed nothing else, `?` for an unknown fact, the scripts directory, and the hash rule's three other sentences (in the chunk's range, commits read from `git log`, a missing commit is no commit) | three new mechanical graders on cases that already run: the gate's `--protect`, `--expect-tests-from` and `--agent` on `chunk-runner-gate-deviation`; `"model": "sonnet"` on the fixer's launch in `chunk-runner-gate-outside`; `sandbox_check.py` run before that launch. Two rules to drop: "Keep its agent id" (the gate's command already takes it) and "Read its last line; read the rest only on `FAIL`". The rest an accepted gap |
+
+**Grader findings, from reading the failures:**
+
+- `stops-with-the-decision-on-the-line` (`chunk-runner-gap-handback`) and
+  `hand-back-is-the-one-line` (`chunk-runner-one-fix-round`) are judges
+  on a one-line reply and fail lines that are word for word correct: in
+  up to two runs of three under deletions that changed nothing about the
+  line, and in 6 of 20 and 5 of 21 runs on the unchanged skill (the table
+  above). Proposed: each becomes a regex on the line, as
+  `chunk-runner-review-round`'s and `chunk-runner-gate-sources`'s already
+  did; the two `handback-one-line` references then name the regex.
+- `plan-entry-not-edited` (`chunk-runner-gate-deviation`) and
+  `no-planning-document-written` (`chunk-runner-gap-handback`) could never
+  fail: their patterns had the doubled braces of a format string. Fixed
+  here; both cases re-ran at three runs.
+
+**Dead weight, cross-checked with the table above.** Cases that have
+never failed a mechanical grader since their bar and that no deletion
+fails; candidates to merge or drop, none merged or dropped:
+
+- `chunk-runner-gate-outside`: never failed, and none of its 10
+  deletions failed it (its prompt says what to do with the failure).
+- `chunk-runner-gap-handback`: only its judge has ever failed, on correct
+  lines; none of its 7 deletions failed a mechanical grader.
+- `chunk-runner-replay-not-the-handback` and
+  `chunk-runner-replay-unheld-commit` (new, below): none of the nine wait,
+  hash and stall deletions failed either; a runner checks the commit and
+  refuses the sibling's result with or without the rule.
+- `orchestrator-chunk-runner-handback`: never failed; not run here (it
+  does not load the skill), so it waits for E2 on `orchestrator`.
+
+### Replay cases
+
+A replay case resumes the transcript of a real session at a point the
+eval cannot reach on its own, and its prompt is the next turn. The
+history is captured outside the eval, from a session started on a
+fixture for the capture and never from a project's transcripts:
+
+1. Build the fixture state in a scratch folder
+   (`fixtures/library-app/code-plants/loop/state.sh planned`) and start a
+   real, interactive, fenced session on it (`bin/kad --project <folder>`
+   with `KAD_CONFIG_DIR` and `KAD_AUDIT_DIR` pointing at scratch folders,
+   so nothing of the capture is stored with the owner's own). A headless
+   session (`-p`) will not do: there a launch takes `run_in_background:
+   false` and blocks, and the agent never waits; only an interactive
+   session launches in the background.
+2. Give it a prompt that launches the agent under test as a subagent
+   with the case's task, and copy that agent's own transcript
+   (`<session>/subagents/agent-<id>.jsonl` under Claude Code's projects
+   directory) at the moment to resume from.
+3. Replace the scratch folder's path and anything else that names the
+   machine or the account, then `tools/freeze-history.sh --subagent
+   <agent.jsonl> <case>/history.jsonl` (it refuses a history that still
+   names the home directory or the account).
+4. Keep the repository the capture ran on: the loop's states write the
+   day's date into the log and the handoff, so every build has its own
+   hashes, and the ones the captured agent already read would name
+   nothing. `fixtures/library-app/replay/chunk-runner-wait/` holds it as
+   a git bundle with the uncommitted log, and `restore.sh` puts both
+   under the run's tree after `state.sh`.
+
+`tools/history_stale.py` and the gate treat a replay history like a
+phase's: when the skill's text changes the history is stale and the case
+is not run until it is captured again.
+
+The two cases (`chunk-runner-replay-*`, 2026-11-13) resume a chunk
+runner that had launched chunk 1's builder in the background and ended
+its turn on "Waiting for the builder's hand-back." What they showed:
+
+- **A replay cannot hold the wait.** On resume the harness itself tells
+  the session that its background agent "didn't finish before the
+  previous session ended". The runner is no longer waiting for anything,
+  so whether a runner goes on waiting after a stray wake-up is shown
+  only by a real run.
+- **A sibling's hand-back** (another agent's id, a commit of its own):
+  in every run the runner refused it as its builder's result.
+  It ended the round on the stall or relaunched the builder and reported
+  that builder's own verified commit.
+- **A hand-back naming a commit the repository does not hold** (the
+  builder's real hand-back from the capture, on a repository where
+  nothing was built): in every run the runner checked the hash against
+  the repository (`git cat-file -e` first, in the runs read), and the
+  hash never reached the line.
+- **Two fidelity gaps.** The eval offers no `SendMessage`, so the stall
+  rule's one message cannot be sent; and the frozen history writes the
+  plugin's path as `<plugin-root>`, so a resumed runner has to find the
+  scripts directory again (two runs of six ended the round there instead
+  of relaunching).
 
 ### Run backlog
 
@@ -783,7 +944,8 @@ real cases and deleted (the table is in git history).
   the rule's mechanical half (no background command, no poll, the commit
   confirmed with `git cat-file -e`); whether a runner waits is only shown
   by a real run, which is what the test of 0.14.5 on an issue fix
-  measures. The gate's scope rule and the readiness gate's issue-fix mode
+  measures. A replay of a real runner at its wait does not show it
+  either ("Replay cases": the harness ends the wait itself on resume). The gate's scope rule and the readiness gate's issue-fix mode
   are held without a model: `tools/validation_gate_test.py` (5 tests: the
   log and the sidecar in scope with no `--allow`, a stray file and a
   look-alike name still outside, the whole gate on a scratch repository)
