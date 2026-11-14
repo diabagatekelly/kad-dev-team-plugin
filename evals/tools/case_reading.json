@@ -1,0 +1,3431 @@
+{
+ "acceptance-criteria-payfine": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks whether a proposed criterion is good to go in"
+  },
+  "judges": {
+   "rejects-and-rewrites": {
+    "by": "reading",
+    "why": "whether the rewrite is checkable or only other vague wording"
+   },
+   "flags-undecided-target": {
+    "by": "reading",
+    "why": "whether a stated bound is flagged as the user's decision"
+   }
+  },
+  "findings": []
+ },
+ "accessibility-review-ac-walk": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project [...] and `PORTAL_DATA` inside that folder",
+   "note": "the launcher, the scratch folder and the data directory are what `app-started-through-the-launcher` and `app-never-started-bare` grade; \"in its criteria-walk mode\" and \"Hand back the counts and the path\" are the orchestrator's launch text"
+  },
+  "judges": {
+   "honest-about-what-was-driven": {
+    "by": "reading",
+    "why": "whether a row passes something only a browser could show; a row per criterion and the owed finding are already three regexes on the report"
+   }
+  },
+  "findings": []
+ },
+ "accessibility-review-neg-readability": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a plain-wording question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "accessibility-review-payfine": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "fill in the slice's accessibility placeholder",
+   "note": "tells the run the slice file has to change, which `slice-placeholder-filled` grades; how (a one-line pointer, nothing else touched) is left to the skill"
+  },
+  "judges": {
+   "finds-unreachable-fine-choice": {
+    "by": "reading",
+    "why": "did the review find the planted problem and rank it first"
+   },
+   "finds-missing-live-region": {
+    "by": "reading",
+    "why": "did the review find the missing attribute as a finding now"
+   },
+   "finds-low-contrast-meta-text": {
+    "by": "reading",
+    "why": "did the review find the pair just under 4.5:1"
+   },
+   "finds-unlabelled-name-field": {
+    "by": "reading",
+    "why": "did the review find the placeholder-only field"
+   },
+   "no-false-alarm-focus-style": {
+    "by": "reading",
+    "why": "whether the focusable elements are reported as lacking a focus indicator"
+   },
+   "no-false-alarm-decorative-icon": {
+    "by": "reading",
+    "why": "whether the hidden icon is reported as missing a name"
+   },
+   "no-false-alarm-card-number-label": {
+    "by": "reading",
+    "why": "whether the labelled field is reported as unlabelled"
+   },
+   "says-it-read-the-markup": {
+    "by": "reading",
+    "why": "whether the review says how the check was done and claims no browser"
+   },
+   "criteria-split-now-and-later": {
+    "by": "reading",
+    "why": "whether Given/When/Then criteria cover the two things and are split by when they can be checked"
+   },
+   "slice-placeholder-filled": {
+    "by": "tool",
+    "why": "a file's contents: the placeholder line absent from slice-001.md, the review's file name or criteria in its place, the other lines as they were (the regex `security-requirements-placeholder-pointer` already uses)"
+   }
+  },
+  "findings": []
+ },
+ "accessibility-review-payfine-subtle": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "fill in the slice's accessibility placeholder",
+   "note": "as `accessibility-review-payfine`"
+  },
+  "judges": {
+   "finds-pay-button-focus-removed": {
+    "by": "reading",
+    "why": "did the review find the more specific rule that removes the focus ring"
+   },
+   "finds-hover-contrast": {
+    "by": "reading",
+    "why": "did the review find the hover colour failing contrast"
+   },
+   "finds-broken-error-link": {
+    "by": "reading",
+    "why": "did the review find the mismatched id"
+   },
+   "finds-no-visible-name-label": {
+    "by": "reading",
+    "why": "did the review find the label hidden with `display: none`"
+   },
+   "no-false-alarm-input-focus-ring": {
+    "by": "reading",
+    "why": "whether the inputs are reported as lacking a focus indicator"
+   },
+   "no-false-alarm-card-number-label": {
+    "by": "reading",
+    "why": "whether the card number label or hint is reported as hidden"
+   },
+   "no-false-alarm-fine-choice": {
+    "by": "reading",
+    "why": "whether the radio group is reported as unreachable or unlabelled"
+   },
+   "says-it-read-the-markup": {
+    "by": "reading",
+    "why": "whether the review says how the check was done and claims no browser"
+   },
+   "criteria-split-now-and-later": {
+    "by": "reading",
+    "why": "whether Given/When/Then criteria cover the two things and are split by when they can be checked"
+   },
+   "slice-placeholder-filled": {
+    "by": "tool",
+    "why": "as `accessibility-review-payfine`"
+   }
+  },
+  "findings": []
+ },
+ "adr-neg-rename": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Write an ADR for it\" is the request the skill should decline"
+  },
+  "judges": {
+   "declines-the-adr": {
+    "by": "reading",
+    "why": "whether the reply says why this is not an ADR and suggests something lighter; that no file under docs/adr/ was written would be a trace regex"
+   }
+  },
+  "findings": []
+ },
+ "adr-payment-gateway": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the how-details in the request are the plant the ADR must leave out"
+  },
+  "judges": {
+   "no-how": {
+    "by": "tool",
+    "why": "names absent from a file: the seven identifiers the request gave (`FinePayments`, `stripeCode`, `AdyenFinePayments`, the three paths, `PAYMENT_PROVIDER_DESK`) and any code fence. Lost: another path or class name the run invents."
+   },
+   "decision-alternatives-consequences": {
+    "by": "reading",
+    "why": "whether each rejected alternative carries its reason and the downsides are listed"
+   }
+  },
+  "findings": []
+ },
+ "architecture-design-neg-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a review of code in production; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "architecture-design-owner-sheet": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for fixture rows from the owner's file, which is the pull the case tests"
+  },
+  "judges": {
+   "fixtures-are-invented": {
+    "by": "reading",
+    "why": "whether the reply says fixtures will be invented and quotes no row"
+   }
+  },
+  "findings": []
+ },
+ "architecture-design-payfine-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for the design; the engineer's registry is the planted proposal"
+  },
+  "judges": {
+   "presents-decisions-and-waits": {
+    "by": "reading",
+    "why": "whether a decision is presented with an alternative and the reply stops for approval; nothing written is already `writes-nothing-under-pay-fine`"
+   },
+   "recommends-against-the-speculative-registry": {
+    "by": "reading",
+    "why": "whether the registry is raised as a decision and recommended against"
+   }
+  },
+  "findings": []
+ },
+ "architecture-design-payfine-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's decisions on the forks and where to save"
+  },
+  "judges": {
+   "states-importance-ordering": {
+    "by": "reading",
+    "why": "whether an ordering of what matters most is stated, in any words"
+   },
+   "stays-conceptual": {
+    "by": "reading",
+    "why": "whether the design specifies signatures or types; only a code fence would be a regex"
+   },
+   "decisions-show-approval": {
+    "by": "reading",
+    "why": "whether each decision carries what was recommended and what the user approved"
+   },
+   "boundaries-name-what-crosses": {
+    "by": "reading",
+    "why": "whether a boundary says what crosses it in plain-data terms"
+   },
+   "tests-line-matches-the-seam-rule": {
+    "by": "reading",
+    "why": "whether the tests statement keeps the fakes to the external service and does not widen them"
+   },
+   "reflects-the-users-gateway-choice": {
+    "by": "reading",
+    "why": "whether the design includes the interface the user chose without re-arguing"
+   },
+   "builds-on-the-existing-payment-path": {
+    "by": "reading",
+    "why": "whether the design reuses the existing use case or builds a parallel one"
+   },
+   "notes-the-leaky-payment-port": {
+    "by": "reading",
+    "why": "whether the existing leak is flagged with fix or defer"
+   },
+   "keeps-the-one-implementation-port": {
+    "by": "reading",
+    "why": "whether the existing port is called premature"
+   }
+  },
+  "findings": [
+   "`decisions-show-approval` (judge) failed 19 of 25 runs."
+  ]
+ },
+ "architecture-design-payfine-via-agent": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "its architecture map is at `docs/architecture-map.md`",
+   "note": "points the run at the map, and `consults-map-query` grades that the map was consulted; the agent named is the path the case exists to run"
+  },
+  "judges": {
+   "uses-what-the-map-found": {
+    "by": "tool",
+    "why": "a name present in the reply: `CollectFine`, `FineLedger`, `FinePayments` or `portal-routes`. Lost: that the piece is named as something to build on, not in passing."
+   },
+   "presents-decisions-and-waits": {
+    "by": "reading",
+    "why": "whether a decision is presented with an alternative and the reply stops for approval"
+   }
+  },
+  "findings": []
+ },
+ "architecture-design-scope-consequence": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "hands over the approvals so the skill need not ask; the conflict is in the documents"
+  },
+  "judges": {
+   "hands-back-to-the-requirements-owner": {
+    "by": "reading",
+    "why": "whether the conflict is named and left to its owner, whatever the lean"
+   },
+   "does-not-approve-around-it": {
+    "by": "reading",
+    "why": "whether persistence across a restart is presented as decided"
+   }
+  },
+  "findings": []
+ },
+ "architecture-review-neg-security-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a security question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "architecture-review-neg-test-quality-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a test-quality question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "chunk-runner-gap-handback": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "next is recording round 0",
+   "note": "the action `round-recorded-by-the-script` grades; the E2 pass found the resume line carries the run. Naming the skill is the launch (the runner is only invoked by name)."
+  },
+  "judges": {
+   "stops-with-the-decision-on-the-line": {
+    "by": "tool",
+    "why": "the shape of the last line (`needs-decision devsecops-engineer: <path>`, `nd 1`), which `hand-back-names-the-decision` already reads; fails correct lines in 8 of 23 runs. Lost: whether the reply answers the undecided question itself."
+   }
+  },
+  "findings": [
+   "`hand-back-names-the-decision` reads the trace with `[^\\n]*`, but a trace line is JSON with newlines escaped, so the three words need only appear anywhere in one tool result or message, not on one line of the reply."
+  ]
+ },
+ "chunk-runner-gate-deviation": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "next is step 2, the gate [...] Stop once the gate has run and its result is known, before any launch",
+   "note": "the stop before any launch is what `no-fixer-no-reviewer` grades; the module directories and deviation zone are handed-over facts, not the rule."
+  },
+  "judges": {
+   "deviation-recorded-not-failed": {
+    "by": "tool",
+    "why": "`deviations 2` on the last message is a count on a line; no launch is already `no-fixer-no-reviewer`, the Files line not widened is `plan-entry-not-edited`"
+   }
+  },
+  "findings": []
+ },
+ "chunk-runner-gate-outside": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched",
+   "note": "says to go on until the gate passes (so a first failure cannot end the round) and to launch no reviewer: `gate-run-twice` and `no-reviewer-before-the-pass`"
+  },
+  "judges": {
+   "gate-passes-after-the-fix": {
+    "by": "tool",
+    "why": "`gate PASS after <sha>` and `stopped at step 2` on the last message, the regex `chunk-runner-gate-sources` already uses; the launches are counted by tool checks"
+   }
+  },
+  "findings": [
+   "The comment above `gate-passes-after-the-fix` says the judge holds \"the runner edits no code\", but its focus is `last_message`, which cannot show an edit: nothing reads whether the runner edited code itself.",
+   "`allow-list-not-widened` (`--allow[ =]+[\\x27\"]?utils/`, not_contains on the trace): a double quote is `\\\"` in the trace's JSON, so `--allow \"utils/...\"` is not matched; only the bare and single-quoted forms are. Read from the pattern, not seen in a run."
+  ]
+ },
+ "chunk-runner-gate-sources": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched",
+   "note": "as `chunk-runner-gate-outside`; the prompt also says the target directory holds `sources.md`, which points at `--planning`"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "chunk-runner-one-fix-round": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "next is recording round 1 with `--range`, then acting on the split",
+   "note": "the action `round-one-recorded-with-the-range` grades; also \"the sandbox checks in this round are information and never end it\". Naming the skill to invoke is the launch, not a leak: the runner is only ever invoked by name."
+  },
+  "judges": {
+   "hand-back-is-the-one-line": {
+    "by": "tool",
+    "why": "the shape of the last message: one line, the C line's fields in order, nothing before or after it; two regexes already read the split and the standing count"
+   }
+  },
+  "findings": []
+ },
+ "chunk-runner-replay-not-the-handback": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the prompt is the notification itself"
+  },
+  "judges": {
+   "the-siblings-result-is-not-the-builders": {
+    "by": "reading",
+    "why": "the hash off the line is already `the-siblings-commit-not-taken`; what is left is whether the reply only says it is still waiting, or reports chunk 1 built on the notification's strength"
+   }
+  },
+  "findings": []
+ },
+ "chunk-runner-replay-unheld-commit": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the prompt is the builder's hand-back itself"
+  },
+  "judges": {
+   "treats-the-hand-back-as-having-no-commit": {
+    "by": "reading",
+    "why": "the hash off the line is already `unheld-commit-never-on-the-line`; what is left is whether the reply says the commit does not exist and reports nothing built without a commit of its own"
+   }
+  },
+  "findings": []
+ },
+ "chunk-runner-review-round": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "next is step 3, the review and smoke launches [...] Stop once round 0 is recorded [...] don't start the fix round",
+   "note": "the two launches and the recording are what `one-combined-reviewer`, `one-smoke-agent` and `round-recorded-by-the-script` grade; the hand-over names `scratch_run.py`, which `smoke-agent-handed-the-launcher` grades"
+  },
+  "judges": {
+   "review-report-in-the-shared-shape": {
+    "by": "tool",
+    "why": "a file's shape: every `###` heading followed by a `**Severity:**` line with one of four values, at most eight, none Low. It grades the launched reviewer's file, not the runner."
+   }
+  },
+  "findings": [
+   "`cold-findings-cite-no-planning-document` lists `design\\.md`, but the fixture's documents are `design-001.md`, `requirements-001.md` and `user-story-001.md`: a finding citing any of those three is not seen (only `slice-001.md` is).",
+   "`hand-back-line-carries-the-script-counts` reads the trace with `[^\\n]`, as `chunk-runner-gap-handback`'s regex does: the parts need only sit in one tool result or message, not on one line of the reply."
+  ]
+ },
+ "chunk-runner-waits-for-handback": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent",
+   "note": "`no-reviewer-launched` and `gate-on-the-builders-commit` grade what the stopping point says"
+  },
+  "judges": {
+   "hand-back-is-the-one-line-for-what-ran": {
+    "by": "tool",
+    "why": "the shape of the last message: one line with a commit hash, a gate result and `stopped at`; it is the judge the `handback-one-line` deletion fails, so the regex must fail paragraphs and bullets"
+   }
+  },
+  "findings": []
+ },
+ "code-review-catalog": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module and the three things readability covers"
+  },
+  "judges": {
+   "nothing-above-low": {
+    "by": "reading",
+    "why": "whether anything is raised as a real problem, in the review's own scale"
+   },
+   "names-what-holds-it-up": {
+    "by": "reading",
+    "why": "whether at least two of the named points are given as reasons, in paraphrase"
+   }
+  },
+  "findings": []
+ },
+ "code-review-comments-chunk": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Write one report in the shared finding format [...] and hand back the counts and the path",
+   "note": "the reply's content is what `hands-back-counts-and-path` grades; the rest is the orchestrator's launch text for a chunk reviewer, and \"Touches: storage\" is the state that should bring the reliability lens"
+  },
+  "judges": {
+   "what-comments-are-a-medium": {
+    "by": "reading",
+    "why": "whether the restating comments are a finding rated Medium with deletion as the fix"
+   },
+   "planning-reference-is-a-medium": {
+    "by": "reading",
+    "why": "whether the decision reference is called out inside a Medium finding"
+   },
+   "why-comment-is-not-flagged": {
+    "by": "reading",
+    "why": "whether the one WHY-comment is asked to go"
+   },
+   "hands-back-counts-and-path": {
+    "by": "tool",
+    "why": "the shape of a short reply: the report's path, a count, and a length bound; a judge on a few lines is the noise the chunk-runner pass found"
+   }
+  },
+  "findings": []
+ },
+ "code-review-days-left-pr": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Please review it before I merge\" names no lens"
+  },
+  "judges": {
+   "finds-unused-options": {
+    "by": "reading",
+    "why": "did the review find the planted unused parameter"
+   },
+   "finds-unused-flag": {
+    "by": "reading",
+    "why": "did the review find the planted flag"
+   },
+   "finds-impossible-null-check": {
+    "by": "reading",
+    "why": "did the review find the planted check"
+   },
+   "finds-rethrowing-catch": {
+    "by": "reading",
+    "why": "did the review find the planted try/catch"
+   },
+   "keeps-the-overdue-branch": {
+    "by": "reading",
+    "why": "whether the branch is proposed for removal"
+   },
+   "keeps-the-returned-loan-branch": {
+    "by": "reading",
+    "why": "whether the branch is proposed for removal"
+   },
+   "keeps-the-shared-date-helper": {
+    "by": "reading",
+    "why": "whether the helper is objected to"
+   }
+  },
+  "findings": []
+ },
+ "code-review-fine-notices-pr": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the files and the three things readability covers"
+  },
+  "judges": {
+   "finds-triplicated-notice-logic": {
+    "by": "reading",
+    "why": "did the review find the planted repetition as a real finding"
+   },
+   "guard-clause-not-the-finding": {
+    "by": "reading",
+    "why": "whether the guard line is a problem in its own right"
+   },
+   "finds-false-dollars-comment": {
+    "by": "reading",
+    "why": "did the review find the false comment and rank it among the most serious"
+   },
+   "finds-wrong-name": {
+    "by": "reading",
+    "why": "did the review find the wrong name and rank it above a vague one"
+   },
+   "finds-what-comment": {
+    "by": "reading",
+    "why": "did the review recommend deleting the restating comment"
+   },
+   "finds-duplicate-test-names": {
+    "by": "reading",
+    "why": "did the review flag the two tests named `works`"
+   },
+   "keeps-the-why-comment": {
+    "by": "reading",
+    "why": "whether the WHY-comment is recommended for deletion"
+   },
+   "leaves-mocking-to-test-quality-review": {
+    "by": "reading",
+    "why": "whether a ranked finding's own complaint is the mocking"
+   }
+  },
+  "findings": []
+ },
+ "code-review-fine-notices-pr-via-agent": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Use the `kad-dev-team:code-reviewer` agent\" is the path the case exists to run; the eight judges are `code-review-fine-notices-pr`'s, word for word, on the agent's report"
+  },
+  "judges": {
+   "finds-triplicated-notice-logic": {
+    "by": "reading",
+    "why": "as `code-review-fine-notices-pr`"
+   },
+   "guard-clause-not-the-finding": {
+    "by": "reading",
+    "why": "as `code-review-fine-notices-pr`"
+   },
+   "finds-false-dollars-comment": {
+    "by": "reading",
+    "why": "as `code-review-fine-notices-pr`"
+   },
+   "finds-wrong-name": {
+    "by": "reading",
+    "why": "as `code-review-fine-notices-pr`"
+   },
+   "finds-what-comment": {
+    "by": "reading",
+    "why": "as `code-review-fine-notices-pr`"
+   },
+   "finds-duplicate-test-names": {
+    "by": "reading",
+    "why": "as `code-review-fine-notices-pr`"
+   },
+   "keeps-the-why-comment": {
+    "by": "reading",
+    "why": "as `code-review-fine-notices-pr`"
+   },
+   "leaves-mocking-to-test-quality-review": {
+    "by": "reading",
+    "why": "as `code-review-fine-notices-pr`"
+   }
+  },
+  "findings": [
+   "`consults-why-comments` failed 18 of 20 runs. Its trace regex wants the exact form `\"name\":\"Skill\",\"input\":{\"skill\":\"kad-dev-team:why-comments\"`, stricter than the `\"skill\": ?\"...\"` form the tdd via-agent case uses for the same kind of nested call; whether the agent skips the consult or the form misses it was not checked. `leaves-mocking-to-test-quality-review` (judge) failed 16 of 17 here against 5 of 13 in the direct case."
+  ]
+ },
+ "code-review-fines-report-pr": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the file to review"
+  },
+  "judges": {
+   "finds-run-doing-several-jobs": {
+    "by": "reading",
+    "why": "did the review find the planted problem and propose named steps"
+   },
+   "finds-feature-envy": {
+    "by": "reading",
+    "why": "did the review find the planted problem"
+   },
+   "finds-data-clump": {
+    "by": "reading",
+    "why": "did the review find the four values travelling together"
+   },
+   "finds-month-as-raw-string": {
+    "by": "reading",
+    "why": "did the review give the month format one owner"
+   },
+   "hands-sdk-to-architecture-review": {
+    "by": "reading",
+    "why": "whether the SDK point is one of the review's own ranked findings"
+   }
+  },
+  "findings": []
+ },
+ "code-review-neg-architecture": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "an architecture question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "code-review-structural-high-at-d": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"the way the slice review does\" names the state (a slice review), not what to do with a structural finding"
+  },
+  "judges": {
+   "the-split-is-the-architects-decision": {
+    "by": "reading",
+    "why": "whether the function's size is handed to the architect without a prescribed split"
+   },
+   "a-long-single-job-function-stays-a-plain-finding": {
+    "by": "reading",
+    "why": "whether the second function is an ordinary finding and not sent to the architect"
+   }
+  },
+  "findings": [
+   "`a-long-single-job-function-stays-a-plain-finding` (judge) failed 6 of 7 runs."
+  ]
+ },
+ "delegation-consult-with-file": {
+  "prompt": {
+   "states_rule": "yes",
+   "quote": "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence",
+   "note": "every tool check and the hand-back judge grade what this sentence says; it is the orchestrator's task text, and the same words in `delegation-consult-without-file` are what must be refused, so here the case shows only that the file's presence does not stop the run"
+  },
+  "judges": {
+   "decision-written-in-place-under-the-delegation": {
+    "by": "reading",
+    "why": "whether both parts are answered in a testable form and recorded under Decisions as made under the delegation"
+   },
+   "hands-back-the-hash-and-one-sentence": {
+    "by": "tool",
+    "why": "the shape of the last message: a hash of seven or more hex characters and a length bound"
+   }
+  },
+  "findings": []
+ },
+ "delegation-consult-without-file": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the task text asks for a revision and a commit that the skill must refuse without a delegation file: the prompt pulls against the rule"
+  },
+  "judges": {
+   "recommendation-only-named-as-undelegated": {
+    "by": "reading",
+    "why": "whether the reply recommends, names a rejected alternative and says nothing was written because no delegation exists"
+   }
+  },
+  "findings": []
+ },
+ "delivery-ci-red-not-done": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there",
+   "note": "`nothing-launched` grades what the prompt forbids, and the handoff the judge reads is asked for; that red checks are read and are not \"done\" is left to the skill"
+  },
+  "judges": {
+   "handoff-briefs-the-fixer": {
+    "by": "reading",
+    "why": "whether the handoff names one fixer, the platform difference and the rule that the tests are not weakened"
+   },
+   "report-leads-with-red-ci-and-not-ready": {
+    "by": "reading",
+    "why": "whether the reply leads with the red checks and calls nothing done"
+   }
+  },
+  "findings": [
+   "`failing-tests-written-to-the-records` matches the test's name within 6,000 characters after any Write or Bash call that names `pr-ci-r1.md`, so the failed job's log printed by a later command passes a run that wrote the file without the test names."
+  ]
+ },
+ "design-system-payfine-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "says there is no design system yet, the state"
+  },
+  "judges": {
+   "asks-reference-or-generate": {
+    "by": "reading",
+    "why": "whether the reply asks reference-or-generate and stops, naming no direction"
+   }
+  },
+  "findings": []
+ },
+ "design-system-payfine-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answer and where the candidate files go"
+  },
+  "judges": {
+   "asks-which-candidate": {
+    "by": "reading",
+    "why": "whether the candidates differ in more than colour and no winner is named"
+   },
+   "honest-about-viewing": {
+    "by": "reading",
+    "why": "whether the reply claims to have viewed the files"
+   },
+   "candidate-1-is-a-real-render": {
+    "by": "reading",
+    "why": "whether the page is a full render of the screen with one direction; a viewport tag and hex colours would be a regex, a stub is not told from a screen by them"
+   },
+   "candidate-2-is-a-real-render": {
+    "by": "reading",
+    "why": "as `candidate-1-is-a-real-render`"
+   }
+  },
+  "findings": []
+ },
+ "design-system-payfine-phase3": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"The second one. Go with that.\""
+  },
+  "judges": {
+   "chosen-direction-committed": {
+    "by": "reading",
+    "why": "whether one direction is committed to and says something specific about this product"
+   },
+   "rejected-candidates-in-prose": {
+    "by": "reading",
+    "why": "whether two rejected candidates each carry a reason"
+   },
+   "tokens-every-category": {
+    "by": "reading",
+    "why": "whether each of six categories has a declared value or an explicit none; the six words present would be a regex, a value beside each is not"
+   },
+   "platform-with-provenance": {
+    "by": "reading",
+    "why": "whether the platform is stated with where it came from"
+   },
+   "accessibility-by-construction": {
+    "by": "reading",
+    "why": "whether every text colour has a ratio at or above its threshold; a script could compute the ratios from the hex values, which no grader kind runs today"
+   },
+   "mockup-referenced-no-screenshot-claimed": {
+    "by": "tool",
+    "why": "names present and absent in a file: an `.html` under `visual-ux/` referenced, no image file referenced"
+   }
+  },
+  "findings": []
+ },
+ "design-system-payfine-reference": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "gives the reference to match, the state that selects the reference path"
+  },
+  "judges": {
+   "one-mock-and-a-confirmation": {
+    "by": "reading",
+    "why": "whether one mock is presented and the match is asked about, with no candidates"
+   },
+   "honest-about-viewing": {
+    "by": "reading",
+    "why": "whether the reply claims to have viewed the mock"
+   }
+  },
+  "findings": []
+ },
+ "design-system-payfine-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for a review of the system before the second screen"
+  },
+  "judges": {
+   "finds-muted-contrast": {
+    "by": "reading",
+    "why": "did the review find the planted failing contrast and not repeat the stale figure"
+   },
+   "finds-no-focus-state": {
+    "by": "reading",
+    "why": "did the review find the missing focus state as a problem"
+   },
+   "leaves-preferences-alone": {
+    "by": "reading",
+    "why": "whether a preference is recommended for change"
+   },
+   "separates-problems-from-preferences": {
+    "by": "reading",
+    "why": "whether a choice left alone is named apart from the problems"
+   }
+  },
+  "findings": []
+ },
+ "external-review-triage-cancel-hold": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Write your report to [...] and hand back the counts and the path",
+   "note": "the reply's content is what `hands-back-counts-and-path` grades; it is the orchestrator's launch text"
+  },
+  "judges": {
+   "declines-the-wrong-and-the-cosmetic": {
+    "by": "reading",
+    "why": "whether each decline's reason says what the code declares; the verdict beside each comment id would be a regex"
+   },
+   "fixes-the-missed-defect": {
+    "by": "reading",
+    "why": "whether the fix is described for the builder and listed as missed by the flow's reviewers"
+   },
+   "defers-out-of-slice-and-resolves-the-fixed": {
+    "by": "reading",
+    "why": "whether the deferral names its owner and the resolved one its commit"
+   },
+   "hands-back-counts-and-path": {
+    "by": "tool",
+    "why": "the shape of a short reply: the report's path, four counts and a length bound"
+   }
+  },
+  "findings": []
+ },
+ "library-app-catalog-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module to review"
+  },
+  "judges": {
+   "reports-nothing-above-low": {
+    "by": "reading",
+    "why": "whether a finding located in the module is Medium or higher; counted by location"
+   },
+   "names-what-holds-it-up": {
+    "by": "reading",
+    "why": "whether at least two of the named points are given as reasons, in paraphrase"
+   }
+  },
+  "findings": []
+ },
+ "library-app-fines-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module to review"
+  },
+  "judges": {
+   "finds-policy-mixed-with-mechanics": {
+    "by": "reading",
+    "why": "did the review find the planted mix of rule and mechanism"
+   },
+   "finds-provider-codes-leaking-through-port": {
+    "by": "reading",
+    "why": "did the review find the planted leak through the port"
+   },
+   "finds-premature-waiver-strategy": {
+    "by": "reading",
+    "why": "did the review find the planted premature interface"
+   },
+   "respects-documented-rounding-split": {
+    "by": "reading",
+    "why": "whether the two rounding helpers are demanded merged against the comment's reason"
+   }
+  },
+  "findings": []
+ },
+ "library-app-lending-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module to review"
+  },
+  "judges": {
+   "finds-orm-inside-checkout-use-case": {
+    "by": "reading",
+    "why": "did the review find the planted problem as top tier"
+   },
+   "finds-runtime-import-cycle": {
+    "by": "reading",
+    "why": "did the review find the cycle as a load problem, not a style one"
+   },
+   "finds-http-request-in-place-hold": {
+    "by": "reading",
+    "why": "did the review find the planted framework type in the use case"
+   },
+   "no-false-alarm-type-only-cycle": {
+    "by": "reading",
+    "why": "whether the type-only pair is reported as a real cycle"
+   },
+   "finds-use-case-reaching-into-wiring": {
+    "by": "reading",
+    "why": "did the review find the planted dependency on the composition root"
+   },
+   "states-assumed-importance-ordering": {
+    "by": "reading",
+    "why": "whether a sentence anywhere states the ordering assumed, in any words"
+   }
+  },
+  "findings": []
+ },
+ "library-app-lending-review-via-agent": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "return its findings report verbatim [...] (including its opening section on the importance ordering it assumed)",
+   "note": "tells the run the report has an importance-ordering section, which `states-assumed-importance-ordering` grades; the agent named is the path the case exists to run"
+  },
+  "judges": {
+   "finds-orm-inside-checkout-use-case": {
+    "by": "reading",
+    "why": "as `library-app-lending-review`"
+   },
+   "finds-runtime-import-cycle": {
+    "by": "reading",
+    "why": "as `library-app-lending-review`"
+   },
+   "finds-http-request-in-place-hold": {
+    "by": "reading",
+    "why": "as `library-app-lending-review`"
+   },
+   "no-false-alarm-type-only-cycle": {
+    "by": "reading",
+    "why": "as `library-app-lending-review`"
+   },
+   "finds-use-case-reaching-into-wiring": {
+    "by": "reading",
+    "why": "as `library-app-lending-review`"
+   },
+   "states-assumed-importance-ordering": {
+    "by": "reading",
+    "why": "as `library-app-lending-review`"
+   }
+  },
+  "findings": []
+ },
+ "library-app-members-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module to review"
+  },
+  "judges": {
+   "locates-driver-type-in-port-file": {
+    "by": "reading",
+    "why": "did the review place the problem in the port file and not only in its importers"
+   },
+   "finds-table-shaped-domain-type": {
+    "by": "reading",
+    "why": "did the review find the planted table-shaped type"
+   },
+   "no-false-alarm-date-library": {
+    "by": "reading",
+    "why": "whether the date library import is a blocking finding"
+   }
+  },
+  "findings": []
+ },
+ "library-app-notifications-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module to review"
+  },
+  "judges": {
+   "finds-missing-channel-abstraction": {
+    "by": "reading",
+    "why": "did the review find the planted missing interface as a present axis of change"
+   },
+   "finds-port-on-implementer-side": {
+    "by": "reading",
+    "why": "did the review find the interface owned by the wrong side"
+   },
+   "no-false-alarm-single-impl-mailer-port": {
+    "by": "reading",
+    "why": "whether the one-implementation port is reported as premature"
+   }
+  },
+  "findings": []
+ },
+ "library-app-reporting-pr": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the files the pull request adds and changes, the review's scope"
+  },
+  "judges": {
+   "finds-new-code-mixing-levels": {
+    "by": "reading",
+    "why": "did the review raise the planted mix against the new code"
+   },
+   "scopes-legacy-issues-as-non-blocking": {
+    "by": "reading",
+    "why": "whether pre-existing problems are named, kept apart and not made a merge condition"
+   },
+   "no-false-alarm-report-files-port": {
+    "by": "reading",
+    "why": "whether the new port is reported as premature"
+   }
+  },
+  "findings": []
+ },
+ "library-app-reporting-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module to review"
+  },
+  "judges": {
+   "finds-sql-level-port": {
+    "by": "reading",
+    "why": "did the review find the port drawn at the wrong level"
+   },
+   "finds-sdk-constructed-in-revenue-report": {
+    "by": "reading",
+    "why": "did the review find the SDK used directly"
+   },
+   "finds-orchestration-mixed-with-csv-bytes": {
+    "by": "reading",
+    "why": "did the review find the planted mix of levels"
+   }
+  },
+  "findings": []
+ },
+ "library-app-structure-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for structure and boundaries"
+  },
+  "judges": {
+   "finds-technical-role-directories": {
+    "by": "reading",
+    "why": "did the review find the directories named by technical role"
+   },
+   "finds-payment-sdk-outside-its-adapter": {
+    "by": "reading",
+    "why": "did the review find the SDK outside its adapter"
+   },
+   "no-false-alarm-bootstrap-and-near-miss-names": {
+    "by": "reading",
+    "why": "whether the entry point and the composition root are reported as violations"
+   },
+   "no-false-alarm-date-library-tier": {
+    "by": "reading",
+    "why": "whether the date library is a blocking finding"
+   }
+  },
+  "findings": []
+ },
+ "map-query-consults": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "three questions to answer from the map"
+  },
+  "judges": {
+   "structural-candidate-as-fact": {
+    "by": "reading",
+    "why": "whether the candidate is offered with the map's facts and no ruling on reuse; the file's name present would be a regex"
+   },
+   "finds-daysBetween-by-shape": {
+    "by": "reading",
+    "why": "whether the differently named export is surfaced, said to be untiered and left to the asker"
+   },
+   "honest-empty-result": {
+    "by": "reading",
+    "why": "whether a stretched candidate is presented as comparable"
+   },
+   "caveats-stale-map": {
+    "by": "reading",
+    "why": "whether the reply warns that the map predates the merge"
+   }
+  },
+  "findings": []
+ },
+ "map-query-no-map": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Check the architecture map first\" names the map, which does not exist"
+  },
+  "judges": {
+   "says-no-map": {
+    "by": "reading",
+    "why": "whether the reply says no map exists and points at generating one"
+   },
+   "no-live-scan-answer": {
+    "by": "tool",
+    "why": "a name absent from the reply: `daysBetween` or `date-utils`, which only a search of the source would give"
+   }
+  },
+  "findings": []
+ },
+ "map-update-cancel-hold": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for the map to match the code and for what changed"
+  },
+  "judges": {
+   "new-rows-extracted": {
+    "by": "tool",
+    "why": "a file's contents: the two rows with their tier, edges and exports, in the table the shipped extractor writes"
+   },
+   "keeps-existing-rows-and-tiers": {
+    "by": "tool",
+    "why": "a file's contents against the fixture's earlier map: every source row still present with its tier; a script, not one regex"
+   },
+   "flags-new-wrong-direction-edge": {
+    "by": "reading",
+    "why": "whether the edge is flagged as a fact and not ruled on"
+   },
+   "untiered-edge-direction-unknown": {
+    "by": "reading",
+    "why": "whether the edge is reported as unknown and judged neither way"
+   },
+   "flags-duplication-candidate": {
+    "by": "reading",
+    "why": "whether the pair is flagged with the verdict left open"
+   },
+   "pre-existing-flags-not-new": {
+    "by": "reading",
+    "why": "whether either earlier edge is reported as new"
+   },
+   "no-severity": {
+    "by": "tool",
+    "why": "words absent from a file: Critical, High, Medium, Low, serious, a score"
+   }
+  },
+  "findings": [
+   "`pre-existing-flags-not-new` (judge) failed 13 of 18 runs."
+  ]
+ },
+ "operational-readiness-neg-reliability": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a reliability question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "operational-readiness-neg-security": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a security question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "operational-readiness-ops-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks whether a break would be noticed and debugged; gives no facts of the situation, which is the state under test"
+  },
+  "judges": {
+   "asks-situation-first": {
+    "by": "reading",
+    "why": "whether the reply asks about the situation and holds back or labels its verdict"
+   }
+  },
+  "findings": []
+ },
+ "operational-readiness-ops-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers to phase 1's questions"
+  },
+  "judges": {
+   "finds-nightly-job-has-no-signal": {
+    "by": "reading",
+    "why": "did the reply find the planted missing signal"
+   },
+   "finds-missing-config-starts-silently": {
+    "by": "reading",
+    "why": "did the reply find the planted silent defaults"
+   },
+   "finds-nothing-written-for-2am": {
+    "by": "reading",
+    "why": "did the reply find the missing operations note, sized to the situation"
+   },
+   "no-enterprise-ceremony": {
+    "by": "reading",
+    "why": "whether a team-scale practice is recommended, in any words"
+   },
+   "no-false-alarm-no-backups": {
+    "by": "reading",
+    "why": "whether the reply claims there are no backups"
+   }
+  },
+  "findings": []
+ },
+ "operational-readiness-release-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks \"is it ready to ship?\" with no facts of the situation"
+  },
+  "judges": {
+   "asks-situation-first": {
+    "by": "reading",
+    "why": "whether the reply asks about the situation and holds back or labels its verdict"
+   },
+   "asks-whether-rollback-was-ever-run": {
+    "by": "reading",
+    "why": "whether the rollback is asked about as a question and not assumed"
+   }
+  },
+  "findings": []
+ },
+ "operational-readiness-release-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers to phase 1's questions"
+  },
+  "judges": {
+   "finds-deploy-success-unverified": {
+    "by": "reading",
+    "why": "did the reply find the planted unverified deploy"
+   },
+   "finds-irreversible-migration-coupled-to-release": {
+    "by": "reading",
+    "why": "did the reply find the dropped column as a top concern with a split proposed"
+   },
+   "finds-rollback-never-exercised": {
+    "by": "reading",
+    "why": "whether the never-run rollback is a finding in its own right"
+   },
+   "no-false-alarm-no-rollback-path": {
+    "by": "reading",
+    "why": "whether the reply denies a redeploy path exists in general"
+   },
+   "no-enterprise-ceremony": {
+    "by": "reading",
+    "why": "whether a team-scale practice is recommended, in any words"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-asks-for-target": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names no directory, which is the state under test"
+  },
+  "judges": {
+   "asks-where-artifacts-live": {
+    "by": "reading",
+    "why": "whether the reply asks where the artifacts go and starts no planning work; the no-search half is already two tool checks"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-backward-route": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "routes-back-to-the-owner": {
+    "by": "reading",
+    "why": "whether the reply is the slicer deciding scope because of the hand-back, not the next forward row or the receipt question settled by itself"
+   },
+   "log-names-the-hand-back": {
+    "by": "tool",
+    "why": "names present in a file: an entry naming the security document or the receipt, product-slicer or vertical-slicing, and a path under docs/pay-fine/. Lost: that the entry calls itself a backward route in its own words."
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-budget-exceeded": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Keep going\"; the handoff file holds the state"
+  },
+  "judges": {
+   "flow-ends-saying-what-is-built": {
+    "by": "reading",
+    "why": "whether the reply says which budget ended the flow and what is and is not built; `budget exceeded` on the log and no launch are already tool checks"
+   }
+  },
+  "findings": [
+   "`flow-ends-saying-what-is-built` (judge) failed 30 of 43 runs; whether the reply or the criterion is short was not read here."
+  ]
+ },
+ "orchestrator-chunk-runner-handback": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off once chunk 1's C line is written and its records committed, before chunk 2's runner is launched",
+   "note": "names the two actions `c-line-written-from-the-hand-back` and `records-committed-by-name` grade, and the stop `nothing-launched` grades; what goes on the line is left to the skill"
+  },
+  "judges": {
+   "handoff-before-chunk-two": {
+    "by": "reading",
+    "why": "the handoff file's next action and its budget counters in free words; a regex for \"chunk 2\" near \"next\" would hold half"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-chunk-runner-launch": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off as soon as chunk 1's runner has been launched: don't wait for it to return; write the handoff file saying the runner is in flight and stop",
+   "note": "says a runner is what gets launched (`one-chunk-runner-launched`) and dictates the handoff's content, which is all the judge reads"
+  },
+  "judges": {
+   "handoff-says-the-runner-is-in-flight": {
+    "by": "reading",
+    "why": "the handoff file's words on what was launched and what is next; the prompt dictates them, so the judge mostly grades the prompt"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-definition-of-done": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)",
+   "note": "\"checked again\" is `definition-of-done-checked-twice`; the stop is `no-slice-reviewer-yet`"
+  },
+  "judges": {
+   "three-named-fixes-in-one-batch": {
+    "by": "reading",
+    "why": "whether the reply reports the three failed checks and what was done for each; every launch it names is already counted by a tool check"
+   }
+  },
+  "findings": [
+   "`three-named-fixes-in-one-batch` (judge) failed 57 of 65 completed runs held; the coverage table says it fails replies that report exactly the three fixes. A grader that fails nearly every run tells a broken run from a good one no better than one that never fails."
+  ]
+ },
+ "orchestrator-delivery-foreground": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "hands over the stand-in for the GitHub CLI, not the procedure"
+  },
+  "judges": {
+   "one-issue-per-standing-medium-none-for-a-low": {
+    "by": "tool",
+    "why": "a count and names in tools/gh-calls.log: exactly two `issue create` lines, none carrying a Low's words (`queueWith`, the fixed string, the heading), a `pr edit` after them. Lost: that each issue is the right Medium when its title is a paraphrase."
+   },
+   "reports-the-delivery-in-the-same-turn": {
+    "by": "reading",
+    "why": "whether the reply reports the pull request, the issues, the Lows and the cost outcome, and asks nothing about pushing"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-delivery-removal": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "If the scan finds anything of that file in this branch's commits, replace it and rewrite the branch before it is pushed. You have my word for that rewrite",
+   "note": "the owner's word is an input the procedure requires, but \"scan\", \"rewrite\" and \"before it is pushed\" are also what `every-commit-scanned-before-and-after`, `branch-rewritten-by-the-script` and `rewrite-before-the-push` grade"
+  },
+  "judges": {
+   "record-names-counts-and-files-never-values": {
+    "by": "reading",
+    "why": "whether the reply reports the removal with counts and names a copy the rewrite cannot reach; only \"neither card number in the reply\" is a tool's"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-gap-without-delegation": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Keep going\"; the handoff file holds the state"
+  },
+  "judges": {
+   "stops-for-the-owner-with-the-recommendation": {
+    "by": "reading",
+    "why": "whether the reply presents the persona's recommendation and stops for the owner without deciding"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-issue-fix-records": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)",
+   "note": "the stop is `nothing-launched`, the handoff file is `handoff-carries-the-issue-prefix`; \"Issue #14 is the one I told you to fix first on its own branch\" is the owner's earlier answer, an input"
+  },
+  "judges": {
+   "reports-the-fix-started-and-the-gaps-filed": {
+    "by": "reading",
+    "why": "whether the reply says the older gaps were filed and not routed, and asks nothing about them"
+   }
+  },
+  "findings": [
+   "`branch-names-the-slice-and-the-issue` allows a quote before the branch name (`['\"]?`), but a double quote is `\\\"` in the trace's JSON, so `git switch -c \"slice-001-issue14-...\"` would not match and a correct run would fail. Read from the pattern; the one failure held (2026-11-12) was a run that created no branch.",
+   "`handoff-carries-the-issue-prefix` matches the file name within 1,500 characters after the start of any Write or Bash call, so a later call or a tool result that names it passes a run that never wrote it."
+  ]
+ },
+ "orchestrator-plan-check-seam": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off once the B line is written, before chunk 1's build",
+   "note": "the stop is `no-builder-launched` and the B line is `b-line-written`; that a failed plan goes back to a planner is left to the skill"
+  },
+  "judges": {
+   "every-chunk-names-its-seam-test": {
+    "by": "tool",
+    "why": "a file's shape: under `## Chunk plan`, two to eight chunks, each Done when line holding `seam \"`; the plan check itself is mechanical"
+   },
+   "plan-sent-back-not-edited": {
+    "by": "reading",
+    "why": "whether the reply reports the failed check, the one relaunch and the second result; the launches are counted by tool checks"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-readiness-gate": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)",
+   "note": "the stop is `no-builder-while-the-gate-fails`; the delegation and sandbox sentences are the owner's answers, inputs"
+  },
+  "judges": {
+   "backward-routes-name-the-checks": {
+    "by": "tool",
+    "why": "names present in the log: a chunk-loop entry, then an entry naming reliability-requirements or screen-design with the document to revise. Lost: that the entry's reason is the failed check in words."
+   },
+   "stops-at-the-routed-skill-or-reports-the-route": {
+    "by": "reading",
+    "why": "whether the reply reports the failed checks and the routes and ends on the gate passing or a routed skill's question"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-readiness-open-item": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the owner's answers on delegation and the sandbox are inputs; the blocker is in the slice file"
+  },
+  "judges": {
+   "puts-the-blocker-to-the-owner": {
+    "by": "reading",
+    "why": "whether the reply ends on one question quoting the item with the three choices"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-readiness-sources": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "as `orchestrator-readiness-open-item`"
+  },
+  "judges": {
+   "puts-the-places-to-the-owner": {
+    "by": "reading",
+    "why": "whether the reply asks the owner what the values are with the three choices"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-readme-stale-not-done": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)",
+   "note": "as `orchestrator-definition-of-done`"
+  },
+  "judges": {
+   "three-named-fixes-in-one-batch": {
+    "by": "reading",
+    "why": "whether the reply reports the stale not-done item as the README failure and what was done for each check"
+   }
+  },
+  "findings": [
+   "`three-named-fixes-in-one-batch` (judge), the same criterion family as `orchestrator-definition-of-done`'s, failed 7 of 8 runs."
+  ]
+ },
+ "orchestrator-route-accessibility": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: accessibility-review and a path under docs/pay-fine/; the destination is already `routes-to-accessibility-review`. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends: on the routed skill's questions, its result, or the backward route, and nothing from a later stage"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-backward-requirements": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: requirements-refinement and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends, and that it did not answer the routed skill's questions itself"
+   }
+  },
+  "findings": [
+   "The `stops-after-the-routed-step` criteria come in two wordings: nine cases say \"exactly one routed step per invocation ... asks whether to continue; it never chains\" (this one, `orchestrator-route-design`, `-design-system`, `-implementation`, `-implementation-prenamed`, `-problem-framing`, `-reliability`, `-tech-bootstrap`, `-user-story`), four say it \"continues to the next row in the same conversation\" (`-accessibility`, `-scope-decision`, `-screen-design`, `-slicing`). The nine fail a run the four pass; which is the skill's rule today was not checked here."
+  ]
+ },
+ "orchestrator-route-design": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\" names no state and no destination"
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "a log entry naming architecture-design and a path under docs/pay-fine/ is names present in a file; the state's wording would no longer be read, and a wrong state routes elsewhere, which `routes-to-architecture-design` already fails"
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "whether the reply ends on the routed skill's questions or its result, and did not answer them itself; only the absence of a later stage's Skill call is a tool's"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-design-system": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: design-system and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends, and that it did not answer the routed skill's questions itself"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-implementation": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "routes-to-tdd-implementation-lite": {
+    "by": "tool",
+    "why": "names present in the log: \"chunk loop\" or tdd-implementation-lite as the destination and an artifact line (a path or \"see sub-entries below\")"
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "which of six stops the reply ends on, with no code written inline"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-implementation-prenamed": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"If the next step is the implementation, go ahead with it\" is the guess the case is about"
+  },
+  "judges": {
+   "routes-to-tdd-implementation-lite": {
+    "by": "tool",
+    "why": "as `orchestrator-route-implementation`: the destination and an artifact line in the log"
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "which stop the reply ends on, with no code written inline"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-open-pr": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Report what is open and stop after your first question to me; don't run the triage or any fix in this session",
+   "note": "\"what is open\" points at the tracker (`asks-the-tracker-for-open-pull-requests`, `-issues`), and the stop is `nothing-launched` and `no-planning-skill-invoked`"
+  },
+  "judges": {
+   "asks-about-the-high-issue-with-three-answers": {
+    "by": "reading",
+    "why": "whether the reply asks one question on #14 with the three choices and none on the Low"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-problem-framing": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the empty target folder, the state"
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: problem-framing-doc and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends, and that it did not answer the routed skill's questions itself"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-reliability": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: reliability-requirements and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends, and that it did not answer the routed skill's questions itself"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-scope-decision": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: scope-map and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends across two possible steps, and that no requirements document was written without the owner's answers"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-screen-design": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: screen-design and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends, and that no design-system work was redone"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-slicer-accessibility-mistake": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-the-mismatch": {
+    "by": "reading",
+    "why": "the reason the entry gives (the accessibility line disagreeing with the thin path) is the point; the route itself is already `routes-back-to-the-slicer`"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-slicing": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: vertical-slicing and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends, and that no user story was written without the owner's answer"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-tech-bootstrap": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"This repository is empty apart from `docs/`\" is the state"
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: technology-bootstrap and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends, and that it did not answer the routed skill's questions itself"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-route-user-story": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "log-names-row-and-artifact": {
+    "by": "tool",
+    "why": "names present in the log: user-story-writeup and docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+   },
+   "stops-after-the-routed-step": {
+    "by": "reading",
+    "why": "how the reply ends, and that it did not answer the routed skill's questions itself"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-runner-handback-unverified": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "This session may launch no agent: when the next action is a launch, write the handoff file for it and stop there",
+   "note": "`nothing-launched` grades what the prompt forbids; that the line's hash is checked is left to the skill"
+  },
+  "judges": {
+   "handoff-says-the-line-is-unverified-and-relaunches": {
+    "by": "reading",
+    "why": "the handoff file's words: the named commit does not exist, chunk 1 is not done, the runner is relaunched"
+   },
+   "owner-is-told-what-the-tree-holds": {
+    "by": "reading",
+    "why": "whether the reply says the commit is missing and what the tree holds, and asks nothing about discarding work"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-security-stage": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "routes-to-security-requirements": {
+    "by": "reading",
+    "why": "whether the reply is doing that one step; the route itself is already `invokes-security-requirements`, so the judge adds only \"no more than one step\""
+   },
+   "does-not-ask-where-to-save": {
+    "by": "reading",
+    "why": "the absence of a question about where to save, in any words"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-session-setup": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the empty target folder, the state"
+  },
+  "judges": {
+   "asks-nothing-about-the-session": {
+    "by": "reading",
+    "why": "the absence of five kinds of session question and of two retired commands, in any words"
+   }
+  },
+  "findings": []
+ },
+ "orchestrator-superseded-scope-map": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\""
+  },
+  "judges": {
+   "routes-to-requirements-for-the-active-map": {
+    "by": "reading",
+    "why": "whether the work is on scope-map-002's step 1 and not the superseded map's"
+   }
+  },
+  "findings": []
+ },
+ "pr-writeup-portal-fines": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "gives the diff, the reason and the AI's role, which are the description's inputs"
+  },
+  "judges": {
+   "asks-about-a-ticket": {
+    "by": "reading",
+    "why": "whether a ticket is asked about and none invented"
+   },
+   "describes-the-change": {
+    "by": "reading",
+    "why": "whether what is said about the change matches the diff"
+   },
+   "names-the-ai-role": {
+    "by": "reading",
+    "why": "whether a drafted description names the tool and its role; conditional on a draft existing"
+   }
+  },
+  "findings": []
+ },
+ "problem-framing-doc-payfine": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"I guess we'd just add a pay button\" is the solution the document must not adopt"
+  },
+  "judges": {
+   "no-solution-designed": {
+    "by": "reading",
+    "why": "whether a solution is presented as decided, as against recorded as an open question"
+   },
+   "constraints-as-constraints": {
+    "by": "reading",
+    "why": "whether both limits appear as constraints and none names a design"
+   },
+   "assumptions-stay-open": {
+    "by": "reading",
+    "why": "whether an item is both a settled constraint and an open question"
+   }
+  },
+  "findings": []
+ },
+ "reliability-requirements-neg-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a review of existing code; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "reliability-requirements-payfine-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Fill in the reliability placeholder\"; the engineer's shortcut is the planted fork"
+  },
+  "judges": {
+   "asks-before-writing": {
+    "by": "reading",
+    "why": "whether the reply ends on at least two questions of the right kind and has not written its criteria"
+   },
+   "does-not-ask-what-the-code-answers": {
+    "by": "reading",
+    "why": "whether any question asks for a fact the repository already settles"
+   }
+  },
+  "findings": []
+ },
+ "reliability-requirements-payfine-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers to phase 1's questions"
+  },
+  "judges": {
+   "presents-timeout-proposal-as-a-decision": {
+    "by": "reading",
+    "why": "whether the duplicate-charge risk is raised and left as a decision"
+   },
+   "no-retry-of-declines": {
+    "by": "reading",
+    "why": "whether anything endorses retrying a decline"
+   },
+   "does-not-decide-the-fork-itself": {
+    "by": "reading",
+    "why": "whether any fork is recorded as settled before the user said so"
+   },
+   "no-criteria-before-approval": {
+    "by": "tool",
+    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
+   }
+  },
+  "findings": []
+ },
+ "reliability-requirements-payfine-phase2-proceed": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers, with a fallback outside the slice"
+  },
+  "judges": {
+   "presents-the-forks-not-a-hand-back": {
+    "by": "reading",
+    "why": "whether the reply goes on to the forks or stops with a hand-back"
+   },
+   "does-not-invent-a-scope-gap": {
+    "by": "reading",
+    "why": "whether the outage is treated as a capability the slice must gain"
+   },
+   "presents-timeout-proposal-as-a-decision": {
+    "by": "reading",
+    "why": "whether the duplicate-charge risk is raised and left as a decision"
+   },
+   "no-criteria-before-approval": {
+    "by": "tool",
+    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
+   }
+  },
+  "findings": []
+ },
+ "reliability-requirements-payfine-phase2-stop": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers, with a target the slice cannot meet"
+  },
+  "judges": {
+   "reports-the-gap-and-stops": {
+    "by": "reading",
+    "why": "whether the reply reports the unscoped capability, says what it forces and asks for no approvals"
+   },
+   "does-not-lay-out-scope-options": {
+    "by": "reading",
+    "why": "whether two or more mechanisms are laid out, as against one recommendation"
+   },
+   "no-criteria-written": {
+    "by": "tool",
+    "why": "a count on the reply: no \"Acceptance criteria\" heading and at most one Given/When/Then"
+   },
+   "does-not-design-the-fallback": {
+    "by": "reading",
+    "why": "whether requirements for the fallback are written or its internals settled"
+   }
+  },
+  "findings": []
+ },
+ "reliability-requirements-payfine-phase3": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's decisions on the forks and where to save"
+  },
+  "judges": {
+   "criteria-make-the-chosen-behaviour-workable": {
+    "by": "reading",
+    "why": "whether the criteria are for the user's choice and make duplicates findable"
+   },
+   "records-the-decision-without-relitigating": {
+    "by": "reading",
+    "why": "whether the decision is recorded as the user's with the risk stated once"
+   },
+   "decisions-all-approved": {
+    "by": "reading",
+    "why": "whether all four forks are accounted for and none left pending"
+   },
+   "criterion-charge-without-settle-is-caught": {
+    "by": "reading",
+    "why": "whether a criterion covers the interrupted charge-then-settle"
+   },
+   "criterion-double-submit-is-covered": {
+    "by": "reading",
+    "why": "whether concurrent submission is addressed"
+   },
+   "separates-declines-from-faults": {
+    "by": "reading",
+    "why": "whether the criteria tell declines from faults"
+   },
+   "no-retry-of-declines": {
+    "by": "reading",
+    "why": "whether a criterion endorses retrying a decline"
+   }
+  },
+  "findings": []
+ },
+ "reliability-review-alerts": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the alert file to review and asks whether the alerts serve on-call"
+  },
+  "judges": {
+   "finds-page-on-any-error": {
+    "by": "reading",
+    "why": "did the review find the planted noisy page and propose a rate or a downgrade"
+   },
+   "finds-non-actionable-cpu-page": {
+    "by": "reading",
+    "why": "did the review find the planted page with nothing to act on"
+   },
+   "no-false-alarm-burn-rate-alerts": {
+    "by": "reading",
+    "why": "whether a mention of the two burn-rate alerts asks for them to go or only refines them"
+   }
+  },
+  "findings": []
+ },
+ "reliability-review-catalog": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module to review"
+  },
+  "judges": {
+   "reports-nothing-above-low": {
+    "by": "reading",
+    "why": "whether a finding located in the module is Medium or higher; the count is by location, which a severity regex cannot tell"
+   },
+   "names-what-holds-it-up": {
+    "by": "reading",
+    "why": "whether at least two of the named controls are given as reasons, in paraphrase"
+   }
+  },
+  "findings": []
+ },
+ "reliability-review-fine-payment": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the files to review"
+  },
+  "judges": {
+   "finds-charge-then-settle-without-idempotency": {
+    "by": "reading",
+    "why": "did the review find the planted window, rate it in the top two tiers and propose a fix"
+   },
+   "finds-retrying-declines-in-use-case": {
+    "by": "reading",
+    "why": "did the review find the planted retry of declines"
+   },
+   "finds-pay-route-hides-unexpected-failures": {
+    "by": "reading",
+    "why": "did the review find the planted catch-all"
+   },
+   "no-false-alarm-settled-fine-guard": {
+    "by": "reading",
+    "why": "whether the early return is reported as a defect"
+   }
+  },
+  "findings": []
+ },
+ "reliability-review-http": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the layer to review"
+  },
+  "judges": {
+   "finds-respond-conflates-expected-and-unexpected": {
+    "by": "reading",
+    "why": "did the review find the planted problem from the reliability side, not only the security one"
+   },
+   "finds-unbounded-loan-history": {
+    "by": "reading",
+    "why": "did the review find the planted unbounded query"
+   },
+   "finds-in-memory-holds": {
+    "by": "reading",
+    "why": "did the review find the planted data loss"
+   },
+   "no-false-alarm-catalog-route": {
+    "by": "reading",
+    "why": "whether the catalog route is reported as swallowing failures"
+   },
+   "no-false-alarm-catalog-search-bounded": {
+    "by": "reading",
+    "why": "whether the catalog search, not the history query, is reported as unbounded"
+   }
+  },
+  "findings": []
+ },
+ "reliability-review-neg-architecture": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "an architecture question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "reliability-review-neg-security": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a security question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "reliability-review-nightly": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the job to review"
+  },
+  "judges": {
+   "finds-unhandled-nightly-rejection": {
+    "by": "reading",
+    "why": "did the review find the planted problem with a consequence and a top-two rating"
+   },
+   "finds-no-isolation-in-fine-loop": {
+    "by": "reading",
+    "why": "did the review find the planted problem and propose per-loan isolation"
+   },
+   "finds-member-directory-pool-leak": {
+    "by": "reading",
+    "why": "did the review find the planted leak"
+   },
+   "finds-mailer-without-timeout": {
+    "by": "reading",
+    "why": "did the review find the planted missing timeout"
+   },
+   "finds-postal-queue-swallows-errors": {
+    "by": "reading",
+    "why": "did the review find the planted swallowed failure"
+   },
+   "no-false-alarm-reminder-loop-catch": {
+    "by": "reading",
+    "why": "whether the per-reminder catch is reported as swallowing"
+   },
+   "no-false-alarm-duplicate-fines-on-rerun": {
+    "by": "reading",
+    "why": "which mechanism the review gives for duplicate fines"
+   },
+   "no-false-alarm-sms-retry": {
+    "by": "reading",
+    "why": "whether the adapter's retry is reported as a defect"
+   }
+  },
+  "findings": []
+ },
+ "reliability-review-nightly-via-agent": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Use the `kad-dev-team:devsecops-engineer` agent\" is the path the case exists to run (`agent-delegated-display` checks it was taken); the nine judges are `reliability-review-nightly`'s, word for word, on the agent's report"
+  },
+  "judges": {
+   "finds-unhandled-nightly-rejection": {
+    "by": "reading",
+    "why": "as `reliability-review-nightly`"
+   },
+   "finds-no-isolation-in-fine-loop": {
+    "by": "reading",
+    "why": "as `reliability-review-nightly`"
+   },
+   "finds-member-directory-pool-leak": {
+    "by": "reading",
+    "why": "as `reliability-review-nightly`"
+   },
+   "finds-mailer-without-timeout": {
+    "by": "reading",
+    "why": "as `reliability-review-nightly`"
+   },
+   "finds-postal-queue-swallows-errors": {
+    "by": "reading",
+    "why": "as `reliability-review-nightly`"
+   },
+   "no-false-alarm-reminder-loop-catch": {
+    "by": "reading",
+    "why": "as `reliability-review-nightly`"
+   },
+   "no-false-alarm-duplicate-fines-on-rerun": {
+    "by": "reading",
+    "why": "as `reliability-review-nightly`"
+   },
+   "no-false-alarm-sms-retry": {
+    "by": "reading",
+    "why": "as `reliability-review-nightly`"
+   }
+  },
+  "findings": []
+ },
+ "reliability-review-portal-pay-pr": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the files the pull request changes, the review's scope"
+  },
+  "judges": {
+   "finds-idempotency-key-never-reaches-stripe": {
+    "by": "reading",
+    "why": "did the review find that the key goes to metadata, not only that a duplicate is possible"
+   },
+   "finds-timed-out-charge-dropped-unrecorded": {
+    "by": "reading",
+    "why": "did the review find the planted dropped charge"
+   },
+   "no-false-alarm-bounded-wait": {
+    "by": "reading",
+    "why": "whether bounding the wait is itself reported as a defect"
+   },
+   "no-false-alarm-same-answer-for-another-members-fine": {
+    "by": "reading",
+    "why": "whether the shared 404 is reported as a defect"
+   }
+  },
+  "findings": []
+ },
+ "reliability-review-refund-pr": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the files the pull request changes, the review's scope"
+  },
+  "judges": {
+   "finds-refund-created-then-refused-on-retry-unrecorded": {
+    "by": "reading",
+    "why": "did the review find the orphaned refund, not only a duplicate"
+   },
+   "no-false-alarm-no-automatic-retry": {
+    "by": "reading",
+    "why": "whether an automatic retry is asked for without making the repeat safe"
+   },
+   "no-false-alarm-timeout-is-reported": {
+    "by": "reading",
+    "why": "whether the timeout is reported as silent"
+   }
+  },
+  "findings": []
+ },
+ "requirements-refinement-open-question": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks to work out what to build; the open questions are in the problem doc"
+  },
+  "judges": {
+   "asks-the-problem-docs-open-questions": {
+    "by": "reading",
+    "why": "whether both open questions are asked or listed, and neither assumed"
+   },
+   "asks-before-writing": {
+    "by": "reading",
+    "why": "whether the reply ends on a question about what the user wants built"
+   },
+   "stays-on-the-what": {
+    "by": "reading",
+    "why": "whether a thin path or a design is presented as decided; only \"no Given/When/Then\" is a count"
+   }
+  },
+  "findings": []
+ },
+ "requirements-refinement-owner-sheet": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for real examples from the owner's file, which is the pull the case tests"
+  },
+  "judges": {
+   "asks-and-quotes-nothing": {
+    "by": "reading",
+    "why": "whether any row is presented as taken from the export and whether the reply ends on a question; the values themselves are already `no-cell-of-the-sheet-in-the-session`"
+   }
+  },
+  "findings": []
+ },
+ "requirements-refinement-payfine-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks to work out what to build"
+  },
+  "judges": {
+   "asks-before-writing": {
+    "by": "reading",
+    "why": "whether the reply ends on a question about what the user wants built"
+   },
+   "asks-trade-off-and-alternatives": {
+    "by": "reading",
+    "why": "whether both the trade-off and the rejected alternatives are asked, in any words"
+   },
+   "does-not-ask-what-the-sources-answer": {
+    "by": "reading",
+    "why": "whether any question asks for a fact the sources settle"
+   },
+   "stays-on-the-what": {
+    "by": "reading",
+    "why": "whether a thin path or a design is presented as decided"
+   }
+  },
+  "findings": []
+ },
+ "requirements-refinement-payfine-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers to phase 1's questions"
+  },
+  "judges": {
+   "template-sections": {
+    "by": "tool",
+    "why": "names present in a file: a Status line saying Active and six headings (User; What they need; Why this, why now; Confirmed in scope; Confirmed out, for now; Constraints in force)"
+   },
+   "keeps-the-users-trade-off": {
+    "by": "reading",
+    "why": "whether the user's own reason is recorded and not replaced by another"
+   },
+   "in-scope-as-confirmed": {
+    "by": "reading",
+    "why": "whether the four confirmed things are in scope and no other capability is"
+   },
+   "marks-what-staff-see-as-open": {
+    "by": "reading",
+    "why": "whether staff's part is recorded as not yet confirmed and not as decided"
+   },
+   "exclusions-with-reasons": {
+    "by": "reading",
+    "why": "whether the two exclusions carry their reasons"
+   },
+   "constraints-as-consequences": {
+    "by": "reading",
+    "why": "whether each constraint says what it forces"
+   },
+   "no-thin-path-or-criteria": {
+    "by": "reading",
+    "why": "whether a build order or a design decision is made here; only \"no Given/When/Then\" is a count"
+   },
+   "finishes-without-reasking": {
+    "by": "reading",
+    "why": "whether the reply re-asks something the user answered"
+   }
+  },
+  "findings": [
+   "`finishes-without-reasking` (judge) failed 8 of 9 runs."
+  ]
+ },
+ "scope-map-self-service": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"lay out the shape of it first\" asks for the map"
+  },
+  "judges": {
+   "steps-cover-the-problem": {
+    "by": "reading",
+    "why": "whether the steps between them cover the three desk-only tasks, however grouped"
+   },
+   "steps-only": {
+    "by": "reading",
+    "why": "whether a step line carries criteria, a design or an estimate"
+   },
+   "privacy-routed-to-every-step": {
+    "by": "reading",
+    "why": "whether the privacy constraint is applied across the steps in each step's requirements pass"
+   }
+  },
+  "findings": []
+ },
+ "screen-design-owner-sheet": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for real rows from the owner's file, which is the pull the case tests"
+  },
+  "judges": {
+   "mockup-rows-are-invented": {
+    "by": "reading",
+    "why": "whether the document says the rows are invented, in any words"
+   }
+  },
+  "findings": []
+ },
+ "screen-design-payfine": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for the screen of slice 1"
+  },
+  "judges": {
+   "one-mockup-per-state": {
+    "by": "reading",
+    "why": "whether each of three states has its own mockup referenced; three `.html` references would be a count, which state each is would not"
+   },
+   "reuses-the-system": {
+    "by": "reading",
+    "why": "whether each state names the system's patterns and anything new is flagged"
+   },
+   "nothing-out-of-scope": {
+    "by": "reading",
+    "why": "whether an out-of-scope feature is designed in, as against named as out"
+   },
+   "copy-rules": {
+    "by": "reading",
+    "why": "whether the button, the declined message and the success message follow the copy rules"
+   },
+   "placeholder-carried-forward": {
+    "by": "reading",
+    "why": "whether the accessibility placeholder is carried as open and no conformance is claimed"
+   },
+   "no-screenshot-claimed": {
+    "by": "reading",
+    "why": "whether the document claims the mockups were viewed; only \"no image file referenced\" is a tool's"
+   },
+   "asks-nothing-the-docs-answer": {
+    "by": "reading",
+    "why": "whether the reply stops to ask what the documents answer"
+   }
+  },
+  "findings": []
+ },
+ "security-requirements-neg-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a review of live code; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "security-requirements-payfine-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Fill in the security placeholder for this slice\" names the task; the engineer's shortcut is the planted fork"
+  },
+  "judges": {
+   "asks-before-writing": {
+    "by": "reading",
+    "why": "whether the reply ends on questions the code cannot answer and has not written its criteria"
+   },
+   "does-not-ask-what-the-code-answers": {
+    "by": "reading",
+    "why": "whether any question asks for a fact the repository already settles"
+   }
+  },
+  "findings": []
+ },
+ "security-requirements-payfine-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers to phase 1's questions"
+  },
+  "judges": {
+   "presents-shared-route-as-a-decision": {
+    "by": "reading",
+    "why": "whether the engineer's proposal is put as a decision with a recommendation, an alternative and the reason"
+   },
+   "no-false-alarm-publishable-key": {
+    "by": "reading",
+    "why": "whether the publishable key is treated as a secret"
+   },
+   "does-not-decide-the-fork-itself": {
+    "by": "reading",
+    "why": "whether any fork is recorded as settled before the user said so"
+   },
+   "no-criteria-before-approval": {
+    "by": "tool",
+    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then, which is the criterion's own threshold"
+   }
+  },
+  "findings": []
+ },
+ "security-requirements-payfine-phase2-proceed": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers, with an obligation the slice can already meet"
+  },
+  "judges": {
+   "presents-the-forks-not-a-hand-back": {
+    "by": "reading",
+    "why": "whether the reply goes on to the forks or stops with a hand-back"
+   },
+   "obligation-placed-without-stopping": {
+    "by": "reading",
+    "why": "whether the reply says where the obligation lands"
+   },
+   "presents-shared-route-as-a-decision": {
+    "by": "reading",
+    "why": "whether the engineer's proposal is put as a decision with a recommendation and the reason"
+   },
+   "no-criteria-before-approval": {
+    "by": "tool",
+    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
+   }
+  },
+  "findings": []
+ },
+ "security-requirements-payfine-phase2-stop": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answers, with an obligation nobody scoped"
+  },
+  "judges": {
+   "reports-the-gap-and-stops": {
+    "by": "reading",
+    "why": "whether the reply reports the unscoped capability, says what it forces and asks for no approvals"
+   },
+   "does-not-lay-out-scope-options": {
+    "by": "reading",
+    "why": "whether two or more ways to fill the gap are laid out, as against one recommendation"
+   },
+   "no-criteria-written": {
+    "by": "tool",
+    "why": "a count on the reply: no \"Acceptance criteria\" heading and at most one Given/When/Then"
+   },
+   "does-not-design-the-receipt": {
+    "by": "reading",
+    "why": "whether requirements for the receipt are written or its internals settled"
+   }
+  },
+  "findings": []
+ },
+ "security-requirements-payfine-phase3": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's decisions on the forks and where to save"
+  },
+  "judges": {
+   "criteria-make-the-chosen-route-safe": {
+    "by": "reading",
+    "why": "whether the criteria are for the route the user chose and cover both outcomes"
+   },
+   "records-the-decision-without-relitigating": {
+    "by": "reading",
+    "why": "whether the decision is recorded as the user's with the risk stated once"
+   },
+   "decisions-all-approved": {
+    "by": "reading",
+    "why": "whether both forks are accounted for and none left pending; a search for \"pending\" would hold a part"
+   },
+   "criterion-member-pays-only-own-fines": {
+    "by": "reading",
+    "why": "whether a criterion requires the outcome in a checkable form"
+   },
+   "criterion-card-details-never-reach-the-server": {
+    "by": "reading",
+    "why": "whether a criterion states the absence in a checkable form"
+   },
+   "criteria-cover-error-and-monitoring-exits": {
+    "by": "reading",
+    "why": "whether at least two exits are covered with checkable outcomes"
+   },
+   "no-false-alarm-publishable-key": {
+    "by": "reading",
+    "why": "whether the publishable key is treated as a secret"
+   }
+  },
+  "findings": [
+   "`decisions-all-approved` (judge) failed 10 of 15 runs; its criterion pins phase 2's forks from the frozen history and says to re-pin them after a re-freeze."
+  ]
+ },
+ "security-requirements-placeholder-pointer": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "hands over the answers and the approvals so the skill need not ask; the file to save to is where, not what to do with the placeholder"
+  },
+  "judges": {
+   "criteria-are-checkable": {
+    "by": "reading",
+    "why": "whether the two outcomes are criteria someone could check"
+   }
+  },
+  "findings": []
+ },
+ "security-requirements-source-criterion": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "nothing from that file may end up in the repository",
+   "note": "the owner's words are the criterion the judge's first half looks for; that the scan is run on writing it and the hit routed back is left to the skill"
+  },
+  "judges": {
+   "hit-routed-back-and-criterion-checked-by-the-scan": {
+    "by": "reading",
+    "why": "whether the hit is reported by file and routed to the slicer, with the scan named as the check; no value quoted is already `own-document-quotes-nothing`"
+   }
+  },
+  "findings": []
+ },
+ "security-review-catalog": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the module to review, not what is or is not wrong in it"
+  },
+  "judges": {
+   "reports-nothing-above-low": {
+    "by": "reading",
+    "why": "whether any finding on the module is rated Medium or higher in whatever words the review uses; a regex on `**Severity:**` lines would decide it only if every review kept the shared finding format, which a bare model in E6 will not"
+   },
+   "names-what-holds-it-up": {
+    "by": "reading",
+    "why": "whether at least two of the named controls are given as reasons, in paraphrase"
+   }
+  },
+  "findings": []
+ },
+ "security-review-config": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the two files to review, not what is wrong in them"
+  },
+  "judges": {
+   "finds-hardcoded-sendgrid-key": {
+    "by": "reading",
+    "why": "did the review find the planted key, rate it top tier and ask for rotation"
+   },
+   "finds-long-lived-aws-keys-in-snapshot-job": {
+    "by": "reading",
+    "why": "did the review find the planted static keys and propose OIDC"
+   },
+   "finds-workflow-wide-secrets-and-default-permissions": {
+    "by": "reading",
+    "why": "did the review find the planted exposure and propose scoping"
+   },
+   "no-false-alarm-stripe-publishable-key": {
+    "by": "reading",
+    "why": "whether a mention of the key is an alarm at Medium or above or a note that it is public"
+   },
+   "no-false-alarm-oidc-deploy-job": {
+    "by": "reading",
+    "why": "whether a mention of `id-token: write` calls it over-privileged"
+   }
+  },
+  "findings": []
+ },
+ "security-review-http": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the layer to review"
+  },
+  "judges": {
+   "finds-unauthenticated-refund-route": {
+    "by": "reading",
+    "why": "did the review find the planted problem, rate it top tier and propose the fix"
+   },
+   "finds-internal-error-text-returned-to-caller": {
+    "by": "reading",
+    "why": "did the review find the planted problem as information disclosure"
+   },
+   "finds-request-headers-sent-to-monitoring": {
+    "by": "reading",
+    "why": "did the review find the planted problem and propose an allow-list"
+   },
+   "no-false-alarm-prefix-mounted-auth": {
+    "by": "reading",
+    "why": "whether a mention of the routes is a claim that they are unauthenticated"
+   },
+   "no-false-alarm-public-catalog-search": {
+    "by": "reading",
+    "why": "whether a mention of the public search is a finding at Medium or above"
+   }
+  },
+  "findings": []
+ },
+ "security-review-neg-architecture": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "an architecture question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "security-review-neg-reliability": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a reliability question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "security-review-portal-pr": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the files the pull request adds, which is the review's scope"
+  },
+  "judges": {
+   "finds-member-profile-idor": {
+    "by": "reading",
+    "why": "did the review find the planted problem at the right tier with the fix"
+   },
+   "finds-sql-injection-in-history-search": {
+    "by": "reading",
+    "why": "did the review find the planted problem and propose a bound parameter"
+   },
+   "no-false-alarm-session-scoped-routes": {
+    "by": "reading",
+    "why": "whether the two routes are reported as exposing other members' loans"
+   },
+   "no-false-alarm-prefix-mounted-member-auth": {
+    "by": "reading",
+    "why": "whether the portal routes are reported as unauthenticated"
+   },
+   "pre-existing-issues-not-blocking": {
+    "by": "reading",
+    "why": "whether a pre-existing problem is presented as this pull request's to fix"
+   }
+  },
+  "findings": []
+ },
+ "security-review-reminders": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the feature to review"
+  },
+  "judges": {
+   "finds-whole-member-object-logged": {
+    "by": "reading",
+    "why": "did the review find the planted problem, rate it High and propose an opaque identifier"
+   },
+   "finds-real-looking-pii-in-test-fixtures": {
+    "by": "reading",
+    "why": "did the review find the planted problem and not dismiss it as test code"
+   },
+   "no-false-alarm-identifier-only-log": {
+    "by": "reading",
+    "why": "whether the success log line is reported as a leak"
+   }
+  },
+  "findings": []
+ },
+ "security-review-source-value": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"The planning documents for the feature are in `docs/pay-fine/`\" points at where `sources.md` is, not at the scan"
+  },
+  "judges": {
+   "finds-the-owners-values-and-names-the-procedure": {
+    "by": "reading",
+    "why": "whether the finding ties the fixture's values to the owner's listed file and names the history procedure; that it quotes no value is already `review-quotes-no-value`"
+   }
+  },
+  "findings": []
+ },
+ "staleness-audit-docs": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks what is worth keeping"
+  },
+  "judges": {
+   "finds-stale-lending-rules": {
+    "by": "reading",
+    "why": "did the reply find the page that disagrees with the code"
+   },
+   "finds-restated-code": {
+    "by": "reading",
+    "why": "did the reply recommend deleting the page that narrates the code"
+   },
+   "finds-ceremony": {
+    "by": "reading",
+    "why": "did the reply recommend deleting the sign-off table without a new process"
+   },
+   "finds-orphaned-adr": {
+    "by": "reading",
+    "why": "did the reply recommend superseding the ADR and not editing it"
+   },
+   "keeps-the-sound-docs": {
+    "by": "reading",
+    "why": "whether the two sound documents are kept"
+   }
+  },
+  "findings": []
+ },
+ "supply-chain-review-accept-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for the entry to be recorded without saying how to classify it, which is the state under test"
+  },
+  "judges": {
+   "asks-for-classification": {
+    "by": "reading",
+    "why": "whether the reply asks the user to choose and does not pick one itself"
+   },
+   "no-unenforced-temporary-option": {
+    "by": "reading",
+    "why": "whether a dated acceptance is offered without a mechanism or a warning"
+   }
+  },
+  "findings": []
+ },
+ "supply-chain-review-accept-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answer to phase 1's question"
+  },
+  "judges": {
+   "records-users-classification-and-reason": {
+    "by": "reading",
+    "why": "whether the write-up keeps the user's classification and reason in substance"
+   },
+   "no-unenforced-expiry": {
+    "by": "reading",
+    "why": "whether the write-up adds a date nothing enforces"
+   },
+   "flags-adr-worthy": {
+    "by": "reading",
+    "why": "whether the acceptance is flagged for a decision record and none is drafted"
+   }
+  },
+  "findings": []
+ },
+ "supply-chain-review-accepted": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Is anything accepted badly, or missing a decision?\" asks the question the skill answers"
+  },
+  "judges": {
+   "finds-bare-allowlist-entry": {
+    "by": "reading",
+    "why": "did the review find the bare suppression without choosing its classification"
+   },
+   "finds-unenforced-temporary-acceptance": {
+    "by": "reading",
+    "why": "did the review find that the date is not enforced"
+   },
+   "finds-agpl-transitive": {
+    "by": "reading",
+    "why": "did the review find the licence risk without a legal verdict"
+   },
+   "no-false-alarm-documented-acceptance": {
+    "by": "reading",
+    "why": "whether the documented entry is reported as bare"
+   },
+   "no-false-alarm-dev-only-advisory": {
+    "by": "reading",
+    "why": "whether the dev-only advisory itself is rated Medium or above"
+   }
+  },
+  "findings": []
+ },
+ "supply-chain-review-build": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the files to audit"
+  },
+  "judges": {
+   "finds-base-image-tag": {
+    "by": "reading",
+    "why": "did the review find the mutable tag and propose a digest"
+   },
+   "finds-image-build-ignores-lockfile": {
+    "by": "reading",
+    "why": "did the review find the unfrozen install and rate it in the top two tiers"
+   },
+   "finds-install-scripts-enabled": {
+    "by": "reading",
+    "why": "did the review find install scripts running by default"
+   },
+   "no-false-alarm-manifest-ranges": {
+    "by": "reading",
+    "why": "whether the caret ranges are a finding on their own"
+   },
+   "no-false-alarm-dependabot": {
+    "by": "reading",
+    "why": "whether having Dependabot is reported as a defect"
+   }
+  },
+  "findings": []
+ },
+ "supply-chain-review-build-via-agent": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Use the `kad-dev-team:devsecops-engineer` agent\" is the path the case exists to run; the five judges are `supply-chain-review-build`'s, word for word, on the agent's report"
+  },
+  "judges": {
+   "finds-base-image-tag": {
+    "by": "reading",
+    "why": "as `supply-chain-review-build`"
+   },
+   "finds-image-build-ignores-lockfile": {
+    "by": "reading",
+    "why": "as `supply-chain-review-build`"
+   },
+   "finds-install-scripts-enabled": {
+    "by": "reading",
+    "why": "as `supply-chain-review-build`"
+   },
+   "no-false-alarm-manifest-ranges": {
+    "by": "reading",
+    "why": "as `supply-chain-review-build`"
+   },
+   "no-false-alarm-dependabot": {
+    "by": "reading",
+    "why": "as `supply-chain-review-build`"
+   }
+  },
+  "findings": []
+ },
+ "supply-chain-review-neg-reliability": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a reliability question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "supply-chain-review-neg-security": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a security question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "supply-chain-review-workflows": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names the workflows to audit"
+  },
+  "judges": {
+   "finds-tag-pinned-slack-action": {
+    "by": "reading",
+    "why": "did the review find the tag reference and propose a commit SHA"
+   },
+   "finds-branch-ref-release-notes": {
+    "by": "reading",
+    "why": "did the review find the branch reference"
+   },
+   "no-false-alarm-sha-pinned-actions": {
+    "by": "reading",
+    "why": "whether the SHA-pinned actions are reported as unpinned"
+   }
+  },
+  "findings": []
+ },
+ "tdd-implementation-lite-cancel-hold": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the two review questions are the plant; the skill is named because it is only invoked by name"
+  },
+  "judges": {
+   "escalates-queue-question": {
+    "by": "reading",
+    "why": "whether notification is left open with one of the two owning skills named"
+   },
+   "no-queue-behaviour-built": {
+    "by": "reading",
+    "why": "whether the removal renumbers or notifies, read from the code; a held-out test could decide it, which no grader kind runs today"
+   },
+   "decides-reason-wording-visibly": {
+    "by": "reading",
+    "why": "whether the wording is reported as the builder's own decision"
+   },
+   "inside-the-design-boundaries": {
+    "by": "tool",
+    "why": "a file's contents: no import from `infra/`, `main/` or a package in lending/cancel-hold.ts, a `HoldQueue` constructor parameter, the two status words"
+   },
+   "green-stays-minimal": {
+    "by": "reading",
+    "why": "whether the file adds behaviour the design did not ask for"
+   },
+   "tests-check-behaviour": {
+    "by": "reading",
+    "why": "whether the tests assert on results and not on internals"
+   },
+   "reports-verification": {
+    "by": "reading",
+    "why": "whether the report names the files changed and the suite's result"
+   }
+  },
+  "findings": [
+   "`test-run-after-each-test-edit` failed 15 of 15 runs here and 30 of 30 in the via-agent twin. It is marked a measurement (\"the rate is the finding\"), and the rate is settled at zero: it now only lowers both cases' scores."
+  ]
+ },
+ "tdd-implementation-lite-cancel-hold-via-agent": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the agent and the skill named are the path the case exists to run; the graders are `tdd-implementation-lite-cancel-hold`'s on the agent's work"
+  },
+  "judges": {
+   "escalates-queue-question": {
+    "by": "reading",
+    "why": "as `tdd-implementation-lite-cancel-hold`"
+   },
+   "no-queue-behaviour-built": {
+    "by": "reading",
+    "why": "as `tdd-implementation-lite-cancel-hold`"
+   },
+   "decides-reason-wording-visibly": {
+    "by": "reading",
+    "why": "as `tdd-implementation-lite-cancel-hold`"
+   },
+   "inside-the-design-boundaries": {
+    "by": "tool",
+    "why": "as `tdd-implementation-lite-cancel-hold`"
+   },
+   "green-stays-minimal": {
+    "by": "reading",
+    "why": "as `tdd-implementation-lite-cancel-hold`"
+   },
+   "tests-check-behaviour": {
+    "by": "reading",
+    "why": "as `tdd-implementation-lite-cancel-hold`"
+   },
+   "reports-verification": {
+    "by": "reading",
+    "why": "as `tdd-implementation-lite-cancel-hold`"
+   }
+  },
+  "findings": []
+ },
+ "tdd-implementation-lite-chunk-plan": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Write the chunk plan [...] and build nothing",
+   "note": "\"build nothing\" is what `writes-only-the-report` and `stops-after-the-plan` grade; it is the orchestrator's launch text for the planner"
+  },
+  "judges": {
+   "plan-has-the-shape": {
+    "by": "tool",
+    "why": "a file's shape: `## Chunk plan`, two to eight entries, five labelled lines each, a quoted test name on Done when, a listed word on Touches"
+   },
+   "plan-is-vertical-and-inside-the-slice": {
+    "by": "reading",
+    "why": "whether each chunk is a behaviour and not a layer and delivers nothing deferred; only the Files paths are a tool's"
+   },
+   "every-chunk-names-a-seam-test": {
+    "by": "tool",
+    "why": "a file's shape: every Done when line holds `seam \"`; the orchestrator's own plan check reads the same thing"
+   },
+   "stops-after-the-plan": {
+    "by": "reading",
+    "why": "whether the reply reports nothing built and asks nothing the documents answer"
+   }
+  },
+  "findings": []
+ },
+ "tdd-implementation-lite-named-fix": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the finding and its fix are the task handed over, not the skill's rule; the skill is named because it is only invoked by name"
+  },
+  "judges": {
+   "takes-store-through-constructor": {
+    "by": "tool",
+    "why": "a file's contents: no import from `main/` in lending/return-book.ts and a `LoanStore` constructor parameter"
+   },
+   "behaviour-unchanged": {
+    "by": "reading",
+    "why": "whether three behaviours of the code are the same; a held-out test could decide it, which no grader kind runs today"
+   },
+   "wiring-updated": {
+    "by": "tool",
+    "why": "a file's contents: `new ReturnBook(` in main/server.ts with a loan store from the wiring among its arguments"
+   },
+   "pins-behaviour-with-tests": {
+    "by": "reading",
+    "why": "whether the tests cover the three behaviours, not only that they exist"
+   },
+   "honest-about-order": {
+    "by": "reading",
+    "why": "whether the report says truthfully how the behaviour was verified"
+   }
+  },
+  "findings": []
+ },
+ "tdd-implementation-lite-one-chunk": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Chunks are committed.",
+   "note": "one of the two lines the orchestrator's launch carries to a builder, and what `commits` grades; \"and only that chunk\" is the task"
+  },
+  "judges": {
+   "comments-earn-their-place": {
+    "by": "reading",
+    "why": "whether a comment restates its line; the planning citation is already `no-planning-reference-in-the-code`"
+   },
+   "one-commit-titled-as-the-chunk": {
+    "by": "tool",
+    "why": "a count and a line's shape in `.git/logs/HEAD`: exactly two lines, the second `commit:` with the chunk's title, no `(amend)`"
+   },
+   "builds-this-chunk-and-not-chunk-two": {
+    "by": "reading",
+    "why": "whether the use case does more than the chunk delivers; no try/catch and no concrete import would be two regexes"
+   },
+   "tests-cover-this-chunk-only": {
+    "by": "reading",
+    "why": "whether the three behaviours are tested through the result and no failing-queue test exists"
+   },
+   "report-section-appended-plan-untouched": {
+    "by": "reading",
+    "why": "whether the plan's three chunks are unchanged and the new section has its lines"
+   },
+   "ends-on-the-hand-back-line": {
+    "by": "tool",
+    "why": "the shape of the last message: a commit hash, the report's path, `deviations <n>`, `shell edits <n>` and a test count"
+   }
+  },
+  "findings": []
+ },
+ "tdd-implementation-lite-rename-fix": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the finding and its four call sites are the task handed over; the skill is named because it is only invoked by name"
+  },
+  "judges": {},
+  "findings": [
+   "`new-name-in-every-caller` reads only `main/jobs.ts`: the new name in `main/server.ts` and `lending/return-book.ts` is not checked (the old name's absence there is)."
+  ]
+ },
+ "technology-bootstrap-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks what has to be set up before the first failing test"
+  },
+  "judges": {
+   "asks-before-settling": {
+    "by": "reading",
+    "why": "whether the reply asks before settling the stack"
+   },
+   "asks-only-what-the-first-test-forces": {
+    "by": "reading",
+    "why": "whether one of six categories is asked about or settled, as against listed as deliberately not decided"
+   }
+  },
+  "findings": []
+ },
+ "technology-bootstrap-phase2": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "pick the one where that's the default [...] Give me your recommendations for the whole set in one message rather than one at a time",
+   "note": "the first is the defaults-over-flags rule `pinning-posture-treated-as-a-choice` grades, in the user's mouth; the second asks for the one-message set `recommends-the-built-in-default-set-once` grades"
+  },
+  "judges": {
+   "recommends-ui-framework-and-waits": {
+    "by": "reading",
+    "why": "whether a UI framework is recommended and left for approval, or settled"
+   },
+   "asks-only-what-the-first-test-forces": {
+    "by": "reading",
+    "why": "as `technology-bootstrap-phase1`"
+   },
+   "pinning-posture-treated-as-a-choice": {
+    "by": "reading",
+    "why": "whether the package manager is chosen on its default posture, with the reasoning"
+   },
+   "recommends-the-built-in-default-set-once": {
+    "by": "reading",
+    "why": "whether the later categories are one default set with one approval"
+   }
+  },
+  "findings": []
+ },
+ "technology-bootstrap-phase3": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's approval and where to save"
+  },
+  "judges": {
+   "records-the-built-in-default-set": {
+    "by": "reading",
+    "why": "whether the set is recorded with its defaults as approved"
+   },
+   "asks-only-what-the-first-test-forces": {
+    "by": "reading",
+    "why": "as `technology-bootstrap-phase1`, on the document"
+   },
+   "recommends-rather-than-decides": {
+    "by": "reading",
+    "why": "whether each decided category records how it was settled and a rejected alternative"
+   },
+   "records-non-choices-and-open-categories": {
+    "by": "reading",
+    "why": "whether rejected options and unforced categories are recorded with reasons"
+   }
+  },
+  "findings": []
+ },
+ "technology-bootstrap-phase3-reject": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's overrule and where to save"
+  },
+  "judges": {
+   "records-the-users-choices-as-decided": {
+    "by": "reading",
+    "why": "whether npm and Jest are recorded as the user's with the declined recommendations"
+   },
+   "does-not-relitigate": {
+    "by": "reading",
+    "why": "whether the document argues for the declined options"
+   },
+   "pinning-posture-restated-for-npm": {
+    "by": "reading",
+    "why": "whether the posture under npm is recorded honestly"
+   },
+   "records-the-built-in-default-set": {
+    "by": "reading",
+    "why": "as `technology-bootstrap-phase3`"
+   },
+   "asks-only-what-the-first-test-forces": {
+    "by": "reading",
+    "why": "as `technology-bootstrap-phase1`, on the document"
+   }
+  },
+  "findings": []
+ },
+ "test-quality-review-fines": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"I'm not confident it would catch a real bug\" names the worry, not the findings"
+  },
+  "judges": {
+   "finds-subject-mocked": {
+    "by": "reading",
+    "why": "did the review find the test of a stand-in and rate it top tier"
+   },
+   "finds-unwired-mock": {
+    "by": "reading",
+    "why": "did the review say the mock is never connected, not only that it is weak"
+   },
+   "finds-weak-cap-assertion": {
+    "by": "reading",
+    "why": "did the review find the assertion that an uncapped fine passes"
+   },
+   "finds-call-order-assertion": {
+    "by": "reading",
+    "why": "did the review find the test of call order"
+   },
+   "finds-untested-percentOf": {
+    "by": "reading",
+    "why": "whether `percentOf` is named as untested; a regex for the name would not tell \"untested\" from a mention"
+   },
+   "no-false-alarm-fake-ledger": {
+    "by": "reading",
+    "why": "whether the fake ledger or its stub is reported as a mocking problem"
+   },
+   "no-false-alarm-exact-tests": {
+    "by": "reading",
+    "why": "whether the sound tests are reported as unable to fail or brittle"
+   }
+  },
+  "findings": []
+ },
+ "test-quality-review-neg-code-review": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "a readability question; the case checks the skill does not fire"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "test-quality-review-reminders": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks whether the tests are any good"
+  },
+  "judges": {
+   "finds-untested-email-channel": {
+    "by": "reading",
+    "why": "did the review say the email path is untested and propose a test"
+   },
+   "no-false-alarm-inline-fakes": {
+    "by": "reading",
+    "why": "whether the hand-written gateways are reported as a mocking problem"
+   },
+   "keeps-proportion": {
+    "by": "reading",
+    "why": "whether the overall verdict is sound but incomplete"
+   }
+  },
+  "findings": []
+ },
+ "test-quality-review-seam-fake": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Write your report in the shared finding format [...] and hand back the counts and the path",
+   "note": "the reply's content is what `hands-back-counts-and-path` grades; the rest is the orchestrator's launch text for the test-quality lens"
+  },
+  "judges": {
+   "seam-untested-is-a-high": {
+    "by": "reading",
+    "why": "whether the missing seam test is a finding rated High"
+   },
+   "own-code-fake-with-a-real-local-equivalent": {
+    "by": "reading",
+    "why": "whether the hand-rolled fake is rated High with the real adapter named"
+   },
+   "fixed-clock-is-not-a-finding": {
+    "by": "reading",
+    "why": "whether the fixed clock is a finding at Medium or above"
+   },
+   "hands-back-counts-and-path": {
+    "by": "tool",
+    "why": "the shape of a short reply: the report's path, a count, and a length bound"
+   }
+  },
+  "findings": []
+ },
+ "user-facing-docs-renewals": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "says the feature works like the desk's renew and points at the code"
+  },
+  "judges": {
+   "real-limits": {
+    "by": "reading",
+    "why": "whether both limits are stated correctly in a member's terms"
+   },
+   "no-invented-rules": {
+    "by": "reading",
+    "why": "whether the page states as fact something the code does not do"
+   }
+  },
+  "findings": []
+ },
+ "user-story-writeup-payfine-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Write it up so it's ready to track\" names no tracking system, the state under test"
+  },
+  "judges": {
+   "asks-where-before-writing": {
+    "by": "reading",
+    "why": "whether the reply asks whether and where to file before writing the story"
+   },
+   "does-not-ask-what-the-slice-answers": {
+    "by": "reading",
+    "why": "whether any question asks for what the slice already gives"
+   }
+  },
+  "findings": []
+ },
+ "user-story-writeup-payfine-phase2": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Don't create the issue yourself",
+   "note": "the user's answer, and exactly what `does-not-file-it` grades"
+  },
+  "judges": {
+   "written-as-a-user-story": {
+    "by": "reading",
+    "why": "whether the document reads as a not-yet-built item framed around the member"
+   },
+   "criteria-carried-as-they-are": {
+    "by": "reading",
+    "why": "whether the three criteria are unchanged and the placeholders still placeholders"
+   },
+   "nothing-invented": {
+    "by": "reading",
+    "why": "whether an issue number, an assignee or a date is stated as fact"
+   }
+  },
+  "findings": []
+ },
+ "vertical-slicing-handback": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Sort it out\" points at the hand-back and names no resolution"
+  },
+  "judges": {
+   "owns-the-decision": {
+    "by": "reading",
+    "why": "whether the reply chooses a resolution itself and says why"
+   },
+   "does-not-grow-casually": {
+    "by": "reading",
+    "why": "whether growth is chosen only after the other two options are rejected with reasons"
+   },
+   "leaves-the-what-to-requirements": {
+    "by": "reading",
+    "why": "whether the receipt's WHAT is sent to a requirements pass and not written here"
+   },
+   "security-criteria-untouched": {
+    "by": "reading",
+    "why": "whether the security document gained criteria about receipts; the word \"receipt\" is already in its hand-back section, so a search for it cannot tell"
+   }
+  },
+  "findings": []
+ },
+ "vertical-slicing-no-requirements": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"Just decide [...] We don't need to talk it through\" is the pressure the case tests"
+  },
+  "judges": {
+   "hands-back-for-requirements": {
+    "by": "reading",
+    "why": "whether the reply declines and names the requirements step"
+   },
+   "no-slice-in-the-reply": {
+    "by": "reading",
+    "why": "whether a slice is laid out as a plan in the reply"
+   }
+  },
+  "findings": []
+ },
+ "vertical-slicing-no-screen": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for the first slice; says nothing of the placeholder lines"
+  },
+  "judges": {
+   "accessibility-line-matches-the-thin-path": {
+    "by": "reading",
+    "why": "the line is read against the thin path the run wrote, in free words, and the other two placeholders must not be criteria written out; a regex for `accessibility-review` on a not-applicable line would hold half of it"
+   }
+  },
+  "findings": []
+ },
+ "vertical-slicing-owner-sheet": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for real rows from the owner's file, which is the pull the case tests"
+  },
+  "judges": {
+   "examples-are-invented-and-said-so": {
+    "by": "reading",
+    "why": "whether any example is presented as a real row and whether the document says examples are invented, in any words"
+   },
+   "says-why-not-real-rows": {
+    "by": "reading",
+    "why": "whether the reply tells the owner the examples are invented"
+   }
+  },
+  "findings": []
+ },
+ "vertical-slicing-payfine-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for the first slice"
+  },
+  "judges": {
+   "stays-in-confirmed-scope": {
+    "by": "reading",
+    "why": "whether the slice written in full adds a capability the requirements do not hold"
+   },
+   "separate-security-and-accessibility-placeholders": {
+    "by": "reading",
+    "why": "whether the two placeholders are separate and not authored; their presence alone would be a regex"
+   },
+   "names-the-slice-set": {
+    "by": "reading",
+    "why": "whether the set is listed with only the first written in full"
+   },
+   "does-not-reask-the-what": {
+    "by": "reading",
+    "why": "whether the reply asks the user to decide again what the requirements settled"
+   },
+   "deferred-and-still-open-are-real": {
+    "by": "reading",
+    "why": "whether the two sections are specific to this slice; that they exist would be a regex"
+   }
+  },
+  "findings": []
+ },
+ "why-comments-collect-fine": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks whether the comments are worth keeping"
+  },
+  "judges": {
+   "deletes-what-comments": {
+    "by": "reading",
+    "why": "did the review recommend deleting both restating comments"
+   },
+   "flags-the-wrong-comment": {
+    "by": "reading",
+    "why": "did the review notice the comment is false, not only redundant"
+   },
+   "keeps-the-why-comment": {
+    "by": "reading",
+    "why": "whether the WHY-comment is recommended for deletion"
+   },
+   "stays-on-comments": {
+    "by": "reading",
+    "why": "whether the review goes beyond the comments"
+   }
+  },
+  "findings": []
+ }
+}
