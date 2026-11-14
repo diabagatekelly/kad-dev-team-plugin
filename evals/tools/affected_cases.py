@@ -168,6 +168,10 @@ class Reach:
     def reaches(self, case, f):
         tags, invoked, delegates, fixtures = self._deps(case)
         parts = f.split("/")
+        if f.startswith(f"evals/{case}/known-bad/"):
+            # a known-bad reference (skill_mutation.py) is read by that
+            # tool, never loaded by a run of the case
+            return False
         if f.startswith(f"evals/{case}/"):
             return True
         if parts[0] == "skills" and len(parts) > 2 and (parts[1] in tags or parts[1] in invoked):

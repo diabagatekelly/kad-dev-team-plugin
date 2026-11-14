@@ -57,7 +57,7 @@ graders:
   - type: regex
     name: no-planning-document-written
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{{[^{{}}]*"(?:file_path|path)":"[^"]*docs/cancel-hold/(?:slice-001|reliability-slice-001|design-001|requirements-001|security-slice-001)\.md"'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/cancel-hold/(?:slice-001|reliability-slice-001|design-001|requirements-001|security-slice-001)\.md"'
     match: not_contains
   - type: llm
     name: stops-with-the-decision-on-the-line

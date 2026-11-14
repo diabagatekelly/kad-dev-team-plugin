@@ -1,0 +1,37 @@
+{
+ "skill": "chunk-runner",
+ "rule": "the hand-back is one line and nothing else",
+ "edits": [
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "One line, the C line's fields in the orchestrator's order, as far as the\nround went, and nothing else: no finding's text, no path but the ones the\nfields hold, no narration, no notes or bullets before it on what you\ncould not find or what the orchestrator should know.",
+   "new": "The C line's fields in the orchestrator's order, as far as the round went."
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "; a finding's title belongs in the report, not in your\nreply.",
+   "new": "."
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": " Your whole\nreply is the line.",
+   "new": ""
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "and hand back the chunk's log line and nothing else.",
+   "new": "and hand back the chunk's log line."
+  }
+ ],
+ "fails": [
+  "hand-back-is-the-one-line"
+ ],
+ "observed": {
+  "date": "2026-11-13",
+  "runs": 3,
+  "claude_version": "2.1.323",
+  "rates": {
+   "hand-back-is-the-one-line": 0.0
+  }
+ }
+}

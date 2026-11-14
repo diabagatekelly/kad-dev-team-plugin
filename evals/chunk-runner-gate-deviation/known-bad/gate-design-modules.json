@@ -1,0 +1,33 @@
+{
+ "skill": "chunk-runner",
+ "rule": "the gate is run with the design's modules and deviation zones; the scope check is three-way",
+ "edits": [
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": " --module-dir '<each module directory>' --deviation-zone '<each composition root and entry point>'",
+   "new": ""
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": " Its scope check is three-way: a changed file on the\n   Files line or in the records directory is in scope; a file inside a\n   design module but off the Files line, a test file off it, or a file\n   under a deviation zone is a **deviation**, printed on the `scope` line\n   and carried to the hand-back as `deviations <n>`, not a failure (the\n   builder names it in its report section; nobody edits the plan entry);\n   a file outside all of these is the `FAIL` that goes to the fixer.",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "gate-run-with-the-design-modules",
+  "gate-passes-and-names-the-deviation",
+  "gate-names-the-test-file-deviation",
+  "deviation-recorded-not-failed"
+ ],
+ "observed": {
+  "date": "2026-11-13",
+  "runs": 3,
+  "claude_version": "2.1.323",
+  "rates": {
+   "gate-run-with-the-design-modules": 0.0,
+   "gate-passes-and-names-the-deviation": 0.0,
+   "gate-names-the-test-file-deviation": 0.0,
+   "deviation-recorded-not-failed": 0.0
+  }
+ }
+}

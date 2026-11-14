@@ -373,6 +373,45 @@
       "tdd-implementation-lite"
     ]
   },
+  "chunk-runner-replay-not-the-handback": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.323",
+    "source": "results/gate-20261113T175613-chunk-runner-replay-not-the-handback.json",
+    "graders": {
+      "no-monitor": 1.0,
+      "no-poll-of-the-branch": 1.0,
+      "no-reviewer-launched": 1.0,
+      "nothing-started-in-the-background-to-wait": 1.0,
+      "the-siblings-commit-not-taken": 1.0,
+      "the-siblings-result-is-not-the-builders": 1.0
+    },
+    "skills_invoked": [
+      "map-query",
+      "tdd-implementation-lite"
+    ]
+  },
+  "chunk-runner-replay-unheld-commit": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.323",
+    "source": "results/gate-20261113T175613-chunk-runner-replay-unheld-commit.json",
+    "graders": {
+      "commit-checked-against-the-repository": 1.0,
+      "no-monitor": 1.0,
+      "no-poll-of-the-branch": 1.0,
+      "no-reviewer-launched": 1.0,
+      "nothing-started-in-the-background-to-wait": 1.0,
+      "treats-the-hand-back-as-having-no-commit": 1.0,
+      "unheld-commit-never-on-the-line": 1.0
+    },
+    "skills_invoked": [
+      "map-query",
+      "tdd-implementation-lite"
+    ]
+  },
   "chunk-runner-review-round": {
     "score": 1.0,
     "runs": 3,

@@ -25,9 +25,20 @@
 #   ending        text from the chosen run's final message (its `evidence` in
 #                 the --json output) that picks that run's branch
 #   output.jsonl  usually evals/<next-phase-case>/history.jsonl
+#
+#        evals/tools/freeze-history.sh --subagent <agent.jsonl> <output.jsonl>
+#   agent.jsonl   a subagent's own transcript from a real session
+#                 (<session>/subagents/agent-<id>.jsonl under Claude Code's
+#                 projects directory), copied at the moment to resume from: a
+#                 replay case's history (evals/README.md, "Replay cases").
+#                 Its turns become the main conversation; it must end on the
+#                 agent's own turn. Never a project's transcript: the session
+#                 is one started on a fixture for the capture.
 set -euo pipefail
 
-usage="usage: freeze-history.sh <kept-run-dir> | <session.jsonl> <output.jsonl> [ending]"
+usage="usage: freeze-history.sh <kept-run-dir> | <session.jsonl> <output.jsonl> [ending] | --subagent <agent.jsonl> <output.jsonl>"
+subagent=0
+if [ "${1:-}" = "--subagent" ]; then subagent=1; shift; fi
 src="${1:?$usage}"
 out="${2:?$usage}"
 ending="${3:-}"
@@ -37,15 +48,16 @@ if [ -d "$src" ]; then
   sessions=("$src"/config/projects/*-home-cwd/*.jsonl)
   [ "${#sessions[@]}" -eq 1 ] || { echo "expected one session transcript under $src/config/projects/*-home-cwd/, found ${#sessions[@]}" >&2; exit 1; }
   src="${sessions[0]}"
-else
+elif [ "$subagent" = 0 ]; then
   [ -n "$ending" ] || { echo "a session.jsonl needs <ending> to pick a run's branch" >&2; exit 1; }
 fi
 
 plugin_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd -P)"
 
-python3 -I - "$src" "$out" "$plugin_root" "$HOME" "$ending" <<'EOF'
+python3 -I - "$src" "$out" "$plugin_root" "$HOME" "$ending" "$subagent" <<'EOF'
 import json, os, sys
 src, dst, plugin_root, home, ending = sys.argv[1:6]
+subagent = sys.argv[6] == "1"
 
 def text(entry):
     content = entry["message"].get("content", "")
@@ -54,6 +66,12 @@ def text(entry):
     return "".join(b.get("text", "") for b in content if isinstance(b, dict))
 
 entries = [json.loads(line) for line in open(src)]
+if subagent:
+    # The agent's turns are the conversation to resume: no longer a side
+    # chain, and no longer any agent's.
+    for entry in entries:
+        entry["isSidechain"] = False
+        entry.pop("agentId", None)
 if ending:
     # A resumed run's first entry points into the history it resumed, which
     # the transcript does not repeat: read that history too, then walk back
@@ -94,6 +112,13 @@ def relativize(text):
 lines = [relativize(json.dumps(entry)).replace(plugin_root, "<plugin-root>") + "\n" for entry in kept]
 if any(home in line for line in lines):
     sys.exit(f"{home} still appears after replacing the plugin root; remove it by hand before freezing")
+# A temp directory can carry the home directory's name with the slashes
+# replaced (Claude Code's own, on macOS); the account name alone is checked too.
+account = os.path.basename(home.rstrip("/"))
+import re
+named = re.compile(r"(?<![A-Za-z0-9])" + re.escape(account) + r"(?![A-Za-z0-9])") if account else None
+if named and any(named.search(line) for line in lines):
+    sys.exit(f"the account name ({account}) still appears, outside a path under {home}; remove it by hand before freezing")
 with open(dst, "w") as f:
     f.writelines(lines)
 print(f"wrote {len(kept)} entries to {dst}; last assistant turn:")

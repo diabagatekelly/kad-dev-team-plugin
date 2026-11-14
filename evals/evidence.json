@@ -135,22 +135,22 @@
     "recorded": "2026-11-12T01:50:51Z"
   },
   "chunk-runner-gap-handback": {
-    "inputs": "77ef69c2c8ec158320666e1332cab53627e0f0ce4d65e31715620f17fc6458fc",
-    "score": 1.0,
+    "inputs": "12bae552cc04c39de8d1a3630e38dcab3d97f92f8b333976c7928bb7f20148e2",
+    "score": 0.926,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261113T012105-chunk-runner-gap-handback.json",
+    "runs": 3,
+    "source": "results/gate-20261113T115752-chunk-runner-gap-handback.json",
     "claude_version": "2.1.323",
-    "recorded": "2026-11-13T01:33:59Z"
+    "recorded": "2026-11-13T11:58:37Z"
   },
   "chunk-runner-gate-deviation": {
-    "inputs": "5ecb7364483f9d5cf0c46c02286ea82b75830a7cc8cc6c7cf3fbca34db79d2dd",
+    "inputs": "4b892433a0993d70868a648f6da010616c7bef0b5bf8ba210f46f71c9f08fb85",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261113T012105-chunk-runner-gate-deviation.json",
+    "runs": 3,
+    "source": "results/gate-20261113T115752-chunk-runner-gate-deviation.json",
     "claude_version": "2.1.323",
-    "recorded": "2026-11-13T01:33:59Z"
+    "recorded": "2026-11-13T11:58:37Z"
   },
   "chunk-runner-gate-outside": {
     "inputs": "4e2cd6c5b6aacc30816df13ac9667cfee73e8e898a4df4547b433efe4ec5e1a8",
@@ -178,6 +178,24 @@
     "source": "results/gate-20261113T012105-chunk-runner-one-fix-round.json",
     "claude_version": "2.1.323",
     "recorded": "2026-11-13T01:33:59Z"
+  },
+  "chunk-runner-replay-not-the-handback": {
+    "inputs": "c51283c81e8f8cc2fa7027ac496279bacadb94f71b0bbac9114f6a6208709994",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261114T073522-chunk-runner-replay-not-the-handback.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T07:37:21Z"
+  },
+  "chunk-runner-replay-unheld-commit": {
+    "inputs": "e8dc70012853d75cf04d42dfca6bb374d127c06ec4fcd1598b4820f035ec17c4",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261114T073522-chunk-runner-replay-unheld-commit.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T07:37:21Z"
   },
   "chunk-runner-review-round": {
     "inputs": "5877df84086c3f2487dcaa74d3361769d4c538191fd2128cbcbcdcd6c8238828",

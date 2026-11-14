@@ -518,6 +518,18 @@ matching against a reference path.
   from a project's transcripts), and resumed with `history_file`. Done when: both skills have a
   survivors list and each survivor is a new grader, a dropped rule, or an
   accepted gap.
+  `chunk-runner`, 2026-11-14: run. `evals/tools/skill_mutation.py` (rule
+  deletions on a scratch copy, known-bad references, a free `check` in
+  the pull-request workflow); 76 deletions on 101 deletion-case pairs at
+  three runs: 6 caught and kept as 7 references, 1 half noticed, 69
+  survivors, listed by why they survived with a proposal for each group
+  in `evals/README.md` ("Rule deletions on a skill"); the proposals wait
+  for the owner (changed prompts, five new graders, one new case with
+  F2's, two rules to drop, two judges to turn into regexes). Two replay
+  cases from a captured runner history ("Replay cases"): a replay cannot
+  hold the wait, since the harness tells a resumed session its agent did
+  not finish. Dead-weight candidates listed, none merged or dropped.
+  `delivery` is next, in its own usage window.
 - [ ] E3 **What others do.** Survey of how comparable orchestrators and
   the wider field evaluate skills and agents:
   `.synthesis/eval-methods-survey.md`; its recommendations are for the

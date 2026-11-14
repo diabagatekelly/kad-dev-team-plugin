@@ -68,7 +68,7 @@ graders:
   - type: regex
     name: plan-entry-not-edited
     target: trace
-    pattern: '"name":"(?:Edit|Write)","input":\{{[^{{}}]*"(?:file_path|path)":"[^"]*implementation-report-slice-001\.md"'
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*implementation-report-slice-001\.md"'
     match: not_contains
   - type: llm
     name: deviation-recorded-not-failed
