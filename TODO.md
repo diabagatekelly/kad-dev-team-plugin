@@ -560,7 +560,7 @@ one run of every case, $54 at list prices on 2026-11-14 (139 cases seen
 since 2026-11-10; 88% of the cost is the agent's own run, 12% the judges;
 the 61 never-failed cases among them are $16 of it), reported again after
 each step. (Corrected by E4 the same day: that figure counted the judges
-twice. The measure is $45.88 for the same 139 cases, 82% agent and 18%
+twice. The measure is $45.70 for the same 139 cases, 82% agent and 18%
 judges; E5 to E7 report against it.) Not taken: a run checker over real runs' records (the owner
 was not convinced), and whole-loop fixture runs, as before.
 What this plan does not yet give: `orchestrator` and `delivery` have had
@@ -583,7 +583,7 @@ after it.
   could decide (about $0.77 a pass, an estimate; 72 runs failed on them
   alone); 9 prompts state the rule they grade and 23 state part of it;
   7 cases have never failed and cost $0.40 or more a run ($3.39 a pass).
-  **The baseline is $45.88, not $54**: a run's cost already includes its
+  **The baseline is $45.70, not $54**: a run's cost already includes its
   judge cost and the $54 added the two (agent 82%, judges 18%). The
   proposals, the order for E5, the skills E6 should take first, which
   `orchestrator` and `delivery` rules a grader could notice, and the

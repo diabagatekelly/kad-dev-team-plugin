@@ -9,8 +9,11 @@ reading file,
    verdict is neither tool nor reading or has no reason, or a prompt said
    to state the rule has no quote; and in step otherwise;
 3. a run's agent cost is its cost less its judge cost; a run held in two
-   result files counts once; an errored run counts for nothing; a case with
-   no run since the date falls back to every held run and is marked;
+   result files counts once; a run with no grader result counts for
+   nothing, and one marked errored because a grader threw still counts; a
+   result file that cannot be read is counted and the report says it is
+   incomplete; a case with no run since the date falls back to every held
+   run and is marked;
 4. the agent's seconds come from the trace's one result line, and a run
    that launched agents has none;
 5. deletions are counted per case from the lists and the known-bad files;
@@ -150,11 +153,15 @@ class Reading(unittest.TestCase):
 class Costs(unittest.TestCase):
     def test_agent_is_cost_less_judge_and_a_run_counts_once(self):
         with tempfile.TemporaryDirectory() as d:
-            runs = [run("2026-11-11T01:00:00.000Z", 0.50, 0.10), run("2026-11-11T01:00:00.000Z", 0.30, 0.00),
+            threw = run("2026-11-11T01:00:00.000Z", 0.30, 0.00)
+            threw["error"] = "1 grader(s) threw: grader threw"  # paid for, graders held: still a run
+            runs = [run("2026-11-11T01:00:00.000Z", 0.50, 0.10), threw,
                     run("2026-11-11T01:00:00.000Z", 9.0, 9.0, error="You've hit your limit · resets 3am")]
             write(os.path.join(d, "gate-20261111T010000-demo.json"), json.dumps(result("demo", runs)))
             write(os.path.join(d, "2026-11-11T01-00-00-000Z", "aggregate-result.json"), json.dumps(result("demo", runs)))
-            costs = cs.read_costs([d])
+            write(os.path.join(d, "gate-20261111T020000-demo.json"), '{"cases": [')  # half written
+            costs, unreadable = cs.read_costs([d])
+            self.assertEqual(unreadable, 1)
             self.assertEqual(len(costs["demo"]), 2)
             row = cs.cost_row(costs["demo"], SINCE)
             self.assertAlmostEqual(row["agent"], 0.35)
@@ -165,7 +172,7 @@ class Costs(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             write(os.path.join(d, "gate-20261101T010000-demo.json"),
                   json.dumps(result("demo", [run("2026-11-01T01:00:00.000Z", 0.20, 0.05)])))
-            row = cs.cost_row(cs.read_costs([d])["demo"], SINCE)
+            row = cs.cost_row(cs.read_costs([d])[0]["demo"], SINCE)
             self.assertTrue(row["old"])
             self.assertAlmostEqual(row["agent"], 0.15)
         self.assertIsNone(cs.cost_row([], SINCE))
@@ -232,6 +239,11 @@ class Report(unittest.TestCase):
         self.assertIn("| `chunk-runner-one` | `j1` | the shape of a line | 0.050 |", text)
         self.assertIn("- `chunk-runner-one`: `t1` cannot fail.", text)
         self.assertIn("$0.60 over the 1 cases with a completed run held", text)
+
+    def test_unreadable_results_are_said(self):
+        self.assertNotIn("Incomplete", self.text())
+        text = cs.report({}, {}, {}, {}, {}, ({}, {}, set()), SINCE, 0.40, 6, ["results"], unreadable=2)
+        self.assertIn("**Incomplete: 2 result files could not be read**", text.split("\n")[0])
 
     def test_written_between_the_markers_only(self):
         with tempfile.TemporaryDirectory() as d:

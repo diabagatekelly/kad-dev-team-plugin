@@ -59,6 +59,8 @@ Usage:
   --readme FILE   replace the text between the two `case-sort` marker
                   comments in FILE with the report, instead of printing it.
   --check         only compare the reading file with the cases; no results read.
+A result file that cannot be read (malformed, or being rewritten by a gate
+run) is counted, and the report's first line says it is incomplete.
 Exit codes: 0 written, printed or in step; 1 the reading file is out of
 step with the cases, or the markers are not in the README.
 """
@@ -175,19 +177,24 @@ def trace_seconds(path):
 
 
 def read_costs(dirs):
-    """{case: [run]} for every completed plugin-arm run, once: a run being
-    {at, agent, judge, seconds, agent_seconds|None}."""
+    """({case: [run]}, files unreadable) for every plugin-arm run that holds
+    grader results, once: a run being {at, agent, judge, seconds, trace}. A
+    run the gate marked errored because a grader threw was still paid for
+    and still counts, as it does in `case_history`; a run with no grader
+    result (the usage limit, an interruption) does not."""
     runs = collections.defaultdict(dict)
+    unreadable = 0
     for path in case_history.result_files(dirs):
         try:
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, ValueError):
+            unreadable += 1
             continue
         for case in data.get("cases") or []:
             for i, run in enumerate((case.get("arms") or {}).get("with") or []):
                 key = (run.get("startedAt") or os.path.basename(str(run.get("tracePath") or path)), i)
-                if key in runs[case.get("name")] or run.get("error") or not run.get("graders"):
+                if key in runs[case.get("name")] or not run.get("graders"):
                     continue
                 total, judge = run.get("costUsd") or 0.0, run.get("judgeCostUsd") or 0.0
                 runs[case.get("name")][key] = {
@@ -197,7 +204,7 @@ def read_costs(dirs):
                     "seconds": run.get("durationSeconds"),
                     "trace": run.get("tracePath"),
                 }
-    return {k: list(v.values()) for k, v in runs.items()}
+    return {k: list(v.values()) for k, v in runs.items()}, unreadable
 
 
 def cost_row(runs, since):
@@ -295,7 +302,7 @@ def cell(text):
     return str(text).replace("|", "\\|").replace("\n", " ")
 
 
-def report(cases, reading, costs, history, firsts, dels, since, costly, few, dirs):
+def report(cases, reading, costs, history, firsts, dels, since, costly, few, dirs, unreadable=0):
     skills = skill_names()
     run_on, caught, passed = dels
     rows = []
@@ -321,7 +328,9 @@ def report(cases, reading, costs, history, firsts, dels, since, costly, few, dir
     out = [
         f"Written by `tools/case_sort.py` on {dt.date.today():%Y-%m-%d} from the cases, `tools/case_reading.json`"
         f" and the results under {', '.join('`' + os.path.basename(os.path.normpath(d)) + '/`' for d in dirs)};"
-        f" cost and time are means over the completed runs since {since:%Y-%m-%d} (`*`: no run since, every held run).",
+        f" cost and time are means over the completed runs since {since:%Y-%m-%d} (`*`: no run since, every held run)."
+        + (f" **Incomplete: {unreadable} result files could not be read**, so runs may be missing from the costs"
+           " and the failure counts." if unreadable else ""),
         "",
         "| Case | Skill | Tool checks | Judges | A tool could decide | Prompt states the rule | Agent $ | Judges $ | Seconds (agent + judges) | Failed since the bar | Deletions that failed it |",
         "|---|---|---|---|---|---|---|---|---|---|---|",
@@ -486,9 +495,13 @@ def main():
         return 1 if said else 0
     since = dt.datetime.strptime(args.since, "%Y-%m-%d").replace(tzinfo=dt.timezone.utc)
     dirs = args.results or [d for d in (os.path.join(EVALS, "results"), case_history.ARCHIVE) if os.path.isdir(d)]
-    history, _, _ = case_history.read_runs(dirs)
-    text = report(cases, reading, read_costs(dirs), history, case_history.first_bars(args.thresholds, dirs),
-                  deletions(), since, args.costly, args.few, dirs)
+    history, _, unread_history = case_history.read_runs(dirs)
+    costs, unread_costs = read_costs(dirs)
+    unreadable = max(unread_history, unread_costs)
+    text = report(cases, reading, costs, history, case_history.first_bars(args.thresholds, dirs),
+                  deletions(), since, args.costly, args.few, dirs, unreadable)
+    if unreadable:
+        print(f"{unreadable} result files could not be read: the report is incomplete", file=sys.stderr)
     if said:
         text += f"\n{len(said)} rows of the reading file are out of step with the cases (`--check` lists them).\n"
     if not args.readme:

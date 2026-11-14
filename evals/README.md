@@ -940,7 +940,7 @@ caught, and two things that take reading: whether a tool could decide
 each judge, and whether the prompt states the rule the case grades. No
 model time. The table is written by `tools/case_sort.py`; run it again
 with `python3 -I evals/tools/case_sort.py --readme evals/README.md`
-(`tools/case_sort_test.py`, 11 tests, holds it without a model).
+(`tools/case_sort_test.py`, 12 tests, holds it without a model).
 
 The two reading columns are not computed. They are in
 `tools/case_reading.json`, one entry per case, written on 2026-11-14 from
@@ -965,12 +965,14 @@ case has to be read before the table is current. What the words mean:
   at the list prices the CLI records. The time split is given only for
   runs that launched no agent and whose trace is still on disk.
 
-**The baseline is $45.88, not $54.** A run's `costUsd` already includes
+**The baseline is $45.70, not $54.** A run's `costUsd` already includes
 its `judgeCostUsd`: in all 189 runs checked, the agent's own total in the
 trace plus the judge cost equals `costUsd`. The $54 of 2026-11-14 added
 the two columns, so it counted the judges twice. For the same 139 cases
-one run of each is $45.88: the agent's runs $37.69 (82%), the judges
-$8.19 (18%). Savings below are against $45.88.
+one run of each is $45.70: the agent's runs $37.53 (82%), the judges
+$8.17 (18%). Savings below are against $45.70. (A run the gate marked
+errored because a grader threw was paid for and is priced, as
+`case_history.py` counts it; a run with no grader result is not.)
 
 <!-- case-sort:start -->
 Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_reading.json` and the results under `results/`, `kad-eval-results-archive/`; cost and time are means over the completed runs since 2026-11-10 (`*`: no run since, every held run).
@@ -980,16 +982,16 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `acceptance-criteria-payfine` | acceptance-criteria | 1 tool call | 2 | 0 of 2 | no | 0.07 | 0.01 | 18 (9 + 9) | 0 of 11 | no pass on the skill |
 | `accessibility-review-ac-walk` | accessibility-review | 5 regex, 2 tool call, 1 file | 1 | 0 of 1 | yes: "Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project [...] and `PORTAL_DATA` inside that folder" | 0.44 | 0.01 | 65 | 1 of 14 | no pass on the skill |
 | `accessibility-review-neg-readability` | accessibility-review | 1 tool call | 0 |  | no | 0.06 | 0.00 | 9 (8 + 1) | 0 of 13 | no pass on the skill |
-| `accessibility-review-payfine` | accessibility-review | 2 regex, 1 tool call, 1 file | 10 | 1 of 10 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.27 | 107 (67 + 36) | 5 of 19 | no pass on the skill |
-| `accessibility-review-payfine-subtle` | accessibility-review | 2 regex, 1 tool call, 1 file | 10 | 1 of 10 | partly: "fill in the slice's accessibility placeholder" | 0.24 | 0.26 | 112 (73 + 36) | 5 of 19 | no pass on the skill |
+| `accessibility-review-payfine` | accessibility-review | 2 regex, 1 tool call, 1 file | 10 | 1 of 10 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.27 | 107 (68 + 39) | 5 of 19 | no pass on the skill |
+| `accessibility-review-payfine-subtle` | accessibility-review | 2 regex, 1 tool call, 1 file | 10 | 1 of 10 | partly: "fill in the slice's accessibility placeholder" | 0.24 | 0.26 | 112 (73 + 39) | 5 of 19 | no pass on the skill |
 | `adr-neg-rename` | adr | 1 regex, 1 tool call | 1 | 0 of 1 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `adr-payment-gateway` | adr | 1 regex, 1 tool call, 1 file | 2 | 1 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `architecture-design-neg-review` | architecture-design | 1 tool call | 0 |  | no | 0.09 | 0.00 | 15 (15 + 0) | 0 of 17 | no pass on the skill |
-| `architecture-design-owner-sheet` | architecture-design | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.23 | 0.01 | 42 (38 + 4) | 0 of 13 | no pass on the skill |
-| `architecture-design-payfine-phase1` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.19 | 0.02 | 41 (32 + 9) | 0 of 24 | no pass on the skill |
+| `architecture-design-owner-sheet` | architecture-design | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.21 | 0.01 | 38 (38 + 4) | 0 of 13 | no pass on the skill |
+| `architecture-design-payfine-phase1` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.18 | 0.02 | 38 (32 + 9) | 0 of 24 | no pass on the skill |
 | `architecture-design-payfine-phase2` | architecture-design | 1 regex | 9 | 0 of 9 | no | 0.26 | 0.32 | 102 (67 + 35) | 20 of 25 | no pass on the skill |
-| `architecture-design-payfine-via-agent` | architecture-design | 2 regex, 1 tool call | 2 | 1 of 2 | partly: "its architecture map is at `docs/architecture-map.md`" | 0.24 | 0.03 | 52 | 0 of 15 | no pass on the skill |
-| `architecture-design-scope-consequence` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.19 | 0.02 | 48 (39 + 9) | 15 of 34 | no pass on the skill |
+| `architecture-design-payfine-via-agent` | architecture-design | 2 regex, 1 tool call | 2 | 1 of 2 | partly: "its architecture map is at `docs/architecture-map.md`" | 0.22 | 0.02 | 46 | 0 of 15 | no pass on the skill |
+| `architecture-design-scope-consequence` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.18 | 0.01 | 44 (39 + 9) | 15 of 34 | no pass on the skill |
 | `architecture-review-neg-security-review` | architecture-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 18 (17 + 1) | 0 of 12 | no pass on the skill |
 | `architecture-review-neg-test-quality-review` | architecture-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 12 (11 + 1) | 0 of 13 | no pass on the skill |
 | `chunk-runner-gap-handback` | chunk-runner | 4 regex, 4 tool call | 1 | 1 of 1 | yes: "next is recording round 0" | 0.28 | 0.01 | 35 (27 + 8) | 8 of 23 | 0 of 7 |
@@ -999,10 +1001,10 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `chunk-runner-one-fix-round` | chunk-runner | 4 regex, 6 tool call | 1 | 1 of 1 | yes: "next is recording round 1 with `--range`, then acting on the split" | 0.53 | 0.01 | 88 | 5 of 21 | 1 of 15: `handback-one-line` |
 | `chunk-runner-replay-not-the-handback` | chunk-runner | 3 regex, 2 tool call | 1 | 0 of 1 | no | 0.46 | 0.01 | 66 | 0 of 7 | 0 of 4 |
 | `chunk-runner-replay-unheld-commit` | chunk-runner | 3 regex, 3 tool call | 1 | 0 of 1 | no | 0.39 | 0.00 | 55 | 0 of 7 | 0 of 5 |
-| `chunk-runner-review-round` | chunk-runner | 5 regex, 8 tool call, 2 file | 1 | 1 of 1 | yes: "next is step 3, the review and smoke launches [...] Stop once round 0 is recorded [...] don't start the fix round" | 1.28 | 0.03 | 163 | 1 of 16 | 1 of 19: `smoke-agent-kind` |
+| `chunk-runner-review-round` | chunk-runner | 5 regex, 8 tool call, 2 file | 1 | 1 of 1 | yes: "next is step 3, the review and smoke launches [...] Stop once round 0 is recorded [...] don't start the fix round" | 1.18 | 0.02 | 150 | 1 of 16 | 1 of 19: `smoke-agent-kind` |
 | `chunk-runner-waits-for-handback` | chunk-runner | 3 regex, 7 tool call | 1 | 1 of 1 | yes: "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent" | 0.59 | 0.01 | 86 | 2 of 5 (few runs) | 2 of 19: `handback-one-line`, `hash-is-real` |
-| `code-review-catalog` | code-review | 1 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.12 | 0.02 | 30 (22 + 7) | 9 of 19 | no pass on the skill |
-| `code-review-comments-chunk` | code-review | 2 regex, 3 tool call, 1 file | 4 | 1 of 4 | partly: "Write one report in the shared finding format [...] and hand back the counts and the path" | 0.24 | 0.06 | 52 (37 + 16) | 17 of 36 | no pass on the skill |
+| `code-review-catalog` | code-review | 1 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.12 | 0.02 | 28 (22 + 7) | 9 of 19 | no pass on the skill |
+| `code-review-comments-chunk` | code-review | 2 regex, 3 tool call, 1 file | 4 | 1 of 4 | partly: "Write one report in the shared finding format [...] and hand back the counts and the path" | 0.24 | 0.06 | 49 (37 + 15) | 17 of 36 | no pass on the skill |
 | `code-review-days-left-pr` | code-review | 1 regex, 1 tool call, 1 file | 7 | 0 of 7 | no | 0.15 | 0.12 | 57 (33 + 24) | 0 of 10 | no pass on the skill |
 | `code-review-fine-notices-pr` | code-review | 1 regex, 2 tool call, 1 file | 8 | 0 of 8 | no | 0.15 | 0.20 | 56 (31 + 24) | 7 of 13 | no pass on the skill |
 | `code-review-fine-notices-pr-via-agent` | code-review | 2 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.21 | 0.12 | 73 | 19 of 20 | no pass on the skill |
@@ -1011,12 +1013,12 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `code-review-structural-high-at-d` | code-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.06 | 69 (53 + 16) | 4 of 5 (few runs) | no pass on the skill |
 | `delegation-consult-with-file` | reliability-requirements | 3 regex, 2 tool call | 2 | 1 of 2 | yes: "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence" | 0.14 | 0.02 | 37 (22 + 15) | 4 of 11 | no pass on the skill |
 | `delegation-consult-without-file` | reliability-requirements | 1 regex, 2 tool call | 1 | 0 of 1 | no | 0.12 | 0.02 | 17 (11 + 6) | 4 of 19 | no pass on the skill |
-| `delivery-ci-red-not-done` | delivery | 5 regex, 3 tool call, 1 file | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.39 | 0.03 | 53 (43 + 12) | 2 of 7 | no pass on the skill |
+| `delivery-ci-red-not-done` | delivery | 5 regex, 3 tool call, 1 file | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.39 | 0.03 | 53 (42 + 12) | 2 of 7 | no pass on the skill |
 | `design-system-payfine-phase1` | design-system | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.10 | 0.00 | 14 (11 + 3) | 0 of 7 | no pass on the skill |
-| `design-system-payfine-phase2` | design-system | 2 regex, 2 file | 4 | 0 of 4 | no | 0.18 | 0.04 | 59 (48 + 13) | 0 of 7 | no pass on the skill |
+| `design-system-payfine-phase2` | design-system | 2 regex, 2 file | 4 | 0 of 4 | no | 0.18 | 0.04 | 59 (46 + 12) | 0 of 7 | no pass on the skill |
 | `design-system-payfine-phase3` | design-system | 2 regex, 1 file | 6 | 1 of 6 | no | 0.31 | 0.24 | 136 (91 + 43) | 5 of 12 | no pass on the skill |
 | `design-system-payfine-reference` | design-system | 3 regex, 1 tool call | 2 | 0 of 2 | no | 0.22 | 0.01 | 75 (68 + 7) | 1 of 6 | no pass on the skill |
-| `design-system-payfine-review` | design-system | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.18 | 0.06 | 60 (51 + 13) | 0 of 7 | no pass on the skill |
+| `design-system-payfine-review` | design-system | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.18 | 0.06 | 60 (49 + 12) | 0 of 7 | no pass on the skill |
 | `external-review-triage-cancel-hold` | external-review-triage | 1 regex, 1 tool call, 1 file | 4 | 1 of 4 | partly: "Write your report to [...] and hand back the counts and the path" | 0.34* | 0.04 | 60 (44 + 15) | 0 of 6 | no pass on the skill |
 | `library-app-catalog-review` | architecture-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.19 | 0.04 | 50 (42 + 8) | 3 of 14 | no pass on the skill |
 | `library-app-fines-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.27 | 0.13 | 84 (71 + 12) | 0 of 9 | no pass on the skill |
@@ -1045,7 +1047,7 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `orchestrator-delivery-foreground` | orchestrator | 3 regex, 4 tool call | 2 | 1 of 2 | no | 0.44 | 0.02 | 74 (60 + 14) | 26 of 66 | no pass on the skill |
 | `orchestrator-delivery-removal` | orchestrator | 6 regex, 5 tool call, 1 tool order | 1 | 0 of 1 | partly: "If the scan finds anything of that file in this branch's commits, replace it and rewrite the branch before it is pushed. You have my word for that rewrite" | 0.46 | 0.01 | 102 | 2 of 20 | no pass on the skill |
 | `orchestrator-gap-without-delegation` | orchestrator | 2 regex, 5 tool call | 1 | 0 of 1 | no | 0.52 | 0.01 | 74 | 12 of 55 | no pass on the skill |
-| `orchestrator-issue-fix-records` | orchestrator | 6 regex, 4 tool call | 1 | 0 of 1 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.34 | 0.01 | 43 (41 + 4) | 1 of 4 (few runs) | no pass on the skill |
+| `orchestrator-issue-fix-records` | orchestrator | 6 regex, 4 tool call | 1 | 0 of 1 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.34 | 0.01 | 43 (39 + 4) | 1 of 4 (few runs) | no pass on the skill |
 | `orchestrator-plan-check-seam` | orchestrator | 1 regex, 4 tool call | 2 | 1 of 2 | partly: "hand off once the B line is written, before chunk 1's build" | 0.47 | 0.02 | 76 | 1 of 43 | no pass on the skill |
 | `orchestrator-readiness-gate` | orchestrator | 2 regex, 4 tool call, 1 tool order | 2 | 1 of 2 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.62 | 0.03 | 141 (121 + 15) | 15 of 61 | no pass on the skill |
 | `orchestrator-readiness-open-item` | orchestrator | 2 regex, 3 tool call | 1 | 0 of 1 | no | 0.31 | 0.01 | 45 (40 + 6) | 6 of 30 | no pass on the skill |
@@ -1063,9 +1065,9 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `orchestrator-route-scope-decision` | orchestrator | 3 tool call, 1 file | 2 | 1 of 2 | no | 0.28 | 0.02 | 42 (32 + 9) | 63 of 111 | no pass on the skill |
 | `orchestrator-route-screen-design` | orchestrator | 1 regex, 3 tool call, 1 file | 2 | 1 of 2 | no | 0.42 | 0.01 | 92 (83 + 9) | 13 of 51 | no pass on the skill |
 | `orchestrator-route-slicer-accessibility-mistake` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.30 | 0.00 | 37 (32 + 6) | 1 of 35 | no pass on the skill |
-| `orchestrator-route-slicing` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.31 | 0.01 | 48 (39 + 9) | 6 of 50 | no pass on the skill |
+| `orchestrator-route-slicing` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.31 | 0.01 | 48 (40 + 8) | 6 of 50 | no pass on the skill |
 | `orchestrator-route-tech-bootstrap` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.26 | 0.01 | 34 (26 + 8) | 2 of 39 | no pass on the skill |
-| `orchestrator-route-user-story` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.23 | 0.01 | 34 (25 + 10) | 4 of 41 | no pass on the skill |
+| `orchestrator-route-user-story` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.23 | 0.01 | 34 (25 + 9) | 4 of 41 | no pass on the skill |
 | `orchestrator-runner-handback-unverified` | orchestrator | 2 regex, 3 tool call | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it and stop there" | 0.29 | 0.02 | 35 (28 + 7) | 0 of 4 (few runs) | no pass on the skill |
 | `orchestrator-security-stage` | orchestrator | 3 tool call, 1 file | 2 | 0 of 2 | no | 0.31 | 0.01 | 44 (37 + 7) | 0 of 36 | no pass on the skill |
 | `orchestrator-session-setup` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.23 | 0.01 | 22 (17 + 5) | 8 of 40 | no pass on the skill |
@@ -1140,36 +1142,36 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `vertical-slicing-handback` | vertical-slicing | 1 tool call | 4 | 0 of 4 | no | 0.17 | 0.02 | 45 (32 + 13) | 0 of 11 | no pass on the skill |
 | `vertical-slicing-no-requirements` | vertical-slicing | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.09 | 0.01 | 12 (6 + 6) | 0 of 11 | no pass on the skill |
 | `vertical-slicing-no-screen` | vertical-slicing | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.17 | 0.02 | 41 (35 + 7) | 1 of 17 | no pass on the skill |
-| `vertical-slicing-owner-sheet` | vertical-slicing | 2 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.15 | 0.01 | 41 (32 + 10) | 2 of 18 | no pass on the skill |
-| `vertical-slicing-payfine-phase1` | vertical-slicing | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.14 | 0.04 | 44 (28 + 18) | 0 of 11 | no pass on the skill |
-| `why-comments-collect-fine` | why-comments | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.07* | 0.02 | 35 (13 + 23) | 0 of 4 (few runs) | no pass on the skill |
+| `vertical-slicing-owner-sheet` | vertical-slicing | 2 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.15 | 0.01 | 41 (32 + 9) | 2 of 18 | no pass on the skill |
+| `vertical-slicing-payfine-phase1` | vertical-slicing | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.14 | 0.04 | 44 (27 + 17) | 0 of 11 | no pass on the skill |
+| `why-comments-collect-fine` | why-comments | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.07* | 0.02 | 35 (14 + 21) | 0 of 4 (few runs) | no pass on the skill |
 
-**One run of every case:** $47.89 over the 147 cases with a completed run held (agent $38.88, judges $9.02, 19% judges); $45.88 over the 139 with a run since 2026-11-10. 19 cases have no completed run held and are not priced.
+**One run of every case:** $47.71 over the 147 cases with a completed run held (agent $38.71, judges $8.99, 19% judges); $45.70 over the 139 with a run since 2026-11-10. 19 cases have no completed run held and are not priced.
 
 **Graders:** 471 judges and 647 tool checks over 166 cases; 18 cases have no judge.
 
 **Judges a tool could decide:** 51 of 471, in 46 cases; 6 cases would be left with no judge. Their share of the judge cost, split evenly within each case (an estimate): $0.77 per run of every case.
 
-**Runs that failed only on a judge:** of 2794 completed runs since the bars, 623 failed; 419 of those failed on judges alone, and 72 on judges a tool could decide alone ($29.62 of runs at today's cost per run): `orchestrator-readiness-gate` 9, `chunk-runner-gap-handback` 8, `code-review-comments-chunk` 7, `orchestrator-route-accessibility` 6, `orchestrator-route-screen-design` 6, `chunk-runner-one-fix-round` 5, `accessibility-review-payfine` 4, `accessibility-review-payfine-subtle` 4, `orchestrator-backward-route` 4, `delegation-consult-with-file` 3, `orchestrator-route-reliability` 3, `tdd-implementation-lite-chunk-plan` 3, `tdd-implementation-lite-one-chunk` 3, `chunk-runner-waits-for-handback` 2, `orchestrator-route-backward-requirements` 2, `orchestrator-route-tech-bootstrap` 2, `orchestrator-route-implementation-prenamed` 1.
+**Runs that failed only on a judge:** of 2794 completed runs since the bars, 623 failed; 419 of those failed on judges alone, and 72 on judges a tool could decide alone ($29.53 of runs at today's cost per run): `orchestrator-readiness-gate` 9, `chunk-runner-gap-handback` 8, `code-review-comments-chunk` 7, `orchestrator-route-accessibility` 6, `orchestrator-route-screen-design` 6, `chunk-runner-one-fix-round` 5, `accessibility-review-payfine` 4, `accessibility-review-payfine-subtle` 4, `orchestrator-backward-route` 4, `delegation-consult-with-file` 3, `orchestrator-route-reliability` 3, `tdd-implementation-lite-chunk-plan` 3, `tdd-implementation-lite-one-chunk` 3, `chunk-runner-waits-for-handback` 2, `orchestrator-route-backward-requirements` 2, `orchestrator-route-tech-bootstrap` 2, `orchestrator-route-implementation-prenamed` 1.
 
 **Prompt states the rule it grades:** yes 9, partly 23, no 134.
 
-**Never failed since the bar (6 or more runs):** 62 cases, $14.28 of one run of every case. **Never failed and $0.40 or more a run (7, $3.39):** `security-review-config` $0.55, `chunk-runner-gate-outside` $0.54, `reliability-review-http` $0.51, `library-app-structure-review` $0.48, `chunk-runner-replay-not-the-handback` $0.47, `security-review-http` $0.43, `library-app-fines-review` $0.41.
+**Never failed since the bar (6 or more runs):** 62 cases, $14.23 of one run of every case. **Never failed and $0.40 or more a run (7, $3.39):** `security-review-config` $0.55, `chunk-runner-gate-outside` $0.54, `reliability-review-http` $0.51, `library-app-structure-review` $0.48, `chunk-runner-replay-not-the-handback` $0.47, `security-review-http` $0.43, `library-app-fines-review` $0.41.
 
 By skill (one run of each of its cases; the judges a tool could decide and their estimated share):
 
 | Skill | Cases (priced) | Agent $ | Judges $ | Judges | A tool could decide | Their share $ | Prompts stating the rule (yes, partly) | Never failed |
 |---|---|---|---|---|---|---|---|---|
 | orchestrator | 34 (34) | 13.91 | 0.39 | 53 | 17 | 0.12 | 0, 10 | 7 |
-| chunk-runner | 9 (9) | 4.89 | 0.07 | 8 | 6 | 0.06 | 7, 0 | 4 |
+| chunk-runner | 9 (9) | 4.79 | 0.06 | 8 | 6 | 0.05 | 7, 0 | 4 |
 | reliability-review | 10 (10) | 2.57 | 1.56 | 37 | 0 | 0.00 | 0, 0 | 4 |
 | architecture-review | 11 (11) | 2.42 | 1.17 | 34 | 0 | 0.00 | 0, 1 | 8 |
 | tdd-implementation-lite | 6 (6) | 1.94 | 0.32 | 29 | 8 | 0.09 | 0, 2 | 0 |
 | security-review | 8 (8) | 1.56 | 0.66 | 21 | 0 | 0.00 | 0, 0 | 6 |
-| code-review | 8 (8) | 1.41 | 0.70 | 36 | 1 | 0.02 | 0, 1 | 2 |
+| code-review | 8 (8) | 1.40 | 0.70 | 36 | 1 | 0.01 | 0, 1 | 2 |
 | security-requirements | 8 (8) | 1.45 | 0.42 | 23 | 3 | 0.04 | 0, 1 | 6 |
 | reliability-requirements | 8 (8) | 1.07 | 0.80 | 24 | 4 | 0.10 | 1, 0 | 1 |
-| architecture-design | 6 (6) | 1.20 | 0.39 | 16 | 1 | 0.01 | 0, 1 | 4 |
+| architecture-design | 6 (6) | 1.14 | 0.38 | 16 | 1 | 0.01 | 0, 1 | 4 |
 | accessibility-review | 4 (4) | 0.97 | 0.54 | 21 | 2 | 0.05 | 1, 2 | 1 |
 | design-system | 5 (5) | 0.98 | 0.35 | 17 | 1 | 0.04 | 0, 0 | 3 |
 | test-quality-review | 4 (4) | 0.65 | 0.39 | 14 | 1 | 0.01 | 0, 1 | 3 |
@@ -1200,12 +1202,12 @@ By skill (one run of each of its cases; the judges a tool could decide and their
 | `accessibility-review-payfine` | `slice-placeholder-filled` | a file's contents: the placeholder line absent from slice-001.md, the review's file name or criteria in its place, the other lines as they were (the regex `security-requirements-placeholder-pointer` already uses) | 0.027 |
 | `accessibility-review-payfine-subtle` | `slice-placeholder-filled` | as `accessibility-review-payfine` | 0.026 |
 | `adr-payment-gateway` | `no-how` | names absent from a file: the seven identifiers the request gave (`FinePayments`, `stripeCode`, `AdyenFinePayments`, the three paths, `PAYMENT_PROVIDER_DESK`) and any code fence. Lost: another path or class name the run invents. | 0.000 |
-| `architecture-design-payfine-via-agent` | `uses-what-the-map-found` | a name present in the reply: `CollectFine`, `FineLedger`, `FinePayments` or `portal-routes`. Lost: that the piece is named as something to build on, not in passing. | 0.014 |
+| `architecture-design-payfine-via-agent` | `uses-what-the-map-found` | a name present in the reply: `CollectFine`, `FineLedger`, `FinePayments` or `portal-routes`. Lost: that the piece is named as something to build on, not in passing. | 0.011 |
 | `chunk-runner-gap-handback` | `stops-with-the-decision-on-the-line` | the shape of the last line (`needs-decision devsecops-engineer: <path>`, `nd 1`), which `hand-back-names-the-decision` already reads; fails correct lines in 8 of 23 runs. Lost: whether the reply answers the undecided question itself. | 0.010 |
 | `chunk-runner-gate-deviation` | `deviation-recorded-not-failed` | `deviations 2` on the last message is a count on a line; no launch is already `no-fixer-no-reviewer`, the Files line not widened is `plan-entry-not-edited` | 0.003 |
 | `chunk-runner-gate-outside` | `gate-passes-after-the-fix` | `gate PASS after <sha>` and `stopped at step 2` on the last message, the regex `chunk-runner-gate-sources` already uses; the launches are counted by tool checks | 0.005 |
 | `chunk-runner-one-fix-round` | `hand-back-is-the-one-line` | the shape of the last message: one line, the C line's fields in order, nothing before or after it; two regexes already read the split and the standing count | 0.007 |
-| `chunk-runner-review-round` | `review-report-in-the-shared-shape` | a file's shape: every `###` heading followed by a `**Severity:**` line with one of four values, at most eight, none Low. It grades the launched reviewer's file, not the runner. | 0.025 |
+| `chunk-runner-review-round` | `review-report-in-the-shared-shape` | a file's shape: every `###` heading followed by a `**Severity:**` line with one of four values, at most eight, none Low. It grades the launched reviewer's file, not the runner. | 0.023 |
 | `chunk-runner-waits-for-handback` | `hand-back-is-the-one-line-for-what-ran` | the shape of the last message: one line with a commit hash, a gate result and `stopped at`; it is the judge the `handback-one-line` deletion fails, so the regex must fail paragraphs and bullets | 0.007 |
 | `code-review-comments-chunk` | `hands-back-counts-and-path` | the shape of a short reply: the report's path, a count, and a length bound; a judge on a few lines is the noise the chunk-runner pass found | 0.015 |
 | `delegation-consult-with-file` | `hands-back-the-hash-and-one-sentence` | the shape of the last message: a hash of seven or more hex characters and a length bound | 0.010 |
@@ -1328,7 +1330,7 @@ owner.
    cheaper by running fewer or shorter cases (E6 and E7), not by E5.
    Four cases cost over $1 a run, all of them cases that launch agents:
    `orchestrator-chunk-runner-launch` $1.76, `chunk-runner-review-round`
-   $1.30, `orchestrator-readme-stale-not-done` $1.12,
+   $1.20, `orchestrator-readme-stale-not-done` $1.12,
    `orchestrator-definition-of-done` $1.10.
 3. *`orchestrator-chunk-runner-launch` pays for a round nobody grades.*
    Its graders read the launch and the handoff file; because a launch
@@ -1351,8 +1353,8 @@ owner.
    their deletions again, about 40 to 60 runs, a guess from the pass's
    own counts.
 5. *The `-via-agent` cases repeat their twin's judges.* Six cases, five
-   priced at $2.55 a pass together, $0.83 of it judges. Keeping the path
-   check and two judges in each would save about $0.58 a pass (1.3%), a
+   priced at $2.53 a pass together, $0.82 of it judges. Keeping the path
+   check and two judges in each would save about $0.59 a pass (1.3%), a
    guess from the even split. They are not candidates to retire: two of
    them fail a grader far more often than their direct twin
    (`code-review-fine-notices-pr-via-agent` fails `consults-why-comments`
@@ -1366,7 +1368,7 @@ owner.
    `chunk-runner-replay-not-the-handback` (0 of 4): $1.01 a pass (2.2%)
    if both went. The other five are review cases with no deletion pass
    and no bare-model run, so by E7's own rule they are not candidates
-   yet. All 62 never-failed cases together are $14.28 a pass (31%), the
+   yet. All 62 never-failed cases together are $14.23 a pass (31%), the
    ceiling on what E7 can retire, not an estimate of it.
 7. *Twelve graders fail in most of their runs.* Listed in the findings.
    A grader that fails nearly every run separates a good run from a
