@@ -494,6 +494,8 @@ known-bad reference and a regression-or-capability tag; suite tiers and
 judge calibration after 0.15.0. Not taken from the survey: whole-loop
 fixture runs per release (the audited real runs are that) and trajectory
 matching against a reference path.
+(Revised 2026-11-14, below: the `delivery` pass is no longer in this
+order; E4 to E7 come after `chunk-runner`'s E2 and before phase B.)
 
 - [x] E1 **Which cases have ever failed.** From the results history (the
   flat `gate-*.json` files and the archive), per case: runs, failures since
@@ -529,21 +531,24 @@ matching against a reference path.
   cases from a captured runner history ("Replay cases"): a replay cannot
   hold the wait, since the harness tells a resumed session its agent did
   not finish. Dead-weight candidates listed, none merged or dropped.
-  **The owner, 2026-11-14: the `delivery` pass is not next.** The pass
-  cost 309 runs and three usage windows, and most of what it taught
+  **The owner, 2026-11-14: the `delivery` pass is not next.** The
+  `chunk-runner` pass cost 309 runs and three usage windows, and most of what it taught
   holds for the whole suite without another run: a prompt that states
   the rule cannot test it, a judge on a one-line reply is noise, a rule
   whose state no case reaches is unguarded, the wait cannot be tested in
   the eval. E4 to E7 below come first; `delivery` gets a deletion pass
   only if they leave a gap there. Done when, as it now stands:
-  `chunk-runner` has its survivors list (done) and the three decisions
-  from PR #54 are taken: which survivor proposals to apply, the weak
-  `--planning` reference (it fails 4 runs of 6), whether the two replay
-  cases stay (no deletion fails them).
-- [ ] E3 **What others do.** Survey of how comparable orchestrators and
+  `chunk-runner` has its survivors list (done), and the owner has
+  decided the three questions PR #54 left open, none decided yet: which
+  survivor proposals to apply, what to do with the weak `--planning`
+  reference (it fails 4 runs of 6), whether the two replay cases stay
+  (no deletion fails them).
+- [x] E3 **What others do.** Survey of how comparable orchestrators and
   the wider field evaluate skills and agents:
   `.synthesis/eval-methods-survey.md`; its recommendations are for the
   owner to pick from before E2 is built.
+  Done: the survey was written 2026-11-12, and the owner's picks from it
+  are the decisions of 2026-11-12 above and of 2026-11-14 below.
 
 Decided by the owner 2026-11-14, after E2 on `chunk-runner`: the suite is
 still changed in place (no new eval directory). Every skill keeps cases;
@@ -556,6 +561,11 @@ since 2026-11-10; 88% of the cost is the agent's own run, 12% the judges;
 the 61 never-failed cases among them are $16 of it), reported again after
 each step. Not taken: a run checker over real runs' records (the owner
 was not convinced), and whole-loop fixture runs, as before.
+What this plan does not yet give: `orchestrator` and `delivery` have had
+no deletion pass and E6 does not apply to them, so their proof is owed
+and not scheduled. E4 says, from reading their cases, which of their
+rules a grader could notice; a deletion pass on those alone is decided
+after it.
 
 - [ ] E4 **Sort the cases.** No model time. Per case: its graders by
   kind (judge, or a tool: regex, tool call, file), which judges a tool
@@ -572,20 +582,28 @@ was not convinced), and whole-loop fixture runs, as before.
   the graders (to verify against the CLI's documentation first). Prompts
   that state the rule they grade are reworded here. Done when: every
   judge E4 marked replaceable is replaced, each changed case has its
-  gate run, and the re-run rate of the gate is reported before and
-  after.
+  gate run, and the re-run rate of the gate and the cost of one run of
+  every case are reported before and after.
 - [ ] E6 **With and without the plugin, skill by skill.** `--ablation
   with-without` at three runs, for the review, requirements and design
   skills; not for `orchestrator`, `chunk-runner` and `delivery`, where a
   bare model cannot know the protocol and rule deletion is the proof.
   One skill or family per usage window (about 1,000 runs for the whole
-  suite). Done when: each such skill has its difference recorded per
-  case, and the skills the bare model matches are listed for the owner
-  to keep, cut down or drop.
+  suite). The CLI scores each arm against the same graders and never
+  compares the two outputs, so equal scores are not yet "adds nothing":
+  before a skill is listed as matched, its paired outputs are read side
+  by side with `evals/tools/pairwise_judge.py`, and that judge's cost is
+  counted. Done when: each such skill has its difference recorded per
+  case with the pairwise verdict, the skills the bare model matches are
+  listed for the owner to keep, cut down or drop, and the cost of one
+  run of every case is reported again.
 - [ ] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
   E6: a case that has never failed, that no deletion fails and that the
-  bare model passes as well. Nothing is dropped without the owner's
-  word. Done when: the suite's full-pass cost is reported against the
+  bare model passes as well. Each candidate is named with the evidence
+  that exists for it: a deletion result only where its skill has had a
+  pass (`chunk-runner` so far), a bare-model result only where E6 ran;
+  a case with neither is not a candidate yet. Nothing is dropped without
+  the owner's word. Done when: the suite's full-pass cost is reported against the
   $54 baseline and each retired case is named with its reason.
 
 Phase B's new cases are written after E4: the prompt names the state and
