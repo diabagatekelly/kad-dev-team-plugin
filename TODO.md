@@ -589,7 +589,7 @@ after it.
   `orchestrator` and `delivery` rules a grader could notice, and the
   grader findings (none fixed) are in that section; all wait for the
   owner.
-- [ ] E5 **Judges a tool can replace become tool checks.** Starting with
+- [x] E5 **Judges a tool can replace become tool checks.** Starting with
   the two hand-back judges that fail correct lines
   (`stops-with-the-decision-on-the-line`, `hand-back-is-the-one-line`).
   If the eval's grader kinds cannot hold a check, the gate runs a
@@ -599,6 +599,31 @@ after it.
   judge E4 marked replaceable is replaced, each changed case has its
   gate run, and the re-run rate of the gate and the cost of one run of
   every case are reported before and after.
+  Done 2026-11-14 (`evals/README.md`, "Judges turned into tool checks"):
+  36 of the 51 judges are regex graders and gone as judges (the six
+  `chunk-runner` hand-back judges, five hand-backs in other skills,
+  eight counts and names on a reply, 17 on a file's shape or contents);
+  the CLI has no script grader and none was needed, a regex reads the
+  last message or a file. Over 640 past runs the checks agree with the
+  judges on 602; in the other 38 the judge failed a right answer, and no
+  check fails what a judge passed. **Accepted gap: the 15 judges on the
+  orchestrator's log stay judges**, because a regex keeps the
+  destination and the path and loses the state's wording. Six
+  `chunk-runner` resume lines name the state; the stopping points, the
+  launcher hand-over and the consult's task sentence are left (they
+  bound the run or are what the orchestrator hands over). One deletion
+  is caught since (`regressions-to-a-fixer`, kept as a reference); three
+  still survive. Measured on 26 changed cases at one run each: judge
+  cost $1.91 to $1.54; so one run of every case is about $45.3 against
+  $45.70 (an estimate). The gate's re-run rate: 7.9% measured before,
+  about 7.6% estimated after. Every changed case has its gate run (32
+  cases, 150 runs).
+  Left for the owner: the one-line hand-back is missed in about a
+  quarter of `chunk-runner` runs (a paragraph before the line), so
+  `chunk-runner-one-fix-round`'s check has a bar of 2 of 3 and its
+  `handback-one-line` reference is not counted by the tool until the
+  skill is fixed; one run ended while its builder worked; 19 grader
+  findings still open; the fixture handoff's "Next action" line.
 - [ ] E6 **With and without the plugin, skill by skill.** `--ablation
   with-without` at three runs, for the review, requirements and design
   skills; not for `orchestrator`, `chunk-runner` and `delivery`, where a

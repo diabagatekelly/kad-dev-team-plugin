@@ -1323,13 +1323,13 @@
     "recorded": "2026-11-14T22:34:29Z"
   },
   "tdd-implementation-lite-one-chunk": {
-    "inputs": "4afc106e1c72c7e9ddde823e0729eedfd559ee529dd3e63cd065e2730b09c4b7",
-    "score": 0.979,
+    "inputs": "8d39d417b5c92c171b2aa054323231d29fd944a3273e6f1e8d20e2e53a9bb9b5",
+    "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261114T222734-rerun-tdd-implementation-lite-one-chunk.json",
+    "source": "results/gate-20261114T223517-tdd-implementation-lite-one-chunk.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:36:23Z"
   },
   "tdd-implementation-lite-rename-fix": {
     "inputs": "9a4b62072ba848366567c6dfc067956570c70296819c7d1a5c917c4a30ab03bb",
