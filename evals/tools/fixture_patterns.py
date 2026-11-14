@@ -9,7 +9,8 @@ it, and nobody should write that by hand. This writes them (TODO.md, E5):
 
   slice-placeholder-filled      accessibility-review-payfine, -payfine-subtle
       the fixture's slice with its accessibility placeholder line replaced
-      by something else, and every other line as it was (whitespace folded)
+      by a line that names accessibility or a document, and every other
+      line as it was (whitespace folded)
   keeps-existing-rows-and-tiers map-update-cancel-hold
       every source row of the fixture's earlier map still in the table with
       the tier it had (rows under test/ left out: the extractor drops them)
@@ -47,7 +48,7 @@ def slice_placeholder(slice_text):
     if text.count(PLACEHOLDER) != 1:
         raise SystemExit("the fixture's slice does not hold the accessibility placeholder line exactly once")
     before, after = text.split(PLACEHOLDER)
-    filled = r"(?![\s\S]*ACCESSIBILITY — placeholder)[-*] \S[\s\S]{1,6000}?"
+    filled = r"(?![\s\S]*ACCESSIBILITY — placeholder)[-*] (?=[\s\S]{0,400}?(?:[Aa]ccessib|\.md\b))\S[\s\S]{1,6000}?"
     tail = r"\s+" + folded(after) if after.strip() else ""
     return r"^\s*" + folded(before) + r"\s+" + filled + tail + r"\s*$"
 
@@ -114,8 +115,11 @@ def main():
         elif text[span[0]:span[1]] == quoted(pattern):
             print(f"PASS  {case} / {grader}")
         elif a.write:
-            with open(path, "w", encoding="utf-8") as f:
+            # written beside the case and moved into place, so a write that
+            # stops half way leaves the case as it was
+            with open(path + ".tmp", "w", encoding="utf-8") as f:
                 f.write(text[:span[0]] + quoted(pattern) + text[span[1]:])
+            os.replace(path + ".tmp", path)
             print(f"WROTE {case} / {grader}")
         else:
             print(f"FAIL  {case} / {grader}: the pattern is not what the fixture gives; run --write, then the case's gate run")

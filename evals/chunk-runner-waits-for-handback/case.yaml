@@ -36,6 +36,14 @@ graders:
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?(?:code-reviewer|accessibility-engineer)'
     min: 0
     max: 0
+  - type: tool_used
+    name: no-smoke-agent-launched
+    # Added with E5: the one-line check reads that no smoke result is on the
+    # line, which a smoke agent launched and left off the line would pass.
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*[Ss]moke)'
+    min: 0
+    max: 0
   - type: regex
     name: nothing-started-in-the-background-to-wait
     target: trace
@@ -79,4 +87,4 @@ graders:
     # as `r0 ?` is not a result). The known-bad reference `handback-one-line`
     # names this grader.
     target: last_message
-    pattern: '^(?![\s\S]*r0 \W{0,2}\d+/\d)(?![\s\S]*smoke \W{0,2}(?:PASS|\d))\s*[^\n]*commits \W{0,2}[0-9a-f]{7,40}\b[^\n]*gate \W{0,2}(?:PASS|FAIL)[^\n]*stopped at[^\n]*\s*$'
+    pattern: '^(?![\s\S]*r0 \W{0,2}\d+/\d)(?![\s\S]*smoke \W{0,2}(?:PASS|FAIL|\d))\s*[^\n]*commits \W{0,2}[0-9a-f]{7,40}\b[^\n]*gate \W{0,2}(?:PASS|FAIL)[^\n]*stopped at[^\n]*\s*$'

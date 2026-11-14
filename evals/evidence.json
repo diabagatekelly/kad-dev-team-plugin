@@ -27,22 +27,22 @@
     "recorded": "2026-11-12T01:50:51Z"
   },
   "accessibility-review-payfine": {
-    "inputs": "23e83c59817e61a7637342acc32a4f8ab798d44d07052bc1ba5f15bb2bb7c871",
-    "score": 1.0,
+    "inputs": "917e8924718ff91d1ba11f03b9fd312a9d9a3142d27aceefb576bcdc41e1eda2",
+    "score": 0.976,
     "bar": 0.976,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-accessibility-review-payfine.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-accessibility-review-payfine.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "accessibility-review-payfine-subtle": {
-    "inputs": "272999b1f250f8b5301c9266cc5115d5b13e4b70e0b93318cac0e605630e85bf",
+    "inputs": "75701ecaa569b93b45b3ff870b2e6f65224c14c0d7d7673806a2f255b6ec4257",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-accessibility-review-payfine-subtle.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-accessibility-review-payfine-subtle.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "adr-neg-rename": {
     "inputs": "f798cb989d80318657577ea46dc9eb6889fa52bb779229684174da0f3c782526",
@@ -171,13 +171,13 @@
     "recorded": "2026-11-14T22:34:29Z"
   },
   "chunk-runner-one-fix-round": {
-    "inputs": "e8e2ecc8187eb9dbc4dae5d78858c6817464daf541a56fd3b8baf48e2c74a773",
+    "inputs": "ed4908d23e739d5b0d094bf89a4edb1b006183924a932621325ecfc984497df0",
     "score": 1.0,
     "bar": 0.97,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-chunk-runner-one-fix-round.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-chunk-runner-one-fix-round.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "chunk-runner-replay-not-the-handback": {
     "inputs": "c51283c81e8f8cc2fa7027ac496279bacadb94f71b0bbac9114f6a6208709994",
@@ -207,13 +207,13 @@
     "recorded": "2026-11-14T22:34:29Z"
   },
   "chunk-runner-waits-for-handback": {
-    "inputs": "05ef27443a071fdba9ae5834fc07eaf3fe7edd25f483b2ce49c1dab72e0a831a",
-    "score": 0.939,
+    "inputs": "c88ef14ab0d8adafacb0ac602630cfe4d1014f12e652ab96889390e5d150c818",
+    "score": 0.972,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261114T222734-rerun-chunk-runner-waits-for-handback.json",
+    "source": "results/gate-20261114T224539-chunk-runner-waits-for-handback.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "code-review-catalog": {
     "inputs": "c5363489d9e1051714265bd65babcd1c1d461df1577169edda6015d0bba58bbf",
@@ -288,13 +288,13 @@
     "recorded": "2026-11-12T01:50:51Z"
   },
   "delegation-consult-with-file": {
-    "inputs": "b21ad2c1da6b852793ffe0dfdf8620000b219a24092c823b374b9a7965034895",
-    "score": 1.0,
+    "inputs": "4921b5a5cb8c69b729029781d5426b4f5d4c87a1c3318185eb0091961ec2f304",
+    "score": 0.905,
     "bar": 0.905,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-delegation-consult-with-file.json",
+    "runs": 3,
+    "source": "results/gate-20261114T225218-delegation-consult-with-file.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:52:49Z"
   },
   "delegation-consult-without-file": {
     "inputs": "61e491d47d05c5e83fe3f3a71e178fb025f261f644eb9590759e9644bf3e4d57",
@@ -585,13 +585,13 @@
     "recorded": "2026-11-13T01:33:59Z"
   },
   "orchestrator-delivery-foreground": {
-    "inputs": "4a0a63c5606b8dc6303575483f8ddf5538d950e117583e90e0c226463ddf9983",
+    "inputs": "0f7c5da71014cd1080aff50c9b1ce21a39d406fd531888490ef4268fad67eee9",
     "score": 1.0,
     "bar": 0.963,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-orchestrator-delivery-foreground.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-orchestrator-delivery-foreground.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "orchestrator-delivery-removal": {
     "inputs": "5c3a8c3fa1f65101f26717173b7bffb60175764986a032f7aa3185dbaeaf50f6",
@@ -873,31 +873,31 @@
     "recorded": "2026-10-31T22:25:28Z"
   },
   "reliability-requirements-payfine-phase2": {
-    "inputs": "f37396a412e46b56c0b116f3f5c31d2dd4aa464c2c3e1e6703d2cb02a22ffb3c",
+    "inputs": "0e0f5b89fe6f0630ee00931799ce4b0a3b7a7166c634f60eb81fca72efd95c5c",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-reliability-requirements-payfine-phase2.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-reliability-requirements-payfine-phase2.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "reliability-requirements-payfine-phase2-proceed": {
-    "inputs": "c31e75cfb654f266eef3f0a0bd076893c5814965dcb65854771fbfd1ef202229",
+    "inputs": "b2b25962054a2845ccee41b4dbad3e4d21ba51e6a80d594686b42802334b7bca",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-reliability-requirements-payfine-phase2-proceed.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-reliability-requirements-payfine-phase2-proceed.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "reliability-requirements-payfine-phase2-stop": {
-    "inputs": "c574b4a7dde3ad15cb5c2e5a72e28677937f17ff01404b31f9c4584a7febf209",
-    "score": 1.0,
+    "inputs": "751c3cc1d8750f825ea783d9061f9a32e8a6887a094fae65a1a5fac85ad646ea",
+    "score": 0.917,
     "bar": 0.917,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-reliability-requirements-payfine-phase2-stop.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-reliability-requirements-payfine-phase2-stop.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "reliability-requirements-payfine-phase3": {
     "inputs": "8c9c950a4fb559b62bcb54bc44479dfaec118ffe391ccf2052fa67c45c7bdf22",
@@ -1080,31 +1080,31 @@
     "recorded": "2026-11-12T01:50:51Z"
   },
   "security-requirements-payfine-phase2": {
-    "inputs": "3dd2640dcad088c8c38e39b95be2e11066a783155cb3b2b5f0b88cd41d0cead2",
+    "inputs": "397e789e032f87aa09bec1dfcbe131c3dc2efdb9ff9c45f502350cb0e5d676f7",
     "score": 1.0,
     "bar": 0.917,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-security-requirements-payfine-phase2.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-security-requirements-payfine-phase2.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "security-requirements-payfine-phase2-proceed": {
-    "inputs": "6b23017d7da5bd122f7137e054ae453d0b47643788e976e5b3a258dee3f8ce18",
+    "inputs": "880c3c21385db1981d099ab0bb16aa2c7b51c45de77736600ef4c91cb3e61a2e",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-security-requirements-payfine-phase2-proceed.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-security-requirements-payfine-phase2-proceed.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "security-requirements-payfine-phase2-stop": {
-    "inputs": "3006e34a16402756fd42cf98137c92118c9c10909df3d54da104ebe6e2813228",
+    "inputs": "3b02357ffdd0bcc07a2d04ef4d4f05c444cba7203c524d4f78cc5f89c6b9c35d",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261114T222734-security-requirements-payfine-phase2-stop.json",
+    "runs": 3,
+    "source": "results/gate-20261114T224539-security-requirements-payfine-phase2-stop.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:34:29Z"
+    "recorded": "2026-11-14T22:51:57Z"
   },
   "security-requirements-payfine-phase3": {
     "inputs": "c9c686f60085d4644a542688c045908defb1c33524d3166adcc05bca3cc850c3",

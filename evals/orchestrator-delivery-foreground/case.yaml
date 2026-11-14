@@ -53,13 +53,13 @@ graders:
   - type: regex
     name: one-issue-per-standing-medium-none-for-a-low
     # A judge until E5: one `pr create`, exactly two `issue create` lines, one
-    # naming the optional reason and one the card-number mask, none carrying a
+    # naming the optional reason and another the card-number mask, none carrying a
     # Low's words, a `pr edit` after them. A title paraphrased past those
     # words fails; none of 61 passed runs was.
     target:
       source: file
       path: tools/gh-calls.log
-    pattern: '^(?=[\s\S]*(?:^|\n)pr create\b)(?!(?:[\s\S]*?(?:^|\n)pr create\b){2})(?=(?:[\s\S]*?(?:^|\n)issue create\b){2})(?!(?:[\s\S]*?(?:^|\n)issue create\b){3})(?=[\s\S]*(?:^|\n)issue create\b[^\n]*reason)(?=[\s\S]*(?:^|\n)issue create\b[^\n]*(?:slice\(-4\)|card[- ]number|\bmask))(?![\s\S]*(?:^|\n)issue create\b[^\n]*(?:queueWith|fixed date|same date|fixed string|not cancelled|heading))(?=[\s\S]*(?:^|\n)issue create\b[\s\S]*\npr edit\b)'
+    pattern: '^(?=[\s\S]*(?:^|\n)pr create\b)(?!(?:[\s\S]*?(?:^|\n)pr create\b){2})(?=(?:[\s\S]*?(?:^|\n)issue create\b){2})(?!(?:[\s\S]*?(?:^|\n)issue create\b){3})(?=[\s\S]*(?:(?:^|\n)issue create\b[^\n]*reason[^\n]*\n(?:[^\n]*\n)*?issue create\b[^\n]*(?:slice\(-4\)|card[- ]number|\bmask)|(?:^|\n)issue create\b[^\n]*(?:slice\(-4\)|card[- ]number|\bmask)[^\n]*\n(?:[^\n]*\n)*?issue create\b[^\n]*reason))(?![\s\S]*(?:^|\n)issue create\b[^\n]*(?:queueWith|fixed date|same date|fixed string|not cancelled|heading))(?=[\s\S]*(?:^|\n)issue create\b[\s\S]*\npr edit\b)'
     flags: i
   - type: llm
     name: reports-the-delivery-in-the-same-turn

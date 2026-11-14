@@ -2,8 +2,9 @@
 
 1. the slice pattern passes the fixture's slice with the placeholder line
    replaced by a pointer or by criteria, with its whitespace re-wrapped, and
-   fails the slice unchanged, a slice with another line reworded, and a
-   slice that keeps the placeholder beside the pointer;
+   fails the slice unchanged, a slice with another line reworded, a slice
+   that keeps the placeholder beside the pointer, and a replacement that
+   names neither accessibility nor a document;
 2. the map pattern passes a map that keeps every source row and tier (with
    or without backticks, rows under test/ gone, new rows added) and fails a
    map that drops a row or changes a tier;
@@ -56,13 +57,16 @@ class SlicePattern(unittest.TestCase):
         self.assertTrue(self.p.search(filled.replace("when they pay,\n  the", "when they pay, the")))
 
     def test_passes_criteria_in_its_place(self):
-        self.assertTrue(self.p.search(SLICE.replace(fp.PLACEHOLDER, "- Given a keyboard user, focus moves.\n- Given an error, it is announced.")))
+        self.assertTrue(self.p.search(SLICE.replace(fp.PLACEHOLDER, "- Accessibility: given a keyboard user, focus moves.\n- Given an error, it is announced.")))
 
     def test_fails_unchanged_reworded_or_kept(self):
         self.assertFalse(self.p.search(SLICE))
         pointer = "- Accessibility: see the review."
         self.assertFalse(self.p.search(SLICE.replace(fp.PLACEHOLDER, pointer).replace("shows as paid", "is marked paid")))
         self.assertFalse(self.p.search(SLICE.replace(fp.PLACEHOLDER, pointer + "\n" + fp.PLACEHOLDER)))
+
+    def test_fails_a_line_that_names_neither_accessibility_nor_a_document(self):
+        self.assertFalse(self.p.search(SLICE.replace(fp.PLACEHOLDER, "- Done.")))
 
     def test_refuses_a_fixture_without_the_line(self):
         with self.assertRaises(SystemExit):

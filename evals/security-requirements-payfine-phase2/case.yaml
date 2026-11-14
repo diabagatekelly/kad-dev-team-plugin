@@ -56,4 +56,4 @@ graders:
     # under another heading. The judge never failed a run, so the check has
     # only been shown not to fail the replies the judge passed.
     target: last_message
-    pattern: '^(?![\s\S]*(?:^|\n)\s*(?:#{1,6}\s*|\*\*)[^\n]{0,40}Acceptance criteria)(?!(?:[\s\S]*?\bGiven\b[\s\S]{0,600}?\b[Ww]hen\b[\s\S]{0,600}?\b[Tt]hen\b){3})'
+    pattern: '^(?![\s\S]*(?:^|\n)\s*(?:#{1,6}\s*|\*\*)[^\n]{0,40}Acceptance criteria)(?!(?:[\s\S]*?\b[Gg]iven\b[\s\S]{0,600}?\b[Ww]hen\b[\s\S]{0,600}?\b[Tt]hen\b){3})'

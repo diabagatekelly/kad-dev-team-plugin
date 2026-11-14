@@ -77,4 +77,4 @@ graders:
     # split, the standing count, in that order, with nothing before or after.
     # The known-bad reference `handback-one-line` names this grader.
     target: last_message
-    pattern: '^\s*[^\n]*commits\b[^\n]*gate\b[^\n]*\(reg \W{0,2}1\W{0,2}, pre \W{0,2}1\W{0,2}\)[^\n]*standing \W{0,2}0/0/1[^\n]*\s*$'
+    pattern: '^\s*[^\n]*commits\b[^\n]*gate \W{0,2}PASS\b[^\n]*\(reg \W{0,2}1\W{0,2}, pre \W{0,2}1\W{0,2}\)[^\n]*standing \W{0,2}0/0/1[^\n]*\s*$'

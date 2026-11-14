@@ -54,8 +54,9 @@ graders:
   - type: regex
     name: hand-back-is-the-hash-and-a-few-sentences
     # Was the judge `hands-back-the-hash-and-one-sentence` until E5: a commit
-    # hash, at most three sentence ends, at most 450 characters, no question.
+    # hash, at most three sentence ends, 60 to 450 characters (a hash alone
+    # is not a hand-back), no question.
     # The judge passed three-sentence replies and failed others of the same
     # shape; three is where its votes were steady.
     target: last_message
-    pattern: '^(?=[\s\S]*\b[0-9a-f]{7,40}\b)(?![\s\S]*\?)(?!(?:[\s\S]*?[.!?](?:\s|$)){4})[\s\S]{0,450}$'
+    pattern: '^(?=[\s\S]*\b[0-9a-f]{7,40}\b)(?![\s\S]*\?)(?!(?:[\s\S]*?[.!?](?:\s|$)){4})[\s\S]{60,450}$'

@@ -984,8 +984,8 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `acceptance-criteria-payfine` | acceptance-criteria | 1 tool call | 2 | 0 of 2 | no | 0.07 | 0.01 | 18 (9 + 9) | 0 of 11 | no pass on the skill |
 | `accessibility-review-ac-walk` | accessibility-review | 5 regex, 2 tool call, 1 file | 1 | 0 of 1 | yes: "Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project [...] and `PORTAL_DATA` inside that folder" | 0.44 | 0.01 | 65 | 1 of 14 | no pass on the skill |
 | `accessibility-review-neg-readability` | accessibility-review | 1 tool call | 0 |  | no | 0.06 | 0.00 | 9 (8 + 1) | 0 of 13 | no pass on the skill |
-| `accessibility-review-payfine` | accessibility-review | 3 regex, 1 tool call, 1 file | 9 | 0 of 9 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.38 | 100 (66 + 33) | 6 of 23 | no pass on the skill |
-| `accessibility-review-payfine-subtle` | accessibility-review | 3 regex, 1 tool call, 1 file | 9 | 0 of 9 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.34 | 102 (70 + 33) | 5 of 23 | no pass on the skill |
+| `accessibility-review-payfine` | accessibility-review | 3 regex, 1 tool call, 1 file | 9 | 0 of 9 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.40 | 96 (65 + 31) | 7 of 26 | no pass on the skill |
+| `accessibility-review-payfine-subtle` | accessibility-review | 3 regex, 1 tool call, 1 file | 9 | 0 of 9 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.40 | 99 (68 + 31) | 5 of 26 | no pass on the skill |
 | `adr-neg-rename` | adr | 1 regex, 1 tool call | 1 | 0 of 1 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `adr-payment-gateway` | adr | 2 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.08 | 0.01 | 13 (11 + 2) | 0 of 4 (few runs) | no pass on the skill |
 | `architecture-design-neg-review` | architecture-design | 1 tool call | 0 |  | no | 0.09 | 0.00 | 15 (15 + 0) | 0 of 17 | no pass on the skill |
@@ -1000,11 +1000,11 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `chunk-runner-gate-deviation` | chunk-runner | 6 regex, 4 tool call, 1 file | 0 |  | partly: "Stop once the gate has run and its result is known, before any launch" | 0.30 | 0.00 | 34 (30 + 3) | 0 of 21 | 1 of 14: `gate-design-modules` |
 | `chunk-runner-gate-outside` | chunk-runner | 5 regex, 5 tool call | 0 |  | partly: "Stop once the gate has passed, before any reviewer is launched" | 0.55 | 0.00 | 85 | 0 of 19 | 0 of 10 |
 | `chunk-runner-gate-sources` | chunk-runner | 6 regex, 4 tool call | 0 |  | partly: "Stop once the gate has passed, before any reviewer is launched" | 0.53 | 0.00 | 75 | 1 of 17 | 2 of 8: `gate-planning-sources`, `handback-template` |
-| `chunk-runner-one-fix-round` | chunk-runner | 5 regex, 6 tool call | 0 |  | partly: "the sandbox checks in this round are information and never end it" | 0.55 | 0.00 | 85 | 6 of 28 | 2 of 15: `handback-one-line`, `regressions-to-a-fixer` |
+| `chunk-runner-one-fix-round` | chunk-runner | 5 regex, 6 tool call | 0 |  | partly: "the sandbox checks in this round are information and never end it" | 0.55 | 0.00 | 84 | 6 of 31 | 2 of 15: `handback-one-line`, `regressions-to-a-fixer` |
 | `chunk-runner-replay-not-the-handback` | chunk-runner | 3 regex, 2 tool call | 1 | 0 of 1 | no | 0.46 | 0.01 | 66 | 0 of 7 | 0 of 4 |
 | `chunk-runner-replay-unheld-commit` | chunk-runner | 3 regex, 3 tool call | 1 | 0 of 1 | no | 0.39 | 0.00 | 55 | 0 of 7 | 0 of 5 |
 | `chunk-runner-review-round` | chunk-runner | 6 regex, 8 tool call, 2 file | 0 |  | partly: "Stop once round 0 is recorded [...] don't start the fix round" | 1.22 | 0.02 | 152 | 1 of 20 | 1 of 19: `smoke-agent-kind` |
-| `chunk-runner-waits-for-handback` | chunk-runner | 4 regex, 7 tool call | 0 |  | yes: "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent" | 0.59 | 0.00 | 85 | 5 of 12 | 2 of 19: `handback-one-line`, `hash-is-real` |
+| `chunk-runner-waits-for-handback` | chunk-runner | 4 regex, 8 tool call | 0 |  | yes: "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent" | 0.59 | 0.00 | 85 | 6 of 15 | 2 of 19: `handback-one-line`, `hash-is-real` |
 | `code-review-catalog` | code-review | 1 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.12 | 0.02 | 28 (22 + 7) | 9 of 19 | no pass on the skill |
 | `code-review-comments-chunk` | code-review | 3 regex, 3 tool call, 1 file | 3 | 0 of 3 | partly: "Write one report in the shared finding format [...] and hand back the counts and the path" | 0.24 | 0.06 | 48 (37 + 13) | 20 of 43 | no pass on the skill |
 | `code-review-days-left-pr` | code-review | 1 regex, 1 tool call, 1 file | 7 | 0 of 7 | no | 0.15 | 0.12 | 57 (33 + 24) | 0 of 10 | no pass on the skill |
@@ -1013,7 +1013,7 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `code-review-fines-report-pr` | code-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.16 | 0.11 | 58 (42 + 16) | 2 of 13 | no pass on the skill |
 | `code-review-neg-architecture` | code-review | 1 tool call | 0 |  | no | 0.17 | 0.00 | 35 (35 + 0) | 0 of 11 | no pass on the skill |
 | `code-review-structural-high-at-d` | code-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.06 | 69 (53 + 16) | 4 of 5 (few runs) | no pass on the skill |
-| `delegation-consult-with-file` | reliability-requirements | 4 regex, 2 tool call | 1 | 0 of 1 | yes: "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence" | 0.15 | 0.03 | 32 (21 + 11) | 6 of 15 | no pass on the skill |
+| `delegation-consult-with-file` | reliability-requirements | 4 regex, 2 tool call | 1 | 0 of 1 | yes: "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence" | 0.15 | 0.03 | 29 (20 + 10) | 11 of 21 | no pass on the skill |
 | `delegation-consult-without-file` | reliability-requirements | 1 regex, 2 tool call | 1 | 0 of 1 | no | 0.12 | 0.02 | 17 (11 + 6) | 4 of 19 | no pass on the skill |
 | `delivery-ci-red-not-done` | delivery | 5 regex, 3 tool call, 1 file | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.39 | 0.03 | 53 (42 + 12) | 2 of 7 | no pass on the skill |
 | `design-system-payfine-phase1` | design-system | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.10 | 0.00 | 14 (11 + 3) | 0 of 7 | no pass on the skill |
@@ -1046,7 +1046,7 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `orchestrator-chunk-runner-handback` | orchestrator | 6 regex, 2 tool call | 1 | 0 of 1 | partly: "hand off once chunk 1's C line is written and its records committed, before chunk 2's runner is launched" | 0.29 | 0.01 | 38 (32 + 7) | 0 of 19 | no pass on the skill |
 | `orchestrator-chunk-runner-launch` | orchestrator | 6 tool call, 1 tool order | 1 | 0 of 1 | partly: "hand off as soon as chunk 1's runner has been launched: don't wait for it to return; write the handoff file saying the runner is in flight and stop" | 1.75 | 0.01 | 279 | 14 of 38 | no pass on the skill |
 | `orchestrator-definition-of-done` | orchestrator | 8 tool call, 1 tool order, 1 file | 1 | 0 of 1 | partly: "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)" | 1.09 | 0.01 | 203 | 51 of 58 | no pass on the skill |
-| `orchestrator-delivery-foreground` | orchestrator | 4 regex, 4 tool call | 1 | 0 of 1 | no | 0.44 | 0.01 | 73 (59 + 13) | 27 of 70 | no pass on the skill |
+| `orchestrator-delivery-foreground` | orchestrator | 4 regex, 4 tool call | 1 | 0 of 1 | no | 0.45 | 0.01 | 72 (59 + 13) | 27 of 73 | no pass on the skill |
 | `orchestrator-delivery-removal` | orchestrator | 6 regex, 5 tool call, 1 tool order | 1 | 0 of 1 | partly: "If the scan finds anything of that file in this branch's commits, replace it and rewrite the branch before it is pushed. You have my word for that rewrite" | 0.46 | 0.01 | 102 | 2 of 20 | no pass on the skill |
 | `orchestrator-gap-without-delegation` | orchestrator | 2 regex, 5 tool call | 1 | 0 of 1 | no | 0.52 | 0.01 | 74 | 12 of 55 | no pass on the skill |
 | `orchestrator-issue-fix-records` | orchestrator | 6 regex, 4 tool call | 1 | 0 of 1 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.34 | 0.01 | 43 (39 + 4) | 1 of 4 (few runs) | no pass on the skill |
@@ -1078,9 +1078,9 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `problem-framing-doc-payfine` | problem-framing-doc | 1 tool call, 1 file | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `reliability-requirements-neg-review` | reliability-requirements | 1 tool call | 0 |  | no | 0.10 | 0.00 | 23 (23 + 0) | 0 of 12 | no pass on the skill |
 | `reliability-requirements-payfine-phase1` | reliability-requirements | 1 tool call | 2 | 0 of 2 | no | 0.12* | 0.03 | 25 (19 + 7) | 0 of 4 (few runs) | no pass on the skill |
-| `reliability-requirements-payfine-phase2` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.13 | 0.06 | 40 (33 + 7) | 0 of 7 | no pass on the skill |
-| `reliability-requirements-payfine-phase2-proceed` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.14 | 0.06 | 40 (33 + 7) | 0 of 7 | no pass on the skill |
-| `reliability-requirements-payfine-phase2-stop` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.11 | 0.04 | 21 (13 + 8) | 2 of 7 | no pass on the skill |
+| `reliability-requirements-payfine-phase2` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.13 | 0.06 | 38 (32 + 7) | 0 of 10 | no pass on the skill |
+| `reliability-requirements-payfine-phase2-proceed` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.14 | 0.06 | 41 (34 + 7) | 0 of 10 | no pass on the skill |
+| `reliability-requirements-payfine-phase2-stop` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.11 | 0.05 | 23 (14 + 9) | 3 of 10 | no pass on the skill |
 | `reliability-requirements-payfine-phase3` | reliability-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21* | 0.38 | 83 (52 + 31) | 0 of 3 (few runs) | no pass on the skill |
 | `reliability-review-alerts` | reliability-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.28 | 0.12 | 104 (85 + 19) | 1 of 15 | no pass on the skill |
 | `reliability-review-catalog` | reliability-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.07 | 71 (62 + 8) | 6 of 18 | no pass on the skill |
@@ -1101,9 +1101,9 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `screen-design-payfine` | screen-design | 3 regex, 2 tool call, 1 file | 7 | 0 of 7 | no | 0.30 | 0.10 | 110 (83 + 27) | 2 of 8 | no pass on the skill |
 | `security-requirements-neg-review` | security-requirements | 1 tool call | 0 |  | no | 0.06 | 0.00 | 13 (13 + 0) | 0 of 10 | no pass on the skill |
 | `security-requirements-payfine-phase1` | security-requirements | 1 tool call | 2 | 0 of 2 | no | 0.14 | 0.02 | 33 (24 + 9) | 0 of 12 | no pass on the skill |
-| `security-requirements-payfine-phase2` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.15 | 0.07 | 43 (30 + 13) | 4 of 18 | no pass on the skill |
-| `security-requirements-payfine-phase2-proceed` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.16 | 0.05 | 52 (40 + 12) | 0 of 13 | no pass on the skill |
-| `security-requirements-payfine-phase2-stop` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.12 | 0.04 | 23 (12 + 11) | 0 of 13 | no pass on the skill |
+| `security-requirements-payfine-phase2` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.15 | 0.08 | 43 (31 + 12) | 4 of 21 | no pass on the skill |
+| `security-requirements-payfine-phase2-proceed` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.16 | 0.06 | 49 (39 + 10) | 0 of 16 | no pass on the skill |
+| `security-requirements-payfine-phase2-stop` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.12 | 0.04 | 21 (12 + 10) | 0 of 16 | no pass on the skill |
 | `security-requirements-payfine-phase3` | security-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21 | 0.17 | 69 (46 + 23) | 13 of 15 | no pass on the skill |
 | `security-requirements-placeholder-pointer` | security-requirements | 5 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.03 | 103 (100 + 4) | 0 of 10 | no pass on the skill |
 | `security-requirements-source-criterion` | security-requirements | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | partly: "nothing from that file may end up in the repository" | 0.29 | 0.03 | 95 (90 + 5) | 0 of 9 | no pass on the skill |
@@ -1148,17 +1148,17 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `vertical-slicing-payfine-phase1` | vertical-slicing | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.14 | 0.04 | 44 (27 + 17) | 0 of 11 | no pass on the skill |
 | `why-comments-collect-fine` | why-comments | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.07* | 0.02 | 35 (14 + 21) | 0 of 4 (few runs) | no pass on the skill |
 
-**One run of every case:** $48.01 over the 148 cases with a completed run held (agent $38.87, judges $9.14, 19% judges); $47.18 over the 145 with a run since 2026-11-10. 18 cases have no completed run held and are not priced.
+**One run of every case:** $48.13 over the 148 cases with a completed run held (agent $38.88, judges $9.26, 19% judges); $47.30 over the 145 with a run since 2026-11-10. 18 cases have no completed run held and are not priced.
 
-**Graders:** 435 judges and 683 tool checks over 166 cases; 24 cases have no judge.
+**Graders:** 435 judges and 684 tool checks over 166 cases; 24 cases have no judge.
 
 **Judges a tool could decide:** 0 of 435, in 0 cases; 0 cases would be left with no judge. Their share of the judge cost, split evenly within each case (an estimate): $0.00 per run of every case.
 
-**Runs that failed only on a judge:** of 2946 completed runs since the bars, 660 failed; 434 of those failed on judges alone, and 0 on judges a tool could decide alone ($0.00 of runs at today's cost per run): none.
+**Runs that failed only on a judge:** of 2985 completed runs since the bars, 668 failed; 437 of those failed on judges alone, and 0 on judges a tool could decide alone ($0.00 of runs at today's cost per run): none.
 
 **Prompt states the rule it grades:** yes 3, partly 28, no 135.
 
-**Never failed since the bar (6 or more runs):** 64 cases, $14.66 of one run of every case. **Never failed and $0.40 or more a run (8, $3.82):** `chunk-runner-gate-outside` $0.55, `security-review-config` $0.55, `reliability-review-http` $0.51, `library-app-structure-review` $0.48, `chunk-runner-replay-not-the-handback` $0.47, `security-review-http` $0.43, `external-review-triage-cancel-hold` $0.42, `library-app-fines-review` $0.41.
+**Never failed since the bar (6 or more runs):** 64 cases, $14.68 of one run of every case. **Never failed and $0.40 or more a run (8, $3.82):** `chunk-runner-gate-outside` $0.55, `security-review-config` $0.55, `reliability-review-http` $0.51, `library-app-structure-review` $0.48, `chunk-runner-replay-not-the-handback` $0.47, `security-review-http` $0.43, `external-review-triage-cancel-hold` $0.42, `library-app-fines-review` $0.41.
 
 By skill (one run of each of its cases; the judges a tool could decide and their estimated share):
 
@@ -1171,9 +1171,9 @@ By skill (one run of each of its cases; the judges a tool could decide and their
 | tdd-implementation-lite | 6 (6) | 1.94 | 0.33 | 21 | 0 | 0.00 | 0, 2 | 0 |
 | security-review | 8 (8) | 1.56 | 0.66 | 21 | 0 | 0.00 | 0, 0 | 6 |
 | code-review | 8 (8) | 1.40 | 0.70 | 35 | 0 | 0.00 | 0, 1 | 2 |
-| security-requirements | 8 (8) | 1.45 | 0.42 | 20 | 0 | 0.00 | 0, 1 | 6 |
-| accessibility-review | 4 (4) | 0.96 | 0.74 | 19 | 0 | 0.00 | 1, 2 | 1 |
-| reliability-requirements | 8 (8) | 1.08 | 0.62 | 20 | 0 | 0.00 | 1, 0 | 3 |
+| security-requirements | 8 (8) | 1.45 | 0.43 | 20 | 0 | 0.00 | 0, 1 | 6 |
+| accessibility-review | 4 (4) | 0.96 | 0.82 | 19 | 0 | 0.00 | 1, 2 | 1 |
+| reliability-requirements | 8 (8) | 1.08 | 0.64 | 20 | 0 | 0.00 | 1, 0 | 3 |
 | architecture-design | 6 (6) | 1.14 | 0.38 | 15 | 0 | 0.00 | 0, 1 | 4 |
 | design-system | 5 (5) | 0.98 | 0.37 | 16 | 0 | 0.00 | 0, 0 | 3 |
 | test-quality-review | 4 (4) | 0.64 | 0.39 | 13 | 0 | 0.00 | 0, 1 | 3 |
@@ -1418,7 +1418,7 @@ run (the slice with its placeholder line filled, the earlier map's 68
 source rows and tiers). Their patterns are the fixture's own text, so
 `tools/fixture_patterns.py` writes them: `--write` puts them into the
 cases, `--check` fails when a fixture edit has left one behind and runs
-in the pull-request workflow, and `tools/fixture_patterns_test.py` (9
+in the pull-request workflow, and `tools/fixture_patterns_test.py` (10
 tests) holds the tool. A regex grader keeps no copy of the text it read,
 as a judge did: a failure is read from the run's trace.
 
@@ -1432,27 +1432,27 @@ the whole last message or file), 640 runs in all:
 | `chunk-runner-gap-handback` | `stops-with-the-decision-on-the-line` | `hand-back-line-ends-on-the-decision` (the reply) | the reply ends on a line with `r0 0/0/1 nd 1` and `needs-decision devsecops-engineer`, the report's path and a title; sentences before it pass, as with the judge | 27 | 18 | 9 | 0 |
 | `chunk-runner-gate-deviation` | `deviation-recorded-not-failed` | `hand-back-line-counts-two-deviations` (the reply) | one line of the reply with `gate PASS`, `deviations 2` and `stopped at step 2` | 21 | 20 | 1 | 0 |
 | `chunk-runner-gate-outside` | `gate-passes-after-the-fix` | `hand-back-line-says-pass-after-the-fix` (the reply) | one line of the reply with `gate PASS after <sha>`, `fixers 1` and `stopped at step 2` | 19 | 19 | 0 | 0 |
-| `chunk-runner-one-fix-round` | `hand-back-is-the-one-line` | `hand-back-is-one-line-and-nothing-else` (the reply) | the whole reply is one line: commits, the gate, `(reg 1, pre 1)`, `standing 0/0/1`, in that order | 25 | 23 | 2 | 0 |
+| `chunk-runner-one-fix-round` | `hand-back-is-the-one-line` | `hand-back-is-one-line-and-nothing-else` (the reply) | the whole reply is one line: commits, `gate PASS`, `(reg 1, pre 1)`, `standing 0/0/1`, in that order | 25 | 23 | 2 | 0 |
 | `chunk-runner-review-round` | `review-report-in-the-shared-shape` | `review-report-in-the-shared-shape` (same name) (`docs/cancel-hold/implementation/chunk-1-r0-review.md`) | no `###` heading without a Severity line of the four values under it, no Low, at most eight Severity lines | 18 | 18 | 0 | 0 |
 | `chunk-runner-waits-for-handback` | `hand-back-is-the-one-line-for-what-ran` | `hand-back-is-one-line-for-what-ran` (the reply) | the whole reply is one line with a commit hash, a gate result and `stopped at`, and no round 0 counts or smoke result | 8 | 5 | 3 | 0 |
 | `code-review-comments-chunk` | `hands-back-counts-and-path` | `hand-back-is-counts-and-path` (the reply) | the report's path, a count by severity, at most 480 characters | 33 | 33 | 0 | 0 |
 | `external-review-triage-cancel-hold` | `hands-back-counts-and-path` | `hand-back-is-counts-and-path` (the reply) | the report's path, a count for each of the four verdicts, no table and no question, at most 400 characters | 6 | 6 | 0 | 0 |
 | `test-quality-review-seam-fake` | `hands-back-counts-and-path` | `hand-back-is-counts-and-path` (the reply) | the report's path, a count of Highs, at most 1,000 characters | 23 | 23 | 0 | 0 |
-| `delegation-consult-with-file` | `hands-back-the-hash-and-one-sentence` | `hand-back-is-the-hash-and-a-few-sentences` (the reply) | a commit hash, at most three sentence ends, at most 450 characters, no question mark | 18 | 17 | 1 | 0 |
+| `delegation-consult-with-file` | `hands-back-the-hash-and-one-sentence` | `hand-back-is-the-hash-and-a-few-sentences` (the reply) | a commit hash, at most three sentence ends, 60 to 450 characters, no question mark | 18 | 17 | 1 | 0 |
 | `tdd-implementation-lite-one-chunk` | `ends-on-the-hand-back-line` | `hand-back-carries-its-five-fields` (the reply) | a commit hash, the report's path, a test count, `deviations <n>`, `shell edits <n>` | 10 | 6 | 4 | 0 |
-| `reliability-requirements-payfine-phase2` | `no-criteria-before-approval` | `no-criteria-before-approval` (same name) (the reply) | no "Acceptance criteria" heading or bold label, fewer than three Given/When/Then | 3 | 3 | 0 | 0 |
-| `reliability-requirements-payfine-phase2-proceed` | `no-criteria-before-approval` | `no-criteria-before-approval` (same name) (the reply) | no "Acceptance criteria" heading or bold label, fewer than three Given/When/Then | 3 | 3 | 0 | 0 |
-| `security-requirements-payfine-phase2` | `no-criteria-before-approval` | `no-criteria-before-approval` (same name) (the reply) | no "Acceptance criteria" heading or bold label, fewer than three Given/When/Then | 14 | 14 | 0 | 0 |
-| `security-requirements-payfine-phase2-proceed` | `no-criteria-before-approval` | `no-criteria-before-approval` (same name) (the reply) | no "Acceptance criteria" heading or bold label, fewer than three Given/When/Then | 9 | 9 | 0 | 0 |
-| `reliability-requirements-payfine-phase2-stop` | `no-criteria-written` | `no-criteria-written` (same name) (the reply) | no "Acceptance criteria" heading or bold label, at most one Given/When/Then | 3 | 3 | 0 | 0 |
-| `security-requirements-payfine-phase2-stop` | `no-criteria-written` | `no-criteria-written` (same name) (the reply) | no "Acceptance criteria" heading or bold label, at most one Given/When/Then | 9 | 9 | 0 | 0 |
+| `reliability-requirements-payfine-phase2` | `no-criteria-before-approval` | `no-criteria-before-approval` (same name) (the reply) | no "Acceptance criteria" heading or bold label, fewer than three given/when/then | 3 | 3 | 0 | 0 |
+| `reliability-requirements-payfine-phase2-proceed` | `no-criteria-before-approval` | `no-criteria-before-approval` (same name) (the reply) | no "Acceptance criteria" heading or bold label, fewer than three given/when/then | 3 | 3 | 0 | 0 |
+| `security-requirements-payfine-phase2` | `no-criteria-before-approval` | `no-criteria-before-approval` (same name) (the reply) | no "Acceptance criteria" heading or bold label, fewer than three given/when/then | 14 | 14 | 0 | 0 |
+| `security-requirements-payfine-phase2-proceed` | `no-criteria-before-approval` | `no-criteria-before-approval` (same name) (the reply) | no "Acceptance criteria" heading or bold label, fewer than three given/when/then | 9 | 9 | 0 | 0 |
+| `reliability-requirements-payfine-phase2-stop` | `no-criteria-written` | `no-criteria-written` (same name) (the reply) | no "Acceptance criteria" heading or bold label, at most one given/when/then | 3 | 3 | 0 | 0 |
+| `security-requirements-payfine-phase2-stop` | `no-criteria-written` | `no-criteria-written` (same name) (the reply) | no "Acceptance criteria" heading or bold label, at most one given/when/then | 9 | 9 | 0 | 0 |
 | `map-query-no-map` | `no-live-scan-answer` | `no-live-scan-answer` (same name) (the reply) | `date-utils` absent (the file a search of the source would give) | 2 | 2 | 0 | 0 |
 | `architecture-design-payfine-via-agent` | `uses-what-the-map-found` | `names-a-piece-the-map-found` (the reply) | one of `CollectFine`, `FineLedger`, `FinePayments`, the Stripe adapter or `portal-routes` named | 13 | 13 | 0 | 0 |
 | `tdd-implementation-lite-chunk-plan` | `plan-has-the-shape` | `plan-has-the-shape` (same name) (`docs/cancel-hold/implementation-report-slice-001.md`) | `## Chunk plan`, two to eight entries, each with its five labelled lines, a quoted name on Done when, a path on Files, a listed word on Touches, no sixth bullet | 19 | 14 | 5 | 0 |
 | `tdd-implementation-lite-chunk-plan` | `every-chunk-names-a-seam-test` | `every-chunk-names-a-seam-test` (same name) (`docs/cancel-hold/implementation-report-slice-001.md`) | two to eight Done when lines, none without `seam "` | 19 | 19 | 0 | 0 |
 | `orchestrator-plan-check-seam` | `every-chunk-names-its-seam-test` | `every-chunk-names-its-seam-test` (same name) (`docs/cancel-hold/implementation/implementation-report-slice-001.md`) | two to eight Done when lines, none without `seam "` | 47 | 47 | 0 | 0 |
-| `accessibility-review-payfine` | `slice-placeholder-filled` | `slice-placeholder-filled` (same name) (`docs/pay-fine/slice-001.md`) | the fixture's slice with the placeholder line replaced by a pointer or the criteria and every other line as it was (pattern written by `tools/fixture_patterns.py`) | 18 | 14 | 4 | 0 |
-| `accessibility-review-payfine-subtle` | `slice-placeholder-filled` | `slice-placeholder-filled` (same name) (`docs/pay-fine/slice-001.md`) | the fixture's slice with the placeholder line replaced by a pointer or the criteria and every other line as it was (pattern written by `tools/fixture_patterns.py`) | 18 | 14 | 4 | 0 |
+| `accessibility-review-payfine` | `slice-placeholder-filled` | `slice-placeholder-filled` (same name) (`docs/pay-fine/slice-001.md`) | the fixture's slice with the placeholder line replaced by a line naming accessibility or a document, and every other line as it was (pattern written by `tools/fixture_patterns.py`) | 18 | 14 | 4 | 0 |
+| `accessibility-review-payfine-subtle` | `slice-placeholder-filled` | `slice-placeholder-filled` (same name) (`docs/pay-fine/slice-001.md`) | the fixture's slice with the placeholder line replaced by a line naming accessibility or a document, and every other line as it was (pattern written by `tools/fixture_patterns.py`) | 18 | 14 | 4 | 0 |
 | `tdd-implementation-lite-one-chunk` | `one-commit-titled-as-the-chunk` | `one-commit-titled-as-the-chunk` (same name) (`.git/logs/HEAD`) | exactly two reflog lines, the second `commit:` with the chunk's title | 19 | 19 | 0 | 0 |
 | `requirements-refinement-payfine-phase2` | `template-sections` | `template-sections` (same name) (`docs/pay-fine/requirements-001.md`) | a Status saying Active and the six headings | 9 | 9 | 0 | 0 |
 | `map-update-cancel-hold` | `keeps-existing-rows-and-tiers` | `keeps-existing-rows-and-tiers` (same name) (`docs/architecture-map.md`) | each of the earlier map's 68 source rows with the tier it had (pattern written by `tools/fixture_patterns.py`) | 18 | 13 | 5 | 0 |
@@ -1463,7 +1463,7 @@ the whole last message or file), 640 runs in all:
 | `tdd-implementation-lite-named-fix` | `wiring-updated` | `wiring-updated` (same name) (`main/server.ts`) | `new ReturnBook(` with two or more arguments, one a loan store | 25 | 25 | 0 | 0 |
 | `tdd-implementation-lite-cancel-hold-via-agent` | `inside-the-design-boundaries` | `inside-the-design-boundaries` (same name) (`lending/cancel-hold.ts`) | a `HoldQueue` constructor parameter, no import from `infra/`, `main/` or a package, the two status words and a reason | 30 | 30 | 0 | 0 |
 | `design-system-payfine-phase3` | `mockup-referenced-no-screenshot-claimed` | `mockup-referenced-no-image-file-named` (`docs/pay-fine/visual-ux/design-system-001.md`) | an `.html` file named, no image file named | 12 | 12 | 0 | 0 |
-| `orchestrator-delivery-foreground` | `one-issue-per-standing-medium-none-for-a-low` | `one-issue-per-standing-medium-none-for-a-low` (same name) (`tools/gh-calls.log`) | one `pr create`, exactly two `issue create` lines (the optional reason, the card-number mask), no Low's words, a `pr edit` after them | 66 | 66 | 0 | 0 |
+| `orchestrator-delivery-foreground` | `one-issue-per-standing-medium-none-for-a-low` | `one-issue-per-standing-medium-none-for-a-low` (same name) (`tools/gh-calls.log`) | one `pr create`, exactly two `issue create` lines, one for the optional reason and another for the card-number mask, no Low's words, a `pr edit` after them | 66 | 66 | 0 | 0 |
 | `adr-payment-gateway` | `no-how` | `no-how` (same name) (`docs/adr/adr-001.md`) | none of the request's seven identifiers, no code fence, no source file path | 0 | 0 | 0 | 0 |
 | **36 judges** | | | | **640** | **602** | **38** | **0** |
 
@@ -1496,7 +1496,7 @@ the whole last message or file), 640 runs in all:
   name, an issue title paraphrased past its key words, a class name an
   ADR invents.
 - The same checks over the 255 kept runs of the E2 deletion pass
-  (`chunk-runner`, six cases): the judges passed 200, the checks 226;
+  (`chunk-runner`, six cases): the judges passed 200, the checks 225;
   one run apart the other way, a paragraph before the line that the
   judge let through and the one-line check does not.
 
@@ -1579,9 +1579,11 @@ changed; these are findings:
   chunk 1 builder is running. Next I'll wait for its report": the runner
   ended its run while its builder worked, the failure the wait rules
   exist for, and the first time a case has shown it.
-- `reliability-requirements` under a consult: one reply of four was two
-  paragraphs where the orchestrator's task asks for the hash and one
-  sentence.
+- `reliability-requirements` under a consult: the hand-back was two or
+  three paragraphs in 5 of 10 runs, where the orchestrator's task asks
+  for the hash and one sentence (the judge had failed 9 of 18 earlier
+  runs for the same). One three-run sample put the case below its bar;
+  the next passed.
 - `code-review` as the chunk reviewer: two replies of seven restated the
   findings in the hand-back.
 - `map-update`: one map of four left the new module untiered, which the
@@ -1601,6 +1603,18 @@ changed; these are findings:
   case used to say the judge did). The other 18 are as they were.
 - Not E5's, and untouched: the `-via-agent` twins' repeated judges, what
   `orchestrator-chunk-runner-launch` pays for, any retirement (E7).
+- A graded file the run never wrote: the CLI reports "grader threw" for
+  a regex or a judge whose file is missing, and the gate sets such a run
+  aside as errored instead of failing it. True of the 107 graders that
+  read a file, before E5 as after; an empty file in the scaffold would
+  turn it into a plain failure, case by case.
+- Declined from the pull request's review, with the reason on each
+  thread: a check that compares a hand-back's counts with its report, a
+  dynamic `import()` in the boundary checks, map rows repeated outside
+  the table or twice with two tiers, an ADR's invented identifiers, any
+  `.html` name standing for the chosen mockup, a map piece named only in
+  passing. Each is a way a wrong output could pass that the judge it
+  replaced might have caught; none has been seen in a run.
 - The three deletions that still survive, and whether the handoff file's
   "Next action" line should stay in the fixture as the loop writes it.
 - The bar of `chunk-runner-one-fix-round`'s one-line check (2 of 3)
