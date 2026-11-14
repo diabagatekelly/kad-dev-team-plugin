@@ -29,18 +29,16 @@ graders:
   - type: file_exists
     name: adr-written
     path: docs/adr/adr-001.md
-  - type: llm
+  - type: regex
     name: no-how
-    focus:
+    # A judge until E5: none of the seven identifiers the request gave, no
+    # code fence, no source file path. Not seen: a class or setting name the
+    # run invents. Never run against past outputs: the case has no result held.
+    target:
       source: file
       path: docs/adr/adr-001.md
-    weight: 1
-    criteria: |
-      An ADR records what was decided and why, never how it is built. The user's message included implementation details: `FinePayments`, `fines/fine-payments.port.ts`, `stripeCode`, `AdyenFinePayments`, `infra/payments/stripe-fine-payments.ts`, `main/wiring.ts`, `PAYMENT_PROVIDER_DESK`.
-
-      PASS if the document contains none of those, and no other file path, class or function name, config setting or code.
-
-      FAIL if any appear.
+    pattern: 'FinePayments|fine-payments\.port|stripeCode|AdyenFinePayments|stripe-fine-payments|main/wiring|PAYMENT_PROVIDER_DESK|\x60\x60\x60|\b[\w-]+/[\w./-]+\.(?:ts|js|json)\b'
+    match: not_contains
   - type: llm
     name: decision-alternatives-consequences
     focus:

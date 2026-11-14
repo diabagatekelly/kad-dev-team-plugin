@@ -18,28 +18,24 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:map-update"'
     min: 1
-  - type: llm
+  - type: regex
     name: new-rows-extracted
-    focus:
+    # A judge until E5: the two new rows with their tier, exactly their two
+    # edges or none, no external package, exactly their two exports.
+    target:
       source: file
       path: docs/architecture-map.md
-    weight: 1
-    criteria: |
-      PASS if the map's module table has a row for `lending/cancel-hold.ts` (tier 1; internal edges to `infra/memory/in-memory-hold-queue.ts` and `utils/money-format.ts`; no external packages; exports `CancelHold` and `CancelHoldResult`) and a row for `utils/money-format.ts` (untiered; no edges; exports `roundHalfUpCents` and `formatCents`).
-
-      FAIL if either row is missing, or has a wrong tier, a missing or invented edge, or a missing or invented export.
-  - type: llm
+    pattern: '^(?=[\s\S]*\|\s*\x60?lending/cancel-hold\.ts\x60?\s*\|\s*tier 1\s*\|(?=[^|\n]*infra/memory/in-memory-hold-queue\.ts)(?=[^|\n]*utils/money-format\.ts)[^|\n;,]*[;,][^|\n;,]*\|\s*(?:—|-|none|)\s*\|(?=[^|\n]*\bCancelHold\b)(?=[^|\n]*\bCancelHoldResult\b)[^|\n;,]*[;,][^|\n;,]*\|)(?=[\s\S]*\|\s*\x60?utils/money-format\.ts\x60?\s*\|\s*untiered\s*\|\s*(?:—|-|none|)\s*\|\s*(?:—|-|none|)\s*\|(?=[^|\n]*\broundHalfUpCents\b)(?=[^|\n]*\bformatCents\b)[^|\n;,]*[;,][^|\n;,]*\|)'
+  - type: regex
     name: keeps-existing-rows-and-tiers
-    focus:
+    # A judge until E5. The pattern is every source row of the fixture's
+    # earlier map with its tier (rows under test/ left out, as the extractor
+    # does); tools/fixture_patterns.py writes it and --check holds it. The
+    # judge failed five maps that kept every row and tier.
+    target:
       source: file
       path: docs/architecture-map.md
-    weight: 1
-    criteria: |
-      The previous map had about 70 module rows: `catalog/`, `members/`, `lending/`, `fines/` and `notifications/` at tier 1, `reporting/` at tier 2, `infra/` and `main/` at tier 3, and `services/payment-service.ts` and `utils/date-utils.ts` untiered. It also listed two `test/` files; the shipped extractor leaves test files out by design (its header says so), so their absence is expected and is not a dropped module.
-
-      PASS if the updated table still lists the source modules (for example `catalog/book.ts`, `fines/money.ts`, `main/jobs.ts`, `infra/http/respond.ts`, `services/payment-service.ts`) with the same tiers, `services/payment-service.ts` and `utils/date-utils.ts` still untiered.
-
-      FAIL if any existing source module (outside `test/`) is dropped, or any existing tier changed (including giving `services/` or `utils/date-utils.ts` a tier).
+    pattern: '^(?=[\s\S]*\|\s*\x60?catalog\/book\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?catalog\/catalog-reader\.port\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?catalog\/search-catalog\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/assess-overdue-fine\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/collect-fine\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/fine-ledger\.port\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/fine-payments\.port\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/fine\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/money\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/standard-waiver\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/waive-small-fine\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?fines\/waiver-strategy\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?infra\/email\/sendgrid-mailer\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/files\/local-report-files\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/http\/catalog-routes\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/http\/fines-routes\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/http\/lending-routes\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/http\/portal-routes\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/http\/respond\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/http\/sessions\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/logging\/logger\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/memory\/in-memory-hold-queue\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/monitoring\/error-reporter\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/payments\/stripe-fine-payments\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/postal\/file-postal-queue\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/postgres\/postgres-catalog-reader\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/postgres\/postgres-fine-ledger\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/postgres\/postgres-loan-history\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/postgres\/postgres-loan-store\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/postgres\/postgres-member-directory\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/postgres\/postgres-report-queries\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/postgres\/postgres-session-store\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/sms\/sms-gateway\.port\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?infra\/sms\/twilio-sms-gateway\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?lending\/checkout-book\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/hold-queue\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/hold\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/loan-history\.port\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/loan-policy\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/loan-store\.port\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/loan\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/place-hold\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/renew-loan\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?lending\/return-book\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?main\/jobs\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?main\/server\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?main\/wiring\.ts\x60?\s*\|\s*tier 3\s*\|)(?=[\s\S]*\|\s*\x60?members\/member-directory\.port\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?members\/member\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?members\/register-member\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?members\/suspend-member\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?notifications\/email-reminder\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?notifications\/mailer\.port\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?notifications\/postal-queue\.port\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?notifications\/postal-reminder\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?notifications\/reminder-schedule\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?notifications\/send-due-reminder\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?notifications\/sms-reminder\.ts\x60?\s*\|\s*tier 1\s*\|)(?=[\s\S]*\|\s*\x60?reporting\/export-report\.ts\x60?\s*\|\s*tier 2\s*\|)(?=[\s\S]*\|\s*\x60?reporting\/monthly-circulation-report\.ts\x60?\s*\|\s*tier 2\s*\|)(?=[\s\S]*\|\s*\x60?reporting\/overdue-report\.ts\x60?\s*\|\s*tier 2\s*\|)(?=[\s\S]*\|\s*\x60?reporting\/report-files\.port\.ts\x60?\s*\|\s*tier 2\s*\|)(?=[\s\S]*\|\s*\x60?reporting\/report-processor\.ts\x60?\s*\|\s*tier 2\s*\|)(?=[\s\S]*\|\s*\x60?reporting\/report-queries\.port\.ts\x60?\s*\|\s*tier 2\s*\|)(?=[\s\S]*\|\s*\x60?reporting\/revenue-report\.ts\x60?\s*\|\s*tier 2\s*\|)(?=[\s\S]*\|\s*\x60?reporting\/rounding\.ts\x60?\s*\|\s*tier 2\s*\|)(?=[\s\S]*\|\s*\x60?services\/payment-service\.ts\x60?\s*\|\s*untiered\s*\|)(?=[\s\S]*\|\s*\x60?utils\/date-utils\.ts\x60?\s*\|\s*untiered\s*\|)'
   - type: llm
     name: flags-new-wrong-direction-edge
     focus:
@@ -86,16 +82,15 @@ graders:
       PASS if neither edge is reported as new in this update: a candidates list that marks them "carried forward" (or leaves them unmarked while marking another edge "new"), and a changes section that does not name them as new, both pass.
 
       FAIL only if either edge is explicitly reported as new (marked "new" in the candidates list, or listed under new edges or new candidates in the changes section).
-  - type: llm
+  - type: regex
     name: no-severity
-    focus:
+    # A judge until E5: no severity or rating word anywhere in the map.
+    target:
       source: file
       path: docs/architecture-map.md
-    weight: 1
-    criteria: |
-      PASS if nothing in the map attaches a severity or rating to any flag (no Critical/High/Medium/Low, no "serious", no scores, no "should be fixed first").
-
-      FAIL if any does.
+    pattern: '\b(?:critical|high|medium|low|serious|severity|severe|scores?|scored|rating|rated|fixed first|priority)\b'
+    flags: i
+    match: not_contains
   - type: regex
     name: writes-only-the-map
     target: trace

@@ -27,16 +27,14 @@ graders:
   - type: file_exists
     name: requirements-written
     path: docs/pay-fine/requirements-001.md
-  - type: llm
+  - type: regex
     name: template-sections
-    focus:
+    # A judge until E5: a Status saying Active and the six headings.
+    target:
       source: file
       path: docs/pay-fine/requirements-001.md
-    weight: 1
-    criteria: |
-      PASS if the document has a Status marked Active and sections (any heading level, wording close to these) for: User; What they need; Why this, why now; Confirmed in scope; Confirmed out, for now; Constraints in force.
-
-      FAIL if any of these is missing or the status is absent.
+    pattern: '^(?=[\s\S]*(?:^|\n)[#*\s]*Status\b[\s\S]{0,80}?\bActive\b)(?=[\s\S]*(?:^|\n)#{1,6}\s*User\b)(?=[\s\S]*(?:^|\n)#{1,6}\s*What they need\b)(?=[\s\S]*(?:^|\n)#{1,6}\s*Why this, why now\b)(?=[\s\S]*(?:^|\n)#{1,6}\s*Confirmed in scope\b)(?=[\s\S]*(?:^|\n)#{1,6}\s*Confirmed out\b)(?=[\s\S]*(?:^|\n)#{1,6}\s*Constraints in force\b)'
+    flags: i
   - type: llm
     name: keeps-the-users-trade-off
     focus:

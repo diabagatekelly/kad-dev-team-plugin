@@ -80,10 +80,6 @@
    "criteria-split-now-and-later": {
     "by": "reading",
     "why": "whether Given/When/Then criteria cover the two things and are split by when they can be checked"
-   },
-   "slice-placeholder-filled": {
-    "by": "tool",
-    "why": "a file's contents: the placeholder line absent from slice-001.md, the review's file name or criteria in its place, the other lines as they were (the regex `security-requirements-placeholder-pointer` already uses)"
    }
   },
   "findings": []
@@ -130,10 +126,6 @@
    "criteria-split-now-and-later": {
     "by": "reading",
     "why": "whether Given/When/Then criteria cover the two things and are split by when they can be checked"
-   },
-   "slice-placeholder-filled": {
-    "by": "tool",
-    "why": "as `accessibility-review-payfine`"
    }
   },
   "findings": []
@@ -157,10 +149,6 @@
    "note": "the how-details in the request are the plant the ADR must leave out"
   },
   "judges": {
-   "no-how": {
-    "by": "tool",
-    "why": "names absent from a file: the seven identifiers the request gave (`FinePayments`, `stripeCode`, `AdyenFinePayments`, the three paths, `PAYMENT_PROVIDER_DESK`) and any code fence. Lost: another path or class name the run invents."
-   },
    "decision-alternatives-consequences": {
     "by": "reading",
     "why": "whether each rejected alternative carries its reason and the downsides are listed"
@@ -720,10 +708,6 @@
    "accessibility-by-construction": {
     "by": "reading",
     "why": "whether every text colour has a ratio at or above its threshold; a script could compute the ratios from the hex values, which no grader kind runs today"
-   },
-   "mockup-referenced-no-screenshot-claimed": {
-    "by": "tool",
-    "why": "names present and absent in a file: an `.html` under `visual-ux/` referenced, no image file referenced"
    }
   },
   "findings": []
@@ -1054,14 +1038,6 @@
    "note": "asks for the map to match the code and for what changed"
   },
   "judges": {
-   "new-rows-extracted": {
-    "by": "tool",
-    "why": "a file's contents: the two rows with their tier, edges and exports, in the table the shipped extractor writes"
-   },
-   "keeps-existing-rows-and-tiers": {
-    "by": "tool",
-    "why": "a file's contents against the fixture's earlier map: every source row still present with its tier; a script, not one regex"
-   },
    "flags-new-wrong-direction-edge": {
     "by": "reading",
     "why": "whether the edge is flagged as a fact and not ruled on"
@@ -1077,10 +1053,6 @@
    "pre-existing-flags-not-new": {
     "by": "reading",
     "why": "whether either earlier edge is reported as new"
-   },
-   "no-severity": {
-    "by": "tool",
-    "why": "words absent from a file: Critical, High, Medium, Low, serious, a score"
    }
   },
   "findings": [
@@ -1286,10 +1258,6 @@
    "note": "hands over the stand-in for the GitHub CLI, not the procedure"
   },
   "judges": {
-   "one-issue-per-standing-medium-none-for-a-low": {
-    "by": "tool",
-    "why": "a count and names in tools/gh-calls.log: exactly two `issue create` lines, none carrying a Low's words (`queueWith`, the fixed string, the heading), a `pr edit` after them. Lost: that each issue is the right Medium when its title is a paraphrase."
-   },
    "reports-the-delivery-in-the-same-turn": {
     "by": "reading",
     "why": "whether the reply reports the pull request, the issues, the Lows and the cost outcome, and asks nothing about pushing"
@@ -1348,10 +1316,6 @@
    "note": "the stop is `no-builder-launched` and the B line is `b-line-written`; that a failed plan goes back to a planner is left to the skill"
   },
   "judges": {
-   "every-chunk-names-its-seam-test": {
-    "by": "tool",
-    "why": "a file's shape: under `## Chunk plan`, two to eight chunks, each Done when line holding `seam \"`; the plan check itself is mechanical"
-   },
    "plan-sent-back-not-edited": {
     "by": "reading",
     "why": "whether the reply reports the failed check, the one relaunch and the second result; the launches are counted by tool checks"
@@ -2198,10 +2162,6 @@
    "note": "the user's answers to phase 1's questions"
   },
   "judges": {
-   "template-sections": {
-    "by": "tool",
-    "why": "names present in a file: a Status line saying Active and six headings (User; What they need; Why this, why now; Confirmed in scope; Confirmed out, for now; Constraints in force)"
-   },
    "keeps-the-users-trade-off": {
     "by": "reading",
     "why": "whether the user's own reason is recorded and not replaced by another"
@@ -2823,10 +2783,6 @@
     "by": "reading",
     "why": "whether the wording is reported as the builder's own decision"
    },
-   "inside-the-design-boundaries": {
-    "by": "tool",
-    "why": "a file's contents: no import from `infra/`, `main/` or a package in lending/cancel-hold.ts, a `HoldQueue` constructor parameter, the two status words"
-   },
    "green-stays-minimal": {
     "by": "reading",
     "why": "whether the file adds behaviour the design did not ask for"
@@ -2862,10 +2818,6 @@
     "by": "reading",
     "why": "as `tdd-implementation-lite-cancel-hold`"
    },
-   "inside-the-design-boundaries": {
-    "by": "tool",
-    "why": "as `tdd-implementation-lite-cancel-hold`"
-   },
    "green-stays-minimal": {
     "by": "reading",
     "why": "as `tdd-implementation-lite-cancel-hold`"
@@ -2888,17 +2840,9 @@
    "note": "\"build nothing\" is what `writes-only-the-report` and `stops-after-the-plan` grade; it is the orchestrator's launch text for the planner"
   },
   "judges": {
-   "plan-has-the-shape": {
-    "by": "tool",
-    "why": "a file's shape: `## Chunk plan`, two to eight entries, five labelled lines each, a quoted test name on Done when, a listed word on Touches"
-   },
    "plan-is-vertical-and-inside-the-slice": {
     "by": "reading",
     "why": "whether each chunk is a behaviour and not a layer and delivers nothing deferred; only the Files paths are a tool's"
-   },
-   "every-chunk-names-a-seam-test": {
-    "by": "tool",
-    "why": "a file's shape: every Done when line holds `seam \"`; the orchestrator's own plan check reads the same thing"
    },
    "stops-after-the-plan": {
     "by": "reading",
@@ -2913,17 +2857,9 @@
    "note": "the finding and its fix are the task handed over, not the skill's rule; the skill is named because it is only invoked by name"
   },
   "judges": {
-   "takes-store-through-constructor": {
-    "by": "tool",
-    "why": "a file's contents: no import from `main/` in lending/return-book.ts and a `LoanStore` constructor parameter"
-   },
    "behaviour-unchanged": {
     "by": "reading",
     "why": "whether three behaviours of the code are the same; a held-out test could decide it, which no grader kind runs today"
-   },
-   "wiring-updated": {
-    "by": "tool",
-    "why": "a file's contents: `new ReturnBook(` in main/server.ts with a loan store from the wiring among its arguments"
    },
    "pins-behaviour-with-tests": {
     "by": "reading",
@@ -2946,10 +2882,6 @@
    "comments-earn-their-place": {
     "by": "reading",
     "why": "whether a comment restates its line; the planning citation is already `no-planning-reference-in-the-code`"
-   },
-   "one-commit-titled-as-the-chunk": {
-    "by": "tool",
-    "why": "a count and a line's shape in `.git/logs/HEAD`: exactly two lines, the second `commit:` with the chunk's title, no `(amend)`"
    },
    "builds-this-chunk-and-not-chunk-two": {
     "by": "reading",

@@ -95,18 +95,14 @@ graders:
       PASS if the file has no comment that restates the line, field or function it sits on (a file with no comments passes), and no comment citing a planning document, decision or criterion.
 
       FAIL if any comment restates what the code already says, or cites a planning document, a decision number or a criterion.
-  - type: llm
+  - type: regex
     name: one-commit-titled-as-the-chunk
-    focus:
+    # A judge until E5: the reflog is two lines, the scaffold's commit and one
+    # `commit:` titled as the chunk (an amend or a third commit fails).
+    target:
       source: file
       path: .git/logs/HEAD
-    weight: 1
-    criteria: |
-      This is the git reflog, one line per commit. Its first line is the scaffold's commit, `commit (initial): Plan: slice 001 in 3 chunks`. The chunk ends with exactly one more commit, whose subject is the chunk's title, "Cancel a member's hold on a title".
-
-      PASS if the file has exactly two lines: the scaffold's, then one `commit:` line whose message starts with "Cancel a member's hold on a title" (the reflog shows only the subject; the rest of the line does not matter).
-
-      FAIL if there is only the scaffold's line, if there are three or more lines, if any line says `commit (amend):`, or if the second commit's subject is anything other than the chunk's title (a generic "implement cancel hold", "chunk 1", "wip").
+    pattern: '^[^\n]*\tcommit \(initial\): Plan: slice 001 in 3 chunks\n[^\n]*\tcommit: Cancel a member''s hold on a title[^\n]*\n?$'
   - type: llm
     name: builds-this-chunk-and-not-chunk-two
     focus:

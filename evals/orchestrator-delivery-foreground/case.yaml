@@ -50,18 +50,17 @@ graders:
       source: file
       path: tools/gh-calls.log
     pattern: 'pr create[\s\S]*issue create[\s\S]*issue create[\s\S]*pr edit'
-  - type: llm
+  - type: regex
     name: one-issue-per-standing-medium-none-for-a-low
-    focus:
+    # A judge until E5: one `pr create`, exactly two `issue create` lines, one
+    # naming the optional reason and one the card-number mask, none carrying a
+    # Low's words, a `pr edit` after them. A title paraphrased past those
+    # words fails; none of 61 passed runs was.
+    target:
       source: file
       path: tools/gh-calls.log
-    weight: 1
-    criteria: |
-      This file lists every call made to the GitHub CLI stand-in, one per line, arguments as given. Delivery files every standing Medium as one issue (here two: `reason` optional on both statuses, and `slice(-4)` on a short card number printing it whole) and files no Low (the three Lows are: `queueWith` builds every hold with the same fixed date; the failure reason is a fixed string with nothing about which queue or title; the notice heading reads "not cancelled" for a failure too). The pull request body is then edited so each standing Medium links its issue.
-
-      PASS if there are exactly two `issue create` calls, each for one of the two standing Mediums (its title or an unmistakable paraphrase), no issue for any of the three Lows, one `pr create`, and a `pr edit` after the issues.
-
-      FAIL if any Low is filed, a standing Medium is not filed, both Mediums go into one issue, or no `pr edit` follows the issues.
+    pattern: '^(?=[\s\S]*(?:^|\n)pr create\b)(?!(?:[\s\S]*?(?:^|\n)pr create\b){2})(?=(?:[\s\S]*?(?:^|\n)issue create\b){2})(?!(?:[\s\S]*?(?:^|\n)issue create\b){3})(?=[\s\S]*(?:^|\n)issue create\b[^\n]*reason)(?=[\s\S]*(?:^|\n)issue create\b[^\n]*(?:slice\(-4\)|card[- ]number|\bmask))(?![\s\S]*(?:^|\n)issue create\b[^\n]*(?:queueWith|fixed date|same date|fixed string|not cancelled|heading))(?=[\s\S]*(?:^|\n)issue create\b[\s\S]*\npr edit\b)'
+    flags: i
   - type: llm
     name: reports-the-delivery-in-the-same-turn
     focus: last_message

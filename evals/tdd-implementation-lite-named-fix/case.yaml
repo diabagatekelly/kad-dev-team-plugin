@@ -34,16 +34,14 @@ graders:
     input_match: 'npm (run )?test|node .*--test'
     min: 1
     arm: both
-  - type: llm
+  - type: regex
     name: takes-store-through-constructor
-    focus:
+    # A judge until E5: a `LoanStore` constructor parameter and no import
+    # from `main/`.
+    target:
       source: file
       path: lending/return-book.ts
-    weight: 1
-    criteria: |
-      PASS if `ReturnBook` receives its `LoanStore` through its constructor and the file no longer imports anything from `main/`.
-
-      FAIL if it still imports from `main/`, or obtains the store any way other than a constructor parameter.
+    pattern: '^(?=[\s\S]*constructor\s*\([^)]*:\s*LoanStore\b)(?![\s\S]*(?:\bfrom|\brequire\(|\bimport)\s*[''"][^''"]*\bmain/)'
   - type: llm
     name: behaviour-unchanged
     focus:
@@ -56,16 +54,15 @@ graders:
       PASS if `run` still does exactly those three things.
 
       FAIL if any of them changed, or new behaviour was added (validation, logging, a different error, a return value).
-  - type: llm
+  - type: regex
     name: wiring-updated
-    focus:
+    # A judge until E5: `new ReturnBook(` with two or more arguments, one of
+    # them a loan store. Not read: that the order matches the constructor (the
+    # typecheck does).
+    target:
       source: file
       path: main/server.ts
-    weight: 1
-    criteria: |
-      PASS if `main/server.ts` constructs `ReturnBook` with a loan store from the wiring (for example `new ReturnBook(wiring.loanStore(), wiring.clock())`, in whatever parameter order the new constructor uses).
-
-      FAIL if `ReturnBook` is still constructed with only a clock, or with arguments that don't match its new constructor.
+    pattern: 'new ReturnBook\([^;\n]*[Ll]oan[^;\n]*,[^;\n]*\)|new ReturnBook\([^;\n]*,[^;\n]*[Ll]oan[^;\n]*\)'
   - type: llm
     name: pins-behaviour-with-tests
     focus:
