@@ -145,6 +145,8 @@ graders:
     # report's path, a test count, `deviations <n>` and `shell edits <n>` in the
     # reply. Notes beside them pass, as the judge's criterion said; the judge
     # failed four replies that carried all five.
+    # The number may come before the word ("0 deviations, 0 shell edits"):
+    # the first form wanted it after, and failed a reply that had all five.
     target: last_message
-    pattern: '^(?=[\s\S]*\b[0-9a-f]{7,40}\b)(?=[\s\S]*implementation-report-slice-001\.md)(?=[\s\S]*\b\d+\W{0,3}tests?\b)(?=[\s\S]*deviations\W{0,3}\d)(?=[\s\S]*shell edits\W{0,3}\d)'
+    pattern: '^(?=[\s\S]*\b[0-9a-f]{7,40}\b)(?=[\s\S]*implementation-report-slice-001\.md)(?=[\s\S]*\b\d+\W{0,3}tests?\b)(?=[\s\S]*(?:deviations\W{0,3}\d|\d+\W{0,3}deviations?\b))(?=[\s\S]*(?:shell edits\W{0,3}\d|\d+\W{0,3}shell edits?\b))'
     flags: i
