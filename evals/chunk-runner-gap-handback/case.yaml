@@ -12,7 +12,7 @@ execution:
 
     The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
 
-    Resume point: the round stopped in step 3: the combined reviewer and the smoke agent have returned and written `chunk-1-r0-review.md` and `chunk-1-r0-smoke.md`; next is recording round 0. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Then act as the skill says.
+    Resume point: the round stopped in step 3: the combined reviewer and the smoke agent have returned and written `chunk-1-r0-review.md` and `chunk-1-r0-smoke.md`; round 0 is not recorded yet. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Then act as the skill says.
   model: opus
   max_turns: 40
   timeout_seconds: 1500
@@ -52,20 +52,22 @@ graders:
     max: 0
   - type: regex
     name: hand-back-names-the-decision
-    target: trace
+    # Read the trace until E5, where a line is a whole JSON message and
+    # `[^\n]*` spanned it; on the reply the three sit on one line.
+    target: last_message
     pattern: 'needs-decision[^\n]*devsecops-engineer[^\n]*chunk-1-r0-review\.md'
   - type: regex
     name: no-planning-document-written
     target: trace
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/cancel-hold/(?:slice-001|reliability-slice-001|design-001|requirements-001|security-slice-001)\.md"'
     match: not_contains
-  - type: llm
-    name: stops-with-the-decision-on-the-line
-    focus: last_message
-    weight: 1
-    criteria: |
-      A `needs-decision` finding ends the chunk runner's run: it records round 0 with `rounds_record.py`, launches no fixer and no persona (consulting is the orchestrator's), and hands back the line as far as it goes with `needs-decision devsecops-engineer: <report path> — <title>` appended.
-
-      PASS if the reply ends with that hand-back line (round 0's counts with `nd 1`, the smoke result, and the needs-decision with the persona, the report path and the finding's title) and the runner does not answer the undecided question itself. Two or three sentences before the line saying why the run ended are tolerated.
-
-      FAIL if the runner decides the question itself (says what a cancel should do when the queue throws), reports launching a fixer or a persona, or ends without the needs-decision on its line.
+  - type: regex
+    name: hand-back-line-ends-on-the-decision
+    # Was the judge `stops-with-the-decision-on-the-line` until E5 (2026-11-14):
+    # it failed lines that were word for word correct in 9 of 27 runs. The reply
+    # ends on a line with round 0's counts (`nd 1`) and the needs-decision with
+    # the persona, the report's path and a title; sentences before it pass, as
+    # they did with the judge. Not read any more: whether the reply answers the
+    # undecided question itself.
+    target: last_message
+    pattern: 'r0 \W{0,2}0/0/1\W{0,2} nd \W{0,2}1\b[^\n]*needs-decision devsecops-engineer[^\n]*chunk-1-r0-review\.md\W{1,6}\w[^\n]*\s*$'

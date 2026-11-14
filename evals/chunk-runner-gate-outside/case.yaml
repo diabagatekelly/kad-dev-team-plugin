@@ -12,7 +12,7 @@ execution:
 
     The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
 
-    Resume point: the round stopped after the build: the implementer committed chunk 1 (the handoff names the commit and the agent); next is step 2, the gate. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Stop once the gate has passed, before any reviewer is launched: hand back the line as far as it goes with `stopped at step 2` appended.
+    Resume point: the round stopped after the build: the implementer committed chunk 1 (the handoff names the commit and the agent); no gate has run on that commit. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Stop once the gate has passed, before any reviewer is launched: hand back the line as far as it goes with `stopped at step 2` appended.
   model: opus
   max_turns: 60
   timeout_seconds: 2400
@@ -68,15 +68,12 @@ graders:
     target: trace
     pattern: '--allow[ =]+[\x27"]?utils/'
     match: not_contains
-  # "The runner edits no code" is the judge's below, not a trace regex: a
-  # nested fixer's own Edit calls are in the runner's trace too (0.14.3).
-  - type: llm
-    name: gate-passes-after-the-fix
-    focus: last_message
-    weight: 1
-    criteria: |
-      A file outside every design module fails the gate's scope check once; the runner hands the gate's output to a fresh fixer, runs the gate again on the fix, and only a second failure ends the round. It never widens `--allow`, never drops a `--protect`, never moves the file itself.
-
-      PASS if the reply hands back the gate as PASS after the fix (`gate PASS after <sha>`), says one fixer was launched for the scope failure and the gate run again, and stops before any reviewer.
-
-      FAIL if the runner edits the code itself, widens the gate's allow list, launches a reviewer before the gate passes, or ends the round on the first failure.
+  # "The runner edits no code" is read by nothing: a nested fixer's own Edit
+  # calls are in the runner's trace too (0.14.3), and the judge that named it
+  # until E5 read only the last message, which cannot show an edit.
+  - type: regex
+    name: hand-back-line-says-pass-after-the-fix
+    # Was the judge `gate-passes-after-the-fix` until E5: `PASS after <sha>`
+    # with a real hash, one fixer counted and the stop, on one line of the reply.
+    target: last_message
+    pattern: 'gate \W{0,2}PASS after \W{0,2}[0-9a-f]{7,40}\b[^\n]*fixers \W{0,2}1\b[^\n]*stopped at step 2'

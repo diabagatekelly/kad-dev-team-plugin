@@ -24,14 +24,14 @@
   }
  ],
  "fails": [
-  "hand-back-is-the-one-line"
+  "hand-back-is-one-line-and-nothing-else"
  ],
  "observed": {
   "date": "2026-11-13",
   "runs": 3,
   "claude_version": "2.1.323",
   "rates": {
-   "hand-back-is-the-one-line": 0.0
+   "hand-back-is-one-line-and-nothing-else": 0.0
   }
  }
 }

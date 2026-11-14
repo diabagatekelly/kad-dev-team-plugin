@@ -306,55 +306,37 @@
  },
  "chunk-runner-gap-handback": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is recording round 0",
-   "note": "the action `round-recorded-by-the-script` grades; the E2 pass found the resume line carries the run. Naming the skill is the launch (the runner is only invoked by name)."
+   "states_rule": "no",
+   "note": "reworded in E5: the resume line names the state (\"round 0 is not recorded yet\") and no longer the action `round-recorded-by-the-script` grades. The fixture's handoff file still carries a \"Next action\" line, as the loop's own handoff does. Naming the skill is the launch (the runner is only invoked by name)."
   },
-  "judges": {
-   "stops-with-the-decision-on-the-line": {
-    "by": "tool",
-    "why": "the shape of the last line (`needs-decision devsecops-engineer: <path>`, `nd 1`), which `hand-back-names-the-decision` already reads; fails correct lines in 8 of 23 runs. Lost: whether the reply answers the undecided question itself."
-   }
-  },
-  "findings": [
-   "`hand-back-names-the-decision` reads the trace with `[^\\n]*`, but a trace line is JSON with newlines escaped, so the three words need only appear anywhere in one tool result or message, not on one line of the reply."
-  ]
+  "judges": {},
+  "findings": []
  },
  "chunk-runner-gate-deviation": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is step 2, the gate [...] Stop once the gate has run and its result is known, before any launch",
-   "note": "the stop before any launch is what `no-fixer-no-reviewer` grades; the module directories and deviation zone are handed-over facts, not the rule."
+   "states_rule": "partly",
+   "quote": "Stop once the gate has run and its result is known, before any launch",
+   "note": "reworded in E5: the resume line names the state (\"no gate has run on that commit\"). The stopping point is left: it bounds the run's cost, and it is what `no-fixer-no-reviewer` grades; the module directories and deviation zone are handed-over facts, not the rule."
   },
-  "judges": {
-   "deviation-recorded-not-failed": {
-    "by": "tool",
-    "why": "`deviations 2` on the last message is a count on a line; no launch is already `no-fixer-no-reviewer`, the Files line not widened is `plan-entry-not-edited`"
-   }
-  },
+  "judges": {},
   "findings": []
  },
  "chunk-runner-gate-outside": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched",
-   "note": "says to go on until the gate passes (so a first failure cannot end the round) and to launch no reviewer: `gate-run-twice` and `no-reviewer-before-the-pass`"
+   "states_rule": "partly",
+   "quote": "Stop once the gate has passed, before any reviewer is launched",
+   "note": "reworded in E5: the resume line names the state. The stopping point is left (it bounds the run's cost): it says to go on until the gate passes and to launch no reviewer, `gate-run-twice` and `no-reviewer-before-the-pass`"
   },
-  "judges": {
-   "gate-passes-after-the-fix": {
-    "by": "tool",
-    "why": "`gate PASS after <sha>` and `stopped at step 2` on the last message, the regex `chunk-runner-gate-sources` already uses; the launches are counted by tool checks"
-   }
-  },
+  "judges": {},
   "findings": [
-   "The comment above `gate-passes-after-the-fix` says the judge holds \"the runner edits no code\", but its focus is `last_message`, which cannot show an edit: nothing reads whether the runner edited code itself.",
-   "`allow-list-not-widened` (`--allow[ =]+[\\x27\"]?utils/`, not_contains on the trace): a double quote is `\\\"` in the trace's JSON, so `--allow \"utils/...\"` is not matched; only the bare and single-quoted forms are. Read from the pattern, not seen in a run."
+   "`allow-list-not-widened` (`--allow[ =]+[\\x27\"]?utils/`, not_contains on the trace): a double quote is `\\\"` in the trace's JSON, so `--allow \"utils/...\"` is not matched; only the bare and single-quoted forms are. Read from the pattern, not seen in a run.",
+   "Nothing reads whether the runner edited code itself: a nested fixer's Edit calls are in the runner's trace too, so a trace regex cannot tell them apart (the comment in the case says so since E5)."
   ]
  },
  "chunk-runner-gate-sources": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched",
+   "states_rule": "partly",
+   "quote": "Stop once the gate has passed, before any reviewer is launched",
    "note": "as `chunk-runner-gate-outside`; the prompt also says the target directory holds `sources.md`, which points at `--planning`"
   },
   "judges": {},
@@ -362,16 +344,11 @@
  },
  "chunk-runner-one-fix-round": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is recording round 1 with `--range`, then acting on the split",
-   "note": "the action `round-one-recorded-with-the-range` grades; also \"the sandbox checks in this round are information and never end it\". Naming the skill to invoke is the launch, not a leak: the runner is only ever invoked by name."
+   "states_rule": "partly",
+   "quote": "the sandbox checks in this round are information and never end it",
+   "note": "reworded in E5: the resume line names the state (\"round 1 is not recorded yet\") and no longer the action `round-one-recorded-with-the-range` grades. What is left is a handed-over fact the E2 pass found the run follows instead of the skill's sentence. Naming the skill to invoke is the launch, not a leak."
   },
-  "judges": {
-   "hand-back-is-the-one-line": {
-    "by": "tool",
-    "why": "the shape of the last message: one line, the C line's fields in order, nothing before or after it; two regexes already read the split and the standing count"
-   }
-  },
+  "judges": {},
   "findings": []
  },
  "chunk-runner-replay-not-the-handback": {
@@ -402,16 +379,11 @@
  },
  "chunk-runner-review-round": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is step 3, the review and smoke launches [...] Stop once round 0 is recorded [...] don't start the fix round",
-   "note": "the two launches and the recording are what `one-combined-reviewer`, `one-smoke-agent` and `round-recorded-by-the-script` grade; the hand-over names `scratch_run.py`, which `smoke-agent-handed-the-launcher` grades"
+   "states_rule": "partly",
+   "quote": "Stop once round 0 is recorded [...] don't start the fix round",
+   "note": "reworded in E5: the resume line names the state (\"no reviewer and no smoke agent has been launched\") and no longer the two launches. The stopping point is left (it bounds the run's cost) and still names the recording `round-recorded-by-the-script` grades; the hand-over names `scratch_run.py`, which `smoke-agent-handed-the-launcher` grades"
   },
-  "judges": {
-   "review-report-in-the-shared-shape": {
-    "by": "tool",
-    "why": "a file's shape: every `###` heading followed by a `**Severity:**` line with one of four values, at most eight, none Low. It grades the launched reviewer's file, not the runner."
-   }
-  },
+  "judges": {},
   "findings": [
    "`cold-findings-cite-no-planning-document` lists `design\\.md`, but the fixture's documents are `design-001.md`, `requirements-001.md` and `user-story-001.md`: a finding citing any of those three is not seen (only `slice-001.md` is).",
    "`hand-back-line-carries-the-script-counts` reads the trace with `[^\\n]`, as `chunk-runner-gap-handback`'s regex does: the parts need only sit in one tool result or message, not on one line of the reply."
@@ -421,14 +393,9 @@
   "prompt": {
    "states_rule": "yes",
    "quote": "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent",
-   "note": "`no-reviewer-launched` and `gate-on-the-builders-commit` grade what the stopping point says"
+   "note": "`no-reviewer-launched` and `gate-on-the-builders-commit` grade what the stopping point says. The case starts at the build and has no resume line, so E5 reworded nothing here: the stopping point is the run's bound."
   },
-  "judges": {
-   "hand-back-is-the-one-line-for-what-ran": {
-    "by": "tool",
-    "why": "the shape of the last message: one line with a commit hash, a gate result and `stopped at`; it is the judge the `handback-one-line` deletion fails, so the regex must fail paragraphs and bullets"
-   }
-  },
+  "judges": {},
   "findings": []
  },
  "code-review-catalog": {
