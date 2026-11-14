@@ -1626,8 +1626,8 @@ changed; these are findings:
 
 `TODO.md`'s E6 (2026-11-14, kad 0.14.5, Claude Code 2.1.325, every case
 on Sonnet): each case run three times with the plugin and three times
-with no plugin at all, skill by skill. `architecture-review` and
-`security-review` are done; the other skills wait for the owner's word.
+with no plugin at all, skill by skill. `architecture-review` is done and
+`security-review` follows; the other skills wait for the owner's word.
 Nothing here is decided: the lists at the end of each skill are for the
 owner.
 
@@ -1655,8 +1655,10 @@ three-run judge cost into the cost of a pass). `evidence.json` is
 written by `eval_gate.py` alone and `eval_evidence.py` only reads it, so
 an ablation run cannot become evidence. No bar, evidence entry or case
 changed in E6. The tool keeps both arms' traces beside the results and
-skips a case already complete, so a pass cut by the usage window is
-resumed with the same command.
+skips a case already complete at the same run count and against the
+same inputs, so a pass cut by the usage window is resumed with the same
+command; it removes an earlier `pairwise.json` when it runs anything,
+and exits 1 when a case ends short of its clean runs.
 
 **What is left out, and why.**
 

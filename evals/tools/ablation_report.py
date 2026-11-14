@@ -5,8 +5,9 @@ Reads `<out>/aggregate-result.json` written by `ablation_run.py` and, when
 it is there, `<out>/pairwise.json` written by `pairwise_judge.py`. Per case:
 the mean score of each arm over its clean runs, every scored grader whose
 pass count differs between the arms, the graders both arms fail, the
-pairwise tally, and the mean cost of one run of each arm (agent and judge
-apart; a run's `costUsd` includes its `judgeCostUsd`). The with-only
+pairwise tally, and the mean cost of one run of each arm, errored runs
+included (agent and judge apart; a run's `costUsd` includes its
+`judgeCostUsd`). The with-only
 graders (`tool_used: Skill`, `arm: with-only`) are indicators, not scored,
 and are left out of the comparison.
 
@@ -43,9 +44,9 @@ def main():
                     if g.get("scored") is False:
                         continue
                     rates.setdefault(g["name"], {a: 0 for a in ARMS})[arm] += 1 if g.get("passed") else 0
-            n = len(clean[arm]) or 1
-            cost[arm] = (sum(r.get("costUsd") or 0 for r in clean[arm]) / n,
-                         sum(r.get("judgeCostUsd") or 0 for r in clean[arm]) / n)
+            ran = case["arms"].get(arm) or []  # errored runs were paid for too
+            cost[arm] = (sum(r.get("costUsd") or 0 for r in ran) / (len(ran) or 1),
+                         sum(r.get("judgeCostUsd") or 0 for r in ran) / (len(ran) or 1))
             total[arm][0] += sum(r.get("costUsd") or 0 for r in case["arms"].get(arm) or [])
             total[arm][1] += sum(r.get("judgeCostUsd") or 0 for r in case["arms"].get(arm) or [])
             total[arm][2] += len(case["arms"].get(arm) or [])
