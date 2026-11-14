@@ -225,13 +225,13 @@
     "recorded": "2026-11-12T01:50:51Z"
   },
   "code-review-comments-chunk": {
-    "inputs": "5a77486371c1a53a50c9c455f25cf36aeabd15df8092d45f63026f92057320e2",
-    "score": 0.833,
+    "inputs": "dd7cdea1da5e0bd100e77ae405ea2b8f5d42a2c9c9baba8332c3ec370b8bd7cc",
+    "score": 0.9,
     "bar": 0.9,
     "runs": 3,
-    "source": "results/gate-20261114T222115-code-review-comments-chunk.json",
+    "source": "results/gate-20261114T222613-code-review-comments-chunk.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:25:26Z"
+    "recorded": "2026-11-14T22:27:11Z"
   },
   "code-review-days-left-pr": {
     "inputs": "fc278cce23fd9d05e76b9b6df65190ec2f4e09fbda895ba035decaf194a9719f",
@@ -459,13 +459,13 @@
     "recorded": "2026-11-12T01:50:51Z"
   },
   "map-query-no-map": {
-    "inputs": "e5e30e859d19eded1819e05a43a9070880f08c09656dbe90423ff508fad61553",
-    "score": 0.889,
+    "inputs": "85b194f7ca466ef303a52b3aaf5c9b9c179dae4117c552aed49c6ce2c7f51ce6",
+    "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261114T150308-map-query-no-map.json",
+    "source": "results/gate-20261114T222613-map-query-no-map.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-14T15:13:18Z"
+    "recorded": "2026-11-14T22:27:11Z"
   },
   "map-update-cancel-hold": {
     "inputs": "fe973a1a9936f05a8358baa3334b774a7338238ae2d65f177b57426b4e307e8b",

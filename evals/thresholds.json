@@ -46,13 +46,13 @@
     }
   },
   "accessibility-review-payfine": {
-    "score": 1.0,
+    "score": 0.976,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T222342-accessibility-review-payfine.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-accessibility-review-payfine.json",
     "graders": {
-      "criteria-split-now-and-later": 1.0,
+      "criteria-split-now-and-later": 0.667,
       "finds-low-contrast-meta-text": 1.0,
       "finds-missing-live-region": 1.0,
       "finds-unlabelled-name-field": 1.0,
@@ -75,8 +75,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T222342-accessibility-review-payfine-subtle.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-accessibility-review-payfine-subtle.json",
     "graders": {
       "criteria-split-now-and-later": 1.0,
       "finds-broken-error-link": 1.0,
@@ -116,8 +116,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261015T214207-adr-payment-gateway.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T222115-adr-payment-gateway.json",
     "graders": {
       "adr-written": 1.0,
       "decision-alternatives-consequences": 1.0,
@@ -202,14 +202,14 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261019T065259-architecture-design-payfine-via-agent.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T222115-retry-architecture-design-payfine-via-agent.json",
     "graders": {
       "agent-delegated-display": 1.0,
       "consults-map-query": 1.0,
       "design-skill-runs": 1.0,
-      "presents-decisions-and-waits": 1.0,
-      "uses-what-the-map-found": 1.0
+      "names-a-piece-the-map-found": 1.0,
+      "presents-decisions-and-waits": 1.0
     },
     "skills_invoked": [
       "architecture-design",
@@ -492,11 +492,11 @@
     "score": 0.9,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T165615-code-review-comments-chunk.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T222613-code-review-comments-chunk.json",
     "graders": {
       "code-review-invoked-first": 1.0,
-      "hands-back-counts-and-path": 0.667,
+      "hand-back-is-counts-and-path": 0.667,
       "no-low-per-chunk": 1.0,
       "planning-reference-is-a-medium": 1.0,
       "reliability-lens-invoked-for-storage": 0.667,
@@ -642,12 +642,12 @@
     "score": 0.905,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T195445-delegation-consult-with-file.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-delegation-consult-with-file.json",
     "graders": {
       "commits-the-decision-by-name": 1.0,
       "decision-written-in-place-under-the-delegation": 0.667,
-      "hands-back-the-hash-and-one-sentence": 0.667,
+      "hand-back-is-the-hash-and-a-few-sentences": 0.667,
       "no-add-all": 1.0,
       "revises-its-own-document": 1.0,
       "skill-invoked": 1.0,
@@ -730,17 +730,17 @@
     }
   },
   "design-system-payfine-phase3": {
-    "score": 0.963,
+    "score": 0.889,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261015T142258-design-system-payfine-phase3.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-design-system-payfine-phase3.json",
     "graders": {
       "accessibility-by-construction": 1.0,
-      "chosen-direction-committed": 1.0,
-      "mockup-referenced-no-screenshot-claimed": 1.0,
+      "chosen-direction-committed": 0.667,
+      "mockup-referenced-no-image-file-named": 1.0,
       "platform-with-provenance": 1.0,
-      "rejected-candidates-in-prose": 0.667,
+      "rejected-candidates-in-prose": 0.333,
       "system-written": 1.0,
       "tokens-every-category": 1.0,
       "winner-is-the-second-candidate": 1.0,
@@ -785,16 +785,16 @@
     ]
   },
   "external-review-triage-cancel-hold": {
-    "score": 0.905,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.304",
-    "source": "results/gate-20261024T215121-external-review-triage-cancel-hold.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-external-review-triage-cancel-hold.json",
     "graders": {
       "declines-the-wrong-and-the-cosmetic": 1.0,
-      "defers-out-of-slice-and-resolves-the-fixed": 0.667,
+      "defers-out-of-slice-and-resolves-the-fixed": 1.0,
       "fixes-the-missed-defect": 1.0,
-      "hands-back-counts-and-path": 0.667,
+      "hand-back-is-counts-and-path": 1.0,
       "report-written": 1.0,
       "skill-invoked": 1.0,
       "writes-only-the-report": 1.0
@@ -995,8 +995,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.296",
-    "source": "results/gate-20261014T045557-map-query-no-map.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T222613-map-query-no-map.json",
     "graders": {
       "no-live-scan-answer": 1.0,
       "says-no-map": 1.0,
@@ -1007,19 +1007,19 @@
     ]
   },
   "map-update-cancel-hold": {
-    "score": 0.867,
+    "score": 0.8,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261107T114229-map-update-cancel-hold.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-map-update-cancel-hold.json",
     "graders": {
       "flags-duplication-candidate": 1.0,
-      "flags-new-wrong-direction-edge": 1.0,
+      "flags-new-wrong-direction-edge": 0.667,
       "keeps-existing-rows-and-tiers": 1.0,
-      "new-rows-extracted": 1.0,
-      "no-bash-writes": 0.333,
+      "new-rows-extracted": 0.667,
+      "no-bash-writes": 0.667,
       "no-severity": 1.0,
-      "pre-existing-flags-not-new": 0.333,
+      "pre-existing-flags-not-new": 0.0,
       "skill-invoked-display": 1.0,
       "untiered-edge-direction-unknown": 1.0,
       "writes-only-the-map": 1.0
@@ -1242,13 +1242,13 @@
     ]
   },
   "orchestrator-delivery-foreground": {
-    "score": 0.926,
+    "score": 0.963,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T203942-orchestrator-delivery-foreground.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-orchestrator-delivery-foreground.json",
     "graders": {
-      "cost-script-run": 0.333,
+      "cost-script-run": 0.667,
       "delivery-skill-invoked": 1.0,
       "e-line-written": 1.0,
       "nothing-in-the-background": 1.0,
@@ -1336,11 +1336,11 @@
     ]
   },
   "orchestrator-plan-check-seam": {
-    "score": 1.0,
+    "score": 0.952,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T182312-orchestrator-plan-check-seam.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-orchestrator-plan-check-seam.json",
     "graders": {
       "b-line-written": 1.0,
       "every-chunk-names-its-seam-test": 1.0,
@@ -1348,12 +1348,13 @@
       "no-builder-launched": 1.0,
       "orchestrator-invoked": 1.0,
       "plan-committed-by-name": 1.0,
-      "plan-sent-back-not-edited": 1.0
+      "plan-sent-back-not-edited": 0.667
     },
     "skills_invoked": [
       "map-query",
       "orchestrator",
-      "tdd-implementation"
+      "tdd-implementation",
+      "tdd-implementation-lite"
     ]
   },
   "orchestrator-readiness-gate": {
@@ -1899,8 +1900,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261101T012149-reliability-requirements-payfine-phase2.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-reliability-requirements-payfine-phase2.json",
     "graders": {
       "does-not-decide-the-fork-itself": 1.0,
       "no-criteria-before-approval": 1.0,
@@ -1915,8 +1916,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261101T012149-reliability-requirements-payfine-phase2-proceed.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-reliability-requirements-payfine-phase2-proceed.json",
     "graders": {
       "does-not-invent-a-scope-gap": 1.0,
       "no-criteria-before-approval": 1.0,
@@ -1928,8 +1929,8 @@
     "score": 0.917,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261101T012149-reliability-requirements-payfine-phase2-stop.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-reliability-requirements-payfine-phase2-stop.json",
     "graders": {
       "does-not-design-the-fallback": 1.0,
       "does-not-lay-out-scope-options": 0.667,
@@ -2193,14 +2194,14 @@
     "score": 0.889,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261101T012149-requirements-refinement-payfine-phase2.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-requirements-refinement-payfine-phase2.json",
     "graders": {
       "constraints-as-consequences": 1.0,
       "exclusions-with-reasons": 1.0,
-      "finishes-without-reasking": 0.0,
+      "finishes-without-reasking": 0.333,
       "in-scope-as-confirmed": 1.0,
-      "keeps-the-users-trade-off": 1.0,
+      "keeps-the-users-trade-off": 0.667,
       "marks-what-staff-see-as-open": 1.0,
       "no-thin-path-or-criteria": 1.0,
       "requirements-written": 1.0,
@@ -2294,13 +2295,13 @@
     ]
   },
   "security-requirements-payfine-phase2": {
-    "score": 1.0,
+    "score": 0.917,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261101T012149-security-requirements-payfine-phase2.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-security-requirements-payfine-phase2.json",
     "graders": {
-      "does-not-decide-the-fork-itself": 1.0,
+      "does-not-decide-the-fork-itself": 0.667,
       "no-criteria-before-approval": 1.0,
       "no-false-alarm-publishable-key": 1.0,
       "presents-shared-route-as-a-decision": 1.0
@@ -2310,8 +2311,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261101T012149-security-requirements-payfine-phase2-proceed.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-security-requirements-payfine-phase2-proceed.json",
     "graders": {
       "no-criteria-before-approval": 1.0,
       "obligation-placed-without-stopping": 1.0,
@@ -2323,8 +2324,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261101T012149-security-requirements-payfine-phase2-stop.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-security-requirements-payfine-phase2-stop.json",
     "graders": {
       "does-not-design-the-receipt": 1.0,
       "does-not-lay-out-scope-options": 1.0,
@@ -2677,10 +2678,10 @@
   },
   "tdd-implementation-lite-cancel-hold": {
     "score": 0.962,
-    "runs": 1,
+    "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261107T112137-tdd-implementation-lite-cancel-hold.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-tdd-implementation-lite-cancel-hold.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "break-and-restore-in-trace": 1.0,
@@ -2719,18 +2720,18 @@
     ]
   },
   "tdd-implementation-lite-cancel-hold-via-agent": {
-    "score": 0.88,
+    "score": 0.907,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261107T112137-rerun-tdd-implementation-lite-cancel-hold-via-agent.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T150308-tdd-implementation-lite-cancel-hold-via-agent.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "agent-delegated-display": 1.0,
-      "break-and-restore-in-trace": 0.667,
+      "break-and-restore-in-trace": 1.0,
       "decides-reason-wording-visibly": 1.0,
       "design-doc-unchanged": 1.0,
-      "escalates-queue-question": 0.333,
+      "escalates-queue-question": 1.0,
       "final-review-runs": 0.333,
       "final-run-is-the-whole-suite": 1.0,
       "green-stays-minimal": 1.0,
@@ -2738,7 +2739,7 @@
       "last-test-run-green": 1.0,
       "lite-skill-in-trace": 1.0,
       "map-query-before-any-code": 1.0,
-      "no-bash-writes": 0.667,
+      "no-bash-writes": 1.0,
       "no-queue-behaviour-built": 1.0,
       "queue-test-before-queue-code": 1.0,
       "red-on-assertions": 1.0,
@@ -2748,7 +2749,7 @@
       "stays-inside-the-slice": 1.0,
       "test-run-after-each-test-edit": 0.0,
       "tests-before-any-code": 1.0,
-      "tests-check-behaviour": 1.0,
+      "tests-check-behaviour": 0.333,
       "use-case-test-before-use-case": 1.0
     },
     "skills_invoked": [
@@ -2762,15 +2763,16 @@
     ]
   },
   "tdd-implementation-lite-chunk-plan": {
-    "score": 0.857,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.304",
-    "source": "results/gate-20261024T215121-tdd-implementation-lite-chunk-plan.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T222115-tdd-implementation-lite-chunk-plan.json",
     "graders": {
       "consults-map-query": 1.0,
-      "plan-has-the-shape": 0.667,
-      "plan-is-vertical-and-inside-the-slice": 0.333,
+      "every-chunk-names-a-seam-test": 1.0,
+      "plan-has-the-shape": 1.0,
+      "plan-is-vertical-and-inside-the-slice": 1.0,
       "report-written": 1.0,
       "skill-invoked": 1.0,
       "stops-after-the-plan": 1.0,
@@ -2783,10 +2785,10 @@
   },
   "tdd-implementation-lite-named-fix": {
     "score": 1.0,
-    "runs": 1,
+    "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261107T112137-tdd-implementation-lite-named-fix.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T222115-tdd-implementation-lite-named-fix.json",
     "graders": {
       "a-green-run-happened": 1.0,
       "behaviour-unchanged": 1.0,
@@ -2816,13 +2818,13 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.323",
-    "source": "results/gate-20261113T013422-tdd-implementation-lite-one-chunk.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T222115-tdd-implementation-lite-one-chunk.json",
     "graders": {
       "builds-this-chunk-and-not-chunk-two": 1.0,
       "comments-earn-their-place": 1.0,
       "commits": 1.0,
-      "ends-on-the-hand-back-line": 1.0,
+      "hand-back-carries-its-five-fields": 1.0,
       "last-test-run-green": 1.0,
       "no-bash-writes": 1.0,
       "no-planning-reference-in-the-code": 1.0,
@@ -2999,12 +3001,12 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.316",
-    "source": "results/gate-20261031T170120-test-quality-review-seam-fake.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T222115-test-quality-review-seam-fake.json",
     "graders": {
       "fake-inventory-listed": 1.0,
       "fixed-clock-is-not-a-finding": 1.0,
-      "hands-back-counts-and-path": 1.0,
+      "hand-back-is-counts-and-path": 1.0,
       "own-code-fake-with-a-real-local-equivalent": 1.0,
       "report-written": 1.0,
       "seam-untested-is-a-high": 1.0,
