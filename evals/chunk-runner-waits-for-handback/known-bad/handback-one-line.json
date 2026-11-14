@@ -27,9 +27,9 @@
   "hand-back-is-one-line-for-what-ran"
  ],
  "observed": {
-  "date": "2026-11-13",
+  "date": "2026-11-14",
   "runs": 3,
-  "claude_version": "2.1.323",
+  "claude_version": "2.1.325",
   "rates": {
    "hand-back-is-one-line-for-what-ran": 0.0
   }
