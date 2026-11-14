@@ -1622,6 +1622,192 @@ changed; these are findings:
   about a quarter of runs, and that is the skill's to fix, not the
   check's.
 
+### With and without the plugin
+
+`TODO.md`'s E6 (2026-11-14, kad 0.14.5, Claude Code 2.1.325, every case
+on Sonnet): each case run three times with the plugin and three times
+with no plugin at all, skill by skill. `architecture-review` and
+`security-review` are done; the other skills wait for the owner's word.
+Nothing here is decided: the lists at the end of each skill are for the
+owner.
+
+**How it is run, and where the results go.** `--ablation with-without`
+repeats a case's runs "with no plugin loaded" (the CLI's documentation:
+no skills, agents, hooks or MCP servers of the plugin, and nothing
+personal either, in both arms); `--runs` is per arm, so a case at three
+runs is six. A case passes on its with-arm score alone; the delta is
+reported and decides nothing. `tool_used: Skill` graders and graders
+marked `arm: with-only` are indicators there, not part of the score.
+
+```
+python3 -I evals/tools/ablation_run.py --out ~/kad-eval-ablation/<skill> <case> [<case> ...]
+python3 -I evals/tools/pairwise_judge.py ~/kad-eval-ablation/<skill>
+python3 -I evals/tools/ablation_report.py ~/kad-eval-ablation/<skill>
+```
+
+`tools/ablation_run.py` refuses an output directory inside the
+repository. A calibration result left in `evals/results/` would be read
+as a run of the case: `record_thresholds.py` takes a bar from the newest
+`results/*.json` unless `--gate-only` is passed, and `case_history.py`
+and `case_sort.py` count the plugin arm of any
+`results/*/aggregate-result.json` as a run (which would also carry a
+three-run judge cost into the cost of a pass). `evidence.json` is
+written by `eval_gate.py` alone and `eval_evidence.py` only reads it, so
+an ablation run cannot become evidence. No bar, evidence entry or case
+changed in E6. The tool keeps both arms' traces beside the results and
+skips a case already complete, so a pass cut by the usage window is
+resumed with the same command.
+
+**What is left out, and why.**
+
+- The negative-trigger cases, which already grade both arms (`arm:
+  both`): `architecture-review-neg-security-review`,
+  `architecture-review-neg-test-quality-review`,
+  `security-review-neg-architecture`, `security-review-neg-reliability`.
+- Cases that resume a `history.jsonl`: neither skill has one.
+- `library-app-lending-review-via-agent` was run and cannot be measured:
+  its prompt names the plugin's own agent, and in all three bare runs
+  the model answered that `kad-dev-team:software-architect` is not
+  available, read nothing and wrote nothing (two turns, $0.03 a run; the
+  CLI then reports "grader threw" for the missing file). That is a
+  correct reply to the request, not a review to compare. Its plugin arm
+  scored 0.96, beside its direct twin's 0.96.
+
+**How to read the two columns.** The CLI scores each arm against the
+same graders and never compares the two outputs. So a case where the
+scores are equal is not yet one where the plugin adds nothing, and every
+measured case had its paired reviews read blind, in both orders, by
+`tools/pairwise_judge.py` (Sonnet; run *i* with against run *i*
+without). Two limits of that judge, both visible in its reasons:
+
+- It is given the two reviews and the request, not the code. "Avoids
+  false claims" is therefore judged by plausibility; nothing checked a
+  bare review's extra findings against the fixture.
+- Its rubric ranks reviews by what serves the developer, whatever the
+  subject. The bare model's reviews range outside the request (an
+  architecture review that leads with a SQL injection, an authorization
+  gap, a race, CSV formula injection), and the judge counts that for
+  them. The skill keeps to its subject on purpose and hands the rest to
+  the other review skills.
+
+#### `architecture-review`
+
+Nine cases, 54 runs, none errored except the three bare runs above.
+Scores are the mean of three runs; a grader is listed with its passes of
+three in each arm.
+
+| Case | With | Without | Graders that differ (with, without) | Pairwise: with / without / tie / split |
+|---|---|---|---|---|
+| `library-app-catalog-review` | 0.83 | 0.75 | `reports-nothing-above-low` 1/3, 0/3 | 0 / 3 / 0 / 0 |
+| `library-app-fines-review` | 1.00 | 0.89 | `finds-premature-waiver-strategy` 3/3, 1/3 | 1 / 2 / 0 / 0 |
+| `library-app-lending-review` | 0.96 | 0.84 | `finds-runtime-import-cycle` 3/3, 1/3; `states-assumed-importance-ordering` 3/3, 0/3; `finds-orm-inside-checkout-use-case` 2/3, 3/3 | 0 / 2 / 0 / 1 |
+| `library-app-lending-review-via-agent` | 0.96 | not measurable | | not run |
+| `library-app-members-review` | 1.00 | 1.00 | none | 0 / 3 / 0 / 0 |
+| `library-app-notifications-review` | 1.00 | 1.00 | none | 0 / 2 / 0 / 1 |
+| `library-app-reporting-pr` | 1.00 | 0.87 | `scopes-legacy-issues-as-non-blocking` 3/3, 1/3 | 1 / 1 / 0 / 1 |
+| `library-app-reporting-review` | 1.00 | 1.00 | none | 0 / 3 / 0 / 0 |
+| `library-app-structure-review` | 1.00 | 1.00 | none | 3 / 0 / 0 / 0 |
+
+The failures, each read from the saved review (the graded file, which
+the result keeps) and not from the judge's vote:
+
+- `finds-runtime-import-cycle`, bare 1/3: all three bare reviews name
+  the `Loan`/`LoanPolicy` cycle. Two list it below the SQL injection and
+  the ORM finding, one of those without saying that loading the module
+  throws. With the plugin it is the top finding, rated Critical, in all
+  three. The difference is rank, not sight.
+- `states-assumed-importance-ordering`, bare 0/3: the section is the
+  skill's own. A bare model has no reason to write it; the grader reads
+  a format, and its weight is 0.5.
+- `finds-premature-waiver-strategy`, bare 1/3: the bare reviews see the
+  one-implementation `WaiverStrategy` and offer "inject it or drop the
+  interface", leading with injection. The skill's reviews call the
+  interface premature and say to fold it in.
+- `scopes-legacy-issues-as-non-blocking`, bare 1/3: the bare reviews
+  stay inside the pull request and two never name the older problems
+  (the SQL-shaped port, Stripe built in a report), so nothing is marked
+  as pre-existing. The skill's reviews have the section every time.
+- `reports-nothing-above-low`, with 1/3 and bare 0/3: on the module the
+  case holds to be clean, two of the plugin's three reviews rate two
+  findings Medium each (among them the port's contract leaving search
+  semantics to the adapter, `Book` serialized to the public route, one
+  port for two consumers), and all three bare reviews rate three or four. The grader
+  has failed three of fourteen earlier runs the same way. Either the
+  skill over-reports on a clean module or the module is less clean than
+  the case says; the bare model does not settle which.
+- `finds-orm-inside-checkout-use-case`, with 2/3 (and 2/3 in the
+  via-agent twin): the failed review has the finding, at High, with the
+  fix the criterion asks for; the judge failed it 3 votes of 3 on an
+  11,000-character file. The grader has failed five earlier runs. A
+  grader finding, not a miss of the skill's.
+
+No grader failed in the bare arm over a file's name: every bare run
+saved its review at the path the prompt gives.
+
+**What the plugin adds over the bare model**, on these cases:
+
+- Rank. The same problems are found by both; the skill puts the
+  structural ones first and at the severity the case expects (the
+  runtime cycle Critical in 3 of 3 against top-ranked in 1 of 3).
+- The whole-app review. In `library-app-structure-review` the graders
+  score both arms 1.00, and the pairwise judge prefers the plugin's
+  review 3 to 0: the bare model missed the `Loan`/`LoanPolicy` cycle in
+  all three runs (one mentions another cycle, through `main/wiring`).
+  No grader of that case reads the cycle, so the scores cannot show the
+  one clear win the skill has.
+- Calling a one-implementation interface premature instead of asking
+  for it to be injected.
+- On a pull request, naming what was there before and keeping it out of
+  the merge conditions.
+- The stated importance ordering, and the report's shape (severity,
+  location, category, fix on every finding).
+- Restraint on a clean module, weakly: 1 of 3 against 0 of 3.
+
+**What the bare model matches or does better.**
+
+- Four cases score 1.00 in both arms: `library-app-members-review`,
+  `-notifications-review`, `-reporting-review` and `-structure-review`.
+  Every planted problem and every trap in them is handled by the bare
+  model in all three runs. `-structure-review` is the exception
+  explained above; in the other three the pairwise judge prefers the
+  bare review in 8 of 9 pairs.
+- Over all eight measured cases the judge prefers the bare review in 16
+  of 24 pairs, the plugin's in 5, and splits by order in 3. Its reasons
+  are nearly the same each time: both reviews find the same core
+  problems, and the bare one adds findings from outside architecture
+  (the SQL injection ranked first, the portal's authorization gap,
+  logged personal data, races, idempotency, CSV formula injection) and
+  ranks them high, where the skill's review rates a SQL injection
+  Medium as a leaky abstraction or lists it as out of scope. Twice it
+  also counts the skill's "Status: verify" and "no checks run" lines
+  against it.
+- The bare reviews are shorter (about 9,100 characters against 12,400
+  on average) and the bare run is cheaper: $0.27 against $0.48 a run
+  here, judges included.
+
+**For the owner: keep, cut down or drop.** Evidence beside each; nothing
+is changed.
+
+| Case | E1: failed / runs | What E6 shows | Suggestion |
+|---|---|---|---|
+| `library-app-lending-review` | 4 / 15 | the widest gap on graders (cycle rank, ordering) | keep; its ORM judge fails right answers and is the one to fix |
+| `library-app-fines-review` | 0 / 9 | one grader apart (premature abstraction) | keep; cut down to the graders that differ, four of its judges pass in both arms |
+| `library-app-reporting-pr` | 0 / 9 | one grader apart (pre-existing problems named) | keep: the only pull-request case |
+| `library-app-catalog-review` | 3 / 14 | fails in both arms | keep, and decide first whether the module or the skill is wrong; as it stands it measures noise |
+| `library-app-structure-review` | 0 / 9 | equal on graders, plugin clearly better read side by side | keep, and give it a grader on the runtime cycle: it would be the suite's sharpest with-and-without check for this skill |
+| `library-app-members-review` | 0 / 9 | equal, bare preferred 3 of 3 | candidate to drop |
+| `library-app-notifications-review` | 0 / 9 | equal, bare preferred 2, split 1 | candidate to drop |
+| `library-app-reporting-review` | 0 / 9 | equal, bare preferred 3 of 3 | candidate to drop, or to merge its two plants into `-reporting-pr` |
+| `library-app-lending-review-via-agent` | 1 / 12 | not measurable without the plugin | E7's question (the via-agent twins), not answered here |
+| the two negative-trigger cases | 0 / 25 | not run (they grade both arms already) | as they are |
+
+Dropping the three candidates would take about $0.90 off one run of
+every case (their one-run costs in "The cases sorted": $0.30, $0.30 and
+$0.30). A question the table does not answer and the owner may want put
+first: whether an architecture review should stay silent on a SQL
+injection it reads past. The judge's preference for the bare model
+rests mostly on that.
+
 ### Run backlog
 
 Emptied: the eight emulated cases it listed were all run, then replaced by

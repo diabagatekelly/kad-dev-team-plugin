@@ -667,6 +667,12 @@ after it.
   case with the pairwise verdict, the skills the bare model matches are
   listed for the owner to keep, cut down or drop, and the cost of one
   run of every case is reported again.
+  In progress 2026-11-14 (`evals/README.md`, "With and without the
+  plugin"): `architecture-review` is done (9 cases, 54 runs, $19.99 and
+  $2.24 for the pairwise judge), `security-review` follows in the same
+  pull request, and the other skills wait for the owner's word, with
+  `reliability-review` next. `tools/ablation_run.py` keeps the results
+  outside the repository, so no bar, history or evidence moves.
 - [ ] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
   E6: a case that has never failed, that no deletion fails and that the
   bare model passes as well. Each candidate is named with the evidence
