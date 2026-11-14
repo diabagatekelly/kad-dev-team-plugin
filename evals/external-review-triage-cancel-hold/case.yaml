@@ -62,13 +62,13 @@ graders:
       PASS if 2203 has the verdict defer with a reason that it is outside this slice (naming product-slicer or the slicing stage as the owner of growing it), and 2204 has the verdict resolved naming the fix commit 4f2a9c1 or the chunk-1 fix round.
 
       FAIL if 2203 is marked fix (growing the slice) or declined as wrong, if 2204 is marked fix or decline, or if 2204's reason does not point at the commit or round that made it moot.
-  - type: llm
-    name: hands-back-counts-and-path
-    focus: last_message
-    weight: 1
-    criteria: |
-      The skill's response is the hand-back only: one line with the counts by verdict (fix, decline, defer, resolved) and one line with the report's path. The orchestrator reads the report file itself.
-
-      PASS if the final response is short (a few lines), gives the counts (1 fix, 2 declines, 1 defer, 1 resolved, or whatever the report's table holds, consistent with it) and the path `docs/cancel-hold/reviews/slice-001/pr-r1-triage.md`, and asks the user nothing.
-
-      FAIL if it reproduces the verdict table or the reasons in the response, omits the counts or the path, or asks a question.
+  - type: regex
+    name: hand-back-is-counts-and-path
+    # Was the judge `hands-back-counts-and-path` until E5 (2026-11-14): the
+    # reply names the report's path and gives counts, and is short. The length
+    # bound (and, where there is one, no bulleted list) stands for "without
+    # reproducing the findings"; it is set from the past runs the judge passed
+    # and failed, with room on both sides.
+    target: last_message
+    pattern: '^(?=[\s\S]*docs/cancel-hold/reviews/slice-001/pr-r1-triage\.md)(?=[\s\S]*(?:\d+ fix|fix\w*\W{0,3}\d))(?=[\s\S]*(?:\d+ declin|declin\w*\W{0,3}\d))(?=[\s\S]*(?:\d+ defer|defer\w*\W{0,3}\d))(?=[\s\S]*(?:\d+ resolved|resolved\W{0,3}\d))(?![\s\S]*[|?])[\s\S]{0,400}$'
+    flags: i

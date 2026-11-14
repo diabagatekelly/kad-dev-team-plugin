@@ -51,13 +51,11 @@ graders:
       PASS if the document now answers both parts in a form a builder can test (a criterion or an amended row saying which result shape an unreachable queue produces and what a failure after removal reports), records it as a numbered decision under Decisions with a line saying it was made under the delegation file, with the rejected alternative named, and keeps the rest of the document (R1, R2, the first decision) intact.
 
       FAIL if the question is answered only in prose outside the criteria and decisions, if the decision is not marked as made under the delegation, if an earlier decision or criterion was removed, or if the document was not changed.
-  - type: llm
-    name: hands-back-the-hash-and-one-sentence
-    focus: last_message
-    weight: 1
-    criteria: |
-      The consult hands back the commit hash and one sentence, nothing else: the orchestrator writes `decision <n> <sha> (<persona>)` under the chunk's line from that and passes the hash to the fixer.
-
-      PASS if the final reply contains a git commit hash (seven or more hex characters) and a one- or two-sentence statement of what was decided, and does not reproduce the document, the finding or a long rationale.
-
-      FAIL if it contains no hash, says nothing was committed, asks the owner a question, or is a page of explanation.
+  - type: regex
+    name: hand-back-is-the-hash-and-a-few-sentences
+    # Was the judge `hands-back-the-hash-and-one-sentence` until E5: a commit
+    # hash, at most three sentence ends, at most 450 characters, no question.
+    # The judge passed three-sentence replies and failed others of the same
+    # shape; three is where its votes were steady.
+    target: last_message
+    pattern: '^(?=[\s\S]*\b[0-9a-f]{7,40}\b)(?![\s\S]*\?)(?!(?:[\s\S]*?[.!?](?:\s|$)){4})[\s\S]{0,450}$'

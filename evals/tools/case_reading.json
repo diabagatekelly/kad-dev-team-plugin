@@ -433,10 +433,6 @@
    "why-comment-is-not-flagged": {
     "by": "reading",
     "why": "whether the one WHY-comment is asked to go"
-   },
-   "hands-back-counts-and-path": {
-    "by": "tool",
-    "why": "the shape of a short reply: the report's path, a count, and a length bound; a judge on a few lines is the noise the chunk-runner pass found"
    }
   },
   "findings": []
@@ -628,10 +624,6 @@
    "decision-written-in-place-under-the-delegation": {
     "by": "reading",
     "why": "whether both parts are answered in a testable form and recorded under Decisions as made under the delegation"
-   },
-   "hands-back-the-hash-and-one-sentence": {
-    "by": "tool",
-    "why": "the shape of the last message: a hash of seven or more hex characters and a length bound"
    }
   },
   "findings": []
@@ -800,10 +792,6 @@
    "defers-out-of-slice-and-resolves-the-fixed": {
     "by": "reading",
     "why": "whether the deferral names its owner and the resolved one its commit"
-   },
-   "hands-back-counts-and-path": {
-    "by": "tool",
-    "why": "the shape of a short reply: the report's path, four counts and a length bound"
    }
   },
   "findings": []
@@ -3006,10 +2994,6 @@
    "report-section-appended-plan-untouched": {
     "by": "reading",
     "why": "whether the plan's three chunks are unchanged and the new section has its lines"
-   },
-   "ends-on-the-hand-back-line": {
-    "by": "tool",
-    "why": "the shape of the last message: a commit hash, the report's path, `deviations <n>`, `shell edits <n>` and a test count"
    }
   },
   "findings": []
@@ -3205,10 +3189,6 @@
    "fixed-clock-is-not-a-finding": {
     "by": "reading",
     "why": "whether the fixed clock is a finding at Medium or above"
-   },
-   "hands-back-counts-and-path": {
-    "by": "tool",
-    "why": "the shape of a short reply: the report's path, a count, and a length bound"
    }
   },
   "findings": []

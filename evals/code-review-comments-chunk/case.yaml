@@ -79,13 +79,13 @@ graders:
       PASS if that comment is not a finding (not mentioned, or named as a comment that earns its place).
 
       FAIL if the report asks for it to be deleted or rates it as a finding of any severity.
-  - type: llm
-    name: hands-back-counts-and-path
-    focus: last_message
-    weight: 1
-    criteria: |
-      The combined reviewer hands back the counts by severity and the report's path, nothing else; the fixer reads the file.
-
-      PASS if the final reply gives the counts and the report path in a few lines, without reproducing the findings' full text.
-
-      FAIL if it reproduces the report in the reply, gives no path, or gives no counts.
+  - type: regex
+    name: hand-back-is-counts-and-path
+    # Was the judge `hands-back-counts-and-path` until E5 (2026-11-14): the
+    # reply names the report's path and gives counts, and is short. The length
+    # bound (and, where there is one, no bulleted list) stands for "without
+    # reproducing the findings"; it is set from the past runs the judge passed
+    # and failed, with room on both sides.
+    target: last_message
+    pattern: '^(?=[\s\S]*chunk-1-r0-review\.md)(?=[\s\S]*(?:\d+\W{0,3}(?:Critical|High|Medium)|(?:Critical|High|Medium)\W{0,5}\d))(?![\s\S]*(?:^|\n)\s*(?:[-*]|\d+\.)\s)[\s\S]{0,550}$'
+    flags: i
