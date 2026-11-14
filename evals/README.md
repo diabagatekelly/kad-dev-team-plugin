@@ -1575,10 +1575,16 @@ changed; these are findings:
 - `chunk-runner`: the hand-back is not the one line in 1 of 7 runs of
   `chunk-runner-one-fix-round` and 3 of 7 of `-waits-for-handback` (and
   in 7 of 25 earlier runs of the first): a paragraph before the line
-  twice, a bulleted report once. In the fourth the whole reply was "The
-  chunk 1 builder is running. Next I'll wait for its report": the runner
-  ended its run while its builder worked, the failure the wait rules
-  exist for, and the first time a case has shown it.
+  three times, a bulleted report once. (Corrected 2026-11-14, after the
+  merge: this list first said one runner ended its run while its builder
+  worked. It did not. In that run the launch was asynchronous, the
+  runner ended its turn on "The chunk 1 builder is running. Next I'll
+  wait for its report", which is the skill's own way of waiting, the
+  hand-back arrived, and it went on to the gate; its final reply had a
+  paragraph before the line. The trace holds two result rows and the
+  first was read as the last. Five of the 32 changed cases had such
+  two-result runs that day, so a launch does not always block under the
+  eval.)
 - `reliability-requirements` under a consult: the hand-back was two or
   three paragraphs in 5 of 10 runs, where the orchestrator's task asks
   for the hash and one sentence (the judge had failed 9 of 18 earlier
