@@ -82,10 +82,12 @@ graders:
   - type: regex
     name: hand-back-is-counts-and-path
     # Was the judge `hands-back-counts-and-path` until E5 (2026-11-14): the
-    # reply names the report's path and gives counts, and is short. The length
-    # bound (and, where there is one, no bulleted list) stands for "without
-    # reproducing the findings"; it is set from the past runs the judge passed
-    # and failed, with room on both sides.
+    # reply names the report's path and gives counts by severity in at most
+    # 480 characters, which stands for "without reproducing the findings".
+    # The bound is set from the 33 past runs: the judge passed replies up to
+    # 453 characters and failed every one from 498. A first form also
+    # refused any bulleted list and failed a reply whose bullets were the
+    # checks it had not run, so the list is no longer read.
     target: last_message
-    pattern: '^(?=[\s\S]*chunk-1-r0-review\.md)(?=[\s\S]*(?:\d+\W{0,3}(?:Critical|High|Medium)|(?:Critical|High|Medium)\W{0,5}\d))(?![\s\S]*(?:^|\n)\s*(?:[-*]|\d+\.)\s)[\s\S]{0,550}$'
+    pattern: '^(?=[\s\S]*chunk-1-r0-review\.md)(?=[\s\S]*(?:\d+\W{0,3}(?:Critical|High|Medium)|(?:Critical|High|Medium)\W{0,5}\d))[\s\S]{0,480}$'
     flags: i

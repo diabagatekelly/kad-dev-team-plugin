@@ -53,6 +53,15 @@
     "claude_version": "2.1.296",
     "recorded": "2026-10-15T21:49:28Z"
   },
+  "adr-payment-gateway": {
+    "inputs": "c1cc214f5cc9685726c244537de601a784892180ee8643a6cb51306e6bbc2b99",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261114T222115-adr-payment-gateway.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T22:25:26Z"
+  },
   "architecture-design-neg-review": {
     "inputs": "0c4ae92fb651aa37d74a751af3749694f9105bf2bef7dc4308cf3678ff4a4638",
     "score": 1.0,
@@ -88,6 +97,15 @@
     "source": "results/gate-20261112T012636-rerun-architecture-design-payfine-phase2.json",
     "claude_version": "2.1.322",
     "recorded": "2026-11-12T01:50:51Z"
+  },
+  "architecture-design-payfine-via-agent": {
+    "inputs": "7ae319a4d0a51b761009bf3ac17937d779c0e5825256bff6437f8b15fb8dcad7",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261114T222115-retry-architecture-design-payfine-via-agent.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T22:25:26Z"
   },
   "architecture-design-scope-consequence": {
     "inputs": "19502a53dd4973697c1022b0fcf3026ba3a62540fc3c05994a7e45b61da21eb8",
@@ -152,6 +170,15 @@
     "claude_version": "2.1.325",
     "recorded": "2026-11-14T14:54:01Z"
   },
+  "chunk-runner-one-fix-round": {
+    "inputs": "e8e2ecc8187eb9dbc4dae5d78858c6817464daf541a56fd3b8baf48e2c74a773",
+    "score": 1.0,
+    "bar": 0.97,
+    "runs": 3,
+    "source": "results/gate-20261114T222115-chunk-runner-one-fix-round.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T22:25:26Z"
+  },
   "chunk-runner-replay-not-the-handback": {
     "inputs": "c51283c81e8f8cc2fa7027ac496279bacadb94f71b0bbac9114f6a6208709994",
     "score": 1.0,
@@ -196,6 +223,15 @@
     "source": "results/gate-20261112T012636-code-review-catalog.json",
     "claude_version": "2.1.322",
     "recorded": "2026-11-12T01:50:51Z"
+  },
+  "code-review-comments-chunk": {
+    "inputs": "5a77486371c1a53a50c9c455f25cf36aeabd15df8092d45f63026f92057320e2",
+    "score": 0.833,
+    "bar": 0.9,
+    "runs": 3,
+    "source": "results/gate-20261114T222115-code-review-comments-chunk.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T22:25:26Z"
   },
   "code-review-days-left-pr": {
     "inputs": "fc278cce23fd9d05e76b9b6df65190ec2f4e09fbda895ba035decaf194a9719f",
@@ -1268,6 +1304,33 @@
     "claude_version": "2.1.325",
     "recorded": "2026-11-14T15:13:18Z"
   },
+  "tdd-implementation-lite-chunk-plan": {
+    "inputs": "80ec9473dcfd8529987a55a90bf889f17b24625329a084d6ec1cf91fd5801011",
+    "score": 1.0,
+    "bar": 0.857,
+    "runs": 3,
+    "source": "results/gate-20261114T222115-tdd-implementation-lite-chunk-plan.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T22:25:26Z"
+  },
+  "tdd-implementation-lite-named-fix": {
+    "inputs": "af0dda1158c7c466993be8521029971ea93a466642eb91b0d8b75f40c4dc00ef",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261114T222115-tdd-implementation-lite-named-fix.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T22:25:26Z"
+  },
+  "tdd-implementation-lite-one-chunk": {
+    "inputs": "4afc106e1c72c7e9ddde823e0729eedfd559ee529dd3e63cd065e2730b09c4b7",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261114T222115-tdd-implementation-lite-one-chunk.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T22:25:26Z"
+  },
   "tdd-implementation-lite-rename-fix": {
     "inputs": "9a4b62072ba848366567c6dfc067956570c70296819c7d1a5c917c4a30ab03bb",
     "score": 1.0,
@@ -1339,6 +1402,15 @@
     "source": "results/gate-20261112T012636-test-quality-review-reminders.json",
     "claude_version": "2.1.322",
     "recorded": "2026-11-12T01:50:51Z"
+  },
+  "test-quality-review-seam-fake": {
+    "inputs": "22512d5c8b30e445256d3866eda09516767bccea929d6aa27fdbdccb4340bbda",
+    "score": 1.0,
+    "bar": 1.0,
+    "runs": 3,
+    "source": "results/gate-20261114T222115-test-quality-review-seam-fake.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T22:25:26Z"
   },
   "user-facing-docs-renewals": {
     "inputs": "8d19b1c208fe548f5164095955df0266688659e51f9b7dc5bce06c6e00fe9e67",
