@@ -40,7 +40,9 @@ graders:
   - type: tool_used
     name: commit-checked-against-the-repository
     tool: Bash
-    input_match: 'git[^|;&]*(?:cat-file\s+-e|rev-list|log\b)'
+    # the hand-back's own hash, asked of the repository: a `git log` that
+    # names no hash is not the check
+    input_match: 'git[^|;&]*(?:cat-file|rev-parse|rev-list|show|log|branch)\b[^|;&]*72ba4bb'
     min: 1
   - type: regex
     name: nothing-started-in-the-background-to-wait

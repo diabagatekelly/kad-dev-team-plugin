@@ -43,13 +43,18 @@ the same `rule` and `edits`, an `id`, and `cases`, the cases to run it on.
         `--out` (default: a `kad-skill-mutation` folder in the temp
         directory), never to `evals/results/`: a run on a broken skill
         is not part of a case's history. `--resume` skips a pair whose
-        result already holds `--runs` clean runs.
+        result already holds `--runs` clean runs of the same deletion on
+        the same case file. One invocation per `--out` folder at a time:
+        two would write the same result files. With `--mutants` a pair is
+        CAUGHT when a grader that passes every run at its bar fails, and
+        INCOMPLETE when a run errored: read the failure before counting it.
 
 Usage: python3 -I evals/tools/skill_mutation.py check
 """
 import argparse
 import concurrent.futures
 import glob
+import hashlib
 import json
 import os
 import re
@@ -89,6 +94,10 @@ def mutants(path, cases=None, rules=None):
     return out
 
 
+def skill_file(ref):
+    return f"skills/{ref.get('skill')}/SKILL.md"
+
+
 def grader_names(case):
     """The names of a case's graders, read from its case.yaml as text (the
     tools here carry no YAML parser)."""
@@ -103,7 +112,14 @@ def problems(ident, case, ref, root=None):
     found = []
     if not ref.get("edits"):
         found.append("no edits")
+    if "fails" in ref and not ref["fails"]:
+        found.append("no grader named in `fails`: nothing would show the deletion is caught")
     for e in ref.get("edits", []):
+        if e.get("file") != skill_file(ref):
+            # the one file a reference may edit: a path elsewhere would guard
+            # nothing of the skill, and one outside the tree would be written to
+            found.append(f"edits {e.get('file')}, not {skill_file(ref)}")
+            continue
         path = os.path.join(root, e["file"])
         if not os.path.isfile(path):
             found.append(f"{e['file']} does not exist")
@@ -125,7 +141,8 @@ def problems(ident, case, ref, root=None):
 def repo_files(root=None):
     root = root or ROOT
     args = ["git", "-C", root, "ls-files", "--cached", "--others", "--exclude-standard"]
-    listed = subprocess.check_output(args, text=True).splitlines()
+    # a fixed git command on the tree's own root; no shell, nothing from a reference
+    listed = subprocess.check_output(args, text=True).splitlines()  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
     return [f for f in listed if f and os.path.isfile(os.path.join(root, f))]
 
 
@@ -137,7 +154,10 @@ def apply(ref, dest, root=None):
         target = os.path.join(dest, f)
         os.makedirs(os.path.dirname(target), exist_ok=True)
         shutil.copy2(os.path.join(root, f), target)
+    marker = json.dumps(f"Base directory for this skill: <plugin-root>/skills/{ref.get('skill')}")[1:-1]
     for e in ref["edits"]:
+        if e.get("file") != skill_file(ref):
+            raise SystemExit(f"edits {e.get('file')}, not {skill_file(ref)}")
         path = os.path.join(dest, e["file"])
         text = open(path, encoding="utf-8").read()
         if text.count(e["old"]) != 1:
@@ -150,10 +170,13 @@ def apply(ref, dest, root=None):
         # too. An edit to the frontmatter is in no history.
         was, now = json.dumps(e["old"])[1:-1], json.dumps(e.get("new", ""))[1:-1]
         for history in glob.glob(os.path.join(dest, "evals", "*", "history.jsonl")):
-            frozen = open(history, encoding="utf-8").read()
-            if was in frozen:
+            lines = open(history, encoding="utf-8").read().split("\n")
+            # only the entry that loaded this skill: the same words in a
+            # prompt or another turn are the case's input and stay
+            edited = [line.replace(was, now) if marker in line else line for line in lines]
+            if edited != lines:
                 with open(history, "w", encoding="utf-8") as fh:
-                    fh.write(frozen.replace(was, now))
+                    fh.write("\n".join(edited))
 
 
 def run_env():
@@ -173,7 +196,16 @@ def run_env():
 _start = threading.Lock()
 
 
-def run_pair(ident, case, ref, runs, out_dir, keep):
+def key_of(case, ref):
+    """What a result was run on: the deletion's edits and the case's own
+    file. A result kept from another deletion or an older case is not this
+    pair's (`--resume`)."""
+    h = hashlib.sha256(json.dumps(ref["edits"], sort_keys=True).encode())
+    h.update(open(os.path.join(EVALS, case, "case.yaml"), "rb").read())
+    return h.hexdigest()[:16]
+
+
+def run_pair(ident, case, ref, runs, out_dir, keep, parallel=8):
     """One reference on one case: the per-grader pass rates over the clean
     runs, how many runs errored, and the result file."""
     sys.path.insert(0, TOOLS)
@@ -181,12 +213,14 @@ def run_pair(ident, case, ref, runs, out_dir, keep):
     out = os.path.join(out_dir, f"{ident}--{case}.json")
     copy = tempfile.mkdtemp(prefix=f"kad-mut-{ident[:24]}-")
     try:
+        if os.path.exists(out):
+            os.remove(out)  # a run that fails to write must not be read as the last one's result
         apply(ref, copy)
         with _start:
             time.sleep(1.1)  # the CLI names its report folder by the second
         args = ["claude", "plugin", "eval", ".", "--case", case, "--runs", str(runs),
                 "--ablation", "none", "--scaffold", "--judge-model", "sonnet", "--no-publish",
-                "--trust-plugin", "--concurrency", str(min(runs, 8)), "--keep-temp", "--json", out]
+                "--trust-plugin", "--concurrency", str(max(1, min(runs, parallel, 8))), "--keep-temp", "--json", out]
         grant = eval_gate.case_tool_grant(case)
         if grant:
             args += ["--allow-tools", *grant]
@@ -210,6 +244,7 @@ def run_pair(ident, case, ref, runs, out_dir, keep):
         for kept, r in zip(data["cases"][0]["arms"]["with"], results):
             if r.get("error"):
                 kept["error"] = r["error"]
+        data["mutation"] = key_of(case, ref)
         json.dump(data, open(out, "w", encoding="utf-8"), indent=2)
         clean = [r for r in results if not r.get("error")]
         return {"id": ident, "case": case, "runs": len(clean), "errored": len(results) - len(clean),
@@ -220,9 +255,11 @@ def run_pair(ident, case, ref, runs, out_dir, keep):
             shutil.rmtree(copy, ignore_errors=True)
 
 
-def done_already(ident, case, runs, out_dir):
+def done_already(ident, case, ref, runs, out_dir):
     try:
         data = json.load(open(os.path.join(out_dir, f"{ident}--{case}.json"), encoding="utf-8"))
+        if data.get("mutation") != key_of(case, ref):
+            return False
         return sum(1 for r in data["cases"][0]["arms"]["with"] if not r.get("error")) >= runs
     except (OSError, ValueError, KeyError, IndexError):
         return False
@@ -262,15 +299,20 @@ def cmd_run(a):
         found = problems(ident, case, ref)
         if found:
             raise SystemExit(f"{case} / {ident} does not apply: {'; '.join(found)} (run `check`)")
-    out_dir = a.out or os.path.join(tempfile.gettempdir(), "kad-skill-mutation")
+    # absolute: the CLI runs in the scratch copy and writes its result there otherwise
+    out_dir = os.path.abspath(a.out or os.path.join(tempfile.gettempdir(), "kad-skill-mutation"))
     os.makedirs(out_dir, exist_ok=True)
     if a.resume:
-        pairs = [p for p in pairs if not done_already(p[0], p[1], a.runs, out_dir)]
+        pairs = [p for p in pairs if not done_already(p[0], p[1], p[2], a.runs, out_dir)]
     print(f"{len(pairs)} to run, {a.runs} runs each, results in {out_dir}", flush=True)
     exit_code = 0
+    try:
+        bars = json.load(open(os.path.join(EVALS, "thresholds.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        bars = {}
     workers = max(1, a.parallel // max(1, a.runs))
     with concurrent.futures.ThreadPoolExecutor(workers) as pool:
-        futures = {pool.submit(run_pair, i, c, r, a.runs, out_dir, a.keep): (i, c, r) for i, c, r in pairs}
+        futures = {pool.submit(run_pair, i, c, r, a.runs, out_dir, a.keep, a.parallel): (i, c, r) for i, c, r in pairs}
         for fut in concurrent.futures.as_completed(futures):
             ident, case, ref = futures[fut]
             res = fut.result()
@@ -278,13 +320,22 @@ def cmd_run(a):
                 print(f"ERROR     {case} / {ident}: {res['error']}", flush=True)
                 exit_code = 1
                 continue
-            failed = failed_graders(res["rates"])
+            # a grader the bar does not record as passing every run cannot
+            # show a deletion: it fails with the rule in place too
+            bar = bars.get(case, {}).get("graders", {})
+            below = sorted(n for n in failed_graders(res["rates"]) if bar.get(n, 1) < 1)
+            failed = [n for n in failed_graders(res["rates"]) if n not in below]
             partial = sorted(n for n, r in res["rates"].items() if FAIL_AT + 1e-9 < r < 1)
             line = (f"{case} / {ident}: {res['runs']} clean"
                     + (f", {res['errored']} errored" if res["errored"] else "")
                     + (f"; failed: {', '.join(failed)}" if failed else "")
                     + ("; partly: " + ", ".join("%s %.2f" % (n, res["rates"][n]) for n in partial) if partial else ""))
-            if a.mutants:
+            if below:
+                line += f"; failing at the bar already, not counted: {', '.join(below)}"
+            if a.mutants and res["runs"] < a.runs:
+                print(f"INCOMPLETE  {line}; too few clean runs to say", flush=True)
+                exit_code = 1
+            elif a.mutants:
                 print(f"{'CAUGHT  ' if failed else 'SURVIVED'}  {line}", flush=True)
             else:
                 missing = sorted(set(ref.get("fails", [])) - set(failed))

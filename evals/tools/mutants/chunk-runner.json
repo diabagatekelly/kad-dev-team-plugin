@@ -1,0 +1,1332 @@
+[
+ {
+  "id": "log-and-records",
+  "skill": "chunk-runner",
+  "rule": "never writes the log, never commits the records",
+  "cases": [
+   "chunk-runner-gap-handback",
+   "chunk-runner-gate-deviation",
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Write to `orchestrator-log.md`, commit the records, run the audit sync,",
+    "new": "Run the audit sync,"
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "It never asks the owner, never consults a persona, never writes the log and never commits the records.",
+    "new": "It never asks the owner, never consults a persona."
+   }
+  ]
+ },
+ {
+  "id": "no-edit-no-widen",
+  "skill": "chunk-runner",
+  "rule": "never edits code, plan or documents; never widens --allow, drops --protect or fixes it itself",
+  "cases": [
+   "chunk-runner-gate-outside",
+   "chunk-runner-gate-sources",
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Edit the plan entry, the code, a test or a\nplanning document; widen `--allow`; drop a `--protect`. ",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Don't widen `--allow`, don't drop a `--protect`, don't\n   fix it yourself.",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "; nobody edits the plan entry)",
+    "new": ")"
+   }
+  ]
+ },
+ {
+  "id": "needs-decision-ends",
+  "skill": "chunk-runner",
+  "rule": "a needs-decision finding ends the run; no persona is launched",
+  "cases": [
+   "chunk-runner-gap-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Launch a persona for a decision (a `needs-decision`\nfinding ends your run: the orchestrator consults and relaunches you).\n",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "\n\n   **A `needs-decision` finding ends your run here**: hand back the line\n   as far as it goes with `needs-decision <persona>: <report path> —\n   <title>` appended. The orchestrator consults the persona and relaunches\n   a runner telling it to resume at the fix round with the decision\n   commit (below).",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "It never asks the owner, never consults a persona, never writes the log and never commits the records.",
+    "new": "It never asks the owner, never writes the log and never commits the records."
+   }
+  ]
+ },
+ {
+  "id": "two-launches",
+  "skill": "chunk-runner",
+  "rule": "review and smoke are two launches, never more; no second reviewer kind",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Launch a third\nreview, a third fixer, or a second reviewer kind.",
+    "new": "Launch a third review or a third fixer."
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "**Review and smoke: two launches, never more**",
+    "new": "**Review and smoke**"
+   }
+  ]
+ },
+ {
+  "id": "printed-counts",
+  "skill": "chunk-runner",
+  "rule": "only the script's printed counts reach the hand-back; no report is opened",
+  "cases": [
+   "chunk-runner-review-round",
+   "chunk-runner-gap-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Open a report to read a\nfinding: the counts you hand back are `rounds_record.py`'s as it printed\nthem, and the fixer reads the reports itself.",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " **Only its printed counts\n   reach your hand-back**: you never parse a report, never tally\n   severities by reading, and never write a script to do either.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "hash-is-real",
+  "skill": "chunk-runner",
+  "rule": "a hash is real only when the repository says so",
+  "cases": [
+   "chunk-runner-waits-for-handback",
+   "chunk-runner-replay-not-the-handback",
+   "chunk-runner-replay-unheld-commit"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "- **A hash is real only when the repository says so.** Before a commit\n  goes into a command, a message or your line, `git cat-file -e\n  '<sha>^{commit}'` exits 0 on it, the hashes a hand-back names included,\n  and a commit claimed as this chunk's work is in `git rev-list\n  <base>..HEAD`: one that exists elsewhere in the repository is not the\n  chunk's.\n  The `commits` on your line are read from `git log --oneline\n  <base>..HEAD` after the hand-back, never copied from a report. A\n  hand-back naming a commit the repository does not hold is a hand-back\n  with no commit.\n",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Every hash on it is one `git cat-file -e` confirmed in this run,\nand no agent",
+    "new": "No agent"
+   }
+  ]
+ },
+ {
+  "id": "wait-is-ending-the-turn",
+  "skill": "chunk-runner",
+  "rule": "waiting is ending the turn; no background command, sleep, poll or monitor",
+  "cases": [
+   "chunk-runner-waits-for-handback",
+   "chunk-runner-replay-not-the-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "- **Waiting is ending your turn with no tool call** (one short sentence\n  on what you are waiting for, or nothing). The hand-back wakes you.\n  Never start a background command, a sleep, a poll or a monitor to wait,\n  and never watch the branch for a commit: a notice that a command of\n  your own finished is not an agent's hand-back, and nothing else that\n  arrives while you wait is either.\n",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "no-invented-result",
+  "skill": "chunk-runner",
+  "rule": "nothing you expect an agent to say is its result",
+  "cases": [
+   "chunk-runner-waits-for-handback",
+   "chunk-runner-replay-not-the-handback",
+   "chunk-runner-replay-unheld-commit"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "- **Nothing you expect an agent to say is its result.** You never write\n  an agent's report, notification or hash yourself, in a reply or in your\n  own reasoning, and you act on no result that is not in a hand-back.\n",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "no-handback-while-working",
+  "skill": "chunk-runner",
+  "rule": "never hand back while a launched agent has not returned",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "- **Never hand back while an agent you launched has not returned.** A\n  round that has to end waits for the hand-back first, then ends.",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "confirmed in this run,\nand no agent you launched is still working when you send it.",
+    "new": "confirmed in this run."
+   }
+  ]
+ },
+ {
+  "id": "builder-carried-lines",
+  "skill": "chunk-runner",
+  "rule": "the builder's two carried lines (orchestrator reviews; chunks are committed)",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "; two lines carried word for word on every build task:\n   that `orchestrator` reviews the result (so the skill's final review is\n   skipped), and that chunks are committed (so the skill's \"Committing a\n   chunk\" applies: the chunk ends with one commit whose subject is the\n   chunk's title, the report section appended in the same commit, nothing\n   pushed).",
+    "new": "."
+   }
+  ]
+ },
+ {
+  "id": "stall-not-before-handback",
+  "skill": "chunk-runner",
+  "rule": "the stall message is never sent before a hand-back; an empty git log means wait",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "**Stall rule.** It reads a hand-back, never the branch. When",
+    "new": "**Stall rule.** When"
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " An empty `git log` before the hand-back means the\n   agent is working: wait. The message is never sent to an agent that\n   has not handed back.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "gate-design-modules",
+  "skill": "chunk-runner",
+  "rule": "the gate is run with the design's modules and deviation zones; the scope check is three-way",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " --module-dir '<each module directory>' --deviation-zone '<each composition root and entry point>'",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Its scope check is three-way: a changed file on the\n   Files line or in the records directory is in scope; a file inside a\n   design module but off the Files line, a test file off it, or a file\n   under a deviation zone is a **deviation**, printed on the `scope` line\n   and carried to the hand-back as `deviations <n>`, not a failure (the\n   builder names it in its report section; nobody edits the plan entry);\n   a file outside all of these is the `FAIL` that goes to the fixer.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "gate-planning-sources",
+  "skill": "chunk-runner",
+  "rule": "the gate is run with --planning; the sources check",
+  "cases": [
+   "chunk-runner-gate-sources"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " --planning '<target directory>'",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Its\n   `sources` check (`--planning`; a `SKIP` line when the target directory\n   lists no file of the owner's in a `sources.md`) fails when a changed\n   file holds a value of a listed source: the `hit:` lines name the file,\n   the line and the cell, never the value, so the output is safe in the\n   records.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "gate-output-saved",
+  "skill": "chunk-runner",
+  "rule": "the gate's output is saved as gate-chunk-<k>-r0.txt",
+  "cases": [
+   "chunk-runner-gate-deviation",
+   "chunk-runner-gate-outside"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Save the output as `gate-chunk-<k>-r0.txt` in the records\n   directory.",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": ", saved as `gate-chunk-<k>-r0-fix.txt`",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "gate-fail-one-fixer",
+  "skill": "chunk-runner",
+  "rule": "a gate FAIL goes to one fresh fixer, once, then the gate again",
+  "cases": [
+   "chunk-runner-gate-outside",
+   "chunk-runner-gate-sources"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "On any other `FAIL`, hand the failing checks to a fresh fixer (`model:\n   \"sonnet\"`, `maxTurns: 120`, `tdd-implementation-lite`, its \"Applying a\n   fix handed back from review\" path, the gate's output verbatim, chunks\n   are committed), once; run the gate again on the fix's range with the\n   same `--base`, saved as `gate-chunk-<k>-r0-fix.txt`. ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "sources-fixer-line",
+  "skill": "chunk-runner",
+  "rule": "the sources fixer's added line (invented values)",
+  "cases": [
+   "chunk-runner-gate-sources"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "**A `sources` failure** goes to that one fixer with one line added to\n   its task: the lines the gate names hold values of a file the owner\n   provided; replace each one that is an example (a name, an amount, a\n   row of made-up data that is not made up) with an invented value, the\n   same one everywhere it recurs, and leave an ordinary word of the code\n   where it is, naming it in the Fix line. What still fails",
+    "new": "**A `sources` failure**: what still fails"
+   }
+  ]
+ },
+ {
+  "id": "sources-never-opened",
+  "skill": "chunk-runner",
+  "rule": "never open a listed source, never --show, never copy a value",
+  "cases": [
+   "chunk-runner-gate-sources"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " You\n   never open a listed source, never run the scan with `--show`, and\n   never copy a value into the hand-back.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "reviewer-nothing-of-the-flow",
+  "skill": "chunk-runner",
+  "rule": "the reviewer is handed five things and nothing of the flow's state",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": ",\n   each handed nothing of the flow's own state (no finding from the\n   other, no severity, no escalation, no \"check whether X\")",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "**It is handed\n     five things and nothing else**:",
+    "new": "It is handed"
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " No slice document, no\n     Touches line, no file list.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "review-report-shape",
+  "skill": "chunk-runner",
+  "rule": "one review report, Critical/High/Medium/needs-decision only, at most eight",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": ", and **one** report in\n     the shared finding format, Critical, High, Medium and\n     `needs-decision` only, at most eight findings, ranked",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "reviewer-suite-from-gate",
+  "skill": "chunk-runner",
+  "rule": "the reviewer reads the suite's result from the gate file and never runs the suite",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "`chunk-<k>-r0-review.md`, and the path of this chunk's last\n     gate output, which is the suite's run on this commit: the reviewer\n     reads the suite's result there and runs the typecheck, lint and\n     format check itself, never the suite, since the smoke agent is\n     starting the app on the same checkout at the same time.",
+    "new": "`chunk-<k>-r0-review.md`."
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "**It is handed\n     five things and nothing else**",
+    "new": "**It is handed four things and nothing else**"
+   }
+  ]
+ },
+ {
+  "id": "smoke-agent-kind",
+  "skill": "chunk-runner",
+  "rule": "the smoke agent's kind (tdd-coach when not UI)",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "`kad-dev-team:accessibility-engineer:AGENT` when\n     Touches includes UI, else `kad-dev-team:tdd-coach:AGENT`. ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "smoke-launcher-and-data",
+  "skill": "chunk-runner",
+  "rule": "the smoke agent starts the app through the scratch launcher, under the data rule",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "start the app through `scratch_run.py` (handed by path, with the\n     scratch folder and the data-path variables the README names, each\n     inside the folder; made-up data; never the owner's data or login\n     credential store; the data rule in the orchestrator's text), wait",
+    "new": "start the app, wait"
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "the\n     report path, the launcher and its folder, and nothing else.",
+    "new": "the report path, and nothing else."
+   }
+  ]
+ },
+ {
+  "id": "rounds-record-r0",
+  "skill": "chunk-runner",
+  "rule": "round 0 is recorded with rounds_record.py",
+  "cases": [
+   "chunk-runner-review-round",
+   "chunk-runner-gap-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Then, inline with Bash:\n\n   ```\n   python3 -I '<scripts>/rounds_record.py' --sidecar '<records dir>/rounds-slice-<nnn>.jsonl' --report '<review report>' --report '<smoke report>' --chunk <k> --round 0\n   ```\n\n   It writes one sidecar row per finding and prints the round's fragment\n   (`r0 <C/H/M> ... ; smoke PASS|<n> findings`) and one line per\n   `needs-decision` finding; a Low in a chunk report is dropped before\n   anything is recorded (`lows dropped <n>`). ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "rounds-record-r1-range",
+  "skill": "chunk-runner",
+  "rule": "round 1 is recorded with --range; the script splits regression from pre-existing",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Then:\n\n   ```\n   python3 -I '<scripts>/rounds_record.py' --sidecar '<sidecar>' --report '<r1 review>' [--report '<r1 smoke>'] --chunk <k> --round 1 --project '<project root>' --range '<before fix>..HEAD' --fix '<sha>' --fixer '<agent id>' --turns <n>\n   ```\n\n   It classifies each finding by hunk: **regression** when its line is\n   inside the fix's diff (a smoke finding always is), **pre-existing**\n   otherwise, and prints the `(reg <r>, pre <p>)` split and one\n   `standing:` line per pre-existing Critical, High or Medium.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "regressions-to-a-fixer",
+  "skill": "chunk-runner",
+  "rule": "regressions go to a second fixer, then the gate",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Regressions\n   go to a **second and last** fixer (a fresh launch, the same shape,\n   `Fix r2` line), then the gate (`gate-chunk-<k>-r2.txt`); the chunk is\n   done: **no third review**.",
+    "new": "The chunk is done: **no third review**."
+   }
+  ]
+ },
+ {
+  "id": "no-third-review",
+  "skill": "chunk-runner",
+  "rule": "no third review",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Launch a third\nreview, a third fixer, or a second reviewer kind.",
+    "new": "Launch a third fixer, or a second reviewer kind."
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "; the chunk is\n   done: **no third review**.",
+    "new": "; the chunk is done."
+   }
+  ]
+ },
+ {
+  "id": "preexisting-stand",
+  "skill": "chunk-runner",
+  "rule": "pre-existing findings are never fixed in this scope, they stand",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Pre-existing findings are never fixed in\n   this scope: they stand, and the hand-back's `standing <C/H/M>` carries\n   them; a standing Critical or High is the orchestrator's to stop on.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "resume-rule",
+  "skill": "chunk-runner",
+  "rule": "the resume rule (start at the named step, run nothing twice)",
+  "cases": [
+   "chunk-runner-review-round",
+   "chunk-runner-one-fix-round",
+   "chunk-runner-gap-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "A task that names a resume point (the orchestrator relaunching you after\na consult, or a session that ended mid-round) gives the facts so far: the\nbuilder's commit and agent id, the gate file, the report paths, the\nrecorded round, a decision commit. Start at the step it names (usually\nthe fix round, the decision commit passed to the fixer with the\nfindings), run nothing twice, and hand back the whole line, the earlier\nfacts included. ",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Optionally a resume point: the step the round\nstopped at and the facts so far (hashes, report paths, a decision commit).",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "stopping-point",
+  "skill": "chunk-runner",
+  "rule": "the stopping-point rule (stopped at <step>)",
+  "cases": [
+   "chunk-runner-gate-deviation",
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "A task that names a stopping point (an owner's hand-off,\nan eval's bound) ends there with the line for what ran and `stopped at\n<step>` appended.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "handback-one-line",
+  "skill": "chunk-runner",
+  "rule": "the hand-back is one line and nothing else",
+  "cases": [
+   "chunk-runner-one-fix-round",
+   "chunk-runner-gap-handback",
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "One line, the C line's fields in the orchestrator's order, as far as the\nround went, and nothing else: no finding's text, no path but the ones the\nfields hold, no narration, no notes or bullets before it on what you\ncould not find or what the orchestrator should know.",
+    "new": "The C line's fields in the orchestrator's order, as far as the round went."
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "; a finding's title belongs in the report, not in your\nreply.",
+    "new": "."
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Your whole\nreply is the line.",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "and hand back the chunk's log line and nothing else.",
+    "new": "and hand back the chunk's log line."
+   }
+  ]
+ },
+ {
+  "id": "handback-template",
+  "skill": "chunk-runner",
+  "rule": "the hand-back line's template",
+  "cases": [
+   "chunk-runner-one-fix-round",
+   "chunk-runner-review-round",
+   "chunk-runner-gate-sources"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "```\n`<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>\n```\n",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "fixer-cap",
+  "skill": "chunk-runner",
+  "rule": "the fixer cap (second and last, no third fixer)",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Launch a third\nreview, a third fixer, or a second reviewer kind.",
+    "new": "Launch a third review, or a second reviewer kind."
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "a **second and last** fixer",
+    "new": "a fixer"
+   }
+  ]
+ },
+ {
+  "id": "never-ask-owner",
+  "skill": "chunk-runner",
+  "rule": "never ask the owner",
+  "cases": [
+   "chunk-runner-gap-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Ask the owner anything (you carry no\n`AskUserQuestion`, and a question on the hand-back line is one the\norchestrator asks). ",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "It never asks the owner, never consults a persona, never writes the log and never commits the records.",
+    "new": "It never consults a persona, never writes the log and never commits the records."
+   }
+  ]
+ },
+ {
+  "id": "audit-and-budget",
+  "skill": "chunk-runner",
+  "rule": "never runs the audit sync or checks the budget's clock",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "commit the records, run the audit sync,\ncheck the budget's clock.",
+    "new": "commit the records."
+   }
+  ]
+ },
+ {
+  "id": "sandbox-check-before-launch",
+  "skill": "chunk-runner",
+  "rule": "the sandbox check before each launch, counted on the hand-back",
+  "cases": [
+   "chunk-runner-gate-outside"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "waited for; before each one run the sandbox check\ninline (`python3 -I <scripts>/sandbox_check.py --project '<project\nroot>'`), and count the checks on the hand-back as `sandbox <n> PASS`.",
+    "new": "waited for."
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Sandbox check. Then, in parallel,",
+    "new": "In parallel,"
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "smoke finding: sandbox check, then one\n   fresh fixer",
+    "new": "smoke finding: one fresh fixer"
+   }
+  ]
+ },
+ {
+  "id": "sandbox-fail-ends",
+  "skill": "chunk-runner",
+  "rule": "under the launcher a sandbox FAIL ends the round",
+  "cases": [
+   "chunk-runner-gate-outside"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "under the launcher (`PASS` at A) a `FAIL` here ends the\nround with `sandbox FAIL: <checks>; ended` on the line, since the fence\nchanged under the flow; when",
+    "new": "when"
+   }
+  ]
+ },
+ {
+  "id": "sandbox-opted-out",
+  "skill": "chunk-runner",
+  "rule": "when the owner opted out at A the checks are information and the round goes on",
+  "cases": [
+   "chunk-runner-gate-outside"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "; when the A line says the owner opted to continue\nunsandboxed (`none on <platform>`, or `owner opted to continue\nunsandboxed`, the task says so) every check in the round is information,\nthe round goes on, and the hand-back says `sandbox <n> checked, FAIL on\n<checks> (owner opted out at A)`.",
+    "new": "."
+   }
+  ]
+ },
+ {
+  "id": "single-quoted-paths",
+  "skill": "chunk-runner",
+  "rule": "every project path in single quotes",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Every project path in a command goes in single\nquotes (`'\\''` for a quote inside one).",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "launch-form",
+  "skill": "chunk-runner",
+  "rule": "every launch is a real async Agent call with model and maxTurns explicit",
+  "cases": [
+   "chunk-runner-gate-outside"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Every launch is a real async `Agent` call with `model` and `maxTurns`\npassed explicitly, waited for; before each one run",
+    "new": "Before each launch run"
+   }
+  ]
+ },
+ {
+  "id": "wait-definition",
+  "skill": "chunk-runner",
+  "rule": "an agent has returned only when its hand-back is in front of you",
+  "cases": [
+   "chunk-runner-waits-for-handback",
+   "chunk-runner-replay-not-the-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "An agent you launched has returned\nonly when its hand-back is in front of you: the `Agent` call's own result\nwhen the call blocks until the agent ends, or, when the harness runs the\nlaunch in the background, the message that names that agent's id and\ncarries its report. Until then you know nothing of its work, however long\nit takes; a build of ten minutes is ordinary.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "hash-in-the-chunks-range",
+  "skill": "chunk-runner",
+  "rule": "a commit claimed as the chunk's is in base..HEAD",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": ",\n  and a commit claimed as this chunk's work is in `git rev-list\n  <base>..HEAD`: one that exists elsewhere in the repository is not the\n  chunk's.",
+    "new": "."
+   }
+  ]
+ },
+ {
+  "id": "commits-read-from-git-log",
+  "skill": "chunk-runner",
+  "rule": "the line's commits are read from git log, never copied from a report",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "The `commits` on your line are read from `git log --oneline\n  <base>..HEAD` after the hand-back, never copied from a report. ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "missing-commit-is-no-commit",
+  "skill": "chunk-runner",
+  "rule": "a hand-back naming a commit the repository does not hold is a hand-back with no commit",
+  "cases": [
+   "chunk-runner-waits-for-handback",
+   "chunk-runner-replay-unheld-commit"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " A\n  hand-back naming a commit the repository does not hold is a hand-back\n  with no commit.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "builder-nothing-of-the-flow",
+  "skill": "chunk-runner",
+  "rule": "the builder is told nothing of reviewers, findings, scope rules or the flow",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Nothing about reviewers, other chunks' findings, scope rules,\n   or the flow's state.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "keep-agent-id",
+  "skill": "chunk-runner",
+  "rule": "keep the builder's agent id",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Keep its agent\n   id: the gate and the hand-back need it.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "gate-agent-transcript",
+  "skill": "chunk-runner",
+  "rule": "the gate is run with --agent; red commit on the line",
+  "cases": [
+   "chunk-runner-waits-for-handback",
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " --agent '<builder agent id>'",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Its\n   `transcript` lines (`--agent`) are the counted shell edits and the\n   commit rule: `committed on a red run: <sha>` when the builder's commit\n   shared a command with its test run and the run showed a failure; put\n   `red commit <sha>` on the hand-back line when it says so.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "stall-message",
+  "skill": "chunk-runner",
+  "rule": "a hand-back that is not done with no commit gets one stall message",
+  "cases": [
+   "chunk-runner-waits-for-handback",
+   "chunk-runner-replay-unheld-commit"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "When the\n   agent's hand-back is in front of you and says it is not done (or it\n   returned at its turn cap), and there is then no new commit on the\n   branch (`git log --oneline <base>..HEAD` is empty, or the commit the\n   hand-back names does not exist), send it one message with\n   `SendMessage`: commit what passes its done check, report the rest as\n   not built, stop. ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "stall-relaunch",
+  "skill": "chunk-runner",
+  "rule": "a second no-commit return relaunches a fresh implementer; a second stall ends the round",
+  "cases": [
+   "chunk-runner-waits-for-handback",
+   "chunk-runner-replay-unheld-commit"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "\n   If it returns again with no commit, note `stall: relaunched` for the\n   hand-back, leave the working tree as it is (discard nothing), and\n   launch a fresh implementer for the same chunk with the stalled agent's\n   report section as handover and one line saying the tree may hold\n   uncommitted work from a previous attempt that it should read before\n   writing. A second stall on the same chunk ends the round: `stall:\n   ended` on the hand-back line.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "shell-edits-counted",
+  "skill": "chunk-runner",
+  "rule": "shell edits are counted, never acted on",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "**Shell edits** are counted, never acted on. The builder's hand-back\n   says `shell edits <m>`; the gate's transcript replay (next step) counts\n   them from what the agent actually ran, and the counted number is the\n   one that goes on the line, `reported <m>` beside it. A formatter run\n   through the manifest's `format` script is not a shell edit. Never a\n   stall, never a relaunch, never a question: the count is there for the\n   audit to find (a fixer mangled a seam test's name with one `sed -i`,\n   incident 3; a builder reported 1 and made 9, incident 4).",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "gate-protect",
+  "skill": "chunk-runner",
+  "rule": "the gate is run with --protect",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " --protect '<every other document in the target directory>'",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "the change set is not empty, every\n   `--protect` document is unchanged, and, with",
+    "new": "the change set is not empty, and, with"
+   }
+  ]
+ },
+ {
+  "id": "gate-expect-tests",
+  "skill": "chunk-runner",
+  "rule": "the gate is run with --expect-tests-from and --chunk; the tests check",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " --expect-tests-from '<implementation report path>' --chunk <k>",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Its\n   `tests` check reads the chunk's Done when line from the report itself\n   and fails when a Done-when test is registered in no test file (names\n   compared case-folded, NFC-normalised, a `seam \"…\"` wrapper stripped\n   from either side; a backticked single word is never a name).",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "gate-coverage",
+  "skill": "chunk-runner",
+  "rule": "the gate is run with --coverage on Node's test runner",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " [--coverage]",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": ", and, with `--coverage` (pass it\n   when the project runs on Node's test runner), coverage holds on the\n   changed source.",
+    "new": "."
+   }
+  ]
+ },
+ {
+  "id": "gate-allows-records-and-log",
+  "skill": "chunk-runner",
+  "rule": "the gate allows the records directory and the log",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md'",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "The log is allowed because it is the orchestrator's own file,\n   appended to at every step and never committed inside the loop.\n   ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "gate-last-line-only",
+  "skill": "chunk-runner",
+  "rule": "read the gate's last line; the rest only on FAIL",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Read its last line; read the rest only on `FAIL`.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "flaky-rule",
+  "skill": "chunk-runner",
+  "rule": "the flaky rule",
+  "cases": [
+   "chunk-runner-gate-outside"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "**The flaky rule.** A `FAIL` whose only failing test passed on the same\n   range in an earlier gate file of this chunk (compare the suite's\n   failing test names with the previous gate output's) is `flaky:\n   <test>`: on the first sighting run the gate once more and note it; on\n   the second sighting send one fresh fixer (`model: \"sonnet\"`,\n   `tdd-implementation-lite`, its handed-back path, the two gate outputs,\n   \"find the cause of the intermittent failure, not the symptom\") counted\n   as the gate fixer below. One flake took four sightings before anyone\n   improvised exactly this (incident 9).\n\n   On any other `FAIL`,",
+    "new": "On a `FAIL`,"
+   }
+  ]
+ },
+ {
+  "id": "second-gate-fail-ends",
+  "skill": "chunk-runner",
+  "rule": "a second gate FAIL ends the round",
+  "cases": [
+   "chunk-runner-gate-outside"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " A second `FAIL`\n   ends the round: `gate FAIL: <checks>; ended` on the hand-back line, the\n   branch as it is.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "sources-still-failing-ends",
+  "skill": "chunk-runner",
+  "rule": "a sources failure left after the fix ends the round",
+  "cases": [
+   "chunk-runner-gate-sources"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "What still fails after the fix\n   ends the round as `gate FAIL: sources; ended`: only the owner can say\n   whether what is left is theirs, and the orchestrator asks. ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "sources-not-readable",
+  "skill": "chunk-runner",
+  "rule": "a source the scan could not read goes to no fixer",
+  "cases": [
+   "chunk-runner-gate-sources"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "A `sources`\n   failure that names a source the scan could not read (`not readable`)\n   goes to no fixer: `gate FAIL: sources (not readable); ended`. ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "light-cadence",
+  "skill": "chunk-runner",
+  "rule": "under light: the smoke agent alone, no fix round",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " (under `light`, the\n   smoke agent alone)",
+    "new": ""
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "- **The combined reviewer** (`loop` only):",
+    "new": "- **The combined reviewer**:"
+   },
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " (`loop` only;\n   under `light` the round ends after step 3 with `review none` on the\n   line and the smoke findings left standing for D)",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "reviewer-told-its-skills",
+  "skill": "chunk-runner",
+  "rule": "the reviewer is told to invoke code-review first, its cold pass and combined chunk review",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "told to invoke `kad-dev-team:code-review` first and follow its \"Cold\n     pass first\" and then its \"Combined chunk review\": the whole of the\n     modules the range touches read, the checks run, suspected bugs\n     probed by execution, the cold findings written, then `code-review`,\n     `test-quality-review`, and `reliability-review` when the range\n     touches HTTP, storage or error handling, with the reliability\n     criteria checked last under their own heading, and **one** report",
+    "new": "told to write **one** report"
+   }
+  ]
+ },
+ {
+  "id": "reviewers-never-install",
+  "skill": "chunk-runner",
+  "rule": "reviewers never install",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " The tree is installed (the gate just ran\n     on it); reviewers never install.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "smoke-report-format",
+  "skill": "chunk-runner",
+  "rule": "the smoke report's format; an app that does not start is one Critical",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "and write `chunk-<k>-r0-smoke.md` in the shared\n     finding format: a `## Result` of `PASS` and no findings, or one\n     finding per thing that broke, each a `###` heading with\n     `**Severity:**` on the line directly under it; an app that does not\n     start is one Critical titled \"the app does not start from the\n     documented command\".",
+    "new": "and write `chunk-<k>-r0-smoke.md`."
+   }
+  ]
+ },
+ {
+  "id": "smoke-handed-nothing-else",
+  "skill": "chunk-runner",
+  "rule": "the smoke agent is handed the Done when line, the criteria, the report path, the launcher, and nothing else",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "It is handed the Done when line, the criteria by path, the\n     report path, the launcher and its folder, and nothing else. ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "smoke-accessibility-pass",
+  "skill": "chunk-runner",
+  "rule": "the accessibility agent's smoke-run review",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "The accessibility agent additionally invokes\n     `kad-dev-team:accessibility-review` in its \"Smoke run\" mode and checks\n     the chunk's accessibility criteria on the built screen, in the same\n     report. ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "smoke-browser-owed",
+  "skill": "chunk-runner",
+  "rule": "browser checks not run are one owed Medium",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " A UI\n     smoke agent whose browser stops answering mid-flow writes, for what\n     it could not drive, one Medium titled `browser checks not run`\n     naming each item; `rounds_record.py` records it as `owed`, never\n     handed to a fixer. When no browser answered at A (the owner chose to\n     continue) every UI smoke run raises that one owed finding.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "wait-for-both",
+  "skill": "chunk-runner",
+  "rule": "wait for both hand-backs; the first to arrive ends nothing",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Wait for both hand-backs (as above: two launches in flight are two\n   hand-backs to wait for, and the first to arrive ends nothing). They\n   are the counts and the paths. Then, inline",
+    "new": "Then, inline"
+   }
+  ]
+ },
+ {
+  "id": "r1-fixer-launch",
+  "skill": "chunk-runner",
+  "rule": "round 0's findings go to one fresh fixer by report path",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "If round 0 raised\n   any Critical, High, Medium or smoke finding: sandbox check, then one\n   fresh fixer (`model: \"sonnet\"`, `maxTurns: 120`, `tdd-implementation-lite`,\n   its handed-back path, chunks are committed) with every finding of both\n   reports verbatim, as the paths of the two report files to read plus\n   the list of which findings in them are handed back (and the decision\n   commit, if any); it commits, one commit per fix or one for the batch,\n   its call, and appends a `Fix r1` line to the chunk's report section.\n   ",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "fixer-stall",
+  "skill": "chunk-runner",
+  "rule": "a fixer that hands back with no commit gets the stall message",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "; a fixer that hands back with no commit the\n   repository holds gets the stall rule's one message, and a second such\n   hand-back ends the round with `stall: ended`.",
+    "new": "."
+   }
+  ]
+ },
+ {
+  "id": "r1-gate",
+  "skill": "chunk-runner",
+  "rule": "the gate on the r1 fix's range",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Then the gate on the fix's range (`--base` the commit before the fix,\n   `--agent` the fixer's id, saved as `gate-chunk-<k>-r1.txt`).",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "r1-re-review",
+  "skill": "chunk-runner",
+  "rule": "the regressions-only re-review of the fix's diff",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "Then the\n   **re-review**: the same combined reviewer kind, `model: \"opus\"`, on\n   the fix's diff only (`<before fix>..HEAD`) and the files it touched\n   (handed as before: the range, the files, the report path; no cold\n   pass, diff-scoped), with the report path `chunk-<k>-r1-review.md` and\n   nothing of round 0; and the smoke agent again",
+    "new": "Then the smoke agent again"
+   }
+  ]
+ },
+ {
+  "id": "r1-smoke-only-after-findings",
+  "skill": "chunk-runner",
+  "rule": "the smoke agent runs again only when round 0's smoke report had findings",
+  "cases": [
+   "chunk-runner-one-fix-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "; and the smoke agent again only when round 0's\n   smoke report had findings (`chunk-<k>-r1-smoke.md`).",
+    "new": "."
+   }
+  ]
+ },
+ {
+  "id": "clean-round-is-done",
+  "skill": "chunk-runner",
+  "rule": "a round 0 with nothing to fix is clean and the chunk is done",
+  "cases": [
+   "chunk-runner-review-round"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " A\n   round 0 with nothing to fix is clean and the chunk is done.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "unknown-fact-is-a-question-mark",
+  "skill": "chunk-runner",
+  "rule": "a fact the fields cannot hold is a ?",
+  "cases": [
+   "chunk-runner-waits-for-handback"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": "A fact the fields\ncannot hold (a transcript not found, a builder's turns unknown) is a `?`\nin its field; a finding's",
+    "new": "A finding's"
+   }
+  ]
+ },
+ {
+  "id": "silence-between-launches",
+  "skill": "chunk-runner",
+  "rule": "between launches say nothing to anyone",
+  "cases": [
+   "chunk-runner-gate-outside"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " Between your own launches say\nnothing to anyone: there is no user in your context, and the orchestrator\nreads only the last line.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "issue-fix-prefix",
+  "skill": "chunk-runner",
+  "rule": "an issue fix's records carry the issue<n>- prefix",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " For an issue fix, the records prefix (`issue<n>-`):\nevery record this skill names then carries it (`issue<n>-chunk-<k>-r0-review.md`,\n`gate-issue<n>-chunk-<k>-r0.txt`, the sidecar `rounds-issue<n>.jsonl` as\nhanded), and nothing is written under a slice's own names.",
+    "new": ""
+   }
+  ]
+ },
+ {
+  "id": "scripts-directory",
+  "skill": "chunk-runner",
+  "rule": "the scripts are in the orchestrator's directory, not this skill's",
+  "cases": [
+   "chunk-runner-gate-deviation"
+  ],
+  "edits": [
+   {
+    "file": "skills/chunk-runner/SKILL.md",
+    "old": " (every script below\nis there; your own `CLAUDE_SKILL_DIR` is this skill's, not that one)",
+    "new": ""
+   }
+  ]
+ }
+]

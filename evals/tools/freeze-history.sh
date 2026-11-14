@@ -115,7 +115,9 @@ if any(home in line for line in lines):
 # A temp directory can carry the home directory's name with the slashes
 # replaced (Claude Code's own, on macOS); the account name alone is checked too.
 account = os.path.basename(home.rstrip("/"))
-if account and any(account in line for line in lines):
+import re
+named = re.compile(r"(?<![A-Za-z0-9])" + re.escape(account) + r"(?![A-Za-z0-9])") if account else None
+if named and any(named.search(line) for line in lines):
     sys.exit(f"the account name ({account}) still appears, outside a path under {home}; remove it by hand before freezing")
 with open(dst, "w") as f:
     f.writelines(lines)
