@@ -823,8 +823,9 @@ and all its graders read the orchestrator's launch.
 | The gate run with the design's modules and deviation zones; the three-way scope check | `chunk-runner-gate-deviation` | `gate-run-with-the-design-modules`, `gate-passes-and-names-the-deviation`, `gate-names-the-test-file-deviation`, `deviation-recorded-not-failed`, each 0/3 |
 | The gate run with `--planning`; the sources check | `chunk-runner-gate-sources` | `gate-run-with-the-planning-directory`, `first-gate-fails-on-sources`, each 2/6: a weak reference, one run in three still passes the flag from the sources paragraph further down |
 | The hand-back line's template | `chunk-runner-gate-sources` | `hands-back-pass-after-the-fix-and-stops` 0/3 (the runs invented a line of their own shape) |
-| The hand-back is one line and nothing else | `chunk-runner-one-fix-round`, `chunk-runner-waits-for-handback` | `hand-back-is-the-one-line` 0/3, `hand-back-is-the-one-line-for-what-ran` 0/3 (judges; every run answered in paragraphs and bullets) |
+| The hand-back is one line and nothing else | `chunk-runner-one-fix-round`, `chunk-runner-waits-for-handback` | `hand-back-is-the-one-line` 0/3, `hand-back-is-the-one-line-for-what-ran` 0/3 (judges; every run answered in paragraphs and bullets). Since E5 the references name the regexes that replaced them, `hand-back-is-one-line-and-nothing-else` and `hand-back-is-one-line-for-what-ran`, each 0/3 again on 2026-11-14 |
 | The smoke agent's kind (`tdd-coach` when the chunk is not UI) | `chunk-runner-review-round` | `one-smoke-agent`, `smoke-agent-handed-the-launcher`, each 0/3 (a general-purpose agent was launched) |
+| Regressions go to a second fixer, then the gate (caught since E5 reworded the prompt, 2026-11-14; a survivor before) | `chunk-runner-one-fix-round` | `second-and-last-fixer`, `gate-on-the-fix`, each 0/3 (the run handed back after round 1 with the regression standing) |
 
 **Half noticed, no reference:** without `--allow` for the records
 directory and the log, the gate fails on scope for the run's own records.
@@ -855,6 +856,7 @@ nothing here is decided:
   above). Proposed: each becomes a regex on the line, as
   `chunk-runner-review-round`'s and `chunk-runner-gate-sources`'s already
   did; the two `handback-one-line` references then name the regex.
+  Done in E5 ("Judges turned into tool checks", below).
 - `plan-entry-not-edited` (`chunk-runner-gate-deviation`) and
   `no-planning-document-written` (`chunk-runner-gap-handback`) could never
   fail: their patterns had the doubled braces of a format string. Fixed
