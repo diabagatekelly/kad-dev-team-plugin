@@ -559,7 +559,9 @@ At the end a pass of the suite should be cheaper and faster. The measure:
 one run of every case, $54 at list prices on 2026-11-14 (139 cases seen
 since 2026-11-10; 88% of the cost is the agent's own run, 12% the judges;
 the 61 never-failed cases among them are $16 of it), reported again after
-each step. Not taken: a run checker over real runs' records (the owner
+each step. (Corrected by E4 the same day: that figure counted the judges
+twice. The measure is $45.88 for the same 139 cases, 82% agent and 18%
+judges; E5 to E7 report against it.) Not taken: a run checker over real runs' records (the owner
 was not convinced), and whole-loop fixture runs, as before.
 What this plan does not yet give: `orchestrator` and `delivery` have had
 no deletion pass and E6 does not apply to them, so their proof is owed
@@ -567,13 +569,26 @@ and not scheduled. E4 says, from reading their cases, which of their
 rules a grader could notice; a deletion pass on those alone is decided
 after it.
 
-- [ ] E4 **Sort the cases.** No model time. Per case: its graders by
+- [x] E4 **Sort the cases.** No model time. Per case: its graders by
   kind (judge, or a tool: regex, tool call, file), which judges a tool
   could replace and which take reading, whether the prompt states the
   rule it grades, what a run costs, whether it has ever failed (E1) and
   whether a deletion failed it (E2, where run). Done when: the list is in
   front of the owner, with the count of cases whose prompt needs
   rewording and the expected saving beside each proposed change.
+  Done 2026-11-14: `evals/tools/case_sort.py` writes the table
+  (`evals/README.md`, "The cases sorted") from the cases, the results
+  history and `evals/tools/case_reading.json`, which holds the reading
+  of all 166 cases and is the file to correct. 471 judges, 51 a tool
+  could decide (about $0.77 a pass, an estimate; 72 runs failed on them
+  alone); 9 prompts state the rule they grade and 23 state part of it;
+  7 cases have never failed and cost $0.40 or more a run ($3.39 a pass).
+  **The baseline is $45.88, not $54**: a run's cost already includes its
+  judge cost and the $54 added the two (agent 82%, judges 18%). The
+  proposals, the order for E5, the skills E6 should take first, which
+  `orchestrator` and `delivery` rules a grader could notice, and the
+  grader findings (none fixed) are in that section; all wait for the
+  owner.
 - [ ] E5 **Judges a tool can replace become tool checks.** Starting with
   the two hand-back judges that fail correct lines
   (`stops-with-the-decision-on-the-line`, `hand-back-is-the-one-line`).

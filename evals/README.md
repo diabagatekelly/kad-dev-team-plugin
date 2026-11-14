@@ -933,6 +933,506 @@ its turn on "Waiting for the builder's hand-back." What they showed:
   scripts directory again (two runs of six ended the round there instead
   of relaunching).
 
+### The cases sorted
+
+`TODO.md`'s E4: per case, what grades it, what a run costs, what it has
+caught, and two things that take reading: whether a tool could decide
+each judge, and whether the prompt states the rule the case grades. No
+model time. The table is written by `tools/case_sort.py`; run it again
+with `python3 -I evals/tools/case_sort.py --readme evals/README.md`
+(`tools/case_sort_test.py`, 11 tests, holds it without a model).
+
+The two reading columns are not computed. They are in
+`tools/case_reading.json`, one entry per case, written on 2026-11-14 from
+a reading of every case file: correct a row there and run the tool again.
+`case_sort.py --check` fails when a case has no entry or an entry's
+judges are not exactly the case's `llm` graders, so a judge added to a
+case has to be read before the table is current. What the words mean:
+
+- **A tool could decide** a judge when its criterion comes down to the
+  shape of a line, a file's contents, a count, or a name present or
+  absent. A judge a tool could decide half of is marked as taking
+  reading, with the half named in its reason. Where a tool check would
+  lose part of what the judge reads, the reason says what is lost.
+- **The prompt states the rule** when it tells the run to do something a
+  grader then checks, and that something should have come from the
+  skill's text. `yes`: the graded action is in the prompt. `partly`: a
+  stopping point or a hand-over sentence gives away one or two graders
+  and leaves the rest to the skill. Naming the skill to invoke does not
+  count for `chunk-runner` and `tdd-implementation-lite`, which are only
+  ever invoked by name, nor does naming the agent in a `-via-agent` case.
+- **Cost and time** are means over the completed runs since 2026-11-10,
+  at the list prices the CLI records. The time split is given only for
+  runs that launched no agent and whose trace is still on disk.
+
+**The baseline is $45.88, not $54.** A run's `costUsd` already includes
+its `judgeCostUsd`: in all 189 runs checked, the agent's own total in the
+trace plus the judge cost equals `costUsd`. The $54 of 2026-11-14 added
+the two columns, so it counted the judges twice. For the same 139 cases
+one run of each is $45.88: the agent's runs $37.69 (82%), the judges
+$8.19 (18%). Savings below are against $45.88.
+
+<!-- case-sort:start -->
+Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_reading.json` and the results under `results/`, `kad-eval-results-archive/`; cost and time are means over the completed runs since 2026-11-10 (`*`: no run since, every held run).
+
+| Case | Skill | Tool checks | Judges | A tool could decide | Prompt states the rule | Agent $ | Judges $ | Seconds (agent + judges) | Failed since the bar | Deletions that failed it |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `acceptance-criteria-payfine` | acceptance-criteria | 1 tool call | 2 | 0 of 2 | no | 0.07 | 0.01 | 18 (9 + 9) | 0 of 11 | no pass on the skill |
+| `accessibility-review-ac-walk` | accessibility-review | 5 regex, 2 tool call, 1 file | 1 | 0 of 1 | yes: "Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project [...] and `PORTAL_DATA` inside that folder" | 0.44 | 0.01 | 65 | 1 of 14 | no pass on the skill |
+| `accessibility-review-neg-readability` | accessibility-review | 1 tool call | 0 |  | no | 0.06 | 0.00 | 9 (8 + 1) | 0 of 13 | no pass on the skill |
+| `accessibility-review-payfine` | accessibility-review | 2 regex, 1 tool call, 1 file | 10 | 1 of 10 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.27 | 107 (67 + 36) | 5 of 19 | no pass on the skill |
+| `accessibility-review-payfine-subtle` | accessibility-review | 2 regex, 1 tool call, 1 file | 10 | 1 of 10 | partly: "fill in the slice's accessibility placeholder" | 0.24 | 0.26 | 112 (73 + 36) | 5 of 19 | no pass on the skill |
+| `adr-neg-rename` | adr | 1 regex, 1 tool call | 1 | 0 of 1 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `adr-payment-gateway` | adr | 1 regex, 1 tool call, 1 file | 2 | 1 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `architecture-design-neg-review` | architecture-design | 1 tool call | 0 |  | no | 0.09 | 0.00 | 15 (15 + 0) | 0 of 17 | no pass on the skill |
+| `architecture-design-owner-sheet` | architecture-design | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.23 | 0.01 | 42 (38 + 4) | 0 of 13 | no pass on the skill |
+| `architecture-design-payfine-phase1` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.19 | 0.02 | 41 (32 + 9) | 0 of 24 | no pass on the skill |
+| `architecture-design-payfine-phase2` | architecture-design | 1 regex | 9 | 0 of 9 | no | 0.26 | 0.32 | 102 (67 + 35) | 20 of 25 | no pass on the skill |
+| `architecture-design-payfine-via-agent` | architecture-design | 2 regex, 1 tool call | 2 | 1 of 2 | partly: "its architecture map is at `docs/architecture-map.md`" | 0.24 | 0.03 | 52 | 0 of 15 | no pass on the skill |
+| `architecture-design-scope-consequence` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.19 | 0.02 | 48 (39 + 9) | 15 of 34 | no pass on the skill |
+| `architecture-review-neg-security-review` | architecture-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 18 (17 + 1) | 0 of 12 | no pass on the skill |
+| `architecture-review-neg-test-quality-review` | architecture-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 12 (11 + 1) | 0 of 13 | no pass on the skill |
+| `chunk-runner-gap-handback` | chunk-runner | 4 regex, 4 tool call | 1 | 1 of 1 | yes: "next is recording round 0" | 0.28 | 0.01 | 35 (27 + 8) | 8 of 23 | 0 of 7 |
+| `chunk-runner-gate-deviation` | chunk-runner | 5 regex, 4 tool call, 1 file | 1 | 1 of 1 | yes: "next is step 2, the gate [...] Stop once the gate has run and its result is known, before any launch" | 0.30 | 0.00 | 35 (31 + 4) | 0 of 17 | 1 of 14: `gate-design-modules` |
+| `chunk-runner-gate-outside` | chunk-runner | 4 regex, 5 tool call | 1 | 1 of 1 | yes: "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched" | 0.54 | 0.00 | 88 | 0 of 15 | 0 of 10 |
+| `chunk-runner-gate-sources` | chunk-runner | 6 regex, 4 tool call | 0 |  | yes: "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched" | 0.52 | 0.00 | 75 | 1 of 13 | 2 of 8: `gate-planning-sources`, `handback-template` |
+| `chunk-runner-one-fix-round` | chunk-runner | 4 regex, 6 tool call | 1 | 1 of 1 | yes: "next is recording round 1 with `--range`, then acting on the split" | 0.53 | 0.01 | 88 | 5 of 21 | 1 of 15: `handback-one-line` |
+| `chunk-runner-replay-not-the-handback` | chunk-runner | 3 regex, 2 tool call | 1 | 0 of 1 | no | 0.46 | 0.01 | 66 | 0 of 7 | 0 of 4 |
+| `chunk-runner-replay-unheld-commit` | chunk-runner | 3 regex, 3 tool call | 1 | 0 of 1 | no | 0.39 | 0.00 | 55 | 0 of 7 | 0 of 5 |
+| `chunk-runner-review-round` | chunk-runner | 5 regex, 8 tool call, 2 file | 1 | 1 of 1 | yes: "next is step 3, the review and smoke launches [...] Stop once round 0 is recorded [...] don't start the fix round" | 1.28 | 0.03 | 163 | 1 of 16 | 1 of 19: `smoke-agent-kind` |
+| `chunk-runner-waits-for-handback` | chunk-runner | 3 regex, 7 tool call | 1 | 1 of 1 | yes: "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent" | 0.59 | 0.01 | 86 | 2 of 5 (few runs) | 2 of 19: `handback-one-line`, `hash-is-real` |
+| `code-review-catalog` | code-review | 1 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.12 | 0.02 | 30 (22 + 7) | 9 of 19 | no pass on the skill |
+| `code-review-comments-chunk` | code-review | 2 regex, 3 tool call, 1 file | 4 | 1 of 4 | partly: "Write one report in the shared finding format [...] and hand back the counts and the path" | 0.24 | 0.06 | 52 (37 + 16) | 17 of 36 | no pass on the skill |
+| `code-review-days-left-pr` | code-review | 1 regex, 1 tool call, 1 file | 7 | 0 of 7 | no | 0.15 | 0.12 | 57 (33 + 24) | 0 of 10 | no pass on the skill |
+| `code-review-fine-notices-pr` | code-review | 1 regex, 2 tool call, 1 file | 8 | 0 of 8 | no | 0.15 | 0.20 | 56 (31 + 24) | 7 of 13 | no pass on the skill |
+| `code-review-fine-notices-pr-via-agent` | code-review | 2 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.21 | 0.12 | 73 | 19 of 20 | no pass on the skill |
+| `code-review-fines-report-pr` | code-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.16 | 0.11 | 58 (42 + 16) | 2 of 13 | no pass on the skill |
+| `code-review-neg-architecture` | code-review | 1 tool call | 0 |  | no | 0.17 | 0.00 | 35 (35 + 0) | 0 of 11 | no pass on the skill |
+| `code-review-structural-high-at-d` | code-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.06 | 69 (53 + 16) | 4 of 5 (few runs) | no pass on the skill |
+| `delegation-consult-with-file` | reliability-requirements | 3 regex, 2 tool call | 2 | 1 of 2 | yes: "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence" | 0.14 | 0.02 | 37 (22 + 15) | 4 of 11 | no pass on the skill |
+| `delegation-consult-without-file` | reliability-requirements | 1 regex, 2 tool call | 1 | 0 of 1 | no | 0.12 | 0.02 | 17 (11 + 6) | 4 of 19 | no pass on the skill |
+| `delivery-ci-red-not-done` | delivery | 5 regex, 3 tool call, 1 file | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.39 | 0.03 | 53 (43 + 12) | 2 of 7 | no pass on the skill |
+| `design-system-payfine-phase1` | design-system | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.10 | 0.00 | 14 (11 + 3) | 0 of 7 | no pass on the skill |
+| `design-system-payfine-phase2` | design-system | 2 regex, 2 file | 4 | 0 of 4 | no | 0.18 | 0.04 | 59 (48 + 13) | 0 of 7 | no pass on the skill |
+| `design-system-payfine-phase3` | design-system | 2 regex, 1 file | 6 | 1 of 6 | no | 0.31 | 0.24 | 136 (91 + 43) | 5 of 12 | no pass on the skill |
+| `design-system-payfine-reference` | design-system | 3 regex, 1 tool call | 2 | 0 of 2 | no | 0.22 | 0.01 | 75 (68 + 7) | 1 of 6 | no pass on the skill |
+| `design-system-payfine-review` | design-system | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.18 | 0.06 | 60 (51 + 13) | 0 of 7 | no pass on the skill |
+| `external-review-triage-cancel-hold` | external-review-triage | 1 regex, 1 tool call, 1 file | 4 | 1 of 4 | partly: "Write your report to [...] and hand back the counts and the path" | 0.34* | 0.04 | 60 (44 + 15) | 0 of 6 | no pass on the skill |
+| `library-app-catalog-review` | architecture-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.19 | 0.04 | 50 (42 + 8) | 3 of 14 | no pass on the skill |
+| `library-app-fines-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.27 | 0.13 | 84 (71 + 12) | 0 of 9 | no pass on the skill |
+| `library-app-lending-review` | architecture-review | 1 regex, 1 tool call, 1 file | 6 | 0 of 6 | no | 0.25 | 0.32 | 81 (60 + 21) | 4 of 15 | no pass on the skill |
+| `library-app-lending-review-via-agent` | architecture-review | 1 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "return its findings report verbatim [...] (including its opening section on the importance ordering it assumed)" | 0.38 | 0.20 | 132 | 1 of 12 | no pass on the skill |
+| `library-app-members-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.09 | 60 (51 + 9) | 0 of 9 | no pass on the skill |
+| `library-app-notifications-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.22 | 0.08 | 63 (54 + 9) | 0 of 9 | no pass on the skill |
+| `library-app-reporting-pr` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.06 | 57 (48 + 9) | 0 of 9 | no pass on the skill |
+| `library-app-reporting-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.22 | 0.08 | 63 (54 + 9) | 0 of 9 | no pass on the skill |
+| `library-app-structure-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.30 | 0.18 | 84 (72 + 12) | 0 of 9 | no pass on the skill |
+| `map-query-consults` | map-query | 1 regex, 1 tool call | 4 | 0 of 4 | no | 0.10 | 0.03 | 23 (12 + 11) | 0 of 8 | no pass on the skill |
+| `map-query-no-map` | map-query | 1 tool call | 2 | 1 of 2 | no | 0.06* | 0.01 | 12 (6 + 6) | 0 of 2 (few runs) | no pass on the skill |
+| `map-update-cancel-hold` | map-update | 2 regex, 1 tool call | 7 | 3 of 7 | no | 0.19 | 0.50 | 53 (25 + 29) | 17 of 18 | no pass on the skill |
+| `operational-readiness-neg-reliability` | operational-readiness | 1 tool call | 0 |  | no | 0.10 | 0.00 | 19 (19 + 1) | 0 of 11 | no pass on the skill |
+| `operational-readiness-neg-security` | operational-readiness | 1 tool call | 0 |  | no | 0.06 | 0.00 | 12 (12 + 0) | 0 of 10 | no pass on the skill |
+| `operational-readiness-ops-phase1` | operational-readiness | 1 tool call | 1 | 0 of 1 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `operational-readiness-ops-phase2` | operational-readiness | 0 | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `operational-readiness-release-phase1` | operational-readiness | 1 tool call | 2 | 0 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `operational-readiness-release-phase2` | operational-readiness | 0 | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `orchestrator-asks-for-target` | orchestrator | 3 tool call | 1 | 0 of 1 | no | 0.18 | 0.00 | 13 (8 + 4) | 0 of 38 | no pass on the skill |
+| `orchestrator-backward-route` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.32 | 0.02 | 59 (48 + 11) | 19 of 49 | no pass on the skill |
+| `orchestrator-budget-exceeded` | orchestrator | 2 regex, 2 tool call | 1 | 0 of 1 | no | 0.25 | 0.01 | 30 (22 + 8) | 26 of 40 | no pass on the skill |
+| `orchestrator-chunk-runner-handback` | orchestrator | 6 regex, 2 tool call | 1 | 0 of 1 | partly: "hand off once chunk 1's C line is written and its records committed, before chunk 2's runner is launched" | 0.29 | 0.01 | 38 (32 + 7) | 0 of 19 | no pass on the skill |
+| `orchestrator-chunk-runner-launch` | orchestrator | 6 tool call, 1 tool order | 1 | 0 of 1 | partly: "hand off as soon as chunk 1's runner has been launched: don't wait for it to return; write the handoff file saying the runner is in flight and stop" | 1.75 | 0.01 | 279 | 14 of 38 | no pass on the skill |
+| `orchestrator-definition-of-done` | orchestrator | 8 tool call, 1 tool order, 1 file | 1 | 0 of 1 | partly: "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)" | 1.09 | 0.01 | 203 | 51 of 58 | no pass on the skill |
+| `orchestrator-delivery-foreground` | orchestrator | 3 regex, 4 tool call | 2 | 1 of 2 | no | 0.44 | 0.02 | 74 (60 + 14) | 26 of 66 | no pass on the skill |
+| `orchestrator-delivery-removal` | orchestrator | 6 regex, 5 tool call, 1 tool order | 1 | 0 of 1 | partly: "If the scan finds anything of that file in this branch's commits, replace it and rewrite the branch before it is pushed. You have my word for that rewrite" | 0.46 | 0.01 | 102 | 2 of 20 | no pass on the skill |
+| `orchestrator-gap-without-delegation` | orchestrator | 2 regex, 5 tool call | 1 | 0 of 1 | no | 0.52 | 0.01 | 74 | 12 of 55 | no pass on the skill |
+| `orchestrator-issue-fix-records` | orchestrator | 6 regex, 4 tool call | 1 | 0 of 1 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.34 | 0.01 | 43 (41 + 4) | 1 of 4 (few runs) | no pass on the skill |
+| `orchestrator-plan-check-seam` | orchestrator | 1 regex, 4 tool call | 2 | 1 of 2 | partly: "hand off once the B line is written, before chunk 1's build" | 0.47 | 0.02 | 76 | 1 of 43 | no pass on the skill |
+| `orchestrator-readiness-gate` | orchestrator | 2 regex, 4 tool call, 1 tool order | 2 | 1 of 2 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.62 | 0.03 | 141 (121 + 15) | 15 of 61 | no pass on the skill |
+| `orchestrator-readiness-open-item` | orchestrator | 2 regex, 3 tool call | 1 | 0 of 1 | no | 0.31 | 0.01 | 45 (40 + 6) | 6 of 30 | no pass on the skill |
+| `orchestrator-readiness-sources` | orchestrator | 4 regex, 4 tool call | 1 | 0 of 1 | no | 0.32 | 0.01 | 47 (42 + 5) | 0 of 17 | no pass on the skill |
+| `orchestrator-readme-stale-not-done` | orchestrator | 2 regex, 8 tool call, 1 tool order | 1 | 0 of 1 | partly: "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)" | 1.11 | 0.01 | 218 | 5 of 6 | no pass on the skill |
+| `orchestrator-route-accessibility` | orchestrator | 1 regex, 4 tool call, 1 file | 2 | 1 of 2 | no | 0.48 | 0.01 | 115 (103 + 11) | 11 of 54 | no pass on the skill |
+| `orchestrator-route-backward-requirements` | orchestrator | 5 tool call, 1 file | 2 | 1 of 2 | no | 0.26 | 0.01 | 34 (26 + 9) | 4 of 40 | no pass on the skill |
+| `orchestrator-route-design` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.35 | 0.01 | 52 (43 + 10) | 1 of 38 | no pass on the skill |
+| `orchestrator-route-design-system` | orchestrator | 5 tool call, 1 file | 2 | 1 of 2 | no | 0.26 | 0.01 | 36 (25 + 11) | 0 of 36 | no pass on the skill |
+| `orchestrator-route-implementation` | orchestrator | 3 tool call, 1 file | 2 | 1 of 2 | no | 0.23 | 0.01 | 31 (22 + 9) | 2 of 42 | no pass on the skill |
+| `orchestrator-route-implementation-prenamed` | orchestrator | 2 tool call, 1 file | 2 | 1 of 2 | no | 0.23 | 0.01 | 30 (20 + 9) | 1 of 38 | no pass on the skill |
+| `orchestrator-route-open-pr` | orchestrator | 1 regex, 6 tool call | 1 | 0 of 1 | partly: "Report what is open and stop after your first question to me; don't run the triage or any fix in this session" | 0.24 | 0.01 | 26 (21 + 5) | 0 of 18 | no pass on the skill |
+| `orchestrator-route-problem-framing` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.21 | 0.01 | 24 (14 + 10) | 1 of 37 | no pass on the skill |
+| `orchestrator-route-reliability` | orchestrator | 5 tool call, 1 file | 2 | 1 of 2 | no | 0.27 | 0.01 | 36 (28 + 8) | 5 of 45 | no pass on the skill |
+| `orchestrator-route-scope-decision` | orchestrator | 3 tool call, 1 file | 2 | 1 of 2 | no | 0.28 | 0.02 | 42 (32 + 9) | 63 of 111 | no pass on the skill |
+| `orchestrator-route-screen-design` | orchestrator | 1 regex, 3 tool call, 1 file | 2 | 1 of 2 | no | 0.42 | 0.01 | 92 (83 + 9) | 13 of 51 | no pass on the skill |
+| `orchestrator-route-slicer-accessibility-mistake` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.30 | 0.00 | 37 (32 + 6) | 1 of 35 | no pass on the skill |
+| `orchestrator-route-slicing` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.31 | 0.01 | 48 (39 + 9) | 6 of 50 | no pass on the skill |
+| `orchestrator-route-tech-bootstrap` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.26 | 0.01 | 34 (26 + 8) | 2 of 39 | no pass on the skill |
+| `orchestrator-route-user-story` | orchestrator | 4 tool call, 1 file | 2 | 1 of 2 | no | 0.23 | 0.01 | 34 (25 + 10) | 4 of 41 | no pass on the skill |
+| `orchestrator-runner-handback-unverified` | orchestrator | 2 regex, 3 tool call | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it and stop there" | 0.29 | 0.02 | 35 (28 + 7) | 0 of 4 (few runs) | no pass on the skill |
+| `orchestrator-security-stage` | orchestrator | 3 tool call, 1 file | 2 | 0 of 2 | no | 0.31 | 0.01 | 44 (37 + 7) | 0 of 36 | no pass on the skill |
+| `orchestrator-session-setup` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.23 | 0.01 | 22 (17 + 5) | 8 of 40 | no pass on the skill |
+| `orchestrator-superseded-scope-map` | orchestrator | 4 tool call, 1 file | 1 | 0 of 1 | no | 0.27 | 0.01 | 35 (31 + 4) | 0 of 36 | no pass on the skill |
+| `pr-writeup-portal-fines` | pr-writeup | 1 tool call | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `problem-framing-doc-payfine` | problem-framing-doc | 1 tool call, 1 file | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `reliability-requirements-neg-review` | reliability-requirements | 1 tool call | 0 |  | no | 0.10 | 0.00 | 23 (23 + 0) | 0 of 12 | no pass on the skill |
+| `reliability-requirements-payfine-phase1` | reliability-requirements | 1 tool call | 2 | 0 of 2 | no | 0.12* | 0.03 | 25 (19 + 7) | 0 of 4 (few runs) | no pass on the skill |
+| `reliability-requirements-payfine-phase2` | reliability-requirements | 0 | 4 | 1 of 4 | no | 0.14* | 0.12 | 51 (38 + 13) | 0 of 3 (few runs) | no pass on the skill |
+| `reliability-requirements-payfine-phase2-proceed` | reliability-requirements | 0 | 4 | 1 of 4 | no | 0.13* | 0.14 | 46 (33 + 13) | 0 of 3 (few runs) | no pass on the skill |
+| `reliability-requirements-payfine-phase2-stop` | reliability-requirements | 0 | 4 | 1 of 4 | no | 0.11* | 0.09 | 30 (14 + 15) | 1 of 3 (few runs) | no pass on the skill |
+| `reliability-requirements-payfine-phase3` | reliability-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21* | 0.38 | 83 (52 + 31) | 0 of 3 (few runs) | no pass on the skill |
+| `reliability-review-alerts` | reliability-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.28 | 0.12 | 104 (85 + 19) | 1 of 15 | no pass on the skill |
+| `reliability-review-catalog` | reliability-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.07 | 71 (62 + 8) | 6 of 18 | no pass on the skill |
+| `reliability-review-fine-payment` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.24 | 0.14 | 76 (62 + 14) | 1 of 15 | no pass on the skill |
+| `reliability-review-http` | reliability-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.33 | 0.19 | 112 (93 + 18) | 0 of 12 | no pass on the skill |
+| `reliability-review-neg-architecture` | reliability-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 20 (20 + 1) | 0 of 12 | no pass on the skill |
+| `reliability-review-neg-security` | reliability-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 18 (18 + 0) | 0 of 13 | no pass on the skill |
+| `reliability-review-nightly` | reliability-review | 1 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.32 | 0.48 | 118 (91 + 27) | 7 of 21 | no pass on the skill |
+| `reliability-review-nightly-via-agent` | reliability-review | 1 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.50 | 0.38 | 186 | 6 of 19 | no pass on the skill |
+| `reliability-review-portal-pay-pr` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.25 | 0.11 | 74 (62 + 12) | 0 of 12 | no pass on the skill |
+| `reliability-review-refund-pr` | reliability-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.23 | 0.08 | 68 (53 + 15) | 1 of 15 | no pass on the skill |
+| `requirements-refinement-open-question` | requirements-refinement | 1 regex, 1 tool call | 3 | 0 of 3 | no | 0.11 | 0.02 | 26 (16 + 10) | 0 of 10 | no pass on the skill |
+| `requirements-refinement-owner-sheet` | requirements-refinement | 2 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.13 | 0.01 | 31 (27 + 4) | 0 of 9 | no pass on the skill |
+| `requirements-refinement-payfine-phase1` | requirements-refinement | 1 tool call | 4 | 0 of 4 | no | 0.11 | 0.03 | 30 (15 + 15) | 3 of 12 | no pass on the skill |
+| `requirements-refinement-payfine-phase2` | requirements-refinement | 1 file | 8 | 1 of 8 | no | 0.13 | 0.08 | 61 (26 + 36) | 8 of 9 | no pass on the skill |
+| `scope-map-self-service` | scope-map | 1 tool call, 1 file | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `screen-design-owner-sheet` | screen-design | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.01 | 89 (85 + 4) | 0 of 9 | no pass on the skill |
+| `screen-design-payfine` | screen-design | 3 regex, 2 tool call, 1 file | 7 | 0 of 7 | no | 0.30 | 0.10 | 110 (83 + 27) | 2 of 8 | no pass on the skill |
+| `security-requirements-neg-review` | security-requirements | 1 tool call | 0 |  | no | 0.06 | 0.00 | 13 (13 + 0) | 0 of 10 | no pass on the skill |
+| `security-requirements-payfine-phase1` | security-requirements | 1 tool call | 2 | 0 of 2 | no | 0.14 | 0.02 | 33 (24 + 9) | 0 of 12 | no pass on the skill |
+| `security-requirements-payfine-phase2` | security-requirements | 0 | 4 | 1 of 4 | no | 0.15 | 0.08 | 46 (31 + 15) | 3 of 14 | no pass on the skill |
+| `security-requirements-payfine-phase2-proceed` | security-requirements | 0 | 4 | 1 of 4 | no | 0.16 | 0.06 | 59 (43 + 15) | 0 of 9 | no pass on the skill |
+| `security-requirements-payfine-phase2-stop` | security-requirements | 0 | 4 | 1 of 4 | no | 0.13 | 0.03 | 27 (13 + 14) | 0 of 9 | no pass on the skill |
+| `security-requirements-payfine-phase3` | security-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21 | 0.17 | 69 (46 + 23) | 13 of 15 | no pass on the skill |
+| `security-requirements-placeholder-pointer` | security-requirements | 5 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.03 | 103 (100 + 4) | 0 of 10 | no pass on the skill |
+| `security-requirements-source-criterion` | security-requirements | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | partly: "nothing from that file may end up in the repository" | 0.29 | 0.03 | 95 (90 + 5) | 0 of 9 | no pass on the skill |
+| `security-review-catalog` | security-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.20 | 0.04 | 57 (47 + 10) | 1 of 13 | no pass on the skill |
+| `security-review-config` | security-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.32 | 0.23 | 113 (94 + 19) | 0 of 10 | no pass on the skill |
+| `security-review-http` | security-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.28 | 0.15 | 89 (73 + 16) | 0 of 10 | no pass on the skill |
+| `security-review-neg-architecture` | security-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 20 (20 + 0) | 0 of 10 | no pass on the skill |
+| `security-review-neg-reliability` | security-review | 1 tool call | 0 |  | no | 0.11 | 0.00 | 28 (28 + 1) | 0 of 13 | no pass on the skill |
+| `security-review-portal-pr` | security-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.19 | 0.15 | 61 (43 + 18) | 3 of 16 | no pass on the skill |
+| `security-review-reminders` | security-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.22 | 0.07 | 66 (54 + 12) | 0 of 10 | no pass on the skill |
+| `security-review-source-value` | security-review | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | no | 0.15 | 0.01 | 30 (25 + 4) | 0 of 9 | no pass on the skill |
+| `staleness-audit-docs` | staleness-audit | 1 tool call | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-accept-phase1` | supply-chain-review | 1 tool call | 2 | 0 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-accept-phase2` | supply-chain-review | 0 | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-accepted` | supply-chain-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-build` | supply-chain-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-build-via-agent` | supply-chain-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-neg-reliability` | supply-chain-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 20 (20 + 0) | 0 of 11 | no pass on the skill |
+| `supply-chain-review-neg-security` | supply-chain-review | 1 tool call | 0 |  | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-workflows` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `tdd-implementation-lite-cancel-hold` | tdd-implementation-lite | 12 regex, 2 tool call, 4 tool order, 1 file | 7 | 1 of 7 | no | 0.41 | 0.06 | 95 (65 + 30) | 15 of 15 | no pass on the skill |
+| `tdd-implementation-lite-cancel-hold-via-agent` | tdd-implementation-lite | 13 regex, 2 tool call, 2 tool order, 1 file | 7 | 1 of 7 | no | 0.40 | 0.09 | 110 | 30 of 30 | no pass on the skill |
+| `tdd-implementation-lite-chunk-plan` | tdd-implementation-lite | 1 regex, 2 tool call, 1 file | 4 | 2 of 4 | partly: "Write the chunk plan [...] and build nothing" | 0.19 | 0.06 | 65 (33 + 32) | 11 of 19 | no pass on the skill |
+| `tdd-implementation-lite-named-fix` | tdd-implementation-lite | 6 regex, 2 tool call, 1 file | 5 | 2 of 5 | no | 0.35 | 0.04 | 79 (59 + 21) | 7 of 25 | no pass on the skill |
+| `tdd-implementation-lite-one-chunk` | tdd-implementation-lite | 6 regex, 3 tool call, 1 tool order | 6 | 2 of 6 | partly: "Chunks are committed." | 0.29 | 0.06 | 62 (47 + 15) | 4 of 19 | no pass on the skill |
+| `tdd-implementation-lite-rename-fix` | tdd-implementation-lite | 10 regex, 3 tool call, 1 file | 0 |  | no | 0.29 | 0.00 | 38 (38 + 1) | 3 of 22 | no pass on the skill |
+| `technology-bootstrap-phase1` | technology-bootstrap | 1 tool call | 2 | 0 of 2 | no | 0.09 | 0.02 | 26 (15 + 10) | 1 of 10 | no pass on the skill |
+| `technology-bootstrap-phase2` | technology-bootstrap | 3 regex | 4 | 0 of 4 | partly: "pick the one where that's the default [...] Give me your recommendations for the whole set in one message rather than one at a time" | 0.15 | 0.07 | 78 (55 + 23) | 7 of 19 | no pass on the skill |
+| `technology-bootstrap-phase3` | technology-bootstrap | 1 regex, 1 file | 4 | 0 of 4 | no | 0.14 | 0.08 | 38 (19 + 19) | 9 of 16 | no pass on the skill |
+| `technology-bootstrap-phase3-reject` | technology-bootstrap | 1 regex, 1 file | 5 | 0 of 5 | no | 0.15 | 0.08 | 43 (29 + 14) | 6 of 11 | no pass on the skill |
+| `test-quality-review-fines` | test-quality-review | 1 regex, 1 tool call, 1 file | 7 | 0 of 7 | no | 0.19 | 0.29 | 76 (49 + 27) | 9 of 18 | no pass on the skill |
+| `test-quality-review-neg-code-review` | test-quality-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 22 (22 + 1) | 0 of 11 | no pass on the skill |
+| `test-quality-review-reminders` | test-quality-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.15 | 0.05 | 42 (32 + 9) | 0 of 12 | no pass on the skill |
+| `test-quality-review-seam-fake` | test-quality-review | 2 regex, 1 tool call, 1 file | 4 | 1 of 4 | partly: "Write your report in the shared finding format [...] and hand back the counts and the path" | 0.21 | 0.05 | 46 (32 + 14) | 0 of 20 | no pass on the skill |
+| `user-facing-docs-renewals` | user-facing-docs | 1 tool call, 1 file | 2 | 0 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `user-story-writeup-payfine-phase1` | user-story-writeup | 1 tool call | 2 | 0 of 2 | no | 0.06 | 0.01 | 13 (6 + 7) | 0 of 7 | no pass on the skill |
+| `user-story-writeup-payfine-phase2` | user-story-writeup | 1 regex, 1 file | 3 | 0 of 3 | partly: "Don't create the issue yourself" |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `vertical-slicing-handback` | vertical-slicing | 1 tool call | 4 | 0 of 4 | no | 0.17 | 0.02 | 45 (32 + 13) | 0 of 11 | no pass on the skill |
+| `vertical-slicing-no-requirements` | vertical-slicing | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.09 | 0.01 | 12 (6 + 6) | 0 of 11 | no pass on the skill |
+| `vertical-slicing-no-screen` | vertical-slicing | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.17 | 0.02 | 41 (35 + 7) | 1 of 17 | no pass on the skill |
+| `vertical-slicing-owner-sheet` | vertical-slicing | 2 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.15 | 0.01 | 41 (32 + 10) | 2 of 18 | no pass on the skill |
+| `vertical-slicing-payfine-phase1` | vertical-slicing | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.14 | 0.04 | 44 (28 + 18) | 0 of 11 | no pass on the skill |
+| `why-comments-collect-fine` | why-comments | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.07* | 0.02 | 35 (13 + 23) | 0 of 4 (few runs) | no pass on the skill |
+
+**One run of every case:** $47.89 over the 147 cases with a completed run held (agent $38.88, judges $9.02, 19% judges); $45.88 over the 139 with a run since 2026-11-10. 19 cases have no completed run held and are not priced.
+
+**Graders:** 471 judges and 647 tool checks over 166 cases; 18 cases have no judge.
+
+**Judges a tool could decide:** 51 of 471, in 46 cases; 6 cases would be left with no judge. Their share of the judge cost, split evenly within each case (an estimate): $0.77 per run of every case.
+
+**Runs that failed only on a judge:** of 2794 completed runs since the bars, 623 failed; 419 of those failed on judges alone, and 72 on judges a tool could decide alone ($29.62 of runs at today's cost per run): `orchestrator-readiness-gate` 9, `chunk-runner-gap-handback` 8, `code-review-comments-chunk` 7, `orchestrator-route-accessibility` 6, `orchestrator-route-screen-design` 6, `chunk-runner-one-fix-round` 5, `accessibility-review-payfine` 4, `accessibility-review-payfine-subtle` 4, `orchestrator-backward-route` 4, `delegation-consult-with-file` 3, `orchestrator-route-reliability` 3, `tdd-implementation-lite-chunk-plan` 3, `tdd-implementation-lite-one-chunk` 3, `chunk-runner-waits-for-handback` 2, `orchestrator-route-backward-requirements` 2, `orchestrator-route-tech-bootstrap` 2, `orchestrator-route-implementation-prenamed` 1.
+
+**Prompt states the rule it grades:** yes 9, partly 23, no 134.
+
+**Never failed since the bar (6 or more runs):** 62 cases, $14.28 of one run of every case. **Never failed and $0.40 or more a run (7, $3.39):** `security-review-config` $0.55, `chunk-runner-gate-outside` $0.54, `reliability-review-http` $0.51, `library-app-structure-review` $0.48, `chunk-runner-replay-not-the-handback` $0.47, `security-review-http` $0.43, `library-app-fines-review` $0.41.
+
+By skill (one run of each of its cases; the judges a tool could decide and their estimated share):
+
+| Skill | Cases (priced) | Agent $ | Judges $ | Judges | A tool could decide | Their share $ | Prompts stating the rule (yes, partly) | Never failed |
+|---|---|---|---|---|---|---|---|---|
+| orchestrator | 34 (34) | 13.91 | 0.39 | 53 | 17 | 0.12 | 0, 10 | 7 |
+| chunk-runner | 9 (9) | 4.89 | 0.07 | 8 | 6 | 0.06 | 7, 0 | 4 |
+| reliability-review | 10 (10) | 2.57 | 1.56 | 37 | 0 | 0.00 | 0, 0 | 4 |
+| architecture-review | 11 (11) | 2.42 | 1.17 | 34 | 0 | 0.00 | 0, 1 | 8 |
+| tdd-implementation-lite | 6 (6) | 1.94 | 0.32 | 29 | 8 | 0.09 | 0, 2 | 0 |
+| security-review | 8 (8) | 1.56 | 0.66 | 21 | 0 | 0.00 | 0, 0 | 6 |
+| code-review | 8 (8) | 1.41 | 0.70 | 36 | 1 | 0.02 | 0, 1 | 2 |
+| security-requirements | 8 (8) | 1.45 | 0.42 | 23 | 3 | 0.04 | 0, 1 | 6 |
+| reliability-requirements | 8 (8) | 1.07 | 0.80 | 24 | 4 | 0.10 | 1, 0 | 1 |
+| architecture-design | 6 (6) | 1.20 | 0.39 | 16 | 1 | 0.01 | 0, 1 | 4 |
+| accessibility-review | 4 (4) | 0.97 | 0.54 | 21 | 2 | 0.05 | 1, 2 | 1 |
+| design-system | 5 (5) | 0.98 | 0.35 | 17 | 1 | 0.04 | 0, 0 | 3 |
+| test-quality-review | 4 (4) | 0.65 | 0.39 | 14 | 1 | 0.01 | 0, 1 | 3 |
+| vertical-slicing | 5 (5) | 0.72 | 0.10 | 14 | 0 | 0.00 | 0, 0 | 3 |
+| technology-bootstrap | 4 (4) | 0.53 | 0.25 | 15 | 0 | 0.00 | 0, 1 | 0 |
+| screen-design | 2 (2) | 0.61 | 0.12 | 8 | 0 | 0.00 | 0, 0 | 1 |
+| map-update | 1 (1) | 0.19 | 0.50 | 7 | 3 | 0.22 | 0, 0 | 0 |
+| requirements-refinement | 4 (4) | 0.47 | 0.14 | 16 | 1 | 0.01 | 0, 0 | 2 |
+| delivery | 1 (1) | 0.39 | 0.03 | 2 | 0 | 0.00 | 0, 1 | 0 |
+| external-review-triage | 1 (1) | 0.34 | 0.04 | 4 | 1 | 0.01 | 0, 1 | 1 |
+| map-query | 2 (2) | 0.16 | 0.04 | 6 | 1 | 0.00 | 0, 0 | 1 |
+| operational-readiness | 6 (2) | 0.16 | 0.00 | 13 | 0 | 0.00 | 0, 0 | 2 |
+| supply-chain-review | 8 (1) | 0.10 | 0.00 | 23 | 0 | 0.00 | 0, 0 | 1 |
+| why-comments | 1 (1) | 0.07 | 0.02 | 4 | 0 | 0.00 | 0, 0 | 0 |
+| acceptance-criteria | 1 (1) | 0.07 | 0.01 | 2 | 0 | 0.00 | 0, 0 | 1 |
+| user-story-writeup | 2 (1) | 0.06 | 0.01 | 5 | 0 | 0.00 | 0, 1 | 1 |
+| adr | 2 (0) |  |  | 3 | 1 | 0.00 | 0, 0 | 0 |
+| pr-writeup | 1 (0) |  |  | 3 | 0 | 0.00 | 0, 0 | 0 |
+| problem-framing-doc | 1 (0) |  |  | 3 | 0 | 0.00 | 0, 0 | 0 |
+| scope-map | 1 (0) |  |  | 3 | 0 | 0.00 | 0, 0 | 0 |
+| staleness-audit | 1 (0) |  |  | 5 | 0 | 0.00 | 0, 0 | 0 |
+| user-facing-docs | 1 (0) |  |  | 2 | 0 | 0.00 | 0, 0 | 0 |
+
+**Judges a tool could decide, with the reason** (the judges that take reading have theirs in `tools/case_reading.json`):
+
+| Case | Judge | What a tool would read | Share of a run $ |
+|---|---|---|---|
+| `accessibility-review-payfine` | `slice-placeholder-filled` | a file's contents: the placeholder line absent from slice-001.md, the review's file name or criteria in its place, the other lines as they were (the regex `security-requirements-placeholder-pointer` already uses) | 0.027 |
+| `accessibility-review-payfine-subtle` | `slice-placeholder-filled` | as `accessibility-review-payfine` | 0.026 |
+| `adr-payment-gateway` | `no-how` | names absent from a file: the seven identifiers the request gave (`FinePayments`, `stripeCode`, `AdyenFinePayments`, the three paths, `PAYMENT_PROVIDER_DESK`) and any code fence. Lost: another path or class name the run invents. | 0.000 |
+| `architecture-design-payfine-via-agent` | `uses-what-the-map-found` | a name present in the reply: `CollectFine`, `FineLedger`, `FinePayments` or `portal-routes`. Lost: that the piece is named as something to build on, not in passing. | 0.014 |
+| `chunk-runner-gap-handback` | `stops-with-the-decision-on-the-line` | the shape of the last line (`needs-decision devsecops-engineer: <path>`, `nd 1`), which `hand-back-names-the-decision` already reads; fails correct lines in 8 of 23 runs. Lost: whether the reply answers the undecided question itself. | 0.010 |
+| `chunk-runner-gate-deviation` | `deviation-recorded-not-failed` | `deviations 2` on the last message is a count on a line; no launch is already `no-fixer-no-reviewer`, the Files line not widened is `plan-entry-not-edited` | 0.003 |
+| `chunk-runner-gate-outside` | `gate-passes-after-the-fix` | `gate PASS after <sha>` and `stopped at step 2` on the last message, the regex `chunk-runner-gate-sources` already uses; the launches are counted by tool checks | 0.005 |
+| `chunk-runner-one-fix-round` | `hand-back-is-the-one-line` | the shape of the last message: one line, the C line's fields in order, nothing before or after it; two regexes already read the split and the standing count | 0.007 |
+| `chunk-runner-review-round` | `review-report-in-the-shared-shape` | a file's shape: every `###` heading followed by a `**Severity:**` line with one of four values, at most eight, none Low. It grades the launched reviewer's file, not the runner. | 0.025 |
+| `chunk-runner-waits-for-handback` | `hand-back-is-the-one-line-for-what-ran` | the shape of the last message: one line with a commit hash, a gate result and `stopped at`; it is the judge the `handback-one-line` deletion fails, so the regex must fail paragraphs and bullets | 0.007 |
+| `code-review-comments-chunk` | `hands-back-counts-and-path` | the shape of a short reply: the report's path, a count, and a length bound; a judge on a few lines is the noise the chunk-runner pass found | 0.015 |
+| `delegation-consult-with-file` | `hands-back-the-hash-and-one-sentence` | the shape of the last message: a hash of seven or more hex characters and a length bound | 0.010 |
+| `design-system-payfine-phase3` | `mockup-referenced-no-screenshot-claimed` | names present and absent in a file: an `.html` under `visual-ux/` referenced, no image file referenced | 0.040 |
+| `external-review-triage-cancel-hold` | `hands-back-counts-and-path` | the shape of a short reply: the report's path, four counts and a length bound | 0.009 |
+| `map-query-no-map` | `no-live-scan-answer` | a name absent from the reply: `daysBetween` or `date-utils`, which only a search of the source would give | 0.003 |
+| `map-update-cancel-hold` | `new-rows-extracted` | a file's contents: the two rows with their tier, edges and exports, in the table the shipped extractor writes | 0.072 |
+| `map-update-cancel-hold` | `keeps-existing-rows-and-tiers` | a file's contents against the fixture's earlier map: every source row still present with its tier; a script, not one regex | 0.072 |
+| `map-update-cancel-hold` | `no-severity` | words absent from a file: Critical, High, Medium, Low, serious, a score | 0.072 |
+| `orchestrator-backward-route` | `log-names-the-hand-back` | names present in a file: an entry naming the security document or the receipt, product-slicer or vertical-slicing, and a path under docs/pay-fine/. Lost: that the entry calls itself a backward route in its own words. | 0.008 |
+| `orchestrator-delivery-foreground` | `one-issue-per-standing-medium-none-for-a-low` | a count and names in tools/gh-calls.log: exactly two `issue create` lines, none carrying a Low's words (`queueWith`, the fixed string, the heading), a `pr edit` after them. Lost: that each issue is the right Medium when its title is a paraphrase. | 0.008 |
+| `orchestrator-plan-check-seam` | `every-chunk-names-its-seam-test` | a file's shape: under `## Chunk plan`, two to eight chunks, each Done when line holding `seam "`; the plan check itself is mechanical | 0.008 |
+| `orchestrator-readiness-gate` | `backward-routes-name-the-checks` | names present in the log: a chunk-loop entry, then an entry naming reliability-requirements or screen-design with the document to revise. Lost: that the entry's reason is the failed check in words. | 0.017 |
+| `orchestrator-route-accessibility` | `log-names-row-and-artifact` | names present in the log: accessibility-review and a path under docs/pay-fine/; the destination is already `routes-to-accessibility-review`. Lost: the state's wording. | 0.007 |
+| `orchestrator-route-backward-requirements` | `log-names-row-and-artifact` | names present in the log: requirements-refinement and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording. | 0.007 |
+| `orchestrator-route-design` | `log-names-row-and-artifact` | a log entry naming architecture-design and a path under docs/pay-fine/ is names present in a file; the state's wording would no longer be read, and a wrong state routes elsewhere, which `routes-to-architecture-design` already fails | 0.006 |
+| `orchestrator-route-design-system` | `log-names-row-and-artifact` | names present in the log: design-system and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording. | 0.005 |
+| `orchestrator-route-implementation` | `routes-to-tdd-implementation-lite` | names present in the log: "chunk loop" or tdd-implementation-lite as the destination and an artifact line (a path or "see sub-entries below") | 0.006 |
+| `orchestrator-route-implementation-prenamed` | `routes-to-tdd-implementation-lite` | as `orchestrator-route-implementation`: the destination and an artifact line in the log | 0.006 |
+| `orchestrator-route-problem-framing` | `log-names-row-and-artifact` | names present in the log: problem-framing-doc and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording. | 0.004 |
+| `orchestrator-route-reliability` | `log-names-row-and-artifact` | names present in the log: reliability-requirements and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording. | 0.006 |
+| `orchestrator-route-scope-decision` | `log-names-row-and-artifact` | names present in the log: scope-map and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording. | 0.009 |
+| `orchestrator-route-screen-design` | `log-names-row-and-artifact` | names present in the log: screen-design and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording. | 0.006 |
+| `orchestrator-route-slicing` | `log-names-row-and-artifact` | names present in the log: vertical-slicing and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording. | 0.005 |
+| `orchestrator-route-tech-bootstrap` | `log-names-row-and-artifact` | names present in the log: technology-bootstrap and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording. | 0.005 |
+| `orchestrator-route-user-story` | `log-names-row-and-artifact` | names present in the log: user-story-writeup and docs/pay-fine/; the destination is already a tool check. Lost: the state's wording. | 0.005 |
+| `reliability-requirements-payfine-phase2` | `no-criteria-before-approval` | a count on the reply: no "Acceptance criteria" heading and fewer than three Given/When/Then | 0.029 |
+| `reliability-requirements-payfine-phase2-proceed` | `no-criteria-before-approval` | a count on the reply: no "Acceptance criteria" heading and fewer than three Given/When/Then | 0.035 |
+| `reliability-requirements-payfine-phase2-stop` | `no-criteria-written` | a count on the reply: no "Acceptance criteria" heading and at most one Given/When/Then | 0.023 |
+| `requirements-refinement-payfine-phase2` | `template-sections` | names present in a file: a Status line saying Active and six headings (User; What they need; Why this, why now; Confirmed in scope; Confirmed out, for now; Constraints in force) | 0.010 |
+| `security-requirements-payfine-phase2` | `no-criteria-before-approval` | a count on the reply: no "Acceptance criteria" heading and fewer than three Given/When/Then, which is the criterion's own threshold | 0.021 |
+| `security-requirements-payfine-phase2-proceed` | `no-criteria-before-approval` | a count on the reply: no "Acceptance criteria" heading and fewer than three Given/When/Then | 0.015 |
+| `security-requirements-payfine-phase2-stop` | `no-criteria-written` | a count on the reply: no "Acceptance criteria" heading and at most one Given/When/Then | 0.007 |
+| `tdd-implementation-lite-cancel-hold` | `inside-the-design-boundaries` | a file's contents: no import from `infra/`, `main/` or a package in lending/cancel-hold.ts, a `HoldQueue` constructor parameter, the two status words | 0.009 |
+| `tdd-implementation-lite-cancel-hold-via-agent` | `inside-the-design-boundaries` | as `tdd-implementation-lite-cancel-hold` | 0.013 |
+| `tdd-implementation-lite-chunk-plan` | `plan-has-the-shape` | a file's shape: `## Chunk plan`, two to eight entries, five labelled lines each, a quoted test name on Done when, a listed word on Touches | 0.016 |
+| `tdd-implementation-lite-chunk-plan` | `every-chunk-names-a-seam-test` | a file's shape: every Done when line holds `seam "`; the orchestrator's own plan check reads the same thing | 0.016 |
+| `tdd-implementation-lite-named-fix` | `takes-store-through-constructor` | a file's contents: no import from `main/` in lending/return-book.ts and a `LoanStore` constructor parameter | 0.008 |
+| `tdd-implementation-lite-named-fix` | `wiring-updated` | a file's contents: `new ReturnBook(` in main/server.ts with a loan store from the wiring among its arguments | 0.008 |
+| `tdd-implementation-lite-one-chunk` | `one-commit-titled-as-the-chunk` | a count and a line's shape in `.git/logs/HEAD`: exactly two lines, the second `commit:` with the chunk's title, no `(amend)` | 0.010 |
+| `tdd-implementation-lite-one-chunk` | `ends-on-the-hand-back-line` | the shape of the last message: a commit hash, the report's path, `deviations <n>`, `shell edits <n>` and a test count | 0.010 |
+| `test-quality-review-seam-fake` | `hands-back-counts-and-path` | the shape of a short reply: the report's path, a count, and a length bound | 0.013 |
+
+**Prompts that state the rule they grade:**
+
+| Case | The prompt's words | What they give away |
+|---|---|---|
+| `accessibility-review-ac-walk` | yes: "Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project [...] and `PORTAL_DATA` inside that folder" | the launcher, the scratch folder and the data directory are what `app-started-through-the-launcher` and `app-never-started-bare` grade; "in its criteria-walk mode" and "Hand back the counts and the path" are the orchestrator's launch text |
+| `accessibility-review-payfine` | partly: "fill in the slice's accessibility placeholder" | tells the run the slice file has to change, which `slice-placeholder-filled` grades; how (a one-line pointer, nothing else touched) is left to the skill |
+| `accessibility-review-payfine-subtle` | partly: "fill in the slice's accessibility placeholder" | as `accessibility-review-payfine` |
+| `architecture-design-payfine-via-agent` | partly: "its architecture map is at `docs/architecture-map.md`" | points the run at the map, and `consults-map-query` grades that the map was consulted; the agent named is the path the case exists to run |
+| `chunk-runner-gap-handback` | yes: "next is recording round 0" | the action `round-recorded-by-the-script` grades; the E2 pass found the resume line carries the run. Naming the skill is the launch (the runner is only invoked by name). |
+| `chunk-runner-gate-deviation` | yes: "next is step 2, the gate [...] Stop once the gate has run and its result is known, before any launch" | the stop before any launch is what `no-fixer-no-reviewer` grades; the module directories and deviation zone are handed-over facts, not the rule. |
+| `chunk-runner-gate-outside` | yes: "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched" | says to go on until the gate passes (so a first failure cannot end the round) and to launch no reviewer: `gate-run-twice` and `no-reviewer-before-the-pass` |
+| `chunk-runner-gate-sources` | yes: "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched" | as `chunk-runner-gate-outside`; the prompt also says the target directory holds `sources.md`, which points at `--planning` |
+| `chunk-runner-one-fix-round` | yes: "next is recording round 1 with `--range`, then acting on the split" | the action `round-one-recorded-with-the-range` grades; also "the sandbox checks in this round are information and never end it". Naming the skill to invoke is the launch, not a leak: the runner is only ever invoked by name. |
+| `chunk-runner-review-round` | yes: "next is step 3, the review and smoke launches [...] Stop once round 0 is recorded [...] don't start the fix round" | the two launches and the recording are what `one-combined-reviewer`, `one-smoke-agent` and `round-recorded-by-the-script` grade; the hand-over names `scratch_run.py`, which `smoke-agent-handed-the-launcher` grades |
+| `chunk-runner-waits-for-handback` | yes: "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent" | `no-reviewer-launched` and `gate-on-the-builders-commit` grade what the stopping point says |
+| `code-review-comments-chunk` | partly: "Write one report in the shared finding format [...] and hand back the counts and the path" | the reply's content is what `hands-back-counts-and-path` grades; the rest is the orchestrator's launch text for a chunk reviewer, and "Touches: storage" is the state that should bring the reliability lens |
+| `delegation-consult-with-file` | yes: "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence" | every tool check and the hand-back judge grade what this sentence says; it is the orchestrator's task text, and the same words in `delegation-consult-without-file` are what must be refused, so here the case shows only that the file's presence does not stop the run |
+| `delivery-ci-red-not-done` | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | `nothing-launched` grades what the prompt forbids, and the handoff the judge reads is asked for; that red checks are read and are not "done" is left to the skill |
+| `external-review-triage-cancel-hold` | partly: "Write your report to [...] and hand back the counts and the path" | the reply's content is what `hands-back-counts-and-path` grades; it is the orchestrator's launch text |
+| `library-app-lending-review-via-agent` | partly: "return its findings report verbatim [...] (including its opening section on the importance ordering it assumed)" | tells the run the report has an importance-ordering section, which `states-assumed-importance-ordering` grades; the agent named is the path the case exists to run |
+| `orchestrator-chunk-runner-handback` | partly: "hand off once chunk 1's C line is written and its records committed, before chunk 2's runner is launched" | names the two actions `c-line-written-from-the-hand-back` and `records-committed-by-name` grade, and the stop `nothing-launched` grades; what goes on the line is left to the skill |
+| `orchestrator-chunk-runner-launch` | partly: "hand off as soon as chunk 1's runner has been launched: don't wait for it to return; write the handoff file saying the runner is in flight and stop" | says a runner is what gets launched (`one-chunk-runner-launched`) and dictates the handoff's content, which is all the judge reads |
+| `orchestrator-definition-of-done` | partly: "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)" | "checked again" is `definition-of-done-checked-twice`; the stop is `no-slice-reviewer-yet` |
+| `orchestrator-delivery-removal` | partly: "If the scan finds anything of that file in this branch's commits, replace it and rewrite the branch before it is pushed. You have my word for that rewrite" | the owner's word is an input the procedure requires, but "scan", "rewrite" and "before it is pushed" are also what `every-commit-scanned-before-and-after`, `branch-rewritten-by-the-script` and `rewrite-before-the-push` grade |
+| `orchestrator-issue-fix-records` | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | the stop is `nothing-launched`, the handoff file is `handoff-carries-the-issue-prefix`; "Issue #14 is the one I told you to fix first on its own branch" is the owner's earlier answer, an input |
+| `orchestrator-plan-check-seam` | partly: "hand off once the B line is written, before chunk 1's build" | the stop is `no-builder-launched` and the B line is `b-line-written`; that a failed plan goes back to a planner is left to the skill |
+| `orchestrator-readiness-gate` | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | the stop is `no-builder-while-the-gate-fails`; the delegation and sandbox sentences are the owner's answers, inputs |
+| `orchestrator-readme-stale-not-done` | partly: "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)" | as `orchestrator-definition-of-done` |
+| `orchestrator-route-open-pr` | partly: "Report what is open and stop after your first question to me; don't run the triage or any fix in this session" | "what is open" points at the tracker (`asks-the-tracker-for-open-pull-requests`, `-issues`), and the stop is `nothing-launched` and `no-planning-skill-invoked` |
+| `orchestrator-runner-handback-unverified` | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it and stop there" | `nothing-launched` grades what the prompt forbids; that the line's hash is checked is left to the skill |
+| `security-requirements-source-criterion` | partly: "nothing from that file may end up in the repository" | the owner's words are the criterion the judge's first half looks for; that the scan is run on writing it and the hit routed back is left to the skill |
+| `tdd-implementation-lite-chunk-plan` | partly: "Write the chunk plan [...] and build nothing" | "build nothing" is what `writes-only-the-report` and `stops-after-the-plan` grade; it is the orchestrator's launch text for the planner |
+| `tdd-implementation-lite-one-chunk` | partly: "Chunks are committed." | one of the two lines the orchestrator's launch carries to a builder, and what `commits` grades; "and only that chunk" is the task |
+| `technology-bootstrap-phase2` | partly: "pick the one where that's the default [...] Give me your recommendations for the whole set in one message rather than one at a time" | the first is the defaults-over-flags rule `pinning-posture-treated-as-a-choice` grades, in the user's mouth; the second asks for the one-message set `recommends-the-built-in-default-set-once` grades |
+| `test-quality-review-seam-fake` | partly: "Write your report in the shared finding format [...] and hand back the counts and the path" | the reply's content is what `hands-back-counts-and-path` grades; the rest is the orchestrator's launch text for the test-quality lens |
+| `user-story-writeup-payfine-phase2` | partly: "Don't create the issue yourself" | the user's answer, and exactly what `does-not-file-it` grades |
+
+**Grader findings** (described, none fixed):
+
+- `architecture-design-payfine-phase2`: `decisions-show-approval` (judge) failed 19 of 25 runs.
+- `chunk-runner-gap-handback`: `hand-back-names-the-decision` reads the trace with `[^\n]*`, but a trace line is JSON with newlines escaped, so the three words need only appear anywhere in one tool result or message, not on one line of the reply.
+- `chunk-runner-gate-outside`: The comment above `gate-passes-after-the-fix` says the judge holds "the runner edits no code", but its focus is `last_message`, which cannot show an edit: nothing reads whether the runner edited code itself.
+- `chunk-runner-gate-outside`: `allow-list-not-widened` (`--allow[ =]+[\x27"]?utils/`, not_contains on the trace): a double quote is `\"` in the trace's JSON, so `--allow "utils/..."` is not matched; only the bare and single-quoted forms are. Read from the pattern, not seen in a run.
+- `chunk-runner-review-round`: `cold-findings-cite-no-planning-document` lists `design\.md`, but the fixture's documents are `design-001.md`, `requirements-001.md` and `user-story-001.md`: a finding citing any of those three is not seen (only `slice-001.md` is).
+- `chunk-runner-review-round`: `hand-back-line-carries-the-script-counts` reads the trace with `[^\n]`, as `chunk-runner-gap-handback`'s regex does: the parts need only sit in one tool result or message, not on one line of the reply.
+- `code-review-fine-notices-pr-via-agent`: `consults-why-comments` failed 18 of 20 runs. Its trace regex wants the exact form `"name":"Skill","input":{"skill":"kad-dev-team:why-comments"`, stricter than the `"skill": ?"..."` form the tdd via-agent case uses for the same kind of nested call; whether the agent skips the consult or the form misses it was not checked. `leaves-mocking-to-test-quality-review` (judge) failed 16 of 17 here against 5 of 13 in the direct case.
+- `code-review-structural-high-at-d`: `a-long-single-job-function-stays-a-plain-finding` (judge) failed 6 of 7 runs.
+- `delivery-ci-red-not-done`: `failing-tests-written-to-the-records` matches the test's name within 6,000 characters after any Write or Bash call that names `pr-ci-r1.md`, so the failed job's log printed by a later command passes a run that wrote the file without the test names.
+- `map-update-cancel-hold`: `pre-existing-flags-not-new` (judge) failed 13 of 18 runs.
+- `orchestrator-budget-exceeded`: `flow-ends-saying-what-is-built` (judge) failed 30 of 43 runs; whether the reply or the criterion is short was not read here.
+- `orchestrator-definition-of-done`: `three-named-fixes-in-one-batch` (judge) failed 57 of 65 completed runs held; the coverage table says it fails replies that report exactly the three fixes. A grader that fails nearly every run tells a broken run from a good one no better than one that never fails.
+- `orchestrator-issue-fix-records`: `branch-names-the-slice-and-the-issue` allows a quote before the branch name (`['"]?`), but a double quote is `\"` in the trace's JSON, so `git switch -c "slice-001-issue14-..."` would not match and a correct run would fail. Read from the pattern; the one failure held (2026-11-12) was a run that created no branch.
+- `orchestrator-issue-fix-records`: `handoff-carries-the-issue-prefix` matches the file name within 1,500 characters after the start of any Write or Bash call, so a later call or a tool result that names it passes a run that never wrote it.
+- `orchestrator-readme-stale-not-done`: `three-named-fixes-in-one-batch` (judge), the same criterion family as `orchestrator-definition-of-done`'s, failed 7 of 8 runs.
+- `orchestrator-route-backward-requirements`: The `stops-after-the-routed-step` criteria come in two wordings: nine cases say "exactly one routed step per invocation ... asks whether to continue; it never chains" (this one, `orchestrator-route-design`, `-design-system`, `-implementation`, `-implementation-prenamed`, `-problem-framing`, `-reliability`, `-tech-bootstrap`, `-user-story`), four say it "continues to the next row in the same conversation" (`-accessibility`, `-scope-decision`, `-screen-design`, `-slicing`). The nine fail a run the four pass; which is the skill's rule today was not checked here.
+- `requirements-refinement-payfine-phase2`: `finishes-without-reasking` (judge) failed 8 of 9 runs.
+- `security-requirements-payfine-phase3`: `decisions-all-approved` (judge) failed 10 of 15 runs; its criterion pins phase 2's forks from the frozen history and says to re-pin them after a re-freeze.
+- `tdd-implementation-lite-cancel-hold`: `test-run-after-each-test-edit` failed 15 of 15 runs here and 30 of 30 in the via-agent twin. It is marked a measurement ("the rate is the finding"), and the rate is settled at zero: it now only lowers both cases' scores.
+- `tdd-implementation-lite-rename-fix`: `new-name-in-every-caller` reads only `main/jobs.ts`: the new name in `main/server.ts` and `lending/return-book.ts` is not checked (the old name's absence there is).
+<!-- case-sort:end -->
+
+**What the sorting says.** Nothing here is decided; each line is for the
+owner.
+
+1. *Turning judges into tool checks saves little money and some noise.*
+   51 of 471 judges could be tool checks. Their share of the judge cost
+   is about $0.77 a pass (1.7%), an estimate: a result holds one judge
+   cost per run, split here evenly over the case's judges. The other 420
+   judges take reading, and they are where the judge money is: the review
+   skills' "did it find the planted problem" and "is this a false alarm"
+   judges. The better reason to replace the 51 is noise: 72 completed
+   runs since the bars failed on those judges alone, which is 12% of all
+   failed runs. Two thirds of all failed runs (419 of 623) failed on
+   judges alone, replaceable or not; that figure includes real catches,
+   since a review that misses a planted problem fails only a judge.
+2. *The money is in the agent's own runs.* 82% of a pass. A pass gets
+   cheaper by running fewer or shorter cases (E6 and E7), not by E5.
+   Four cases cost over $1 a run, all of them cases that launch agents:
+   `orchestrator-chunk-runner-launch` $1.76, `chunk-runner-review-round`
+   $1.30, `orchestrator-readme-stale-not-done` $1.12,
+   `orchestrator-definition-of-done` $1.10.
+3. *`orchestrator-chunk-runner-launch` pays for a round nobody grades.*
+   Its graders read the launch and the handoff file; because a launch
+   blocks under the eval, the launched runner then runs its whole round
+   (279 s a run). Ending the case at the launch would save most of its
+   $1.76, perhaps $1.50 a pass (3%). A guess: the orchestrator's own
+   share of the run was not measured, and the CLI may offer no way to
+   stop a launched agent early.
+4. *Nine prompts state the rule they grade and 23 state part of it.* The
+   nine are seven `chunk-runner` cases (the resume line names the next
+   action, as the deletion pass found), `accessibility-review-ac-walk`
+   (the prompt gives the launcher, the scratch folder and the data
+   directory) and `delegation-consult-with-file` (the prompt gives the
+   revision, the commit name and the hand-back). The 23 are mostly a
+   stopping point ("hand off once the B line is written") or the
+   orchestrator's own launch sentence ("hand back the counts and the
+   path"). Rewording saves nothing and may cost a little, since the run
+   then has to find the action itself; what it buys is a case that can
+   fail when the rule goes. The seven `chunk-runner` cases would then owe
+   their deletions again, about 40 to 60 runs, a guess from the pass's
+   own counts.
+5. *The `-via-agent` cases repeat their twin's judges.* Six cases, five
+   priced at $2.55 a pass together, $0.83 of it judges. Keeping the path
+   check and two judges in each would save about $0.58 a pass (1.3%), a
+   guess from the even split. They are not candidates to retire: two of
+   them fail a grader far more often than their direct twin
+   (`code-review-fine-notices-pr-via-agent` fails `consults-why-comments`
+   in 18 of 20 runs against 2 of 13;
+   `tdd-implementation-lite-cancel-hold-via-agent` fails `final-review-runs`
+   in 11 of 30 against none of 15), so the agent path does behave
+   differently, unless the first is the grader's form (see the findings).
+6. *Never failed and costly: seven cases, $3.39 a pass (7.4%).* Listed
+   under the table. Only two have a deletion result,
+   `chunk-runner-gate-outside` (0 of 10 deletions failed it) and
+   `chunk-runner-replay-not-the-handback` (0 of 4): $1.01 a pass (2.2%)
+   if both went. The other five are review cases with no deletion pass
+   and no bare-model run, so by E7's own rule they are not candidates
+   yet. All 62 never-failed cases together are $14.28 a pass (31%), the
+   ceiling on what E7 can retire, not an estimate of it.
+7. *Twelve graders fail in most of their runs.* Listed in the findings.
+   A grader that fails nearly every run separates a good run from a
+   broken one no better than one that never fails, and each is a re-run
+   waiting to happen when its case's bar moves.
+
+**The order for E5**, by noise removed first and certainty of the
+replacement:
+
+1. `chunk-runner`'s six judges on a hand-back line, the two E5 names
+   first (`stops-with-the-decision-on-the-line`,
+   `hand-back-is-the-one-line`), together with the seven prompts
+   reworded, since both change the same case files and one gate run
+   covers them.
+2. The five hand-back judges on a short reply in other skills
+   (`hands-back-counts-and-path` three times,
+   `hands-back-the-hash-and-one-sentence`, `ends-on-the-hand-back-line`).
+3. The eight counts and names on a reply: `no-criteria-before-approval`
+   four times and `no-criteria-written` twice, whose criteria already
+   state a number, `no-live-scan-answer` and `uses-what-the-map-found`.
+4. The 17 judges on a file's shape or contents (the chunk plan's shape
+   and its seam tests, the reflog's two lines, the requirements
+   template's headings, the slice's placeholder line, the ADR's banned
+   names, three of `map-update`'s seven, the constructor and wiring
+   checks). Some need the per-case script E5 describes: a count of chunk
+   entries or a comparison with the fixture's earlier map is not one
+   regex.
+5. Last, and only if wanted: the 15 judges on the orchestrator's log
+   (`log-names-row-and-artifact` eleven times and four like it). A regex
+   holds the destination and the artifact path and loses the state's
+   wording. They are the least certain of the 51.
+
+**The skills E6 should take first.** By money and by how many of the
+skill's cases have never failed, which is where a bare model matching the
+skill would free the most: `architecture-review` (11 cases, $3.59, 8
+never failed), `security-review` (8, $2.22, 6 never failed), then
+`reliability-review` (10, $4.14, the most judge money of any skill),
+`code-review`, `security-requirements` (6 of 8 never failed) and
+`reliability-requirements`, then the design skills. Two limits read from
+the cases: the 21 cases that resume a `history.jsonl` carry the skill's
+text inside the history, so "without the plugin" is not without the skill
+there, and E6 can measure only the first-turn cases of those skills; and
+16 of the 17 negative-trigger cases already grade both arms (`arm: both`;
+`adr-neg-rename` does not), $1.39 a pass for the 17, so they need no E6
+run.
+
+**`orchestrator` and `delivery`: which rules a grader could notice.**
+`TODO.md` asks this of E4 before a deletion pass on either is decided.
+The orchestrator's 34 cases have 203 tool checks, and they read: the
+skill a route invokes (every routing-table row with a case), the scripts
+run (`readiness_check.py`, `done_check.py`, `sandbox_check.py`,
+`cost_by_role.py`, `source_scan.py` and their order), the agents
+launched by kind, count and model, the A, B, C and E lines of the log by
+regex, the commits by name, and the calls to the GitHub stand-in. A
+deletion of any rule behind those would be noticed. What only a judge
+reads, so a deletion would fail at most a judge: stopping after one
+routed step, every question put to the owner and its choices, and what
+the handoff file says. Ten prompts state part of the rule, all of them
+stopping points. `delivery` has one case of its own
+(`delivery-ci-red-not-done`) and is reached by two of the orchestrator's;
+the red-CI rule, the scan, map and rewrite order, the issue per standing
+Medium and the foreground rule are read by tool checks, and nothing reads
+the triage's verdicts being acted on (the fixes pushed, the declines
+replied to, the deferrals filed). A deletion pass on `delivery` would
+mostly report rules no case reaches.
+
 ### Run backlog
 
 Emptied: the eight emulated cases it listed were all run, then replaced by
