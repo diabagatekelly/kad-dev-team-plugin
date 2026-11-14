@@ -28,11 +28,9 @@ graders:
       PASS if the response says no map exists yet and points to generating one first (a map update).
 
       FAIL if it answers as though a map had been checked.
-  - type: llm
+  - type: regex
     name: no-live-scan-answer
-    focus: last_message
-    weight: 1
-    criteria: |
-      PASS if the response does not answer the question from a search of the source code (for example by reporting `daysBetween` in `utils/date-utils.ts` as what it found).
-
-      FAIL if it reports candidates it found by searching the code.
+    # A judge until E5: the two names only a search of the source would give.
+    target: last_message
+    pattern: 'daysBetween|date-utils'
+    match: not_contains

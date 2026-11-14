@@ -44,13 +44,12 @@ graders:
       PASS if the response points out that a timed-out charge may have gone through so a retry risks a duplicate charge, and leaves how to handle that as a decision for the user (recommendation plus at least one alternative, not yet approved), whichever of those framings it uses.
 
       FAIL if it adopts "payment failed, please try again" without addressing the duplicate-charge risk, or settles how to handle the risk itself without leaving it for approval.
-  - type: llm
+  - type: regex
     name: no-criteria-before-approval
-    focus: last_message
-    weight: 1
-    criteria: |
-      The skill's rule: once the questions are answered, the next response is the forks, presented for approval, and the acceptance-criteria document is written only after the approvals, complete. This checks that the response stopped at the forks.
-
-      PASS if the response contains no acceptance-criteria document: no "Acceptance criteria" section and no set of Given/When/Then criteria. Describing a fork's options, what each would have to guarantee (for example "the member is never charged twice"), a list of failure modes found in the code, and a single illustrative criterion are all fine.
-
-      FAIL if it writes the criteria now (an acceptance-criteria section, or three or more Given/When/Then criteria), whether or not it also asks for approval.
+    # A judge until E5 (2026-11-14), with the same thresholds: no heading or
+    # bold label saying "Acceptance criteria", and fewer than three
+    # Given/When/Then in the reply. Not seen: criteria written in another form
+    # under another heading. The judge never failed a run, so the check has
+    # only been shown not to fail the replies the judge passed.
+    target: last_message
+    pattern: '^(?![\s\S]*(?:^|\n)\s*(?:#{1,6}\s*|\*\*)[^\n]{0,40}Acceptance criteria)(?!(?:[\s\S]*?\bGiven\b[\s\S]{0,600}?\b[Ww]hen\b[\s\S]{0,600}?\b[Tt]hen\b){3})'

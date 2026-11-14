@@ -260,10 +260,6 @@
    "note": "points the run at the map, and `consults-map-query` grades that the map was consulted; the agent named is the path the case exists to run"
   },
   "judges": {
-   "uses-what-the-map-found": {
-    "by": "tool",
-    "why": "a name present in the reply: `CollectFine`, `FineLedger`, `FinePayments` or `portal-routes`. Lost: that the piece is named as something to build on, not in passing."
-   },
    "presents-decisions-and-waits": {
     "by": "reading",
     "why": "whether a decision is presented with an alternative and the reply stops for approval"
@@ -1048,10 +1044,6 @@
    "says-no-map": {
     "by": "reading",
     "why": "whether the reply says no map exists and points at generating one"
-   },
-   "no-live-scan-answer": {
-    "by": "tool",
-    "why": "a name absent from the reply: `daysBetween` or `date-utils`, which only a search of the source would give"
    }
   },
   "findings": []
@@ -1822,10 +1814,6 @@
    "does-not-decide-the-fork-itself": {
     "by": "reading",
     "why": "whether any fork is recorded as settled before the user said so"
-   },
-   "no-criteria-before-approval": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
    }
   },
   "findings": []
@@ -1847,10 +1835,6 @@
    "presents-timeout-proposal-as-a-decision": {
     "by": "reading",
     "why": "whether the duplicate-charge risk is raised and left as a decision"
-   },
-   "no-criteria-before-approval": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
    }
   },
   "findings": []
@@ -1868,10 +1852,6 @@
    "does-not-lay-out-scope-options": {
     "by": "reading",
     "why": "whether two or more mechanisms are laid out, as against one recommendation"
-   },
-   "no-criteria-written": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and at most one Given/When/Then"
    },
    "does-not-design-the-fallback": {
     "by": "reading",
@@ -2368,10 +2348,6 @@
    "does-not-decide-the-fork-itself": {
     "by": "reading",
     "why": "whether any fork is recorded as settled before the user said so"
-   },
-   "no-criteria-before-approval": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then, which is the criterion's own threshold"
    }
   },
   "findings": []
@@ -2393,10 +2369,6 @@
    "presents-shared-route-as-a-decision": {
     "by": "reading",
     "why": "whether the engineer's proposal is put as a decision with a recommendation and the reason"
-   },
-   "no-criteria-before-approval": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
    }
   },
   "findings": []
@@ -2414,10 +2386,6 @@
    "does-not-lay-out-scope-options": {
     "by": "reading",
     "why": "whether two or more ways to fill the gap are laid out, as against one recommendation"
-   },
-   "no-criteria-written": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and at most one Given/When/Then"
    },
    "does-not-design-the-receipt": {
     "by": "reading",
