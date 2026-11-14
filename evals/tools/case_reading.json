@@ -80,10 +80,6 @@
    "criteria-split-now-and-later": {
     "by": "reading",
     "why": "whether Given/When/Then criteria cover the two things and are split by when they can be checked"
-   },
-   "slice-placeholder-filled": {
-    "by": "tool",
-    "why": "a file's contents: the placeholder line absent from slice-001.md, the review's file name or criteria in its place, the other lines as they were (the regex `security-requirements-placeholder-pointer` already uses)"
    }
   },
   "findings": []
@@ -130,10 +126,6 @@
    "criteria-split-now-and-later": {
     "by": "reading",
     "why": "whether Given/When/Then criteria cover the two things and are split by when they can be checked"
-   },
-   "slice-placeholder-filled": {
-    "by": "tool",
-    "why": "as `accessibility-review-payfine`"
    }
   },
   "findings": []
@@ -157,10 +149,6 @@
    "note": "the how-details in the request are the plant the ADR must leave out"
   },
   "judges": {
-   "no-how": {
-    "by": "tool",
-    "why": "names absent from a file: the seven identifiers the request gave (`FinePayments`, `stripeCode`, `AdyenFinePayments`, the three paths, `PAYMENT_PROVIDER_DESK`) and any code fence. Lost: another path or class name the run invents."
-   },
    "decision-alternatives-consequences": {
     "by": "reading",
     "why": "whether each rejected alternative carries its reason and the downsides are listed"
@@ -260,10 +248,6 @@
    "note": "points the run at the map, and `consults-map-query` grades that the map was consulted; the agent named is the path the case exists to run"
   },
   "judges": {
-   "uses-what-the-map-found": {
-    "by": "tool",
-    "why": "a name present in the reply: `CollectFine`, `FineLedger`, `FinePayments` or `portal-routes`. Lost: that the piece is named as something to build on, not in passing."
-   },
    "presents-decisions-and-waits": {
     "by": "reading",
     "why": "whether a decision is presented with an alternative and the reply stops for approval"
@@ -306,55 +290,37 @@
  },
  "chunk-runner-gap-handback": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is recording round 0",
-   "note": "the action `round-recorded-by-the-script` grades; the E2 pass found the resume line carries the run. Naming the skill is the launch (the runner is only invoked by name)."
+   "states_rule": "no",
+   "note": "reworded in E5: the resume line names the state (\"round 0 is not recorded yet\") and no longer the action `round-recorded-by-the-script` grades. The fixture's handoff file still carries a \"Next action\" line, as the loop's own handoff does. Naming the skill is the launch (the runner is only invoked by name)."
   },
-  "judges": {
-   "stops-with-the-decision-on-the-line": {
-    "by": "tool",
-    "why": "the shape of the last line (`needs-decision devsecops-engineer: <path>`, `nd 1`), which `hand-back-names-the-decision` already reads; fails correct lines in 8 of 23 runs. Lost: whether the reply answers the undecided question itself."
-   }
-  },
-  "findings": [
-   "`hand-back-names-the-decision` reads the trace with `[^\\n]*`, but a trace line is JSON with newlines escaped, so the three words need only appear anywhere in one tool result or message, not on one line of the reply."
-  ]
+  "judges": {},
+  "findings": []
  },
  "chunk-runner-gate-deviation": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is step 2, the gate [...] Stop once the gate has run and its result is known, before any launch",
-   "note": "the stop before any launch is what `no-fixer-no-reviewer` grades; the module directories and deviation zone are handed-over facts, not the rule."
+   "states_rule": "partly",
+   "quote": "Stop once the gate has run and its result is known, before any launch",
+   "note": "reworded in E5: the resume line names the state (\"no gate has run on that commit\"). The stopping point is left: it bounds the run's cost, and it is what `no-fixer-no-reviewer` grades; the module directories and deviation zone are handed-over facts, not the rule."
   },
-  "judges": {
-   "deviation-recorded-not-failed": {
-    "by": "tool",
-    "why": "`deviations 2` on the last message is a count on a line; no launch is already `no-fixer-no-reviewer`, the Files line not widened is `plan-entry-not-edited`"
-   }
-  },
+  "judges": {},
   "findings": []
  },
  "chunk-runner-gate-outside": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched",
-   "note": "says to go on until the gate passes (so a first failure cannot end the round) and to launch no reviewer: `gate-run-twice` and `no-reviewer-before-the-pass`"
+   "states_rule": "partly",
+   "quote": "Stop once the gate has passed, before any reviewer is launched",
+   "note": "reworded in E5: the resume line names the state. The stopping point is left (it bounds the run's cost): it says to go on until the gate passes and to launch no reviewer, `gate-run-twice` and `no-reviewer-before-the-pass`"
   },
-  "judges": {
-   "gate-passes-after-the-fix": {
-    "by": "tool",
-    "why": "`gate PASS after <sha>` and `stopped at step 2` on the last message, the regex `chunk-runner-gate-sources` already uses; the launches are counted by tool checks"
-   }
-  },
+  "judges": {},
   "findings": [
-   "The comment above `gate-passes-after-the-fix` says the judge holds \"the runner edits no code\", but its focus is `last_message`, which cannot show an edit: nothing reads whether the runner edited code itself.",
-   "`allow-list-not-widened` (`--allow[ =]+[\\x27\"]?utils/`, not_contains on the trace): a double quote is `\\\"` in the trace's JSON, so `--allow \"utils/...\"` is not matched; only the bare and single-quoted forms are. Read from the pattern, not seen in a run."
+   "`allow-list-not-widened` (`--allow[ =]+[\\x27\"]?utils/`, not_contains on the trace): a double quote is `\\\"` in the trace's JSON, so `--allow \"utils/...\"` is not matched; only the bare and single-quoted forms are. Read from the pattern, not seen in a run.",
+   "Nothing reads whether the runner edited code itself: a nested fixer's Edit calls are in the runner's trace too, so a trace regex cannot tell them apart (the comment in the case says so since E5)."
   ]
  },
  "chunk-runner-gate-sources": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is step 2, the gate [...] Stop once the gate has passed, before any reviewer is launched",
+   "states_rule": "partly",
+   "quote": "Stop once the gate has passed, before any reviewer is launched",
    "note": "as `chunk-runner-gate-outside`; the prompt also says the target directory holds `sources.md`, which points at `--planning`"
   },
   "judges": {},
@@ -362,16 +328,11 @@
  },
  "chunk-runner-one-fix-round": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is recording round 1 with `--range`, then acting on the split",
-   "note": "the action `round-one-recorded-with-the-range` grades; also \"the sandbox checks in this round are information and never end it\". Naming the skill to invoke is the launch, not a leak: the runner is only ever invoked by name."
+   "states_rule": "partly",
+   "quote": "the sandbox checks in this round are information and never end it",
+   "note": "reworded in E5: the resume line names the state (\"round 1 is not recorded yet\") and no longer the action `round-one-recorded-with-the-range` grades. What is left is a handed-over fact the E2 pass found the run follows instead of the skill's sentence. Naming the skill to invoke is the launch, not a leak."
   },
-  "judges": {
-   "hand-back-is-the-one-line": {
-    "by": "tool",
-    "why": "the shape of the last message: one line, the C line's fields in order, nothing before or after it; two regexes already read the split and the standing count"
-   }
-  },
+  "judges": {},
   "findings": []
  },
  "chunk-runner-replay-not-the-handback": {
@@ -402,16 +363,11 @@
  },
  "chunk-runner-review-round": {
   "prompt": {
-   "states_rule": "yes",
-   "quote": "next is step 3, the review and smoke launches [...] Stop once round 0 is recorded [...] don't start the fix round",
-   "note": "the two launches and the recording are what `one-combined-reviewer`, `one-smoke-agent` and `round-recorded-by-the-script` grade; the hand-over names `scratch_run.py`, which `smoke-agent-handed-the-launcher` grades"
+   "states_rule": "partly",
+   "quote": "Stop once round 0 is recorded [...] don't start the fix round",
+   "note": "reworded in E5: the resume line names the state (\"no reviewer and no smoke agent has been launched\") and no longer the two launches. The stopping point is left (it bounds the run's cost) and still names the recording `round-recorded-by-the-script` grades; the hand-over names `scratch_run.py`, which `smoke-agent-handed-the-launcher` grades"
   },
-  "judges": {
-   "review-report-in-the-shared-shape": {
-    "by": "tool",
-    "why": "a file's shape: every `###` heading followed by a `**Severity:**` line with one of four values, at most eight, none Low. It grades the launched reviewer's file, not the runner."
-   }
-  },
+  "judges": {},
   "findings": [
    "`cold-findings-cite-no-planning-document` lists `design\\.md`, but the fixture's documents are `design-001.md`, `requirements-001.md` and `user-story-001.md`: a finding citing any of those three is not seen (only `slice-001.md` is).",
    "`hand-back-line-carries-the-script-counts` reads the trace with `[^\\n]`, as `chunk-runner-gap-handback`'s regex does: the parts need only sit in one tool result or message, not on one line of the reply."
@@ -421,14 +377,9 @@
   "prompt": {
    "states_rule": "yes",
    "quote": "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent",
-   "note": "`no-reviewer-launched` and `gate-on-the-builders-commit` grade what the stopping point says"
+   "note": "`no-reviewer-launched` and `gate-on-the-builders-commit` grade what the stopping point says. The case starts at the build and has no resume line, so E5 reworded nothing here: the stopping point is the run's bound."
   },
-  "judges": {
-   "hand-back-is-the-one-line-for-what-ran": {
-    "by": "tool",
-    "why": "the shape of the last message: one line with a commit hash, a gate result and `stopped at`; it is the judge the `handback-one-line` deletion fails, so the regex must fail paragraphs and bullets"
-   }
-  },
+  "judges": {},
   "findings": []
  },
  "code-review-catalog": {
@@ -466,10 +417,6 @@
    "why-comment-is-not-flagged": {
     "by": "reading",
     "why": "whether the one WHY-comment is asked to go"
-   },
-   "hands-back-counts-and-path": {
-    "by": "tool",
-    "why": "the shape of a short reply: the report's path, a count, and a length bound; a judge on a few lines is the noise the chunk-runner pass found"
    }
   },
   "findings": []
@@ -661,10 +608,6 @@
    "decision-written-in-place-under-the-delegation": {
     "by": "reading",
     "why": "whether both parts are answered in a testable form and recorded under Decisions as made under the delegation"
-   },
-   "hands-back-the-hash-and-one-sentence": {
-    "by": "tool",
-    "why": "the shape of the last message: a hash of seven or more hex characters and a length bound"
    }
   },
   "findings": []
@@ -765,10 +708,6 @@
    "accessibility-by-construction": {
     "by": "reading",
     "why": "whether every text colour has a ratio at or above its threshold; a script could compute the ratios from the hex values, which no grader kind runs today"
-   },
-   "mockup-referenced-no-screenshot-claimed": {
-    "by": "tool",
-    "why": "names present and absent in a file: an `.html` under `visual-ux/` referenced, no image file referenced"
    }
   },
   "findings": []
@@ -833,10 +772,6 @@
    "defers-out-of-slice-and-resolves-the-fixed": {
     "by": "reading",
     "why": "whether the deferral names its owner and the resolved one its commit"
-   },
-   "hands-back-counts-and-path": {
-    "by": "tool",
-    "why": "the shape of a short reply: the report's path, four counts and a length bound"
    }
   },
   "findings": []
@@ -1093,10 +1028,6 @@
    "says-no-map": {
     "by": "reading",
     "why": "whether the reply says no map exists and points at generating one"
-   },
-   "no-live-scan-answer": {
-    "by": "tool",
-    "why": "a name absent from the reply: `daysBetween` or `date-utils`, which only a search of the source would give"
    }
   },
   "findings": []
@@ -1107,14 +1038,6 @@
    "note": "asks for the map to match the code and for what changed"
   },
   "judges": {
-   "new-rows-extracted": {
-    "by": "tool",
-    "why": "a file's contents: the two rows with their tier, edges and exports, in the table the shipped extractor writes"
-   },
-   "keeps-existing-rows-and-tiers": {
-    "by": "tool",
-    "why": "a file's contents against the fixture's earlier map: every source row still present with its tier; a script, not one regex"
-   },
    "flags-new-wrong-direction-edge": {
     "by": "reading",
     "why": "whether the edge is flagged as a fact and not ruled on"
@@ -1130,10 +1053,6 @@
    "pre-existing-flags-not-new": {
     "by": "reading",
     "why": "whether either earlier edge is reported as new"
-   },
-   "no-severity": {
-    "by": "tool",
-    "why": "words absent from a file: Critical, High, Medium, Low, serious, a score"
    }
   },
   "findings": [
@@ -1268,8 +1187,8 @@
     "why": "whether the reply is the slicer deciding scope because of the hand-back, not the next forward row or the receipt question settled by itself"
    },
    "log-names-the-hand-back": {
-    "by": "tool",
-    "why": "names present in a file: an entry naming the security document or the receipt, product-slicer or vertical-slicing, and a path under docs/pay-fine/. Lost: that the entry calls itself a backward route in its own words."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in a file: an entry naming the security document or the receipt, product-slicer or vertical-slicing, and a path under docs/pay-fine/. Lost: that the entry calls itself a backward route in its own words."
    }
   },
   "findings": []
@@ -1339,10 +1258,6 @@
    "note": "hands over the stand-in for the GitHub CLI, not the procedure"
   },
   "judges": {
-   "one-issue-per-standing-medium-none-for-a-low": {
-    "by": "tool",
-    "why": "a count and names in tools/gh-calls.log: exactly two `issue create` lines, none carrying a Low's words (`queueWith`, the fixed string, the heading), a `pr edit` after them. Lost: that each issue is the right Medium when its title is a paraphrase."
-   },
    "reports-the-delivery-in-the-same-turn": {
     "by": "reading",
     "why": "whether the reply reports the pull request, the issues, the Lows and the cost outcome, and asks nothing about pushing"
@@ -1401,10 +1316,6 @@
    "note": "the stop is `no-builder-launched` and the B line is `b-line-written`; that a failed plan goes back to a planner is left to the skill"
   },
   "judges": {
-   "every-chunk-names-its-seam-test": {
-    "by": "tool",
-    "why": "a file's shape: under `## Chunk plan`, two to eight chunks, each Done when line holding `seam \"`; the plan check itself is mechanical"
-   },
    "plan-sent-back-not-edited": {
     "by": "reading",
     "why": "whether the reply reports the failed check, the one relaunch and the second result; the launches are counted by tool checks"
@@ -1420,8 +1331,8 @@
   },
   "judges": {
    "backward-routes-name-the-checks": {
-    "by": "tool",
-    "why": "names present in the log: a chunk-loop entry, then an entry naming reliability-requirements or screen-design with the document to revise. Lost: that the entry's reason is the failed check in words."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: a chunk-loop entry, then an entry naming reliability-requirements or screen-design with the document to revise. Lost: that the entry's reason is the failed check in words."
    },
    "stops-at-the-routed-skill-or-reports-the-route": {
     "by": "reading",
@@ -1479,8 +1390,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: accessibility-review and a path under docs/pay-fine/; the destination is already `routes-to-accessibility-review`. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: accessibility-review and a path under docs/pay-fine/; the destination is already `routes-to-accessibility-review`. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1496,8 +1407,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: requirements-refinement and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: requirements-refinement and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1515,8 +1426,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "a log entry naming architecture-design and a path under docs/pay-fine/ is names present in a file; the state's wording would no longer be read, and a wrong state routes elsewhere, which `routes-to-architecture-design` already fails"
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: a log entry naming architecture-design and a path under docs/pay-fine/ is names present in a file; the state's wording would no longer be read, and a wrong state routes elsewhere, which `routes-to-architecture-design` already fails"
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1532,8 +1443,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: design-system and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: design-system and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1549,8 +1460,8 @@
   },
   "judges": {
    "routes-to-tdd-implementation-lite": {
-    "by": "tool",
-    "why": "names present in the log: \"chunk loop\" or tdd-implementation-lite as the destination and an artifact line (a path or \"see sub-entries below\")"
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: \"chunk loop\" or tdd-implementation-lite as the destination and an artifact line (a path or \"see sub-entries below\")"
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1566,8 +1477,8 @@
   },
   "judges": {
    "routes-to-tdd-implementation-lite": {
-    "by": "tool",
-    "why": "as `orchestrator-route-implementation`: the destination and an artifact line in the log"
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: as `orchestrator-route-implementation`: the destination and an artifact line in the log"
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1597,8 +1508,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: problem-framing-doc and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: problem-framing-doc and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1614,8 +1525,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: reliability-requirements and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: reliability-requirements and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1631,8 +1542,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: scope-map and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: scope-map and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1648,8 +1559,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: screen-design and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: screen-design and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1678,8 +1589,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: vertical-slicing and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: vertical-slicing and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1695,8 +1606,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: technology-bootstrap and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: technology-bootstrap and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1712,8 +1623,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: user-story-writeup and docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: user-story-writeup and docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1867,10 +1778,6 @@
    "does-not-decide-the-fork-itself": {
     "by": "reading",
     "why": "whether any fork is recorded as settled before the user said so"
-   },
-   "no-criteria-before-approval": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
    }
   },
   "findings": []
@@ -1892,10 +1799,6 @@
    "presents-timeout-proposal-as-a-decision": {
     "by": "reading",
     "why": "whether the duplicate-charge risk is raised and left as a decision"
-   },
-   "no-criteria-before-approval": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
    }
   },
   "findings": []
@@ -1913,10 +1816,6 @@
    "does-not-lay-out-scope-options": {
     "by": "reading",
     "why": "whether two or more mechanisms are laid out, as against one recommendation"
-   },
-   "no-criteria-written": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and at most one Given/When/Then"
    },
    "does-not-design-the-fallback": {
     "by": "reading",
@@ -2263,10 +2162,6 @@
    "note": "the user's answers to phase 1's questions"
   },
   "judges": {
-   "template-sections": {
-    "by": "tool",
-    "why": "names present in a file: a Status line saying Active and six headings (User; What they need; Why this, why now; Confirmed in scope; Confirmed out, for now; Constraints in force)"
-   },
    "keeps-the-users-trade-off": {
     "by": "reading",
     "why": "whether the user's own reason is recorded and not replaced by another"
@@ -2413,10 +2308,6 @@
    "does-not-decide-the-fork-itself": {
     "by": "reading",
     "why": "whether any fork is recorded as settled before the user said so"
-   },
-   "no-criteria-before-approval": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then, which is the criterion's own threshold"
    }
   },
   "findings": []
@@ -2438,10 +2329,6 @@
    "presents-shared-route-as-a-decision": {
     "by": "reading",
     "why": "whether the engineer's proposal is put as a decision with a recommendation and the reason"
-   },
-   "no-criteria-before-approval": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and fewer than three Given/When/Then"
    }
   },
   "findings": []
@@ -2459,10 +2346,6 @@
    "does-not-lay-out-scope-options": {
     "by": "reading",
     "why": "whether two or more ways to fill the gap are laid out, as against one recommendation"
-   },
-   "no-criteria-written": {
-    "by": "tool",
-    "why": "a count on the reply: no \"Acceptance criteria\" heading and at most one Given/When/Then"
    },
    "does-not-design-the-receipt": {
     "by": "reading",
@@ -2900,10 +2783,6 @@
     "by": "reading",
     "why": "whether the wording is reported as the builder's own decision"
    },
-   "inside-the-design-boundaries": {
-    "by": "tool",
-    "why": "a file's contents: no import from `infra/`, `main/` or a package in lending/cancel-hold.ts, a `HoldQueue` constructor parameter, the two status words"
-   },
    "green-stays-minimal": {
     "by": "reading",
     "why": "whether the file adds behaviour the design did not ask for"
@@ -2939,10 +2818,6 @@
     "by": "reading",
     "why": "as `tdd-implementation-lite-cancel-hold`"
    },
-   "inside-the-design-boundaries": {
-    "by": "tool",
-    "why": "as `tdd-implementation-lite-cancel-hold`"
-   },
    "green-stays-minimal": {
     "by": "reading",
     "why": "as `tdd-implementation-lite-cancel-hold`"
@@ -2965,17 +2840,9 @@
    "note": "\"build nothing\" is what `writes-only-the-report` and `stops-after-the-plan` grade; it is the orchestrator's launch text for the planner"
   },
   "judges": {
-   "plan-has-the-shape": {
-    "by": "tool",
-    "why": "a file's shape: `## Chunk plan`, two to eight entries, five labelled lines each, a quoted test name on Done when, a listed word on Touches"
-   },
    "plan-is-vertical-and-inside-the-slice": {
     "by": "reading",
     "why": "whether each chunk is a behaviour and not a layer and delivers nothing deferred; only the Files paths are a tool's"
-   },
-   "every-chunk-names-a-seam-test": {
-    "by": "tool",
-    "why": "a file's shape: every Done when line holds `seam \"`; the orchestrator's own plan check reads the same thing"
    },
    "stops-after-the-plan": {
     "by": "reading",
@@ -2990,17 +2857,9 @@
    "note": "the finding and its fix are the task handed over, not the skill's rule; the skill is named because it is only invoked by name"
   },
   "judges": {
-   "takes-store-through-constructor": {
-    "by": "tool",
-    "why": "a file's contents: no import from `main/` in lending/return-book.ts and a `LoanStore` constructor parameter"
-   },
    "behaviour-unchanged": {
     "by": "reading",
     "why": "whether three behaviours of the code are the same; a held-out test could decide it, which no grader kind runs today"
-   },
-   "wiring-updated": {
-    "by": "tool",
-    "why": "a file's contents: `new ReturnBook(` in main/server.ts with a loan store from the wiring among its arguments"
    },
    "pins-behaviour-with-tests": {
     "by": "reading",
@@ -3024,10 +2883,6 @@
     "by": "reading",
     "why": "whether a comment restates its line; the planning citation is already `no-planning-reference-in-the-code`"
    },
-   "one-commit-titled-as-the-chunk": {
-    "by": "tool",
-    "why": "a count and a line's shape in `.git/logs/HEAD`: exactly two lines, the second `commit:` with the chunk's title, no `(amend)`"
-   },
    "builds-this-chunk-and-not-chunk-two": {
     "by": "reading",
     "why": "whether the use case does more than the chunk delivers; no try/catch and no concrete import would be two regexes"
@@ -3039,10 +2894,6 @@
    "report-section-appended-plan-untouched": {
     "by": "reading",
     "why": "whether the plan's three chunks are unchanged and the new section has its lines"
-   },
-   "ends-on-the-hand-back-line": {
-    "by": "tool",
-    "why": "the shape of the last message: a commit hash, the report's path, `deviations <n>`, `shell edits <n>` and a test count"
    }
   },
   "findings": []
@@ -3238,10 +3089,6 @@
    "fixed-clock-is-not-a-finding": {
     "by": "reading",
     "why": "whether the fixed clock is a finding at Medium or above"
-   },
-   "hands-back-counts-and-path": {
-    "by": "tool",
-    "why": "the shape of a short reply: the report's path, a count, and a length bound"
    }
   },
   "findings": []

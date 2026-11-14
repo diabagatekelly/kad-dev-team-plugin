@@ -36,6 +36,14 @@ graders:
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?(?:code-reviewer|accessibility-engineer)'
     min: 0
     max: 0
+  - type: tool_used
+    name: no-smoke-agent-launched
+    # Added with E5: the one-line check reads that no smoke result is on the
+    # line, which a smoke agent launched and left off the line would pass.
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*[Ss]moke)'
+    min: 0
+    max: 0
   - type: regex
     name: nothing-started-in-the-background-to-wait
     target: trace
@@ -71,13 +79,12 @@ graders:
     target: trace
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
     match: not_contains
-  - type: llm
-    name: hand-back-is-the-one-line-for-what-ran
-    focus: last_message
-    weight: 1
-    criteria: |
-      The chunk runner was told to stop after the gate on the builder's commit. Its final reply is one hand-back line in the C line's field order as far as the round went: the chunk's title, the builder's turns and minutes (or `?`), the commit or commits, the gate result, deviations, shell edits, the builder's agent id (or `?`), the launch counts, the sandbox checks, and `stopped at review` (or `stopped at` with the step named).
-
-      PASS if the final reply is essentially that one line: it names at least one commit hash, a gate result (`PASS`, `PASS after <sha>` or a `FAIL … ended`), and that it stopped before the review. Fields for steps that did not run may be absent or hold a placeholder (`review none`, `r0 ?`, `smoke ?`, `standing ?`): a placeholder is not a result.
-
-      FAIL if it reports counts or findings from a review or smoke run, says an agent is still working, names no commit although the gate passed, or is prose instead of the line.
+  - type: regex
+    name: hand-back-is-one-line-for-what-ran
+    # Was the judge `hand-back-is-the-one-line-for-what-ran` until E5. The
+    # whole reply is one line with a commit hash, a gate result and `stopped
+    # at`, and holds no round 0 counts and no smoke result (a placeholder such
+    # as `r0 ?` is not a result). The known-bad reference `handback-one-line`
+    # names this grader.
+    target: last_message
+    pattern: '^(?![\s\S]*r0 \W{0,2}\d+/\d)(?![\s\S]*smoke \W{0,2}(?:PASS|FAIL|\d))\s*[^\n]*commits \W{0,2}[0-9a-f]{7,40}\b[^\n]*gate \W{0,2}(?:PASS|FAIL)[^\n]*stopped at[^\n]*\s*$'

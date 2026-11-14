@@ -168,16 +168,14 @@ graders:
       PASS if the report says which wording it chose, as its own decision.
 
       FAIL if it sends this back as an open question, or never mentions the wording as a decision.
-  - type: llm
+  - type: regex
     name: inside-the-design-boundaries
-    focus:
+    # A judge until E5: a `HoldQueue` constructor parameter, no import from
+    # `infra/`, `main/` or a package, the two status words and a reason.
+    target:
       source: file
       path: lending/cancel-hold.ts
-    weight: 1
-    criteria: |
-      PASS if CancelHold receives a HoldQueue (the interface from `lending/hold-queue.ts`) through its constructor, the file imports nothing from `infra/`, `main/` or a third-party package, and `run` returns plain data: a cancelled/rejected status, with a reason when rejected.
-
-      FAIL if any of those doesn't hold.
+    pattern: '^(?=[\s\S]*constructor\s*\([^)]*:\s*HoldQueue\b)(?![\s\S]*(?:\bfrom|\brequire\(|\bimport)\s*[''"](?:(?!node:)[^''"./][^''"]*|[^''"]*\b(?:infra|main)/[^''"]*)[''"])(?=[\s\S]*[''"]cancelled[''"])(?=[\s\S]*[''"]rejected[''"])(?=[\s\S]*\breason\b)'
   - type: llm
     name: green-stays-minimal
     focus:

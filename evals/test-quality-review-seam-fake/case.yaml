@@ -68,13 +68,13 @@ graders:
       PASS if the fixed clock is not a finding rated Medium or above (listing it in the inventory as fine, or not mentioning it, both pass).
 
       FAIL if the fixed clock is a finding rated Medium or above.
-  - type: llm
-    name: hands-back-counts-and-path
-    focus: last_message
-    weight: 1
-    criteria: |
-      Under the chunk loop the reviewer hands back the counts by severity and the report's path, nothing else; the fixer reads the file.
-
-      PASS if the final reply gives the counts (at least the number of Highs) and the report path, in a few lines, without reproducing the findings' full text.
-
-      FAIL if it reproduces the whole report in the reply, gives no path, or gives no counts.
+  - type: regex
+    name: hand-back-is-counts-and-path
+    # Was the judge `hands-back-counts-and-path` until E5 (2026-11-14): the
+    # reply names the report's path and gives counts, and is short. The length
+    # bound (and, where there is one, no bulleted list) stands for "without
+    # reproducing the findings"; it is set from the past runs the judge passed
+    # and failed, with room on both sides.
+    target: last_message
+    pattern: '^(?=[\s\S]*chunk-1-r0-test-quality\.md)(?=[\s\S]*(?:\d+\W{0,3}High|High\W{0,5}\d))[\s\S]{0,1000}$'
+    flags: i

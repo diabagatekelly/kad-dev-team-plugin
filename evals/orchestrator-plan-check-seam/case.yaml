@@ -41,18 +41,14 @@ graders:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
     pattern: '- \*\*B\. Plan:\*\*'
-  - type: llm
+  - type: regex
     name: every-chunk-names-its-seam-test
-    focus:
+    # A judge until E5: under `## Chunk plan`, two to eight Done when lines and
+    # none without `seam "`.
+    target:
       source: file
       path: docs/cancel-hold/implementation/implementation-report-slice-001.md
-    weight: 1
-    criteria: |
-      The B step's plan check requires every chunk's Done when line to name a seam test: its first quoted test name preceded by the word `seam` (`seam "cancels a member's hold through the real in-memory queue"`), a test through the real wiring and the real local store.
-
-      PASS if the report's `## Chunk plan` has two to eight chunks and every chunk's Done when line names a seam test marked with the word `seam` before a quoted test name.
-
-      FAIL if any chunk's Done when has no `seam`-marked test name, or the plan heading is missing.
+    pattern: '^(?=[\s\S]*(?:^|\n)## Chunk plan\b)(?=(?:[\s\S]*?\*\*Done when:?\*\*:?){2})(?!(?:[\s\S]*?\*\*Done when:?\*\*:?){9})(?![\s\S]*\*\*Done when:?\*\*:?(?![^\n]*\bseam\W{0,3}["“]))'
   - type: llm
     name: plan-sent-back-not-edited
     focus: last_message

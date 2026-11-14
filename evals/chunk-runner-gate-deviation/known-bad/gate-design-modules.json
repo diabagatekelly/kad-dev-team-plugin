@@ -17,17 +17,17 @@
   "gate-run-with-the-design-modules",
   "gate-passes-and-names-the-deviation",
   "gate-names-the-test-file-deviation",
-  "deviation-recorded-not-failed"
+  "hand-back-line-counts-two-deviations"
  ],
  "observed": {
-  "date": "2026-11-13",
+  "date": "2026-11-14",
   "runs": 3,
-  "claude_version": "2.1.323",
+  "claude_version": "2.1.325",
   "rates": {
    "gate-run-with-the-design-modules": 0.0,
    "gate-passes-and-names-the-deviation": 0.0,
    "gate-names-the-test-file-deviation": 0.0,
-   "deviation-recorded-not-failed": 0.0
+   "hand-back-line-counts-two-deviations": 0.0
   }
  }
 }

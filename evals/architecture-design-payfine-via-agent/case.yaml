@@ -29,16 +29,13 @@ graders:
     name: consults-map-query
     target: trace
     pattern: '"skill": ?"kad-dev-team:map-query"'
-  - type: llm
-    name: uses-what-the-map-found
-    focus: last_message
-    weight: 1
-    criteria: |
-      The architecture map records that the fines module already has a `CollectFine` use case (`fines/collect-fine.ts`), a `FineLedger` port and a `FinePayments` port with a Stripe adapter (`infra/payments/stripe-fine-payments.ts`), and that the member portal has its own routes (`infra/http/portal-routes.ts`).
-
-      PASS if the response names at least one of these existing pieces as something the design builds on or must decide whether to reuse.
-
-      FAIL if it designs the slice as though none of them existed.
+  - type: regex
+    name: names-a-piece-the-map-found
+    # Was the judge `uses-what-the-map-found` until E5: one of the map's
+    # existing pieces is named in the reply. Not read any more: that it is
+    # named as something to build on, and not in passing.
+    target: last_message
+    pattern: 'CollectFine|collect-fine\.ts|FineLedger|FinePayments|stripe-fine-payments|portal-routes'
   - type: llm
     name: presents-decisions-and-waits
     focus: last_message

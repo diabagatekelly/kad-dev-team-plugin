@@ -24,14 +24,15 @@
   }
  ],
  "fails": [
-  "hand-back-is-the-one-line"
+  "hand-back-is-one-line-and-nothing-else"
  ],
  "observed": {
-  "date": "2026-11-13",
+  "date": "2026-11-14",
   "runs": 3,
-  "claude_version": "2.1.323",
+  "claude_version": "2.1.325",
   "rates": {
-   "hand-back-is-the-one-line": 0.0
-  }
+   "hand-back-is-one-line-and-nothing-else": 0.0
+  },
+  "note": "the grader is a regex since E5; on the unchanged skill it passed 2 runs of 3 at its bar (one run wrote a paragraph before the line), so `run` does not count it and exits 1 until the bar is 1.00"
  }
 }
