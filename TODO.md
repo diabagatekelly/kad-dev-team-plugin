@@ -389,6 +389,36 @@ Decided by the owner 2026-11-13 (all three yes), to build with 0.15.0:
   project's memory takes it without a question, and the existing case
   still asks.
 
+### From E5 (2026-11-14): the chunk runner's hand-back
+
+Two misses in `skills/chunk-runner`, shown by the regex checks that
+replaced its hand-back judges (`evals/README.md`, "Judges turned into
+tool checks"). Not E6's: `chunk-runner` is outside it. Both go with
+phase B's other `chunk-runner` changes, in one edit, because a change to
+the skill's text stales every `chunk-runner` case and the two replay
+histories, which are then captured again from a real session. **G1 is
+due before slice 3 whichever comes first**: it only costs anything when
+a real loop runs.
+
+- [ ] G1 **The runner hands back while its builder is still working.**
+  One run of seven of `chunk-runner-waits-for-handback` ended on "The
+  chunk 1 builder is running. Next I'll wait for its report": the class
+  of issue #33, and the first time a case has shown it. One run is not
+  a rate. Done when: the cause is read from that run's trace
+  (`evals/results/gate-20261114T222734-rerun-chunk-runner-waits-for-handback-run2.trace.jsonl`),
+  the skill's wait rule is changed for it, and
+  `hand-back-is-one-line-for-what-ran` passes ten runs of ten.
+- [ ] G2 **The hand-back is not the one line in about a quarter of
+  runs**: a paragraph before the line (7 of 25 earlier runs of
+  `chunk-runner-one-fix-round`, 1 of 7 and 2 of 7 on 2026-11-14), once
+  a bulleted report. Whether the orchestrator reads its line past a
+  preamble was not checked: check that first, it decides how much this
+  matters. Done when: `hand-back-is-one-line-and-nothing-else` has a
+  bar of 3 of 3 on `chunk-runner-one-fix-round`, and
+  `skill_mutation.py run --case chunk-runner-one-fix-round --rule
+  handback-one-line` exits 0 (the tool does not count the reference
+  while the bar is 2 of 3).
+
 ### Phase B, 0.15.0: the review rebalance (finding 10)
 
 - [ ] B1 **Gate categories, picked per stack.** The plugin names the
