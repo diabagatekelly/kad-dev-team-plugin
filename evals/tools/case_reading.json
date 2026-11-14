@@ -1187,8 +1187,8 @@
     "why": "whether the reply is the slicer deciding scope because of the hand-back, not the next forward row or the receipt question settled by itself"
    },
    "log-names-the-hand-back": {
-    "by": "tool",
-    "why": "names present in a file: an entry naming the security document or the receipt, product-slicer or vertical-slicing, and a path under docs/pay-fine/. Lost: that the entry calls itself a backward route in its own words."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in a file: an entry naming the security document or the receipt, product-slicer or vertical-slicing, and a path under docs/pay-fine/. Lost: that the entry calls itself a backward route in its own words."
    }
   },
   "findings": []
@@ -1331,8 +1331,8 @@
   },
   "judges": {
    "backward-routes-name-the-checks": {
-    "by": "tool",
-    "why": "names present in the log: a chunk-loop entry, then an entry naming reliability-requirements or screen-design with the document to revise. Lost: that the entry's reason is the failed check in words."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: a chunk-loop entry, then an entry naming reliability-requirements or screen-design with the document to revise. Lost: that the entry's reason is the failed check in words."
    },
    "stops-at-the-routed-skill-or-reports-the-route": {
     "by": "reading",
@@ -1390,8 +1390,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: accessibility-review and a path under docs/pay-fine/; the destination is already `routes-to-accessibility-review`. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: accessibility-review and a path under docs/pay-fine/; the destination is already `routes-to-accessibility-review`. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1407,8 +1407,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: requirements-refinement and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: requirements-refinement and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1426,8 +1426,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "a log entry naming architecture-design and a path under docs/pay-fine/ is names present in a file; the state's wording would no longer be read, and a wrong state routes elsewhere, which `routes-to-architecture-design` already fails"
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: a log entry naming architecture-design and a path under docs/pay-fine/ is names present in a file; the state's wording would no longer be read, and a wrong state routes elsewhere, which `routes-to-architecture-design` already fails"
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1443,8 +1443,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: design-system and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: design-system and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1460,8 +1460,8 @@
   },
   "judges": {
    "routes-to-tdd-implementation-lite": {
-    "by": "tool",
-    "why": "names present in the log: \"chunk loop\" or tdd-implementation-lite as the destination and an artifact line (a path or \"see sub-entries below\")"
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: \"chunk loop\" or tdd-implementation-lite as the destination and an artifact line (a path or \"see sub-entries below\")"
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1477,8 +1477,8 @@
   },
   "judges": {
    "routes-to-tdd-implementation-lite": {
-    "by": "tool",
-    "why": "as `orchestrator-route-implementation`: the destination and an artifact line in the log"
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: as `orchestrator-route-implementation`: the destination and an artifact line in the log"
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1508,8 +1508,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: problem-framing-doc and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: problem-framing-doc and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1525,8 +1525,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: reliability-requirements and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: reliability-requirements and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1542,8 +1542,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: scope-map and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: scope-map and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1559,8 +1559,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: screen-design and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: screen-design and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1589,8 +1589,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: vertical-slicing and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: vertical-slicing and a path under docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1606,8 +1606,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: technology-bootstrap and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: technology-bootstrap and a path under docs/cancel-hold/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",
@@ -1623,8 +1623,8 @@
   },
   "judges": {
    "log-names-row-and-artifact": {
-    "by": "tool",
-    "why": "names present in the log: user-story-writeup and docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
+    "by": "reading",
+    "why": "kept as a judge, an accepted gap (E5, 2026-11-14): a regex keeps the destination and the path and loses the state's wording. What a tool could hold: names present in the log: user-story-writeup and docs/pay-fine/; the destination is already a tool check. Lost: the state's wording."
    },
    "stops-after-the-routed-step": {
     "by": "reading",

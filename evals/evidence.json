@@ -135,49 +135,49 @@
     "recorded": "2026-11-12T01:50:51Z"
   },
   "chunk-runner-gap-handback": {
-    "inputs": "12bae552cc04c39de8d1a3630e38dcab3d97f92f8b333976c7928bb7f20148e2",
-    "score": 0.926,
+    "inputs": "c1113edac75366e23c4fcd9f56cb324882257b423281d4101deb47a9a588558d",
+    "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261113T115752-chunk-runner-gap-handback.json",
-    "claude_version": "2.1.323",
-    "recorded": "2026-11-13T11:58:37Z"
+    "source": "results/gate-20261114T144913-chunk-runner-gap-handback.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T14:54:01Z"
   },
   "chunk-runner-gate-deviation": {
-    "inputs": "4b892433a0993d70868a648f6da010616c7bef0b5bf8ba210f46f71c9f08fb85",
+    "inputs": "cdf1c800f1565afae4b8ca0a36ce6d286be38813ed28ad2314f521ff60bfd09b",
     "score": 1.0,
     "bar": 1.0,
     "runs": 3,
-    "source": "results/gate-20261113T115752-chunk-runner-gate-deviation.json",
-    "claude_version": "2.1.323",
-    "recorded": "2026-11-13T11:58:37Z"
+    "source": "results/gate-20261114T144913-chunk-runner-gate-deviation.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T14:54:01Z"
   },
   "chunk-runner-gate-outside": {
-    "inputs": "4e2cd6c5b6aacc30816df13ac9667cfee73e8e898a4df4547b433efe4ec5e1a8",
+    "inputs": "ee4dbb53840660ba082dea8552847ef1a93b5344614fac915019e4c4b42526e7",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261113T012105-chunk-runner-gate-outside.json",
-    "claude_version": "2.1.323",
-    "recorded": "2026-11-13T01:33:59Z"
+    "runs": 3,
+    "source": "results/gate-20261114T144913-chunk-runner-gate-outside.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T14:54:01Z"
   },
   "chunk-runner-gate-sources": {
-    "inputs": "dd4b5ee8682da43bc882c0b6557660eb6503761fca9d3b8a84ed359d521429d5",
+    "inputs": "280905e5fe8919489e786e2245492186a81024ea5eb781f793a2a26b0a8c1bd2",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261113T012105-chunk-runner-gate-sources.json",
-    "claude_version": "2.1.323",
-    "recorded": "2026-11-13T01:33:59Z"
+    "runs": 3,
+    "source": "results/gate-20261114T144913-chunk-runner-gate-sources.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T14:54:01Z"
   },
   "chunk-runner-one-fix-round": {
-    "inputs": "9399055c20435aa3ee7bc811cabb070fd1a8bf66a5a15c10b65fc2f54ca2cbbf",
-    "score": 1.0,
+    "inputs": "52a27997a46da783b21405ec8be93c98124922ab498fafe4272dacb3d008aad0",
+    "score": 0.97,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261113T012105-chunk-runner-one-fix-round.json",
-    "claude_version": "2.1.323",
-    "recorded": "2026-11-13T01:33:59Z"
+    "runs": 3,
+    "source": "results/gate-20261114T144913-chunk-runner-one-fix-round.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T14:54:01Z"
   },
   "chunk-runner-replay-not-the-handback": {
     "inputs": "c51283c81e8f8cc2fa7027ac496279bacadb94f71b0bbac9114f6a6208709994",
@@ -198,22 +198,22 @@
     "recorded": "2026-11-14T07:37:21Z"
   },
   "chunk-runner-review-round": {
-    "inputs": "5877df84086c3f2487dcaa74d3361769d4c538191fd2128cbcbcdcd6c8238828",
+    "inputs": "cbd6e913e104d0c4b1d992de7e3746291abef2c76902815cc690f3e83d1d5f5d",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261113T012105-chunk-runner-review-round.json",
-    "claude_version": "2.1.323",
-    "recorded": "2026-11-13T01:33:59Z"
+    "runs": 3,
+    "source": "results/gate-20261114T144913-chunk-runner-review-round.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T14:54:01Z"
   },
   "chunk-runner-waits-for-handback": {
-    "inputs": "e787ae0c0bb018e5972268681945d91ba1e75a16301853d93d37971831a3964f",
+    "inputs": "05ef27443a071fdba9ae5834fc07eaf3fe7edd25f483b2ce49c1dab72e0a831a",
     "score": 1.0,
     "bar": 0.97,
-    "runs": 1,
-    "source": "results/gate-20261113T012105-chunk-runner-waits-for-handback.json",
-    "claude_version": "2.1.323",
-    "recorded": "2026-11-13T01:33:59Z"
+    "runs": 3,
+    "source": "results/gate-20261114T144913-chunk-runner-waits-for-handback.json",
+    "claude_version": "2.1.325",
+    "recorded": "2026-11-14T14:54:01Z"
   },
   "code-review-catalog": {
     "inputs": "c5363489d9e1051714265bd65babcd1c1d461df1577169edda6015d0bba58bbf",

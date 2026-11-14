@@ -263,18 +263,18 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261109T111044-chunk-runner-gap-handback.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T144913-chunk-runner-gap-handback.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
+      "hand-back-line-ends-on-the-decision": 1.0,
       "hand-back-names-the-decision": 1.0,
       "log-not-written": 1.0,
       "no-planning-document-written": 1.0,
       "no-records-commit": 1.0,
       "nothing-launched": 1.0,
       "orchestrator-not-invoked": 1.0,
-      "round-recorded-by-the-script": 1.0,
-      "stops-with-the-decision-on-the-line": 1.0
+      "round-recorded-by-the-script": 1.0
     },
     "skills_invoked": [
       "chunk-runner"
@@ -284,15 +284,15 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261109T111044-chunk-runner-gate-deviation.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T144913-chunk-runner-gate-deviation.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
-      "deviation-recorded-not-failed": 1.0,
       "gate-file-saved": 1.0,
       "gate-names-the-test-file-deviation": 1.0,
       "gate-passes-and-names-the-deviation": 1.0,
       "gate-run-with-the-design-modules": 1.0,
+      "hand-back-line-counts-two-deviations": 1.0,
       "log-not-written": 1.0,
       "no-fixer-no-reviewer": 1.0,
       "no-records-commit": 1.0,
@@ -305,17 +305,17 @@
   },
   "chunk-runner-gate-outside": {
     "score": 1.0,
-    "runs": 1,
+    "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.322",
-    "source": "results/gate-20261110T113956-chunk-runner-gate-outside.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T144913-chunk-runner-gate-outside.json",
     "graders": {
       "allow-list-not-widened": 1.0,
       "chunk-runner-invoked": 1.0,
       "failure-handed-to-the-fixer-once": 1.0,
       "first-gate-fails-on-scope": 1.0,
-      "gate-passes-after-the-fix": 1.0,
       "gate-run-twice": 1.0,
+      "hand-back-line-says-pass-after-the-fix": 1.0,
       "log-not-written": 1.0,
       "no-records-commit": 1.0,
       "no-reviewer-before-the-pass": 1.0,
@@ -330,8 +330,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.321",
-    "source": "results/gate-20261109T213507-chunk-runner-gate-sources.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T144913-chunk-runner-gate-sources.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "failure-handed-to-the-fixer-once": 1.0,
@@ -350,16 +350,16 @@
     ]
   },
   "chunk-runner-one-fix-round": {
-    "score": 1.0,
+    "score": 0.97,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261109T111044-chunk-runner-one-fix-round.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T144913-chunk-runner-one-fix-round.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "gate-on-the-fix": 1.0,
       "hand-back-carries-the-split": 1.0,
-      "hand-back-is-the-one-line": 1.0,
+      "hand-back-is-one-line-and-nothing-else": 0.667,
       "hand-back-leaves-the-medium-standing": 1.0,
       "log-not-written": 1.0,
       "no-records-commit": 1.0,
@@ -370,6 +370,7 @@
     },
     "skills_invoked": [
       "chunk-runner",
+      "map-query",
       "tdd-implementation-lite"
     ]
   },
@@ -416,8 +417,8 @@
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.319",
-    "source": "results/gate-20261109T111044-chunk-runner-review-round.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T144913-chunk-runner-review-round.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "cold-findings-cite-no-planning-document": 1.0,
@@ -444,16 +445,16 @@
     ]
   },
   "chunk-runner-waits-for-handback": {
-    "score": 0.97,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
-    "claude_version": "2.1.323",
-    "source": "results/gate-20261112T224223-chunk-runner-waits-for-handback.json",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261114T144913-chunk-runner-waits-for-handback.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "commit-confirmed-by-the-repository": 1.0,
       "gate-on-the-builders-commit": 1.0,
-      "hand-back-is-the-one-line-for-what-ran": 0.667,
+      "hand-back-is-one-line-for-what-ran": 1.0,
       "log-not-written": 1.0,
       "no-monitor": 1.0,
       "no-poll-of-the-branch": 1.0,
