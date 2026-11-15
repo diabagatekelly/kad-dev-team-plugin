@@ -2187,8 +2187,8 @@ the tally suggests is that the prompts, not the skills, could say less
 | The requirements skills, 36 runs | $4.95 | measured the same way |
 | The design skills, 48 runs | $9.78 | measured the same way |
 | The pairwise judge, 120 pairs read in both orders | $8.74 ($2.24, $1.52, $1.99, $0.94, $0.82 and $1.23) | measured: the judge's own `total_cost_usd` |
-| One two-run check of the revised runner | $0.13 | measured |
-| **E6 so far, 246 runs** | **$80.03** | measured; the session that ran and read it is not in the figure |
+| Two two-run checks of the runner after its review fixes | $0.27 | measured |
+| **E6 so far, 246 runs** | **$80.17** | measured; the session that ran and read it is not in the figure |
 | One run of every case, before E6 | about $45.3 | E5's estimate against the $45.70 baseline |
 | One run of every case, after E6 | about $45.3 | unchanged: E6 changed no case, grader or prompt |
 | The same if every "candidate to drop" above went (three `architecture-review` cases, two `security-review`, two `reliability-review`) | about $42.9 | estimated: less $0.90, $0.72 and $0.76, the cases' single-run costs in "The cases sorted" |
