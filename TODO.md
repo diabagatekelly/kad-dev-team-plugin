@@ -654,7 +654,7 @@ after it.
   `handback-one-line` reference is not counted by the tool until the
   skill is fixed; one run ended while its builder worked; 19 grader
   findings still open; the fixture handoff's "Next action" line.
-- [ ] E6 **With and without the plugin, skill by skill.** `--ablation
+- [x] E6 **With and without the plugin, skill by skill.** `--ablation
   with-without` at three runs, for the review, requirements and design
   skills; not for `orchestrator`, `chunk-runner` and `delivery`, where a
   bare model cannot know the protocol and rule deletion is the proof.
@@ -667,21 +667,66 @@ after it.
   case with the pairwise verdict, the skills the bare model matches are
   listed for the owner to keep, cut down or drop, and the cost of one
   run of every case is reported again.
-  In progress 2026-11-15 (`evals/README.md`, "With and without the
-  plugin"): `architecture-review` (9 cases), `security-review` (6),
-  `reliability-review` (7), `code-review` (5) and the first turns of
-  the requirements and design skills (14) are done, 246 runs, $80.31
-  with the pairwise judge. The review skills add rank, scope and
-  restraint more than findings; the requirements and design skills add
-  the protocol (the owner is asked before anything is settled, a file
-  of the owner's is not opened), which a bare model never follows, and
-  which the pairwise judge marks down because the prompts ask for the
-  artefact. Thirteen cases score the same in both arms; the keep, cut
-  down or drop lists are in that section and wait for the owner. Not
-  run: `accessibility-review`, `test-quality-review`,
-  `vertical-slicing`, the map skills and the one-case writing skills.
-  `tools/ablation_run.py` keeps the results outside the repository, so
-  no bar, history or evidence moves.
+  Done 2026-11-15 (`evals/README.md`, "With and without the plugin"):
+  every case that can be run bare, 68 cases and 408 runs, $120.74 with
+  the pairwise judge. The others cannot be: they resume a history,
+  grade both arms already, or name a plugin skill or agent in the
+  prompt (two that were tried answered that the agent does not exist).
+  The review skills add rank, scope and restraint more than findings;
+  the requirements, design, slicing and readiness skills add the
+  protocol (the owner is asked first, the step with nothing to build on
+  is refused, a file of the owner's is not opened), which a bare model
+  never follows and the pairwise judge marks down. Eighteen cases score
+  the same in both arms. The plugin is behind the bare model by more than one run on
+  three:
+  `map-update-cancel-hold` (its diff calls old edges new),
+  `problem-framing-doc-payfine` (the skill asks, the case grades a
+  document; never run before), `technology-bootstrap-phase1` (split
+  votes). One run of every case is unchanged at about $45.3: E6 changed
+  no case. `tools/ablation_run.py` keeps the results outside the
+  repository, so no bar, history or evidence moves.
+
+Decided by the owner 2026-11-15, on E6's lists (one question at a time,
+after PR #59 was merged):
+
+1. E6 is finished before E7: the 27 cases not yet run bare are run
+   first.
+2. **Dropped in E7, all seven** cases that score the same in both arms
+   and that the pairwise judge prefers bare: `library-app-members-review`,
+   `-notifications-review`, `-reporting-review`, `security-review-http`,
+   `-reminders`, `reliability-review-alerts`, `-portal-pay-pr`.
+3. **The clean-module cases keep their bar** ("nothing above Low") and
+   the skills are fixed: the plugin's Mediums on a module with no
+   structural problem are over-reporting. A skill change, so phase B.
+4. **A serious problem a review reads past is named, at the severity it
+   appears to have, and handed on**: one line at the top (what, where,
+   severity as seen, which review owns it), never rated down to fit the
+   review's own categories, never ranked among its own findings. For
+   every review skill; phase B.
+5. The first-turn prompts that ask for the artefact outright stay as
+   they are: the skill holding its protocol against that pull is what
+   the case tests. The pairwise tally there is a limit of the judge.
+6. `architecture-design-owner-sheet` and `screen-design-owner-sheet`
+   lose the fixture's `sources.md`, so each skill applies the data rule
+   itself, as `requirements-refinement-owner-sheet` does. E7; a failure
+   is a finding for phase B.
+7. `code-review`'s mocking rule becomes decision 4's rule: the
+   mock-only test is named in one line with its severity and
+   `test-quality-review` as its owner, not ranked. The grader is
+   rewritten to pass that. Phase B for the text, E7 or phase B for the
+   grader, whichever changes the case first.
+8. **Judges that pass in both arms are cut in the kept cases**: each
+   case keeps every grader that differed, every false-alarm trap and
+   one judge on its most important planted problem.
+9. **The five grader findings of E6 are fixed in E7**
+   (`found-with-the-scan`, the `describeEntry` judge, the ORM judge, a
+   cycle grader for `library-app-structure-review`, an empty
+   `sources.md` so that `requirements-refinement-owner-sheet` fails
+   instead of throwing). The older open grader findings stay a separate
+   list.
+10. `evals/fixtures/bootstrap-empty` (a bank-connection slice) is fine
+    as it is: an invented example, not a project's content.
+
 - [ ] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
   E6: a case that has never failed, that no deletion fails and that the
   bare model passes as well. Each candidate is named with the evidence

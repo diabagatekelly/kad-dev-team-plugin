@@ -1624,15 +1624,13 @@ changed; these are findings:
 
 ### With and without the plugin
 
-`TODO.md`'s E6 (2026-11-14, kad 0.14.5, Claude Code 2.1.325, every case
-on Sonnet): each case run three times with the plugin and three times
-with no plugin at all, skill by skill. `architecture-review`,
-`security-review`, `reliability-review`, `code-review` and the first
-turns of the requirements and design skills are done. Not run: the
-other review skills (`accessibility-review`, `test-quality-review`),
-`vertical-slicing`, the map skills and the one-case writing skills.
-Nothing here is decided: the lists at the end of each skill are for the
-owner.
+`TODO.md`'s E6 (2026-11-14 and 15, kad 0.14.5, Claude Code 2.1.325, every
+case on Sonnet): each case run three times with the plugin and three
+times with no plugin at all, skill by skill. Every case that can be run
+bare has been: 68 cases, 408 runs. The owner's decisions on the lists
+below are in `TODO.md`, above E7.
+The lists at the end of each skill were written before those
+decisions and are left as they were put.
 
 **How it is run, and where the results go.** `--ablation with-without`
 repeats a case's runs "with no plugin loaded" (the CLI's documentation:
@@ -2179,6 +2177,129 @@ the tally suggests is that the prompts, not the skills, could say less
 | `architecture-design-owner-sheet`, `screen-design-owner-sheet` | 0 / 27, 0 / 19 | equal: the fixture states the rule and the bare model obeys it | cut down or merge: one case with no `sources.md`, like `requirements-refinement-owner-sheet`, would test the skill ($0.54 a run for the two) |
 | `technology-bootstrap-phase1` | 1 / 10 | plugin behind, on split votes | read the grader's criterion against the three plugin replies before anything else |
 
+#### The remaining skills
+
+Twenty-seven cases in two passes, 162 runs: the reviews not yet run
+(`accessibility-review`, `test-quality-review`, `supply-chain-review`;
+the review rubric) and everything else that has a first turn
+(`vertical-slicing`, the map skills, `operational-readiness`,
+`supply-chain-review`'s acceptance, and the one-case writing skills;
+`--rubric work`). Left out: three cases that resume a history and
+`supply-chain-review-build-via-agent`. `adr-neg-rename` is in: it is a
+negative case that does not grade both arms. Every trace holds one
+`result` row.
+
+| Case | With | Without | Graders that differ (with, without) | Pairwise: with / without / tie / split |
+|---|---|---|---|---|
+| `accessibility-review-payfine` | 1.00 | 0.90 | `criteria-split-now-and-later` 3/3, 0/3; `finds-unreachable-fine-choice` 3/3, 2/3 | 1 / 0 / 0 / 2 |
+| `accessibility-review-payfine-subtle` | 1.00 | 0.92 | `criteria-split-now-and-later` 3/3, 0/3 | 1 / 1 / 0 / 1 |
+| `test-quality-review-fines` | 0.93 | 0.89 | three findings 3/3, 2/3 each; `no-false-alarm-exact-tests` 1/3, 3/3 | 1 / 1 / 0 / 1 |
+| `test-quality-review-reminders` | 1.00 | 1.00 | none | 2 / 1 / 0 / 0 |
+| `supply-chain-review-accepted` | 0.95 | 1.00 | `no-false-alarm-dev-only-advisory` 2/3, 3/3 | 1 / 0 / 0 / 2 |
+| `supply-chain-review-build` | 1.00 | 1.00 | none | 0 / 1 / 0 / 2 |
+| `supply-chain-review-workflows` | 1.00 | 1.00 | none | 1 / 1 / 0 / 1 |
+| `supply-chain-review-accept-phase1` | 1.00 | 0.00 | `asks-for-classification` and `no-unenforced-temporary-option` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `operational-readiness-ops-phase1` | 1.00 | 0.00 | `asks-situation-first` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `operational-readiness-release-phase1` | 1.00 | 0.00 | `asks-situation-first` and `asks-whether-rollback-was-ever-run` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `vertical-slicing-payfine-phase1` | 1.00 | 0.43 | four graders 3/3, 0/3 (the placeholders, the slice set, consults first, what is deferred) | 0 / 2 / 0 / 1 |
+| `vertical-slicing-no-requirements` | 1.00 | 0.00 | all three 3/3, 0/3 (writes no slice, hands back) | 0 / 3 / 0 / 0 |
+| `vertical-slicing-handback` | 1.00 | 0.75 | `leaves-the-what-to-requirements` 3/3, 0/3 | 3 / 0 / 0 / 0 |
+| `vertical-slicing-no-screen` | 0.89 | 0.67 | `accessibility-line-matches-the-thin-path` 2/3, 0/3 | 2 / 0 / 0 / 1 |
+| `vertical-slicing-owner-sheet` | 1.00 | 1.00 | none | 0 / 3 / 0 / 0 |
+| `map-query-consults` | 1.00 | 0.20 | five graders, 3/3 against 0/3 to 2/3 | 1 / 0 / 0 / 2 |
+| `map-query-no-map` | 1.00 | 0.00 | `says-no-map` and `no-live-scan-answer` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `map-update-cancel-hold` | 0.85 | 0.96 | `pre-existing-flags-not-new` 0/3, 3/3; `no-bash-writes` 2/3, 3/3; `flags-duplication-candidate` 3/3, 2/3 | 0 / 3 / 0 / 0 |
+| `adr-payment-gateway` | 1.00 | 0.50 | `no-how` and `document-carries-the-three-checks` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `adr-neg-rename` | 1.00 | 0.00 | `declines-the-adr` and `opens-with-the-three-checks` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `pr-writeup-portal-fines` | 1.00 | 0.33 | `asks-about-a-ticket` and `names-the-ai-role` 3/3, 0/3 | 2 / 1 / 0 / 0 |
+| `scope-map-self-service` | 1.00 | 0.58 | `privacy-routed-to-every-step` 3/3, 0/3; `steps-only` 3/3, 1/3 | 0 / 3 / 0 / 0 |
+| `staleness-audit-docs` | 1.00 | 0.73 | `finds-ceremony` 3/3, 0/3; `finds-restated-code` 3/3, 2/3 | 0 / 2 / 0 / 1 |
+| `user-facing-docs-renewals` | 1.00 | 0.89 | `no-invented-rules` 3/3, 2/3 | 3 / 0 / 0 / 0 |
+| `why-comments-collect-fine` | 1.00 | 0.83 | `stays-on-comments` 3/3, 0/3 | 3 / 0 / 0 / 0 |
+| `user-story-writeup-payfine-phase1` | 1.00 | 1.00 | none | 0 / 3 / 0 / 0 |
+| `problem-framing-doc-payfine` | no clean run | 1.00 | | not run |
+
+What was read, from the final replies, the writes and the votes:
+
+- **`problem-framing-doc-payfine` is failed by the plugin, 3 of 3.** The
+  case grades a `problem.md`; the skill's first turn asks one question
+  ("what makes this worth solving now?") and writes nothing, so every
+  grader on the file throws. The bare model writes the document and
+  scores 1.00. The case has no run in the results history: it and the
+  skill have drifted apart unseen. Either the case needs the answer in
+  its prompt or a second turn, or the skill should not ask when the
+  request already carries the problem.
+- **`map-update-cancel-hold`: the plugin is behind.**
+  `pre-existing-flags-not-new` fails 3 of 3 (13 of 18 before): the
+  regenerated map's changes section lists edges and exports of most
+  modules as new, the two carried-forward candidates among them. The
+  bare model edits the old map by hand from the import lines, marks
+  nothing old as new, costs half ($0.56 against $1.08 a run) and is
+  preferred 3 of 3. What the plugin has that no grader reads is the
+  extractor's completeness (74 modules, 154 edges). The "everything is
+  new" diff is a defect of the skill or its script, known from the
+  history and not fixed.
+- `test-quality-review-fines`, `no-false-alarm-exact-tests`, with 1/3
+  and bare 3/3 on clean votes: the plugin calls sound exact-value tests
+  brittle in two runs of three (5 of 18 before). A false alarm the bare
+  model does not raise. `supply-chain-review-accepted`: one plugin run
+  of three flags the dev-only advisory.
+- **The first turns and the refusals are the protocol again.** Bare:
+  the readiness verdict given without asking the situation, the slice
+  written with no requirements to cut it from, the acceptance written
+  without asking for a classification, an ADR written for a rename, a
+  search of the source where there is no map. Plugin: 3 of 3 the other
+  way in each. The judge prefers the bare response in all of these, for
+  the reason given under the requirements and design skills.
+- **Format graders, failing bare by construction:** the three checks an
+  ADR opens with, `names-the-ai-role` and `asks-about-a-ticket` in a
+  pull-request description, `criteria-split-now-and-later` in an
+  accessibility review. A bare model has no reason to produce them;
+  they say the skill's format is followed, not that the output is
+  better. No grader failed over a file's name.
+- **Where the plugin's output is preferred as well as scored higher:**
+  `vertical-slicing-handback` and `-no-screen`, `why-comments`,
+  `user-facing-docs` (no invented rules), `pr-writeup`. These five are
+  the cases outside the reviews where both the graders and the judge
+  see the skill's addition.
+- Not read: the bare failures of `staleness-audit-docs`,
+  `scope-map-self-service` and `map-query-consults` beyond their
+  grader names, and the three `test-quality-review-fines` findings the
+  bare model missed once each.
+
+**What these skills add over the bare model.** `vertical-slicing`: it
+refuses to cut a slice with no requirements, leaves the WHAT to the
+requirements step, and consults before writing. The map skills: an
+answer from the map and an honest "there is no map" in place of a scan
+(and, for `map-update`, less than the bare model on the one case there
+is). `operational-readiness`, `supply-chain-review`'s acceptance, `adr`:
+the question or the refusal first. The writing skills: restraint (no
+invented rules, comments only, no ceremony). `accessibility-review` and
+`test-quality-review`: little that the graders see beyond format;
+`supply-chain-review`'s three review cases: nothing.
+
+**What the bare model matches.** Five cases score the same in both
+arms: `supply-chain-review-build` and `-workflows`,
+`test-quality-review-reminders`, `user-story-writeup-payfine-phase1`
+and `vertical-slicing-owner-sheet` (whose scaffold, like the other two
+owner-sheet cases, carries a `sources.md` that states the rule). Over
+the 78 pairs of these two passes the judge prefers the plugin 21 times,
+the bare model 43, and splits 14.
+
+**For the owner**, by the decisions already taken (`TODO.md`, above
+E7), not new suggestions:
+
+- Decision 2's pattern (equal, bare preferred, never failed):
+  `user-story-writeup-payfine-phase1`. `supply-chain-review-build`,
+  `-workflows` and `test-quality-review-reminders` are equal with the
+  judge even or for the plugin: not the same pattern, the owner's call.
+- Decision 6's pattern: `vertical-slicing-owner-sheet` has a
+  `sources.md` too.
+- Decision 3's pattern (a skill over-reports): the exact-tests false
+  alarm in `test-quality-review`.
+- New, and not covered by a decision: `problem-framing-doc-payfine`
+  (case and skill disagree) and `map-update`'s diff.
+
 #### What E6 cost, and one run of every case
 
 | | Figure | How it is known |
@@ -2189,9 +2310,11 @@ the tally suggests is that the prompts, not the skills, could say less
 | `code-review`, 30 runs | $8.12 | measured the same way |
 | The requirements skills, 36 runs | $4.95 | measured the same way |
 | The design skills, 48 runs | $9.78 | measured the same way |
-| The pairwise judge, 120 pairs read in both orders | $8.74 ($2.24, $1.52, $1.99, $0.94, $0.82 and $1.23) | measured: the judge's own `total_cost_usd` |
+| The remaining reviews, 42 runs | $16.55 | measured the same way |
+| The remaining first turns and writing skills, 120 runs | $19.25 | measured the same way |
+| The pairwise judge, 198 pairs read in both orders | $13.37 | measured: the judge's own `total_cost_usd`, eight passes | measured: the judge's own `total_cost_usd` |
 | Three two-run checks of the runner after its review fixes | $0.41 | measured |
-| **E6 so far, 246 runs** | **$80.31** | measured; the session that ran and read it is not in the figure |
+| **E6, 408 runs** | **$120.74** | measured; the session that ran and read it is not in the figure |
 | One run of every case, before E6 | about $45.3 | E5's estimate against the $45.70 baseline |
 | One run of every case, after E6 | about $45.3 | unchanged: E6 changed no case, grader or prompt |
 | The same if every "candidate to drop" above went (three `architecture-review` cases, two `security-review`, two `reliability-review`) | about $42.9 | estimated: less $0.90, $0.72 and $0.76, the cases' single-run costs in "The cases sorted" |
