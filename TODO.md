@@ -671,15 +671,15 @@ after it.
   every case that can be run bare, 68 cases and 408 runs, $120.74 with
   the pairwise judge. The others cannot be: they resume a history,
   grade both arms already, or name a plugin skill or agent in the
-  prompt (two that were tried answered that the agent does not exist).
+  prompt (the one that was tried answered that the agent does not
+  exist).
   The review skills add rank, scope and restraint more than findings;
   the requirements, design, slicing and readiness skills add the
   protocol (the owner is asked first, the step with nothing to build on
   is refused, a file of the owner's is not opened), which a bare model
   never follows and the pairwise judge marks down. Eighteen cases score
-  the same in both arms. The plugin is behind the bare model by more than one run on
-  three:
-  `map-update-cancel-hold` (its diff calls old edges new),
+  the same in both arms. The plugin is behind the bare model by more
+  than one run on three: `map-update-cancel-hold` (its diff calls old edges new),
   `problem-framing-doc-payfine` (the skill asks, the case grades a
   document; never run before), `technology-bootstrap-phase1` (split
   votes). One run of every case is unchanged at about $45.3: E6 changed
