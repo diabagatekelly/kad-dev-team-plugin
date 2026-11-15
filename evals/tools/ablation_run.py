@@ -21,7 +21,8 @@ same CLI version and against the same inputs (the fingerprint
 `eval_evidence.py` uses: the case, its skills, agents and fixtures), is
 skipped, so a pass cut by the usage window is resumed by the same command.
 A case whose inputs change while it runs gets no result.
-When any case is run, an earlier `pairwise.json` is removed: its votes were
+The output directory is made readable by its owner only (traces hold
+whatever a run read). When any case is run, an earlier `pairwise.json` is removed: its votes were
 on other reviews. Exit 1 when a case ends without its clean runs in both
 arms (a case that cannot run bare, like one that names the plugin's agent,
 ends so every time).
@@ -31,6 +32,7 @@ Usage (on macOS put Homebrew's Node 24 first on PATH, as gate.sh does):
       [--jobs 2] [--concurrency 4] case [case ...]
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -75,8 +77,20 @@ def cli_version():
     return m.group(1) if m else None
 
 
+MANIFEST = os.path.join(ROOT, ".claude-plugin", "plugin.json")
+
+
+def manifest_hash():
+    """The plugin manifest decides what the plugin arm loads and is in no
+    case's fingerprint."""
+    try:
+        return hashlib.sha256(open(MANIFEST, "rb").read().replace(b"\r\n", b"\n")).hexdigest()
+    except OSError:
+        return None
+
+
 def stamp(runs, inputs, version):
-    return {"runs": runs, "inputs": inputs, "claude": version}
+    return {"runs": runs, "inputs": inputs, "claude": version, "manifest": manifest_hash()}
 
 
 def current(path, want, inputs, version):
@@ -118,28 +132,13 @@ def keep_traces(case, base):
             shutil.rmtree(scaffold, ignore_errors=True)
 
 
-def drop_kept(log_path):
-    """Remove the scaffolds a run that left no result still kept: the CLI
-    prints each kept directory, and without a result nothing else names
-    them."""
-    try:
-        text = open(log_path, encoding="utf-8", errors="replace").read()
-    except OSError:
-        return
-    for scaffold in set(re.findall(r"kept (/\S*/(?:claude-eval-|e-)\w+)(?=[:\s])", text)):
-        for root, dirs, _ in os.walk(scaffold):
-            os.chmod(root, 0o700)
-            for d in dirs:
-                os.chmod(os.path.join(root, d), 0o700)
-        shutil.rmtree(scaffold, ignore_errors=True)
-
-
 def no_result(base, why):
     """A case that ends without a usable result leaves no result file (a
-    half-written one would be read by the merge) and no kept scaffold."""
+    half-written one would be read by the merge). Its kept scaffolds stay
+    in the temp directory: only the result names them, and a path printed
+    in a log a case can write to is not one to delete."""
     if os.path.isfile(base + ".json"):
         os.remove(base + ".json")
-    drop_kept(base + ".log")
     return f"no result ({why}; see {base}.log)"
 
 
@@ -221,8 +220,13 @@ def main():
         # a name, never a path: it is joined to the output directory below
         if not CASE_NAME.match(case) or not os.path.isdir(os.path.join(EVALS, case)):
             sys.exit(f"no such case: {case}")
-    os.makedirs(os.path.join(out, "cli"), exist_ok=True)
+    # Traces hold whatever a run read, a fixture's stand-in for an owner's
+    # file included: the directory is the user's alone.
+    os.makedirs(os.path.join(out, "cli"), mode=0o700, exist_ok=True)
+    os.chmod(out, 0o700)
     version = cli_version()
+    if version is None:
+        sys.exit("`claude --version` did not run; nothing was started or removed")
     aggregate = os.path.join(out, "aggregate-result.json")
     if os.path.isfile(aggregate):
         os.remove(aggregate)  # rebuilt below from what is current, or absent
