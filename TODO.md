@@ -669,15 +669,19 @@ after it.
   run of every case is reported again.
   In progress 2026-11-15 (`evals/README.md`, "With and without the
   plugin"): `architecture-review` (9 cases), `security-review` (6),
-  `reliability-review` (7) and `code-review` (5) are done, 162 runs,
-  $63.25 with the pairwise judge. The skills add rank, scope and
-  restraint more than findings; what a bare model could not do is
-  `security-review`'s scan for the owner's values, and what it did not
-  do is search for callers (`code-review`'s unused code). Ten cases
-  score the same in both arms; the keep, cut down or drop lists are in
-  that section and wait for the owner, as do the requirements and
-  design skills. `tools/ablation_run.py` keeps the results outside the
-  repository, so no bar, history or evidence moves.
+  `reliability-review` (7), `code-review` (5) and the first turns of
+  the requirements and design skills (14) are done, 246 runs, $80.03
+  with the pairwise judge. The review skills add rank, scope and
+  restraint more than findings; the requirements and design skills add
+  the protocol (the owner is asked before anything is settled, a file
+  of the owner's is not opened), which a bare model never follows, and
+  which the pairwise judge marks down because the prompts ask for the
+  artefact. Thirteen cases score the same in both arms; the keep, cut
+  down or drop lists are in that section and wait for the owner. Not
+  run: `accessibility-review`, `test-quality-review`,
+  `vertical-slicing`, the map skills and the one-case writing skills.
+  `tools/ablation_run.py` keeps the results outside the repository, so
+  no bar, history or evidence moves.
 - [ ] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
   E6: a case that has never failed, that no deletion fails and that the
   bare model passes as well. Each candidate is named with the evidence

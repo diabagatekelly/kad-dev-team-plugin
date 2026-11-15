@@ -1627,8 +1627,10 @@ changed; these are findings:
 `TODO.md`'s E6 (2026-11-14, kad 0.14.5, Claude Code 2.1.325, every case
 on Sonnet): each case run three times with the plugin and three times
 with no plugin at all, skill by skill. `architecture-review`,
-`security-review`, `reliability-review` and `code-review` are done; the
-other skills wait for the owner's word.
+`security-review`, `reliability-review`, `code-review` and the first
+turns of the requirements and design skills are done. Not run: the
+other review skills (`accessibility-review`, `test-quality-review`),
+`vertical-slicing`, the map skills and the one-case writing skills.
 Nothing here is decided: the lists at the end of each skill are for the
 owner.
 
@@ -2066,6 +2068,114 @@ model, 2 splits. Plugin reviews are about 7,200 characters against
 No case of this skill is a candidate to drop on E6's evidence, so the
 estimates below do not move.
 
+#### The requirements and design skills
+
+Fourteen cases in two passes, 84 runs: `security-requirements`,
+`reliability-requirements`, `requirements-refinement` and
+`acceptance-criteria` (6 cases), then `architecture-design`,
+`design-system`, `screen-design` and `technology-bootstrap` (8). Only
+first turns can be run: of these skills' other cases 14 resume a
+history, 4 are negative-trigger cases that grade both arms, and 5 name
+a plugin skill or agent in the prompt. The paired outputs were read by
+`pairwise_judge.py --rubric work`, a second rubric written for this
+pass (fit to the step asked, what is left to the person, whether it can
+be acted on), since the first is about code reviews.
+
+| Case | With | Without | Graders that differ (with, without) | Pairwise: with / without / tie / split |
+|---|---|---|---|---|
+| `security-requirements-payfine-phase1` | 0.83 | 0.50 | `asks-before-writing` 3/3, 0/3; `does-not-ask-what-the-code-answers` 2/3, 3/3 | 0 / 3 / 0 / 0 |
+| `reliability-requirements-payfine-phase1` | 1.00 | 0.50 | `asks-before-writing` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `requirements-refinement-payfine-phase1` | 1.00 | 0.50 | `asks-trade-off-and-alternatives` 3/3, 0/3; `stays-on-the-what` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `requirements-refinement-open-question` | 1.00 | 0.50 | `asks-before-writing` 3/3, 0/3; `stays-on-the-what` 3/3, 0/3 | 0 / 2 / 0 / 1 |
+| `requirements-refinement-owner-sheet` | 1.00 | no clean run (read from the traces) | | 0 / 3 / 0 / 0 |
+| `acceptance-criteria-payfine` | 1.00 | 1.00 | none | 3 / 0 / 0 / 0 |
+| `architecture-design-payfine-phase1` | 1.00 | 0.22 | `presents-decisions-and-waits` 3/3, 0/3; `writes-nothing-under-pay-fine` 3/3, 0/3; `recommends-against-the-speculative-registry` 3/3, 2/3 | 0 / 3 / 0 / 0 |
+| `architecture-design-owner-sheet` | 1.00 | 1.00 | none | 0 / 3 / 0 / 0 |
+| `design-system-payfine-phase1` | 1.00 | 0.00 | `asks-reference-or-generate` 3/3, 0/3; `writes-nothing-yet` 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `design-system-payfine-reference` | 1.00 | 0.00 | all five: one mock and a confirmation, the mock's brand and typeface, nothing settled before confirmation, honest about viewing, each 3/3, 0/3 | 0 / 3 / 0 / 0 |
+| `design-system-payfine-review` | 1.00 | 0.83 | `separates-problems-from-preferences` 3/3, 0/3 | 1 / 2 / 0 / 0 |
+| `screen-design-payfine` | 0.97 | 0.53 | the four mockup graders and `reuses-the-system` 3/3, 0/3; `placeholder-carried-forward` 3/3, 1/3; `nothing-out-of-scope` 2/3, 3/3 | 0 / 3 / 0 / 0 |
+| `screen-design-owner-sheet` | 1.00 | 1.00 | none | 0 / 3 / 0 / 0 |
+| `technology-bootstrap-phase1` | 0.67 | 1.00 | `asks-only-what-the-first-test-forces` 1/3, 3/3 | 1 / 1 / 0 / 1 |
+
+Every trace holds one `result` row. What the bare runs did, from their
+final replies and the files they wrote:
+
+- **The bare model writes the document; the plugin stops and asks.** In
+  every first-turn case the bare run went straight to the artefact: the
+  reliability and security criteria written with numbers of its own
+  choosing, `design-001.md` saved, `design-system-001.md` saved from
+  the stylesheet with no mock and no confirmation, the screen written
+  as a specification with no mockup ("I didn't build an HTML mock").
+  The plugin's runs read the same material, say what the code already
+  settles and put the decisions to the owner. The graders that differ
+  are the ones that read this, so the scores are a measure of the
+  protocol, and they are 3/3 against 0/3 nearly everywhere. None of
+  these failures is a file named differently: where a file is missing
+  the bare run did not make it.
+- **`requirements-refinement-owner-sheet`: the data rule.** Here no
+  `sources.md` exists yet. All three bare runs opened the owner's
+  export and wrote amounts, titles and dates from it into a
+  requirements file meant to be committed (leaving out names and card
+  numbers of their own accord). The plugin's runs opened nothing,
+  listed the source and asked. The CLI counts the bare runs as errored
+  because a graded file (`sources.md`) was never written; the verdict
+  is from the traces.
+- **The other two owner-sheet cases do not show the rule.** In
+  `architecture-design-owner-sheet` and `screen-design-owner-sheet` the
+  fixture already holds a `sources.md` that states it, and the bare
+  model obeys it in all six runs. Those cases test the fixture's file
+  more than the skill.
+- `technology-bootstrap-phase1`, with 1/3: two plugin runs failed on
+  split votes (FAIL PASS FAIL, PASS FAIL FAIL). The failed reply that
+  was read lists what the first test does not need and asks for the
+  language first, which is the criterion's subject; whether it asks
+  for more further down was not settled. The one case of the fourteen
+  where the plugin is behind on its own grader.
+- `does-not-ask-what-the-code-answers`, with 2/3
+  (`security-requirements`): one plugin reply puts questions the code
+  it had just read answers. `nothing-out-of-scope`, with 2/3
+  (`screen-design`): not read further.
+
+**What the plugin adds over the bare model** in these skills is one
+thing, and it is large: the owner is asked before anything is settled.
+Trade-offs and alternatives are put as questions, a design waits for
+its decisions, a design system waits for a reference or a direction,
+and a file of the owner's is not opened. A bare model does none of this
+unprompted. It also adds the mockups (`screen-design`) and, in the
+review of a design system, the line between problems and preferences.
+
+**What the bare model matches, and what the judge prefers.**
+`acceptance-criteria-payfine` and the two owner-sheet cases above score
+the same in both arms. Read side by side the judge prefers the bare
+response in 35 of 42 pairs, the plugin's in 5 (three of them
+`acceptance-criteria`), and splits 2. Its reason is the same nearly
+every time: the request says to fill in the placeholder or save the
+design, the bare response does, and the plugin's "writes nothing and
+stops to ask". The rubric says that asking what the step depends on is
+not worse; the judge still counts a finished document as serving the
+person better, and twice says the questions were answerable from the
+code. It does not see whether the numbers a bare response invents are
+right. So the tally is not a finding that the bare output is better:
+it is a reading of "ask first" against "write first" by a judge with
+no stake in the answer, and it says that these cases' prompts ask for
+the artefact in so many words while the skill withholds it. Whether
+the owner wants to be asked is the owner's call and already made; what
+the tally suggests is that the prompts, not the skills, could say less
+("the placeholder is unfilled" in place of "fill it in").
+
+**For the owner: keep, cut down or drop.**
+
+| Case | E1: failed / runs | What E6 shows | Suggestion |
+|---|---|---|---|
+| the six first turns that separate the arms at 3/3 against 0/3 (`security-requirements-`, `reliability-requirements-` and `requirements-refinement-payfine-phase1`, `requirements-refinement-open-question`, `architecture-design-payfine-phase1`, `design-system-payfine-phase1`) | 3 / 70 together | the protocol, which only the plugin follows; cheap ($0.10 to $0.20 a run) | keep: never having failed is not the same as guarding nothing here |
+| `requirements-refinement-owner-sheet` | 0 / 22 | the data rule with no file to state it; the bare model breaks it 3 of 3 | keep; an empty `sources.md` in the scaffold would let the bare arm be scored instead of thrown |
+| `design-system-payfine-reference`, `screen-design-payfine` | 1 / 6, 2 / 8 | the widest gaps (0.00 and 0.53 bare) | keep |
+| `design-system-payfine-review` | 0 / 7 | one grader apart | keep, or cut down to that grader |
+| `acceptance-criteria-payfine` | 0 / 13 | equal on graders, plugin preferred 3 of 3 | keep ($0.08 a run); its graders do not read what the judge saw |
+| `architecture-design-owner-sheet`, `screen-design-owner-sheet` | 0 / 27, 0 / 19 | equal: the fixture states the rule and the bare model obeys it | cut down or merge: one case with no `sources.md`, like `requirements-refinement-owner-sheet`, would test the skill ($0.54 a run for the two) |
+| `technology-bootstrap-phase1` | 1 / 10 | plugin behind, on split votes | read the grader's criterion against the three plugin replies before anything else |
+
 #### What E6 cost, and one run of every case
 
 | | Figure | How it is known |
@@ -2074,9 +2184,11 @@ estimates below do not move.
 | `security-review`, 36 runs | $11.42 | measured the same way |
 | `reliability-review`, 42 runs | $16.90 | measured the same way |
 | `code-review`, 30 runs | $8.12 | measured the same way |
-| The pairwise judge, 78 pairs read in both orders | $6.69 ($2.24, $1.52, $1.99 and $0.94) | measured: the judge's own `total_cost_usd` |
+| The requirements skills, 36 runs | $4.95 | measured the same way |
+| The design skills, 48 runs | $9.78 | measured the same way |
+| The pairwise judge, 120 pairs read in both orders | $8.74 ($2.24, $1.52, $1.99, $0.94, $0.82 and $1.23) | measured: the judge's own `total_cost_usd` |
 | One two-run check of the revised runner | $0.13 | measured |
-| **E6 so far** | **$63.25** | measured; the session that ran and read it is not in the figure |
+| **E6 so far, 246 runs** | **$80.03** | measured; the session that ran and read it is not in the figure |
 | One run of every case, before E6 | about $45.3 | E5's estimate against the $45.70 baseline |
 | One run of every case, after E6 | about $45.3 | unchanged: E6 changed no case, grader or prompt |
 | The same if every "candidate to drop" above went (three `architecture-review` cases, two `security-review`, two `reliability-review`) | about $42.9 | estimated: less $0.90, $0.72 and $0.76, the cases' single-run costs in "The cases sorted" |
@@ -2107,7 +2219,14 @@ would account for.
   for or against them.
 - The pairwise judge does not see the code and rewards findings outside
   the request; its votes are a reading of the two texts, not a check of
-  either.
+  either. On the requirements and design skills it prefers a finished
+  document to a question, whatever the rubric says.
+- Most of the first-turn prompts of the requirements and design cases
+  ask for the artefact outright ("fill in the placeholder", "save the
+  design"; not counted prompt by prompt) while the skill's first turn
+  withholds it. The cases pass because the skill overrides the request;
+  a prompt that states the situation would test the same rule without
+  the contradiction.
 - The clean-module case separates the arms in the three specialist
   reviews (plugin 7 of 9 runs at nothing above Low, bare 1 of 9) and
   goes the other way in `code-review` (2 of 3 against 3 of 3); it is
