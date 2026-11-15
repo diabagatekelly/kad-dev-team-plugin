@@ -1626,9 +1626,9 @@ changed; these are findings:
 
 `TODO.md`'s E6 (2026-11-14, kad 0.14.5, Claude Code 2.1.325, every case
 on Sonnet): each case run three times with the plugin and three times
-with no plugin at all, skill by skill. `architecture-review` and
-`security-review` are done; the other skills wait for the owner's word,
-`reliability-review` next.
+with no plugin at all, skill by skill. `architecture-review`,
+`security-review` and `reliability-review` are done; the other skills
+wait for the owner's word, `code-review` next.
 Nothing here is decided: the lists at the end of each skill are for the
 owner.
 
@@ -1666,8 +1666,12 @@ and exits 1 when a case ends short of its clean runs.
 - The negative-trigger cases, which already grade both arms (`arm:
   both`): `architecture-review-neg-security-review`,
   `architecture-review-neg-test-quality-review`,
-  `security-review-neg-architecture`, `security-review-neg-reliability`.
-- Cases that resume a `history.jsonl`: neither skill has one.
+  `security-review-neg-architecture`, `security-review-neg-reliability`,
+  `reliability-review-neg-architecture`,
+  `reliability-review-neg-security`.
+- Cases that resume a `history.jsonl`: none of the three skills has one.
+- `reliability-review-nightly-via-agent` was not run, for the reason the
+  next case shows: its prompt names the plugin's agent.
 - `library-app-lending-review-via-agent` was run and cannot be measured:
   its prompt names the plugin's own agent, and in all three bare runs
   the model answered that `kad-dev-team:software-architect` is not
@@ -1896,30 +1900,105 @@ against $0.38 a run, judges included).
 | `security-review-reminders` | 0 / 10 | equal, pairwise 0 / 1 / 2 splits | candidate to drop |
 | the two negative-trigger cases | 0 / 23 | not run (they grade both arms already) | as they are |
 
+#### `reliability-review`
+
+Seven cases, 42 runs, none errored; every trace holds one `result` row.
+
+| Case | With | Without | Graders that differ (with, without) | Pairwise: with / without / tie / split |
+|---|---|---|---|---|
+| `reliability-review-alerts` | 1.00 | 1.00 | none | 1 / 2 / 0 / 0 |
+| `reliability-review-catalog` | 1.00 | 0.75 | `reports-nothing-above-low` 3/3, 0/3 | 0 / 2 / 0 / 1 |
+| `reliability-review-fine-payment` | 1.00 | 0.94 | `no-false-alarm-settled-fine-guard` 3/3, 2/3 | 1 / 0 / 0 / 2 |
+| `reliability-review-http` | 1.00 | 0.95 | `finds-unbounded-loan-history` 3/3, 2/3 | 2 / 1 / 0 / 0 |
+| `reliability-review-nightly` | 1.00 | 0.97 | `no-false-alarm-sms-retry` 3/3, 2/3 | 2 / 1 / 0 / 0 |
+| `reliability-review-portal-pay-pr` | 1.00 | 1.00 | none | 0 / 3 / 0 / 0 |
+| `reliability-review-refund-pr` | 1.00 | 1.00 | none | 0 / 3 / 0 / 0 |
+
+The plugin arm passed every grader in all 21 runs, which it has not
+done before: three of these graders have failed plugin runs in the
+history (`reports-nothing-above-low` 6 of 18, `no-false-alarm-sms-retry`
+6 of 21, the settled-fine guard 1 of 15). The bare failures, read from
+the saved reviews:
+
+- `reports-nothing-above-low`, bare 0/3: on the clean module every bare
+  review has three or four Medium findings (the alert that pages on one
+  error, no tests for the module, a rate limit or a scan it marks "not
+  verified"). The plugin's three keep to Low. The only gap of the
+  seven cases that is wider than one run, and the third skill in which
+  the clean-module case separates the arms.
+- `finds-unbounded-loan-history`, bare 2/3: one bare review of the HTTP
+  layer has no finding on the history query at all. A miss, once.
+- `no-false-alarm-sms-retry`, bare 2/3: one bare review rates the SMS
+  retry High for possible duplicate texts, where the criterion allows a
+  Low note. A false alarm, once, on a grader the plugin itself has
+  failed in more than a quarter of its earlier runs.
+- `no-false-alarm-settled-fine-guard`, bare 2/3: the judge voted PASS
+  FAIL FAIL. The passages on settled fines in that review are about
+  double charges, and none that was read reports the early return as a
+  defect. Counted as the grader's noise, not as a difference.
+
+No grader failed in the bare arm over a file's name.
+
+**What the plugin adds over the bare model**, on these cases: restraint
+on a clean module (3 of 3 against 0 of 3), and otherwise one run of
+three here and there: one planted problem missed once, one false alarm
+raised once. Every other planted problem and trap in the seven cases is
+handled by the bare model in all three runs.
+
+**What the bare model matches or does better.** `-alerts`,
+`-portal-pay-pr` and `-refund-pr` score 1.00 in both arms, and the
+judge prefers the bare review in 8 of their 9 pairs. Over all 21 pairs
+it is 12 for the bare model, 6 for the plugin and 3 splits. The reasons
+are not the ones from `architecture-review`: here the extra findings
+are inside the subject (a race between two submissions with an
+unconditional settle, an unhandled rejection on the losing promise, a
+fine waived while it is being paid, the missing affected-row check on a
+refund, a route that swallows provider errors and never reports them).
+Whether they are true of the fixture was not checked, by the judge or
+here; if they are, the two pull-request cases plant less than a bare
+model finds. The plugin's reviews are half as long again (about 13,500
+characters against 8,800) and cost $0.51 a run against $0.29.
+
+**For the owner: keep, cut down or drop.**
+
+| Case | E1: failed / runs | What E6 shows | Suggestion |
+|---|---|---|---|
+| `reliability-review-catalog` | 6 / 18 | the one clear gap (restraint), on a grader the plugin fails a third of the time | keep |
+| `reliability-review-http` | 0 / 12 | one bare miss in three | keep, or cut down to the grader that differs |
+| `reliability-review-nightly` | 7 / 21 | one bare false alarm in three, inside the grader's own noise; the dearest case of the skill ($0.80 a run) | cut down: ten judges, one of which separates the arms weakly |
+| `reliability-review-fine-payment` | 1 / 15 | no difference once the split vote is read | cut down or drop |
+| `reliability-review-refund-pr` | 1 / 16 | equal, bare preferred 3 of 3 | keep one of the two pull-request cases; check the bare reviews' extra findings against the fixture first |
+| `reliability-review-portal-pay-pr` | 0 / 12 | equal, bare preferred 3 of 3 | candidate to drop |
+| `reliability-review-alerts` | 1 / 15 | equal, bare preferred 2 of 3 | candidate to drop |
+| `reliability-review-nightly-via-agent` | 6 / 19 | not run: cannot be measured bare | E7's question |
+| the two negative-trigger cases | 0 / 25 | not run (they grade both arms already) | as they are |
+
 #### What E6 cost, and one run of every case
 
 | | Figure | How it is known |
 |---|---|---|
 | `architecture-review`, 54 runs | $19.99 | measured: the CLI's `costUsd` for the pass, list prices |
 | `security-review`, 36 runs | $11.42 | measured the same way |
-| The pairwise judge, 42 pairs read in both orders | $3.76 ($2.24 and $1.52) | measured: the judge's own `total_cost_usd` |
+| `reliability-review`, 42 runs | $16.90 | measured the same way |
+| The pairwise judge, 63 pairs read in both orders | $5.75 ($2.24, $1.52 and $1.99) | measured: the judge's own `total_cost_usd` |
 | One two-run check of the revised runner | $0.13 | measured |
-| **E6 so far** | **$35.30** | measured; the session that ran and read it is not in the figure |
+| **E6 so far** | **$54.19** | measured; the session that ran and read it is not in the figure |
 | One run of every case, before E6 | about $45.3 | E5's estimate against the $45.70 baseline |
 | One run of every case, after E6 | about $45.3 | unchanged: E6 changed no case, grader or prompt |
-| The same if every "candidate to drop" above went (three `architecture-review` cases, two `security-review`) | about $43.7 | estimated: less $0.90 and $0.72, the cases' single-run costs in "The cases sorted" |
-| The same if `security-review-config` went too | about $43.1 | estimated: less $0.55 |
+| The same if every "candidate to drop" above went (three `architecture-review` cases, two `security-review`, two `reliability-review`) | about $42.9 | estimated: less $0.90, $0.72 and $0.76, the cases' single-run costs in "The cases sorted" |
+| The same if `security-review-config` went too | about $42.4 | estimated: less $0.55 |
 
 Costs in this section are compared within a pass only. A run here was
 one of three per arm, and a three-run result records about twice the
 judge cost per run of a single-run one, so the per-run figures above
-($0.48 and $0.27, $0.38 and $0.26) are not comparable with the
+($0.48 and $0.27, $0.38 and $0.26, $0.51 and $0.29) are not comparable with the
 single-run costs in "The cases sorted"; the estimates of a pass use
 that table's figures, not these. One more thing seen and not explained:
 within one pass the plugin arm's runs record more judge cost than the
 bare arm's for the same graders ($0.24 against $0.11 a run in
-`architecture-review`, $0.16 against $0.11 in `security-review`),
-more than the longer reviews would account for.
+`architecture-review`, $0.16 against $0.11 in `security-review`, $0.24
+against $0.12 in `reliability-review`), more than the longer reviews
+would account for.
 
 **Seen along the way, for E7 and the grader findings; nothing fixed.**
 
@@ -1935,6 +2014,12 @@ more than the longer reviews would account for.
 - The pairwise judge does not see the code and rewards findings outside
   the request; its votes are a reading of the two texts, not a check of
   either.
+- The clean-module case is the one that separates the arms in all three
+  skills (plugin 7 of 9 runs at nothing above Low, bare 1 of 9), and it
+  is also the case the plugin fails most often in the history.
+- In the two `reliability-review` pull-request cases the bare model
+  reports problems the cases do not plant (a submission race, a missing
+  affected-row check). Unchecked against the fixture.
 
 ### Run backlog
 

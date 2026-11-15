@@ -668,15 +668,16 @@ after it.
   listed for the owner to keep, cut down or drop, and the cost of one
   run of every case is reported again.
   In progress 2026-11-14 (`evals/README.md`, "With and without the
-  plugin"): `architecture-review` (9 cases, 54 runs) and
-  `security-review` (6 cases, 36 runs) are done, $35.30 with the
-  pairwise judge. The skills add rank, scope and restraint more than
-  findings; `security-review`'s scan for the owner's values is the one
-  thing a bare model could not do. Seven cases score the same in both
-  arms; the keep, cut down or drop lists are in that section and wait
-  for the owner, as do the other skills, `reliability-review` next
-  (7 cases, 42 runs, about $19). `tools/ablation_run.py` keeps the
-  results outside the repository, so no bar, history or evidence moves.
+  plugin"): `architecture-review` (9 cases, 54 runs), `security-review`
+  (6 cases, 36 runs) and `reliability-review` (7 cases, 42 runs) are
+  done, $54.19 with the pairwise judge. The skills add rank, scope and
+  restraint more than findings: the clean-module case separates the
+  arms in all three, and `security-review`'s scan for the owner's
+  values is the one thing a bare model could not do. Ten cases score
+  the same in both arms; the keep, cut down or drop lists are in that
+  section and wait for the owner, as do the other skills, `code-review`
+  next. `tools/ablation_run.py` keeps the results outside the
+  repository, so no bar, history or evidence moves.
 - [ ] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
   E6: a case that has never failed, that no deletion fails and that the
   bare model passes as well. Each candidate is named with the evidence
