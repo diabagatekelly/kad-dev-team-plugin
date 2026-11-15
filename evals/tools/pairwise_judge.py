@@ -14,7 +14,12 @@ Combine-step judge until the chunk loop replaced that flow on 2026-10-24;
 the evals keep it); this file only supplies the review rubric and the
 results-dir plumbing.
 
-Usage: python3 -I evals/tools/pairwise_judge.py evals/results/<timestamp> [--model sonnet]
+`--rubric work` is for cases whose output is not a code review: the first
+turn of a requirements or design skill (questions to the owner, a proposal,
+a document). The default, `review`, is the rubric the review skills' passes
+were judged with.
+
+Usage: python3 -I evals/tools/pairwise_judge.py <results-dir> [--model sonnet] [--rubric review|work]
 """
 import argparse
 import json
@@ -36,8 +41,24 @@ Decide which review would serve the developer better. Weigh, in order:
 Ignore length, formatting, tone, and whether it uses any particular named rule or vocabulary. A longer review is not better unless the extra content is correct and useful."""
 
 
+WORK_RUBRIC = """You are judging two responses to the same request. The request is one step of planning a piece of software: requirements, acceptance criteria, a design, a technology choice, or the questions to settle before one of those can be written. You do not know who wrote either response.
+
+Decide which response would serve the person who asked better. Weigh, in order:
+1. Fit to the request and to the material it points at: does it do the step that was asked, no more and no less, and does it avoid claims that are false about that material?
+2. Judgment: does it separate what must be decided by the person from what it can settle itself, and are the things it raises the ones that matter for this step?
+3. Usability: could the person act on it as it stands (answer its questions, approve it, build from it)?
+
+A response that asks the person the questions the step depends on, instead of answering them itself, is not worse for that; a response that invents answers the material does not give is worse. Ignore length, formatting, tone, and whether it uses any particular named rule or vocabulary. A longer response is not better unless the extra content is correct and useful."""
+
+RUBRICS = {"review": (REVIEW_RUBRIC, "review"), "work": (WORK_RUBRIC, "response")}
+
+
 def last_message(run):
-    """The CLI stores the agent's final message as `evidence` on each llm grader."""
+    """The text the case's first `llm` grader read, which the CLI keeps as
+    `evidence`: the saved file when the grader's focus is a file (every
+    review case), the final reply when it is `last_message`. Both arms of a
+    case have the same graders in the same order, so the two sides are
+    always the same artefact."""
     for grader in run["graders"]:
         if grader.get("evidence"):
             return grader["evidence"]
@@ -45,9 +66,10 @@ def last_message(run):
 
 
 def judge_pair(job):
-    case, index, with_review, without_review, request, model = job
+    case, index, with_review, without_review, request, model, rubric = job
+    text, tag = RUBRICS[rubric]
     result = compare(request, {"with": with_review, "without": without_review},
-                     REVIEW_RUBRIC, model, tag="review")
+                     text, model, tag=tag)
     # The shape earlier runs' pairwise.json files have: orders keyed by who
     # was shown first, winners named by arm.
     return {"case": case, "run": index,
@@ -60,6 +82,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("results_dir", type=Path)
     parser.add_argument("--model", default="sonnet")
+    parser.add_argument("--rubric", choices=sorted(RUBRICS), default="review")
     parser.add_argument("-j", "--concurrency", type=int, default=4)
     args = parser.parse_args()
 
@@ -71,7 +94,7 @@ def main():
             with_review, without_review = last_message(w), last_message(wo)
             if with_review and without_review:
                 jobs.append((case["name"], index, with_review, without_review,
-                             case["promptMarkdown"], args.model))
+                             case["promptMarkdown"], args.model, args.rubric))
     if not jobs:
         sys.exit("no paired with/without outputs found (cases need an llm grader for the CLI to keep output)")
 
@@ -82,7 +105,7 @@ def main():
     for pair in pairs:
         tally = summary.setdefault(pair["case"], {"with": 0, "without": 0, "tie": 0, "split": 0})
         tally[pair["verdict"]] = tally.get(pair["verdict"], 0) + 1  # "no verdict" when a judge call failed
-    out = {"model": args.model, "summary": summary, "pairs": pairs,
+    out = {"model": args.model, "rubric": args.rubric, "summary": summary, "pairs": pairs,
            "cost_usd": sum(p["cost_usd"] for p in pairs)}
     (args.results_dir / "pairwise.json").write_text(json.dumps(out, indent=2))
     for case, tally in summary.items():
