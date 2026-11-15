@@ -1627,8 +1627,9 @@ changed; these are findings:
 `TODO.md`'s E6 (2026-11-14, kad 0.14.5, Claude Code 2.1.325, every case
 on Sonnet): each case run three times with the plugin and three times
 with no plugin at all, skill by skill. `architecture-review`,
-`security-review` and `reliability-review` are done; the other skills
-wait for the owner's word, `code-review` next.
+`security-review`, `reliability-review` and `code-review` are done
+(`code-review`'s failures are only partly read, see its section); the
+other skills wait for the owner's word.
 Nothing here is decided: the lists at the end of each skill are for the
 owner.
 
@@ -1973,6 +1974,59 @@ characters against 8,800) and cost $0.51 a run against $0.29.
 | `reliability-review-nightly-via-agent` | 6 / 19 | not run: cannot be measured bare | E7's question |
 | the two negative-trigger cases | 0 / 25 | not run (they grade both arms already) | as they are |
 
+#### `code-review`
+
+Five cases, 30 runs, none errored; every trace holds one `result` row.
+Left out: `code-review-neg-architecture` (`arm: both`),
+`code-review-fine-notices-pr-via-agent` (names the plugin's agent) and
+`code-review-comments-chunk` (its prompt tells the model to invoke the
+plugin's skill and follow its "Combined chunk review", so a bare run
+has nothing to follow).
+
+| Case | With | Without | Graders that differ (with, without) | Pairwise: with / without / tie / split |
+|---|---|---|---|---|
+| `code-review-catalog` | 0.92 | 1.00 | `nothing-above-low` 2/3, 3/3 | 0 / 2 / 0 / 1 |
+| `code-review-days-left-pr` | 1.00 | 0.93 | `finds-impossible-null-check` 3/3, 2/3; `keeps-the-shared-date-helper` 3/3, 2/3 | 1 / 2 / 0 / 0 |
+| `code-review-fine-notices-pr` | 0.93 | 0.90 | `leaves-mocking-to-test-quality-review` 1/3, 0/3 | 0 / 3 / 0 / 0 |
+| `code-review-fines-report-pr` | 0.95 | 0.71 | `finds-feature-envy` 3/3, 1/3; `finds-month-as-raw-string` 3/3, 2/3; `hands-sdk-to-architecture-review` 2/3, 0/3 | 2 / 0 / 0 / 1 |
+| `code-review-structural-high-at-d` | 0.83 | 0.67 | `the-split-is-the-architects-decision` 3/3, 0/3; `a-long-single-job-function-stays-a-plain-finding` 1/3, 2/3 | 3 / 0 / 0 / 0 |
+
+**Read so far** (the session's usage limit was reached here; the rest
+is owed):
+
+- `nothing-above-low`, with 2/3: the failed plugin review rates one
+  naming point Medium on the clean module (`terms` is plural where the
+  contract takes one substring). The bare model kept to Low in all
+  three: the one clean-module case of the four skills where the bare
+  arm is the more restrained. The grader has failed 9 of 19 plugin
+  runs.
+- `leaves-mocking-to-test-quality-review`, 1/3 and 0/3: both arms
+  report the mock-only test as a finding of their own. The plugin does
+  what the grader fails in two runs of three (and in 5 of 13 earlier
+  runs); the pairwise judge counts the bare review's fuller treatment
+  of that test in its favour, and counts the plugin's "Critical" on a
+  wrong comment against it.
+- `the-split-is-the-architects-decision`, bare 0/3: the bare review
+  proposes the split into helpers itself.
+- `finds-impossible-null-check`, bare 2/3: the failed bare review does
+  name the check ("contradicts the `Loan` parameter type"), as a Low.
+  Probably the grader's reading of rank, not a miss.
+- **Not read yet:** the criteria of the three hand-over graders (a
+  bare model has no sibling skill to hand over to, so they may be
+  failing by construction, like the stated ordering in
+  `architecture-review`), `finds-feature-envy` (bare 1/3),
+  `a-long-single-job-function-stays-a-plain-finding` (with 1/3, a
+  grader that has failed 4 of 7 plugin runs), and the pairwise reasons
+  for `-fines-report-pr` and `-structural-high-at-d`.
+
+**So far, for the owner:** `-fines-report-pr` and
+`-structural-high-at-d` show the widest gaps and the judge prefers the
+plugin's review in 5 of their 6 pairs: keep. `-fine-notices-pr` and
+`-catalog` do not separate the arms in the plugin's favour and rest on
+graders the plugin itself fails often: read before deciding. No
+suggestion on the others until the failures are read. Plugin reviews
+are about 7,200 characters against 4,500, $0.34 a run against $0.20.
+
 #### What E6 cost, and one run of every case
 
 | | Figure | How it is known |
@@ -1980,9 +2034,10 @@ characters against 8,800) and cost $0.51 a run against $0.29.
 | `architecture-review`, 54 runs | $19.99 | measured: the CLI's `costUsd` for the pass, list prices |
 | `security-review`, 36 runs | $11.42 | measured the same way |
 | `reliability-review`, 42 runs | $16.90 | measured the same way |
-| The pairwise judge, 63 pairs read in both orders | $5.75 ($2.24, $1.52 and $1.99) | measured: the judge's own `total_cost_usd` |
+| `code-review`, 30 runs | $8.12 | measured the same way |
+| The pairwise judge, 78 pairs read in both orders | $6.69 ($2.24, $1.52, $1.99 and $0.94) | measured: the judge's own `total_cost_usd` |
 | One two-run check of the revised runner | $0.13 | measured |
-| **E6 so far** | **$54.19** | measured; the session that ran and read it is not in the figure |
+| **E6 so far** | **$63.25** | measured; the session that ran and read it is not in the figure |
 | One run of every case, before E6 | about $45.3 | E5's estimate against the $45.70 baseline |
 | One run of every case, after E6 | about $45.3 | unchanged: E6 changed no case, grader or prompt |
 | The same if every "candidate to drop" above went (three `architecture-review` cases, two `security-review`, two `reliability-review`) | about $42.9 | estimated: less $0.90, $0.72 and $0.76, the cases' single-run costs in "The cases sorted" |

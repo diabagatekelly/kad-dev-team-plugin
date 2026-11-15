@@ -675,8 +675,10 @@ after it.
   arms in all three, and `security-review`'s scan for the owner's
   values is the one thing a bare model could not do. Ten cases score
   the same in both arms; the keep, cut down or drop lists are in that
-  section and wait for the owner, as do the other skills, `code-review`
-  next. `tools/ablation_run.py` keeps the results outside the
+  section and wait for the owner. `code-review` (5 cases, 30 runs) is
+  run, $63.25 in all, and its failures are only partly read: the
+  hand-over graders' criteria, two graders and two cases' pairwise
+  reasons are owed before its list is written. The other skills wait. `tools/ablation_run.py` keeps the results outside the
   repository, so no bar, history or evidence moves.
 - [ ] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
   E6: a case that has never failed, that no deletion fails and that the
