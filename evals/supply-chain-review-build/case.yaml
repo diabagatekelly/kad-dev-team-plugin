@@ -17,6 +17,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `finds-base-image-tag`,
+  # `finds-install-scripts-enabled`. What they graded is still in the
+  # fixture. `finds-image-build-ignores-lockfile` is the judge kept on the
+  # case's most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/supply-chain-review-build.md
@@ -25,20 +30,6 @@ graders:
     target: trace
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/supply-chain-review-build\.md")[^"]*"'
     match: not_contains
-  - type: llm
-    name: finds-base-image-tag
-    focus:
-      source: file
-      path: docs/reviews/supply-chain-review-build.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      The `Dockerfile` starts `FROM node:22-slim`: a mutable tag on the image that runs in production. `.github/dependabot.yml` has a docker entry, which bumps tags but does not make the reference immutable.
-
-      PASS if the review flags the tag-pinned base image and proposes pinning it by digest (`@sha256:...`). It must not present Dependabot's docker updates as already solving this.
-
-      FAIL if it is missed, or accepted because Dependabot watches docker.
   - type: llm
     name: finds-image-build-ignores-lockfile
     focus:
@@ -53,20 +44,6 @@ graders:
       PASS if the review identifies that the image build installs without the lockfile (or not in frozen mode), states that production can therefore get different versions from what CI tested, rates it Critical or High (or the top two tiers of whatever scale it uses), and proposes copying the lockfile and using `npm ci` (or equivalent frozen install).
 
       FAIL if it is missed or rated Medium or lower.
-  - type: llm
-    name: finds-install-scripts-enabled
-    focus:
-      source: file
-      path: docs/reviews/supply-chain-review-build.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `package-lock.json` marks `native-phone-codec` (a transitive dependency via `sms-sdk`) with `hasInstallScript: true`, and there is no `.npmrc` setting `ignore-scripts`, so npm runs that install script in CI's `npm ci` and in the image build.
-
-      PASS if the review flags that install/lifecycle scripts run by default (naming the package with an install script, or the absence of `ignore-scripts`) and proposes disabling them with a narrow allowlist or equivalent.
-
-      FAIL if it is missed.
   - type: llm
     name: no-false-alarm-manifest-ranges
     focus:

@@ -13,6 +13,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `untiered-edge-direction-unknown`. What they graded is still in the
+  # fixture. `flags-new-wrong-direction-edge` is the judge kept on the
+  # case's most important planted problem.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill
@@ -46,18 +51,6 @@ graders:
       PASS if the map flags `lending/cancel-hold.ts` (tier 1) → `infra/memory/in-memory-hold-queue.ts` (tier 3) as a wrong-direction candidate, naming both tiers, as a fact rather than a ruling (no "must fix", no prescribed fix).
 
       FAIL if it is missing, or presented as a confirmed violation with a demanded fix.
-  - type: llm
-    name: untiered-edge-direction-unknown
-    focus:
-      source: file
-      path: docs/architecture-map.md
-    weight: 1
-    criteria: |
-      `lending/cancel-hold.ts` (tier 1) → `utils/money-format.ts` (untiered) can't be checked mechanically.
-
-      PASS if the map reports this edge as untiered / direction unknown (or equivalent), and does not call it either correct or wrong.
-
-      FAIL if it is omitted from the flags entirely, or judged either way, or if `utils/money-format.ts` is given a tier to make the check possible.
   - type: llm
     name: flags-duplication-candidate
     focus:

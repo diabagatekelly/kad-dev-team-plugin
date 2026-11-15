@@ -17,6 +17,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-in-memory-holds`. What they graded is still in the fixture.
+  # `finds-respond-conflates-expected-and-unexpected` is the judge kept on
+  # the case's most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/reliability-review-http.md
@@ -51,20 +56,6 @@ graders:
       `PostgresLoanHistory.forCard` (`infra/postgres/postgres-loan-history.ts`) has no limit or pagination, and `GET /portal/history` returns the whole result; a member's loan history only ever grows.
 
       PASS if the review flags the unbounded history query/response and proposes a limit and pagination.
-
-      FAIL if it is missed.
-  - type: llm
-    name: finds-in-memory-holds
-    focus:
-      source: file
-      path: docs/reviews/reliability-review-http.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      Holds are stored by `InMemoryHoldQueue` (`infra/memory/in-memory-hold-queue.ts`), a process-wide singleton in `main/wiring.ts`. Every deploy, restart or crash silently discards every hold members have placed, and nothing ever removes a hold, so the map only grows.
-
-      PASS if the review flags that holds live only in process memory and are lost on restart/deploy (data loss), and proposes persisting them (behind the existing `HoldQueue` port, or an equivalent durable store). Mentioning unbounded growth is a plus, not required.
 
       FAIL if it is missed.
   - type: llm

@@ -13,6 +13,10 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `copy-rules`. What they
+  # graded is still in the fixture. No planted-problem judge is kept beside
+  # the graders that differed: this case plants none.
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -77,16 +81,6 @@ graders:
       PASS if the design adds none of these. Mentioning one as out of scope or as an open question is fine. Showing the fine that was just paid as paid (a "Paid" tag, or a paid group on the same page) is the slice's own criterion, not payment history; payment history means a record of earlier payments (dates, amounts, a statement) beyond the fine paid in this flow.
 
       FAIL if any of them is designed in (for example a "pay all" button, a "save this card" checkbox, a filter, or a receipt download).
-  - type: llm
-    name: copy-rules
-    focus:
-      source: file
-      path: docs/pay-fine/visual-ux/screen-design-001.md
-    weight: 1
-    criteria: |
-      PASS if the interface copy the document gives follows these rules: the pay button names the outcome verb-first (for example "Pay $3.00", not "Submit" or "Continue"); the declined message says what happened and what the member can do next, without blaming them; the success message names what succeeded, in the past tense.
-
-      FAIL if the pay button is generic, the declined message gives no next step, or the success message doesn't say what was paid.
   - type: llm
     name: placeholder-carried-forward
     focus:

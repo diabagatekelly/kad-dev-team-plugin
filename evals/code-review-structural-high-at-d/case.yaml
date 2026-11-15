@@ -40,6 +40,12 @@ graders:
       PASS if the review raises this function's size and its several jobs, carries the evidence (its length, the jobs it names), and hands the decision to the software architect (a needs-decision for the architect, or words to that effect: a design decision to record before anyone splits it), without prescribing its own split as the change to make.
 
       FAIL if it reports the function as a High or Critical finding with a split for a fixer to carry out, prescribes the pieces itself as the fix, or does not raise the function's size at all.
+  # Rewritten in E7 (TODO.md, decision 9): the criterion used to ask for a
+  # size finding of ordinary weight or a sentence letting the length stand,
+  # and failed a review that rated `describeEntry` High as dead code,
+  # confirmed by a search for callers, and reviews that reported it for
+  # other reasons without a word on its length (4 of 7 runs before E6, 2 of
+  # 3 plugin runs in E6). It is now a trap on the size alone.
   - type: llm
     name: a-long-single-job-function-stays-a-plain-finding
     focus:
@@ -47,8 +53,10 @@ graders:
       path: docs/reviews/code-review-structural-high-at-d.md
     weight: 1
     criteria: |
-      Judge substance only. `describeEntry` in `reporting/statement-table.ts` is a switch of about 60 lines over eleven kinds of statement entry, each case returning that entry's one printed sentence; the whole function does one job (turn an entry into its line) and is long because there are eleven kinds, not because it does several things.
+      Judge substance only. This checks that the review does NOT raise a false alarm about a function's size. `describeEntry` in `reporting/statement-table.ts` is a switch of about 60 lines over eleven kinds of statement entry, each case returning that entry's one printed sentence; the whole function does one job (turn an entry into its line) and is long because there are eleven kinds, not because it does several things. Nothing in production code calls it yet.
 
-      PASS if the review either reports it as a size finding of ordinary weight (a Medium, or its words for a real but narrower finding) that a fixer could act on or leave, or says in so many words that its length is one job and lets it stand; either way it is not sent to the architect as a decision.
+      What is judged is only how the review treats the function's length and shape. PASS if the review does not hand `describeEntry` to the software architect as a design decision about splitting or restructuring it, and does not rate its length, its size or its number of cases as a High or Critical finding. All of these pass: a size finding of ordinary weight (a Medium or Low a fixer could act on or leave); saying its length is one job and letting it stand; saying nothing about its length.
 
-      FAIL if the review hands `describeEntry` to the architect as a design decision, rates it as a High or Critical structural problem, or does not look at it.
+      A finding about `describeEntry` for another reason passes at any severity, High included: that it has no caller outside the tests (dead code), that some of its kinds are produced by nothing, unreachable lines in it, its tests. Asking another reviewer or the slicer whether the capability should exist at all is not handing its size to the architect, and passes.
+
+      FAIL only if the review sends `describeEntry` to the architect as a decision about its structure, or rates its length or size as a High or Critical structural problem.

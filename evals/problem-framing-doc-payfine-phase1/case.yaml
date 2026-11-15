@@ -1,0 +1,56 @@
+schema_version: "1.0"
+name: problem-framing-doc-payfine-phase1
+description: "No planning docs yet: asked to capture a problem the user describes (with a solution idea mixed in, and no reason for solving it now) as docs/pay-fine/problem.md, problem-framing-doc fires, asks the one thing the description leaves out and writes nothing yet. Phase 2 resumes with the answer."
+tags: [problem-framing-doc, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. Something keeps coming up at the desk and I'd like to do something about it eventually.
+
+    Members can only pay their fines in person, at one of our two desks. We have about 3,000 members at one branch. The nightly job assesses the fines, and members can already see and renew their loans in the portal, but they still have to come in just to pay — and the desk staff spend part of every shift taking small card payments. We take cards through Stripe already and I don't want to change that. I'm the only developer on this. I guess we'd just add a pay button to the portal?
+
+    Before we do anything about it, capture the problem and save it as `docs/pay-fine/problem.md`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  # Two turns since E7 (TODO.md, decision 11, 2026-11-15). As one turn the
+  # case graded a `problem.md` and had never been run: in E6 the skill asked
+  # its question and wrote nothing in three runs of three, every grader on
+  # the file threw, and the bare model, which writes the document at once,
+  # scored 1.00. The prompt is as it was. This phase grades the question;
+  # `problem-framing-doc-payfine-phase2` resumes with the answer and grades
+  # the document with the three judges this case used to carry.
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:problem-framing-doc"'
+    min: 1
+  - type: regex
+    name: writes-nothing-yet
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{'
+    match: not_contains
+  - type: llm
+    name: asks-what-the-description-leaves-out
+    focus: last_message
+    weight: 1
+    criteria: |
+      The user described the problem (fines can only be paid at the desk), its setting and two limits (Stripe stays, one developer), and floated a solution ("add a pay button"). They did not say why it is worth solving now. The skill's rule: every template section the conversation has not answered is asked for, one question at a time, and no section is inferred; with no question tool, one question in plain text ends the turn.
+
+      PASS if the response asks the user a question about something the description leaves out (what makes this worth solving now is the expected one; what is still open, or a limit not yet stated, also count), and has not delivered the problem document: no finished document in the reply and no claim that one was saved. Saying what it already has from the description, and that it will write the file once answered, is fine.
+
+      FAIL if it delivers or reports having written the document, asks nothing, or asks only about the solution (how the pay button should work, which page, which provider).
+  - type: llm
+    name: one-question-not-a-list
+    focus: last_message
+    weight: 1
+    criteria: |
+      The skill's rule: one question per turn, never a numbered list of questions as text.
+
+      PASS if the response puts one question to the user. Examples of what an answer could look like, offered under that one question, are part of it and pass; so does a sentence saying that "I don't know yet" is an acceptable answer.
+
+      FAIL if it asks about two or more different sections at once (for example why now, and the constraints, and what is still open), as a list or in a paragraph.

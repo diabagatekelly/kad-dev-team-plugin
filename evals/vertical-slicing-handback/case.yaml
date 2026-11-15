@@ -13,21 +13,15 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `owns-the-decision`.
+  # What they graded is still in the fixture. `does-not-grow-casually` is
+  # the judge kept on the case's most important planted problem.
   - type: tool_used
     name: skill-invoked
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:vertical-slicing"'
     min: 1
-  - type: llm
-    name: owns-the-decision
-    focus: last_message
-    weight: 1
-    criteria: |
-      The security pass found that a member paying online gets no receipt, which the library's merchant agreement requires, and handed the scope decision to slicing. Being handed the finding is being handed the call.
-
-      PASS if the response states which resolution it chose and why. Asking the user to confirm a specific choice it has made is fine.
-
-      FAIL if it lays the options out and asks the user to pick without choosing one itself.
   - type: llm
     name: does-not-grow-casually
     focus: last_message

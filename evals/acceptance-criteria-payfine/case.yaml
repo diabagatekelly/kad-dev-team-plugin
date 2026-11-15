@@ -17,21 +17,15 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `rejects-and-rewrites`.
+  # What they graded is still in the fixture. `flags-undecided-target` is
+  # the judge kept on the case's most important planted problem.
   - type: tool_used
     name: skill-invoked
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:acceptance-criteria"'
     min: 1
-  - type: llm
-    name: rejects-and-rewrites
-    focus: last_message
-    weight: 1
-    criteria: |
-      Nothing in the slice or the other planning docs says how long any step of paying a fine may take, and nobody has agreed a number.
-
-      PASS if the response says the criterion is not ready as written because nobody could agree whether it passed ("quick" and "left waiting" are not observable), and either offers at least one rewrite as Given/When/Then whose outcome someone could check by measuring (a stated time bound, even one marked as a placeholder for the user to confirm), or explains that it cannot be made testable until someone decides the bound. A Given/When/Then with the bound left open for that decision counts.
-
-      FAIL if it accepts the criterion as written, or rewrites it only into other vague wording ("responsive", "without noticeable delay", "a reasonable time").
   - type: llm
     name: flags-undecided-target
     focus: last_message

@@ -15,6 +15,10 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `finds-data-clump`.
+  # What they graded is still in the fixture. `finds-run-doing-several-jobs`
+  # is the judge kept on the case's most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/code-review-fines-report-pr.md
@@ -56,20 +60,6 @@ graders:
       PASS if the review flags that most of `shouldChase` is about the member rather than about chasing fines (feature envy, logic in the wrong place, or duplicating `isActive`), and proposes moving the member checks next to the member (for example reusing or extending `isActive`, or a member-side "is reachable" function).
 
       FAIL if it is missed.
-  - type: llm
-    name: finds-data-clump
-    focus:
-      source: file
-      path: docs/reviews/code-review-fines-report-pr.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `fromYear, fromMonth, toYear, toMonth` travel together through `periodLabel`, `monthsInPeriod` and `runFinesReportForPeriod` (which takes seven parameters in all).
-
-      PASS if the review flags the four values traveling together and proposes one period/range object for them. Also naming the seven-parameter list is welcome, not required.
-
-      FAIL if the repeated group isn't flagged.
   - type: llm
     name: finds-month-as-raw-string
     focus:

@@ -13,6 +13,10 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `finds-orphaned-adr`.
+  # What they graded is still in the fixture. `finds-stale-lending-rules` is
+  # the judge kept on the case's most important planted problem.
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -48,16 +52,6 @@ graders:
       PASS if the response recommends deleting it as ceremony and does not propose a replacement process.
 
       FAIL if it keeps it or proposes a new or better sign-off process.
-  - type: llm
-    name: finds-orphaned-adr
-    focus: last_message
-    weight: 1
-    criteria: |
-      `docs/adr/adr-002-reminders-email-only.md` is Accepted and says reminders go by email only, never SMS or post; `notifications/` sends SMS and postal reminders.
-
-      PASS if the response flags the disagreement and recommends superseding the ADR (or marking it superseded) rather than editing it in place or leaving it.
-
-      FAIL if it is missed, kept as is, or the fix is to edit the accepted ADR's text.
   - type: llm
     name: keeps-the-sound-docs
     focus: last_message

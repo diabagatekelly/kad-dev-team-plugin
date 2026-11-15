@@ -17,6 +17,12 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-long-lived-aws-keys-in-snapshot-job`,
+  # `finds-workflow-wide-secrets-and-default-permissions`. What they graded
+  # is still in the fixture. `finds-hardcoded-sendgrid-key` is the judge
+  # kept on the case's most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/security-review-config.md
@@ -39,34 +45,6 @@ graders:
       PASS if the review flags the committed API key as a top-severity finding (Critical or High, or the equivalent top tier), proposes removing the fallback and loading the key from a secret store / failing fast when it is missing, AND says the key must be rotated/revoked because it is in the repository history (deleting it from the file is not enough).
 
       FAIL if it is missed, rated Medium or below, or the fix does not mention rotating/revoking the key.
-  - type: llm
-    name: finds-long-lived-aws-keys-in-snapshot-job
-    focus:
-      source: file
-      path: docs/reviews/security-review-config.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      The `snapshot` job in `.github/workflows/deploy.yml` authenticates to AWS with long-lived access keys (`SNAPSHOT_AWS_ACCESS_KEY_ID` / `SNAPSHOT_AWS_SECRET_ACCESS_KEY` secrets), while the `deploy` job in the same workflow already uses GitHub OIDC (`id-token: write` + `role-to-assume`), so federated short-lived credentials are demonstrably available.
-
-      PASS if the review flags the static access keys as a credential finding and proposes switching the snapshot job to OIDC with its own narrowly scoped role (and retiring the keys).
-
-      FAIL if it is missed.
-  - type: llm
-    name: finds-workflow-wide-secrets-and-default-permissions
-    focus:
-      source: file
-      path: docs/reviews/security-review-config.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `.github/workflows/deploy.yml` puts every runtime secret (`STRIPE_SECRET_KEY`, `SENDGRID_API_KEY`, `TWILIO_*`, `PGPASSWORD`, `PGSEARCHPASSWORD`, `MONITOR_DSN`) in the workflow-level `env:` block, so every job gets them, including `test` (checkout, `npm ci`, typecheck, tests) which needs none of them and runs third-party install scripts. The workflow also has no top-level `permissions:` block, so `test` and `snapshot` run with the repository's default `GITHUB_TOKEN` permissions.
-
-      PASS if the review flags the over-broad secret exposure (all secrets handed to jobs that don't need them) and proposes scoping each secret to the job/step that needs it. Also flagging the missing top-level permissions block is expected but not required for PASS.
-
-      FAIL if the workflow-wide secrets are missed.
   - type: llm
     name: no-false-alarm-stripe-publishable-key
     focus:

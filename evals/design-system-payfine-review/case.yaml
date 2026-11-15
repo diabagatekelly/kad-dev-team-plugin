@@ -13,6 +13,10 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `finds-no-focus-state`.
+  # What they graded is still in the fixture. `finds-muted-contrast` is the
+  # judge kept on the case's most important planted problem.
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -40,18 +44,6 @@ graders:
       PASS if the review reports the muted text colour as failing contrast on its backgrounds (a computed ratio in the 2 to 3 range, or "fails 4.5:1", or the mismatch between the value and the document's stated figure: any of these) and proposes a darker value or an equivalent fix.
 
       FAIL if it is missed, or the document's 6.01:1 is repeated as if verified.
-  - type: llm
-    name: finds-no-focus-state
-    focus:
-      source: file
-      path: docs/pay-fine/visual-ux/design-system-review.md
-    weight: 1
-    criteria: |
-      Judge substance only. Neither the document nor the sample defines a focus state: there is no focus token, no `:focus-visible` (or `:focus`) rule, and the accessibility section says nothing about focus, so keyboard users get whatever the browser draws, if anything, on buttons, inputs, nav links and the choosable cards.
-
-      PASS if the review reports the missing focus state as a problem and proposes a fix (a visible focus ring with a stated colour and offset, or equivalent).
-
-      FAIL if it is missed, or treated as a preference.
   - type: llm
     name: leaves-preferences-alone
     focus:

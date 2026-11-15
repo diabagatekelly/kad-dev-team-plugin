@@ -17,6 +17,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-payment-sdk-outside-its-adapter`. What they graded is still in
+  # the fixture. `finds-technical-role-directories` is the judge kept on the
+  # case's most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/library-app-structure-review.md
@@ -39,8 +44,14 @@ graders:
       PASS if the review flags at least `services/` as a naming/structure problem of this kind (ideally `utils/` too) and suggests where the code belongs instead (refunds with fines; the date helpers with their callers or a business-named module).
 
       FAIL if neither directory is raised.
+  # Added in E7 (TODO.md, decision 9). In E6 both arms scored 1.00 here and
+  # the paired reviews read 3 to 0 for the plugin: every plugin review had
+  # this cycle and no bare review did (one named another, through
+  # `main/wiring`). No grader read it. The request is for structure and
+  # boundaries, not each module's internals, so the criterion asks that the
+  # cycle is seen as a load problem and to be fixed, not for a rank.
   - type: llm
-    name: finds-payment-sdk-outside-its-adapter
+    name: finds-runtime-import-cycle
     focus:
       source: file
       path: docs/reviews/library-app-structure-review.md
@@ -48,11 +59,11 @@ graders:
     criteria: |
       Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
 
-      `stripe-sdk` is imported in three places: `infra/payments/stripe-fine-payments.ts` (an adapter behind a port), `services/payment-service.ts`, and `reporting/revenue-report.ts`. The last two construct the client directly and read `process.env` themselves.
+      `lending/loan.ts` and `lending/loan-policy.ts` import each other as values, and both construct the other class in a static field initializer (`Loan.policy = new LoanPolicy()`, `LoanPolicy.sample = new Loan(...)`). Loading either module throws at startup. A review of the app's structure and boundaries that traces the import graph meets it.
 
-      PASS if the review flags the payment SDK being used outside a single adapter, naming at least one of the two non-adapter sites, and proposes routing all payment access through one port/adapter.
+      PASS if the review names the mutual import between `lending/loan.ts` and `lending/loan-policy.ts` (the files, or the `Loan` and `LoanPolicy` classes) as a real cycle at runtime or module load, not a type-only one, as a finding to be fixed, and says how the cycle is broken (drop the static sample, inject the policy, or similar).
 
-      FAIL if the spread of the SDK beyond its adapter is not raised.
+      FAIL if this cycle is not in the review, is dismissed as harmless or type-only, or is treated as optional cleanup. A different cycle (for example one through `main/wiring.ts`) does not count.
   - type: llm
     name: no-false-alarm-bootstrap-and-near-miss-names
     focus:

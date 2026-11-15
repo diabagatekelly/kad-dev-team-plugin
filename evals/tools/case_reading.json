@@ -5,10 +5,6 @@
    "note": "asks whether a proposed criterion is good to go in"
   },
   "judges": {
-   "rejects-and-rewrites": {
-    "by": "reading",
-    "why": "whether the rewrite is checkable or only other vague wording"
-   },
    "flags-undecided-target": {
     "by": "reading",
     "why": "whether a stated bound is flagged as the user's decision"
@@ -49,18 +45,6 @@
     "by": "reading",
     "why": "did the review find the planted problem and rank it first"
    },
-   "finds-missing-live-region": {
-    "by": "reading",
-    "why": "did the review find the missing attribute as a finding now"
-   },
-   "finds-low-contrast-meta-text": {
-    "by": "reading",
-    "why": "did the review find the pair just under 4.5:1"
-   },
-   "finds-unlabelled-name-field": {
-    "by": "reading",
-    "why": "did the review find the placeholder-only field"
-   },
    "no-false-alarm-focus-style": {
     "by": "reading",
     "why": "whether the focusable elements are reported as lacking a focus indicator"
@@ -94,18 +78,6 @@
    "finds-pay-button-focus-removed": {
     "by": "reading",
     "why": "did the review find the more specific rule that removes the focus ring"
-   },
-   "finds-hover-contrast": {
-    "by": "reading",
-    "why": "did the review find the hover colour failing contrast"
-   },
-   "finds-broken-error-link": {
-    "by": "reading",
-    "why": "did the review find the mismatched id"
-   },
-   "finds-no-visible-name-label": {
-    "by": "reading",
-    "why": "did the review find the label hidden with `display: none`"
    },
    "no-false-alarm-input-focus-ring": {
     "by": "reading",
@@ -431,17 +403,9 @@
     "by": "reading",
     "why": "did the review find the planted unused parameter"
    },
-   "finds-unused-flag": {
-    "by": "reading",
-    "why": "did the review find the planted flag"
-   },
    "finds-impossible-null-check": {
     "by": "reading",
     "why": "did the review find the planted check"
-   },
-   "finds-rethrowing-catch": {
-    "by": "reading",
-    "why": "did the review find the planted try/catch"
    },
    "keeps-the-overdue-branch": {
     "by": "reading",
@@ -464,10 +428,6 @@
    "note": "names the files and the three things readability covers"
   },
   "judges": {
-   "finds-triplicated-notice-logic": {
-    "by": "reading",
-    "why": "did the review find the planted repetition as a real finding"
-   },
    "guard-clause-not-the-finding": {
     "by": "reading",
     "why": "whether the guard line is a problem in its own right"
@@ -479,14 +439,6 @@
    "finds-wrong-name": {
     "by": "reading",
     "why": "did the review find the wrong name and rank it above a vague one"
-   },
-   "finds-what-comment": {
-    "by": "reading",
-    "why": "did the review recommend deleting the restating comment"
-   },
-   "finds-duplicate-test-names": {
-    "by": "reading",
-    "why": "did the review flag the two tests named `works`"
    },
    "keeps-the-why-comment": {
     "by": "reading",
@@ -556,10 +508,6 @@
     "by": "reading",
     "why": "did the review find the planted problem"
    },
-   "finds-data-clump": {
-    "by": "reading",
-    "why": "did the review find the four values travelling together"
-   },
    "finds-month-as-raw-string": {
     "by": "reading",
     "why": "did the review give the month format one owner"
@@ -591,11 +539,11 @@
    },
    "a-long-single-job-function-stays-a-plain-finding": {
     "by": "reading",
-    "why": "whether the second function is an ordinary finding and not sent to the architect"
+    "why": "whether the function's size is sent to the architect or rated High, as against a finding about it for another reason (dead code)"
    }
   },
   "findings": [
-   "`a-long-single-job-function-stays-a-plain-finding` (judge) failed 6 of 7 runs."
+   "`a-long-single-job-function-stays-a-plain-finding` (judge) failed 6 of 7 runs before E7 rewrote it as a trap on the size alone."
   ]
  },
  "delegation-consult-with-file": {
@@ -739,10 +687,6 @@
     "by": "reading",
     "why": "did the review find the planted failing contrast and not repeat the stale figure"
    },
-   "finds-no-focus-state": {
-    "by": "reading",
-    "why": "did the review find the missing focus state as a problem"
-   },
    "leaves-preferences-alone": {
     "by": "reading",
     "why": "whether a preference is recommended for change"
@@ -799,10 +743,6 @@
    "note": "names the module to review"
   },
   "judges": {
-   "finds-policy-mixed-with-mechanics": {
-    "by": "reading",
-    "why": "did the review find the planted mix of rule and mechanism"
-   },
    "finds-provider-codes-leaking-through-port": {
     "by": "reading",
     "why": "did the review find the planted leak through the port"
@@ -826,23 +766,15 @@
   "judges": {
    "finds-orm-inside-checkout-use-case": {
     "by": "reading",
-    "why": "did the review find the planted problem as top tier"
+    "why": "did the review find the planted problem at High or Critical (a High below the Critical cycle passes since E7)"
    },
    "finds-runtime-import-cycle": {
     "by": "reading",
     "why": "did the review find the cycle as a load problem, not a style one"
    },
-   "finds-http-request-in-place-hold": {
-    "by": "reading",
-    "why": "did the review find the planted framework type in the use case"
-   },
    "no-false-alarm-type-only-cycle": {
     "by": "reading",
     "why": "whether the type-only pair is reported as a real cycle"
-   },
-   "finds-use-case-reaching-into-wiring": {
-    "by": "reading",
-    "why": "did the review find the planted dependency on the composition root"
    },
    "states-assumed-importance-ordering": {
     "by": "reading",
@@ -885,48 +817,6 @@
   },
   "findings": []
  },
- "library-app-members-review": {
-  "prompt": {
-   "states_rule": "no",
-   "note": "names the module to review"
-  },
-  "judges": {
-   "locates-driver-type-in-port-file": {
-    "by": "reading",
-    "why": "did the review place the problem in the port file and not only in its importers"
-   },
-   "finds-table-shaped-domain-type": {
-    "by": "reading",
-    "why": "did the review find the planted table-shaped type"
-   },
-   "no-false-alarm-date-library": {
-    "by": "reading",
-    "why": "whether the date library import is a blocking finding"
-   }
-  },
-  "findings": []
- },
- "library-app-notifications-review": {
-  "prompt": {
-   "states_rule": "no",
-   "note": "names the module to review"
-  },
-  "judges": {
-   "finds-missing-channel-abstraction": {
-    "by": "reading",
-    "why": "did the review find the planted missing interface as a present axis of change"
-   },
-   "finds-port-on-implementer-side": {
-    "by": "reading",
-    "why": "did the review find the interface owned by the wrong side"
-   },
-   "no-false-alarm-single-impl-mailer-port": {
-    "by": "reading",
-    "why": "whether the one-implementation port is reported as premature"
-   }
-  },
-  "findings": []
- },
  "library-app-reporting-pr": {
   "prompt": {
    "states_rule": "no",
@@ -948,27 +838,6 @@
   },
   "findings": []
  },
- "library-app-reporting-review": {
-  "prompt": {
-   "states_rule": "no",
-   "note": "names the module to review"
-  },
-  "judges": {
-   "finds-sql-level-port": {
-    "by": "reading",
-    "why": "did the review find the port drawn at the wrong level"
-   },
-   "finds-sdk-constructed-in-revenue-report": {
-    "by": "reading",
-    "why": "did the review find the SDK used directly"
-   },
-   "finds-orchestration-mixed-with-csv-bytes": {
-    "by": "reading",
-    "why": "did the review find the planted mix of levels"
-   }
-  },
-  "findings": []
- },
  "library-app-structure-review": {
   "prompt": {
    "states_rule": "no",
@@ -979,10 +848,6 @@
     "by": "reading",
     "why": "did the review find the directories named by technical role"
    },
-   "finds-payment-sdk-outside-its-adapter": {
-    "by": "reading",
-    "why": "did the review find the SDK outside its adapter"
-   },
    "no-false-alarm-bootstrap-and-near-miss-names": {
     "by": "reading",
     "why": "whether the entry point and the composition root are reported as violations"
@@ -990,6 +855,10 @@
    "no-false-alarm-date-library-tier": {
     "by": "reading",
     "why": "whether the date library is a blocking finding"
+   },
+   "finds-runtime-import-cycle": {
+    "by": "reading",
+    "why": "whether the `Loan`/`LoanPolicy` cycle is named as a load problem to fix, as against another cycle or a type-only one"
    }
   },
   "findings": []
@@ -1041,10 +910,6 @@
    "flags-new-wrong-direction-edge": {
     "by": "reading",
     "why": "whether the edge is flagged as a fact and not ruled on"
-   },
-   "untiered-edge-direction-unknown": {
-    "by": "reading",
-    "why": "whether the edge is reported as unknown and judged neither way"
    },
    "flags-duplication-candidate": {
     "by": "reading",
@@ -1715,10 +1580,27 @@
   },
   "findings": []
  },
- "problem-framing-doc-payfine": {
+ "problem-framing-doc-payfine-phase1": {
   "prompt": {
    "states_rule": "no",
-   "note": "\"I guess we'd just add a pay button\" is the solution the document must not adopt"
+   "note": "asks for the document outright (\"capture the problem and save it\"); the skill holding its question against that is what the case tests"
+  },
+  "judges": {
+   "asks-what-the-description-leaves-out": {
+    "by": "reading",
+    "why": "whether the question is about a section the description leaves out and not about the solution, and whether a document is delivered"
+   },
+   "one-question-not-a-list": {
+    "by": "reading",
+    "why": "whether examples under one question are told apart from several questions at once"
+   }
+  },
+  "findings": []
+ },
+ "problem-framing-doc-payfine-phase2": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the user's answer to phase 1's question; it names no section and no rule"
   },
   "judges": {
    "no-solution-designed": {
@@ -1731,7 +1613,7 @@
    },
    "assumptions-stay-open": {
     "by": "reading",
-    "why": "whether an item is both a settled constraint and an open question"
+    "why": "whether the desk question is recorded as open and no item is both a settled constraint and an open question"
    }
   },
   "findings": []
@@ -1861,27 +1743,6 @@
   },
   "findings": []
  },
- "reliability-review-alerts": {
-  "prompt": {
-   "states_rule": "no",
-   "note": "names the alert file to review and asks whether the alerts serve on-call"
-  },
-  "judges": {
-   "finds-page-on-any-error": {
-    "by": "reading",
-    "why": "did the review find the planted noisy page and propose a rate or a downgrade"
-   },
-   "finds-non-actionable-cpu-page": {
-    "by": "reading",
-    "why": "did the review find the planted page with nothing to act on"
-   },
-   "no-false-alarm-burn-rate-alerts": {
-    "by": "reading",
-    "why": "whether a mention of the two burn-rate alerts asks for them to go or only refines them"
-   }
-  },
-  "findings": []
- },
  "reliability-review-catalog": {
   "prompt": {
    "states_rule": "no",
@@ -1909,14 +1770,6 @@
     "by": "reading",
     "why": "did the review find the planted window, rate it in the top two tiers and propose a fix"
    },
-   "finds-retrying-declines-in-use-case": {
-    "by": "reading",
-    "why": "did the review find the planted retry of declines"
-   },
-   "finds-pay-route-hides-unexpected-failures": {
-    "by": "reading",
-    "why": "did the review find the planted catch-all"
-   },
    "no-false-alarm-settled-fine-guard": {
     "by": "reading",
     "why": "whether the early return is reported as a defect"
@@ -1937,10 +1790,6 @@
    "finds-unbounded-loan-history": {
     "by": "reading",
     "why": "did the review find the planted unbounded query"
-   },
-   "finds-in-memory-holds": {
-    "by": "reading",
-    "why": "did the review find the planted data loss"
    },
    "no-false-alarm-catalog-route": {
     "by": "reading",
@@ -1978,22 +1827,6 @@
    "finds-unhandled-nightly-rejection": {
     "by": "reading",
     "why": "did the review find the planted problem with a consequence and a top-two rating"
-   },
-   "finds-no-isolation-in-fine-loop": {
-    "by": "reading",
-    "why": "did the review find the planted problem and propose per-loan isolation"
-   },
-   "finds-member-directory-pool-leak": {
-    "by": "reading",
-    "why": "did the review find the planted leak"
-   },
-   "finds-mailer-without-timeout": {
-    "by": "reading",
-    "why": "did the review find the planted missing timeout"
-   },
-   "finds-postal-queue-swallows-errors": {
-    "by": "reading",
-    "why": "did the review find the planted swallowed failure"
    },
    "no-false-alarm-reminder-loop-catch": {
     "by": "reading",
@@ -2047,31 +1880,6 @@
    "no-false-alarm-sms-retry": {
     "by": "reading",
     "why": "as `reliability-review-nightly`"
-   }
-  },
-  "findings": []
- },
- "reliability-review-portal-pay-pr": {
-  "prompt": {
-   "states_rule": "no",
-   "note": "names the files the pull request changes, the review's scope"
-  },
-  "judges": {
-   "finds-idempotency-key-never-reaches-stripe": {
-    "by": "reading",
-    "why": "did the review find that the key goes to metadata, not only that a duplicate is possible"
-   },
-   "finds-timed-out-charge-dropped-unrecorded": {
-    "by": "reading",
-    "why": "did the review find the planted dropped charge"
-   },
-   "no-false-alarm-bounded-wait": {
-    "by": "reading",
-    "why": "whether bounding the wait is itself reported as a defect"
-   },
-   "no-false-alarm-same-answer-for-another-members-fine": {
-    "by": "reading",
-    "why": "whether the shared 404 is reported as a defect"
    }
   },
   "findings": []
@@ -2137,10 +1945,6 @@
    "note": "asks to work out what to build"
   },
   "judges": {
-   "asks-before-writing": {
-    "by": "reading",
-    "why": "whether the reply ends on a question about what the user wants built"
-   },
    "asks-trade-off-and-alternatives": {
     "by": "reading",
     "why": "whether both the trade-off and the rejected alternatives are asked, in any words"
@@ -2246,10 +2050,6 @@
    "nothing-out-of-scope": {
     "by": "reading",
     "why": "whether an out-of-scope feature is designed in, as against named as out"
-   },
-   "copy-rules": {
-    "by": "reading",
-    "why": "whether the button, the declined message and the success message follow the copy rules"
    },
    "placeholder-carried-forward": {
     "by": "reading",
@@ -2447,14 +2247,6 @@
     "by": "reading",
     "why": "did the review find the planted key, rate it top tier and ask for rotation"
    },
-   "finds-long-lived-aws-keys-in-snapshot-job": {
-    "by": "reading",
-    "why": "did the review find the planted static keys and propose OIDC"
-   },
-   "finds-workflow-wide-secrets-and-default-permissions": {
-    "by": "reading",
-    "why": "did the review find the planted exposure and propose scoping"
-   },
    "no-false-alarm-stripe-publishable-key": {
     "by": "reading",
     "why": "whether a mention of the key is an alarm at Medium or above or a note that it is public"
@@ -2462,35 +2254,6 @@
    "no-false-alarm-oidc-deploy-job": {
     "by": "reading",
     "why": "whether a mention of `id-token: write` calls it over-privileged"
-   }
-  },
-  "findings": []
- },
- "security-review-http": {
-  "prompt": {
-   "states_rule": "no",
-   "note": "names the layer to review"
-  },
-  "judges": {
-   "finds-unauthenticated-refund-route": {
-    "by": "reading",
-    "why": "did the review find the planted problem, rate it top tier and propose the fix"
-   },
-   "finds-internal-error-text-returned-to-caller": {
-    "by": "reading",
-    "why": "did the review find the planted problem as information disclosure"
-   },
-   "finds-request-headers-sent-to-monitoring": {
-    "by": "reading",
-    "why": "did the review find the planted problem and propose an allow-list"
-   },
-   "no-false-alarm-prefix-mounted-auth": {
-    "by": "reading",
-    "why": "whether a mention of the routes is a claim that they are unauthenticated"
-   },
-   "no-false-alarm-public-catalog-search": {
-    "by": "reading",
-    "why": "whether a mention of the public search is a finding at Medium or above"
    }
   },
   "findings": []
@@ -2521,10 +2284,6 @@
     "by": "reading",
     "why": "did the review find the planted problem at the right tier with the fix"
    },
-   "finds-sql-injection-in-history-search": {
-    "by": "reading",
-    "why": "did the review find the planted problem and propose a bound parameter"
-   },
    "no-false-alarm-session-scoped-routes": {
     "by": "reading",
     "why": "whether the two routes are reported as exposing other members' loans"
@@ -2536,27 +2295,6 @@
    "pre-existing-issues-not-blocking": {
     "by": "reading",
     "why": "whether a pre-existing problem is presented as this pull request's to fix"
-   }
-  },
-  "findings": []
- },
- "security-review-reminders": {
-  "prompt": {
-   "states_rule": "no",
-   "note": "names the feature to review"
-  },
-  "judges": {
-   "finds-whole-member-object-logged": {
-    "by": "reading",
-    "why": "did the review find the planted problem, rate it High and propose an opaque identifier"
-   },
-   "finds-real-looking-pii-in-test-fixtures": {
-    "by": "reading",
-    "why": "did the review find the planted problem and not dismiss it as test code"
-   },
-   "no-false-alarm-identifier-only-log": {
-    "by": "reading",
-    "why": "whether the success log line is reported as a leak"
    }
   },
   "findings": []
@@ -2591,10 +2329,6 @@
    "finds-ceremony": {
     "by": "reading",
     "why": "did the reply recommend deleting the sign-off table without a new process"
-   },
-   "finds-orphaned-adr": {
-    "by": "reading",
-    "why": "did the reply recommend superseding the ADR and not editing it"
    },
    "keeps-the-sound-docs": {
     "by": "reading",
@@ -2647,17 +2381,9 @@
    "note": "\"Is anything accepted badly, or missing a decision?\" asks the question the skill answers"
   },
   "judges": {
-   "finds-bare-allowlist-entry": {
-    "by": "reading",
-    "why": "did the review find the bare suppression without choosing its classification"
-   },
    "finds-unenforced-temporary-acceptance": {
     "by": "reading",
     "why": "did the review find that the date is not enforced"
-   },
-   "finds-agpl-transitive": {
-    "by": "reading",
-    "why": "did the review find the licence risk without a legal verdict"
    },
    "no-false-alarm-documented-acceptance": {
     "by": "reading",
@@ -2676,17 +2402,9 @@
    "note": "names the files to audit"
   },
   "judges": {
-   "finds-base-image-tag": {
-    "by": "reading",
-    "why": "did the review find the mutable tag and propose a digest"
-   },
    "finds-image-build-ignores-lockfile": {
     "by": "reading",
     "why": "did the review find the unfrozen install and rate it in the top two tiers"
-   },
-   "finds-install-scripts-enabled": {
-    "by": "reading",
-    "why": "did the review find install scripts running by default"
    },
    "no-false-alarm-manifest-ranges": {
     "by": "reading",
@@ -2753,10 +2471,6 @@
    "finds-tag-pinned-slack-action": {
     "by": "reading",
     "why": "did the review find the tag reference and propose a commit SHA"
-   },
-   "finds-branch-ref-release-notes": {
-    "by": "reading",
-    "why": "did the review find the branch reference"
    },
    "no-false-alarm-sha-pinned-actions": {
     "by": "reading",
@@ -3015,14 +2729,6 @@
     "by": "reading",
     "why": "did the review find the test of a stand-in and rate it top tier"
    },
-   "finds-unwired-mock": {
-    "by": "reading",
-    "why": "did the review say the mock is never connected, not only that it is weak"
-   },
-   "finds-weak-cap-assertion": {
-    "by": "reading",
-    "why": "did the review find the assertion that an uncapped fine passes"
-   },
    "finds-call-order-assertion": {
     "by": "reading",
     "why": "did the review find the test of call order"
@@ -3119,10 +2825,6 @@
    "asks-where-before-writing": {
     "by": "reading",
     "why": "whether the reply asks whether and where to file before writing the story"
-   },
-   "does-not-ask-what-the-slice-answers": {
-    "by": "reading",
-    "why": "whether any question asks for what the slice already gives"
    }
   },
   "findings": []
@@ -3155,10 +2857,6 @@
    "note": "\"Sort it out\" points at the hand-back and names no resolution"
   },
   "judges": {
-   "owns-the-decision": {
-    "by": "reading",
-    "why": "whether the reply chooses a resolution itself and says why"
-   },
    "does-not-grow-casually": {
     "by": "reading",
     "why": "whether growth is chosen only after the other two options are rejected with reasons"
@@ -3256,10 +2954,6 @@
    "note": "asks whether the comments are worth keeping"
   },
   "judges": {
-   "deletes-what-comments": {
-    "by": "reading",
-    "why": "did the review recommend deleting both restating comments"
-   },
    "flags-the-wrong-comment": {
     "by": "reading",
     "why": "did the review notice the comment is false, not only redundant"

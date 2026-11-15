@@ -13,6 +13,12 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-missing-live-region`, `finds-low-contrast-meta-text`,
+  # `finds-unlabelled-name-field`. What they graded is still in the fixture.
+  # `finds-unreachable-fine-choice` is the judge kept on the case's most
+  # important planted problem.
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -38,42 +44,6 @@ graders:
       PASS if the review flags this, ranks it as its most severe finding (no accessible path to a required action), and proposes a fix that keeps choosing a fine on this screen (for example a radio group, or real buttons) rather than removing the choice.
 
       FAIL if it is missed, ranked below another finding, or the fix drops the ability to choose.
-  - type: llm
-    name: finds-missing-live-region
-    focus:
-      source: file
-      path: docs/pay-fine/accessibility-review-001.md
-    weight: 1
-    criteria: |
-      Judge substance only. The declined notice (`<div class="notice">`, "Your card was declined") has no `role="alert"`, `role="status"` or `aria-live`.
-
-      PASS if the review flags the missing attribute as a finding now, with a role or `aria-live` value to add. It may also list whether the announcement actually fires as not yet verifiable.
-
-      FAIL if it is missed, or only appears among things that can't be checked until real code exists.
-  - type: llm
-    name: finds-low-contrast-meta-text
-    focus:
-      source: file
-      path: docs/pay-fine/accessibility-review-001.md
-    weight: 1
-    criteria: |
-      Judge substance only. The fines' secondary line (`.fine-meta`, "Returned 12 days late, charged 3 September") is `var(--text-subtle)` = `#777777` at 14px on the white card, about 4.48:1, just under the 4.5:1 needed for normal-size text.
-
-      PASS if the review flags this text as failing contrast (a ratio in the 4.4 to 4.5 range, or "just under 4.5:1") and proposes a darker colour or token.
-
-      FAIL if it is missed or the pair is called passing.
-  - type: llm
-    name: finds-unlabelled-name-field
-    focus:
-      source: file
-      path: docs/pay-fine/accessibility-review-001.md
-    weight: 1
-    criteria: |
-      Judge substance only. The "Name on card" input has only a placeholder: no `<label>`, `aria-label` or `aria-labelledby`.
-
-      PASS if the review flags it as unlabelled and says a placeholder doesn't count, with a fix giving it a real label.
-
-      FAIL if it is missed.
   - type: llm
     name: no-false-alarm-focus-style
     focus:
