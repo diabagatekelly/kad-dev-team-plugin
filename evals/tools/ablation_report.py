@@ -58,6 +58,8 @@ def main():
                 if n["with"] and n["without"] and r["with"] * n["without"] == r["without"] * n["with"] and r["with"] < n["with"]]
         t = pairwise["summary"].get(case["name"])
         pw = f"{t['with']} / {t['without']} / {t['tie']} / {t['split']}" if t else "not run"
+        if t and t.get("no verdict"):
+            pw += f" ({t['no verdict']} with no verdict: a judge call failed)"
         shown = {arm: f"{score[arm]:.2f}" if n[arm] else "no clean run" for arm in ARMS}
         print(f"| `{case['name']}` | {shown['with']} | {shown['without']} | {'; '.join(differ) or 'none'} | "
               f"{'; '.join(both) or 'none'} | {pw} | ${cost['with'][0]:.2f} (${cost['with'][1]:.2f}), "

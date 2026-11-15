@@ -14,10 +14,13 @@ Per case it writes `<out>/<case>.json` and `.log`, copies each run's trace
 to `<out>/<case>-<arm>-run<i>.trace.jsonl` (both arms; a failure is read
 from the trace) and removes the kept scaffold. At the end the cases are
 merged into `<out>/aggregate-result.json`, the file `pairwise_judge.py`
-takes. A case whose result is already in `<out>` with every run clean, at
-the same run count and against the same inputs (the fingerprint
+takes; a result in `<out>` made at another run count, CLI version or
+against other inputs is left out of it and named. A case whose result is
+already in `<out>` with every run clean, at the same run count, with the
+same CLI version and against the same inputs (the fingerprint
 `eval_evidence.py` uses: the case, its skills, agents and fixtures), is
 skipped, so a pass cut by the usage window is resumed by the same command.
+A case whose inputs change while it runs gets no result.
 When any case is run, an earlier `pairwise.json` is removed: its votes were
 on other reviews. Exit 1 when a case ends without its clean runs in both
 arms (a case that cannot run bare, like one that names the plugin's agent,
@@ -62,16 +65,38 @@ def errored(run):
     return any(str(g.get("explanation", "")).startswith("grader threw") for g in run.get("graders", []))
 
 
-def done(path, want, inputs):
-    """The result at `path` holds `want` clean runs per arm, made at this run
-    count against these inputs."""
+def cli_version():
+    """`2.1.325` from `claude --version`, the form a result's `claudeVersion` has."""
+    try:
+        text = subprocess.run(["claude", "--version"], capture_output=True, text=True, timeout=60).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    m = re.match(r"\s*(\S+)", text)
+    return m.group(1) if m else None
+
+
+def stamp(runs, inputs, version):
+    return {"runs": runs, "inputs": inputs, "claude": version}
+
+
+def current(path, want, inputs, version):
+    """The result at `path`, when it was made at this run count, with this
+    CLI version and against these inputs; None otherwise (a missing or
+    half-written file included)."""
     try:
         data = json.load(open(path, encoding="utf-8"))
-        case = data["cases"][0]
-    except (OSError, ValueError, KeyError, IndexError):
+        data["cases"][0]["arms"]
+    except (OSError, ValueError, KeyError, IndexError, TypeError):
+        return None
+    return data if data.get("ablation") == stamp(want, inputs, version) else None
+
+
+def done(path, want, inputs, version):
+    """The result at `path` is current and holds `want` clean runs per arm."""
+    data = current(path, want, inputs, version)
+    if data is None:
         return False
-    if data.get("ablation") != {"runs": want, "inputs": inputs}:
-        return False
+    case = data["cases"][0]
     return all(len([r for r in (case["arms"].get(arm) or []) if not errored(r)]) >= want for arm in ARMS)
 
 
@@ -93,8 +118,33 @@ def keep_traces(case, base):
             shutil.rmtree(scaffold, ignore_errors=True)
 
 
+def drop_kept(log_path):
+    """Remove the scaffolds a run that left no result still kept: the CLI
+    prints each kept directory, and without a result nothing else names
+    them."""
+    try:
+        text = open(log_path, encoding="utf-8", errors="replace").read()
+    except OSError:
+        return
+    for scaffold in set(re.findall(r"kept (/\S*/(?:claude-eval-|e-)\w+)(?=[:\s])", text)):
+        for root, dirs, _ in os.walk(scaffold):
+            os.chmod(root, 0o700)
+            for d in dirs:
+                os.chmod(os.path.join(root, d), 0o700)
+        shutil.rmtree(scaffold, ignore_errors=True)
+
+
+def no_result(base, why):
+    """A case that ends without a usable result leaves no result file (a
+    half-written one would be read by the merge) and no kept scaffold."""
+    if os.path.isfile(base + ".json"):
+        os.remove(base + ".json")
+    drop_kept(base + ".log")
+    return f"no result ({why}; see {base}.log)"
+
+
 def run_case(job):
-    case, out, runs, concurrency = job
+    case, out, runs, concurrency, version = job
     base = os.path.join(out, case)
     inputs = fingerprint(case)
     for old in (base + ".json", os.path.join(out, "pairwise.json")):
@@ -119,21 +169,25 @@ def run_case(job):
             code = subprocess.run(args, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,  # nosemgrep
                                   timeout=TIMEOUT).returncode
         except subprocess.TimeoutExpired:
-            return case, False, f"no result (the CLI ran over {TIMEOUT} s; see {base}.log)"
+            return case, False, no_result(base, f"the CLI ran over {TIMEOUT} s")
     try:
         data = json.load(open(base + ".json", encoding="utf-8"))
         keep_traces(data["cases"][0], base)
-        data["ablation"] = {"runs": runs, "inputs": inputs}
+        data["ablation"] = stamp(runs, inputs, data.get("claudeVersion"))
         json.dump(data, open(base + ".json", "w", encoding="utf-8"), indent=2)
     except (OSError, ValueError, KeyError, IndexError):
-        return case, False, f"no result (exit {code}; see {base}.log)"
+        return case, False, no_result(base, f"exit {code}")
+    if fingerprint(case) != inputs:
+        # a skill, fixture or the case was edited during the run: the scores
+        # belong to neither state (eval_gate does the same for evidence)
+        return case, False, no_result(base, "its inputs changed while it ran")
     c = data["cases"][0]
     bad = [f"{arm}{i}" for arm, i, r in runs_of(c) if errored(r)]
     scores = {arm: [round(r["score"], 2) for r in c["arms"].get(arm) or []
                     if not errored(r) and isinstance(r.get("score"), (int, float))] for arm in ARMS}
     line = f"with {scores['with']} without {scores['without']} ${data.get('costUsd') or 0:.2f}" + (
         f"  ERRORED: {' '.join(bad)}" if bad else "")
-    return case, done(base + ".json", runs, inputs), line
+    return case, done(base + ".json", runs, inputs, version), line
 
 
 def inside_repository(path):
@@ -168,27 +222,41 @@ def main():
         if not CASE_NAME.match(case) or not os.path.isdir(os.path.join(EVALS, case)):
             sys.exit(f"no such case: {case}")
     os.makedirs(os.path.join(out, "cli"), exist_ok=True)
-    todo = [c for c in cases if not done(os.path.join(out, c + ".json"), a.runs, fingerprint(c))]
+    version = cli_version()
+    aggregate = os.path.join(out, "aggregate-result.json")
+    if os.path.isfile(aggregate):
+        os.remove(aggregate)  # rebuilt below from what is current, or absent
+    todo = [c for c in cases if not done(os.path.join(out, c + ".json"), a.runs, fingerprint(c), version)]
     for c in cases:
         if c not in todo:
             print(f"{c}: already complete, skipped", flush=True)
     short = []
     with ThreadPoolExecutor(a.jobs) as pool:
-        for case, ok, line in pool.map(run_case, [(c, out, a.runs, a.concurrency) for c in todo]):
+        for case, ok, line in pool.map(run_case, [(c, out, a.runs, a.concurrency, version) for c in todo]):
             print(f"{case}: {line}", flush=True)
             if not ok:
                 short.append(case)
+    # Every current result in the directory, not only the cases named: a pass
+    # is often finished by naming the cases that were cut. A result made at
+    # another run count or version, or against inputs that have changed
+    # since, is left out and said.
     merged = None
     for name in sorted(f for f in os.listdir(out) if f.endswith(".json") and f not in ("aggregate-result.json", "pairwise.json")):
-        data = json.load(open(os.path.join(out, name), encoding="utf-8"))
+        case = name[:-5]
+        data = None
+        if CASE_NAME.match(case) and os.path.isdir(os.path.join(EVALS, case)):
+            data = current(os.path.join(out, name), a.runs, fingerprint(case), version)
+        if data is None:
+            print(f"{case}: not current (other inputs, run count or CLI version, or unreadable); left out", flush=True)
+            continue
         if merged is None:
             merged = {k: v for k, v in data.items() if k not in ("cases", "aggregates", "costUsd", "ablation")}
             merged["cases"], merged["costUsd"] = [], 0.0
         merged["cases"] += data["cases"]
         merged["costUsd"] += data.get("costUsd") or 0.0
     if merged:
-        json.dump(merged, open(os.path.join(out, "aggregate-result.json"), "w", encoding="utf-8"), indent=2)
-        print(f"{len(merged['cases'])} cases, ${merged['costUsd']:.2f} -> {os.path.join(out, 'aggregate-result.json')}")
+        json.dump(merged, open(aggregate, "w", encoding="utf-8"), indent=2)
+        print(f"{len(merged['cases'])} cases, ${merged['costUsd']:.2f} -> {aggregate}")
     if short:
         sys.exit(f"without {a.runs} clean runs in both arms: {' '.join(short)}")
 

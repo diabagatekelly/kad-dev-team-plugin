@@ -54,7 +54,11 @@ RUBRICS = {"review": (REVIEW_RUBRIC, "review"), "work": (WORK_RUBRIC, "response"
 
 
 def last_message(run):
-    """The CLI stores the agent's final message as `evidence` on each llm grader."""
+    """The text the case's first `llm` grader read, which the CLI keeps as
+    `evidence`: the saved file when the grader's focus is a file (every
+    review case), the final reply when it is `last_message`. Both arms of a
+    case have the same graders in the same order, so the two sides are
+    always the same artefact."""
     for grader in run["graders"]:
         if grader.get("evidence"):
             return grader["evidence"]
