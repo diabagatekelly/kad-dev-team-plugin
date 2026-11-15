@@ -670,7 +670,7 @@ after it.
   In progress 2026-11-15 (`evals/README.md`, "With and without the
   plugin"): `architecture-review` (9 cases), `security-review` (6),
   `reliability-review` (7), `code-review` (5) and the first turns of
-  the requirements and design skills (14) are done, 246 runs, $80.17
+  the requirements and design skills (14) are done, 246 runs, $80.31
   with the pairwise judge. The review skills add rank, scope and
   restraint more than findings; the requirements and design skills add
   the protocol (the owner is asked before anything is settled, a file

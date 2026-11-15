@@ -1644,9 +1644,12 @@ marked `arm: with-only` are indicators there, not part of the score.
 
 ```
 python3 -I evals/tools/ablation_run.py --out ~/kad-eval-ablation/<skill> <case> [<case> ...]
-python3 -I evals/tools/pairwise_judge.py ~/kad-eval-ablation/<skill>
+python3 -I evals/tools/pairwise_judge.py ~/kad-eval-ablation/<skill> [--rubric work]
 python3 -I evals/tools/ablation_report.py ~/kad-eval-ablation/<skill>
 ```
+
+`--rubric work` is for cases whose output is not a code review (the
+requirements and design skills); the default rubric is the review one.
 
 `tools/ablation_run.py` refuses an output directory inside the
 repository. A calibration result left in `evals/results/` would be read
@@ -2187,8 +2190,8 @@ the tally suggests is that the prompts, not the skills, could say less
 | The requirements skills, 36 runs | $4.95 | measured the same way |
 | The design skills, 48 runs | $9.78 | measured the same way |
 | The pairwise judge, 120 pairs read in both orders | $8.74 ($2.24, $1.52, $1.99, $0.94, $0.82 and $1.23) | measured: the judge's own `total_cost_usd` |
-| Two two-run checks of the runner after its review fixes | $0.27 | measured |
-| **E6 so far, 246 runs** | **$80.17** | measured; the session that ran and read it is not in the figure |
+| Three two-run checks of the runner after its review fixes | $0.41 | measured |
+| **E6 so far, 246 runs** | **$80.31** | measured; the session that ran and read it is not in the figure |
 | One run of every case, before E6 | about $45.3 | E5's estimate against the $45.70 baseline |
 | One run of every case, after E6 | about $45.3 | unchanged: E6 changed no case, grader or prompt |
 | The same if every "candidate to drop" above went (three `architecture-review` cases, two `security-review`, two `reliability-review`) | about $42.9 | estimated: less $0.90, $0.72 and $0.76, the cases' single-run costs in "The cases sorted" |

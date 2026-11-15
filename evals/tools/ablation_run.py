@@ -21,8 +21,8 @@ same CLI version and against the same inputs (the fingerprint
 `eval_evidence.py` uses: the case, its skills, agents and fixtures), is
 skipped, so a pass cut by the usage window is resumed by the same command.
 A case whose inputs change while it runs gets no result.
-The output directory is made readable by its owner only (traces hold
-whatever a run read). When any case is run, an earlier `pairwise.json` is removed: its votes were
+An output directory the run creates is readable by its owner only (traces
+hold whatever a run read; one that already exists keeps its mode). When any case is run, an earlier `pairwise.json` is removed: its votes were
 on other reviews. Exit 1 when a case ends without its clean runs in both
 arms (a case that cannot run bare, like one that names the plugin's agent,
 ends so every time).
@@ -89,8 +89,9 @@ def manifest_hash():
         return None
 
 
-def stamp(runs, inputs, version):
-    return {"runs": runs, "inputs": inputs, "claude": version, "manifest": manifest_hash()}
+def stamp(runs, inputs, version, manifest=None):
+    return {"runs": runs, "inputs": inputs, "claude": version,
+            "manifest": manifest if manifest is not None else manifest_hash()}
 
 
 def current(path, want, inputs, version):
@@ -145,14 +146,10 @@ def no_result(base, why):
 def run_case(job):
     case, out, runs, concurrency, version = job
     base = os.path.join(out, case)
-    inputs = fingerprint(case)
+    inputs, manifest = fingerprint(case), manifest_hash()
     for old in (base + ".json", os.path.join(out, "pairwise.json")):
         if os.path.isfile(old):
             os.remove(old)  # never read back a result this run did not write
-    # The CLI names its report folder by the second a run starts and refuses
-    # to reuse one, so launches are at least a second apart (as in eval_gate).
-    with _launch:
-        time.sleep(1.1)
     args = ["claude", "plugin", "eval", ".", "--case", case, "--runs", str(runs),
             "--ablation", "with-without", "--scaffold", "--judge-model", "sonnet",
             "--no-publish", "--trust-plugin", "--concurrency", str(concurrency),
@@ -163,21 +160,31 @@ def run_case(job):
     with open(base + ".log", "w") as log:
         # a fixed list plus the case's directory name; no shell is involved
         try:
+            # The CLI names its report folder by the second a run starts and
+            # refuses to reuse one: the start itself is under the lock, a
+            # second after the one before.
+            with _launch:
+                time.sleep(1.1)
+                proc = subprocess.Popen(args, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)  # nosemgrep
+        except OSError as e:
+            return case, False, no_result(base, f"the CLI did not start: {e}")
+        try:
             # The exit code is not a verdict: the CLI exits 1 whenever the
             # plugin arm is below its threshold. The result file is.
-            code = subprocess.run(args, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,  # nosemgrep
-                                  timeout=TIMEOUT).returncode
+            code = proc.wait(timeout=TIMEOUT)
         except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
             return case, False, no_result(base, f"the CLI ran over {TIMEOUT} s")
     try:
         data = json.load(open(base + ".json", encoding="utf-8"))
         keep_traces(data["cases"][0], base)
-        data["ablation"] = stamp(runs, inputs, data.get("claudeVersion"))
+        data["ablation"] = stamp(runs, inputs, data.get("claudeVersion"), manifest)
         json.dump(data, open(base + ".json", "w", encoding="utf-8"), indent=2)
     except (OSError, ValueError, KeyError, IndexError):
         return case, False, no_result(base, f"exit {code}")
-    if fingerprint(case) != inputs:
-        # a skill, fixture or the case was edited during the run: the scores
+    if fingerprint(case) != inputs or manifest_hash() != manifest:
+        # a skill, fixture, the manifest or the case was edited during the run: the scores
         # belong to neither state (eval_gate does the same for evidence)
         return case, False, no_result(base, "its inputs changed while it ran")
     c = data["cases"][0]
@@ -222,8 +229,13 @@ def main():
             sys.exit(f"no such case: {case}")
     # Traces hold whatever a run read, a fixture's stand-in for an owner's
     # file included: the directory is the user's alone.
-    os.makedirs(os.path.join(out, "cli"), mode=0o700, exist_ok=True)
-    os.chmod(out, 0o700)
+    # Only a directory this run creates: one that was there keeps its mode.
+    if not os.path.exists(out):
+        os.makedirs(out, mode=0o700)
+    cli = os.path.join(out, "cli")
+    if os.path.islink(cli):
+        sys.exit(f"{cli} is a link; the CLI's own output stays inside the output directory")
+    os.makedirs(cli, mode=0o700, exist_ok=True)
     version = cli_version()
     if version is None:
         sys.exit("`claude --version` did not run; nothing was started or removed")
