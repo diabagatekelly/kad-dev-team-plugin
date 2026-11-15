@@ -1627,8 +1627,7 @@ changed; these are findings:
 `TODO.md`'s E6 (2026-11-14, kad 0.14.5, Claude Code 2.1.325, every case
 on Sonnet): each case run three times with the plugin and three times
 with no plugin at all, skill by skill. `architecture-review`,
-`security-review`, `reliability-review` and `code-review` are done
-(`code-review`'s failures are only partly read, see its section); the
+`security-review`, `reliability-review` and `code-review` are done; the
 other skills wait for the owner's word.
 Nothing here is decided: the lists at the end of each skill are for the
 owner.
@@ -1991,41 +1990,81 @@ has nothing to follow).
 | `code-review-fines-report-pr` | 0.95 | 0.71 | `finds-feature-envy` 3/3, 1/3; `finds-month-as-raw-string` 3/3, 2/3; `hands-sdk-to-architecture-review` 2/3, 0/3 | 2 / 0 / 0 / 1 |
 | `code-review-structural-high-at-d` | 0.83 | 0.67 | `the-split-is-the-architects-decision` 3/3, 0/3; `a-long-single-job-function-stays-a-plain-finding` 1/3, 2/3 | 3 / 0 / 0 / 0 |
 
-**Read so far** (the session's usage limit was reached here; the rest
-is owed):
+The failures, read from the saved reviews:
 
-- `nothing-above-low`, with 2/3: the failed plugin review rates one
+- `finds-feature-envy`, bare 1/3: two bare reviews never say that
+  `shouldChase` is mostly about the member. A miss, twice.
+- `hands-sdk-to-architecture-review`, with 2/3, bare 0/3: the criterion
+  passes a review that leaves the Stripe client out of its own ranked
+  findings. All three bare reviews rank it ("inject the client, or a
+  small port"). Not a failure by construction, since saying nothing
+  passes: the bare model does not keep to readability.
+- `the-split-is-the-architects-decision`, bare 0/3: all three bare
+  reviews prescribe the helpers to extract. The plugin's raise the
+  88-line function with its six jobs as a needs-decision for the
+  architect. Partly by construction: the hand-over is the plugin's own
+  division of labour, though "a design decision to record first" would
+  have passed.
+- `leaves-mocking-to-test-quality-review`, with 1/3, bare 0/3: both
+  arms rank the mock-only test as a finding of their own. The skill's
+  rule is not followed in two plugin runs of three (5 of 13 before),
+  which is the skill's to fix, and the pairwise judge prefers the bare
+  review in all three pairs partly for its fuller treatment of that
+  test.
+- `nothing-above-low`, with 2/3, bare 3/3: one plugin review rates a
   naming point Medium on the clean module (`terms` is plural where the
-  contract takes one substring). The bare model kept to Low in all
-  three: the one clean-module case of the four skills where the bare
-  arm is the more restrained. The grader has failed 9 of 19 plugin
-  runs.
-- `leaves-mocking-to-test-quality-review`, 1/3 and 0/3: both arms
-  report the mock-only test as a finding of their own. The plugin does
-  what the grader fails in two runs of three (and in 5 of 13 earlier
-  runs); the pairwise judge counts the bare review's fuller treatment
-  of that test in its favour, and counts the plugin's "Critical" on a
-  wrong comment against it.
-- `the-split-is-the-architects-decision`, bare 0/3: the bare review
-  proposes the split into helpers itself.
-- `finds-impossible-null-check`, bare 2/3: the failed bare review does
-  name the check ("contradicts the `Loan` parameter type"), as a Low.
-  Probably the grader's reading of rank, not a miss.
-- **Not read yet:** the criteria of the three hand-over graders (a
-  bare model has no sibling skill to hand over to, so they may be
-  failing by construction, like the stated ordering in
-  `architecture-review`), `finds-feature-envy` (bare 1/3),
-  `a-long-single-job-function-stays-a-plain-finding` (with 1/3, a
-  grader that has failed 4 of 7 plugin runs), and the pairwise reasons
-  for `-fines-report-pr` and `-structural-high-at-d`.
+  contract takes one substring). The one clean-module case of the four
+  skills where the bare arm is the more restrained; the grader has
+  failed 9 of 19 plugin runs.
+- `a-long-single-job-function-stays-a-plain-finding`, with 1/3, bare
+  2/3: **a grader finding.** One failed plugin review rates
+  `describeEntry` High as dead code, confirmed by a search for callers,
+  not as a structural problem; the other failed on a split vote. The
+  pairwise judge names that dead-code finding as the reason it prefers
+  the plugin's review. The grader has failed 4 of 7 earlier runs.
+- `finds-impossible-null-check` and `keeps-the-shared-date-helper`,
+  bare 2/3 each, the same run: the review names the null check
+  ("contradicts the `Loan` parameter type") as a Low. Rank, not sight.
+- `finds-month-as-raw-string`, bare 2/3: not read.
 
-**So far, for the owner:** `-fines-report-pr` and
-`-structural-high-at-d` show the widest gaps and the judge prefers the
-plugin's review in 5 of their 6 pairs: keep. `-fine-notices-pr` and
-`-catalog` do not separate the arms in the plugin's favour and rest on
-graders the plugin itself fails often: read before deciding. No
-suggestion on the others until the failures are read. Plugin reviews
-are about 7,200 characters against 4,500, $0.34 a run against $0.20.
+No grader failed in the bare arm over a file's name.
+
+**What the plugin adds over the bare model**, on these cases:
+
+- Code nothing uses, established by search: exports with no caller, a
+  55-line switch no production code reaches, fields never read. The
+  judge prefers the plugin's review in 5 of 6 pairs of
+  `-fines-report-pr` and `-structural-high-at-d`, and this is its
+  reason each time.
+- Logic in the wrong place (3 of 3 against 1 of 3).
+- Keeping to readability: the SDK and the split are left to the
+  architecture side.
+
+**What the bare model matches or does better.** No case scores the same
+in both arms, but in three the plugin has no lead worth the name:
+`-catalog` (bare ahead), `-fine-notices-pr` (0.93 against 0.90, on a
+grader both fail) and `-days-left-pr` (one bare run apart). In those
+three the judge prefers the bare review in 7 of 9 pairs, for extra
+correctness points (a NaN from an invalid date, a disagreement with
+`isOverdue`) and for lower severities where the plugin says Critical of
+a wrong comment. Over all 15 pairs: 6 for the plugin, 7 for the bare
+model, 2 splits. Plugin reviews are about 7,200 characters against
+4,500, $0.34 a run against $0.20.
+
+**For the owner: keep, cut down or drop.**
+
+| Case | E1: failed / runs | What E6 shows | Suggestion |
+|---|---|---|---|
+| `code-review-fines-report-pr` | 2 / 13 | the widest gap (0.95 against 0.71), plugin preferred | keep |
+| `code-review-structural-high-at-d` | 4 / 7 | plugin preferred 3 of 3; one of its two judges fails right answers | keep; fix the `describeEntry` grader so that a dead-code High passes |
+| `code-review-days-left-pr` | 0 / 10 | one bare run apart, on rank | cut down to the two graders that differ |
+| `code-review-fine-notices-pr` | 7 / 13 | no separation; its mocking rule is broken by the plugin two runs in three | decide first whether the rule is wanted; if it is, the skill needs the fix, not the case |
+| `code-review-catalog` | 9 / 19 | bare ahead; the grader fails the plugin half the time | as with `library-app-catalog-review`: decide what "clean" means here before keeping it as a bar |
+| `code-review-comments-chunk`, `-fine-notices-pr-via-agent` | 17 / 37, 19 / 20 | not measurable bare | E7's question |
+| `code-review-neg-architecture` | 0 / 11 | not run | as it is |
+
+No case of this skill is a candidate to drop on E6's evidence, so the
+estimates below do not move.
 
 #### What E6 cost, and one run of every case
 
@@ -2069,9 +2108,14 @@ would account for.
 - The pairwise judge does not see the code and rewards findings outside
   the request; its votes are a reading of the two texts, not a check of
   either.
-- The clean-module case is the one that separates the arms in all three
-  skills (plugin 7 of 9 runs at nothing above Low, bare 1 of 9), and it
-  is also the case the plugin fails most often in the history.
+- The clean-module case separates the arms in the three specialist
+  reviews (plugin 7 of 9 runs at nothing above Low, bare 1 of 9) and
+  goes the other way in `code-review` (2 of 3 against 3 of 3); it is
+  also the case the plugin fails most often in the history.
+- `a-long-single-job-function-stays-a-plain-finding` fails a review
+  that rates `describeEntry` High for being dead code.
+- `leaves-mocking-to-test-quality-review` is failed by the plugin in
+  two runs of three: a rule of the skill's that is not followed.
 - In the two `reliability-review` pull-request cases the bare model
   reports problems the cases do not plant (a submission race, a missing
   affected-row check). Unchecked against the fixture.

@@ -667,18 +667,16 @@ after it.
   case with the pairwise verdict, the skills the bare model matches are
   listed for the owner to keep, cut down or drop, and the cost of one
   run of every case is reported again.
-  In progress 2026-11-14 (`evals/README.md`, "With and without the
-  plugin"): `architecture-review` (9 cases, 54 runs), `security-review`
-  (6 cases, 36 runs) and `reliability-review` (7 cases, 42 runs) are
-  done, $54.19 with the pairwise judge. The skills add rank, scope and
-  restraint more than findings: the clean-module case separates the
-  arms in all three, and `security-review`'s scan for the owner's
-  values is the one thing a bare model could not do. Ten cases score
-  the same in both arms; the keep, cut down or drop lists are in that
-  section and wait for the owner. `code-review` (5 cases, 30 runs) is
-  run, $63.25 in all, and its failures are only partly read: the
-  hand-over graders' criteria, two graders and two cases' pairwise
-  reasons are owed before its list is written. The other skills wait. `tools/ablation_run.py` keeps the results outside the
+  In progress 2026-11-15 (`evals/README.md`, "With and without the
+  plugin"): `architecture-review` (9 cases), `security-review` (6),
+  `reliability-review` (7) and `code-review` (5) are done, 162 runs,
+  $63.25 with the pairwise judge. The skills add rank, scope and
+  restraint more than findings; what a bare model could not do is
+  `security-review`'s scan for the owner's values, and what it did not
+  do is search for callers (`code-review`'s unused code). Ten cases
+  score the same in both arms; the keep, cut down or drop lists are in
+  that section and wait for the owner, as do the requirements and
+  design skills. `tools/ablation_run.py` keeps the results outside the
   repository, so no bar, history or evidence moves.
 - [ ] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
   E6: a case that has never failed, that no deletion fails and that the
