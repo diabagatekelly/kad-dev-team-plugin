@@ -17,6 +17,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-branch-ref-release-notes`. What they graded is still in the
+  # fixture. `finds-tag-pinned-slack-action` is the judge kept on the case's
+  # most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/supply-chain-review-workflows.md
@@ -37,20 +42,6 @@ graders:
       In `.github/workflows/deploy.yml`, the `deploy` job uses `slackapi/slack-github-action@v1.27.0`, a third-party action referenced by tag, after AWS credentials have been configured and with every workflow-level secret in the environment.
 
       PASS if the review flags this tag reference as mutable and proposes pinning it to a full commit SHA. Mentioning what the action can reach (the deploy job's credentials and secrets) strengthens it but is not required.
-
-      FAIL if it is missed.
-  - type: llm
-    name: finds-branch-ref-release-notes
-    focus:
-      source: file
-      path: docs/reviews/supply-chain-review-workflows.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `.github/workflows/release-notes.yml` uses `changelog-tools/release-notes-action@main`, a branch reference, in a workflow granted `contents: write`.
-
-      PASS if the review flags the `@main` reference as mutable (whatever is on that branch runs next time) and proposes pinning it to a full commit SHA.
 
       FAIL if it is missed.
   - type: llm

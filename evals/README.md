@@ -462,9 +462,10 @@ score is history, not a claim about today.
 | `vertical-slicing-payfine-phase1` | real, Sonnet: 17/18 over 3 runs after the stop-first rule (`results/rrf-*`), the miss a grader that read "paid or waived fines don't show as outstanding" as adding waivers; reworded, and all three kept slices pass it with the eval's judge model; baseline 4/5 in calibration (no separate security and accessibility placeholders) — problem plus Active requirements, saves `slice-001.md`: stays inside "confirmed in scope", both placeholders, slice set named, doesn't re-ask the WHAT | yes |
 | `vertical-slicing-no-screen` | real, Sonnet: 0.92 over 3 runs, then 1.00 in 3/3 after the rule's rewording for Sourcery's round on PR 29 (the exemption is about the interface, not about deferring it; nonvisual interfaces count as screens) (`results/gate-20261101T*`, the Mac); every run's thin path is the use case behind a route a later slice adds and its accessibility line says not applicable, no screen, naming the persona for when one is added, with the security and reliability placeholders left to `devsecops-engineer`. Bar recorded; drafted 2026-11-01 (issue #25): the cancel-a-hold problem, whose first slice needs no screen; the slicer's accessibility line says not applicable, this slice has no screen, naming the persona for when one is added, while the security and reliability placeholders stay real; a thin path that does name a screen keeps the real placeholder, the grader checking the line against the thin path either way | yes |
 | `acceptance-criteria-payfine` | real, Sonnet: 9/9 over 3 runs; the baseline passed in calibration, so this is a regression guard — the engineer's "handles errors gracefully": rejected as untestable, and the undecided non-decline failures are flagged or routed to the reliability placeholder, not settled in the rewrite. Phase E (2026-10-15): the criterion is now "Paying a fine is quick; the member isn't left waiting" (the old one was the skill's own worked example); 9/9 over 3 runs, the time bound flagged or routed to the reliability placeholder every time | yes |
-| `problem-framing-doc-payfine` | real, Sonnet: 14/15 over 3 runs; the baseline passed in calibration, a regression guard — the user's own description with "add a pay button" in it: no solution in the doc, Stripe and one-developer as constraints. Known miss 1/3: an unstated "in-person payment must keep working" listed as a constraint beside a related open question | yes |
+| `problem-framing-doc-payfine-phase1` | real, Sonnet: 3/3 runs clean, 12/12 (`results/gate-20261115T114019`) — two turns since E7 (2026-11-15; as one turn the case graded a document the skill does not write before it has asked, and had no run held): the user's own description with "add a pay button" in it and no reason for solving it now; the skill asks why now, one question, and writes nothing | yes |
+| `problem-framing-doc-payfine-phase2` | real, Sonnet: 3/3 runs clean, 15/15 (`results/gate-20261115T120641`) — resumes phase 1 with the answer: no solution in the doc, Stripe and one-developer as constraints, the desk question left open, the user's own reason under Why now (a regex; a judge on it was noise in its first six runs) | yes |
 | `scope-map-self-service` | real, Sonnet: 14/15 over 3 runs; the miss is borderline, not a clear judge error: the map routes privacy to each step's requirements pass, but through one blanket line covering its whole cross-cutting list. The eval's judge failed it 3/3; `tools/rejudge.py` passes it 8/8, which is a hint only. Baseline misses the privacy routing on both calibration passes — a new, larger problem (`planning/self-service/`: fines, holds, contact details) whose privacy constraint is worded around one step. Phase E (2026-10-15): the problem doc's sentence generalising the privacy constraint for the skill is gone; privacy still routed to every step's requirements pass, 15/15 | yes |
-| `user-story-writeup-payfine-phase1` | real, Sonnet: 9/9 over 3 runs; baseline fails on both calibration passes (writes the story or fills the security placeholder) — asked to make slice 1 "ready to track", asks whether and where to file before writing. Before the fix the skill never fired: the run filled the slice's security placeholder instead | yes |
+| `user-story-writeup-payfine-phase1` | real, Sonnet: 9/9 over 3 runs; baseline fails on both calibration passes (writes the story or fills the security placeholder) — asked to make slice 1 "ready to track", asks whether and where to file before writing. Before the fix the skill never fired: the run filled the slice's security placeholder instead. E7 (2026-11-15): equal in both arms of E6 and kept as the source of phase 2's frozen history, with one judge | yes |
 | `user-story-writeup-payfine-phase2` | real, Sonnet: 15/15 over 3 runs (`results/rrf-*`) — resumes phase 1 with "GitHub, save it here, I'll paste it in": writes the story to the given path as a user story, carries the three criteria and both placeholders as they are, invents no issue number or assignee, and doesn't file it | yes |
 | `requirements-refinement-payfine-phase2` | real, Sonnet: 24/27 over 3 runs (`results/gate-20261014T201657`), re-frozen 2026-10-14 twice (the skill changed under it, see findings) — resumes phase 1 with the user's answers (pay online now, not see-only; payment link rejected; one fine, no saved cards; nothing about staff, whose part phase 1 had asked about): template sections, the user's own trade-off, scope as confirmed, both constraints as consequences, findings that name what is forced without prescribing the change. Every run writes a "Not yet confirmed" section and two of three put the staff view in it; the misses are the final message re-asking a long list of open items, which the judge reads as re-asking (one run clean). Re-frozen 2026-10-31 from a new phase 1 (the skill text had changed under it in PR 2): 0.89 in 3/3, the same `finishes-without-reasking` loss as before | yes |
 | `requirements-refinement-open-question` | real, Sonnet: 1.00 in 3/3 (`results/gate-20261031T17*`, the Mac); both open questions asked or listed under Not yet confirmed with what the answer changes, in every run. Bar recorded; drafted 2026-10-31 (v4 PR 3, case 12, first part): the pay-fine problem doc's two open questions (P4): phase 1 asks them or lists them under Not yet confirmed with what the answer would change, never assumes an answer | yes |
@@ -500,10 +501,7 @@ score is history, not a claim about today.
 | `library-app-lending-review` | real, Sonnet: 6/6 with plugin vs 4/6 without (runtime cycle missed, ordering not stated), 1 run — ORM in a use case, runtime import cycle, framework request crossing in, use case reaching into the composition root, type-only-cycle trap | yes |
 | `library-app-lending-review-via-agent` | real, Sonnet: 6/6 with plugin, again after `Skill` was added to the agent (`results/sa1-*`), delegation to `software-architect` confirmed via `Agent`; an earlier run scored 5/6 because the top-level agent summarised the report and dropped the ordering line, so the prompt now asks for the report verbatim (`results/20261009-220948-sonnet3-lending-review-via-agent`); the no-plugin arm is vacuous (the agent doesn't exist without the plugin) | yes |
 | `architecture-design-payfine-via-agent` | real, Sonnet: 3/3 runs clean (`results/sa2-*`); with-only, the no-plugin arm has no agent to delegate to — the pay-a-fine design handed to the `software-architect` agent with the architecture map in place: `architecture-design` runs inside the agent, consults `map-query` through `Skill`, builds on the fines pieces the map records, and stops at its first decisions. Before the fix 2/3: one run returned the `map-query` report as its final answer, one read the map itself instead of consulting | yes |
-| `library-app-members-review` | real, Sonnet: 3/3 with plugin vs 2/3 without (table-shaped domain type missed), 1 run — backward-check contamination located in the port file, table-shaped domain type, date-library trap | yes |
 | `library-app-fines-review` | real, Sonnet: 4/4 with plugin vs 2/4 without (policy-mixed-with-mechanics and the premature strategy interface missed), 1 run | yes |
-| `library-app-notifications-review` | real, Sonnet: 3/3 both arms, 1 run — missing channel abstraction, port on the implementer's side, one-impl-port-over-I/O trap | yes |
-| `library-app-reporting-review` | real, Sonnet: 3/3 with plugin vs 2/3 without after one skill fix, 1 run each — SQL-level port and SDK in a report found by both arms; the orchestration-mixed-with-CSV smell was missed by both arms in every Sonnet run until the skill's "inconsistent abstraction level" smell gained a concrete check (a method that calls collaborators and also handles characters/delimiters/encodings is at two levels); re-run `results/20261009-220715-sonnet3-reporting-review` passes with the plugin, the baseline still misses it | yes |
 | `library-app-reporting-pr` | real, Sonnet: 3/3 with plugin vs 1/3 without after one skill fix, 1 run each — first Sonnet run had the "Pre-existing, not blocking" section listing only items inside the diff; the skill gained "skim the rest of the module before you finish", and the re-run (`results/20261009-215755-sonnet2b`) named the SQL-level port and the Stripe import as pre-existing and non-blocking, with the PR's own smell flagged and the new port not called premature | yes |
 | `library-app-structure-review` | real, Sonnet: 4/4 with plugin vs 3/4 without (`services/` and `utils/` described, not flagged), 1 run — technical-role directories, SDK outside its adapter, bootstrap/near-miss/date-library traps | yes |
 | `library-app-catalog-review` | real, Sonnet: 1/1 with plugin vs 0/1 without, 1 run — the clean module; with the skill the review reports nothing above Low, without it a Medium is raised (earlier runs flagged two things the fixture itself had introduced, a cross-module read and a dead search route; both fixed) | yes |
@@ -515,10 +513,8 @@ score is history, not a claim about today.
 | `security-requirements-payfine-phase3` | real, Sonnet: 27/27 over 3 runs (`results/gate-20261014T194332`), re-frozen 2026-10-14 — the user keeps the shared route; the saved document writes the criteria for it and makes it safe (members pay only their own fines, cannot waive), records the overrule with its risk once and every other decision as approved, card data never received, error and monitoring exits covered. Graded on the saved file. Re-frozen 2026-10-31 from the new phase 2 (the `decisions-all-approved` grader re-pinned to its three forks: the route the owner overruled, one charge attempt with idempotency, the card-testing throttle): 0.89 in 3/3, every run leaving the browser-tokenisation premise "unconfirmed" under Open questions although "go with your recommendations" covered it; `rejudge.py --explain` passes it twice with that caveat, the eval's judge fails it nine votes in nine. Bar 0.89 as measured | no (bar 0.89: the skill leaves a premise open that the owner's blanket approval covered, see the row) |
 | `security-requirements-neg-review` | real, Sonnet: never invokes `security-requirements` in either arm (a review of live code) | yes |
 | `security-requirements-placeholder-pointer` | real, Sonnet: 1.00 in 3/3 (`results/gate-20261031T17*`, the Mac); the security document written, only the placeholder line replaced, story and design byte-identical. Bar recorded; drafted 2026-10-31 (v4 PR 3, case 12, third part): with the pay-fine slice, story and design on disk, the skill writes `security-slice-001.md`, replaces the slice's security placeholder line with a one-line pointer and nothing else; the reliability placeholder, the story and the design stay byte-identical | yes |
-| `security-review-http` | real, Sonnet: 3/3 plants + 2/2 traps with plugin, 1 run — refund route outside every auth prefix, internal error text to callers, request headers/bodies to monitoring; traps: prefix-mounted staff auth, public catalog search. Baseline missed the error-text finding | yes |
 | `security-review-portal-pr` | real, Sonnet: 5/5 with plugin, 1 run — member-profile IDOR, SQL injection in history search, PR scoping of pre-existing problems; traps: session-scoped routes, prefix-mounted member auth | yes |
 | `security-review-config` | real, Sonnet: 5/5 with plugin, 1 run — hardcoded SendGrid fallback key (rotation required), long-lived AWS keys beside an OIDC job, workflow-wide secrets; traps: Stripe publishable key, `id-token: write`. Baseline called the publishable key a leaked secret | yes |
-| `security-review-reminders` | real, Sonnet: 3/3 with plugin vs 1/3 without, 1 run — whole member object logged, real-looking PII in test fixtures; trap: identifier-only log line. Phase E (2026-10-15): "Pay attention to how member data is handled" dropped from the prompt; 3/3 runs, both plants found | yes |
 | `security-review-catalog` | real, Sonnet: 1/1 with plugin vs 0/1 without, 1 run — the clean module; baseline rated a rate-limit/scan note Medium | yes |
 | `security-review-neg-architecture` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
 | `security-review-neg-reliability` | real, Sonnet: never invokes a `security-review` skill in either arm | yes |
@@ -540,8 +536,6 @@ score is history, not a claim about today.
 | `reliability-review-nightly` | real, Sonnet: 7/8 with plugin vs 5/8 without, 1 run (`results/g3-*`, after the missing-retry rule) — unhandled rejection from the timer-driven job, no per-loan isolation, a database pool leaked per run, a mailer with no timeout, a postal adapter that swallows failures; traps: the reminder loop's catch, re-run idempotency, a correct transient-only SMS retry. The miss folds per-loan isolation into its crash finding (a re-ask passes it, a hint only). The pool leak was missed in two of six earlier calibration runs | yes |
 | `reliability-review-nightly-via-agent` | real, Sonnet: 7/8 with plugin (`results/g3-*`), delegation to `devsecops-engineer` confirmed via `Agent`; the miss is the re-run trap, failed on a correctly scoped overlapping-runs race (the probe case in the findings showed the eval's judge failing this text as a last message and passing it as a file); the no-plugin arm (0/5 finds) is not a comparison, the agent doesn't exist without the plugin | yes |
 | `reliability-review-http` | real, Sonnet: 5/5 with plugin vs 2/5 without, 1 run (`results/g3-*`) — expected and unexpected failures conflated in `respond.ts`, unbounded loan history, holds kept only in memory; traps: the catalog route's 503 handling, the capped search. Unbounded history and in-memory holds each missed once across calibration. Phase E (2026-10-15): the dependency-failure and data-growth hint dropped from the prompt; 3/3 runs, all three plants found | yes |
-| `reliability-review-alerts` | real, Sonnet: 3/3 both arms, 1 run (`results/g3-*`; was 3/3 vs 2/3) — page on any error event, non-actionable CPU page; trap: multi-window burn-rate alerts with a runbook. Now a regression guard | yes |
-| `reliability-review-portal-pay-pr` | real, Sonnet: 3/3 runs clean, 24/24 (`results/gate-20261018T160908`) — G1 (2026-10-18), the first plant whose defect only shows across files (overlay `code-plants/reliability-review/portal-pay/`, answer key R14, R15, RT10, RT11): a PR adding pay-a-fine to the portal, whose use case charges with an idempotency key the port's comment promises will stop a repeat charge, while the Stripe adapter sends it as a `metadata` label the SDK types say Stripe never reads; the route's "please try again" on a timeout then double-charges. Every run read both sides and the vendor types, found the key ineffective and the charge abandoned at the timeout, and left the bounded wait and the shared 404 alone. No baseline arm | yes |
 | `reliability-review-refund-pr` | real, Sonnet: 1.00 in 1/1 then 1.00 in 3/3 (`results/gate-20261107T005438`), bar recorded; drafted 2026-11-03 (0.12.0, H3.4, answer key R16, RT12, RT13, overlay `code-plants/reliability-review/refund/`): a PR letting staff refund a paid fine, whose Stripe adapter stops waiting after 10 s, whose route says "try again", and whose repeat is refused as already refunded and treated as a refusal, so a refund that exists at Stripe is recorded nowhere (run 3's orphaned Plaid Item in Stripe's vocabulary). Every run found the orphaned refund and asked for the refused repeat to be reconciled or the attempt recorded, left the absence of an automatic retry alone, and did not call the reported timeout silent. No baseline arm | yes |
 | `reliability-review-fine-payment` | real, Sonnet: 4/4 with plugin vs 3/4 without, 1 run (`results/g3-*`; was 4/4 both arms) — charge-then-settle with no idempotency, retrying declines in the use case, a pay route that hides unexpected failures; trap: the settled-fine guard. The baseline missed the declines retry. Phase E (2026-10-15): the provider-or-database hint dropped from the prompt; 3/3 runs, all three plants found | yes |
 | `reliability-review-catalog` | real, Sonnet: 2/3 with plugin vs 0/3 without (`results/g3-*`) — the clean module. Every failing run used to rate a missing read retry Medium; the skill now treats a missing retry as a finding only when a transient failure loses something a retry would save, and a read that fails cleanly to its caller as Low at most. The remaining failure rates two things Medium that the grader excludes (the service-wide `request-errors` alert and lending's `respond.ts`), so by the grader's own terms it is 3/3; the eval's judge failed it anyway. Earlier history: a leading prompt about slowness and growth produced capacity speculation in every run of both arms until it was made neutral | yes |
@@ -592,63 +586,60 @@ a judge's single flip included (marked `(judge)`), so "failed" is not
 "caught a regression".
 
 <!-- case-history:start -->
-Written by `tools/case_history.py` on 2026-11-14 from 6339 result files under `results/`, `kad-eval-results-archive/`: 3902 plugin-arm runs, 2026-10-31 to 2026-11-14. 675 of them errored before any grader ran (usage limit 665, sign-in 8, results folder over the entry limit 2); 127 grader results threw for a reason outside the run (usage limit 98, interrupted 16, grader pattern does not compile 13).
+Written by `tools/case_history.py` on 2026-11-15 from 6681 result files under `results/`, `kad-eval-results-archive/`: 4279 plugin-arm runs, 2026-10-31 to 2026-11-15. 699 of them errored before any grader ran (usage limit 686, sign-in 11, results folder over the entry limit 2); 129 grader results threw for a reason outside the run (usage limit 100, interrupted 16, grader pattern does not compile 13).
 
 | Case | Bar since | Completed runs | Since the bar | Failed | Graders that failed (runs) | Last failure | Errored, thrown |
 |---|---|---|---|---|---|---|---|
-| `acceptance-criteria-payfine` | 2026-10-11 | 11 | 11 | 0 |  |  | 1, 1 |
+| `acceptance-criteria-payfine` | 2026-10-11 | 15 | 15 | 0 |  |  | 1, 1 |
 | `accessibility-review-ac-walk` | 2026-11-09 | 18 | 14 | 1 | `honest-about-what-was-driven` (judge) ×1 | 2026-11-11 | 0, 0 |
 | `accessibility-review-neg-readability` | 2026-10-11 | 13 | 13 | 0 |  |  | 0, 0 |
-| `accessibility-review-payfine` | 2026-10-11 | 19 | 19 | 5 | `slice-placeholder-filled` (judge) ×4, `criteria-split-now-and-later` (judge) ×1 | 2026-11-11 | 3, 2 |
-| `accessibility-review-payfine-subtle` | 2026-10-11 | 19 | 19 | 5 | `slice-placeholder-filled` (judge) ×4, `no-false-alarm-card-number-label` (judge) ×1 | 2026-11-11 | 0, 4 |
+| `accessibility-review-payfine` | 2026-10-11 | 30 | 30 | 7 | `slice-placeholder-filled` (judge) ×4, `criteria-split-now-and-later` (judge) ×2, `no-false-alarm-focus-style` (judge) ×1 | 2026-11-14 | 3, 2 |
+| `accessibility-review-payfine-subtle` | 2026-10-11 | 30 | 30 | 5 | `slice-placeholder-filled` (judge) ×4, `no-false-alarm-card-number-label` (judge) ×1 | 2026-11-11 | 0, 4 |
 | `adr-neg-rename` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `adr-payment-gateway` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `adr-payment-gateway` | 2026-10-11 | 4 | 4 | 0 |  |  | 3, 0 |
 | `architecture-design-neg-review` | 2026-10-11 | 17 | 17 | 0 |  |  | 0, 0 |
-| `architecture-design-owner-sheet` | 2026-11-09 | 27 | 13 | 0 |  |  | 3, 2 |
+| `architecture-design-owner-sheet` | 2026-11-09 | 32 | 18 | 1 | `fixtures-are-invented` (judge) ×1 | 2026-11-15 | 3, 2 |
 | `architecture-design-payfine-phase1` | 2026-10-11 | 24 | 24 | 0 |  |  | 0, 2 |
 | `architecture-design-payfine-phase2` | 2026-10-11 | 25 | 25 | 20 | `decisions-show-approval` (judge) ×19, `stays-conceptual` (judge) ×2, `builds-on-the-existing-payment-path` (judge) ×1, `notes-the-leaky-payment-port` (judge) ×1, `keeps-the-one-implementation-port` (judge) ×1 | 2026-11-12 | 0, 6 |
-| `architecture-design-payfine-via-agent` | 2026-10-11 | 15 | 15 | 0 |  |  | 0, 4 |
+| `architecture-design-payfine-via-agent` | 2026-10-11 | 19 | 19 | 0 |  |  | 6, 4 |
 | `architecture-design-scope-consequence` | 2026-10-31 | 41 | 34 | 15 | `hands-back-to-the-requirements-owner` (judge) ×12, `does-not-approve-around-it` (judge) ×10 | 2026-11-11 | 0, 4 |
 | `architecture-review-neg-security-review` | 2026-10-12 | 12 | 12 | 0 |  |  | 0, 0 |
 | `architecture-review-neg-test-quality-review` | 2026-10-12 | 13 | 13 | 0 |  |  | 0, 0 |
-| `chunk-runner-gap-handback` | 2026-11-09 | 27 | 23 | 8 | `stops-with-the-decision-on-the-line` (judge) ×8 | 2026-11-13 | 3, 0 |
-| `chunk-runner-gate-deviation` | 2026-11-09 | 21 | 17 | 0 |  |  | 3, 0 |
-| `chunk-runner-gate-outside` | 2026-11-09 | 19 | 15 | 0 |  |  | 2, 0 |
-| `chunk-runner-gate-sources` | 2026-11-09 | 27 | 13 | 1 | `hands-back-pass-after-the-fix-and-stops` ×1 | 2026-11-11 | 8, 0 |
-| `chunk-runner-one-fix-round` | 2026-11-09 | 25 | 21 | 5 | `hand-back-is-the-one-line` (judge) ×5 | 2026-11-12 | 2, 0 |
+| `chunk-runner-gap-handback` | 2026-11-09 | 31 | 27 | 8 | `stops-with-the-decision-on-the-line` (judge) ×8 | 2026-11-13 | 3, 0 |
+| `chunk-runner-gate-deviation` | 2026-11-09 | 25 | 21 | 0 |  |  | 3, 0 |
+| `chunk-runner-gate-outside` | 2026-11-09 | 23 | 19 | 0 |  |  | 2, 0 |
+| `chunk-runner-gate-sources` | 2026-11-09 | 31 | 17 | 1 | `hands-back-pass-after-the-fix-and-stops` ×1 | 2026-11-11 | 8, 0 |
+| `chunk-runner-one-fix-round` | 2026-11-09 | 35 | 31 | 6 | `hand-back-is-the-one-line` (judge) ×5, `hand-back-is-one-line-and-nothing-else` ×1 | 2026-11-14 | 5, 0 |
 | `chunk-runner-replay-not-the-handback` | 2026-11-13 | 13 | 7 | 0 |  |  | 0, 0 |
 | `chunk-runner-replay-unheld-commit` | 2026-11-13 | 13 | 7 | 0 |  |  | 0, 1 |
-| `chunk-runner-review-round` | 2026-11-09 | 20 | 16 | 1 | `hand-back-line-carries-the-script-counts` ×1, `round-recorded-by-the-script` ×1, `smoke-report-written` ×1, `review-report-written` ×1, `one-smoke-agent` ×1, `two-launches-never-more` ×1, and 5 more | 2026-11-11 | 2, 0 |
-| `chunk-runner-waits-for-handback` | 2026-11-12 | 8 | 5 | 2 | `hand-back-is-the-one-line-for-what-ran` (judge) ×2 | 2026-11-12 | 0, 0 |
+| `chunk-runner-review-round` | 2026-11-09 | 24 | 20 | 1 | `two-launches-never-more` ×1, `review-report-in-the-shared-shape` ×1, `one-combined-reviewer` ×1, `smoke-agent-handed-the-launcher` ×1, `smoke-report-written` ×1, `report-names-the-suite-run` ×1, and 5 more | 2026-11-11 | 2, 0 |
+| `chunk-runner-waits-for-handback` | 2026-11-12 | 18 | 15 | 6 | `hand-back-is-one-line-for-what-ran` ×4, `hand-back-is-the-one-line-for-what-ran` (judge) ×2 | 2026-11-14 | 0, 0 |
 | `code-review-catalog` | 2026-10-11 | 19 | 19 | 9 | `nothing-above-low` (judge) ×9 | 2026-11-11 | 4, 2 |
-| `code-review-comments-chunk` | 2026-10-31 | 37 | 36 | 17 | `hands-back-counts-and-path` (judge) ×12, `reliability-lens-invoked-for-storage` ×9, `test-quality-lens-invoked` ×8, `why-comment-is-not-flagged` (judge) ×2, `report-written` ×1, `what-comments-are-a-medium` ×1, and 2 more | 2026-11-12 | 8, 8 |
-| `code-review-days-left-pr` | 2026-10-11 | 10 | 10 | 0 |  |  | 1, 0 |
-| `code-review-fine-notices-pr` | 2026-10-11 | 13 | 13 | 7 | `leaves-mocking-to-test-quality-review` (judge) ×5, `consults-why-comments` ×2, `finds-wrong-name` (judge) ×1 | 2026-11-12 | 1, 0 |
+| `code-review-comments-chunk` | 2026-10-31 | 44 | 43 | 20 | `hands-back-counts-and-path` (judge) ×12, `reliability-lens-invoked-for-storage` ×11, `test-quality-lens-invoked` ×10, `why-comment-is-not-flagged` (judge) ×3, `hand-back-is-counts-and-path` ×3, `no-low-per-chunk` ×1, and 3 more | 2026-11-14 | 11, 8 |
+| `code-review-days-left-pr` | 2026-10-11 | 17 | 17 | 3 | `skill-invoked-display` ×3 | 2026-11-15 | 1, 0 |
+| `code-review-fine-notices-pr` | 2026-10-11 | 17 | 17 | 9 | `leaves-mocking-to-test-quality-review` (judge) ×7, `consults-why-comments` ×2, `finds-wrong-name` (judge) ×1 | 2026-11-15 | 1, 0 |
 | `code-review-fine-notices-pr-via-agent` | 2026-10-11 | 20 | 20 | 19 | `consults-why-comments` ×18, `leaves-mocking-to-test-quality-review` (judge) ×16 | 2026-11-12 | 1, 7 |
-| `code-review-fines-report-pr` | 2026-10-11 | 13 | 13 | 2 | `hands-sdk-to-architecture-review` (judge) ×2, `finds-feature-envy` (judge) ×1 | 2026-11-11 | 4, 0 |
+| `code-review-fines-report-pr` | 2026-10-11 | 17 | 17 | 3 | `hands-sdk-to-architecture-review` (judge) ×2, `finds-feature-envy` (judge) ×1, `finds-month-as-raw-string` (judge) ×1 | 2026-11-15 | 4, 0 |
 | `code-review-neg-architecture` | 2026-10-11 | 11 | 11 | 0 |  |  | 1, 0 |
-| `code-review-structural-high-at-d` | 2026-11-11 | 7 | 5 | 4 | `a-long-single-job-function-stays-a-plain-finding` (judge) ×4 | 2026-11-12 | 1, 0 |
-| `delegation-consult-with-file` | 2026-10-31 | 18 | 11 | 4 | `hands-back-the-hash-and-one-sentence` (judge) ×3, `decision-written-in-place-under-the-delegation` (judge) ×1 | 2026-11-09 | 1, 0 |
+| `code-review-structural-high-at-d` | 2026-11-11 | 11 | 9 | 4 | `a-long-single-job-function-stays-a-plain-finding` (judge) ×4 | 2026-11-12 | 1, 0 |
+| `delegation-consult-with-file` | 2026-10-31 | 28 | 21 | 11 | `decision-written-in-place-under-the-delegation` (judge) ×5, `hand-back-is-the-hash-and-a-few-sentences` ×5, `hands-back-the-hash-and-one-sentence` (judge) ×3 | 2026-11-14 | 1, 0 |
 | `delegation-consult-without-file` | 2026-10-31 | 20 | 19 | 4 | `recommendation-only-named-as-undelegated` (judge) ×4 | 2026-11-12 | 4, 0 |
 | `delivery-ci-red-not-done` | 2026-11-12 | 10 | 7 | 2 | `report-leads-with-red-ci-and-not-ready` (judge) ×1, `handoff-briefs-the-fixer` (judge) ×1 | 2026-11-13 | 0, 6 |
 | `design-system-payfine-phase1` | 2026-10-11 | 7 | 7 | 0 |  |  | 1, 0 |
 | `design-system-payfine-phase2` | 2026-10-11 | 7 | 7 | 0 |  |  | 1, 2 |
-| `design-system-payfine-phase3` | 2026-10-11 | 12 | 12 | 5 | `accessibility-by-construction` (judge) ×5 | 2026-11-11 | 5, 0 |
+| `design-system-payfine-phase3` | 2026-10-11 | 16 | 16 | 7 | `accessibility-by-construction` (judge) ×5, `rejected-candidates-in-prose` (judge) ×2, `chosen-direction-committed` (judge) ×1 | 2026-11-14 | 5, 0 |
 | `design-system-payfine-reference` | 2026-10-17 | 6 | 6 | 1 | `mock-carries-reference-brand` ×1 | 2026-11-11 | 5, 0 |
-| `design-system-payfine-review` | 2026-10-17 | 7 | 7 | 0 |  |  | 1, 4 |
-| `external-review-triage-cancel-hold` | 2026-10-24 | 6 | 6 | 0 |  |  | 0, 0 |
+| `design-system-payfine-review` | 2026-10-17 | 11 | 11 | 0 |  |  | 1, 4 |
+| `external-review-triage-cancel-hold` | 2026-10-24 | 10 | 10 | 0 |  |  | 0, 0 |
 | `library-app-catalog-review` | 2026-10-11 | 14 | 14 | 3 | `reports-nothing-above-low` (judge) ×3 | 2026-11-09 | 8, 0 |
-| `library-app-fines-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
-| `library-app-lending-review` | 2026-10-11 | 15 | 15 | 4 | `finds-orm-inside-checkout-use-case` (judge) ×4 | 2026-11-11 | 6, 0 |
+| `library-app-fines-review` | 2026-10-11 | 13 | 13 | 0 |  |  | 3, 0 |
+| `library-app-lending-review` | 2026-10-11 | 22 | 22 | 5 | `finds-orm-inside-checkout-use-case` (judge) ×4, `finds-runtime-import-cycle` (judge) ×1 | 2026-11-15 | 6, 0 |
 | `library-app-lending-review-via-agent` | 2026-10-11 | 12 | 12 | 1 | `finds-orm-inside-checkout-use-case` (judge) ×1 | 2026-11-09 | 3, 0 |
-| `library-app-members-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
-| `library-app-notifications-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
 | `library-app-reporting-pr` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
-| `library-app-reporting-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
-| `library-app-structure-review` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
+| `library-app-structure-review` | 2026-10-11 | 13 | 13 | 0 |  |  | 3, 0 |
 | `map-query-consults` | 2026-10-11 | 8 | 8 | 0 |  |  | 3, 0 |
-| `map-query-no-map` | 2026-10-11 | 2 | 2 | 0 |  |  | 1, 0 |
-| `map-update-cancel-hold` | 2026-10-11 | 18 | 18 | 17 | `pre-existing-flags-not-new` (judge) ×13, `no-bash-writes` ×6, `keeps-existing-rows-and-tiers` (judge) ×5 | 2026-11-11 | 3, 0 |
+| `map-query-no-map` | 2026-10-11 | 9 | 9 | 1 | `no-live-scan-answer` ×1 | 2026-11-14 | 1, 0 |
+| `map-update-cancel-hold` | 2026-10-11 | 26 | 26 | 25 | `pre-existing-flags-not-new` (judge) ×21, `no-bash-writes` ×7, `keeps-existing-rows-and-tiers` (judge) ×5, `new-rows-extracted` ×2, `flags-new-wrong-direction-edge` (judge) ×2 | 2026-11-15 | 3, 0 |
 | `operational-readiness-neg-reliability` | 2026-10-11 | 11 | 11 | 0 |  |  | 3, 0 |
 | `operational-readiness-neg-security` | 2026-10-11 | 10 | 10 | 0 |  |  | 3, 0 |
 | `operational-readiness-ops-phase1` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
@@ -660,13 +651,13 @@ Written by `tools/case_history.py` on 2026-11-14 from 6339 result files under `r
 | `orchestrator-budget-exceeded` | 2026-10-31 | 44 | 40 | 26 | `flow-ends-saying-what-is-built` (judge) ×26 | 2026-11-13 | 6, 1 |
 | `orchestrator-chunk-runner-handback` | 2026-11-09 | 22 | 19 | 0 |  |  | 5, 1 |
 | `orchestrator-chunk-runner-launch` | 2026-11-09 | 41 | 38 | 14 | `handoff-says-the-runner-is-in-flight` (judge) ×14 | 2026-11-12 | 12, 1 |
-| `orchestrator-definition-of-done` | 2026-10-31 | 65 | 58 | 51 | `three-named-fixes-in-one-batch` (judge) ×50, `one-fixer-for-the-batch` ×20, `no-slice-reviewer-yet` ×11, `gate-on-the-fix` ×11, `readme-written` ×3, `readme-skill-invoked-inline` ×3, and 4 more | 2026-11-13 | 19, 0 |
-| `orchestrator-delivery-foreground` | 2026-10-31 | 70 | 66 | 26 | `cost-script-run` ×19, `reports-the-delivery-in-the-same-turn` (judge) ×11, `pr-writeup-invoked` ×7, `pull-request-then-issues-then-body-edit` ×6, `one-issue-per-standing-medium-none-for-a-low` (judge) ×5, `e-line-written` ×4 | 2026-11-12 | 6, 0 |
+| `orchestrator-definition-of-done` | 2026-10-31 | 65 | 58 | 51 | `three-named-fixes-in-one-batch` (judge) ×50, `one-fixer-for-the-batch` ×20, `no-slice-reviewer-yet` ×11, `gate-on-the-fix` ×11, `readme-skill-invoked-inline` ×3, `check-before-any-launch` ×3, and 4 more | 2026-11-13 | 19, 0 |
+| `orchestrator-delivery-foreground` | 2026-10-31 | 77 | 73 | 27 | `cost-script-run` ×20, `reports-the-delivery-in-the-same-turn` (judge) ×11, `pr-writeup-invoked` ×7, `pull-request-then-issues-then-body-edit` ×6, `one-issue-per-standing-medium-none-for-a-low` (judge) ×5, `e-line-written` ×4 | 2026-11-14 | 6, 0 |
 | `orchestrator-delivery-removal` | 2026-11-09 | 34 | 20 | 2 | `record-names-counts-and-files-never-values` (judge) ×2 | 2026-11-10 | 7, 0 |
 | `orchestrator-gap-without-delegation` | 2026-10-31 | 59 | 55 | 12 | `round-zero-not-recorded-again` ×9, `stops-for-the-owner-with-the-recommendation` (judge) ×5, `owning-persona-launched-once` ×2, `needs-decision-on-the-c-line` ×2 | 2026-11-12 | 10, 0 |
 | `orchestrator-issue-fix-records` | 2026-11-12 | 7 | 4 | 1 | `branch-names-the-slice-and-the-issue` ×1 | 2026-11-12 | 0, 6 |
-| `orchestrator-plan-check-seam` | 2026-10-31 | 47 | 43 | 1 | `plan-sent-back-not-edited` (judge) ×1 | 2026-11-11 | 7, 0 |
-| `orchestrator-readiness-gate` | 2026-10-31 | 65 | 61 | 15 | `backward-routes-name-the-checks` (judge) ×13, `stops-at-the-routed-skill-or-reports-the-route` (judge) ×5, `readiness-gate-run-by-the-script` ×4, `a-line-carries-session-and-audit` ×4, `first-failed-check-routed-inline` ×4, `gate-before-the-routed-skill` ×4, and 1 more | 2026-11-11 | 8, 0 |
+| `orchestrator-plan-check-seam` | 2026-10-31 | 51 | 47 | 2 | `plan-sent-back-not-edited` (judge) ×2 | 2026-11-14 | 7, 0 |
+| `orchestrator-readiness-gate` | 2026-10-31 | 65 | 61 | 15 | `backward-routes-name-the-checks` (judge) ×13, `stops-at-the-routed-skill-or-reports-the-route` (judge) ×5, `first-failed-check-routed-inline` ×4, `a-line-carries-session-and-audit` ×4, `readiness-gate-run-by-the-script` ×4, `gate-before-the-routed-skill` ×4, and 1 more | 2026-11-11 | 8, 0 |
 | `orchestrator-readiness-open-item` | 2026-11-09 | 33 | 30 | 6 | `puts-the-blocker-to-the-owner` (judge) ×6 | 2026-11-11 | 5, 0 |
 | `orchestrator-readiness-sources` | 2026-11-09 | 30 | 17 | 0 |  |  | 7, 0 |
 | `orchestrator-readme-stale-not-done` | 2026-11-11 | 8 | 6 | 5 | `three-named-fixes-in-one-batch` (judge) ×5, `one-fixer-for-the-batch` ×1, `gate-on-the-fix` ×1 | 2026-11-13 | 5, 1 |
@@ -687,89 +678,86 @@ Written by `tools/case_history.py` on 2026-11-14 from 6339 result files under `r
 | `orchestrator-route-user-story` | 2026-10-11 | 41 | 41 | 4 | `stops-after-the-routed-step` (judge) ×3, `routes-to-user-story-writeup` ×3, `log-names-row-and-artifact` ×1, `log-written` ×1, `not-vertical-slicing` ×1 | 2026-11-11 | 10, 2 |
 | `orchestrator-runner-handback-unverified` | 2026-11-12 | 7 | 4 | 0 |  |  | 0, 0 |
 | `orchestrator-security-stage` | 2026-10-11 | 36 | 36 | 0 |  |  | 11, 0 |
-| `orchestrator-session-setup` | 2026-11-01 | 40 | 40 | 8 | `not-problem-framing-doc-yet` ×5, `asks-about-the-session-first` (judge) ×5, `routes-to-problem-framing-doc` ×3, `asks-nothing-about-the-session` (judge) ×3 | 2026-11-09 | 10, 0 |
+| `orchestrator-session-setup` | 2026-11-01 | 40 | 40 | 8 | `asks-about-the-session-first` (judge) ×5, `not-problem-framing-doc-yet` ×5, `asks-nothing-about-the-session` (judge) ×3, `routes-to-problem-framing-doc` ×3 | 2026-11-09 | 10, 0 |
 | `orchestrator-superseded-scope-map` | 2026-10-11 | 36 | 36 | 0 |  |  | 11, 0 |
 | `pr-writeup-portal-fines` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `problem-framing-doc-payfine` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `problem-framing-doc-payfine-phase1` | 2026-11-15 | 4 | 4 | 0 |  |  | 0, 0 |
+| `problem-framing-doc-payfine-phase2` | 2026-11-15 | 10 | 4 | 0 |  |  | 0, 0 |
 | `reliability-requirements-neg-review` | 2026-10-11 | 12 | 12 | 0 |  |  | 5, 0 |
 | `reliability-requirements-payfine-phase1` | 2026-10-11 | 4 | 4 | 0 |  |  | 0, 0 |
-| `reliability-requirements-payfine-phase2` | 2026-10-11 | 3 | 3 | 0 |  |  | 0, 0 |
-| `reliability-requirements-payfine-phase2-proceed` | 2026-10-18 | 3 | 3 | 0 |  |  | 0, 0 |
-| `reliability-requirements-payfine-phase2-stop` | 2026-10-17 | 3 | 3 | 1 | `does-not-lay-out-scope-options` (judge) ×1 | 2026-11-01 | 0, 0 |
+| `reliability-requirements-payfine-phase2` | 2026-10-11 | 10 | 10 | 0 |  |  | 0, 0 |
+| `reliability-requirements-payfine-phase2-proceed` | 2026-10-18 | 10 | 10 | 0 |  |  | 0, 0 |
+| `reliability-requirements-payfine-phase2-stop` | 2026-10-17 | 10 | 10 | 3 | `does-not-lay-out-scope-options` (judge) ×3 | 2026-11-14 | 0, 0 |
 | `reliability-requirements-payfine-phase3` | 2026-10-11 | 3 | 3 | 0 |  |  | 0, 0 |
-| `reliability-review-alerts` | 2026-10-11 | 15 | 15 | 1 | `no-false-alarm-burn-rate-alerts` (judge) ×1 | 2026-11-11 | 5, 0 |
 | `reliability-review-catalog` | 2026-10-11 | 18 | 18 | 6 | `reports-nothing-above-low` (judge) ×6 | 2026-11-12 | 11, 0 |
-| `reliability-review-fine-payment` | 2026-10-11 | 15 | 15 | 1 | `no-false-alarm-settled-fine-guard` (judge) ×1 | 2026-11-12 | 5, 0 |
-| `reliability-review-http` | 2026-10-11 | 12 | 12 | 0 |  |  | 5, 0 |
+| `reliability-review-fine-payment` | 2026-10-11 | 19 | 19 | 1 | `no-false-alarm-settled-fine-guard` (judge) ×1 | 2026-11-12 | 5, 0 |
+| `reliability-review-http` | 2026-10-11 | 16 | 16 | 0 |  |  | 5, 0 |
 | `reliability-review-neg-architecture` | 2026-10-11 | 12 | 12 | 0 |  |  | 5, 0 |
 | `reliability-review-neg-security` | 2026-10-11 | 13 | 13 | 0 |  |  | 5, 0 |
-| `reliability-review-nightly` | 2026-10-11 | 21 | 21 | 7 | `no-false-alarm-sms-retry` (judge) ×6, `finds-no-isolation-in-fine-loop` (judge) ×1 | 2026-11-11 | 5, 0 |
+| `reliability-review-nightly` | 2026-10-11 | 25 | 25 | 7 | `no-false-alarm-sms-retry` (judge) ×6, `finds-no-isolation-in-fine-loop` (judge) ×1 | 2026-11-11 | 5, 0 |
 | `reliability-review-nightly-via-agent` | 2026-10-11 | 19 | 19 | 6 | `no-false-alarm-sms-retry` (judge) ×6 | 2026-11-11 | 8, 0 |
-| `reliability-review-portal-pay-pr` | 2026-10-18 | 12 | 12 | 0 |  |  | 5, 0 |
 | `reliability-review-refund-pr` | 2026-11-07 | 16 | 15 | 1 | `no-false-alarm-timeout-is-reported` (judge) ×1 | 2026-11-09 | 5, 0 |
 | `requirements-refinement-open-question` | 2026-10-31 | 11 | 10 | 0 |  |  | 2, 0 |
-| `requirements-refinement-owner-sheet` | 2026-11-09 | 22 | 9 | 0 |  |  | 2, 0 |
-| `requirements-refinement-payfine-phase1` | 2026-10-11 | 12 | 12 | 3 | `does-not-ask-what-the-sources-answer` (judge) ×3 | 2026-11-11 | 5, 0 |
-| `requirements-refinement-payfine-phase2` | 2026-10-11 | 9 | 9 | 8 | `finishes-without-reasking` (judge) ×8 | 2026-11-12 | 2, 0 |
+| `requirements-refinement-owner-sheet` | 2026-11-09 | 26 | 13 | 0 |  |  | 2, 0 |
+| `requirements-refinement-payfine-phase1` | 2026-10-11 | 19 | 19 | 6 | `does-not-ask-what-the-sources-answer` (judge) ×6 | 2026-11-15 | 5, 0 |
+| `requirements-refinement-payfine-phase2` | 2026-10-11 | 13 | 13 | 11 | `finishes-without-reasking` (judge) ×10, `keeps-the-users-trade-off` (judge) ×1 | 2026-11-14 | 2, 0 |
 | `scope-map-self-service` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `screen-design-owner-sheet` | 2026-11-09 | 19 | 9 | 0 |  |  | 5, 0 |
-| `screen-design-payfine` | 2026-10-11 | 8 | 8 | 2 | `copy-rules` (judge) ×2 | 2026-11-11 | 3, 0 |
+| `screen-design-owner-sheet` | 2026-11-09 | 23 | 13 | 0 |  |  | 5, 0 |
+| `screen-design-payfine` | 2026-10-11 | 12 | 12 | 2 | `copy-rules` (judge) ×2 | 2026-11-11 | 3, 0 |
 | `security-requirements-neg-review` | 2026-10-11 | 10 | 10 | 0 |  |  | 3, 0 |
 | `security-requirements-payfine-phase1` | 2026-10-11 | 12 | 12 | 0 |  |  | 2, 0 |
-| `security-requirements-payfine-phase2` | 2026-10-11 | 14 | 14 | 3 | `does-not-decide-the-fork-itself` (judge) ×3 | 2026-11-12 | 5, 0 |
-| `security-requirements-payfine-phase2-proceed` | 2026-10-18 | 9 | 9 | 0 |  |  | 2, 0 |
-| `security-requirements-payfine-phase2-stop` | 2026-10-17 | 9 | 9 | 0 |  |  | 2, 0 |
+| `security-requirements-payfine-phase2` | 2026-10-11 | 21 | 21 | 4 | `does-not-decide-the-fork-itself` (judge) ×4 | 2026-11-14 | 5, 0 |
+| `security-requirements-payfine-phase2-proceed` | 2026-10-18 | 16 | 16 | 0 |  |  | 2, 0 |
+| `security-requirements-payfine-phase2-stop` | 2026-10-17 | 16 | 16 | 0 |  |  | 2, 0 |
 | `security-requirements-payfine-phase3` | 2026-10-11 | 15 | 15 | 13 | `decisions-all-approved` (judge) ×10, `criterion-card-details-never-reach-the-server` (judge) ×4 | 2026-11-12 | 5, 0 |
 | `security-requirements-placeholder-pointer` | 2026-10-31 | 11 | 10 | 0 |  |  | 2, 0 |
 | `security-requirements-source-criterion` | 2026-11-09 | 19 | 9 | 0 |  |  | 5, 0 |
 | `security-review-catalog` | 2026-10-11 | 13 | 13 | 1 | `reports-nothing-above-low` (judge) ×1 | 2026-11-09 | 3, 0 |
-| `security-review-config` | 2026-10-11 | 10 | 10 | 0 |  |  | 4, 0 |
-| `security-review-http` | 2026-10-11 | 10 | 10 | 0 |  |  | 4, 0 |
+| `security-review-config` | 2026-10-11 | 14 | 14 | 0 |  |  | 4, 0 |
 | `security-review-neg-architecture` | 2026-10-11 | 10 | 10 | 0 |  |  | 3, 0 |
 | `security-review-neg-reliability` | 2026-10-11 | 13 | 13 | 0 |  |  | 5, 0 |
-| `security-review-portal-pr` | 2026-10-11 | 16 | 16 | 3 | `pre-existing-issues-not-blocking` (judge) ×3 | 2026-11-11 | 4, 0 |
-| `security-review-reminders` | 2026-10-11 | 10 | 10 | 0 |  |  | 4, 0 |
-| `security-review-source-value` | 2026-11-09 | 16 | 9 | 0 |  |  | 6, 0 |
-| `staleness-audit-docs` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `security-review-portal-pr` | 2026-10-11 | 20 | 20 | 3 | `pre-existing-issues-not-blocking` (judge) ×3 | 2026-11-11 | 4, 0 |
+| `security-review-source-value` | 2026-11-09 | 20 | 13 | 0 |  |  | 6, 0 |
+| `staleness-audit-docs` | 2026-10-11 | 7 | 7 | 3 | `finds-ceremony` (judge) ×3 | 2026-11-15 | 0, 0 |
 | `supply-chain-review-accept-phase1` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `supply-chain-review-accept-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `supply-chain-review-accepted` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `supply-chain-review-build` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
+| `supply-chain-review-accepted` | 2026-10-11 | 4 | 4 | 1 | `no-false-alarm-dev-only-advisory` (judge) ×1 | 2026-11-15 | 0, 0 |
+| `supply-chain-review-build` | 2026-10-11 | 7 | 7 | 1 | `no-false-alarm-manifest-ranges` (judge) ×1 | 2026-11-15 | 0, 0 |
 | `supply-chain-review-build-via-agent` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `supply-chain-review-neg-reliability` | 2026-10-11 | 11 | 11 | 0 |  |  | 5, 0 |
 | `supply-chain-review-neg-security` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `supply-chain-review-workflows` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `tdd-implementation-lite-cancel-hold` | 2026-10-18 | 15 | 15 | 15 | `test-run-after-each-test-edit` ×15, `tests-check-behaviour` (judge) ×1 | 2026-11-12 | 9, 0 |
-| `tdd-implementation-lite-cancel-hold-via-agent` | 2026-10-18 | 30 | 30 | 30 | `test-run-after-each-test-edit` ×30, `final-review-runs` ×11, `escalates-queue-question` (judge) ×7, `tests-check-behaviour` (judge) ×4, `break-and-restore-in-trace` ×2, `no-bash-writes` ×1, and 2 more | 2026-11-12 | 6, 0 |
-| `tdd-implementation-lite-chunk-plan` | 2026-10-24 | 19 | 19 | 11 | `plan-is-vertical-and-inside-the-slice` (judge) ×8, `plan-has-the-shape` (judge) ×5 | 2026-11-12 | 5, 0 |
-| `tdd-implementation-lite-named-fix` | 2026-10-18 | 25 | 25 | 7 | `final-review-runs` ×6, `no-bash-writes` ×1 | 2026-11-11 | 12, 0 |
-| `tdd-implementation-lite-one-chunk` | 2026-11-07 | 19 | 19 | 4 | `ends-on-the-hand-back-line` (judge) ×4, `no-bash-writes` ×1 | 2026-11-13 | 3, 0 |
+| `supply-chain-review-workflows` | 2026-10-11 | 4 | 4 | 0 |  |  | 0, 0 |
+| `tdd-implementation-lite-cancel-hold` | 2026-10-18 | 19 | 19 | 19 | `test-run-after-each-test-edit` ×19, `tests-check-behaviour` (judge) ×1 | 2026-11-14 | 9, 0 |
+| `tdd-implementation-lite-cancel-hold-via-agent` | 2026-10-18 | 34 | 34 | 34 | `test-run-after-each-test-edit` ×34, `final-review-runs` ×14, `escalates-queue-question` (judge) ×7, `tests-check-behaviour` (judge) ×6, `break-and-restore-in-trace` ×2, `no-bash-writes` ×1, and 2 more | 2026-11-14 | 6, 0 |
+| `tdd-implementation-lite-chunk-plan` | 2026-10-24 | 29 | 29 | 14 | `plan-is-vertical-and-inside-the-slice` (judge) ×11, `plan-has-the-shape` (judge) ×5 | 2026-11-14 | 5, 2 |
+| `tdd-implementation-lite-named-fix` | 2026-10-18 | 29 | 29 | 7 | `final-review-runs` ×6, `no-bash-writes` ×1 | 2026-11-11 | 15, 0 |
+| `tdd-implementation-lite-one-chunk` | 2026-11-07 | 29 | 29 | 6 | `ends-on-the-hand-back-line` (judge) ×4, `no-bash-writes` ×1, `one-commit-titled-as-the-chunk` ×1, `hand-back-carries-its-five-fields` ×1 | 2026-11-14 | 6, 0 |
 | `tdd-implementation-lite-rename-fix` | 2026-11-02 | 22 | 22 | 3 | `no-shell-writes-into-the-tree` ×3 | 2026-11-09 | 6, 0 |
 | `technology-bootstrap-phase1` | 2026-10-11 | 10 | 10 | 1 | `asks-only-what-the-first-test-forces` (judge) ×1 | 2026-11-11 | 7, 0 |
 | `technology-bootstrap-phase2` | 2026-10-11 | 19 | 19 | 7 | `asks-only-what-the-first-test-forces` (judge) ×5, `recommends-the-built-in-default-set-once` (judge) ×1, `recommends-ui-framework-and-waits` (judge) ×1 | 2026-11-11 | 4, 0 |
 | `technology-bootstrap-phase3` | 2026-10-11 | 16 | 16 | 9 | `records-non-choices-and-open-categories` (judge) ×9, `records-the-built-in-default-set` (judge) ×2, `writes-nothing-else` ×1 | 2026-11-11 | 4, 0 |
 | `technology-bootstrap-phase3-reject` | 2026-10-14 | 11 | 11 | 6 | `does-not-relitigate` (judge) ×5, `asks-only-what-the-first-test-forces` (judge) ×1 | 2026-11-11 | 4, 0 |
-| `test-quality-review-fines` | 2026-10-11 | 18 | 18 | 9 | `no-false-alarm-fake-ledger` (judge) ×6, `no-false-alarm-exact-tests` (judge) ×5 | 2026-11-12 | 6, 2 |
+| `test-quality-review-fines` | 2026-10-11 | 25 | 25 | 14 | `no-false-alarm-fake-ledger` (judge) ×9, `no-false-alarm-exact-tests` (judge) ×8, `finds-subject-mocked` (judge) ×1 | 2026-11-15 | 6, 2 |
 | `test-quality-review-neg-code-review` | 2026-10-11 | 11 | 11 | 0 |  |  | 3, 0 |
 | `test-quality-review-reminders` | 2026-10-11 | 12 | 12 | 0 |  |  | 3, 1 |
-| `test-quality-review-seam-fake` | 2026-10-31 | 24 | 20 | 0 |  |  | 6, 4 |
+| `test-quality-review-seam-fake` | 2026-10-31 | 28 | 24 | 0 |  |  | 9, 4 |
 | `user-facing-docs-renewals` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `user-story-writeup-payfine-phase1` | 2026-10-11 | 7 | 7 | 0 |  |  | 3, 0 |
+| `user-story-writeup-payfine-phase1` | 2026-10-11 | 11 | 11 | 0 |  |  | 3, 0 |
 | `user-story-writeup-payfine-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `vertical-slicing-handback` | 2026-10-11 | 11 | 11 | 0 |  |  | 4, 0 |
+| `vertical-slicing-handback` | 2026-10-11 | 16 | 16 | 1 | `leaves-the-what-to-requirements` (judge) ×1 | 2026-11-15 | 4, 0 |
 | `vertical-slicing-no-requirements` | 2026-10-11 | 11 | 11 | 0 |  |  | 4, 0 |
 | `vertical-slicing-no-screen` | 2026-11-01 | 20 | 17 | 1 | `accessibility-line-matches-the-thin-path` (judge) ×1 | 2026-11-01 | 4, 0 |
-| `vertical-slicing-owner-sheet` | 2026-11-09 | 25 | 18 | 2 | `consults-acceptance-criteria` ×2 | 2026-11-11 | 6, 1 |
+| `vertical-slicing-owner-sheet` | 2026-11-09 | 29 | 22 | 2 | `consults-acceptance-criteria` ×2 | 2026-11-11 | 6, 1 |
 | `vertical-slicing-payfine-phase1` | 2026-10-11 | 11 | 11 | 0 |  |  | 4, 1 |
-| `why-comments-collect-fine` | 2026-10-11 | 4 | 4 | 0 |  |  | 0, 3 |
+| `why-comments-collect-fine` | 2026-10-11 | 8 | 8 | 0 |  |  | 0, 3 |
 
-Of 166 cases, 78 have failed at least once since their bar (however few their runs), 62 never have over 6 or more completed runs, and 26 have not failed but have fewer than 6 runs to go by.
+Of 160 cases, 84 have failed at least once since their bar (however few their runs), 56 never have over 6 or more completed runs, and 20 have not failed but have fewer than 6 runs to go by.
 
-**Never failed since the bar (62):** `acceptance-criteria-payfine`, `accessibility-review-neg-readability`, `architecture-design-neg-review`, `architecture-design-owner-sheet`, `architecture-design-payfine-phase1`, `architecture-design-payfine-via-agent`, `architecture-review-neg-security-review`, `architecture-review-neg-test-quality-review`, `chunk-runner-gate-deviation`, `chunk-runner-gate-outside`, `chunk-runner-replay-not-the-handback`, `chunk-runner-replay-unheld-commit`, `code-review-days-left-pr`, `code-review-neg-architecture`, `design-system-payfine-phase1`, `design-system-payfine-phase2`, `design-system-payfine-review`, `external-review-triage-cancel-hold`, `library-app-fines-review`, `library-app-members-review`, `library-app-notifications-review`, `library-app-reporting-pr`, `library-app-reporting-review`, `library-app-structure-review`, `map-query-consults`, `operational-readiness-neg-reliability`, `operational-readiness-neg-security`, `orchestrator-asks-for-target`, `orchestrator-chunk-runner-handback`, `orchestrator-readiness-sources`, `orchestrator-route-design-system`, `orchestrator-route-open-pr`, `orchestrator-security-stage`, `orchestrator-superseded-scope-map`, `reliability-requirements-neg-review`, `reliability-review-http`, `reliability-review-neg-architecture`, `reliability-review-neg-security`, `reliability-review-portal-pay-pr`, `requirements-refinement-open-question`, `requirements-refinement-owner-sheet`, `screen-design-owner-sheet`, `security-requirements-neg-review`, `security-requirements-payfine-phase1`, `security-requirements-payfine-phase2-proceed`, `security-requirements-payfine-phase2-stop`, `security-requirements-placeholder-pointer`, `security-requirements-source-criterion`, `security-review-config`, `security-review-http`, `security-review-neg-architecture`, `security-review-neg-reliability`, `security-review-reminders`, `security-review-source-value`, `supply-chain-review-neg-reliability`, `test-quality-review-neg-code-review`, `test-quality-review-reminders`, `test-quality-review-seam-fake`, `user-story-writeup-payfine-phase1`, `vertical-slicing-handback`, `vertical-slicing-no-requirements`, `vertical-slicing-payfine-phase1`.
+**Never failed since the bar (56):** `acceptance-criteria-payfine`, `accessibility-review-neg-readability`, `architecture-design-neg-review`, `architecture-design-payfine-phase1`, `architecture-design-payfine-via-agent`, `architecture-review-neg-security-review`, `architecture-review-neg-test-quality-review`, `chunk-runner-gate-deviation`, `chunk-runner-gate-outside`, `chunk-runner-replay-not-the-handback`, `chunk-runner-replay-unheld-commit`, `code-review-neg-architecture`, `design-system-payfine-phase1`, `design-system-payfine-phase2`, `design-system-payfine-review`, `external-review-triage-cancel-hold`, `library-app-fines-review`, `library-app-reporting-pr`, `library-app-structure-review`, `map-query-consults`, `operational-readiness-neg-reliability`, `operational-readiness-neg-security`, `orchestrator-asks-for-target`, `orchestrator-chunk-runner-handback`, `orchestrator-readiness-sources`, `orchestrator-route-design-system`, `orchestrator-route-open-pr`, `orchestrator-security-stage`, `orchestrator-superseded-scope-map`, `reliability-requirements-neg-review`, `reliability-requirements-payfine-phase2`, `reliability-requirements-payfine-phase2-proceed`, `reliability-review-http`, `reliability-review-neg-architecture`, `reliability-review-neg-security`, `requirements-refinement-open-question`, `requirements-refinement-owner-sheet`, `screen-design-owner-sheet`, `security-requirements-neg-review`, `security-requirements-payfine-phase1`, `security-requirements-payfine-phase2-proceed`, `security-requirements-payfine-phase2-stop`, `security-requirements-placeholder-pointer`, `security-requirements-source-criterion`, `security-review-config`, `security-review-neg-architecture`, `security-review-neg-reliability`, `security-review-source-value`, `supply-chain-review-neg-reliability`, `test-quality-review-neg-code-review`, `test-quality-review-reminders`, `test-quality-review-seam-fake`, `user-story-writeup-payfine-phase1`, `vertical-slicing-no-requirements`, `vertical-slicing-payfine-phase1`, `why-comments-collect-fine`.
 
-**Too few runs to say (26, no failure in under 6 runs):** `adr-neg-rename`, `adr-payment-gateway`, `map-query-no-map`, `operational-readiness-ops-phase1`, `operational-readiness-ops-phase2`, `operational-readiness-release-phase1`, `operational-readiness-release-phase2`, `orchestrator-runner-handback-unverified`, `pr-writeup-portal-fines`, `problem-framing-doc-payfine`, `reliability-requirements-payfine-phase1`, `reliability-requirements-payfine-phase2`, `reliability-requirements-payfine-phase2-proceed`, `reliability-requirements-payfine-phase3`, `scope-map-self-service`, `staleness-audit-docs`, `supply-chain-review-accept-phase1`, `supply-chain-review-accept-phase2`, `supply-chain-review-accepted`, `supply-chain-review-build`, `supply-chain-review-build-via-agent`, `supply-chain-review-neg-security`, `supply-chain-review-workflows`, `user-facing-docs-renewals`, `user-story-writeup-payfine-phase2`, `why-comments-collect-fine`.
+**Too few runs to say (20, no failure in under 6 runs):** `adr-neg-rename`, `adr-payment-gateway`, `operational-readiness-ops-phase1`, `operational-readiness-ops-phase2`, `operational-readiness-release-phase1`, `operational-readiness-release-phase2`, `orchestrator-runner-handback-unverified`, `pr-writeup-portal-fines`, `problem-framing-doc-payfine-phase1`, `problem-framing-doc-payfine-phase2`, `reliability-requirements-payfine-phase1`, `reliability-requirements-payfine-phase3`, `scope-map-self-service`, `supply-chain-review-accept-phase1`, `supply-chain-review-accept-phase2`, `supply-chain-review-build-via-agent`, `supply-chain-review-neg-security`, `supply-chain-review-workflows`, `user-facing-docs-renewals`, `user-story-writeup-payfine-phase2`.
 
-**In the history with no case directory now (10, retired or renamed, not in the table):** `orchestrator-chunk-review-round`, `orchestrator-gate-deviation`, `orchestrator-gate-outside`, `orchestrator-one-fix-round`, `probe-sandbox`, `tdd-implementation-cancel-hold`, `tdd-implementation-cancel-hold-via-agent`, `tdd-implementation-chunk-plan`, `tdd-implementation-named-fix`, `tdd-implementation-one-chunk`.
+**In the history with no case directory now (17, retired or renamed, not in the table):** `library-app-members-review`, `library-app-notifications-review`, `library-app-reporting-review`, `orchestrator-chunk-review-round`, `orchestrator-gate-deviation`, `orchestrator-gate-outside`, `orchestrator-one-fix-round`, `probe-sandbox`, `reliability-review-alerts`, `reliability-review-portal-pay-pr`, `security-review-http`, `security-review-reminders`, `tdd-implementation-cancel-hold`, `tdd-implementation-cancel-hold-via-agent`, `tdd-implementation-chunk-plan`, `tdd-implementation-named-fix`, `tdd-implementation-one-chunk`.
 <!-- case-history:end -->
 
 ### Rule deletions on a skill
@@ -977,19 +965,19 @@ errored because a grader threw was paid for and is priced, as
 `case_history.py` counts it; a run with no grader result is not.)
 
 <!-- case-sort:start -->
-Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_reading.json` and the results under `results/`, `kad-eval-results-archive/`; cost and time are means over the completed runs since 2026-11-10 (`*`: no run since, every held run).
+Written by `tools/case_sort.py` on 2026-11-15 from the cases, `tools/case_reading.json` and the results under `results/`, `kad-eval-results-archive/`; cost and time are means over the completed runs since 2026-11-10 (`*`: no run since, every held run).
 
 | Case | Skill | Tool checks | Judges | A tool could decide | Prompt states the rule | Agent $ | Judges $ | Seconds (agent + judges) | Failed since the bar | Deletions that failed it |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `acceptance-criteria-payfine` | acceptance-criteria | 1 tool call | 2 | 0 of 2 | no | 0.07 | 0.01 | 18 (9 + 9) | 0 of 11 | no pass on the skill |
+| `acceptance-criteria-payfine` | acceptance-criteria | 1 tool call | 1 | 0 of 1 | no | 0.07 | 0.01 | 17 (9 + 7) | 0 of 15 | no pass on the skill |
 | `accessibility-review-ac-walk` | accessibility-review | 5 regex, 2 tool call, 1 file | 1 | 0 of 1 | yes: "Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project [...] and `PORTAL_DATA` inside that folder" | 0.44 | 0.01 | 65 | 1 of 14 | no pass on the skill |
 | `accessibility-review-neg-readability` | accessibility-review | 1 tool call | 0 |  | no | 0.06 | 0.00 | 9 (8 + 1) | 0 of 13 | no pass on the skill |
-| `accessibility-review-payfine` | accessibility-review | 3 regex, 1 tool call, 1 file | 9 | 0 of 9 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.40 | 96 (65 + 31) | 7 of 26 | no pass on the skill |
-| `accessibility-review-payfine-subtle` | accessibility-review | 3 regex, 1 tool call, 1 file | 9 | 0 of 9 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.40 | 99 (68 + 31) | 5 of 26 | no pass on the skill |
+| `accessibility-review-payfine` | accessibility-review | 3 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.37 | 97 (68 + 29) | 7 of 30 | no pass on the skill |
+| `accessibility-review-payfine-subtle` | accessibility-review | 3 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.35 | 100 (72 + 28) | 5 of 30 | no pass on the skill |
 | `adr-neg-rename` | adr | 1 regex, 1 tool call | 1 | 0 of 1 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `adr-payment-gateway` | adr | 2 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.08 | 0.01 | 13 (11 + 2) | 0 of 4 (few runs) | no pass on the skill |
 | `architecture-design-neg-review` | architecture-design | 1 tool call | 0 |  | no | 0.09 | 0.00 | 15 (15 + 0) | 0 of 17 | no pass on the skill |
-| `architecture-design-owner-sheet` | architecture-design | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.21 | 0.01 | 38 (38 + 4) | 0 of 13 | no pass on the skill |
+| `architecture-design-owner-sheet` | architecture-design | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.22 | 0.01 | 44 (44 + 4) | 1 of 18 | no pass on the skill |
 | `architecture-design-payfine-phase1` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.18 | 0.02 | 38 (32 + 9) | 0 of 24 | no pass on the skill |
 | `architecture-design-payfine-phase2` | architecture-design | 1 regex | 9 | 0 of 9 | no | 0.26 | 0.32 | 102 (67 + 35) | 20 of 25 | no pass on the skill |
 | `architecture-design-payfine-via-agent` | architecture-design | 3 regex, 1 tool call | 1 | 0 of 1 | partly: "its architecture map is at `docs/architecture-map.md`" | 0.22 | 0.02 | 45 | 0 of 19 | no pass on the skill |
@@ -1007,12 +995,12 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `chunk-runner-waits-for-handback` | chunk-runner | 4 regex, 8 tool call | 0 |  | yes: "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent" | 0.59 | 0.00 | 85 | 6 of 15 | 2 of 19: `handback-one-line`, `hash-is-real` |
 | `code-review-catalog` | code-review | 1 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.12 | 0.02 | 28 (22 + 7) | 9 of 19 | no pass on the skill |
 | `code-review-comments-chunk` | code-review | 3 regex, 3 tool call, 1 file | 3 | 0 of 3 | partly: "Write one report in the shared finding format [...] and hand back the counts and the path" | 0.24 | 0.06 | 48 (37 + 13) | 20 of 43 | no pass on the skill |
-| `code-review-days-left-pr` | code-review | 1 regex, 1 tool call, 1 file | 7 | 0 of 7 | no | 0.15 | 0.12 | 57 (33 + 24) | 0 of 10 | no pass on the skill |
-| `code-review-fine-notices-pr` | code-review | 1 regex, 2 tool call, 1 file | 8 | 0 of 8 | no | 0.15 | 0.20 | 56 (31 + 24) | 7 of 13 | no pass on the skill |
+| `code-review-days-left-pr` | code-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.14 | 0.13 | 53 (32 + 21) | 3 of 17 | no pass on the skill |
+| `code-review-fine-notices-pr` | code-review | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.15 | 0.19 | 54 (32 + 22) | 9 of 17 | no pass on the skill |
 | `code-review-fine-notices-pr-via-agent` | code-review | 2 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.21 | 0.12 | 73 | 19 of 20 | no pass on the skill |
-| `code-review-fines-report-pr` | code-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.16 | 0.11 | 58 (42 + 16) | 2 of 13 | no pass on the skill |
+| `code-review-fines-report-pr` | code-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.16 | 0.14 | 62 (44 + 18) | 3 of 17 | no pass on the skill |
 | `code-review-neg-architecture` | code-review | 1 tool call | 0 |  | no | 0.17 | 0.00 | 35 (35 + 0) | 0 of 11 | no pass on the skill |
-| `code-review-structural-high-at-d` | code-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.06 | 69 (53 + 16) | 4 of 5 (few runs) | no pass on the skill |
+| `code-review-structural-high-at-d` | code-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.06 | 67 (54 + 13) | 4 of 9 | no pass on the skill |
 | `delegation-consult-with-file` | reliability-requirements | 4 regex, 2 tool call | 1 | 0 of 1 | yes: "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence" | 0.15 | 0.03 | 29 (20 + 10) | 11 of 21 | no pass on the skill |
 | `delegation-consult-without-file` | reliability-requirements | 1 regex, 2 tool call | 1 | 0 of 1 | no | 0.12 | 0.02 | 17 (11 + 6) | 4 of 19 | no pass on the skill |
 | `delivery-ci-red-not-done` | delivery | 5 regex, 3 tool call, 1 file | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.39 | 0.03 | 53 (42 + 12) | 2 of 7 | no pass on the skill |
@@ -1020,20 +1008,17 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `design-system-payfine-phase2` | design-system | 2 regex, 2 file | 4 | 0 of 4 | no | 0.18 | 0.04 | 59 (46 + 12) | 0 of 7 | no pass on the skill |
 | `design-system-payfine-phase3` | design-system | 3 regex, 1 file | 5 | 0 of 5 | no | 0.31 | 0.26 | 132 (91 + 39) | 7 of 16 | no pass on the skill |
 | `design-system-payfine-reference` | design-system | 3 regex, 1 tool call | 2 | 0 of 2 | no | 0.22 | 0.01 | 75 (68 + 7) | 1 of 6 | no pass on the skill |
-| `design-system-payfine-review` | design-system | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.18 | 0.06 | 60 (49 + 12) | 0 of 7 | no pass on the skill |
+| `design-system-payfine-review` | design-system | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.17 | 0.06 | 62 (50 + 12) | 0 of 11 | no pass on the skill |
 | `external-review-triage-cancel-hold` | external-review-triage | 2 regex, 1 tool call, 1 file | 3 | 0 of 3 | partly: "Write your report to [...] and hand back the counts and the path" | 0.35 | 0.07 | 54 (47 + 8) | 0 of 10 | no pass on the skill |
 | `library-app-catalog-review` | architecture-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.19 | 0.04 | 50 (42 + 8) | 3 of 14 | no pass on the skill |
-| `library-app-fines-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.27 | 0.13 | 84 (71 + 12) | 0 of 9 | no pass on the skill |
-| `library-app-lending-review` | architecture-review | 1 regex, 1 tool call, 1 file | 6 | 0 of 6 | no | 0.25 | 0.32 | 81 (60 + 21) | 4 of 15 | no pass on the skill |
+| `library-app-fines-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.27 | 0.12 | 81 (70 + 11) | 0 of 13 | no pass on the skill |
+| `library-app-lending-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.25 | 0.28 | 80 (60 + 20) | 5 of 22 | no pass on the skill |
 | `library-app-lending-review-via-agent` | architecture-review | 1 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "return its findings report verbatim [...] (including its opening section on the importance ordering it assumed)" | 0.38 | 0.20 | 132 | 1 of 12 | no pass on the skill |
-| `library-app-members-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.09 | 60 (51 + 9) | 0 of 9 | no pass on the skill |
-| `library-app-notifications-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.22 | 0.08 | 63 (54 + 9) | 0 of 9 | no pass on the skill |
 | `library-app-reporting-pr` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.06 | 57 (48 + 9) | 0 of 9 | no pass on the skill |
-| `library-app-reporting-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.22 | 0.08 | 63 (54 + 9) | 0 of 9 | no pass on the skill |
-| `library-app-structure-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.30 | 0.18 | 84 (72 + 12) | 0 of 9 | no pass on the skill |
+| `library-app-structure-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.31 | 0.18 | 96 (83 + 13) | 0 of 13 | no pass on the skill |
 | `map-query-consults` | map-query | 1 regex, 1 tool call | 4 | 0 of 4 | no | 0.10 | 0.03 | 23 (12 + 11) | 0 of 8 | no pass on the skill |
 | `map-query-no-map` | map-query | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.07 | 0.01 | 8 (5 + 3) | 1 of 9 | no pass on the skill |
-| `map-update-cancel-hold` | map-update | 5 regex, 1 tool call | 4 | 0 of 4 | no | 0.18 | 0.54 | 47 (23 + 24) | 21 of 22 | no pass on the skill |
+| `map-update-cancel-hold` | map-update | 5 regex, 1 tool call | 3 | 0 of 3 | no | 0.18 | 0.55 | 44 (21 + 22) | 25 of 26 | no pass on the skill |
 | `operational-readiness-neg-reliability` | operational-readiness | 1 tool call | 0 |  | no | 0.10 | 0.00 | 19 (19 + 1) | 0 of 11 | no pass on the skill |
 | `operational-readiness-neg-security` | operational-readiness | 1 tool call | 0 |  | no | 0.06 | 0.00 | 12 (12 + 0) | 0 of 10 | no pass on the skill |
 | `operational-readiness-ops-phase1` | operational-readiness | 1 tool call | 1 | 0 of 1 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
@@ -1075,30 +1060,29 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `orchestrator-session-setup` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.23 | 0.01 | 22 (17 + 5) | 8 of 40 | no pass on the skill |
 | `orchestrator-superseded-scope-map` | orchestrator | 4 tool call, 1 file | 1 | 0 of 1 | no | 0.27 | 0.01 | 35 (31 + 4) | 0 of 36 | no pass on the skill |
 | `pr-writeup-portal-fines` | pr-writeup | 1 tool call | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `problem-framing-doc-payfine` | problem-framing-doc | 1 tool call, 1 file | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `problem-framing-doc-payfine-phase1` | problem-framing-doc | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.06 | 0.01 | 15 (7 + 8) | 0 of 4 (few runs) | no pass on the skill |
+| `problem-framing-doc-payfine-phase2` | problem-framing-doc | 1 regex, 1 file | 3 | 0 of 3 | no | 0.07 | 0.06 | 30 (13 + 17) | 0 of 4 (few runs) | no pass on the skill |
 | `reliability-requirements-neg-review` | reliability-requirements | 1 tool call | 0 |  | no | 0.10 | 0.00 | 23 (23 + 0) | 0 of 12 | no pass on the skill |
 | `reliability-requirements-payfine-phase1` | reliability-requirements | 1 tool call | 2 | 0 of 2 | no | 0.12* | 0.03 | 25 (19 + 7) | 0 of 4 (few runs) | no pass on the skill |
 | `reliability-requirements-payfine-phase2` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.13 | 0.06 | 38 (32 + 7) | 0 of 10 | no pass on the skill |
 | `reliability-requirements-payfine-phase2-proceed` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.14 | 0.06 | 41 (34 + 7) | 0 of 10 | no pass on the skill |
 | `reliability-requirements-payfine-phase2-stop` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.11 | 0.05 | 23 (14 + 9) | 3 of 10 | no pass on the skill |
 | `reliability-requirements-payfine-phase3` | reliability-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21* | 0.38 | 83 (52 + 31) | 0 of 3 (few runs) | no pass on the skill |
-| `reliability-review-alerts` | reliability-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.28 | 0.12 | 104 (85 + 19) | 1 of 15 | no pass on the skill |
 | `reliability-review-catalog` | reliability-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.07 | 71 (62 + 8) | 6 of 18 | no pass on the skill |
-| `reliability-review-fine-payment` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.24 | 0.14 | 76 (62 + 14) | 1 of 15 | no pass on the skill |
-| `reliability-review-http` | reliability-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.33 | 0.19 | 112 (93 + 18) | 0 of 12 | no pass on the skill |
+| `reliability-review-fine-payment` | reliability-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.23 | 0.12 | 74 (62 + 12) | 1 of 19 | no pass on the skill |
+| `reliability-review-http` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.34 | 0.19 | 120 (101 + 19) | 0 of 16 | no pass on the skill |
 | `reliability-review-neg-architecture` | reliability-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 20 (20 + 1) | 0 of 12 | no pass on the skill |
 | `reliability-review-neg-security` | reliability-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 18 (18 + 0) | 0 of 13 | no pass on the skill |
-| `reliability-review-nightly` | reliability-review | 1 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.32 | 0.48 | 118 (91 + 27) | 7 of 21 | no pass on the skill |
+| `reliability-review-nightly` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.33 | 0.40 | 124 (100 + 24) | 7 of 25 | no pass on the skill |
 | `reliability-review-nightly-via-agent` | reliability-review | 1 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.50 | 0.38 | 186 | 6 of 19 | no pass on the skill |
-| `reliability-review-portal-pay-pr` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.25 | 0.11 | 74 (62 + 12) | 0 of 12 | no pass on the skill |
 | `reliability-review-refund-pr` | reliability-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.23 | 0.08 | 68 (53 + 15) | 1 of 15 | no pass on the skill |
 | `requirements-refinement-open-question` | requirements-refinement | 1 regex, 1 tool call | 3 | 0 of 3 | no | 0.11 | 0.02 | 26 (16 + 10) | 0 of 10 | no pass on the skill |
-| `requirements-refinement-owner-sheet` | requirements-refinement | 2 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.13 | 0.01 | 31 (27 + 4) | 0 of 9 | no pass on the skill |
-| `requirements-refinement-payfine-phase1` | requirements-refinement | 1 tool call | 4 | 0 of 4 | no | 0.11 | 0.03 | 30 (15 + 15) | 3 of 12 | no pass on the skill |
+| `requirements-refinement-owner-sheet` | requirements-refinement | 2 regex, 1 tool call | 1 | 0 of 1 | no | 0.13 | 0.01 | 31 (27 + 4) | 0 of 13 | no pass on the skill |
+| `requirements-refinement-payfine-phase1` | requirements-refinement | 1 tool call | 3 | 0 of 3 | no | 0.11 | 0.04 | 28 (16 + 12) | 6 of 19 | no pass on the skill |
 | `requirements-refinement-payfine-phase2` | requirements-refinement | 1 regex, 1 file | 7 | 0 of 7 | no | 0.13 | 0.12 | 55 (24 + 31) | 11 of 13 | no pass on the skill |
 | `scope-map-self-service` | scope-map | 1 tool call, 1 file | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `screen-design-owner-sheet` | screen-design | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.01 | 89 (85 + 4) | 0 of 9 | no pass on the skill |
-| `screen-design-payfine` | screen-design | 3 regex, 2 tool call, 1 file | 7 | 0 of 7 | no | 0.30 | 0.10 | 110 (83 + 27) | 2 of 8 | no pass on the skill |
+| `screen-design-owner-sheet` | screen-design | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.30 | 0.01 | 90 (87 + 4) | 0 of 13 | no pass on the skill |
+| `screen-design-payfine` | screen-design | 3 regex, 2 tool call, 1 file | 6 | 0 of 6 | no | 0.29 | 0.09 | 114 (86 + 28) | 2 of 12 | no pass on the skill |
 | `security-requirements-neg-review` | security-requirements | 1 tool call | 0 |  | no | 0.06 | 0.00 | 13 (13 + 0) | 0 of 10 | no pass on the skill |
 | `security-requirements-payfine-phase1` | security-requirements | 1 tool call | 2 | 0 of 2 | no | 0.14 | 0.02 | 33 (24 + 9) | 0 of 12 | no pass on the skill |
 | `security-requirements-payfine-phase2` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.15 | 0.08 | 43 (31 + 12) | 4 of 21 | no pass on the skill |
@@ -1108,22 +1092,20 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `security-requirements-placeholder-pointer` | security-requirements | 5 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.03 | 103 (100 + 4) | 0 of 10 | no pass on the skill |
 | `security-requirements-source-criterion` | security-requirements | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | partly: "nothing from that file may end up in the repository" | 0.29 | 0.03 | 95 (90 + 5) | 0 of 9 | no pass on the skill |
 | `security-review-catalog` | security-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.20 | 0.04 | 57 (47 + 10) | 1 of 13 | no pass on the skill |
-| `security-review-config` | security-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.32 | 0.23 | 113 (94 + 19) | 0 of 10 | no pass on the skill |
-| `security-review-http` | security-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.28 | 0.15 | 89 (73 + 16) | 0 of 10 | no pass on the skill |
+| `security-review-config` | security-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.32 | 0.19 | 112 (95 + 16) | 0 of 14 | no pass on the skill |
 | `security-review-neg-architecture` | security-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 20 (20 + 0) | 0 of 10 | no pass on the skill |
 | `security-review-neg-reliability` | security-review | 1 tool call | 0 |  | no | 0.11 | 0.00 | 28 (28 + 1) | 0 of 13 | no pass on the skill |
-| `security-review-portal-pr` | security-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.19 | 0.15 | 61 (43 + 18) | 3 of 16 | no pass on the skill |
-| `security-review-reminders` | security-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.22 | 0.07 | 66 (54 + 12) | 0 of 10 | no pass on the skill |
-| `security-review-source-value` | security-review | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | no | 0.15 | 0.01 | 30 (25 + 4) | 0 of 9 | no pass on the skill |
-| `staleness-audit-docs` | staleness-audit | 1 tool call | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `security-review-portal-pr` | security-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.19 | 0.14 | 59 (42 + 17) | 3 of 20 | no pass on the skill |
+| `security-review-source-value` | security-review | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | no | 0.15 | 0.02 | 31 (27 + 4) | 0 of 13 | no pass on the skill |
+| `staleness-audit-docs` | staleness-audit | 1 tool call | 4 | 0 of 4 | no | 0.12 | 0.07 | 40 (26 + 15) | 3 of 7 | no pass on the skill |
 | `supply-chain-review-accept-phase1` | supply-chain-review | 1 tool call | 2 | 0 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `supply-chain-review-accept-phase2` | supply-chain-review | 0 | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `supply-chain-review-accepted` | supply-chain-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `supply-chain-review-build` | supply-chain-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-accepted` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.20 | 0.12 | 70 (59 + 11) | 1 of 4 (few runs) | no pass on the skill |
+| `supply-chain-review-build` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.11 | 98 (85 + 13) | 1 of 7 | no pass on the skill |
 | `supply-chain-review-build-via-agent` | supply-chain-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `supply-chain-review-neg-reliability` | supply-chain-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 20 (20 + 0) | 0 of 11 | no pass on the skill |
 | `supply-chain-review-neg-security` | supply-chain-review | 1 tool call | 0 |  | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `supply-chain-review-workflows` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
+| `supply-chain-review-workflows` | supply-chain-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.20 | 0.09 | 70 (61 + 9) | 0 of 4 (few runs) | no pass on the skill |
 | `tdd-implementation-lite-cancel-hold` | tdd-implementation-lite | 13 regex, 2 tool call, 4 tool order, 1 file | 6 | 0 of 6 | no | 0.41 | 0.08 | 92 (65 + 27) | 19 of 19 | no pass on the skill |
 | `tdd-implementation-lite-cancel-hold-via-agent` | tdd-implementation-lite | 14 regex, 2 tool call, 2 tool order, 1 file | 6 | 0 of 6 | no | 0.39 | 0.09 | 106 | 34 of 34 | no pass on the skill |
 | `tdd-implementation-lite-chunk-plan` | tdd-implementation-lite | 3 regex, 2 tool call, 1 file | 2 | 0 of 2 | partly: "Write the chunk plan [...] and build nothing" | 0.19 | 0.06 | 53 (32 + 21) | 14 of 29 | no pass on the skill |
@@ -1134,31 +1116,31 @@ Written by `tools/case_sort.py` on 2026-11-14 from the cases, `tools/case_readin
 | `technology-bootstrap-phase2` | technology-bootstrap | 3 regex | 4 | 0 of 4 | partly: "pick the one where that's the default [...] Give me your recommendations for the whole set in one message rather than one at a time" | 0.15 | 0.07 | 78 (55 + 23) | 7 of 19 | no pass on the skill |
 | `technology-bootstrap-phase3` | technology-bootstrap | 1 regex, 1 file | 4 | 0 of 4 | no | 0.14 | 0.08 | 38 (19 + 19) | 9 of 16 | no pass on the skill |
 | `technology-bootstrap-phase3-reject` | technology-bootstrap | 1 regex, 1 file | 5 | 0 of 5 | no | 0.15 | 0.08 | 43 (29 + 14) | 6 of 11 | no pass on the skill |
-| `test-quality-review-fines` | test-quality-review | 1 regex, 1 tool call, 1 file | 7 | 0 of 7 | no | 0.19 | 0.29 | 76 (49 + 27) | 9 of 18 | no pass on the skill |
+| `test-quality-review-fines` | test-quality-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.19 | 0.25 | 82 (53 + 28) | 14 of 25 | no pass on the skill |
 | `test-quality-review-neg-code-review` | test-quality-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 22 (22 + 1) | 0 of 11 | no pass on the skill |
 | `test-quality-review-reminders` | test-quality-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.15 | 0.05 | 42 (32 + 9) | 0 of 12 | no pass on the skill |
 | `test-quality-review-seam-fake` | test-quality-review | 3 regex, 1 tool call, 1 file | 3 | 0 of 3 | partly: "Write your report in the shared finding format [...] and hand back the counts and the path" | 0.19 | 0.06 | 44 (32 + 12) | 0 of 24 | no pass on the skill |
 | `user-facing-docs-renewals` | user-facing-docs | 1 tool call, 1 file | 2 | 0 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `user-story-writeup-payfine-phase1` | user-story-writeup | 1 tool call | 2 | 0 of 2 | no | 0.06 | 0.01 | 13 (6 + 7) | 0 of 7 | no pass on the skill |
+| `user-story-writeup-payfine-phase1` | user-story-writeup | 1 tool call | 1 | 0 of 1 | no | 0.06 | 0.01 | 13 (7 + 6) | 0 of 11 | no pass on the skill |
 | `user-story-writeup-payfine-phase2` | user-story-writeup | 1 regex, 1 file | 3 | 0 of 3 | partly: "Don't create the issue yourself" |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `vertical-slicing-handback` | vertical-slicing | 1 tool call | 4 | 0 of 4 | no | 0.17 | 0.02 | 45 (32 + 13) | 0 of 11 | no pass on the skill |
+| `vertical-slicing-handback` | vertical-slicing | 1 tool call | 3 | 0 of 3 | no | 0.15 | 0.02 | 52 (38 + 14) | 1 of 16 | no pass on the skill |
 | `vertical-slicing-no-requirements` | vertical-slicing | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.09 | 0.01 | 12 (6 + 6) | 0 of 11 | no pass on the skill |
 | `vertical-slicing-no-screen` | vertical-slicing | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.17 | 0.02 | 41 (35 + 7) | 1 of 17 | no pass on the skill |
-| `vertical-slicing-owner-sheet` | vertical-slicing | 2 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.15 | 0.01 | 41 (32 + 9) | 2 of 18 | no pass on the skill |
+| `vertical-slicing-owner-sheet` | vertical-slicing | 2 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.15 | 0.02 | 42 (33 + 9) | 2 of 22 | no pass on the skill |
 | `vertical-slicing-payfine-phase1` | vertical-slicing | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.14 | 0.04 | 44 (27 + 17) | 0 of 11 | no pass on the skill |
-| `why-comments-collect-fine` | why-comments | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.07* | 0.02 | 35 (14 + 21) | 0 of 4 (few runs) | no pass on the skill |
+| `why-comments-collect-fine` | why-comments | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.08 | 0.04 | 25 (14 + 12) | 0 of 8 | no pass on the skill |
 
-**One run of every case:** $48.13 over the 148 cases with a completed run held (agent $38.88, judges $9.26, 19% judges); $47.30 over the 145 with a run since 2026-11-10. 18 cases have no completed run held and are not priced.
+**One run of every case:** $46.81 over the 147 cases with a completed run held (agent $38.03, judges $8.77, 19% judges); $46.07 over the 145 with a run since 2026-11-10. 13 cases have no completed run held and are not priced.
 
-**Graders:** 435 judges and 684 tool checks over 166 cases; 24 cases have no judge.
+**Graders:** 372 judges and 664 tool checks over 160 cases; 24 cases have no judge.
 
-**Judges a tool could decide:** 0 of 435, in 0 cases; 0 cases would be left with no judge. Their share of the judge cost, split evenly within each case (an estimate): $0.00 per run of every case.
+**Judges a tool could decide:** 0 of 372, in 0 cases; 0 cases would be left with no judge. Their share of the judge cost, split evenly within each case (an estimate): $0.00 per run of every case.
 
-**Runs that failed only on a judge:** of 2985 completed runs since the bars, 668 failed; 437 of those failed on judges alone, and 0 on judges a tool could decide alone ($0.00 of runs at today's cost per run): none.
+**Runs that failed only on a judge:** of 3067 completed runs since the bars, 693 failed; 458 of those failed on judges alone, and 0 on judges a tool could decide alone ($0.00 of runs at today's cost per run): none.
 
-**Prompt states the rule it grades:** yes 3, partly 28, no 135.
+**Prompt states the rule it grades:** yes 3, partly 28, no 129.
 
-**Never failed since the bar (6 or more runs):** 64 cases, $14.68 of one run of every case. **Never failed and $0.40 or more a run (8, $3.82):** `chunk-runner-gate-outside` $0.55, `security-review-config` $0.55, `reliability-review-http` $0.51, `library-app-structure-review` $0.48, `chunk-runner-replay-not-the-handback` $0.47, `security-review-http` $0.43, `external-review-triage-cancel-hold` $0.42, `library-app-fines-review` $0.41.
+**Never failed since the bar (6 or more runs):** 56 cases, $12.10 of one run of every case. **Never failed and $0.40 or more a run (6, $2.98):** `chunk-runner-gate-outside` $0.55, `reliability-review-http` $0.53, `security-review-config` $0.51, `library-app-structure-review` $0.49, `chunk-runner-replay-not-the-handback` $0.47, `external-review-triage-cancel-hold` $0.42.
 
 By skill (one run of each of its cases; the judges a tool could decide and their estimated share):
 
@@ -1166,35 +1148,35 @@ By skill (one run of each of its cases; the judges a tool could decide and their
 |---|---|---|---|---|---|---|---|---|
 | orchestrator | 34 (34) | 13.92 | 0.38 | 51 | 0 | 0.00 | 0, 10 | 7 |
 | chunk-runner | 9 (9) | 4.87 | 0.05 | 2 | 0 | 0.00 | 1, 5 | 4 |
-| reliability-review | 10 (10) | 2.57 | 1.56 | 37 | 0 | 0.00 | 0, 0 | 4 |
-| architecture-review | 11 (11) | 2.42 | 1.17 | 34 | 0 | 0.00 | 0, 1 | 8 |
+| reliability-review | 8 (8) | 2.05 | 1.24 | 23 | 0 | 0.00 | 0, 0 | 3 |
+| architecture-review | 8 (8) | 1.77 | 0.88 | 22 | 0 | 0.00 | 0, 1 | 5 |
 | tdd-implementation-lite | 6 (6) | 1.94 | 0.33 | 21 | 0 | 0.00 | 0, 2 | 0 |
-| security-review | 8 (8) | 1.56 | 0.66 | 21 | 0 | 0.00 | 0, 0 | 6 |
-| code-review | 8 (8) | 1.40 | 0.70 | 35 | 0 | 0.00 | 0, 1 | 2 |
+| code-review | 8 (8) | 1.39 | 0.73 | 29 | 0 | 0.00 | 0, 1 | 1 |
 | security-requirements | 8 (8) | 1.45 | 0.43 | 20 | 0 | 0.00 | 0, 1 | 6 |
-| accessibility-review | 4 (4) | 0.96 | 0.82 | 19 | 0 | 0.00 | 1, 2 | 1 |
 | reliability-requirements | 8 (8) | 1.08 | 0.64 | 20 | 0 | 0.00 | 1, 0 | 3 |
-| architecture-design | 6 (6) | 1.14 | 0.38 | 15 | 0 | 0.00 | 0, 1 | 4 |
-| design-system | 5 (5) | 0.98 | 0.37 | 16 | 0 | 0.00 | 0, 0 | 3 |
-| test-quality-review | 4 (4) | 0.64 | 0.39 | 13 | 0 | 0.00 | 0, 1 | 3 |
-| vertical-slicing | 5 (5) | 0.72 | 0.10 | 14 | 0 | 0.00 | 0, 0 | 3 |
+| accessibility-review | 4 (4) | 0.96 | 0.74 | 13 | 0 | 0.00 | 1, 2 | 1 |
+| architecture-design | 6 (6) | 1.15 | 0.38 | 15 | 0 | 0.00 | 0, 1 | 3 |
+| security-review | 6 (6) | 1.06 | 0.39 | 10 | 0 | 0.00 | 0, 0 | 4 |
+| design-system | 5 (5) | 0.98 | 0.37 | 15 | 0 | 0.00 | 0, 0 | 3 |
+| supply-chain-review | 8 (4) | 0.71 | 0.32 | 18 | 0 | 0.00 | 0, 0 | 1 |
+| test-quality-review | 4 (4) | 0.63 | 0.36 | 11 | 0 | 0.00 | 0, 1 | 3 |
+| vertical-slicing | 5 (5) | 0.71 | 0.11 | 13 | 0 | 0.00 | 0, 0 | 2 |
 | technology-bootstrap | 4 (4) | 0.53 | 0.25 | 15 | 0 | 0.00 | 0, 1 | 0 |
-| map-update | 1 (1) | 0.18 | 0.54 | 4 | 0 | 0.00 | 0, 0 | 0 |
-| screen-design | 2 (2) | 0.61 | 0.12 | 8 | 0 | 0.00 | 0, 0 | 1 |
-| requirements-refinement | 4 (4) | 0.47 | 0.18 | 15 | 0 | 0.00 | 0, 0 | 2 |
+| map-update | 1 (1) | 0.18 | 0.55 | 3 | 0 | 0.00 | 0, 0 | 0 |
+| screen-design | 2 (2) | 0.59 | 0.11 | 7 | 0 | 0.00 | 0, 0 | 1 |
+| requirements-refinement | 4 (4) | 0.47 | 0.18 | 14 | 0 | 0.00 | 0, 0 | 2 |
 | delivery | 1 (1) | 0.39 | 0.03 | 2 | 0 | 0.00 | 0, 1 | 0 |
 | external-review-triage | 1 (1) | 0.35 | 0.07 | 3 | 0 | 0.00 | 0, 1 | 1 |
+| problem-framing-doc | 2 (2) | 0.13 | 0.07 | 5 | 0 | 0.00 | 0, 0 | 0 |
 | map-query | 2 (2) | 0.17 | 0.04 | 5 | 0 | 0.00 | 0, 0 | 1 |
+| staleness-audit | 1 (1) | 0.12 | 0.07 | 4 | 0 | 0.00 | 0, 0 | 0 |
 | operational-readiness | 6 (2) | 0.16 | 0.00 | 13 | 0 | 0.00 | 0, 0 | 2 |
-| supply-chain-review | 8 (1) | 0.10 | 0.00 | 23 | 0 | 0.00 | 0, 0 | 1 |
-| why-comments | 1 (1) | 0.07 | 0.02 | 4 | 0 | 0.00 | 0, 0 | 0 |
+| why-comments | 1 (1) | 0.08 | 0.04 | 3 | 0 | 0.00 | 0, 0 | 1 |
 | adr | 2 (1) | 0.08 | 0.01 | 2 | 0 | 0.00 | 0, 0 | 0 |
-| acceptance-criteria | 1 (1) | 0.07 | 0.01 | 2 | 0 | 0.00 | 0, 0 | 1 |
-| user-story-writeup | 2 (1) | 0.06 | 0.01 | 5 | 0 | 0.00 | 0, 1 | 1 |
+| acceptance-criteria | 1 (1) | 0.07 | 0.01 | 1 | 0 | 0.00 | 0, 0 | 1 |
+| user-story-writeup | 2 (1) | 0.06 | 0.01 | 4 | 0 | 0.00 | 0, 1 | 1 |
 | pr-writeup | 1 (0) |  |  | 3 | 0 | 0.00 | 0, 0 | 0 |
-| problem-framing-doc | 1 (0) |  |  | 3 | 0 | 0.00 | 0, 0 | 0 |
 | scope-map | 1 (0) |  |  | 3 | 0 | 0.00 | 0, 0 | 0 |
-| staleness-audit | 1 (0) |  |  | 5 | 0 | 0.00 | 0, 0 | 0 |
 | user-facing-docs | 1 (0) |  |  | 2 | 0 | 0.00 | 0, 0 | 0 |
 
 **Judges a tool could decide, with the reason** (the judges that take reading have theirs in `tools/case_reading.json`):
@@ -1246,7 +1228,7 @@ By skill (one run of each of its cases; the judges a tool could decide and their
 - `chunk-runner-review-round`: `cold-findings-cite-no-planning-document` lists `design\.md`, but the fixture's documents are `design-001.md`, `requirements-001.md` and `user-story-001.md`: a finding citing any of those three is not seen (only `slice-001.md` is).
 - `chunk-runner-review-round`: `hand-back-line-carries-the-script-counts` reads the trace with `[^\n]`, as `chunk-runner-gap-handback`'s regex does: the parts need only sit in one tool result or message, not on one line of the reply.
 - `code-review-fine-notices-pr-via-agent`: `consults-why-comments` failed 18 of 20 runs. Its trace regex wants the exact form `"name":"Skill","input":{"skill":"kad-dev-team:why-comments"`, stricter than the `"skill": ?"..."` form the tdd via-agent case uses for the same kind of nested call; whether the agent skips the consult or the form misses it was not checked. `leaves-mocking-to-test-quality-review` (judge) failed 16 of 17 here against 5 of 13 in the direct case.
-- `code-review-structural-high-at-d`: `a-long-single-job-function-stays-a-plain-finding` (judge) failed 6 of 7 runs.
+- `code-review-structural-high-at-d`: `a-long-single-job-function-stays-a-plain-finding` (judge) failed 6 of 7 runs before E7 rewrote it as a trap on the size alone.
 - `delivery-ci-red-not-done`: `failing-tests-written-to-the-records` matches the test's name within 6,000 characters after any Write or Bash call that names `pr-ci-r1.md`, so the failed job's log printed by a later command passes a run that wrote the file without the test names.
 - `map-update-cancel-hold`: `pre-existing-flags-not-new` (judge) failed 13 of 18 runs.
 - `orchestrator-budget-exceeded`: `flow-ends-saying-what-is-built` (judge) failed 30 of 43 runs; whether the reply or the criterion is short was not read here.
@@ -2364,6 +2346,219 @@ would account for.
 - In the two `reliability-review` pull-request cases the bare model
   reports problems the cases do not plant (a submission race, a missing
   affected-row check). Unchecked against the fixture.
+
+### Retired and cut down
+
+`TODO.md`'s E7 (2026-11-15, kad 0.14.5, Claude Code 2.1.325, every case
+on Sonnet), by the owner's decisions of the same day (`TODO.md`, above
+E7): seven cases dropped, 41 judges that passed in both arms of E6 cut
+from 25 kept cases, three owner-sheet cases without the fixture's
+`sources.md`, five graders fixed, `problem-framing-doc-payfine` as two
+turns. No skill text and no script changed. The suite has 160 cases
+(166 before), 372 judges (435) and 664 tool checks (684). The sections
+above are left as they were written: E6's tables still name the dropped
+cases and the cut judges, as the record they were dropped on.
+
+**Dropped (decision 2), with the evidence for each.** All seven scored
+the same in both arms of E6, three runs each, every planted problem and
+trap handled by the bare model, and the paired reviews read for the
+bare one or split. No rule deletion (E2) has been run on their skills,
+so there is no deletion result for any of them.
+
+| Case | E1: failed / runs since its bar | E6: with, without | E6 pairwise: with / without / split | One run (measured, six single runs 2026-11-10 to 14) |
+|---|---|---|---|---|
+| `library-app-members-review` | 0 / 9 | 1.00, 1.00 | 0 / 3 / 0 | $0.29 |
+| `library-app-notifications-review` | 0 / 9 | 1.00, 1.00 | 0 / 2 / 1 | $0.30 |
+| `library-app-reporting-review` | 0 / 9 | 1.00, 1.00 | 0 / 3 / 0 | $0.30 |
+| `security-review-http` | 0 / 10 | 1.00, 1.00 | 0 / 1 / 2 | $0.43 |
+| `security-review-reminders` | 0 / 10 | 1.00, 1.00 | 0 / 1 / 2 | $0.29 |
+| `reliability-review-alerts` | 1 / 15 (one judge flip, `no-false-alarm-burn-rate-alerts`) | 1.00, 1.00 | 1 / 2 / 0 | $0.37 |
+| `reliability-review-portal-pay-pr` | 0 / 12 | 1.00, 1.00 | 0 / 3 / 0 | $0.36 |
+
+Each one's directory, bar, evidence entry, row in
+`tools/case_reading.json` and row in the coverage table are gone; the
+two generated tables list them under "no case directory now". Their
+plants are still in the fixture's `app/`, which other cases share. One
+thing is left over: the overlay
+`fixtures/library-app/code-plants/reliability-review/portal-pay/` was
+copied by `reliability-review-portal-pay-pr` alone and no case uses it
+now (the answer key says so). It was not deleted: removing a fixture
+was not in the decision.
+
+`user-story-writeup-payfine-phase1` fits the same pattern (0 / 7; 1.00
+in both arms; the bare reply preferred three pairs of three) and **is
+kept, by the owner's word during E7**: `user-story-writeup-payfine-phase2`
+resumes a history frozen from it, and with phase 1 gone that history
+could not be frozen again the next time the skill's text changes. It is
+cut down to one judge.
+
+**Cut down (decision 8).** In every kept case that E6 measured, a judge
+that passed three runs of three in both arms is gone, except a
+false-alarm trap and one judge on the case's most important planted
+problem. Every grader that differed between the arms stays, whatever it
+is. Tool checks stay: they cost nothing. Where the most important
+planted problem is one whose judge differed, no second one is kept
+beside it. The comment at the top of each case's graders names what was
+cut. Bars are from the gate pass at three runs on 2026-11-15
+(`record_thresholds.py --gate-only`).
+
+| Case | Judges before, after | Judges cut | The judge kept on the planted problem, and why that one | Bar before, now |
+|---|---|---|---|---|
+| `library-app-fines-review` | 4, 3 | `finds-policy-mixed-with-mechanics` | `finds-provider-codes-leaking-through-port`: a provider's codes crossing a port into business logic is the case's dependency problem; the mixed method is a readability one (`finds-premature-waiver-strategy` differed and stays) | 1.00, 1.00 |
+| `library-app-lending-review` | 6, 4 | `finds-http-request-in-place-hold`, `finds-use-case-reaching-into-wiring` | `finds-runtime-import-cycle`: the one problem that stops the app loading, and it differed (3/3 against 1/3) | 1.00, 1.00 |
+| `library-app-structure-review` | 4, 4 | `finds-payment-sdk-outside-its-adapter` | `finds-technical-role-directories`: the layout is what a whole-app review is asked for; a judge on the runtime cycle is added (below) | 1.00, 1.00 |
+| `code-review-days-left-pr` | 7, 5 | `finds-unused-flag`, `finds-rethrowing-catch` | `finds-unused-options`: of the four kinds of unneeded code it is the one on the function's public signature (`finds-impossible-null-check` differed and stays) | 1.00, 1.00 |
+| `code-review-fine-notices-pr` | 8, 5 | `finds-triplicated-notice-logic`, `finds-what-comment`, `finds-duplicate-test-names` | `finds-false-dollars-comment`: a comment that states the wrong unit of money is the finding the case ranks first. `finds-wrong-name` stays as a trap: it carries the "vague name ranked below the wrong one" check | 0.97, 0.93 |
+| `code-review-fines-report-pr` | 5, 4 | `finds-data-clump` | `finds-run-doing-several-jobs`: the case's first plant, and the one the others hang from | 1.00, 0.95 |
+| `design-system-payfine-review` | 4, 3 | `finds-no-focus-state` | `finds-muted-contrast`: a measurable failure the document misstates (2.5:1 claimed as 6.01:1) | 1.00, 1.00 |
+| `screen-design-payfine` | 7, 6 | `copy-rules` | none: the case plants no problem; the two that passed in both arms and stay (`no-screenshot-claimed`, `asks-nothing-the-docs-answer`) are traps | 0.97, 1.00 |
+| `acceptance-criteria-payfine` | 2, 1 | `rejects-and-rewrites` | `flags-undecided-target`: deciding a time bound nobody agreed is the harm the skill is there to stop; rejecting "quick" is what any model does | 1.00, 1.00 |
+| `requirements-refinement-payfine-phase1` | 4, 3 | `asks-before-writing` | none: `asks-trade-off-and-alternatives` and `stays-on-the-what` differed and are on the same subject; `does-not-ask-what-the-sources-answer` is a trap | 0.93, 0.92 |
+| `reliability-review-fine-payment` | 4, 2 | `finds-retrying-declines-in-use-case`, `finds-pay-route-hides-unexpected-failures` | `finds-charge-then-settle-without-idempotency`: the member has paid and the fine stays owed | 1.00, 1.00 |
+| `reliability-review-http` | 5, 4 | `finds-in-memory-holds` | `finds-respond-conflates-expected-and-unexpected`: every route goes through it (`finds-unbounded-loan-history` differed and stays) | 1.00, 1.00 |
+| `reliability-review-nightly` | 8, 4 | `finds-no-isolation-in-fine-loop`, `finds-member-directory-pool-leak`, `finds-mailer-without-timeout`, `finds-postal-queue-swallows-errors` | `finds-unhandled-nightly-rejection`: the job dies with nothing logged, whatever else is fixed | 0.97, 1.00 |
+| `accessibility-review-payfine` | 9, 6 | `finds-missing-live-region`, `finds-low-contrast-meta-text`, `finds-unlabelled-name-field` | `finds-unreachable-fine-choice`: the one the case ranks highest, and it differed (3/3 against 2/3). `says-it-read-the-markup` stays as a trap on a false claim | 0.98, 1.00 |
+| `accessibility-review-payfine-subtle` | 9, 6 | `finds-hover-contrast`, `finds-broken-error-link`, `finds-no-visible-name-label` | `finds-pay-button-focus-removed`: the primary action, and found only by following the cascade | 1.00, 1.00 |
+| `supply-chain-review-accepted` | 5, 3 | `finds-bare-allowlist-entry`, `finds-agpl-transitive` | `finds-unenforced-temporary-acceptance`: the same advisory as the trap that differed (`no-false-alarm-dev-only-advisory`), so the pair reads "flag the date nothing enforces, do not over-rate the advisory" | 1.00, 0.94 |
+| `supply-chain-review-build` | 5, 3 | `finds-base-image-tag`, `finds-install-scripts-enabled` | `finds-image-build-ignores-lockfile`: the skill's own question (would the next build pull a bad version) answered yes | 0.96, 1.00 |
+| `supply-chain-review-workflows` | 3, 2 | `finds-branch-ref-release-notes` | `finds-tag-pinned-slack-action`: it runs with the cloud credentials and every secret | 1.00, 1.00 |
+| `test-quality-review-fines` | 7, 5 | `finds-unwired-mock`, `finds-weak-cap-assertion` | `finds-subject-mocked`: a test that cannot fail, and it differed (3/3 against 2/3) | 0.97, 0.88 |
+| `security-review-config` | 5, 3 | `finds-long-lived-aws-keys-in-snapshot-job`, `finds-workflow-wide-secrets-and-default-permissions` | `finds-hardcoded-sendgrid-key`: a live key committed in source | 1.00, 1.00 |
+| `security-review-portal-pr` | 5, 4 | `finds-sql-injection-in-history-search` | `finds-member-profile-idor`: it is seen only by reading the mount and the handler together, and the case's two traps are about the same judgement | 1.00, 1.00 |
+| `map-update-cancel-hold` | 4, 3 | `untiered-edge-direction-unknown` | `flags-new-wrong-direction-edge`: what the map is regenerated for | 0.80, 0.81 |
+| `staleness-audit-docs` | 5, 4 | `finds-orphaned-adr` | `finds-stale-lending-rules`: the page that tells a reader the wrong rules | 0.89, 0.93 |
+| `vertical-slicing-handback` | 4, 3 | `owns-the-decision` | `does-not-grow-casually`: the ranked order is the skill's rule, and it cannot pass without a decision taken. `security-criteria-untouched` stays as a trap | 1.00, 0.92 |
+| `why-comments-collect-fine` | 4, 3 | `deletes-what-comments` | `flags-the-wrong-comment`: the comment that says the opposite of the code | 1.00, 1.00 |
+| `user-story-writeup-payfine-phase1` | 2, 1 | `does-not-ask-what-the-slice-answers` (by the owner's word: one judge) | `asks-where-before-writing`: the first turn's one job | 1.00, 1.00 |
+
+Kept as they are, a reading of the decision and not the owner's words:
+a case that plants no problem keeps the one judge on its subject even
+though it passed in both arms, because without it an empty reply passes
+(`names-what-holds-it-up` in the four clean-module cases,
+`asks-before-settling`, `describes-the-change`,
+`steps-cover-the-problem`, `real-limits`,
+`decision-alternatives-consequences`,
+`asks-the-problem-docs-open-questions`,
+`finds-untested-email-channel`, `finds-new-code-mixing-levels` and
+`finds-refund-created-then-refused-on-retry-unrecorded`, each the only
+planted-problem judge of its case). The four `-via-agent`
+twins of cut cases were not run bare and are untouched, so they still
+carry the judges cut from the direct case.
+
+**Without the fixture's `sources.md` (decision 6).**
+`architecture-design-owner-sheet`, `screen-design-owner-sheet` and
+`vertical-slicing-owner-sheet` no longer install the listing that
+stated the data rule. One sentence of each prompt had to change with
+it: it said the export "is listed in `docs/pay-fine/sources.md`" and
+never named the file, so each now names `owner-files/desk-fees.csv` in
+the words `requirements-refinement-owner-sheet` uses. The skills apply
+the rule themselves: in all nine runs the file was listed in a new
+`sources.md`, no cell of it reached the session and the owner was told
+the examples are invented. Bars: 0.89 (one run of three failed
+`fixtures-are-invented` on a split vote, FAIL PASS FAIL, over a reply
+that says "I won't copy rows" and "the test data will be invented"),
+1.00 and 1.00 (0.95 before). Their judges were left alone: what E6
+measured in the bare arm was the old scaffold.
+
+**The five grader fixes (decision 9).**
+
+| Grader, case | What it did wrongly | The fix | Its first gate runs (three, 2026-11-15) |
+|---|---|---|---|
+| `found-with-the-scan`, `security-review-source-value` | passed three bare runs of three in E6 where no scan ran: the pattern was the script's name and `scan` anywhere in a `Bash` input, and the review, written through a heredoc, recommended the command | the input must run it: an interpreter, the script's path, `scan`, with no heredoc opened before it in the command | 3/3, each on one call that ran the scan. Over E6's six traces, with no model time: the three plugin runs still pass, the three bare runs now fail. Known limits: an `echo` of the command passes, a `--planning` pointed elsewhere passes |
+| `a-long-single-job-function-stays-a-plain-finding`, `code-review-structural-high-at-d` | failed reviews that reported `describeEntry` for another reason (a High as dead code, confirmed by search) or said nothing about its length: 6 of 7 runs before E6, 2 of 3 plugin runs in E6 | a trap on the size alone: fails only when the function's length is sent to the architect or rated High or Critical; a finding about it for another reason passes at any severity | 3/3 on clean votes. The three reviews report it as code with no production caller (Medium) and unreachable lines; none hands its size on. Not yet shown to fail a wrong review. Bar 0.80 to 1.00 |
+| `finds-orm-inside-checkout-use-case`, `library-app-lending-review` | "a must-fix / top-tier finding" was read as the review's highest severity: a review with the finding at High and the right fix, second to the Critical cycle, failed three votes of three (and five earlier runs) | High or Critical passes, and the criterion says that a High below the Critical cycle does; Medium, Low or optional fails | 3/3 on clean votes; all three reviews rate it High, second to the cycle at Critical. Not yet shown to fail a Medium. The `-via-agent` twin keeps the old wording (not in E7) |
+| `finds-runtime-import-cycle` (new), `library-app-structure-review` | no grader read the one thing the bare model missed there three runs of three, so both arms scored 1.00 | a judge on the `Loan`/`LoanPolicy` cycle as a load problem to fix; another cycle does not count, and no rank is asked for | 3/3 on clean votes; each review has it, rated Critical. Its bare arm has not been run: by E6's reading the bare reviews would fail it, by the grader that is unmeasured |
+| `listing-names-the-location`, `requirements-refinement-owner-sheet` | with no `sources.md` written, the CLI reported "grader threw" and the bare runs counted as errored, not failed | the scaffold leaves an empty `sources.md`; `source-listed` (the file exists) went, since it could no longer fail | 3/3; each run read the empty file, wrote the listing and asked. The bare arm was not run again |
+
+**`problem-framing-doc-payfine` as two turns (decision 11).**
+`-phase1` keeps the prompt and grades the question: the skill invoked,
+nothing written (a regex on the trace), a question about what the
+description leaves out, and one question, not a list. Three runs of
+three asked why it is worth solving now and wrote nothing. `-phase2`
+resumes run 1 of that pass (`history.jsonl`, frozen with
+`freeze-history.sh`) with an answer that covers every section left, and
+grades the document with the three judges the one-turn case carried.
+Bars 1.00 and 1.00. One grader was corrected twice on its first runs,
+which is the rule of "Judges turned into tool checks" at work:
+`why-now-is-the-users` began as a judge (the reason is the user's, no
+trigger invented) and failed four right documents of six, on full and
+split votes, whose section said that nothing forces it, that there is
+no deadline, and that the cost is desk time every shift; rewording the
+criterion changed nothing, and two documents worded the same way
+passed. It is a regex now (a Why now section that holds the user's
+reason), passes the six documents already written, and no longer reads
+an invented trigger.
+
+**`map-update`'s diff (decision 12), diagnosed with no model time.** The
+cause is the script's, not the model's: `extract_map.py`'s `parse_prior`
+reads a prior row's edges, packages and exports only from names between
+backticks, and the fixture's prior map (written two weeks before the
+script) has bare cells, so every module's prior edges and exports are
+empty and all of them come out as new: 151 change lines with the script
+alone on the case's scaffold, the same 151 as the failed run's map.
+With its own output as the prior the script reports no change. The
+full account and the two ways to fix it are `TODO.md`'s B9. Nothing was
+fixed; `pre-existing-flags-not-new` failed three runs of three again.
+
+**What it cost, and one run of every case.**
+
+| | Figure | How it is known |
+|---|---|---|
+| E7's gate runs: 34 cases at three runs (102), two more passes of `-phase2` after its grader changed (6), the `--stale` pass (2), one single run of the 34 (34) and its re-runs (18) | 162 runs, $47.38 | measured: the CLI's `costUsd`, list prices; the session that ran and read them is not in the figure. One usage window, not cut |
+| The seven dropped cases, one run each | $2.34 | measured: the mean of each case's six single gate runs of 2026-11-10 to 14 |
+| The 27 changed cases that had single runs before, one run each | $9.02 before, $7.76 after | measured: the same means before; one single gate run each on 2026-11-15 after. Judges $3.42 to $2.26; the agent's own cost $5.60 to $5.50, which is noise |
+| Five changed cases with no single run before (`staleness-audit-docs`, the three `supply-chain-review` cases, `why-comments-collect-fine`) | $1.10 after; about $0.15 less than before | after measured; the saving estimated, their seven cut judges priced at the mean of the fifteen left |
+| `problem-framing-doc-payfine`, now two cases | $0.15 | measured; the one-turn case had never run and was not in the baseline |
+| **One run of every case** | **about $41.7**, against $45.70 at the baseline and about $45.3 after E5 and E6 | estimated from the measured parts above: $45.3, less $2.34, $1.26 and $0.15, plus $0.15. Not measured as a whole: that takes one run of all 160 cases |
+| The table above ("The cases sorted") | $46.81 over 147 cases, $48.13 before | not the measure: it averages three-run results in, where the CLI records about twice the judge cost per run |
+| The gate's re-run rate, the 34 changed cases | 6 of 34 first runs re-run (18%) | measured on the one single pass, too few to be a rate; 7.9% over all cases before E5, 12.8% for E5's changed cases. Five of the six were a judge on a long review failing once, one a skill not invoked (below); all six passed on the re-run |
+
+Fewer graders in a case make one flip weigh more, which is the likely
+reason the changed cases re-run more often than the suite did; it was
+not tested.
+
+**Found by E7 and left for phase B or the grader list; nothing fixed.**
+
+- `map-update`: the diff, above (`TODO.md` B9). And one run of three
+  left the new module untiered where the design names its tier, so the
+  wrong-direction edge was listed as direction unknown: the kept judge
+  caught it.
+- The data rule in the owner-sheet cases: the skills list the file and
+  quote nothing, but they look at its shape with `Read` and `Grep` on
+  the file itself (nine of twelve runs; these cases grant no `Bash`, so
+  `source_scan.py describe` cannot run), and one `vertical-slicing` run
+  searched the export for the names it had invented. The fixture's old
+  `sources.md` said "never `cat`, read or grep one".
+- `code-review` was not invoked in `code-review-days-left-pr` in three
+  of four runs of the single pass and its re-run (0 of 3 in E6's plugin
+  arm, 3 of 3 in the three-run pass): the review is written without the
+  skill about as often as with it.
+- `test-quality-review`: `no-false-alarm-exact-tests` failed 2 runs of 3
+  again and `no-false-alarm-fake-ledger` 1 of 3 and 2 of 3 (decision 3's
+  pattern, `TODO.md` B7).
+- `requirements-refinement`'s first turn asks something the sources
+  answer in one run of three in each pass of the day
+  (`does-not-ask-what-the-sources-answer`), as `security-requirements`
+  did in E6.
+- `supply-chain-review-accepted` rates the dev-only advisory in one run
+  of three, as in E6. `staleness-audit-docs` misses the ceremonial
+  sign-off log one run of three. `code-review`'s mocking rule fails two
+  runs of three, as before (`TODO.md` B8).
+- Grader findings, with the older open ones: `fixtures-are-invented`
+  (`architecture-design-owner-sheet`) failed a reply that says it, on a
+  split vote; `library-app-lending-review-via-agent` still has the ORM
+  wording E7 fixed in the direct case; the four `-via-agent` twins
+  repeat judges their direct cases no longer carry.
+- A judge asked two things about one section of a long document was
+  noise (`why-now-is-the-users`, above): a new case's judge on a file
+  wants its first runs read before its bar is believed, as a check's
+  do.
+- Seen in E6's traces while fixing the scan grader: two bare runs of
+  `security-review-source-value` listed the plugin installed under the
+  home directory's plugin cache while looking for the script. E6 read
+  them as not finding it, and no scan ran; but the bare arm can see an
+  installed copy of the plugin on this machine.
+- The overlay `code-plants/reliability-review/portal-pay/` has no case.
 
 ### Run backlog
 

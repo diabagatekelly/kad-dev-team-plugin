@@ -13,6 +13,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `finds-unused-flag`,
+  # `finds-rethrowing-catch`. What they graded is still in the fixture.
+  # `finds-unused-options` is the judge kept on the case's most important
+  # planted problem.
   - type: tool_used
     name: skill-invoked-display
     tool: Skill
@@ -41,20 +46,6 @@ graders:
 
       FAIL if it is missed, or treated as fine to keep for later.
   - type: llm
-    name: finds-unused-flag
-    focus:
-      source: file
-      path: docs/reviews/days-left.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `DAYS_LEFT_ENABLED` is a constant set to `true` that nothing changes, read or configures, with an `if (!DAYS_LEFT_ENABLED) return null;` branch for a value nobody sets.
-
-      PASS if the review flags the flag and its branch as unneeded and proposes removing them.
-
-      FAIL if it is missed.
-  - type: llm
     name: finds-impossible-null-check
     focus:
       source: file
@@ -66,20 +57,6 @@ graders:
       `daysLeft` checks `loan === null || loan === undefined` and throws, but `loan` is typed as a non-nullable `Loan` and the only callers (the tests) always pass one.
 
       PASS if the review flags the null check as handling a case the type already rules out, and proposes removing it.
-
-      FAIL if it is missed.
-  - type: llm
-    name: finds-rethrowing-catch
-    focus:
-      source: file
-      path: docs/reviews/days-left.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      The body is wrapped in `try { ... } catch (error) { throw error; }`, which only rethrows what it caught.
-
-      PASS if the review flags the try/catch as doing nothing and proposes removing it.
 
       FAIL if it is missed.
   - type: llm

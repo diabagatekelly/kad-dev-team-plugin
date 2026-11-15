@@ -17,6 +17,12 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-retrying-declines-in-use-case`,
+  # `finds-pay-route-hides-unexpected-failures`. What they graded is still
+  # in the fixture. `finds-charge-then-settle-without-idempotency` is the
+  # judge kept on the case's most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/reliability-review-fine-payment.md
@@ -39,34 +45,6 @@ graders:
       PASS if the review identifies this partial-completion window (charged but not settled) and its consequence (a stuck payment and/or a double charge on retry), rates it Critical or High (or the top two tiers of whatever scale it uses), and proposes a fix such as an idempotency key derived from the fine id, recording the attempt before charging, or reconciliation.
 
       FAIL if it is missed or rated Medium or lower.
-  - type: llm
-    name: finds-retrying-declines-in-use-case
-    focus:
-      source: file
-      path: docs/reviews/reliability-review-fine-payment.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `fines/collect-fine.ts` re-charges up to three times whenever the outcome is `!ok`. Those outcomes are the provider's deterministic answers (card declined, expired card, insufficient funds), so a declined card is charged three times for nothing; the transient failures (network errors, timeouts) are thrown by `StripeFinePayments` and are not retried at all. The retry also sits in the use case rather than in the payment adapter.
-
-      PASS if the review flags that the retry repeats non-transient failures (declines) and proposes not retrying them. Mentioning that the retry belongs in the adapter, or that a payment retry needs an idempotency key, strengthens it but is not required.
-
-      FAIL if it is missed, or if the review accepts the retry as reasonable resilience.
-  - type: llm
-    name: finds-pay-route-hides-unexpected-failures
-    focus:
-      source: file
-      path: docs/reviews/reliability-review-fine-payment.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `POST /fines/:id/pay` in `infra/http/fines-routes.ts` catches every error, answers 402 with the error message, and neither logs nor reports anything. A database failure or a payment-provider outage therefore looks like a declined card to the desk and is invisible to whoever runs the service.
-
-      PASS if the review flags that unexpected failures on the pay route are indistinguishable from payment declines and/or go unrecorded, and proposes separating expected payment outcomes from unexpected errors (different status, and logging/reporting the unexpected ones).
-
-      FAIL if it is missed.
   - type: llm
     name: no-false-alarm-settled-fine-guard
     focus:

@@ -15,6 +15,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `deletes-what-comments`. What they graded is still in the fixture.
+  # `flags-the-wrong-comment` is the judge kept on the case's most important
+  # planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/why-comments-collect-fine.md
@@ -28,18 +33,6 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:why-comments"'
     min: 1
-  - type: llm
-    name: deletes-what-comments
-    focus:
-      source: file
-      path: docs/reviews/why-comments-collect-fine.md
-    weight: 1
-    criteria: |
-      "Look up the fine." and "Throw if there is no fine." each say only what the next line of code says.
-
-      PASS if the response recommends deleting both.
-
-      FAIL if it keeps either, or rewrites either into another comment.
   - type: llm
     name: flags-the-wrong-comment
     focus:

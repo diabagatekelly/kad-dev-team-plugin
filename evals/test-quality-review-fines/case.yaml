@@ -15,6 +15,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `finds-unwired-mock`,
+  # `finds-weak-cap-assertion`. What they graded is still in the fixture.
+  # `finds-subject-mocked` is the judge kept on the case's most important
+  # planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/test-quality-review-fines.md
@@ -42,34 +47,6 @@ graders:
       PASS if the review flags this test as testing a stand-in instead of the real code (it can't fail, proves nothing), rates it Critical or must-fix (sharing the top tier with the unwired-mock test is fine), and proposes either calling the real `run` and asserting on its result or deleting the test because the first test already covers the real `run`.
 
       FAIL if it is missed, or treated as a minor or optional issue.
-  - type: llm
-    name: finds-unwired-mock
-    focus:
-      source: file
-      path: docs/reviews/test-quality-review-fines.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      In 'does not charge inside the grace period', `record = mock.fn()` is never attached to the ledger or the use case, so `record.mock.callCount() === 0` holds whatever the code does.
-
-      PASS if the review says this mock is never wired to anything the code calls, so the assertion can't catch a fine being recorded, and proposes asserting on something real (the fake ledger's recorded fines, the null result).
-
-      FAIL if it is missed, or flagged only as "weak" without saying the mock is never connected.
-  - type: llm
-    name: finds-weak-cap-assertion
-    focus:
-      source: file
-      path: docs/reviews/test-quality-review-fines.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      'caps the fine at ten dollars' asserts only `amountCents > 0`, which an uncapped fine also satisfies.
-
-      PASS if the review flags that this assertion can't catch a missing or wrong cap and proposes asserting the exact capped amount (1000 cents).
-
-      FAIL if it is missed.
   - type: llm
     name: finds-call-order-assertion
     focus:

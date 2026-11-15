@@ -13,6 +13,13 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob]
 runs: 3
 graders:
+  # Kept in E7 (TODO.md, the owner 2026-11-15) though it fits decision 2's
+  # pattern (equal in both arms of E6, the bare reply preferred three pairs
+  # of three, never failed): `user-story-writeup-payfine-phase2` resumes a
+  # history frozen from this case, and with it gone that history could not
+  # be frozen again when the skill's text changes. Cut down to one judge:
+  # `does-not-ask-what-the-slice-answers` passed three runs of three with
+  # and without the plugin and is gone.
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -28,13 +35,3 @@ graders:
       PASS if the response asks whether to file it and/or which tracking system to use, and has not delivered a finished user story (a one-line summary of what the story will say is fine).
 
       FAIL if it delivers the finished story first (even with a note asking about the system), or picks a system itself.
-  - type: llm
-    name: does-not-ask-what-the-slice-answers
-    focus: last_message
-    weight: 1
-    criteria: |
-      `docs/pay-fine/slice-001.md` already gives the thin path (a signed-in member sees their outstanding fines in the portal and pays one by card) and its acceptance criteria.
-
-      PASS if the response does not ask the user who the story is for, what it should cover, or what its acceptance criteria are.
-
-      FAIL if it asks any of those as open questions.

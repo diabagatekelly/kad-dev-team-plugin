@@ -459,6 +459,79 @@ a real loop runs.
   macOS), since the gate runs on one. Done when: the generated workflow
   has the matrix and the case passes.
 
+From the eval suite (E6's decisions of 2026-11-15 and what E7 found;
+`evals/README.md`, "With and without the plugin" and "Retired and cut
+down"). Skill text and scripts, so none of it was E7's:
+
+- [ ] B7 **A review reports nothing above Low on a sound module**
+  (decision 3). The plugin's Mediums on the clean catalog module are
+  over-reporting: `architecture-review` 2 runs of 3 in E6,
+  `code-review` 1 of 3 (9 of 19 before), and `test-quality-review`
+  calls sound exact-value tests brittle 2 runs of 3. The cases keep
+  their bar. Done when: the four clean-module cases and
+  `test-quality-review-fines`'s `no-false-alarm-exact-tests` pass three
+  runs of three.
+- [ ] B8 **A serious problem a review reads past is named and handed
+  on** (decision 4): one line at the top (what, where, the severity it
+  appears to have, which review owns it), never rated down to fit the
+  review's own categories, never ranked among its findings. Every
+  review skill. `code-review`'s mocking rule becomes this rule
+  (decision 7), and `leaves-mocking-to-test-quality-review` is
+  rewritten to pass the one line (`code-review-fine-notices-pr` and its
+  `-via-agent` twin). Done when: a case per review skill with a planted
+  out-of-subject problem shows the line, and the mocking judge passes
+  three runs of three.
+- [ ] B9 **`map-update`'s changes section calls old edges and exports
+  new** (decision 12; `map-update-cancel-hold`,
+  `pre-existing-flags-not-new`, 0 of 3 in E6 and 13 of 18 before).
+  Diagnosed 2026-11-15 with no model time. The cause is in
+  `skills/map-update/scripts/extract_map.py`, `parse_prior`: it takes a
+  prior row's edges, external packages and exports from the names
+  between backticks in each cell (``re.findall(r"`([^`]+)`", cell)``),
+  which is how the script itself writes a row. A prior map whose cells
+  are bare (`catalog/book.ts, catalog/catalog-reader.port.ts`, `none`)
+  gives three empty sets for every module, while the path and the tier
+  are still read from the first two cells, so nothing looks wrong: the
+  tiers carry forward and `render` then lists every edge and every
+  export of every module the prior map already had as `new` (`now -
+  before` with `before` empty). The fixture's prior map
+  (`evals/fixtures/library-app/code-plants/map/update/docs/architecture-map.md`,
+  written 2026-10-11, two weeks before the script) is in that bare
+  form, as is any map a model wrote by hand before 0.14.2. Reproduced
+  with the script alone on a scratch copy of the case's scaffold: 151
+  change lines (52 "new internal edges", 68 "new exports", none
+  removed), the same 151 as the failed run's map
+  (`~/kad-eval-ablation/work-2/map-update-cancel-hold-with-run0.trace.jsonl`),
+  among them `lending/return-book.ts`: new internal edges
+  `main/wiring.ts`. Run again with its own output as the prior, the
+  script prints "No change in modules, edges or exports". The
+  wrong-direction list is right in the same map (both old candidates
+  "carried forward"): that label is matched on the prior map's bullet,
+  whose names are in backticks. The model does not cause it and does
+  not repair it; the run's reply says the changes section "also lists
+  new edges and exports for most of the other modules". Two ways to fix
+  it, the owner's to pick: `parse_prior` reads a bare cell too (split
+  on commas and semicolons, `none` and a dash as empty), or it refuses
+  a prior row it cannot read and says so in the changes section instead
+  of diffing against nothing. Either way the first is needed for maps
+  already in projects. Done when: `pre-existing-flags-not-new` passes
+  three runs of three and a test of `extract_map.py` holds a bare-cell
+  prior map.
+
+- [ ] B10 **What E7's gate runs showed, each to be read before it is
+  fixed** (`evals/README.md`, "Retired and cut down", the last list):
+  the owner-sheet cases look at the owner's file with `Read` and `Grep`
+  because they grant no `Bash` for `source_scan.py describe`, and one
+  `vertical-slicing` run searched the export for its invented names;
+  `map-update` left the new module untiered one run of three;
+  `code-review` is not invoked in `code-review-days-left-pr` about half
+  the time; `requirements-refinement`'s first turn asks what the
+  sources answer one run of three; `test-quality-review` calls the
+  designated fake a mocking problem one or two runs of three; the
+  `-via-agent` twins still carry the judges cut from their direct
+  cases and `library-app-lending-review-via-agent` the old ORM wording;
+  the overlay `code-plants/reliability-review/portal-pay/` has no case.
+
 **Check of B1 without a run:** apply the picked checks to
 `personal-finance-tracker-3` at `main` on a scratch clone and record how
 many violations each finds. This sets the baseline and shows whether the
@@ -727,7 +800,26 @@ after PR #59 was merged):
 10. `evals/fixtures/bootstrap-empty` (a bank-connection slice) is fine
     as it is: an invented example, not a project's content.
 
-- [ ] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
+Decided the same day, after PR #60 was merged (on the last 27 cases):
+
+11. **`problem-framing-doc-payfine` becomes two turns.** Phase 1 grades
+    that the skill asks and writes nothing; phase 2 resumes with the
+    answer and grades the document. The skill's question stays: the
+    case was wrong, not the skill. E7.
+12. **`map-update`'s diff (old edges listed as new) is diagnosed in E7
+    with no model time**: the script's diff logic and one failed trace.
+    The cause is written under phase B below; the fix is phase B's.
+
+And on what PR #60 measured against decisions 2, 6 and 8:
+`user-story-writeup-payfine-phase1` fits the same pattern and is kept,
+cut down to one judge: `-phase2` resumes a history frozen from it, and
+with phase 1 gone that history could not be frozen again;
+`vertical-slicing-owner-sheet` loses its fixture `sources.md`
+with the other two; `supply-chain-review-build`, `-workflows` and
+`test-quality-review-reminders` are kept and cut down by decision 8 like
+every other kept case.
+
+- [x] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
   E6: a case that has never failed, that no deletion fails and that the
   bare model passes as well. Each candidate is named with the evidence
   that exists for it: a deletion result only where its skill has had a
@@ -735,6 +827,23 @@ after PR #59 was merged):
   a case with neither is not a candidate yet. Nothing is dropped without
   the owner's word. Done when: the suite's full-pass cost is reported against the
   $54 baseline and each retired case is named with its reason.
+  Done 2026-11-15 (`evals/README.md`, "Retired and cut down"), by the
+  twelve decisions above: seven cases dropped, each with its E1 and E6
+  evidence (no deletion pass has run on their skills); 41 judges that
+  passed in both arms cut from 25 kept cases, each keeping what
+  differed, its traps and one judge on its most important planted
+  problem; `user-story-writeup-payfine-phase1` kept with one judge as
+  the source of phase 2's history; the three owner-sheet cases without
+  the fixture's `sources.md` (the skills list the file and quote
+  nothing, nine runs of nine); the five graders fixed;
+  `problem-framing-doc-payfine` as `-phase1` and `-phase2`. 160 cases,
+  372 judges (435), every changed case with its gate run at three runs
+  and its bar re-recorded (162 runs, $47.38, one window). One run of
+  every case is about $41.7 against the $45.70 baseline (the $54 here
+  was corrected by E4), an estimate built from measured parts: the
+  dropped cases $2.34, the changed cases $9.02 to $7.76 at one run
+  each. The gate re-ran 6 of the 34 changed cases on one single pass.
+  What E7 found and did not fix is B7 to B10 under phase B.
 
 Phase B's new cases are written after E4: the prompt names the state and
 leaves the action to the skill, a tool grades what a tool can, and each

@@ -24,8 +24,16 @@ graders:
     min: 1
   - type: tool_used
     name: found-with-the-scan
+    # A call that runs the script: an interpreter, the script's path, then
+    # `scan`, with no heredoc opened before it in the same command. Until E7
+    # (TODO.md, decision 9) the pattern was the script's name and `scan` on
+    # one line anywhere in the input, and it passed three bare runs of three
+    # in E6 where no scan ran: the review, written through a shell heredoc,
+    # recommended the command. What this does not read: that the scan
+    # reached the fixture (a `--planning` pointed elsewhere still passes),
+    # and an `echo` of the command would pass.
     tool: Bash
-    input_match: 'source_scan\.py[^\n]*\bscan\b'
+    input_match: '"command"\s*:\s*"(?:(?!<<)(?:[^"\\]|\\.))*?\bpython3?(?:\s+-\w+)*\s+(?:\\")?[^\s"\\]*source_scan\.py(?:\\")?\s+scan\b'
     min: 1
   - type: file_exists
     name: review-written

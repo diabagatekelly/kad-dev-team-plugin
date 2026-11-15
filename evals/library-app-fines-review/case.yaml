@@ -17,6 +17,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-policy-mixed-with-mechanics`. What they graded is still in the
+  # fixture. `finds-provider-codes-leaking-through-port` is the judge kept
+  # on the case's most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/library-app-fines-review.md
@@ -25,20 +30,6 @@ graders:
     target: trace
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/library-app-fines-review\.md")[^"]*"'
     match: not_contains
-  - type: llm
-    name: finds-policy-mixed-with-mechanics
-    focus:
-      source: file
-      path: docs/reviews/library-app-fines-review.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `fines/assess-overdue-fine.ts` interleaves the fee policy (3-day grace period, 25 cents per day, $10 cap) with millisecond date arithmetic and id generation (base-36 timestamp plus a random hex nonce) in one method body.
-
-      PASS if the review notices that a business rule and low-level mechanism are mixed in this method and proposes separating them (named policy values or a policy function; id generation and date math moved out of the rule).
-
-      FAIL if this is not noticed.
   - type: llm
     name: finds-provider-codes-leaking-through-port
     focus:

@@ -17,6 +17,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-sql-injection-in-history-search`. What they graded is still in
+  # the fixture. `finds-member-profile-idor` is the judge kept on the case's
+  # most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/security-review-portal-pr.md
@@ -39,20 +44,6 @@ graders:
       PASS if the review flags that any signed-in member can read another member's details (an authorization or access-control gap, whatever it calls it), treats it as High or Critical (or the equivalent top tier), and proposes using the session's card number or rejecting a mismatch.
 
       FAIL if it is missed or rated Medium or below.
-  - type: llm
-    name: finds-sql-injection-in-history-search
-    focus:
-      source: file
-      path: docs/reviews/security-review-portal-pr.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `PostgresLoanHistory.forCard` in `infra/postgres/postgres-loan-history.ts` binds the card number as `$1` but interpolates `titleContains` straight into the SQL text (`ilike '%${titleContains}%'`). `titleContains` is the `title` query-string parameter of `GET /portal/history`, controlled by any signed-in member.
-
-      PASS if the review flags this as SQL injection reachable from the member-controlled query parameter, at High or Critical (or the equivalent top tier), and proposes passing the search text as a bound query parameter (for example `ilike $2`). Also escaping LIKE wildcards (`%`, `_`, `\\`) in the value before binding it is fine and does not count against the review.
-
-      FAIL if it is missed, rated Medium or below, or the only fix proposed keeps the value interpolated into the SQL text and sanitises or quote-escapes it there.
   - type: llm
     name: no-false-alarm-session-scoped-routes
     focus:

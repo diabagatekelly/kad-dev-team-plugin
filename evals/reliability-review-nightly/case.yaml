@@ -17,6 +17,13 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-no-isolation-in-fine-loop`, `finds-member-directory-pool-leak`,
+  # `finds-mailer-without-timeout`, `finds-postal-queue-swallows-errors`.
+  # What they graded is still in the fixture.
+  # `finds-unhandled-nightly-rejection` is the judge kept on the case's most
+  # important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/reliability-review-nightly.md
@@ -39,62 +46,6 @@ graders:
       PASS if the review identifies that a failure in the nightly job is unhandled at its entry point, and states a concrete consequence (the process crashing / the web server going down, or the failure being invisible), rates it Critical or High (or the top two tiers of whatever scale it uses), and proposes catching and reporting failures at the job boundary (or running the job outside the web process).
 
       FAIL if it is missed, or only mentioned as a style point, or rated Medium or lower.
-  - type: llm
-    name: finds-no-isolation-in-fine-loop
-    focus:
-      source: file
-      path: docs/reviews/reliability-review-nightly.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      In `main/jobs.ts`, the fine-assessment loop calls `await assess.run(loan)` for each overdue loan with no per-loan error handling. One failing loan abandons the remaining assessments and also everything after the loop that night: every due-date reminder and the monthly report export.
-
-      PASS if the review points out that one failure in the fine-assessment step stops the rest of the nightly work (remaining fines and/or the reminders and reports that follow), and proposes per-loan isolation anywhere in the review: catch, log the loan and continue; handle each loop body separately; or apply the reminder loop's per-item catch to the fine loop. A recommendation whose only fix is one try/catch around the whole job does not pass, since that still abandons the remaining work.
-
-      FAIL if it is missed.
-  - type: llm
-    name: finds-member-directory-pool-leak
-    focus:
-      source: file
-      path: docs/reviews/reliability-review-nightly.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `PostgresMemberDirectory` (`infra/postgres/postgres-member-directory.ts`) creates its own `PgClient` in its constructor; per `types/vendor.d.ts` a `PgClient` opens a connection pool and only `end()` closes it. Nothing ever calls `end()`. `runNightly` calls `wiring.memberDirectory()` on every run, so each night opens one more pool that is never closed, until the database runs out of connections. Every other adapter shares the single `wiring.pgClient()`.
-
-      PASS if the review identifies that a new database client/pool is created per nightly run (or per directory instance) and never closed, describes it as a leak that will eventually exhaust connections, and proposes sharing the existing client (or closing it).
-
-      FAIL if it is missed.
-  - type: llm
-    name: finds-mailer-without-timeout
-    focus:
-      source: file
-      path: docs/reviews/reliability-review-nightly.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `infra/email/sendgrid-mailer.ts` constructs `new MailClient(apiKey)` without `timeoutMs`; `types/vendor.d.ts` documents that without it a request waits indefinitely. The nightly job sends reminders one at a time, so a single hung email request stalls every reminder after it and the monthly report, with nothing logged. The SMS adapter sets a 5-second timeout.
-
-      PASS if the review flags the missing timeout on the email client (or on outbound reminder calls including email) and proposes setting a timeout. Connecting it to the serial nightly loop stalling strengthens the finding but is not required.
-
-      FAIL if it is missed.
-  - type: llm
-    name: finds-postal-queue-swallows-errors
-    focus:
-      source: file
-      path: docs/reviews/reliability-review-nightly.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `infra/postal/file-postal-queue.ts` catches any `appendFile` failure, logs it at `info` as `postal queue write skipped`, and resolves normally. `SendDueReminder` therefore succeeds and `main/jobs.ts` logs `reminder sent` for a letter that was never queued.
-
-      PASS if the review flags that the postal adapter swallows the write failure (converting it into apparent success), notes the consequence that the reminder is recorded as sent or that nobody learns of the failure, and proposes letting the error propagate (or otherwise surfacing it as a failure).
-
-      FAIL if it is missed or treated as acceptable logging.
   - type: llm
     name: no-false-alarm-reminder-loop-catch
     focus:

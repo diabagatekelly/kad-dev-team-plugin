@@ -17,6 +17,12 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-http-request-in-place-hold`,
+  # `finds-use-case-reaching-into-wiring`. What they graded is still in the
+  # fixture. `finds-runtime-import-cycle` is the judge kept on the case's
+  # most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/library-app-lending-review.md
@@ -25,6 +31,12 @@ graders:
     target: trace
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/library-app-lending-review\.md")[^"]*"'
     match: not_contains
+  # Reworded in E7 (TODO.md, decision 9): "a must-fix / top-tier finding"
+  # was read as the highest severity in the review, and the judge failed,
+  # three votes of three, a review that had the finding at High with the
+  # fix the criterion asks for, second to the Critical cycle (E6; five
+  # earlier runs failed too). `library-app-lending-review-via-agent`
+  # carries the old wording still: it was not in E7.
   - type: llm
     name: finds-orm-inside-checkout-use-case
     focus:
@@ -36,9 +48,9 @@ graders:
 
       `lending/checkout-book.ts` imports `OrmRepository`, `OrmRow` and `PgClient` from `pg-orm`, declares its own ORM row class, runs its queries through the ORM, and `run()` returns the ORM row. A `LoanStore` port (`lending/loan-store.port.ts`) already exists with a Postgres adapter and is not used here.
 
-      PASS if the review flags business logic depending directly on the ORM in this file, treats it as a must-fix / top-tier finding (reasoning that the class is built around the ORM end to end: constructor, field, query, return type), and proposes moving persistence behind the existing `LoanStore` port or an equivalent interface.
+      PASS if the review flags business logic depending directly on the ORM in this file, rates it High or Critical (or, where it uses no such words, calls it something that must be fixed), and proposes moving persistence behind the existing `LoanStore` port or an equivalent interface. The module also holds a runtime import cycle that a review rightly rates above everything else: the ORM finding rated High, one step below a Critical cycle and listed second, passes. The review need not spell out why the class is built around the ORM (constructor, field, query, return type), as long as the finding is about the use case depending on it.
 
-      FAIL if it is missed, or presented as minor/optional.
+      FAIL if it is missed, rated Medium or Low, or presented as minor or optional.
   - type: llm
     name: finds-runtime-import-cycle
     focus:
@@ -53,20 +65,6 @@ graders:
       PASS if the review identifies this mutual import as a real module-load problem caused by the static initializers (not merely a stylistic or type-level cycle), treats it as must-fix at the highest severity it uses, and proposes a fix that breaks the cycle (drop `LoanPolicy.sample`, inject the policy, or similar).
 
       FAIL if missed, dismissed as harmless or type-only, or treated as optional cleanup.
-  - type: llm
-    name: finds-http-request-in-place-hold
-    focus:
-      source: file
-      path: docs/reviews/library-app-lending-review.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `lending/place-hold.ts` declares `run(req: HttpRequest)` with the request type from `express-lite`, and reads `req.params` / `req.body` inside the use case.
-
-      PASS if the review flags a framework request object crossing into business logic as-is and proposes that the use case take plain inputs (isbn, card number) with parsing done in the HTTP route.
-
-      FAIL if missed.
   - type: llm
     name: no-false-alarm-type-only-cycle
     focus:
@@ -83,20 +81,6 @@ graders:
       FAIL if it is reported as a genuine circular dependency problem or asked to be fixed before merge.
 
       An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
-  - type: llm
-    name: finds-use-case-reaching-into-wiring
-    focus:
-      source: file
-      path: docs/reviews/library-app-lending-review.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `lending/return-book.ts` imports `loanStore` from `main/wiring.ts` and calls it in a field initializer to obtain its store. `main/wiring.ts` is the composition root: it imports every concrete adapter, `pg-orm` and `process.env`. The sibling use cases (`RenewLoan`, `CheckoutBook`, `PlaceHold`) receive their dependencies through their constructors from `main/server.ts`.
-
-      PASS if the review flags business code depending on the composition root (any wording: wrong-direction dependency, service locator, hidden dependency on all of infra, untestable with a fake store) and proposes passing `LoanStore` in through the constructor so that only `main/` imports `main/wiring.ts`.
-
-      FAIL if it is missed, or excused as acceptable composition-root wiring because the function returns an interface type.
   - type: llm
     name: states-assumed-importance-ordering
     focus:

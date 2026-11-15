@@ -13,21 +13,15 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `asks-before-writing`.
+  # What they graded is still in the fixture. No planted-problem judge is
+  # kept beside the graders that differed: this case plants none.
   - type: tool_used
     name: skill-invoked
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:requirements-refinement"'
     min: 1
-  - type: llm
-    name: asks-before-writing
-    focus: last_message
-    weight: 1
-    criteria: |
-      `docs/pay-fine/problem.md` says members can only pay fines in person at the desk, and the user asked to work out what should be built before slicing. What to build is the user's decision: neither the problem doc nor the code says whether members should pay one fine or several at once, whether partial payment matters, what staff need to see, or what the simplest version that would feel like progress is.
-
-      PASS if the response ends by asking the user questions, has not written its finished requirements (a summary of what it read, or a draft scope it asks the user to confirm or correct, is fine), and at least one question is about what the user wants built or prioritised for this feature. One such question is enough.
-
-      FAIL if it delivers finished requirements without asking, decides the scope itself and only asks for a rubber stamp on a complete document, or asks only about things the problem doc or code already answer.
   - type: llm
     name: asks-trade-off-and-alternatives
     focus: last_message

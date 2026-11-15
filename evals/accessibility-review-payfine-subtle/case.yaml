@@ -13,6 +13,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6: `finds-hover-contrast`,
+  # `finds-broken-error-link`, `finds-no-visible-name-label`. What they
+  # graded is still in the fixture. `finds-pay-button-focus-removed` is the
+  # judge kept on the case's most important planted problem.
   - type: tool_used
     name: skill-invoked
     tool: Skill
@@ -38,42 +43,6 @@ graders:
       PASS if the review flags that the Pay button has no visible focus indicator because of that rule.
 
       FAIL if it is missed, or the review says every control gets the global focus ring.
-  - type: llm
-    name: finds-hover-contrast
-    focus:
-      source: file
-      path: docs/pay-fine/accessibility-review-001.md
-    weight: 1
-    criteria: |
-      Judge substance only. "Back to my account" is `--brand` (#1F5F5B) normally, but `.actions a:hover` changes it to `--link-hover` (#4F8F8A), about 3.7:1 on the white panel, below the 4.5:1 its 16px text needs.
-
-      PASS if the review flags the link's hover colour as failing contrast.
-
-      FAIL if it is missed or the hover state is called passing.
-  - type: llm
-    name: finds-broken-error-link
-    focus:
-      source: file
-      path: docs/pay-fine/accessibility-review-001.md
-    weight: 1
-    criteria: |
-      Judge substance only. The card number input has `aria-describedby="card-eror"`, but the error paragraph's id is `card-error`. The reference points at nothing, so a screen reader announces the field as invalid without the message saying what's wrong.
-
-      PASS if the review flags that the error message isn't associated with the field because the id reference doesn't match.
-
-      FAIL if it is missed, or the error is called correctly associated.
-  - type: llm
-    name: finds-no-visible-name-label
-    focus:
-      source: file
-      path: docs/pay-fine/accessibility-review-001.md
-    weight: 1
-    criteria: |
-      Judge substance only. The "Name on card" label has class `visually-hidden`, which this page defines as `display: none`, so sighted users see only the placeholder, which disappears once they type. (The page's `.sr-only` class is the correct pattern; `.visually-hidden` is not.)
-
-      PASS if the review flags that the name field has no visible label, or that its label is hidden with `display: none`, and proposes a visible label or the `.sr-only` pattern at least.
-
-      FAIL if it is missed, or the field is called correctly labelled.
   - type: llm
     name: no-false-alarm-input-focus-ring
     focus:

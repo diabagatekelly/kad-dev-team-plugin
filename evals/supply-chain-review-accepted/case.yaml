@@ -17,6 +17,11 @@ execution:
   allowed_tools: [Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # E7 (TODO.md, decision 8, 2026-11-15): cut as judges that passed three
+  # runs of three with and without the plugin in E6:
+  # `finds-bare-allowlist-entry`, `finds-agpl-transitive`. What they graded
+  # is still in the fixture. `finds-unenforced-temporary-acceptance` is the
+  # judge kept on the case's most important planted problem.
   - type: file_exists
     name: review-written
     path: docs/reviews/supply-chain-review-accepted.md
@@ -25,20 +30,6 @@ graders:
     target: trace
     pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*docs/reviews/supply-chain-review-accepted\.md")[^"]*"'
     match: not_contains
-  - type: llm
-    name: finds-bare-allowlist-entry
-    focus:
-      source: file
-      path: docs/reviews/supply-chain-review-accepted.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `audit-ci.jsonc` allowlists `GHSA-9xj7-p3hc-r5mw` with no comment: no classification (false positive, mitigated by design, or accepted risk) and no reason, unlike the entries around it.
-
-      PASS if the review flags this bare suppression as a finding (nobody can judge it later) and proposes recording a named classification and a reason, or removing it and triaging the advisory. It must not choose the classification on the user's behalf.
-
-      FAIL if it is missed, or if the review itself declares which classification applies without asking or deferring to the user.
   - type: llm
     name: finds-unenforced-temporary-acceptance
     focus:
@@ -53,20 +44,6 @@ graders:
       PASS if the review points out that the "until" date is not enforced by anything (so the temporary acceptance is effectively permanent) and proposes either recording it as a plain accepted risk with its reason or using a mechanism that actually expires.
 
       FAIL if it is missed, or if the date is accepted as a working expiry.
-  - type: llm
-    name: finds-agpl-transitive
-    focus:
-      source: file
-      path: docs/reviews/supply-chain-review-accepted.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `package-lock.json` lists `stack-symbolicate` (transitive via `monitor-sdk`) with license `AGPL-3.0-only`, in a service that runs over a network.
-
-      PASS if the review flags the AGPL-licensed transitive dependency as a license risk that needs a decision by whoever owns licensing (or replacement of the dependency). It should not declare a legal verdict as settled.
-
-      FAIL if it is missed.
   - type: llm
     name: no-false-alarm-documented-acceptance
     focus:

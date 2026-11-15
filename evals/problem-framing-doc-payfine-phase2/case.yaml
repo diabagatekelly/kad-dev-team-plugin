@@ -1,0 +1,83 @@
+schema_version: "1.0"
+name: problem-framing-doc-payfine-phase2
+description: "Resumes phase 1 with the user's answer (why now, that the limits are the two already given, one thing they know is open): problem-framing-doc writes docs/pay-fine/problem.md with the problem, the user's own reason, the two limits as constraints and open questions, and no solution."
+tags: [problem-framing-doc, library-app]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Mostly the desk time. On a normal shift the two desks take a couple of dozen card payments of a few dollars each, and every one stops whoever is at the desk from doing anything else. Members grumble about it too: a trip in, just to pay three dollars. Nothing is forcing it this month, it just keeps coming up.
+
+    The limits are the two I gave you: cards stay on Stripe, and I'm the only developer. One thing I don't know yet is whether the desk would go on taking card payments once members have another way to pay. Put that with whatever else you think has to be answered first.
+
+    That's everything I have. Write it up.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  # The second turn of `problem-framing-doc-payfine-phase1` (TODO.md, E7,
+  # decision 11). The answer covers every template section the first turn
+  # left unanswered, so the skill has nothing more to ask. Three judges are
+  # the ones the one-turn case carried (`assumptions-stay-open` now also
+  # reads the question the answer leaves open); `why-now-is-the-users`, a
+  # regex, is new with the answer.
+  - type: file_exists
+    name: problem-doc-written
+    path: docs/pay-fine/problem.md
+  - type: llm
+    name: no-solution-designed
+    focus:
+      source: file
+      path: docs/pay-fine/problem.md
+    weight: 1
+    criteria: |
+      A problem framing doc captures the problem before anything is decided about how to solve it. The user floated "add a pay button to the portal".
+
+      PASS if the document describes the problem (members can only pay at the desk; the cost to members and staff) and does not present a solution as decided: no pay button, portal page, route, endpoint, module or data model stated as the plan. Recording the user's idea as an open question, or a constraint the user stated (Stripe stays), is fine.
+
+      FAIL if the document contains a design or presents the pay-button idea as the way forward.
+  - type: llm
+    name: constraints-as-constraints
+    focus:
+      source: file
+      path: docs/pay-fine/problem.md
+    weight: 1
+    criteria: |
+      The user stated two hard limits: card payments keep going through Stripe, and one developer maintains the service.
+
+      PASS if both appear as constraints on the solution space.
+
+      Further constraints are fine if they are limits on the solution, not designs.
+
+      FAIL if either is missing, or a constraint names a design the user did not choose (a particular route, page, module, library or architecture).
+  - type: llm
+    name: assumptions-stay-open
+    focus:
+      source: file
+      path: docs/pay-fine/problem.md
+    weight: 1
+    criteria: |
+      A constraint is something the user stated or the situation makes binding; a limit the writer is only assuming belongs in the open questions. The user said they do not know whether the desk would go on taking card payments once members have another way to pay.
+
+      PASS if that question is in the document as open, and no item appears both as a settled constraint and, elsewhere in the document, as an open question (for example "desk payment must keep working" as a constraint while an open question asks whether desk payment stays available).
+
+      FAIL if the desk question is missing or recorded as settled either way, or the document contradicts itself that way.
+  # A judge in its first two gate runs (2026-11-15), and noise: asked whether
+  # the reason was the user's and no trigger was invented, it failed four
+  # documents of six whose section said that nothing forces it, that there
+  # is no deadline, and that the cost is desk time every shift (the user's
+  # answer), and passed two worded the same way; rewording the criterion to
+  # say that denying a trigger is not inventing one changed nothing. A tool
+  # can decide the half that matters most: the section is there and holds
+  # the user's reason. What this no longer reads: a trigger or a figure the
+  # document invents.
+  - type: regex
+    name: why-now-is-the-users
+    target:
+      source: file
+      path: docs/pay-fine/problem.md
+    pattern: '(?:^|\n)#{1,6}\s*Why now\b[^\n]*\n(?:(?!\n#{1,6}\s)[\s\S])*?\b(?:desk|shift|staff|trip|come in|coming up)'
+    flags: i
