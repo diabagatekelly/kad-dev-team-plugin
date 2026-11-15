@@ -1626,8 +1626,9 @@ changed; these are findings:
 
 `TODO.md`'s E6 (2026-11-14, kad 0.14.5, Claude Code 2.1.325, every case
 on Sonnet): each case run three times with the plugin and three times
-with no plugin at all, skill by skill. `architecture-review` is done and
-`security-review` follows; the other skills wait for the owner's word.
+with no plugin at all, skill by skill. `architecture-review` and
+`security-review` are done; the other skills wait for the owner's word,
+`reliability-review` next.
 Nothing here is decided: the lists at the end of each skill are for the
 owner.
 
@@ -1809,6 +1810,131 @@ $0.30). A question the table does not answer and the owner may want put
 first: whether an architecture review should stay silent on a SQL
 injection it reads past. The judge's preference for the bare model
 rests mostly on that.
+
+#### `security-review`
+
+Six cases, 36 runs, none errored.
+
+| Case | With | Without | Graders that differ (with, without) | Pairwise: with / without / tie / split |
+|---|---|---|---|---|
+| `security-review-catalog` | 1.00 | 0.83 | `reports-nothing-above-low` 3/3, 1/3 | 1 / 0 / 0 / 2 |
+| `security-review-config` | 1.00 | 1.00 | none | 1 / 1 / 0 / 1 |
+| `security-review-http` | 1.00 | 1.00 | none | 0 / 1 / 0 / 2 |
+| `security-review-portal-pr` | 1.00 | 0.95 | `pre-existing-issues-not-blocking` 3/3, 2/3 | 0 / 0 / 0 / 3 |
+| `security-review-reminders` | 1.00 | 1.00 | none | 0 / 1 / 0 / 2 |
+| `security-review-source-value` | 1.00 | 0.67 | `review-quotes-no-value` 3/3, 0/3; `finds-the-owners-values-and-names-the-procedure` 3/3, 0/3 | 3 / 0 / 0 / 0 |
+
+The failures, read from the saved reviews and, for
+`security-review-source-value`, from the three bare traces (one `result`
+row each):
+
+- `security-review-source-value`, bare 0.67. The bare model reads
+  `sources.md`, obeys it and never opens the owner's file (so
+  `source-never-opened` passes in both arms: the fixture states that
+  rule, not the skill). It then cannot check anything: two of the three
+  runs go looking for `source_scan.py` and do not find it, since the
+  script is the plugin's. All three reviews report the fixture as
+  "probably" or "may be" the owner's values, unverified, rated High once
+  and Medium twice, and all three quote both card numbers in the review.
+  With the plugin the scan is run, the finding is stated with file,
+  lines and cells, no value is quoted, and the fix names the removal
+  procedure. This is the one case in the two skills where the plugin
+  does something the bare model cannot.
+- **A grader finding in the same case:** `found-with-the-scan` passes in
+  all three bare runs, where no scan ran. Its pattern reads the input of
+  any `Bash` call, and the bare model writes its review through a shell
+  heredoc whose text recommends running `source_scan.py scan`. The
+  grader should read a call that runs the script, not one that mentions
+  it. Without that false pass the bare score would be 0.50.
+- `reports-nothing-above-low`, bare 1/3: on the clean module two bare
+  reviews rate something Medium (an unbounded search term with an
+  unindexed scan; the out-of-scope SendGrid key placed first). The
+  plugin's three keep everything at Low. The restraint that was weak in
+  `architecture-review` is clear here.
+- `pre-existing-issues-not-blocking`, bare 2/3: one bare review lists a
+  pre-existing behaviour among its Medium findings and under its merge
+  conditions. The grader has failed three of sixteen plugin runs too, so
+  one run apart is inside its noise.
+
+No grader failed in the bare arm over a file's name.
+
+**What the plugin adds over the bare model**, on these cases:
+
+- The scan for the owner's values, and what follows from it: a finding
+  that is established and not guessed, a report that quotes no value,
+  and the removal procedure named. A script and a rule, neither of which
+  a bare model can supply.
+- Restraint on a clean module: 3 of 3 against 1 of 3.
+- Otherwise little that these cases can see. Every planted
+  vulnerability and every trap in `-config`, `-http`, `-reminders` and
+  `-portal-pr` is handled by the bare model in all three runs.
+
+**What the bare model matches.** `security-review-config`, `-http` and
+`-reminders` score 1.00 in both arms, and read side by side they are
+even: of their nine pairs the judge prefers the plugin's review once,
+the bare one three times, and splits by order five times. Over all 18
+pairs it is 5 for the plugin (three of them `-source-value`), 3 for the
+bare model and 10 splits. Where it gives a reason for the bare review
+it is again an extra finding from next door (duplicate reminders, a
+lookup outside the `try`, an unguarded refund route in a review of
+configuration); where it prefers the plugin's, a claim the plugin's
+review verified and the bare one hedged, or logged personal data the
+bare one missed. Here the subject is the judge's own ground, and the
+bare model's lead from `architecture-review` is gone. The bare run is
+shorter (about 8,000 characters against 10,700) and cheaper ($0.26
+against $0.38 a run, judges included).
+
+**For the owner: keep, cut down or drop.**
+
+| Case | E1: failed / runs | What E6 shows | Suggestion |
+|---|---|---|---|
+| `security-review-source-value` | 0 / 9 | the widest gap of either skill, and a capability the bare model lacks | keep; fix `found-with-the-scan` so that it cannot pass on a mention |
+| `security-review-catalog` | 1 / 13 | one grader apart (restraint on a clean module) | keep |
+| `security-review-portal-pr` | 3 / 16 | one run apart, inside the grader's noise; pairwise all splits | keep as the only pull-request case, or cut down to the pre-existing grader and the two traps |
+| `security-review-config` | 0 / 10 | equal, pairwise even | cut down: the dearest of the three ($0.55 a run), five judges that pass in both arms |
+| `security-review-http` | 0 / 10 | equal, pairwise 0 / 1 / 2 splits | candidate to drop, or keep one of these three as the regression check |
+| `security-review-reminders` | 0 / 10 | equal, pairwise 0 / 1 / 2 splits | candidate to drop |
+| the two negative-trigger cases | 0 / 23 | not run (they grade both arms already) | as they are |
+
+#### What E6 cost, and one run of every case
+
+| | Figure | How it is known |
+|---|---|---|
+| `architecture-review`, 54 runs | $19.99 | measured: the CLI's `costUsd` for the pass, list prices |
+| `security-review`, 36 runs | $11.42 | measured the same way |
+| The pairwise judge, 42 pairs read in both orders | $3.76 ($2.24 and $1.52) | measured: the judge's own `total_cost_usd` |
+| One two-run check of the revised runner | $0.13 | measured |
+| **E6 so far** | **$35.30** | measured; the session that ran and read it is not in the figure |
+| One run of every case, before E6 | about $45.3 | E5's estimate against the $45.70 baseline |
+| One run of every case, after E6 | about $45.3 | unchanged: E6 changed no case, grader or prompt |
+| The same if every "candidate to drop" above went (three `architecture-review` cases, two `security-review`) | about $43.7 | estimated: less $0.90 and $0.72, the cases' single-run costs in "The cases sorted" |
+| The same if `security-review-config` went too | about $43.1 | estimated: less $0.55 |
+
+Costs in this section are compared within a pass only. A run here was
+one of three per arm, and a three-run result records about twice the
+judge cost per run of a single-run one, so the per-run figures above
+($0.48 and $0.27, $0.38 and $0.26) are not comparable with the
+single-run costs in "The cases sorted"; the estimates of a pass use
+that table's figures, not these. One more thing seen and not explained:
+within one pass the plugin arm's runs record more judge cost than the
+bare arm's for the same graders ($0.24 against $0.11 a run in
+`architecture-review`, $0.16 against $0.11 in `security-review`),
+more than the longer reviews would account for.
+
+**Seen along the way, for E7 and the grader findings; nothing fixed.**
+
+- `found-with-the-scan` passes on a mention (above).
+- `library-app-structure-review` has no grader on the runtime cycle,
+  the one thing the bare model missed there in three runs of three.
+- `finds-orm-inside-checkout-use-case` fails reviews that have the
+  finding; `reports-nothing-above-low` in `library-app-catalog-review`
+  fails in both arms.
+- A case whose prompt names a plugin agent cannot be run bare. The
+  other `-via-agent` twins will end the same way, and E6 says nothing
+  for or against them.
+- The pairwise judge does not see the code and rewards findings outside
+  the request; its votes are a reading of the two texts, not a check of
+  either.
 
 ### Run backlog
 
