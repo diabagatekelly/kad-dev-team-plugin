@@ -46,7 +46,14 @@ graders:
       posture), and, if the first test drives a UI or crosses HTTP, a UI or
       HTTP framework.
 
-      Two things do not count against this check. (1) A category listed as
+      Three things do not count against this check. (0) The skill's gate
+      checks (0.15.0), recommended with the set and recorded under a `Gate
+      checks` heading: a tool per category the local gate runs (a
+      type-aware lint, compiler flags, size limits, a duplication and an
+      unused-code tool, coverage of changed lines, test timeouts, a secret
+      scanner, and a workflow scanner named for when a workflow exists).
+      They are checks on the code, not a pipeline, a host or a product
+      from the list above. (1) A category listed as
       deliberately not decided, with an owner. (2) The skill's default set for
       what a later chunk of the slice may force, "the runtime's built-in unless
       a chunk forces a dependency", approved once as a whole: an in-memory
@@ -91,3 +98,11 @@ graders:
     target: trace
     pattern: '"skill": ?"kad-dev-team:security-requirements"'
     match: not_contains
+  # 0.15.0 (TODO.md B1): the gate's categories are part of the one set.
+  - type: regex
+    name: gate-checks-recommended-with-the-set
+    # The message names a tool or a rule for duplication, unused code and
+    # the secret scan, and gives at least one limit as a number.
+    target: last_message
+    pattern: '^(?=[\s\S]*duplicat)(?=[\s\S]*unused)(?=[\s\S]*(?:secret|gitleaks))(?=[\s\S]*(?:complexity|max-lines|lines? per function|\b40 lines|\b300\b))[\s\S]*$'
+    flags: i

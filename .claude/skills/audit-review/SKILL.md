@@ -109,7 +109,7 @@ time so the numbers compare across runs:
   measured against.
 - **The mutation pass**: write the mutants as a JSON list (one break per
   module, two per module of the slice's subject; `old` must match once),
-  `python3 -I evals/tools/mutation_pass.py check --repo <clone> --mutants
+  `python3 -I skills/orchestrator/scripts/mutation_pass.py check --repo <clone> --mutants
   <file>` until every one matches, then `run` with the manifest's test
   and typecheck commands, `--base origin/main`, `--out` beside the review
   and `--log` in the scratchpad. The report carries the kill rate overall,

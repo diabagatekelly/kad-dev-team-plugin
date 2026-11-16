@@ -1,6 +1,6 @@
 ---
 name: ci-pipeline
-description: Write the continuous-integration configuration a repository is missing, so its pull requests run the same checks the orchestrator's gate runs locally (install with the frozen lockfile, typecheck, lint, the test suite with its coverage gate), hardened (pinned action commits, least-privilege permissions, no secrets). Use inside the first delivery that finds no CI in the repository, or when asked to add CI or a pipeline to a project. Writes CI only; deployment, environments and infrastructure are a separate, later skill.
+description: Write the continuous-integration configuration a repository is missing, so its pull requests run the same checks the orchestrator's gate runs locally (install with the frozen lockfile, typecheck, lint, the test suite with its coverage gate) on Linux and macOS, hardened (pinned action commits, least-privilege permissions, no secrets). Use inside the first delivery that finds no CI in the repository, or when asked to add CI or a pipeline to a project. Writes CI only; deployment, environments and infrastructure are a separate, later skill.
 ---
 
 # CI pipeline
@@ -31,7 +31,18 @@ change is the user's to ask for).
   else: stop and report what was found; don't invent a build.
 - **What the gate runs** is in the orchestrator's log and the project's
   documented test command; CI runs exactly those commands, so a local green
-  and a remote green mean the same thing. Coverage thresholds stay where
+  and a remote green mean the same thing. When the project root has a
+  `gate-checks.json`, an entry's `cmd` is one of those commands too when
+  two things hold: it is a script of the project's manifest, run through
+  the runner the project uses (pnpm, npm, yarn or bun; `uv run` or the
+  project's own task for Python), and its exit code is its verdict,
+  which is an entry with no `count` (the tool keeps its own baseline) or
+  a counted one whose `baseline` is 0. A counted entry with a baseline
+  above 0 exits non-zero on the violations the owner already accepted,
+  and only the gate compares the count: CI would be red on a tree the
+  gate passes, so it is listed under "Not run in CI" with its baseline.
+  So is an entry whose tool is a binary the manifest does not install,
+  which is never installed by a third-party action. Coverage thresholds stay where
   the project enforces them (the test runner's configuration); CI adds
   none of its own.
 
@@ -42,14 +53,23 @@ change is the user's to ask for).
 - `on: pull_request` and `push` to the default branch only.
 - `permissions: contents: read` at the top; no job widens it.
 - `concurrency` keyed on the ref, `cancel-in-progress: true`.
-- One `checks` job on `ubuntu-latest`: checkout, toolchain setup with the
+- One `checks` job on **two operating systems**, `strategy.matrix.os:
+  [ubuntu-latest, macos-latest]` with `runs-on: ${{ matrix.os }}` and
+  `fail-fast: false`: the gate runs on one machine, and a defect only
+  the other system shows (a path's case, a rename over an open file, a
+  signal, a line ending) reaches the pull request red with nothing local
+  to explain it (incident 33). Both always; never one "to save minutes",
+  and never a third unless the project's manifest says it supports it.
+  Its steps: checkout, toolchain setup with the
   version from step 1, the package manager enabled (`corepack enable` for
   pnpm or yarn), install with the frozen lockfile (`pnpm install
   --frozen-lockfile`, `npm ci`, `yarn install --immutable`, `uv sync
-  --frozen`), then typecheck, lint and test as separate named steps in that
-  order, each only if the project has the script. A step the project has
+  --frozen`), then typecheck, lint, the gate checks that are manifest
+  scripts, and test as separate named steps in that order, each only if
+  the project has the script. A step the project has
   no command for is left out, not stubbed.
-- One `audit` job, same setup, running the package manager's audit at high
+- One `audit` job on `ubuntu-latest` alone (an advisory does not depend
+  on the system), same setup, running the package manager's audit at high
   severity (`pnpm audit --audit-level=high`, `npm audit --audit-level=high`,
   `pip-audit` where available). It fails the run; a project that wants it
   advisory changes that itself.
@@ -59,8 +79,9 @@ change is the user's to ask for).
   annotated tag to its commit); never copy a SHA from memory. No
   third-party actions beyond `actions/checkout`, `actions/setup-node`,
   `actions/setup-python` and `astral-sh/setup-uv`.
-- No secrets, no `secrets.*`, no deploy step, no matrix unless the project
-  already supports more than one runtime version in its manifest, no
+- No secrets, no `secrets.*`, no deploy step, no matrix of runtime
+  versions unless the project already supports more than one in its
+  manifest (the operating-system matrix above is the only other one), no
   caching of anything but the package manager's store through the setup
   action's built-in cache option.
 - Timeouts on every job (`timeout-minutes`, fifteen unless the suite's
@@ -83,8 +104,8 @@ and the report says the README was not there). Never push here;
 
 - **Written** — the file, the host, the toolchain version and where it came
   from.
-- **Runs** — each step and the exact command, and that they match the
-  gate's.
+- **Runs** — each step and the exact command, that they match the
+  gate's, and the two operating systems the checks job runs on.
 - **Pinned** — each action, tag and SHA.
 - **Not run in CI** — any gate command the workflow could not include and
   why.

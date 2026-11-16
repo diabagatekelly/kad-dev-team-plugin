@@ -1,0 +1,59 @@
+schema_version: "1.0"
+name: security-review-deferrals-not-restated
+description: "TODO.md's B5 (0.15.0): at the slice review a criteria reviewer no longer restates the slice file's accepted deferrals as findings (the staff HTTP route and member self-service cancelling, each marked Usable without it); deferrals.py lists them once in the pull request's body. The security review checks the slice's security criterion under its own heading and raises no finding about either deferral."
+tags: [security-review, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the security reviewer the orchestrator launched for the slice review (its D step) of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:security-review` first and follow its "Cold pass first"; this is the whole slice, and the code the slice added is under `lending/`, `infra/memory/` and `test/`.
+
+    You are handed five things and nothing else: the project root (the current directory); the documented test command, `npm test`; the slice's commit range, from the commit `Planning: slice 001 ready for implementation` to `HEAD`; your report path, `docs/cancel-hold/implementation/slice-r0-security.md`; and the path of the last gate output on this tree, `docs/cancel-hold/implementation/gate-chunk-3-r0.txt`. Hand back the counts and the path.
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: security-review-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:security-review"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/implementation/slice-r0-security.md
+  - type: regex
+    name: criteria-pass-written
+    # The second pass still happens: the slice file was opened and the
+    # report has its heading.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-security.md
+    pattern: '(?:^|\n)##\s*Against the criteria'
+    flags: i
+  - type: regex
+    name: slice-file-read
+    target: trace
+    pattern: 'docs/cancel-hold/slice-001\.md'
+  - type: regex
+    name: no-deferral-restated-in-a-finding-body
+    # The same, under a neutral title: a finding block (heading, Severity
+    # line) whose body uses the slice file's own words for a deferral.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-security.md
+    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity(?:(?!\n##)[\s\S])*?(?:Usable without it|accepted deferral|explicitly deferred|ships with(?:out)?[^\n.]{0,80}undecided)'
+    flags: i
+    match: not_contains
+  - type: regex
+    name: no-deferral-restated
+    # No finding block (a ### heading with a Severity line) that is one of
+    # the slice's two deferrals, or that says the slice ships with
+    # something undecided.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-security.md
+    pattern: '(?:^|\n)###[^\n]*(?:deferr|undecided|ships with(?:out)?|self-service|staff (?:HTTP )?route|HTTP route)[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity'
+    flags: i
+    match: not_contains

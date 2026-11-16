@@ -492,9 +492,10 @@ whole round, one implementer building it as a commit on the slice branch,
 a mechanical gate, one combined reviewer and one smoke run in a real
 browser, one fix round and a regressions-only re-review, no more, and
 hands back one line; the orchestrator keeps the records, the log and the
-owner's questions; the whole slice is held to a Definition of Done,
-reviewed once more at the end and, when it has a screen, its acceptance
-criteria are walked in a real browser; then the branch is pushed, a pull
+owner's questions; the whole slice is held to a Definition of Done, its
+changed lines are mutated against the suite, it is reviewed once more at
+the end and read cold by an agent with no planning document, and, when
+it has a screen, its acceptance criteria are walked in a real browser; then the branch is pushed, a pull
 request opened, the standing Mediums filed, and the external reviewer's
 comments triaged. Nothing in it runs "until clean", nothing runs in the
 background, and nothing is resumed by message to fix something: every
@@ -518,7 +519,7 @@ the app (`scratch_run.py`, the data rule below).
 **The data rule** (P2.3; two smoke agents once started the app on the
 owner's real data and login credential store, incident 10). Every agent that starts the
 app (a smoke run, the criteria walk, the slice accessibility review, the
-stranger test) starts it through `scratch_run.py`, handed by absolute
+cold read) starts it through `scratch_run.py`, handed by absolute
 path with a scratch folder outside the project
 (`${TMPDIR:-/tmp}/kad-run-<slice>-<k>-<round>`): the app's data paths are
 given explicitly inside that folder (`--env NAME=<relative path>` for each
@@ -886,6 +887,49 @@ gate sent it back four times over documents it had not touched
    written is the one. Then write the A line: `readiness — PASS` when it
    passed first time, otherwise `readiness — PASS after <check> (entry
    <n>), <check> (entry <m>)`.
+5. **Gate checks.** The gate runs the project's own checks from
+   `gate-checks.json` at the project root: the eight categories
+   `technology-bootstrap` picks a tool for per stack (type-aware lint,
+   stricter compiler flags, complexity and length limits, duplication,
+   unused code, changed-line coverage, test timeouts and random order,
+   secret and workflow scans), each held against the existing code as
+   its baseline, so only a new violation fails (incident 36). Inline
+   with Bash, look for the file and for a `## Gate checks` heading in
+   the bootstrap document, and take the first that applies:
+   - **The file is there**: nothing to do; `gate checks — present`.
+   - **No file, the section is there, the project has a manifest**: one
+     fresh Sonnet fixer on the slice branch, before B
+     (`kad-dev-team:tdd-coach:AGENT`, `model: "sonnet"`, `maxTurns:
+     120`, `tdd-implementation-lite`, its handed-back path, chunks are
+     committed), handed the bootstrap document by path and one named
+     fix: wire the section as written (each picked tool installed
+     exact-pinned, its configuration and manifest script, and
+     `gate-checks.json` with one entry per category in the forms the
+     section's skill gives), change no source or test file to make a
+     check pass, then run
+
+     ```
+     python3 -I '<scripts>/validation_gate.py' --project '<project root>' --record-gate-baselines
+     ```
+
+     and commit everything as `Gate checks: wired`. Check the hash it
+     hands back as C.2 checks a runner's; `gate checks — wired <sha>`.
+     A category the fixer could not wire is its report's, and the A
+     line says `gate checks — wired <sha>, <n> not wired` for step 5.
+   - **No file, the section is there, no manifest yet** (a first slice
+     in an empty repository): the same launch after chunk 1's records
+     commit, when there is something to run the tools on; `gate checks —
+     after chunk 1`, and an indented bullet under chunk 1's C line with
+     the hash.
+   - **No file and no section**: a backward route, its own entry, to
+     `software-architect:technology-bootstrap` for that section alone
+     (its re-entry rule), then step 2 again. Nothing else of the
+     bootstrap is reopened.
+
+   You never write `gate-checks.json`, pick a tool or set a baseline
+   yourself, and never lower or raise a baseline to make a gate pass: a
+   count over its baseline is the gate's `FAIL`, and it goes to the
+   fixer like any other.
 
 Write the A line now (format below), then go to B.
 
@@ -1110,14 +1154,34 @@ orchestrator's side.
    in strings and the persisted names are High (the flow stops for the
    owner before the reviewers); comment density, planning references, env
    defaults and padding are Medium (the pull request body's Definition of
-   Done table). Only then:
+   Done table). Then:
+
+   **Mutation on the changed lines**, inline with Bash, while the tree
+   is still (no reviewer is running yet): a tool breaks each line the
+   slice added, one operator at a time, and the suite says whether any
+   test notices.
+
+   ```
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py" changed --repo '<project root>' --base '<base>' --out "${TMPDIR:-/tmp}/kad-mutants-<slice>.json"
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py" run --repo '<project root>' --mutants "${TMPDIR:-/tmp}/kad-mutants-<slice>.json" --test '<documented test command>' --base '<base>' --allow-dirty --out '<records dir>/slice-mutation.md'
+   ```
+
+   The mutants file holds lines of the source and stays outside the
+   tree; the report carries counts, lines and test names only. The
+   run's last line, `mutation: <n> mutants, <c> caught, <s> survived`,
+   goes on the D line as printed. You read no survivor and judge none:
+   the test-quality reviewer is handed the report and says which
+   matter. A run that cannot start (the baseline fails, a file would
+   not restore) is `mutation: not run (<the script's line>)` on the D
+   line and the reviewers go ahead without it. Only then:
 3. **The six reviewers once.** Sandbox check. `model: "opus"`, in
    parallel, **each handed five things and nothing else**: the project
    root, the documented test command, the whole slice's range
    `<base>..HEAD`, its report path `slice-r0-<reviewer>.md`, and the
    path of the last gate output on this tree (the suite's run; six
    suites at once on one checkout contend for ports and files, so no
-   reviewer runs it). Each follows its skill's "Cold pass first": all of
+   reviewer runs it). The test-quality reviewer is handed a sixth: the
+   path of `slice-mutation.md`. Each follows its skill's "Cold pass first": all of
    `src/` and `test/` read, the typecheck, lint and format check run and
    the suite's result read from the gate output (the tree is installed;
    no reviewer installs, since the six share one `node_modules`),
@@ -1130,11 +1194,11 @@ orchestrator's side.
    `devsecops-engineer:security-review`,
    `devsecops-engineer:reliability-review`, and
    `accessibility-engineer:accessibility-review` only if the slice is
-   UI-touching. Each criteria reviewer also restates every accepted
-   deferral of the slice file (its `Usable without it` items) as a
-   finding under `## Against the criteria` ("the slice ships with X
-   undecided; consequence Y"), so a deferral reaches the pull request
-   instead of being dropped. Lows are allowed here and only here: they go
+   UI-touching. No reviewer restates an accepted deferral of the slice
+   file: `deferrals.py` lists them once in the pull request's body at E
+   (a quarter of one slice review's findings were the same deferrals,
+   said by each criteria reviewer, incident 37). Lows are allowed here
+   and only here: they go
    to the pull request body under "Known Lows", grouped by theme, and are
    not filed.
 
@@ -1183,24 +1247,37 @@ orchestrator's side.
    re-review and the second fixer as above. The D line records `fixes
    builders <n> opus <m>`, and the review measures regressions per
    actionable finding against the 25% of incident 19.
-4. **The stranger test**, once, in D's last review round (round 1 when
-   there was a fix round, round 0 otherwise, launched alongside that
-   round's reviewers): the smoke agent (`accessibility-engineer` if
-   UI-touching, else `tdd-coach`, `model: "opus"`) clones the repository
-   into a fresh temporary directory (`git clone <project root> <tmp>` at
-   the branch), follows the README and nothing else from clone to
-   running (the app started through `scratch_run.py`, handed by path with
-   its own scratch folder: the data rule holds on a clone too), drives
-   the slice's thin path once in the real browser, removes the clone and
-   the scratch folder, and writes `slice-r<i>-smoke.md` (with no browser,
-   the same owed finding as the chunk smoke run, for the slice's thin
-   path, which goes to no fixer here either). The data hash runs around
-   it and goes on the D line.
-   What else it raises goes to that round's
-   fixer (as a round-0 finding when it ran with round 0, as a regression
-   when with round 1); a README that does not get a stranger to a running
-   app is a High for `docs-writer:readme` again, inline, then the fixer's
-   gate.
+4. **The cold read**, an eighth launch with round 0's reviewers (it was
+   the stranger test, a README followed on a clone in the last round;
+   it is now the whole reading a stranger gives the code, and early
+   enough for its bugs to be fixed): `kad-dev-team:tdd-coach:AGENT`,
+   `model: "opus"`, a real async `Agent` call, told to invoke
+   `kad-dev-team:cold-read` first, by name, and handed: the project
+   root (it clones from it and never works in it), the branch, the
+   base commit, the scratch launcher and a scratch folder of its own
+   (the data rule holds on a clone too), and the report path
+   `slice-r0-cold.md`. **Nothing else**: no planning document or its
+   path, no criteria, no report, no gate output, no word on what the
+   slice is for. Its skill is the procedure: a fresh clone, the README
+   from its first command, every source and test file read, each thing
+   the slice adds paired with the older code it runs beside or depends
+   on, every suspicion probed by execution, the clone removed. The
+   data hash runs around it and goes on the D line.
+
+   Its report is in the shared finding format and is recorded with
+   round 0's (`rounds_record.py` reads `slice-r0-cold.md` as reviewer
+   `cold`). A finding marked `confirmed by execution` goes to D's fix
+   round with the others, at the severity the reader gave it, whether
+   the code is the slice's or older (older code the slice runs beside
+   is what this reader is for; a bug in it that the slice cannot ship
+   with is fixed here, and one it can is a standing finding for the
+   body). A `verify` finding is not handed to the fixer: it stands,
+   named in the body, for the owner. A README that does not get the
+   reader to a running app is a High for `docs-writer:readme`, inline,
+   then the fixer's gate, as before. The cold read is not launched
+   again at round 1: the regressions-only re-review covers the fix's
+   diff. The audit's own cold read after delivery stays as it is, a
+   second reader the loop does not see.
 5. The records commit `Records: slice <nnn> review`; the snapshot and
    the sync exactly as C.6, their last line on the D line's `audit`
    field; then the D line.
@@ -1241,7 +1318,7 @@ the values back in its own log bullet (incident 18).
    names), invoke `release-engineer:ci-pipeline` inline with the `Skill`
    tool: it writes the workflow for the project's stack, mirroring the
    gate's commands (install with a frozen lockfile, typecheck, lint, the
-   suite with its coverage gate), pinned action SHAs, least-privilege
+   suite with its coverage gate) on Linux and macOS, pinned action SHAs, least-privilege
    permissions, and commits it by name. If one exists, skip; a gate
    command the workflow does not run is a line in the report, not a change
    you make. An audit job that fails on a dependency advisory is a named
@@ -1251,12 +1328,14 @@ the values back in its own log bullet (incident 18).
 3. **Push and pull request.** Invoke `release-engineer:delivery` inline
    with the `Skill` tool, telling it: the branch, the base, the report's
    path, the records directory and the sidecar, the Definition of Done
-   results, and the tracker `user-story-writeup` recorded for this project
-   (or that none is recorded). It pushes the branch, has
+   results, the slice file's path (its deferrals are listed in the body
+   by `deferrals.py`, once), and the tracker `user-story-writeup`
+   recorded for this project (or that none is recorded). It pushes the
+   branch, has
    `docs-writer:pr-writeup` write the body from the report (what was built
    chunk by chunk, decided gaps and decision commits, escalations, the
-   Definition of Done table, the standing Mediums, the Known Lows grouped
-   by theme, the model and tool provenance), opens the pull request
+   Definition of Done table, the standing Mediums, the deferrals list,
+   the Known Lows grouped by theme, the model and tool provenance), opens the pull request
    against the default branch, files **each standing Medium** as one issue
    in the recorded tracker (title from the finding, body from its text,
    file and line, label `tech-debt` where the tracker has labels), **files
@@ -1387,12 +1466,12 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
+- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
 - **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
-- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; stranger `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
-- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; checks `<CI green <sha> | CI red r<i>: <jobs> | CI no result>`<; ci r<i> fix `<sha>`>; issues `<#…>` (M `<m>`, deferred `<x>`); Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
+- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; mutation `<<n> mutants, <c> caught, <s> survived | not run (<why>)>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; cold `<<n> confirmed, <m> verify | PASS>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
+- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; checks `<CI green <sha> | CI red r<i>: <jobs> | CI no result>`<; ci r<i> fix `<sha>`>; issues `<#…>` (M `<m>`, deferred `<x>`); deferrals `<n>` listed; Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
   - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```
 

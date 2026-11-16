@@ -7,7 +7,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "start": "node dist/main/server.js",
-    "test": "node --experimental-transform-types --no-warnings --import ./test/ts-resolve.mjs --test --test-reporter=spec test/*.test.ts"
+    "test": "node --experimental-transform-types --no-warnings --import ./test/ts-resolve.mjs --test --test-timeout=5000 --test-reporter=spec test/*.test.ts"
   },
   "dependencies": {
     "date-fns-lite": "^2.1.0",

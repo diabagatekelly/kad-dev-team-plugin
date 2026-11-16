@@ -94,8 +94,38 @@ each as its own call: this skill; `kad-dev-team:test-quality-review`;
 error handling (you see that in the modules you read; no Touches line is
 handed over). The suite's own run you take from the gate output the task
 names; you never run it beside the smoke agent. Each returns an
-answer, not the turn. Only the reliability lens has a second pass, over
-the reliability criteria, under `## Against the criteria`. Then write **one** report to the path the task
+answer, not the turn. A lens is its skill's text as it stands today,
+not what you remember of it: one applied without its `Skill` call has
+not been applied, whatever the report's categories say, and a hand-back
+that says a lens was applied "inline" reports a lens that was skipped.
+Only the reliability lens has a second pass, over
+the reliability criteria, under `## Against the criteria`.
+
+**What the gate holds is not yours to report.** The gate output the task
+names ends its checks with one line, `INFO  gate covers: …`: every check
+that ran on this commit, the project's own among them by category
+(type-aware lint, stricter compiler flags, complexity and length limits,
+duplication, unused code, changed-line coverage, test timeouts and
+random order, secret and workflow scans). A category on that line was
+counted by a tool, with the existing code as its baseline, and one new
+violation would have failed the gate before you were launched. So
+nothing in a listed category is a finding in a chunk report, at any
+severity, under any of the three lenses: not a duplicated block, not an
+unused export or option, not a long or deeply nested function, not a
+line no test runs, not a promise nothing awaits. The tool's count is not
+restated as a finding either, and "the gate allows it but" is the same
+finding with a preamble. What no tool holds is what the launch is for
+(incident 36): **behaviour**, whether the code does what its names and
+its tests say, probed by execution; **names and comments that tell the
+truth**; **the design as the code shows it**, a rule in the wrong
+place, a state the app can reach that nothing handles. A category
+missing from the line (no `gate-checks.json` in the project, or an
+entry that says not picked) is still yours, by the sections below. And
+a tool's pass settles its own question only: when the block it counts
+as existing duplication, or the function it counts as long, is where
+the code does the wrong thing, the wrong thing is your finding.
+
+Then write **one** report to the path the task
 names, in the shared format below: Critical, High, Medium and
 `needs-decision` only, no Low (a Low noticed per chunk is dropped, not
 listed; the slice review at D collects Lows once, and `rounds_record.py`
@@ -133,6 +163,12 @@ different judgment call — that's `tdd-coach:test-quality-review`'s job, not
 yours.
 
 ## Duplication
+
+**Not in a chunk report when the gate's line lists `duplication`** (above):
+the project's tool has counted the copies, at the size the owner approved,
+and a block it does not count is not a finding you add back by eye,
+however many times you see it. This section is for a review with no such
+line: a pull request reviewed on its own, a project with no gate checks.
 
 Flag a duplicated block once it's more than a couple of lines and shows up
 two or more times. Two instances is a "watch for a third" — worth a note,

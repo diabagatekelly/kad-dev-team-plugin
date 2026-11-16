@@ -83,6 +83,42 @@ load-bearing bug on three runs' recorded lists
 because they tell you what to look for, and the cold pass is for what
 nobody wrote down.
 
+## What the gate holds, and the survivors at D
+
+**Per chunk, the gate's categories are not reported.** The gate output
+the task names lists what a tool counted on this commit (`INFO  gate
+covers: …`). With `changed-line coverage` on that line, a line or a
+branch of the change that no test runs is the gate's, and so is the
+untested-export sweep above for the changed files; with `test timeouts
+and random order` on it, a test that hangs or passes only in one order
+is the runner's. Neither is a finding in a chunk report. What a
+coverage figure cannot say is what is left: whether a test would fail
+if the rule were wrong (the seam, the fakes, an assertion that cannot
+fail, a test that mirrors the code).
+
+**At the slice review, the survivors.** The task hands you a sixth
+thing at D: the path of the mutation report (`slice-mutation.md`). A
+script changed each line the slice added, one operator at a time (a
+comparison's boundary, an equality, a connective, a boolean), ran the
+suite on each, and listed under `## Survivors` every change no test
+noticed. You do not run the pass; you read every survivor:
+
+- Open the line. Say what rule it holds and whether the app behaves
+  differently with the operator changed.
+- **It does, and no test fails**: a finding titled `no test holds <the
+  rule, in words>`, `**Category:** unguarded rule`, the line as its
+  Location, High when the rule decides money, access, or what is stored
+  or removed, Medium otherwise, and as its fix the test to write: the
+  input and the result it must assert, never a change to the code.
+  Several survivors on one rule are one finding naming them all.
+- **It does not** (a guard another guard already covers, a boundary no
+  input can reach, the condition of a log line): one line under a `##
+  Survivors read` heading, `#<n> equivalent: <why>`, and no finding.
+
+Every survivor is in one of the two places, by its number. A report
+that says the task handed no mutation report, or `mutation: not run`,
+says so under `## Checks run` and goes on without it.
+
 ## The seam check and the fake inventory
 
 Under the orchestrator's chunk loop (as a lens of the combined chunk

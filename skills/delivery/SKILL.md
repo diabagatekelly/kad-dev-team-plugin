@@ -85,15 +85,33 @@ push, and a lease.
 
 ## 3. The pull request
 
+First the slice's deferrals, by a script, when a slice file was handed
+or the branch's planning names one:
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/deferrals.py" --slice-file '<the slice file>' --out "${TMPDIR:-/tmp}/kad-pr-deferred-<branch>.md"
+```
+
+It writes one section, `## Deferred with this slice`: every item of the
+slice file's `Explicitly deferred` and `Still open` sections, once, with
+its triage sentence. Its last line (`deferrals: <n> listed …`) goes in
+the report. That file's text is a part of the body exactly as written:
+never reworded, summarised, reordered or merged into another part, and
+nothing is added to it from a reviewer's report, since no review
+restates a deferral now (incident 37). With no slice file (a branch
+delivered outside the chunk loop) the part is left out and the report
+says so.
+
 Invoke `kad-dev-team:pr-writeup` with the `Skill` tool for the body; it
 returns an answer, not the turn. Hand it the implementation report, the
-sidecar and the Definition of Done results, and tell it the body has these
-parts, in this order: what was built, one line per chunk with its commit
+sidecar, the Definition of Done results and the deferrals file, and tell
+it the body has these parts, in this order: what was built, one line per chunk with its commit
 hash; decided gaps and the mid-build decision commits (`Decision <n>`,
 with the persona); escalations and who owns them; a **Definition of Done**
 table, one row per check with its result; **Standing**, the Mediums left
 standing after the fix rounds, as a list that will carry issue links after
-step 4; **Known Lows**, the slice review's Lows grouped by theme (naming,
+step 4; **Deferred with this slice**, the deferrals file's section
+verbatim; **Known Lows**, the slice review's Lows grouped by theme (naming,
 comments, tests, structure, and so on), each with its file and line, not
 filed anywhere; a provenance line naming the models and their roles (the
 orchestrator session's model routing, Sonnet implementing and fixing, Opus

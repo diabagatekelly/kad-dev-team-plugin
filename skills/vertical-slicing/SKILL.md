@@ -385,9 +385,9 @@ the sentence says how. An item with neither sentence fails the readiness
 gate back to this skill. Why: a slice deferred a change to a stored
 rule, six reviewers accepted the deferral as the document's, and a cold
 read found that a first choice was permanent and a misclick had no undo
-(incident 14). The criteria reviewers restate
-every accepted deferral as a finding at the slice review, so what ships
-undecided reaches the pull request.
+(incident 14). Every accepted deferral is listed
+in the pull request's body, once, from this file, so what ships
+undecided reaches the reader of the pull request.
 
 Keep the whole write-up skimmable — this document answers "what are we
 building first and why," not "here is everything about the feature."

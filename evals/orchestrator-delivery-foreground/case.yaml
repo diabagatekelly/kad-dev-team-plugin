@@ -71,3 +71,20 @@ graders:
       PASS if the reply reports pull request #7 and two issue numbers, says the Lows stayed in the body, and gives the cost outcome (`not measured` with a reason, or a figure); the audit field is `off` in this session and may go unmentioned in the reply; a note that the external reviewer left nothing passes, and so does a note that the stand-in's `pr view` could not show the edited body.
 
       FAIL if it asks whether to push or open the pull request, reports the issues as filed in the background or still to be linked, or omits the pull request number.
+  # 0.15.0 (TODO.md B5): the slice's deferrals are listed once, by the
+  # script, and its section is a part of the pull request's body.
+  - type: tool_used
+    name: deferrals-listed-by-the-script
+    tool: Bash
+    input_match: 'deferrals\.py[^\n]*--slice-file[^\n]*slice-001\.md'
+    min: 1
+  - type: tool_used
+    name: body-carries-the-deferrals-section
+    # The command that builds the body splices the script's file into it
+    # (`cat "$TMPDIR/kad-pr-deferred.md" >> body`, between the Standing and
+    # the Known Lows parts), which is what all three first runs did, or
+    # writes the section's heading itself. A first form looked for the
+    # heading only and failed the three bodies that carried the file.
+    tool: Bash
+    input_match: '(?=[\s\S]*deferred[\w.-]*\.md)(?=[\s\S]*(?:Known Lows|What was built))|Deferred with this slice'
+    min: 1

@@ -1,0 +1,32 @@
+{
+ "skill": "technology-bootstrap",
+ "rule": "the gate's eight categories are picked per stack and recorded in a Gate checks section",
+ "edits": [
+  {
+   "file": "skills/technology-bootstrap/SKILL.md",
+   "old": "## Gate checks, picked per stack\n\nThe chunk loop's gate runs the suite, the typecheck and the lint on every\ncommit. Eight more categories are things a tool decides and a reviewer\nreading by eye does not (incident 36), and which tool does it depends on\nthe language, so the tool is picked here: once, with the default set\nabove, inside the same one approval.\n\n| Category | What it holds | TypeScript or JavaScript | Python |\n|---|---|---|---|\n| type-aware lint | a promise nothing awaits, an `any` leaking through a call, a condition that is always true | the linter's type-checked preset (the linter's own type-aware engine when the compiler version in use has no API the preset can load) | Ruff with a wide rule selection |\n| stricter compiler flags | undefined from an index, optional against undefined, a path with no return | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noImplicitOverride`, `noPropertyAccessFromIndexSignature` | the type checker's strict mode |\n| complexity and length limits | a function, a file or a line past the size a reader holds | the linter's `complexity`, `max-depth`, `max-params`, `max-lines-per-function` (function expressions counted) and `max-lines`; the formatter's line width | Ruff's complexity and size rules; the formatter's line length |\n| duplication | a block copied across files | jscpd | jscpd |\n| unused code | a file, export or dependency nothing uses | knip | vulture and deptry |\n| changed-line coverage | new lines no test runs while the file stays above its minimum | the gate's own read of the runner's lcov report: nothing to install | diff-cover on the coverage report |\n| test timeouts and random order | a test that hangs; tests that pass only in one order | the runner's own flags in the test script | pytest-timeout and pytest-randomly |\n| secret and workflow scans | a committed credential; a workflow that injects, is unpinned or over-permitted | gitleaks; actionlint and zizmor once a workflow exists | the same |\n\nFor another language, the ecosystem's equivalent of each, named with why.\nWhat the recommendation says, per category:\n\n- **The tool, and why that one**: what the project already has first (a\n  rule set of the linter it uses, a flag of its compiler, a flag of its\n  runner), then one single-purpose tool, exact-pinned. A category with\n  no credible tool on this stack is recorded as **not picked** with the\n  reason; it is never left out without a word.\n- **The limits, as numbers**: complexity 10, depth 4, parameters 4, a\n  function 40 lines, a file 300, a line 100 columns, a test 5 seconds,\n  unless the owner names others. A limit is a choice like any other and\n  the owner may change it; a category recommended with no number has\n  not been recommended.\n- **The existing code is the baseline.** Only a new violation fails. A\n  tool that keeps its own baseline keeps it (a suppressions file, a\n  baseline file); for the others the count the tool finds today is the\n  baseline in `gate-checks.json`, and the gate fails on one more. Never\n  recommend clearing the existing violations first: that is a slice of\n  its own, the owner's to ask for.\n\n**Recorded twice, by two hands.** This skill writes the `## Gate checks`\nsection of its document (the output format below): one row per category\nwith the tool and its version, the command, the limits, and how the\nbaseline is held. The build wires them, never this skill: the tools\ninstalled, their configuration and manifest scripts written, and\n`gate-checks.json` at the project root, one entry per category\n(`{\"category\", \"name\", \"cmd\"}` for a tool with its own baseline;\n`{\"category\", \"name\", \"cmd\", \"count\": \"<regex over its output>\",\n\"baseline\": <n>}` for a counted one; `{\"category\", \"covered_by\":\n\"suite\" | \"typecheck\" | \"lint\" | \"coverage\", \"note\"}` when a check the\ngate already runs holds it; `{\"category\", \"not_picked\": \"<reason>\"}`).\nThe orchestrator's A step launches that wiring once, from this section.\n\nA project whose bootstrap predates this section re-enters for it alone\n(below): the eight rows, one approval, nothing else reopened.\n\n",
+   "new": ""
+  },
+  {
+   "file": "skills/technology-bootstrap/SKILL.md",
+   "old": "## Gate checks\nOne row per category of the eight: the tool and its exact version (or\nwhat already in the project holds it), the command, the limits as\nnumbers, how the baseline is held (the tool's own file, or a count in\n`gate-checks.json`); or `not picked` and why. Approved with the set\nabove.\n\n",
+   "new": ""
+  },
+  {
+   "file": "skills/technology-bootstrap/SKILL.md",
+   "old": "- **The document has no `## Gate checks` section** (it was written before\n  the gate took the eight categories): the orchestrator's A step sends\n  the flow back here for that section only.\n\n",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "gate-checks-section-holds-the-eight"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "gate-checks-section-holds-the-eight": 0.0
+  }
+ }
+}

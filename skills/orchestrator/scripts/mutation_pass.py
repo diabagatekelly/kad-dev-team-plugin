@@ -2,6 +2,14 @@
 """A mutation pass over a clone: scripted exact-string breaks, one at a time,
 each run against the whole suite, the tree restored after each.
 
+Two uses. A review writes its own mutants (below). The chunk loop's slice
+review (the orchestrator's D step) has them written for it: `changed`
+reads the lines a range added to the source files and writes one mutant
+per operator it finds there (a comparison's boundary, an equality, a
+logical connective, a boolean literal), nothing a person chose, so what
+survives is a line of the slice's own that no test holds; the
+test-quality reviewer reads the survivors and says which matter.
+
 The slice 2 review (2026-11-08) ran forty such breaks by hand through a
 scratch script; this is that script as a tool, so the next review and the
 slice review's measures run it the same way. Nothing here invents a
@@ -45,11 +53,31 @@ only: the report never prints `old` or `new`, so a mutant written over a
 line that holds a value the owner's data gave never carries it into the
 review (the note is the reviewer's own words).
 
+`changed`, in order: lists the source files `git diff --name-only
+<base>...HEAD` names (`.ts .tsx .js .jsx .mjs .cjs .py`, test files left
+out), reads the lines the range added to each (`git diff -U0`), blanks
+strings and comments on a line before looking for an operator, and
+writes one mutant per operator kind per line: `old` is the whole line
+(the line before it too when the line alone occurs more than once; a
+line that is still not unique is skipped and counted), `new` the line
+with the first such operator replaced, `note` the line and the
+replacement in words (`line 41: <= to <`), never the code. With more
+than `--max` mutants (40) it keeps every k-th in file and line order, so
+the cap thins the pass evenly instead of dropping the last files. The
+mutants file holds lines of the source: write it outside the tree.
+
+`run --allow-dirty` is for the slice review's own tree, where the
+orchestrator's log is modified and never committed inside the loop: the
+tree's tracked changes must be the same after every mutant as before the
+run, and no mutant's file may be among them.
+
 Usage:
-  python3 -I evals/tools/mutation_pass.py check --repo DIR --mutants FILE
-  python3 -I evals/tools/mutation_pass.py run --repo DIR --mutants FILE --test 'CMD'
+  python3 -I <scripts>/mutation_pass.py check --repo DIR --mutants FILE
+  python3 -I <scripts>/mutation_pass.py changed --repo DIR --base REF --out FILE [--max 40]
+  python3 -I <scripts>/mutation_pass.py run --repo DIR --mutants FILE --test 'CMD'
       [--typecheck 'CMD'] [--base origin/main] [--out REPORT.md] [--log LOG.jsonl]
-      [--timeout SECONDS] [--title TEXT]
+      [--timeout SECONDS] [--title TEXT] [--allow-dirty]
+  (from this repository: python3 -I skills/orchestrator/scripts/mutation_pass.py ...)
 Exit codes: 0 ran (survivors are findings, not failures); 1 usage, a
 mutant that does not match once, or a tree that is not clean; 2 the
 baseline fails; 3 the tree could not be restored after a mutant (the
@@ -215,11 +243,121 @@ def diff_files(repo, base):
     return set(r.stdout.split())
 
 
+SOURCE = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py")
+TEST_DIRS = {"test", "tests", "__tests__", "spec"}
+TEST_NAME = re.compile(r"(?:\.(?:test|spec)\.[cm]?[jt]sx?|(?:^|/)test_[^/]*\.py|_test\.py)$")
+HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", re.M)
+JS_BLANK = re.compile(r"'(?:\\.|[^'\\\n])*'|\"(?:\\.|[^\"\\\n])*\"|`(?:\\.|[^`\\])*`|//.*$|/\*.*?\*/")
+PY_BLANK = re.compile(r"'(?:\\.|[^'\\\n])*'|\"(?:\\.|[^\"\\\n])*\"|#.*$")
+# (the operator as it stands in formatted code, its replacement, the words for the note)
+JS_OPERATORS = [(" <= ", " < ", "<= to <"), (" >= ", " > ", ">= to >"), (" < ", " <= ", "< to <="),
+                (" > ", " >= ", "> to >="), (" === ", " !== ", "=== to !=="), (" !== ", " === ", "!== to ==="),
+                (" == ", " != ", "== to !="), (" != ", " == ", "!= to =="), (" && ", " || ", "&& to ||"),
+                (" || ", " && ", "|| to &&")]
+JS_WORDS = [("true", "false"), ("false", "true")]
+PY_OPERATORS = [(" <= ", " < ", "<= to <"), (" >= ", " > ", ">= to >"), (" < ", " <= ", "< to <="),
+                (" > ", " >= ", "> to >="), (" == ", " != ", "== to !="), (" != ", " == ", "!= to =="),
+                (" and ", " or ", "and to or"), (" or ", " and ", "or to and")]
+PY_WORDS = [("True", "False"), ("False", "True")]
+NOT_CODE = re.compile(r"^\s*(?:import\b|from\b.*\bimport\b|export\s+(?:type|interface)\b|type\s+\w|interface\s+\w|\*|/\*|//|#)")
+
+
+def is_test_file(path):
+    parts = path.split("/")
+    return any(p in TEST_DIRS for p in parts[:-1]) or bool(TEST_NAME.search(path))
+
+
+def blanked(line, python):
+    """The line with every string and comment replaced by spaces of the
+    same length, so an operator's position in it is its position in the
+    line."""
+    return (PY_BLANK if python else JS_BLANK).sub(lambda m: " " * len(m.group(0)), line)
+
+
+def line_mutants(line, python):
+    """[(the mutated line, the replacement in words)]: one per operator kind
+    found in the line's code, the first occurrence of each."""
+    if NOT_CODE.match(line):
+        return []
+    code = blanked(line, python)
+    out = []
+    for old, new, words in (PY_OPERATORS if python else JS_OPERATORS):
+        at = code.find(old)
+        if at >= 0:
+            out.append((line[:at] + new + line[at + len(old):], words))
+    for old, new in (PY_WORDS if python else JS_WORDS):
+        m = re.search(r"\b" + old + r"\b", code)
+        if m:
+            out.append((line[:m.start()] + new + line[m.end():], f"{old} to {new}"))
+    return out
+
+
+def added_lines(repo, base, path):
+    """The 1-based numbers of the lines `<base>...HEAD` added to `path`."""
+    r = git(repo, "diff", "-U0", "--no-renames", f"{base}...HEAD", "--", path)
+    lines = set()
+    for start, count in HUNK.findall(r.stdout):
+        lines.update(range(int(start), int(start) + int(count if count != "" else 1)))
+    return lines
+
+
+def changed(a):
+    """`changed`: the mutants of the lines a range added (module docstring)."""
+    repo = os.path.abspath(a.repo)
+    names = git(repo, "diff", "--name-only", "--no-renames", "--diff-filter=AM", f"{a.base}...HEAD")
+    if names.returncode != 0:
+        say(f"mutation_pass: `{a.base}` is not a ref in {repo}")
+        return 1
+    files = sorted(f for f in names.stdout.splitlines() if f.endswith(SOURCE) and not is_test_file(f))
+    mutants, skipped, lines_read = [], 0, 0
+    for path in files:
+        try:
+            text = open(os.path.join(repo, path), encoding="utf-8").read()
+        except (OSError, UnicodeDecodeError):
+            continue
+        rows = text.split("\n")
+        for n in sorted(added_lines(repo, a.base, path)):
+            if n > len(rows) or not rows[n - 1].strip():
+                continue
+            lines_read += 1
+            line = rows[n - 1]
+            for mutated, words in line_mutants(line, path.endswith(".py")):
+                old, new = line, mutated
+                if text.count(old) != 1 and n > 1:
+                    old, new = rows[n - 2] + "\n" + line, rows[n - 2] + "\n" + mutated
+                if text.count(old) != 1:
+                    skipped += 1
+                    continue
+                mutants.append({"file": path, "old": old, "new": new, "note": f"line {n}: {words}",
+                                "area": path.split("/")[0] if "/" in path else ""})
+    total = len(mutants)
+    if a.max and total > a.max:
+        step = total / a.max
+        mutants = [mutants[int(i * step)] for i in range(a.max)]
+    with open(a.out, "w", encoding="utf-8") as f:
+        json.dump(mutants, f, indent=1)
+        f.write("\n")
+    say(f"mutants: {len(mutants)} written to {a.out} ({lines_read} added lines in {len(files)} source files; "
+        f"{total} found{', capped at ' + str(a.max) if total > len(mutants) else ''}; {skipped} skipped, line not unique)")
+    return 0
+
+
+def tracked_changes(repo):
+    return git(repo, "status", "--porcelain", "--untracked-files=no").stdout
+
+
 def run(a, mutants):
     repo = os.path.abspath(a.repo)
-    if git(repo, "status", "--porcelain").stdout.strip():
+    dirty = git(repo, "status", "--porcelain").stdout.strip()
+    if dirty and not a.allow_dirty:
         say("mutation_pass: the tree is not clean; commit or stash first (every mutant is restored with git checkout)")
         return 1
+    if a.allow_dirty:
+        modified = {line[3:].strip().strip('"') for line in tracked_changes(repo).splitlines()}
+        hit = sorted({m["file"] for m in mutants} & modified)
+        if hit:
+            say(f"mutation_pass: {', '.join(hit)} has uncommitted changes and a mutant; restoring it would lose them")
+            return 1
     problems = [(i, locate(repo, m)[1]) for i, m in enumerate(mutants, 1)]
     problems = [(i, p) for i, p in problems if p]
     if problems:
@@ -279,6 +417,7 @@ def run_locked(a, repo, mutants, head, changed, log, record):
     record({"mutant": 0, "baseline": True, "exit": 0, "tests": base_count, "seconds": round(secs, 1)})
 
     results = []
+    before = tracked_changes(repo) if a.allow_dirty else ""
     # A termination (Ctrl-C, a kill) raises through the `finally` below, so
     # the mutant in flight is restored before the runner exits.
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
@@ -299,7 +438,8 @@ def run_locked(a, repo, mutants, head, changed, log, record):
         finally:
             git(repo, "checkout", "--", m["file"])
         verdict, count, names = read_result(code, out)
-        if git(repo, "status", "--porcelain").stdout.strip():
+        after = tracked_changes(repo) if a.allow_dirty else git(repo, "status", "--porcelain").stdout.strip()
+        if after != before:
             say(f"mutation_pass: the tree is not clean after mutant {i} ({m['file']}); stopped")
             record({"mutant": i, "file": m["file"], "line": line, "restored": False})
             return 3
@@ -321,6 +461,10 @@ def run_locked(a, repo, mutants, head, changed, log, record):
         say(f"mutation_pass: report written to {a.out}")
     else:
         say(report)
+    counted = [r for r in results if r["verdict"] != "error"]
+    say(f"mutation: {len(counted)} mutants, {sum(1 for r in counted if r['caught'])} caught, "
+        f"{sum(1 for r in counted if not r['caught'])} survived"
+        + (f", {len(results) - len(counted)} not counted" if len(results) != len(counted) else ""))
     return 0
 
 
@@ -335,7 +479,7 @@ def render(a, repo, head, base_count, results, have_diff):
              + (f" Typecheck `{a.typecheck}` run on every mutant." if a.typecheck else ""), "",
              "## Method", "",
              "Each mutant is an exact string replacement that matched once in its file, applied by "
-             "`evals/tools/mutation_pass.py`; then the typecheck (if given) and the full suite ran once, "
+             "`mutation_pass.py`; then the typecheck (if given) and the full suite ran once, "
              "`git checkout --` restored the file, and `git status --porcelain` was empty after every mutant. "
              "Test names are listed as the runner prints them; the first three failures are shown with the "
              "total in brackets. \"In the diff\" means the file is in `git diff --name-only <base>...HEAD`.", "",
@@ -375,7 +519,7 @@ def render(a, repo, head, base_count, results, have_diff):
         lines.append("None.")
     for r in survivors:
         lines.append(f"- **#{r['mutant']} `{r['file']}:{r['line']}`: {r['note']}.** No test fails. Gap: a missing assertion or a missing test; the reviewer names which.")
-    lines += ["", f"Written {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} by `evals/tools/mutation_pass.py`"
+    lines += ["", f"Written {dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')} by `mutation_pass.py`"
               + (f"; log `{a.log}`" if a.log else "") + "."]
     return "\n".join(lines) + "\n"
 
@@ -396,7 +540,16 @@ def main():
     r.add_argument("--log", help="a JSON-lines log, one line per mutant as it finishes")
     r.add_argument("--timeout", type=int, default=1800, help="seconds per command (1800)")
     r.add_argument("--title", help="the report's title (default: the repo's basename)")
+    r.add_argument("--allow-dirty", action="store_true",
+                   help="run on a tree with uncommitted changes to other tracked files (the loop's log); they must be the same after every mutant")
+    g = sub.add_parser("changed", help="write one mutant per operator on the lines a range added to the source files")
+    g.add_argument("--repo", required=True)
+    g.add_argument("--base", required=True, help="the range is <base>...HEAD")
+    g.add_argument("--out", required=True, help="the mutants file to write (outside the tree: it holds source lines)")
+    g.add_argument("--max", type=int, default=40, help="at most this many mutants, thinned evenly (40; 0 for all)")
     a = ap.parse_args()
+    if a.cmd == "changed":
+        return changed(a)
     mutants = load_mutants(a.mutants)
     if a.cmd == "check":
         return check(os.path.abspath(a.repo), mutants)

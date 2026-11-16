@@ -1,0 +1,79 @@
+schema_version: "1.0"
+name: cold-read-new-beside-old
+description: "TODO.md's B3 (0.15.0): the cold read inside the slice review finds, by running it, a bug where the slice's new code meets older code. The slice adds removing a hold from a title's queue; the older PlaceHold gives a new hold the position `queue length + 1` and stores it on the hold. After a cancel the queue is shorter, so the next hold placed gets a position another waiting hold already has, and the hold that moved to the head still says it is second. No planning document says so and no test covers the pair. The reader clones, reads no planning document, probes the pair by execution and reports it confirmed."
+tags: [cold-read, library-app, capability]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the cold reader the orchestrator launched with round 0 of the slice review (its D step) of the library-lending app. Invoke the skill `kad-dev-team:cold-read` first.
+
+    You are handed: the project root, which is your current working directory (clone from it, never work in it); the branch, `slice-001-cancel-hold`; the base commit, the one whose subject is `Library lending service` (`git log --oneline` has it); the scratch launcher, `scratch_run.py` in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`), with the scratch folder `${TMPDIR:-/tmp}/kad-cold-001`; and the report path, `docs/cancel-hold/implementation/slice-r0-cold.md` in the project.
+  model: sonnet
+  max_turns: 90
+  timeout_seconds: 2700
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: cold-read-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:cold-read"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/implementation/slice-r0-cold.md
+  - type: tool_used
+    name: clones-before-reading
+    # Was a regex over the trace that stopped at the first brace of the
+    # command, so `${TMPDIR:-/tmp}` before the clone failed two right runs.
+    tool: Bash
+    input_match: 'git clone'
+    min: 1
+  - type: regex
+    name: opens-no-planning-document
+    # No Read of a file under docs/, and no shell command that prints one;
+    # the report is written there (a Write, or a heredoc redirected into
+    # it, which the first run used and a first form of this check failed).
+    target: trace
+    pattern: '(?:"name":"Read","input":\{[^{}]*"file_path":"[^"]*/docs/[^"]*\.md")|(?:"name":"Bash","input":\{[^{}]*"command":"[^"]*\b(?:cat|head|tail|less|sed -n|grep)\b[^"|;&<>]*docs/cancel-hold/[^"]*\.md)'
+    match: not_contains
+  - type: regex
+    name: positions-bug-confirmed-by-execution
+    # A finding block with a Severity line whose text speaks of the hold's
+    # stored position and carries the confirmed status. (A first form also
+    # asked for PlaceHold by name and failed a right finding that said
+    # "at placement".)
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-cold.md
+    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity:?\*\*:?\s*(?:Critical|High|Medium)(?=(?:(?!\n###)[\s\S])*?confirmed by execution)(?:(?!\n###)[\s\S])*?position'
+    flags: i
+  - type: tool_used
+    name: a-probe-was-run
+    # "Confirmed by execution" in the report is a claim; this is the run:
+    # a script under the scratch folder's probes directory executed with
+    # node, or node run on the clone's code directly.
+    tool: Bash
+    # (The input is matched as JSON, where a line break is the two
+    # characters `\n`: `\bnode` does not match after one, which failed a
+    # run whose probe was written and run in one command.)
+    input_match: '(?:\\n|\b)node\b[^\n]*(?:probes?/|--import|--experimental|-e\b|--eval|--test)'
+    min: 1
+  - type: regex
+    name: pairs-probed-listed
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-cold.md
+    pattern: '(?:^|\n)##\s*Pairs probed\s*\n(?:(?!\n## )[\s\S])*?(?:PlaceHold|place-hold|hold\.ts|position)'
+    flags: i
+  - type: regex
+    name: project-tree-untouched
+    # Nothing written into the project but the report.
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*slice-r0-cold\.md")(?![^"]*(?:kad-cold-001|/tmp/|/T/|/probes/|scratch))'
+    match: not_contains
+  - type: regex
+    name: hand-back-is-the-cold-line
+    target: last_message
+    pattern: '^\s*`?cold: (?:\d+ confirmed[^\n]*|PASS[^\n]*)slice-r0-cold\.md`?\.?\s*$'
