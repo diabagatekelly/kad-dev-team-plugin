@@ -518,6 +518,34 @@
       "ci-pipeline"
     ]
   },
+  "ci-pipeline-screen-job": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T222834-ci-pipeline-screen-job.json",
+    "graders": {
+      "browser-installed-from-the-pinned-package": 1.0,
+      "capture-states-left-to-the-project": 1.0,
+      "captures-uploaded-as-the-screens-artifact": 1.0,
+      "checks-workflow-written": 1.0,
+      "ci-pipeline-invoked": 1.0,
+      "ci-stays-read-only": 1.0,
+      "committed-not-pushed": 1.0,
+      "comparison-copied-into-the-project": 1.0,
+      "comparison-run-by-the-projects-copy": 1.0,
+      "harness-in-the-project": 1.0,
+      "one-named-image": 1.0,
+      "pinned-browser-lockfile-in-the-project": 1.0,
+      "plugin-files-copied-not-written": 1.0,
+      "screens-workflow-written": 1.0,
+      "threshold-file-written": 1.0,
+      "threshold-is-the-owners-tenth-of-a-percent": 1.0
+    },
+    "skills_invoked": [
+      "ci-pipeline"
+    ]
+  },
   "code-review-catalog": {
     "score": 0.944,
     "runs": 3,
@@ -778,6 +806,57 @@
       "nothing-launched": 1.0,
       "orchestrator-invoked": 1.0,
       "report-leads-with-red-ci-and-not-ready": 1.0
+    },
+    "skills_invoked": [
+      "delivery",
+      "orchestrator"
+    ]
+  },
+  "delivery-screens-owed": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T222015-delivery-screens-owed.json",
+    "graders": {
+      "artifact-downloaded": 1.0,
+      "baselines-adopted-by-the-script": 1.0,
+      "checks-watched-again-after-the-push": 1.0,
+      "delivery-skill-invoked": 1.0,
+      "e-line-says-green-and-carries-the-baselines": 1.0,
+      "no-fixer-for-owed-baselines": 1.0,
+      "no-image-copied-by-hand": 1.0,
+      "no-red-round-written": 1.0,
+      "no-unlisted-baseline-touched": 1.0,
+      "nothing-in-the-background": 1.0,
+      "orchestrator-invoked": 1.0,
+      "the-two-listed-baselines-pushed-in-one-commit": 1.0
+    },
+    "skills_invoked": [
+      "delivery",
+      "orchestrator"
+    ]
+  },
+  "delivery-screens-stray": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T222015-delivery-screens-stray.json",
+    "graders": {
+      "artifact-downloaded": 1.0,
+      "checks-read": 1.0,
+      "delivery-skill-invoked": 1.0,
+      "handoff-briefs-the-fixer-not-to-weaken-the-check": 1.0,
+      "its-images-kept-in-the-records": 1.0,
+      "no-baseline-committed-while-a-finding-stands": 1.0,
+      "no-baseline-staged-or-copied": 1.0,
+      "no-e-line-that-says-clean-or-green": 1.0,
+      "nothing-launched": 1.0,
+      "orchestrator-invoked": 1.0,
+      "report-leads-with-the-red-screens-check": 1.0,
+      "threshold-and-list-left-alone": 1.0,
+      "unlisted-state-written-to-the-records": 1.0
     },
     "skills_invoked": [
       "delivery",
@@ -1176,6 +1255,63 @@
       "why-comments"
     ]
   },
+  "orchestrator-autopilot-question": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T222015-orchestrator-autopilot-question.json",
+    "graders": {
+      "asks-the-autopilot-question": 1.0,
+      "delegation-not-asked-again": 1.0,
+      "no-autopilot-file-before-the-answer": 1.0,
+      "no-branch-before-the-answer": 1.0,
+      "nothing-launched-before-the-answer": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "map-query",
+      "orchestrator",
+      "tdd-implementation-lite"
+    ]
+  },
+  "orchestrator-autopilot-recorded": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T222015-orchestrator-autopilot-recorded.json",
+    "graders": {
+      "a-line-names-the-autopilot-file": 1.0,
+      "autopilot-file-written": 1.0,
+      "file-holds-the-owners-words-the-stops-and-the-always-asked": 1.0,
+      "no-builder-in-this-session": 1.0,
+      "orchestrator-invoked": 1.0,
+      "question-not-asked-when-already-answered": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-autopilot-round": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T222015-orchestrator-autopilot-round.json",
+    "graders": {
+      "handed-the-standing-finding-by-report": 1.0,
+      "next-chunk-not-started-over-a-standing-high": 1.0,
+      "orchestrator-invoked": 1.0,
+      "sandbox-checked-before-the-launch": 1.0,
+      "verify-reviewer-launched-once": 1.0,
+      "verify-reviewer-on-opus": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
   "orchestrator-backward-route": {
     "score": 1.0,
     "runs": 3,
@@ -1210,6 +1346,25 @@
       "budget-exceeded-on-the-log": 1.0,
       "flow-ends-on-the-clock-and-says-what-is-built": 1.0,
       "nothing-launched": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-capture-states": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T222015-orchestrator-capture-states.json",
+    "graders": {
+      "handoff-names-the-fixer-and-the-missing-state": 1.0,
+      "listed-states-asked-of-the-script": 1.0,
+      "no-capture-code-written-by-the-orchestrator": 1.0,
+      "nothing-in-the-background": 1.0,
+      "nothing-launched": 1.0,
+      "nothing-pushed-while-a-state-is-not-driven": 1.0,
       "orchestrator-invoked": 1.0
     },
     "skills_invoked": [
@@ -1409,6 +1564,25 @@
       "orchestrator"
     ]
   },
+  "orchestrator-last-fix-review-at-d": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T222015-orchestrator-last-fix-review-at-d.json",
+    "graders": {
+      "last-fix-reviewer-launched": 1.0,
+      "last-fix-reviewer-on-opus": 1.0,
+      "one-launch-and-no-other": 1.0,
+      "orchestrator-invoked": 1.0,
+      "scoped-to-the-fixs-range": 1.0
+    },
+    "skills_invoked": [
+      "code-review",
+      "orchestrator",
+      "test-quality-review"
+    ]
+  },
   "orchestrator-mutation-before-review": {
     "score": 1.0,
     "runs": 3,
@@ -1453,14 +1627,14 @@
     ]
   },
   "orchestrator-readiness-gate": {
-    "score": 0.963,
+    "score": 0.926,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-orchestrator-readiness-gate.json",
+    "source": "results/gate-20261116T233740-orchestrator-readiness-gate.json",
     "graders": {
       "a-line-carries-session-and-audit": 1.0,
-      "backward-routes-name-the-checks": 0.667,
+      "backward-routes-name-the-checks": 0.333,
       "first-failed-check-routed-inline": 1.0,
       "gate-before-the-routed-skill": 1.0,
       "no-builder-while-the-gate-fails": 1.0,
@@ -1480,16 +1654,16 @@
     ]
   },
   "orchestrator-readiness-open-item": {
-    "score": 1.0,
+    "score": 0.944,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-orchestrator-readiness-open-item.json",
+    "source": "results/gate-20261116T233740-orchestrator-readiness-open-item.json",
     "graders": {
       "blocker-named-in-the-log": 1.0,
       "nothing-launched-while-blocked": 1.0,
       "orchestrator-invoked": 1.0,
-      "puts-the-blocker-to-the-owner": 1.0,
+      "puts-the-blocker-to-the-owner": 0.667,
       "readiness-gate-run-by-the-script": 1.0,
       "slice-file-not-edited-by-the-orchestrator": 1.0
     },
@@ -1502,7 +1676,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-orchestrator-readiness-sources.json",
+    "source": "results/gate-20261116T233740-orchestrator-readiness-sources.json",
     "graders": {
       "check-named-in-the-log": 1.0,
       "log-holds-no-value": 1.0,
@@ -2359,9 +2533,11 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T114102-screen-design-payfine.json",
+    "source": "results/gate-20261116T222015-screen-design-payfine.json",
     "graders": {
+      "a-listed-state-is-named-as-its-mockup-file": 1.0,
       "asks-nothing-the-docs-answer": 1.0,
+      "changed-states-section-lists-three-states": 1.0,
       "does-not-fire-design-system": 1.0,
       "each-mockup-styled": 1.0,
       "mockups-carry-the-system-brand-token": 1.0,
