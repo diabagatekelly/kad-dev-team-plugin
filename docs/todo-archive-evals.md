@@ -1,3 +1,5 @@
+> **Archive.** `evals/TODO.md` as it stood on 2026-11-16; its one unticked line, J4, is a decision recorded as "not cases" and was narrowed in the lines after it. Nothing here is a work list any more: the open work is `TODO.md` at the repository root, which keeps each item's letter and number, so a reference such as "`TODO.md`'s B9" in `evals/README.md` or in a commit still resolves, there if the item is open and here if it is done. The owner's decisions and every "done" note are below, unchanged.
+
 # Eval suite work list
 
 From `AUDIT-2026-10-12.md`. Phases are ordered by dependency: each phase's
