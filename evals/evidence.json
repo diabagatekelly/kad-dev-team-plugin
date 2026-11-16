@@ -216,13 +216,13 @@
     "recorded": "2026-11-16T04:48:23Z"
   },
   "ci-pipeline-os-matrix": {
-    "inputs": "6dfc8a68e36f705ffb27c33c1450bd767824a3f61db34e4d2e15ccdee5087e47",
-    "score": 1.0,
+    "inputs": "4dfe93b47479af260cc0be952a4d78147704ec2dd1cdd1c7686fc9b108879763",
+    "score": 0.963,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261116T042036-ci-pipeline-os-matrix.json",
+    "runs": 3,
+    "source": "results/gate-20261116T122447-ci-pipeline-os-matrix.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T04:48:23Z"
+    "recorded": "2026-11-16T12:26:59Z"
   },
   "code-review-catalog": {
     "inputs": "8e84dd38cfefd2fa26f3aa16d2ec2271389af19aa7699a3d6702d6c80ea9fe42",
@@ -306,13 +306,13 @@
     "recorded": "2026-11-16T12:08:36Z"
   },
   "cold-read-new-beside-old": {
-    "inputs": "0dcf12d3795ddfe7d61ab1505dac194bffabc95cdb5056a39f2952cf357e3527",
+    "inputs": "2ed85af9c589efa28a91326a604e2705d6eff6c1dbe43d402b162caf5806a02d",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 1,
-    "source": "results/gate-20261116T042036-cold-read-new-beside-old.json",
+    "runs": 3,
+    "source": "results/gate-20261116T122750-cold-read-new-beside-old.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T04:48:23Z"
+    "recorded": "2026-11-16T12:28:38Z"
   },
   "delegation-consult-with-file": {
     "inputs": "519d976e42a6597d16df38200ee51e3500fc0fd2aff844c19b483d2fc754d1ac",
@@ -621,13 +621,13 @@
     "recorded": "2026-11-16T04:48:23Z"
   },
   "orchestrator-mutation-before-review": {
-    "inputs": "0f311c3486c612bdd7a891c7daf3936abfdfd8f822db082b251f1f7cbd76de8d",
+    "inputs": "f872451db5656d29bf54ad9d6caabdbe9e2b187e3f8d47d2f9699a8c36cacf88",
     "score": 1.0,
     "bar": 0.917,
-    "runs": 1,
-    "source": "results/gate-20261116T042036-orchestrator-mutation-before-review.json",
+    "runs": 3,
+    "source": "results/gate-20261116T122447-orchestrator-mutation-before-review.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T04:48:23Z"
+    "recorded": "2026-11-16T12:26:59Z"
   },
   "orchestrator-plan-check-seam": {
     "inputs": "2af552201d93d5c7ddd32290bd96d62fe79e7b43e99c1dba664d6ee346e94cc4",
@@ -1152,13 +1152,13 @@
     "recorded": "2026-11-16T04:48:23Z"
   },
   "security-review-deferrals-not-restated": {
-    "inputs": "bb1fd4fef60006b283e4053192f7fdff2c3cf0a98ac2d52d0b2ccbf36a8b8d59",
-    "score": 1.0,
+    "inputs": "fd7143f9ccaad19c67520618979bd38bd50e64898a6603d1a96c72c279a7c958",
+    "score": 0.944,
     "bar": 0.933,
-    "runs": 1,
-    "source": "results/gate-20261116T042036-security-review-deferrals-not-restated.json",
+    "runs": 3,
+    "source": "results/gate-20261116T122447-security-review-deferrals-not-restated.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T04:48:23Z"
+    "recorded": "2026-11-16T12:26:59Z"
   },
   "security-review-neg-architecture": {
     "inputs": "0f7663a4fa7e39bdd211d0f125ab58623abe52d941e8c6c2cb79bd864813e6ee",
