@@ -12,6 +12,10 @@ fix then revises it.
 - An older criterion the fix rewords is the fix's again.
 - A base that is not a commit is refused (exit 2), never read as "no gaps".
 - A button's label is not a wait; the wait the criterion states still is.
+- The eleventh check: a screen design with no `States this slice changes`
+  section routes to screen-design, a slice with no screen design is not
+  asked for one, and under an issue fix an older slice's missing section
+  is an older gap.
 
 Usage: python3 -I evals/tools/readiness_check_test.py
 """
@@ -246,6 +250,66 @@ class ALabelIsNotAWait(unittest.TestCase):
     def test_an_unquoted_again_is_still_read(self):
         ok, _, _ = self.numbers("- R5: Given a failed cancel, when staff ask, then the route tries again and the hold is as it was.")
         self.assertFalse(ok)
+
+
+SECTION = ("## States this slice changes\n\n- `desk-holds`: new\n- `desk-holds-cancelled`: new\n"
+           "- `desk-holds-refused`: new\n\n")
+
+
+class ChangedStatesListed(unittest.TestCase):
+    """The eleventh check (0.16.0): a UI-touching slice's screen design
+    lists the states the slice changes, for the screen-change check."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = os.path.realpath(self.tmp.name)
+        self.planning = os.path.join(self.root, "docs", "cancel-hold")
+        shutil.copytree(PLANNING, self.planning)
+        self.screen = os.path.join("visual-ux", "screen-design-001.md")
+
+    def edit(self, old, new):
+        Project.edit(self, self.screen, old, new)
+
+    def gate(self, *args):
+        return Project.gate(self, *args)
+
+    def test_the_fixtures_screen_design_has_the_section_and_passes(self):
+        _, out = self.gate()
+        self.assertIn("PASS  changed-states-listed:", out)
+
+    def test_a_screen_design_with_no_section_routes_to_screen_design(self):
+        self.edit(SECTION, "")
+        code, out = self.gate()
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL  changed-states-listed:", out)
+        self.assertIn("no `## States this slice changes` section", out)
+        self.assertIn("route: changed-states-listed -> ux-designer:screen-design", out)
+
+    def test_a_listed_state_with_no_mockup_of_its_name_fails(self):
+        os.remove(os.path.join(self.planning, "visual-ux", "desk-holds-refused.html"))
+        _, out = self.gate()
+        self.assertIn("`desk-holds-refused` (new) has no mockup named desk-holds-refused.html", out)
+
+    def test_a_slice_with_no_screen_design_is_not_asked_for_one(self):
+        os.remove(os.path.join(self.planning, self.screen))
+        _, out = self.gate()
+        self.assertNotIn("changed-states-listed", out)
+
+    def test_under_an_issue_fix_an_older_slices_missing_section_is_an_older_gap(self):
+        self.edit(SECTION, "")
+        project = Project.__new__(Project)
+        project.root, project.planning = self.root, self.planning
+        git(self.root, "init", "-q")
+        for pair in (("user.name", "t"), ("user.email", "t@example.test"), ("commit.gpgsign", "false")):
+            git(self.root, "config", *pair)
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-qm", "a slice merged before 0.16.0")
+        project.add_criterion(SOUND)
+        _, out = project.gate("--fix-base", "HEAD")
+        self.assertIn("PASS  changed-states-listed: nothing the fix revised fails", out)
+        self.assertNotIn("route: changed-states-listed", out)
+        self.assertIn("INFO  older-gap: changed-states-listed:", out)
 
 
 if __name__ == "__main__":

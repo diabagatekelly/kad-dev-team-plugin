@@ -1,0 +1,50 @@
+# The screen-change check (C1) with a real browser, on the loop fixture's
+# holds desk: evals/tools/fixture_screens.sh says what is asserted. No
+# model and no secret; the one job of this repository that installs from
+# npm (Playwright, pinned in skills/ci-pipeline/screens/package-lock.json,
+# the same folder ci-pipeline copies into a project).
+#
+# The fixture's images (its baselines and the two capture sets the cases
+# and the tool test read) are this job's artifact, committed by hand:
+# Ubuntu 24.04 is the one fixed environment they come from.
+name: Fixture screens
+
+on:
+  pull_request:
+    paths:
+      - "skills/orchestrator/scripts/screen_check.py"
+      - "skills/ci-pipeline/screens/**"
+      - "evals/fixtures/library-app/code-plants/loop/screens/**"
+      - "evals/tools/fixture_screens.sh"
+      - "evals/tools/screen_check_test.py"
+      - ".github/workflows/fixture-screens.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fixture-screens-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screens:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: The tool test
+        run: python3 -I evals/tools/screen_check_test.py
+      - name: Capture the fixture's desk and judge it three times
+        run: bash evals/tools/fixture_screens.sh "$RUNNER_TEMP/fixture-screens"
+      - name: Keep the captures and the differences
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fixture-screens
+          path: ${{ runner.temp }}/fixture-screens/out

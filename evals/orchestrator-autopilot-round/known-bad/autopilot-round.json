@@ -1,0 +1,36 @@
+{
+ "skill": "orchestrator",
+ "rule": "under autopilot a standing Critical or High gets a round of verify, fix and review",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "**The autopilot round.** When a scope's rounds are over and a Critical\nor High stands (the runner's line says so, D's fix round left one, or a\nlast-fix review raised one): without `autopilot.md` the flow stops for\nthe owner, as before. With it, at most **two** rounds per scope (the\nowner, 2026-11-16), each in this order, every launch after a sandbox\ncheck, and one `taken as recommended` bullet per round:\n\n1. **Verify.** One `kad-dev-team:code-reviewer:AGENT`, `model: \"opus\"`,\n   handed the standing Critical and High findings by report path and\n   title, the project root, the test command and a report path\n   (`<scope>-auto-r<i>-verify.md`, the scope being `chunk-<k>`, `slice`\n   or `pr`), and told one thing: for each, run the code at `HEAD` and\n   say whether the finding is still true. What it reproduces it writes\n   as a finding in the shared format at the severity it finds; what it\n   cannot reproduce it lists under `## Not reproduced`, one line each\n   with what it ran. A last-fix review's own Critical or High was read\n   on the diff minutes ago and is not verified again: it goes straight\n   to step 2. Record the report (`--chunk <k | D | pr> --round <i>\n   --last`).\n2. **Fix.** Nothing confirmed and nothing from a last-fix review: the\n   round ends here, `auto r<i> verify 0 confirmed, <n> not reproduced`,\n   and the scope goes on (the unreproduced findings stay in the sidecar\n   and are filed at E with that sentence). Otherwise one fresh fixer\n   (`model: \"sonnet\"`, `maxTurns: 120`, `tdd-implementation-lite`, its\n   handed-back path, chunks are committed) with the confirmed findings\n   by report path, then the gate on its range (its own one fixer on a\n   `FAIL`, as everywhere).\n3. **Read the fix.** The last-fix review on that fix's range\n   (`<scope>-auto-r<i>-last-review.md`), recorded with `--last`.\n\nA Critical or High after round 1 gets round 2; one after round 2 stops\nthe flow for the owner at step 5, with both rounds' reports named. The\nfragment on the C, D or E line: `auto r<i> verify <c> confirmed, <n>\nnot reproduced< fix <sha> → last <C/H/M>>`. The round never runs for a\n`gate FAIL … ended`, a `stall: ended`, a hand-back that failed its hash\ncheck, `data CHANGED` or the loop time: those end the flow as they did.\nA stop once went to the owner over a Critical the last fix had already\nremoved, and the extra review they allowed found a real High.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "- **the autopilot round** for a Critical or High left standing when a\n  scope's rounds are over (below), twice at most per scope;\n",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": ", up to two rounds\n     of verify, fix and review for a Critical or High left standing,",
+   "new": ","
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "A Critical or High standing after\n   that gets the autopilot round when `autopilot.md` says yes; without\n   the file, or after its second round, it stops the flow before E.",
+   "new": "A Critical or High standing after\n   that stops the flow before E."
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "<; auto r<i> verify `<c>` confirmed, `<n>` not reproduced< fix `<sha>` → last `<C/H/M>`>>",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "verify-reviewer-launched-once",
+  "verify-reviewer-on-opus",
+  "handed-the-standing-finding-by-report"
+ ]
+}

@@ -1,0 +1,82 @@
+schema_version: "1.0"
+name: delivery-screens-owed
+description: "C1 (0.16.0), baselines committed by the loop from the CI artifact: resumed at E.4 with pull request #7 open and its `screens` check red with `BASELINES OWED 1 changed, 1 new` (the listed `hold-not-cancelled` and the new `queue-failure`; nothing else moved). Delivery downloads the artifact, has screen_check.py adopt the two images, commits exactly those as baselines, pushes, watches the checks again (green on the new head), and finishes E with no fixer and no red round."
+tags: [orchestrator, delivery, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command); the remote is already set up.
+  model: sonnet
+  max_turns: 70
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: delivery-skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:delivery"'
+    min: 1
+  - type: regex
+    name: artifact-downloaded
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)run download[^\n]*screens'
+  - type: tool_used
+    name: baselines-adopted-by-the-script
+    tool: Bash
+    input_match: 'screen_check\.py[^\n]*\badopt\b[^\n]*--artifact'
+    min: 1
+  # What the push delivered (the remote's `git log --stat`): one commit named Baselines holding the two listed states' images.
+  - type: regex
+    name: the-two-listed-baselines-pushed-in-one-commit
+    target:
+      source: file
+      path: tools/pushed-history.txt
+    pattern: '\n    Baselines[^\n]*\n(?:(?!\ncommit )[\s\S])*?baselines/hold-not-cancelled\.png(?:(?!\ncommit )[\s\S])*?baselines/queue-failure\.png'
+  - type: regex
+    name: no-unlisted-baseline-touched
+    target:
+      source: file
+      path: tools/pushed-history.txt
+    pattern: '\n    Baselines[^\n]*\n(?:(?!\ncommit )[\s\S])*?baselines/hold-cancelled\.png'
+    match: not_contains
+  - type: regex
+    name: no-image-copied-by-hand
+    target: trace
+    pattern: '"name":"Bash","input":\{"command":"(?:[^"\\]|\\.)*\bcp\b(?:[^"\\]|\\.)*captures/(?:[^"\\]|\\.)*baselines'
+    match: not_contains
+  - type: tool_used
+    name: no-fixer-for-owed-baselines
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: no-red-round-written
+    target: trace
+    pattern: '"name":"Write","input":\{"(?:file_path|path)":"[^"]*pr-ci-r1\.md"'
+    match: not_contains
+  - type: regex
+    name: checks-watched-again-after-the-push
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: 'pr checks[\s\S]*run download[\s\S]*pr checks'
+  - type: regex
+    name: e-line-says-green-and-carries-the-baselines
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '- \*\*E\. Delivery:\*\*(?=[^\n]*CI green)(?=[^\n]*baselines)'
+  - type: regex
+    name: nothing-in-the-background
+    target: trace
+    pattern: '"run_in_background"\s*:\s*true'
+    match: not_contains

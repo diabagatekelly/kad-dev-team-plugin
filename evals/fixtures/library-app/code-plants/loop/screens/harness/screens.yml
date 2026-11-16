@@ -1,0 +1,39 @@
+name: screens
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: screens-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  screens:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b4d8f7b2d4b4f5b7b2d8d1d8f3f4a # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@1a4a6f5a0d4a1e5c2f0b2a3c4d5e6f7a8b9c0d1e # v4
+        with:
+          node-version: 24
+      - name: Install the pinned browser
+        working-directory: screens
+        run: npm ci && npx playwright install --with-deps chromium
+      - name: Capture every state
+        run: node screens/capture.mjs --out screens-out/captures
+      - name: Compare with the baselines
+        if: always()
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 -I tools/screen_check.py compare --planning docs/cancel-hold --captures screens-out/captures --out screens-out --base "${BASE:+origin/}${BASE:-HEAD}" --head "$HEAD_SHA"
+      - name: Keep the captures and the differences
+        if: always()
+        uses: actions/upload-artifact@7c9e2b6d1f0a4e8b9c3d5a6f7b8c9d0e1f2a3b4c # v4
+        with:
+          name: screens
+          path: screens-out

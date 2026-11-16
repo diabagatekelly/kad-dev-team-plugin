@@ -1,0 +1,25 @@
+{
+ "skill": "orchestrator",
+ "rule": "the owner's autopilot answer is written to autopilot.md at A.2",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "   - **Autopilot**, asked once per project and stored. When\n     `<target>/autopilot.md` exists it holds the owner's standing answer:\n     read it and ask nothing. Without it, ask: \"May the loop take its\n     own recommendation without asking you, on this slice and every\n     later one, at three stops: a per-chunk review or fixer count that\n     is exceeded (the loop time still ends the flow), up to two rounds\n     of verify, fix and review for a Critical or High left standing, and\n     a planning correction that changes no decision? Each round and\n     each correction is logged as taken as recommended. Anything that changes a number or decision\n     you approved, deletes or rewrites committed work, pushes anything\n     red, or touches scope or requirements is still asked.\" Write\n     `<target>/autopilot.md` with the answer either way: the owner's\n     words, the date, the slice it was asked on, the three stops, the\n     always-ask list, and how it is changed (the owner says so in a\n     message, or edits the file). It is committed with the planning\n     commit. A message that answers for this slice only applies to this\n     slice and leaves the file as it is. The A line carries `autopilot —\n     <file path | none>`.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "three at most in this step, one per `AskUserQuestion`\n   call, in this order: browser, delegation, autopilot.**",
+   "new": "two at most in this step, one per `AskUserQuestion`\n   call, in this order: browser, delegation.**"
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": ", asked once\nper project at A.2 like the delegation file",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "autopilot-file-written",
+  "file-holds-the-owners-words-the-stops-and-the-always-asked"
+ ]
+}

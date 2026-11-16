@@ -62,6 +62,12 @@
 #                     a card number longer than four characters and prints
 #                     a shorter one whole, under a test whose name says
 #                     otherwise; next: the runner's step 5
+#   chunk1-handback-high  as chunk1-handback with the owner's autopilot file
+#                     saying yes, chunk 1's queue the one that finds a hold
+#                     by the start of its card number, and a re-review that
+#                     found it (High, in lines the fix did not write): the
+#                     runner's line in the handoff says one High stands;
+#                     next: the orchestrator's side of the hand-back
 #   chunk1-done       chunk 1's C line written and records committed; the
 #                     loop started six hours ago; the owner's autopilot
 #                     file says yes; next: the budget check
@@ -78,10 +84,20 @@
 #                     lines (`slice-mutation.md` in the records: one
 #                     survivor on the rule, one that changes nothing);
 #                     next: D.3, the slice reviewers and the cold read
+#   slice-review-r2-fixed  D's fix round as far as its second fix: round 0
+#                     recorded, fix r1 committed and gated, round 1
+#                     recorded with one regression (the fix's escaping of
+#                     quotes is held by no test), the regressions fixer's
+#                     commit gated; next: D.3 from there
 #   no-ci             as slice-review-r0, with `origin` named as a
 #                     github.com repository (nothing is fetched or pushed)
 #                     and `tools/gh` the recording stand-in; the
 #                     repository has no workflow; next: the CI
+#   no-ci-ui          as no-ci, on a project with a screen: the holds desk's
+#                     page, stylesheet and mockups on `main`, the slice's
+#                     screen design (its changed-states section) committed
+#                     with the planning; no workflow, no capture harness, no
+#                     baseline and no threshold file yet; next: the CI
 #   delivery-ready    D done (two standing Mediums, three Lows), origin a
 #                     local bare repository, `tools/gh` a recording stand-in;
 #                     next: E
@@ -96,6 +112,25 @@
 #                     its two issues filed; the pull request's check is red
 #                     on the pushed commit (two tests fail on the runner);
 #                     next: E.4, the CI watch
+#   delivery-ready-ui as delivery-ready, on the project with the holds
+#                     desk's screen and the screen-change check in place on
+#                     `main` (screens workflow, capture harness, the
+#                     comparison's copy, two baselines, the threshold file);
+#                     the slice's screen design lists `hold-not-cancelled`
+#                     as changed and `queue-failure` as new, and the capture
+#                     file does not drive `queue-failure` yet; next: E
+#   delivery-screens-stray  as delivery-ci-red on that project, the capture
+#                     file driving all three states: the `screens` check is
+#                     red on the pushed commit because the slice's style
+#                     change was written on the rule every notice shares, so
+#                     `hold-cancelled` moved; `gh run download` gives the
+#                     run's artifact (the captures, and the report and
+#                     difference images `screen_check.py` really wrote from
+#                     them); next: E.4, the CI watch
+#   delivery-screens-owed  as delivery-screens-stray with the style change
+#                     as intended: nothing moved but the listed state, and a
+#                     new one has no baseline; the `screens` check is red
+#                     with baselines owed; next: E.4, the CI watch
 #   issue14-planned   slice 001 built and merged on main with the planning
 #                     as it was written (three gaps the readiness gate
 #                     would name today); issue #14 (High) open, the owner's
@@ -132,6 +167,29 @@ protect=($target/slice-001.md $target/design-001.md $target/requirements-001.md 
 
 base_repo() { bash "$loop/base.sh" "$fixture/route-plants/cancel-hold"; }
 
+desk_screen() {  # desk_screen [bare]: the holds desk's screen on main, as an earlier change left it
+  # The page, its stylesheet and test, the screen design and the two
+  # mockups. Unless `bare`: the screen-change check as `ci-pipeline`
+  # writes it (the workflow, the capture harness with its pinned browser,
+  # the comparison's copy), the states the capture drives, two baselines
+  # and the threshold file.
+  cp -R "$loop/screens/base/." .
+  mkdir -p "$target/visual-ux"
+  cp -R "$loop/screens/base-planning/visual-ux/." "$target/visual-ux/"
+  if [ "${1:-}" = bare ]; then
+    rm -rf screens "$target/visual-ux/baselines"
+  else
+    mkdir -p .github/workflows tools
+    cp "$loop/screens/harness/screens.yml" .github/workflows/screens.yml
+    cp "$plugin/skills/ci-pipeline/screens/capture.mjs" "$plugin/skills/ci-pipeline/screens/package.json" \
+      "$plugin/skills/ci-pipeline/screens/package-lock.json" screens/
+    cp "$scripts/screen_check.py" tools/screen_check.py
+  fi
+  git add -A
+  git commit -qm "Holds desk: the notice screen"
+  git push -q origin main
+}
+
 list_source() {  # the owner's fee export beside the project and its listing committed as planning
   bash "$fixture/source-plants/install.sh" "$target"
   git add "$target/sources.md"
@@ -163,6 +221,10 @@ gate() {  # gate <base> <out> <allow...>: the real gate, its output saved as the
 planning() {  # the slice branch, the delegation file when the state has one, the A line
   git checkout -q -b slice-001-cancel-hold
   local deleg="none" commit=""
+  if [ -n "${ui:-}" ]; then  # the slice's screen design and mockups, committed with the planning
+    cp -R "$loop/screens/slice-planning/visual-ux/." "$target/visual-ux/"
+    git add "$target/visual-ux"
+  fi
   if [ "${delegation:-yes}" = yes ]; then
     cp "$loop/docs/delegation-slice-001.md" "$target/"
     git add "$target/delegation-slice-001.md"
@@ -172,7 +234,9 @@ planning() {  # the slice branch, the delegation file when the state has one, th
   fi
   local auto="none"
   if [ "${autopilot:-no}" = yes ]; then
-    cp "$loop/docs/autopilot.md" "$target/autopilot.md"
+    # `autopilot_file=autopilot-short`: the owner's yes with no stop spelled
+    # out, for a case whose reference removes the skill's own account of one.
+    cp "$loop/docs/${autopilot_file:-autopilot}.md" "$target/autopilot.md"
     git add "$target/autopilot.md"
     git commit -qm "Planning: the owner's autopilot answer"
     auto="$target/autopilot.md"
@@ -233,7 +297,12 @@ fix1() {  # fix1 [outside [ungated]]: the fixer's commit for round 0's card-numb
     cp "$loop/snapshots/chunk1-outside/utils/card-number.ts" utils/card-number.ts
     extra=utils/card-number.ts
   fi
-  cp -R "$loop/snapshots/chunk1-fixed/." .
+  if [ "${keep_queue:-}" = yes ]; then  # the fix's two files only: chunk 1's queue stays as committed
+    cp "$loop/snapshots/chunk1-fixed/lending/cancel-hold.ts" lending/cancel-hold.ts
+    cp "$loop/snapshots/chunk1-fixed/test/cancel-hold.test.ts" test/cancel-hold.test.ts
+  else
+    cp -R "$loop/snapshots/chunk1-fixed/." .
+  fi
   "$py" -I - "$report" <<'EOF'
 import sys
 path = sys.argv[1]
@@ -337,7 +406,12 @@ EOF
   cp "$loop/snapshots/slice-built/test/cancel-hold-again.test.ts" test/cancel-hold-again.test.ts
   cp "$loop/snapshots/slice-built/test/cancel-hold-notice.test.ts" test/cancel-hold-notice.test.ts
   cat "$loop/docs/chunk-3-section.md" >> "$report"
-  git add lending/cancel-hold-notice.ts test/cancel-hold-again.test.ts test/cancel-hold-notice.test.ts "$report"
+  local style=()
+  if [ -n "${ui:-}" ]; then  # the slice's style change for the refusal notice, as intended or as planted
+    cp "$loop/screens/${css:-slice}/main/desk.css" main/desk.css
+    style=(main/desk.css)
+  fi
+  git add lending/cancel-hold-notice.ts test/cancel-hold-again.test.ts test/cancel-hold-notice.test.ts "$report" ${style[@]+"${style[@]}"}
   git commit -q -F - <<'EOF'
 Reject a second cancel and give the desk its notice
 
@@ -346,7 +420,7 @@ Decided: the notice carries its own dismiss script
 Deviation: none
 EOF
   c3_sha="$(git rev-parse --short HEAD)"
-  gate "$before" "$records/gate-chunk-3-r0.txt" test/cancel-hold-again.test.ts lending/cancel-hold-notice.ts test/cancel-hold-notice.test.ts
+  gate "$before" "$records/gate-chunk-3-r0.txt" test/cancel-hold-again.test.ts lending/cancel-hold-notice.ts test/cancel-hold-notice.test.ts ${style[@]+"${style[@]}"}
   clean_chunk 3 "Reject a second cancel and give the desk its notice" "$before" "$c3_sha" ""
   records_commit "Records: slice 001 chunk 3"
   cat >> "$log" <<EOF
@@ -361,8 +435,10 @@ map_commit() {
   map_sha="$(git rev-parse --short HEAD)"
 }
 
-slice_review() {  # D's records: round 0 (3 M, 3 L), the fix, round 1 (2 M standing), the D line
-  local head="$readme_sha"
+slice_review() {  # slice_review [reg]: D's records: round 0 (3 M, 3 L), the fix, round 1 (2 M standing), the D line
+  # `reg`: round 1 finds one regression as well, the regressions fixer
+  # commits and its gate runs; no records commit and no D line (D is not over).
+  local head="$readme_sha" mode="${1:-}"
   for r in code security reliability test-quality architecture; do
     sed "s/@BASE@/$base_sha/; s/@HEAD@/$head/" "$loop/records/slice-r0-$r.md" > "$records/slice-r0-$r.md"
   done
@@ -392,7 +468,9 @@ EOF
   d_fix_sha="$(git rev-parse --short HEAD)"
   gate "$head" "$records/gate-slice-r1.txt" lending/cancel-hold-notice.ts test/cancel-hold-notice.test.ts
   for r in code reliability; do
-    sed "s/@HEAD@/$head/; s/@FIX@/$d_fix_sha/" "$loop/records/slice-r1-$r.md" > "$records/slice-r1-$r.md"
+    local from="slice-r1-$r"
+    if [ "$mode" = reg ] && [ "$r" = code ]; then from=slice-r1-code-reg; fi
+    sed "s/@HEAD@/$head/; s/@FIX@/$d_fix_sha/" "$loop/records/$from.md" > "$records/slice-r1-$r.md"
   done
   for r in test-quality architecture security; do
     name="$(printf '%s' "$r" | sed 's/-/ /; s/^./\U&/')"
@@ -401,6 +479,14 @@ EOF
   "$py" -I "$scripts/rounds_record.py" --sidecar "$sidecar" --chunk D --round 1 --project . --range "$head..$d_fix_sha" --fix "$d_fix_sha" --fixer agent-9d04 --turns 24 \
     --report "$records/slice-r1-test-quality.md" --report "$records/slice-r1-code.md" --report "$records/slice-r1-architecture.md" \
     --report "$records/slice-r1-security.md" --report "$records/slice-r1-reliability.md" > /dev/null
+  if [ "$mode" = reg ]; then
+    cp "$loop/snapshots/slice-r2-fixed/test/cancel-hold-notice.test.ts" test/cancel-hold-notice.test.ts
+    git add test/cancel-hold-notice.test.ts
+    git commit -qm "Pin the notice's escaping of quotes"
+    d_fix2_sha="$(git rev-parse --short HEAD)"
+    gate "$d_fix_sha" "$records/gate-slice-r2.txt" test/cancel-hold-notice.test.ts
+    return
+  fi
   records_commit "Records: slice 001 review"
   cat >> "$log" <<EOF
 - **D. Slice review:** map \`docs/architecture-map.md\` (\`$map_sha\`); done \`PASS after $readme_sha\`; reviewers \`tq co ar se re\`; r0 \`0/0/3/3\`; stranger \`PASS\`; r1 fix \`$d_fix_sha\` → \`0/0/2\` (reg 0, pre 2); standing \`0/0/2\`; records \`$rec_sha\`
@@ -427,6 +513,12 @@ handoff() {  # handoff <state line> <next action> [extra lines...]: the file the
 }
 
 base_repo
+case "$state" in
+  no-ci-ui) ui=bare; desk_screen bare ;;
+  delivery-ready-ui) ui=yes; desk_screen ;;
+  delivery-screens-stray) ui=yes; css=planted; desk_screen ;;
+  delivery-screens-owed) ui=yes; desk_screen ;;
+esac
 case "$state" in
   planned)
     planning; plan
@@ -503,6 +595,12 @@ case "$state" in
     round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review-clean; record1
     reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`2\` (reported \`1\`); review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg \`0\`, pre \`0\`); standing \`0/0/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted" \
       "C.6 for chunk 1: the records commit, the audit sync (audit off here), the C line from the hand-back, the budget check; then chunk 2's runner" ;;
+  chunk1-handback-high)
+    autopilot=yes; autopilot_file=autopilot-short; planning; plan; chunk1 chunk1-gate-covers "none"
+    gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
+    round0 chunk-1-r0-review; record0; keep_queue=yes fix1; review1 chunk-1-r1-review-high; record1
+    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\` (reported \`0\`); review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/1/0\` (reg \`0\`, pre \`1\`); standing \`0/1/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted; the standing High is in $records/chunk-1-r1-review.md (\`A cancel for one card removes another member's hold\`)" \
+      "the orchestrator's side of chunk 1, from the hand-back line" ;;
   chunk1-handback-phantom)
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
@@ -588,7 +686,7 @@ LOG
       started="$(hours_ago 1)" reviews=4 fixers=3 handoff "chunk 1 of 3 done: C line written, records committed as $rec_sha; chunk 1's runner was relaunched once after a hand-back that failed its hash check, so the chunk took 4 reviewer launches and 3 fixers" \
         "the budget check at the chunk boundary, then chunk 2"
     fi ;;
-  slice-built|slice-review-r0|no-ci|delivery-ready|delivery-ready-source|delivery-ci-red)
+  slice-built|slice-review-r0|slice-review-r2-fixed|no-ci|no-ci-ui|delivery-ready|delivery-ready-ui|delivery-ready-source|delivery-ci-red|delivery-screens-stray|delivery-screens-owed)
     planning; plan; chunk1 chunk1 "none"
     if [ "$state" = delivery-ready-source ]; then plant_cards; fi
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
@@ -599,7 +697,7 @@ LOG
     if [ "$state" = slice-built ]; then
       reviews=6 fixers=1 handoff "D.1 done: map-update ran and committed the map as $map_sha" "D.2: the Definition of Done, then the slice reviewers" \
         "**Standing:** none"
-    elif [ "$state" = slice-review-r0 ] || [ "$state" = no-ci ]; then
+    elif [ "$state" = slice-review-r0 ] || [ "$state" = no-ci ] || [ "$state" = no-ci-ui ]; then
       cp "$loop/docs/README-slice.md" README.md
       git add README.md
       git commit -qm "README: clone to running, tests and checks, where things live, what this slice does"
@@ -611,7 +709,7 @@ LOG
       "$py" -I "$scripts/mutation_pass.py" run --repo . --mutants "$mutants" --test 'npm test' --base "$base_sha" \
         --allow-dirty --remove-mutants --out "$records/slice-mutation.md" > /dev/null
       [ -f "$records/slice-mutation.md" ] || { echo "state.sh: the mutation pass wrote no report" >&2; exit 1; }
-      if [ "$state" = no-ci ]; then
+      if [ "$state" = no-ci ] || [ "$state" = no-ci-ui ]; then
         git remote set-url origin https://github.com/example/library-lending.git
         mkdir -p tools
         cp "$loop/tools/gh" tools/gh
@@ -622,13 +720,19 @@ LOG
         git commit -qm "Tools: the GitHub CLI stand-in"
       fi
       # no-ci leaves no handoff file: nothing in that state is mid-loop.
-      [ "$state" = no-ci ] || reviews=6 fixers=1 handoff "D.2 done: the Definition of Done passes and the mutation pass ran on the slice's changed lines (\`$records/slice-mutation.md\`)" \
+      [ "$state" = no-ci ] || [ "$state" = no-ci-ui ] || reviews=6 fixers=1 handoff "D.2 done: the Definition of Done passes and the mutation pass ran on the slice's changed lines (\`$records/slice-mutation.md\`)" \
         "D.3: the slice reviewers, the criteria reviewers among them, and the cold read" "**Standing:** none"
     else
       cp "$loop/docs/README-slice.md" README.md
       git add README.md
       git commit -qm "README: clone to running, tests and checks, where things live, what this slice does"
       readme_sha="$(git rev-parse --short HEAD)"
+      if [ "$state" = slice-review-r2-fixed ]; then
+        slice_review reg
+        reviews=11 fixers=2 handoff "D.3: round 0 recorded (0/0/3/3); the fixer (agent-9d04, 24 turns) committed $d_fix_sha and its gate passed ($records/gate-slice-r1.txt); round 1 recorded (0/0/3: reg 1, pre 2); the regressions fixer (agent-4e17, 9 turns) committed $d_fix2_sha; gate PASS on $d_fix_sha..$d_fix2_sha ($records/gate-slice-r2.txt)" \
+          "D.3 from there (the commit before the second fix is $d_fix_sha)" "**Standing:** 2 Mediums (pre-existing, in the sidecar)"
+        exit 0
+      fi
       slice_review
       mkdir -p .github/workflows
       cat > .github/workflows/ci.yml <<'EOF'
@@ -677,7 +781,14 @@ HOOK
       fi
       standing="**Standing:** 2 Mediums (\`reason\` optional on both statuses, lending/cancel-hold.ts:32; \`slice(-4)\` on a short card number, lending/cancel-hold.ts:55); 3 Lows in the slice reports"
       tracker="**Tracker:** GitHub issues in this repository (user-story-001.md); the \`gh\` CLI on this machine is the wrapper at \`tools/gh\`"
-      if [ "$state" = delivery-ci-red ]; then
+      if [ "$state" = delivery-screens-stray ] || [ "$state" = delivery-screens-owed ]; then
+        # E.2 as the previous session did it: the capture file drives the
+        # new state too.
+        cp "$loop/screens/slice/screens/states.mjs" screens/states.mjs
+        git add screens/states.mjs
+        git commit -qm "Screens: drive the queue-failure state"
+      fi
+      if [ "$state" = delivery-ci-red ] || [ "$state" = delivery-screens-stray ] || [ "$state" = delivery-screens-owed ]; then
         # E.1 to E.3 as the previous session did them: the log and the
         # records committed, the branch pushed, the pull request open. The
         # check is red on exactly the pushed commit (tools/ci-red).
@@ -687,7 +798,31 @@ HOOK
         pushed_sha="$(git rev-parse --short HEAD)"
         : > tools/pr-open
         git rev-parse HEAD > tools/ci-red
-        cp "$loop/tools/ci-failed.log" tools/ci-failed.log
+        if [ "$state" = delivery-ci-red ]; then
+          cp "$loop/tools/ci-failed.log" tools/ci-failed.log
+        else
+          # The red check is the screens job. Its artifact is what the
+          # comparison really writes from the captures Chromium made of
+          # this tree (screens/captures/ in the fixture), and the failing
+          # step's log is the comparison's own output.
+          printf 'screens\n' > tools/ci-check
+          # What a later push delivers, for the graders: every commit the
+          # remote then holds, with the files it touches. Empty until one.
+          cat > .git/origin.git/hooks/post-receive <<'HOOK'
+#!/bin/sh
+git log --stat --all > ../../tools/pushed-history.txt 2>&1
+HOOK
+          chmod +x .git/origin.git/hooks/post-receive
+          : > tools/pushed-history.txt
+          mkdir -p tools/ci-artifact/captures
+          cap=intended; [ "$state" = delivery-screens-owed ] || cap=planted
+          cp "$loop/screens/captures/$cap/"*.png tools/ci-artifact/captures/
+          { printf 'screens / Compare with the baselines\n'
+            "$py" -I tools/screen_check.py compare --planning "$target" --captures tools/ci-artifact/captures \
+              --out tools/ci-artifact --base main --head "$(git rev-parse HEAD)" || true
+            printf 'Process completed with exit code %s.\n' "$([ "$cap" = planted ] && echo 1 || echo 3)"
+          } > tools/ci-failed.log
+        fi
         reviews=11 fixers=2 handoff "E.3 done: the records committed, the branch pushed at $pushed_sha, pull request #7 opened (https://github.com/example/library-lending/pull/7) with its body, the two standing Mediums filed as #41 and #42 and linked in the body; the session ended before the pull request's checks were looked at" \
           "E.4 on pull request #7, then the cost and the E line" \
           "$standing" "$tracker"

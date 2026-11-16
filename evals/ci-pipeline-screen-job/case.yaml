@@ -1,0 +1,81 @@
+schema_version: "1.0"
+name: ci-pipeline-screen-job
+description: "C1 (0.16.0), ci-pipeline's screen job: a github.com repository with a built slice, a screen (a screen design and mockups under the planning directory's visual-ux/), no workflow, no capture harness and no threshold file. ci-pipeline writes the checks workflow and, as its own file, the screen-change check's: one named Ubuntu image, read-only, the comparison run by the project's copy of screen_check.py, the captures uploaded as the `screens` artifact; it copies the plugin's capture harness and pinned browser package instead of writing them, records the owner's 0.1% threshold, and commits without pushing. Every content check reads the trace: the reference removes the section, and a file that was never written would void the run."
+tags: [ci-pipeline, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold` whose `origin` is a github.com repository; its planning documents are in `docs/cancel-hold/`. The repository has no continuous integration yet: add it, so the pull request for this branch runs its checks. On this machine the GitHub CLI is the stand-in at `tools/gh` (run it as `tools/gh …`; there is no network and nothing is to be pushed).
+  model: sonnet
+  max_turns: 45
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: ci-pipeline-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:ci-pipeline"'
+    min: 1
+  - type: file_exists
+    name: checks-workflow-written
+    path: .github/workflows/ci.yml
+  - type: file_exists
+    name: screens-workflow-written
+    path: .github/workflows/screens.yml
+  # The workflow is read from the command or the Write that made it (the
+  # first run wrote it with a heredoc): a file that was never written
+  # would void the run. One named image: pixels are compared.
+  - type: regex
+    name: one-named-image
+    target: trace
+    pattern: 'screens\.yml(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)[\s\S]{0,6000}?runs-on:\s*ubuntu-24\.04'
+  - type: regex
+    name: comparison-run-by-the-projects-copy
+    target: trace
+    pattern: 'screens\.yml(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)[\s\S]{0,6000}?tools/screen_check\.py compare[^"]{0,200}?docs/cancel-hold'
+  - type: regex
+    name: captures-uploaded-as-the-screens-artifact
+    target: trace
+    pattern: 'screens\.yml(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)[\s\S]{0,6000}?actions/upload-artifact@[0-9a-f]{40}[\s\S]{0,300}?name:\s*screens'
+  - type: regex
+    name: browser-installed-from-the-pinned-package
+    target: trace
+    pattern: 'screens\.yml(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)[\s\S]{0,6000}?npm ci[\s\S]{0,200}?playwright install[^"]{0,60}?chromium'
+  - type: regex
+    name: ci-stays-read-only
+    target: trace
+    pattern: 'screens\.yml(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)[\s\S]{0,6000}?(?:contents:\s*write|git push|secrets\.)'
+    match: not_contains
+  - type: file_exists
+    name: harness-in-the-project
+    path: screens/capture.mjs
+  - type: file_exists
+    name: pinned-browser-lockfile-in-the-project
+    path: screens/package-lock.json
+  - type: file_exists
+    name: comparison-copied-into-the-project
+    path: tools/screen_check.py
+  - type: regex
+    name: plugin-files-copied-not-written
+    target: trace
+    pattern: '"name":"(?:Write|Edit)","input":\{"(?:file_path|path)":"[^"]*(?:screens/(?:capture\.mjs|package(?:-lock)?\.json)|tools/screen_check\.py)"'
+    match: not_contains
+  - type: file_exists
+    name: threshold-file-written
+    path: docs/cancel-hold/visual-ux/baselines/screen-check.json
+  - type: regex
+    name: threshold-is-the-owners-tenth-of-a-percent
+    target: trace
+    pattern: 'max_changed_percent[\\"]*\s*:\s*0\.1\b'
+  - type: regex
+    name: capture-states-left-to-the-project
+    target: trace
+    pattern: '"name":"(?:Write|Edit)","input":\{"(?:file_path|path)":"[^"]*screens/states\.mjs"'
+    match: not_contains
+  - type: regex
+    name: committed-not-pushed
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*git push'
+    match: not_contains

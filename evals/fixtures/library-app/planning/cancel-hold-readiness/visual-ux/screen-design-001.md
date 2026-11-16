@@ -15,4 +15,10 @@ Built on `visual-ux/design-system-001.md`. One mockup per state:
 Cancel → confirm in the row → the result state renders in place; focus
 stays on the row's position in the table.
 
+## States this slice changes
+
+- `desk-holds`: new
+- `desk-holds-cancelled`: new
+- `desk-holds-refused`: new
+
 The accessibility criteria are in `../accessibility-slice-001.md`.

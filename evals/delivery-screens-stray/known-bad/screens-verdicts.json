@@ -1,0 +1,39 @@
+{
+ "skill": "delivery",
+ "also": [
+  "orchestrator"
+ ],
+ "rule": "the screens check's two red verdicts: a stray state is a red round with the check not weakened, owed baselines are adopted",
+ "edits": [
+  {
+   "file": "skills/delivery/SKILL.md",
+   "old": "### The screens check\n\nA project with a screen has a second check, `screens`\n(`.github/workflows/screens.yml`): a headless browser captures every\nstate the project drives and `tools/screen_check.py` compares each with\nthe baseline committed in `<target directory>/visual-ux/baselines/`. When\nthat check is the red one, its verdict is read before step 3, from the\nrun's artifact, never from the page:\n\n```\ngh run download <run id> --name screens --dir \"${TMPDIR:-/tmp}/kad-screens-<branch>-r<i>\"\n```\n\nThe last line of the artifact's `screen-check.txt` is the verdict, and\nthere are two that are red:\n\n- **`screens: BASELINES OWED <c> changed, <n> new, <r> removed`**:\n  nothing is wrong. Only states the slice's screen design lists changed,\n  and the committed baselines are still the old images. This is not a\n  red round: no file for a fixer, no `CI red`, nothing counted against\n  the three. The baselines are adopted by the script and by nothing\n  else, inline:\n\n  ```\n  python3 -I \"${CLAUDE_SKILL_DIR}/../orchestrator/scripts/screen_check.py\" adopt --planning '<target directory>' --artifact '<the downloaded directory>' --base '<default branch>'\n  ```\n\n  It compares again here, copies the capture of each listed state over\n  its baseline (and removes a baseline listed as removed), and prints\n  each path and `adopted: <c> changed, <n> new, <r> removed`. Commit\n  exactly the paths it printed, by name (`git add -A -- <each path>`,\n  which stages a removal too), as `Baselines: <c> changed, <n> new, <r>\n  removed`, push (preconditions 4 and 5 again) and run this section from\n  1. An image is never copied out of the artifact by hand, and a state\n  the script did not print is never committed. `adopt` exiting 1 has\n  copied nothing: a finding stands, and the verdict is the next one.\n  Owed a second time, on the push whose only new commit is the baselines\n  commit, is a state that does not render the same twice: red, named in\n  the report as unstable with its state, for the owner; no second\n  adoption and no fixer.\n- **`screens: FAIL <k> not listed: <state>, …`**: a state the slice's\n  screen design does not list moved (`STRAY`), appeared (`UNLISTED`) or\n  was not captured (`MISSING`). This is red, and step 3 applies with\n  these in place of the tests and the platform: `pr-ci-r<i>.md` holds the\n  head, each such state with its line of `screen-check.txt` (the share of\n  pixels), the screen design whose list it is not on, and for each the\n  two images, copied from the artifact into `<records dir>/screens-r<i>/`\n  (`<state>.png`, the capture, and `<state>-diff.png`, the difference).\n  Return `CI red r<i>: <that path>`. The fixer the orchestrator launches\n  makes the code leave those states as they were; **the check is not\n  weakened**: no edit to a baseline image, to the threshold file\n  (`screen-check.json`), to the screen design's changed-states list, to\n  the workflow or to the capture of a failing state. When its fix is\n  pushed and the next verdict is `BASELINES OWED`, the listed states are\n  adopted as above.\n\nA `screens` job that failed with no verdict (the install, the browser,\nno artifact) is an ordinary red: step 3 as written, from `--log-failed`.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/delivery/SKILL.md",
+   "old": "- **Baselines** — only when the screens check owed any: the adoption\n  commit and the script's `adopted:` line; a state reported unstable.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/delivery/SKILL.md",
+   "old": " copy or\ncommit a baseline image `screen_check.py adopt` did not print, or edit\nthe screen check's threshold file;",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "   **The screens check has two red verdicts, and `delivery` reads which\n   before any fixer is thought of** (its \"The screens check\"). `screens:\n   BASELINES OWED` is no failure: only states the slice's screen design\n   lists changed, `delivery` adopts their new images as baselines from\n   the run's artifact with `screen_check.py adopt`, commits them, pushes\n   and watches again; no fixer, no round counted, and the E line carries\n   `baselines <sha> (<c> changed, <n> new, <r> removed)`. `screens:\n   FAIL` is `CI red r<i>` like any other, the same one fixer and the same\n   three rounds, with these two lines word for word in place of the\n   platform ones: the states the file names changed on screen and the\n   slice's screen design does not list them, so the cause is a style or\n   markup change that reached them from something the slice did change;\n   and the check is not weakened (no edit to a baseline image, the\n   threshold file, the screen design's changed-states list, the workflow\n   or the capture of a failing state: the code is made to leave those\n   states as they were). You never copy an image out of an artifact or\n   commit a baseline yourself.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "<; baselines `<sha>` (`<c>` changed, `<n>` new, `<r>` removed)>",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "artifact-downloaded",
+  "its-images-kept-in-the-records",
+  "handoff-briefs-the-fixer-not-to-weaken-the-check"
+ ]
+}

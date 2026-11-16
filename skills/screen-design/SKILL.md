@@ -264,6 +264,38 @@ the mockup concrete enough that someone could build from it directly, but
 keep it a design artifact, not the final styled component wired into the
 real codebase — implementing it is a later step, `tdd-coach`'s.
 
+## States this slice changes
+
+The screen design carries one list under that heading, exactly: one line
+per state this slice changes on screen, by name.
+
+- **A state's name is its mockup's file stem**: `hold-not-cancelled.html`
+  is the state `hold-not-cancelled`. Lower-case, hyphens, one name in the
+  whole of `visual-ux/`. It is the one name the mockup, the script that
+  captures the built screen and the saved baseline image
+  (`visual-ux/baselines/<name>.png`) share, so name the file as you would
+  name the state.
+- **`new`** for a state this slice adds: `` - `queue-failure`: new ``.
+- **`changed`**, with what changes, for a state an earlier slice already
+  shows and this one alters: `` - `hold-not-cancelled`: changed, the tint
+  and the wider padding ``. Use the name it has (look in `visual-ux/` and
+  `visual-ux/baselines/` before writing one): a second name for a state
+  that exists is a new state to everything that reads this list.
+- **`removed`** for a state this slice takes away.
+- A state the slice leaves as it is has no line. When the slice changes
+  nothing a person sees, the section says `- none` and why.
+
+List every state the change reaches, not only the one it is for: a
+component two states share (a notice, a row, a header) changes both, and
+both get a line. At delivery a scripted browser renders every state that
+has a baseline and compares it, pixel by pixel, with that baseline: a
+state on this list gets its new image saved as the baseline, and a
+difference in a state that is not on it stops the delivery as a finding.
+A line for a state that turns out not to move costs nothing; a missing
+line costs a fix round. A state added mid-build under a delegation gets
+its line with its mockup. The readiness gate checks that the section is
+there and that each state it names has a mockup of that name.
+
 ## A file the owner provides
 
 **A file the owner provides is described, never quoted.** A sheet, an
@@ -348,6 +380,10 @@ uses and how they're arranged for this screen specifically.
 ## Interaction flow
 What happens at each step, including error and empty states, walked
 through as the user would experience it.
+
+## States this slice changes
+One line per state, by its mockup's file stem: `new`, `changed` (with
+what changes) or `removed`; `- none` when nothing a person sees changes.
 
 ## New patterns proposed, if any
 Anything this screen needed that the design system didn't already have,

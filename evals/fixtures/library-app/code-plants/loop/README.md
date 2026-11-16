@@ -37,7 +37,25 @@ grade the one step they are about.
   its answers: `pr-open` (the slice branch has an open pull request),
   `ci-red` (a commit: the check fails while the remote branch is at it),
   `ci-failed.log` (what `run view --log-failed` prints, the fixture's
-  `tools/ci-failed.log`), `issues.json` (what `issue list` prints).
+  `tools/ci-failed.log`), `issues.json` (what `issue list` prints),
+  `ci-check` (the failing check's name, `screens`), `ci-artifact/` (what
+  `run download` gives while the check is red).
+- `screens/`: the holds desk's screen, for the screen-change check (C1,
+  0.16.0), which the cancel-hold slice itself does not have. `base/` is
+  the page, its stylesheet and test and the capture file for two states,
+  put on `main` by the states that need a screen; `base-planning/` its
+  screen design, mockups, the threshold file and the two baselines;
+  `slice/` and `slice-planning/` what the slice adds (the refusal
+  notice's style change as intended, the capture file with the new
+  state, the screen design with its `States this slice changes`
+  section); `planted/` the same style change written on the rule every
+  notice shares; `harness/screens.yml` the workflow `ci-pipeline` would
+  write. `captures/intended/` and `captures/planted/` are what Chromium
+  renders of the slice's tree either way: with the baselines they are
+  the artifact of the plugin's own `fixture-screens` workflow
+  (`evals/tools/fixture_screens.sh`, Ubuntu 24.04, Playwright pinned in
+  `skills/ci-pipeline/screens/`), committed by hand from it. The states
+  build a run's artifact from them with the real `screen_check.py`.
 - `docs/issue14-*.md`, `docs/issues-high-14.json`: the planning an issue
   fix adds to the merged slice (a reliability criterion and its home in
   the design) and the open High issue it answers.
@@ -58,4 +76,7 @@ Plants, for `answer-key.md`'s `L` rows:
 | L10 | `delivery-ready` | two standing Mediums and three Lows in the sidecar; the tracker is GitHub; the `gh` stand-in records what gets filed |
 | L11 | `chunk1-handback-phantom`'s handoff | the runner's line names an r1 fix commit no object of the repository has; only round 0 is recorded |
 | L12 | `delivery-ci-red` | the branch pushed, pull request #7 open, its check failing on the pushed commit with two tests red on the runner |
+| L14 | `chunk1-handback-high` | the queue of `chunk1-gate-covers` (a hold found by the start of its card number) left standing as a High by the re-review; the autopilot file says yes and names no stop |
+| L15 | `slice-review-r2-fixed` | D's round 1 with one regression (the fix's escaping of quotes held by no test) and the regressions fixer's commit, gated |
+| L16 | `screens/planted/main/desk.css` | the refusal notice's wider padding written on `.notice`, which every notice shares: `hold-cancelled` moves and no screen design lists it |
 | L13 | `issue14-planned` | slice 001 merged with three gaps the readiness gate names today; issue #14 open and its fix's planning uncommitted |

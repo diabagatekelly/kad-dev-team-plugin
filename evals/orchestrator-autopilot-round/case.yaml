@@ -1,0 +1,46 @@
+schema_version: "1.0"
+name: orchestrator-autopilot-round
+description: "The autopilot round (0.15.1's C2, held by no case until 0.16.0): resumed at chunk 1's hand-back, whose line says one High stands after the fix round (the queue finds a hold by the start of its card number; the re-review found it in lines the fix did not write), with the owner's `autopilot.md` saying yes. The orchestrator does not stop for the owner: after a sandbox check it launches one code-reviewer on Opus to verify the standing finding by running it, with the round's own report path, and launches no fixer and no next chunk before that. Graded on that launch alone."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. Hand off as soon as the next agent has been launched: don't wait for it to return; write the handoff file saying it is in flight and stop.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: verify-reviewer-launched-once
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*chunk-1-auto-r1-verify\.md)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: verify-reviewer-on-opus
+    tool: Agent
+    input_match: '(?=[\s\S]*chunk-1-auto-r1-verify\.md)(?=[\s\S]*"model"\s*:\s*"opus")'
+    min: 1
+  - type: tool_used
+    name: handed-the-standing-finding-by-report
+    tool: Agent
+    input_match: '(?=[\s\S]*chunk-1-auto-r1-verify\.md)(?=[\s\S]*chunk-1-r1-review\.md)'
+    min: 1
+  - type: tool_order
+    name: sandbox-checked-before-the-launch
+    before: {tool: Bash, input_match: 'sandbox_check\.py'}
+    after: {tool: Agent, input_match: 'chunk-1-auto-r1-verify\.md'}
+  - type: tool_used
+    name: next-chunk-not-started-over-a-standing-high
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner'
+    min: 0
+    max: 0

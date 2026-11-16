@@ -1,0 +1,20 @@
+{
+ "skill": "orchestrator",
+ "rule": "before the push, a listed state the capture file does not drive goes to one fixer",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "   **The screen-change check**, when the target directory holds a screen\n   design for this slice (`visual-ux/screen-*<nnn>*.md`, the file the\n   readiness gate read). Every state with a saved baseline is rendered\n   again in CI and compared with it; two things have to be in the branch\n   before the push:\n   - **The check itself.** No `.github/workflows/screens.yml`: invoke\n     `release-engineer:ci-pipeline` inline, telling it the target\n     directory, for its screen job (the workflow, the capture harness\n     with its pinned browser, the comparison's copy, the threshold\n     file); it commits them by name. One that exists is left as it is.\n   - **A capture for each state the slice lists.** Inline with Bash:\n\n     ```\n     python3 -I \"${CLAUDE_SKILL_DIR}/scripts/screen_check.py\" states --planning '<target directory>' --capture screens/states.mjs --base '<default branch>'\n     ```\n\n     Its last line is `states: <n> listed, <m> not driven`, with one\n     `missing: <state>` line per state the screen design lists as\n     changed or new and the project's capture file does not drive. None\n     missing: go on. Otherwise sandbox check, then **one** fresh fixer\n     (`model: \"sonnet\"`, `maxTurns: 120`, `tdd-implementation-lite`, its\n     handed-back path, chunks are committed) handed the screen design\n     and `screens/capture.mjs` by path (its header is the contract), the\n     `missing:` lines as printed, and one named fix: in\n     `screens/states.mjs`, one quoted key per missing state, named\n     exactly as its line names it, whose function drives the built app\n     to that state on made-up data (the data rule: a temporary folder,\n     the project's fake credential tool, no provider connection, never\n     the owner's data directory), and nothing else changed: no source\n     file, no test, no baseline, no threshold, no screen design. Then\n     the gate on its range (with `--allow screens/`: the capture file\n     is outside the design's modules on purpose) and the script once\n     more. A state still\n     missing is not asked about: CI reports it and E.4's red path takes\n     it. The fixer's commit is read by E's one last-fix review with the\n     other fixes of this step. You write no capture code yourself.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "<; screens — states fix `<sha>`>",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "listed-states-asked-of-the-script",
+  "handoff-names-the-fixer-and-the-missing-state"
+ ]
+}

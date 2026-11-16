@@ -111,7 +111,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
 <body>
 <div class="wrap">
   <h1>How kad-dev-team takes a new project from an idea to a pull request</h1>
-  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.15.1.</p>
+  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.16.0.</p>
 
   <div class="legend" role="group" aria-label="Highlight one kind of work">
     <button type="button" id="f-all" data-show="" aria-pressed="true">Show all</button>
@@ -168,7 +168,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
         <div class="chips"><span class="chip m"><b>devsecops-engineer</b> · reliability-requirements <span class="tag">inline</span></span><span class="chip o">Targets</span></div><div class="none">None</div></div>
       <div class="row"><div class="what"><strong>9. Design system</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI, once per project</span><span>Tokens and core component patterns.</span></div>
         <div class="chips"><span class="chip m"><b>ux-designer</b> · design-system <span class="tag">inline</span></span><span class="chip o">Picks a direction</span></div><div class="none">None</div></div>
-      <div class="row"><div class="what"><strong>10. Screen design</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI</span><span>A mockup of every state the slice names.</span></div>
+      <div class="row"><div class="what"><strong>10. Screen design</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI</span><span>A mockup of every state the slice names, and a list of the states the slice changes, each by its mockup's file name.</span></div>
         <div class="chips"><span class="chip m"><b>ux-designer</b> · screen-design <span class="tag">inline</span></span></div><div class="none">None</div></div>
       <div class="row"><div class="what"><strong>11. Accessibility criteria</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI</span><span>The mockup is driven, not only read: keyboard order, computed contrast, structure.</span></div>
         <div class="chips"><span class="chip m"><b>accessibility-engineer</b> · accessibility-review <span class="tag">inline</span></span></div>
@@ -192,9 +192,9 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
         <div class="chips"><span class="chip t">sandbox_check.py</span></div></div>
       <div class="row"><div class="what"><strong>Three questions at most</strong><span>Each asked once per project and stored: may the loop take its own recommendation at three named stops (an autopilot file). May personas settle design gaps themselves (a delegation file), and which review cadence.</span></div>
         <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span><span class="chip o">Delegation, cadence</span></div><div class="none">None</div></div>
-      <div class="row"><div class="what"><strong>Is the planning ready to build from?</strong><span>Ten mechanical checks over the documents. A failure routes back to the persona that owns the document, not to a fixer.</span></div>
+      <div class="row"><div class="what"><strong>Is the planning ready to build from?</strong><span>Eleven mechanical checks over the documents; on a slice with a screen, one is that the screen design lists the states the slice changes. A failure routes back to the persona that owns the document, not to a fixer.</span></div>
         <div class="chips"><span class="chip m">The owning persona, on a failure <span class="tag">inline</span></span></div>
-        <div class="chips"><span class="chip t">readiness_check.py</span><span class="chip t">source_scan.py</span></div></div>
+        <div class="chips"><span class="chip t">readiness_check.py</span><span class="chip t">source_scan.py</span><span class="chip t">screen_check.py check-section</span></div></div>
       <div class="row"><div class="what"><strong>Wire the gate's checks</strong><span>The tools the bootstrap picked are installed and the existing code is recorded as their baseline. On an empty repository this waits until chunk 1 has made a manifest.</span></div>
         <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">agent · Sonnet</span></span></div>
         <div class="chips"><span class="chip t">validation_gate.py --record-gate-baselines</span></div></div>
@@ -301,12 +301,18 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <div class="row"><div class="what"><strong>Write the CI</strong><span class="cond" style="display:inline-block;margin:0 0 2px">if the repository has none</span><span>The gate's commands on Linux and macOS, actions pinned to commits, read-only permissions.</span></div>
         <div class="chips"><span class="chip m"><b>release-engineer</b> · ci-pipeline <span class="tag">inline</span></span></div>
         <div class="chips"><span class="chip t">gh api, tag to commit</span></div></div>
+      <div class="row"><div class="what"><strong>Set up the screen-change check</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI</span><span>If the project has none: its own workflow on one pinned Linux image, a capture harness with Playwright's Chromium pinned, a copy of the comparison script, and the owner's threshold (0.1% of a state's pixels). Then a script lists the states the slice changes that nothing drives yet, and one fixer writes their capture code.</span></div>
+        <div class="chips"><span class="chip m"><b>release-engineer</b> · ci-pipeline, screen job <span class="tag">inline</span></span><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet, if a state is not driven</span></span></div>
+        <div class="chips"><span class="chip t">screen_check.py states</span><span class="chip t">validation_gate.py</span></div></div>
       <div class="row"><div class="what"><strong>Push and open the pull request</strong><span>History is scanned for the owner's values first. The body is written from the records; the slice's deferrals are listed once by a script; standing Mediums become issues.</span></div>
         <div class="chips"><span class="chip m"><b>release-engineer</b> · delivery <span class="tag">inline</span></span><span class="chip m"><b>docs-writer</b> · pr-writeup <span class="tag">inline</span></span></div>
         <div class="chips"><span class="chip t">source_scan.py scan --history</span><span class="chip t">deferrals.py</span><span class="chip t">rounds_record.py --standing</span><span class="chip t">git push</span><span class="chip t">gh pr create</span><span class="chip t">gh issue create</span></div></div>
       <div class="row"><div class="what"><strong>Watch the checks</strong><span>Red goes to a fixer told which system failed, three rounds at most. No result is never green.</span></div>
         <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet, on red</span></span></div>
         <div class="chips"><span class="chip t">gh pr checks</span><span class="chip t">gh run view</span></div></div>
+      <div class="row"><div class="what"><strong>Read the screens check</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI</span><span>In CI a headless browser renders every state that has a baseline and a script compares the pixels. Only listed states changed: their new images are taken from the run's artifact, committed as baselines and pushed, with no fixer. Any other state changed: red, to the same one fixer and three rounds, told the check is not weakened.</span></div>
+        <div class="chips"><span class="chip m"><b>release-engineer</b> · delivery <span class="tag">inline</span></span><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet, on a stray change</span></span></div>
+        <div class="chips"><span class="chip t">screens workflow: Playwright Chromium, pinned</span><span class="chip t">screen_check.py compare, in CI</span><span class="chip t">gh run download</span><span class="chip t">screen_check.py adopt</span></div></div>
       <div class="row"><div class="what"><strong>Triage the external review</strong><span>Waited for only where a bot has reviewed in the repository before. One verdict per comment: fix, decline with the reason, defer to an issue, or already resolved. Up to five rounds; then one last-fix review of every CI and triage fix together.</span></div>
         <div class="chips"><span class="chip m"><b>code-reviewer</b> · external-review-triage <span class="tag">agent · Opus</span></span><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span></div>
         <div class="chips"><span class="chip t">gh api, comments</span></div></div>
@@ -319,13 +325,13 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
   <!-- ============ SCRIPTS ============ -->
   <div class="section">
     <h2>The scripts, and what each one decides without a model</h2>
-    <p>All but two live beside the orchestrator skill. The model runs them and carries their last line; it does not re-count or overrule them.</p>
+    <p>All but two live beside the orchestrator skill; <code>screen_check.py</code> is also copied into a project with a screen, so its CI can run it. The model runs them and carries their last line; it does not re-count or overrule them.</p>
     <div class="tablebox">
       <table class="scripts">
         <thead><tr><th>Script</th><th>Decides</th><th>Where</th></tr></thead>
         <tbody>
           <tr><td>sandbox_check.py</td><td>Whether the session is fenced from the machine's keys and the network</td><td>A, and before every launch</td></tr>
-          <tr><td>readiness_check.py</td><td>Whether the planning documents are complete enough to build from (ten checks)</td><td>A</td></tr>
+          <tr><td>readiness_check.py</td><td>Whether the planning documents are complete enough to build from (eleven checks)</td><td>A</td></tr>
           <tr><td>source_scan.py</td><td>Whether any file or transcript holds a value from a file the owner provided</td><td>Planning, the gate, delivery, the audit copy</td></tr>
           <tr><td>validation_gate.py</td><td>Whether a commit passes: suite, typecheck, lint, coverage, the eight check categories against their baselines, scope, test names</td><td>C after every build and fix; D</td></tr>
           <tr><td>rounds_record.py</td><td>How many findings at each severity, which are regressions of a fix, and which stand (a last-fix review's all do)</td><td>C, D and E, after every review</td></tr>
@@ -333,6 +339,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
           <tr><td>extract_map.py</td><td>The real import edges and exports, and what changed since the last map</td><td>D</td></tr>
           <tr><td>done_check.py</td><td>The Definition of Done (nine checks)</td><td>D</td></tr>
           <tr><td>mutation_pass.py</td><td>Which changed lines no test would notice breaking</td><td>D</td></tr>
+          <tr><td>screen_check.py</td><td>Whether a state changed on screen that the slice's screen design does not list (more than the owner's share of its pixels, anti-aliasing ignored), which baselines are owed, and which listed states nothing drives yet</td><td>A (the section), E before the push, the project's CI, E after a red screens check</td></tr>
           <tr><td>deferrals.py</td><td>The list of what the slice ships without, for the pull request body</td><td>E</td></tr>
           <tr><td>cost_by_role.py</td><td>What the slice cost, by role, and which session it could not cover</td><td>E</td></tr>
           <tr><td>audit_sync.py</td><td>Which transcripts are copied to the audit repository and which are withheld</td><td>After every chunk, D and E</td></tr>

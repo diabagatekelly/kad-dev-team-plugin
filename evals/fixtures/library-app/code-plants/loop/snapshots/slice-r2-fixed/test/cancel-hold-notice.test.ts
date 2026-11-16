@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { cancelNotice } from '../lending/cancel-hold-notice';
+
+test('a cancelled result gets a cancelled notice', () => {
+  const notice = cancelNotice({ status: 'cancelled' });
+  assert.equal(notice.heading, 'Hold cancelled');
+  assert.match(notice.markup, /notice--cancelled/);
+});
+
+test('a rejected result carries its reason into the notice', () => {
+  const notice = cancelNotice({ status: 'rejected', reason: 'card ending 4444 has no hold on 9780140449136' });
+  assert.equal(notice.heading, 'Hold not cancelled');
+  assert.match(notice.body, /card ending 4444/);
+});
+
+test('a reason with markup in it is shown as text, not rendered', () => {
+  const notice = cancelNotice({ status: 'rejected', reason: '<img src=x onerror=alert(1)>' });
+  assert.doesNotMatch(notice.markup, /<img/);
+  assert.match(notice.markup, /&lt;img/);
+});
+
+test('quotes and an ampersand in a reason are escaped', () => {
+  const notice = cancelNotice({ status: 'rejected', reason: `"Salt & Road" isn't held` });
+  assert.match(notice.markup, /&quot;Salt &amp; Road&quot; isn&#39;t held/);
+});

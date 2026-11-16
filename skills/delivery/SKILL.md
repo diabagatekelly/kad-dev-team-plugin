@@ -15,8 +15,9 @@ same silence.
 **What you are given.** The branch, the base commit it grew from, the
 implementation report's path, the records directory (the reviewer and
 smoke reports) and the `rounds-slice-<nnn>.jsonl` sidecar, the Definition
-of Done results, the tracker `user-story-writeup` recorded for this
-project (GitHub, Jira, Linear, something else, or none), and the default
+of Done results, the target directory (the planning documents; the
+screen designs and their baselines are in its `visual-ux/`), the tracker
+`user-story-writeup` recorded for this project (GitHub, Jira, Linear, something else, or none), and the default
 branch to target. If the orchestrator did not give one of these, take it
 from the repository (`git rev-parse --abbrev-ref HEAD`, `git remote
 get-url origin`, `gh repo view --json defaultBranchRef`), never from a
@@ -223,6 +224,65 @@ A delivery once reported what it had built while the pull request's
 checks were failing on a defect only the runner's platform showed
 (incident 33).
 
+### The screens check
+
+A project with a screen has a second check, `screens`
+(`.github/workflows/screens.yml`): a headless browser captures every
+state the project drives and `tools/screen_check.py` compares each with
+the baseline committed in `<target directory>/visual-ux/baselines/`. When
+that check is the red one, its verdict is read before step 3, from the
+run's artifact, never from the page:
+
+```
+gh run download <run id> --name screens --dir "${TMPDIR:-/tmp}/kad-screens-<branch>-r<i>"
+```
+
+The last line of the artifact's `screen-check.txt` is the verdict, and
+there are two that are red:
+
+- **`screens: BASELINES OWED <c> changed, <n> new, <r> removed`**:
+  nothing is wrong. Only states the slice's screen design lists changed,
+  and the committed baselines are still the old images. This is not a
+  red round: no file for a fixer, no `CI red`, nothing counted against
+  the three. The baselines are adopted by the script and by nothing
+  else, inline:
+
+  ```
+  python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/screen_check.py" adopt --planning '<target directory>' --artifact '<the downloaded directory>' --base '<default branch>'
+  ```
+
+  It compares again here, copies the capture of each listed state over
+  its baseline (and removes a baseline listed as removed), and prints
+  each path and `adopted: <c> changed, <n> new, <r> removed`. Commit
+  exactly the paths it printed, by name (`git add -A -- <each path>`,
+  which stages a removal too), as `Baselines: <c> changed, <n> new, <r>
+  removed`, push (preconditions 4 and 5 again) and run this section from
+  1. An image is never copied out of the artifact by hand, and a state
+  the script did not print is never committed. `adopt` exiting 1 has
+  copied nothing: a finding stands, and the verdict is the next one.
+  Owed a second time, on the push whose only new commit is the baselines
+  commit, is a state that does not render the same twice: red, named in
+  the report as unstable with its state, for the owner; no second
+  adoption and no fixer.
+- **`screens: FAIL <k> not listed: <state>, …`**: a state the slice's
+  screen design does not list moved (`STRAY`), appeared (`UNLISTED`) or
+  was not captured (`MISSING`). This is red, and step 3 applies with
+  these in place of the tests and the platform: `pr-ci-r<i>.md` holds the
+  head, each such state with its line of `screen-check.txt` (the share of
+  pixels), the screen design whose list it is not on, and for each the
+  two images, copied from the artifact into `<records dir>/screens-r<i>/`
+  (`<state>.png`, the capture, and `<state>-diff.png`, the difference).
+  Return `CI red r<i>: <that path>`. The fixer the orchestrator launches
+  makes the code leave those states as they were; **the check is not
+  weakened**: no edit to a baseline image, to the threshold file
+  (`screen-check.json`), to the screen design's changed-states list, to
+  the workflow or to the capture of a failing state. When its fix is
+  pushed and the next verdict is `BASELINES OWED`, the listed states are
+  adopted as above.
+
+A `screens` job that failed with no verdict (the install, the browser,
+no artifact) is an ordinary red: step 3 as written, from `--log-failed`.
+
 ## 5. The external reviewer's comments
 
 Once the CI watch says green, **wait for an external review only where
@@ -360,6 +420,8 @@ the CI state has not said whether the delivery is done.
   tests, the rounds spent and the checks URL; or `CI no result after <m>
   min` with the URL. Anything but green also says, in these words, that
   the pull request is not ready.
+- **Baselines** — only when the screens check owed any: the adoption
+  commit and the script's `adopted:` line; a state reported unstable.
 - **Pushed** — the branch and the commit hash.
 - **Pull request** — number and URL; whether it was created or updated.
 - **Pipeline** — CI present already, or added by `ci-pipeline` in this
@@ -380,7 +442,9 @@ the CI state has not said whether the delivery is done.
 Push to, rebase onto or merge into the default branch; force-push outside
 "Removing a value from history" (the owner's words and a lease there) or
 delete any remote branch; write a value of the owner's, or its
-replacement, into a record; commit application code or tests; edit the planning
+replacement, into a record; commit application code or tests; copy or
+commit a baseline image `screen_check.py adopt` did not print, or edit
+the screen check's threshold file; edit the planning
 documents or the implementation report (the chunk sections are the loop's;
 the issue links go in the pull request body); file a Low; report a pull
 request as built, clean or ready while a check is red or has no result;

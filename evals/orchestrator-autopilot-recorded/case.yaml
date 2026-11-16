@@ -1,0 +1,45 @@
+schema_version: "1.0"
+name: orchestrator-autopilot-recorded
+description: "The autopilot question (0.15.1's C2 at A.2, held by no case until 0.16.0), the record: the same first slice, with the owner's answer to the autopilot question in their message. The question is not asked; `autopilot.md` is written in the target directory with the owner's words, the three stops and what is always asked; the A line names it. `orchestrator-autopilot-question` is the other half: the question asked once."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Decisions that come up during the build may be settled with the owning persona without asking me, on this slice and every later one, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed. And yes to autopilot: take your own recommendation at the stops the chunk loop would otherwise put to me, and log each one. Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session).
+  model: sonnet
+  max_turns: 50
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: file_exists
+    name: autopilot-file-written
+    path: docs/cancel-hold/autopilot.md
+  # Read from the Write or the heredoc that made it, not the file: a file that was never written would void the run.
+  - type: regex
+    name: file-holds-the-owners-words-the-stops-and-the-always-asked
+    target: trace
+    pattern: 'autopilot\.md(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)(?=[\s\S]{0,3000}?take your own recommendation)(?=[\s\S]{0,3000}?Critical or High)(?=[\s\S]{0,3000}?(?:scope|requirements))'
+  - type: regex
+    name: a-line-names-the-autopilot-file
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*A\. Start:\*\*[^\n]*autopilot\s+—\s+`?[^`;\n]*autopilot\.md'
+  - type: regex
+    name: question-not-asked-when-already-answered
+    target: last_message
+    pattern: '[Mm]ay the loop take its own recommendation'
+    match: not_contains
+  - type: tool_used
+    name: no-builder-in-this-session
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?(?:tdd-coach|chunk-runner)'
+    min: 0
+    max: 0

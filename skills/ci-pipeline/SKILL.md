@@ -1,6 +1,6 @@
 ---
 name: ci-pipeline
-description: Write the continuous-integration configuration a repository is missing, so its pull requests run the same checks the orchestrator's gate runs locally (install with the frozen lockfile, typecheck, lint, the test suite with its coverage gate) on Linux and macOS, hardened (pinned action commits, least-privilege permissions, no secrets). Use inside the first delivery that finds no CI in the repository, or when asked to add CI or a pipeline to a project. Writes CI only; deployment, environments and infrastructure are a separate, later skill.
+description: Write the continuous-integration configuration a repository is missing, so its pull requests run the same checks the orchestrator's gate runs locally (install with the frozen lockfile, typecheck, lint, the test suite with its coverage gate) on Linux and macOS, hardened (pinned action commits, least-privilege permissions, no secrets); and, for a project with a screen, the screen-change check's own job (a pinned headless Chromium captures every driven state and a script compares it with the committed baselines). Use inside the first delivery that finds no CI in the repository, inside the first delivery of a slice with a screen that finds no screen-change check, or when asked to add CI or a pipeline to a project. Writes CI only; deployment, environments and infrastructure are a separate, later skill.
 ---
 
 # CI pipeline
@@ -9,7 +9,10 @@ description: Write the continuous-integration configuration a repository is miss
 (`.github/workflows/*.yml`, or the equivalent for the host the remote
 names) and a pull request is about to be opened; or the user asks for CI.
 `technology-bootstrap` defers infrastructure until a slice forces it, and a
-pull request with no checks is the first thing that does. Not this skill:
+pull request with no checks is the first thing that does. Also: the
+project has a screen (a screen design under the planning directory's
+`visual-ux/`) and no `.github/workflows/screens.yml`; section 3 alone
+then, when the repository already has its CI. Not this skill:
 deployment, environments, secrets, release jobs, or a change to a workflow
 that already exists (report what the gate runs that CI does not; the
 change is the user's to ask for).
@@ -78,7 +81,8 @@ change is the user's to ask for).
   time with `gh api repos/<owner>/<action>/git/ref/tags/<tag>` (follow an
   annotated tag to its commit); never copy a SHA from memory. No
   third-party actions beyond `actions/checkout`, `actions/setup-node`,
-  `actions/setup-python` and `astral-sh/setup-uv`.
+  `actions/setup-python` and `astral-sh/setup-uv` (and
+  `actions/upload-artifact` in the screen job of section 3).
 - No secrets, no `secrets.*`, no deploy step, no matrix of runtime
   versions unless the project already supports more than one in its
   manifest (the operating-system matrix above is the only other one), no
@@ -100,7 +104,86 @@ typecheck and coverage on pull requests'` (without `README.md` in the
 and the report says the README was not there). Never push here;
 `delivery` pushes.
 
-## 3. Report
+## 3. The screen job, for a project with a screen
+
+Only when the planning directory (the one the orchestrator named, or the
+one the project keeps its documents in) holds a screen design
+(`visual-ux/screen-*.md`) and `.github/workflows/screens.yml` does not
+exist. One that exists is left alone, like any workflow. The check: a
+real headless browser renders every state the project's capture file
+drives, on made-up data, and a script compares each image with the
+baseline committed beside the screen designs; a difference in a state
+the slice's screen design does not list fails the job. It is its own
+workflow file, so no existing workflow is touched. In this order:
+
+1. **Copy the plugin's four files, as they are.** Never write them from
+   memory, never edit a copy:
+
+   ```
+   mkdir -p screens tools
+   cp "${CLAUDE_SKILL_DIR}/screens/capture.mjs" "${CLAUDE_SKILL_DIR}/screens/package.json" "${CLAUDE_SKILL_DIR}/screens/package-lock.json" screens/
+   cp "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/screen_check.py" tools/screen_check.py
+   ```
+
+   `screens/` is a package of its own: Playwright, exact-pinned with its
+   lockfile, is the browser (its Chromium), installed by CI with `npm ci`
+   in that folder. The project's manifest and lockfile do not carry it
+   and are not edited; nothing is installed here. `capture.mjs` is the
+   harness; its header says what `screens/states.mjs`, the project's own
+   file, has to export. That file is not yours to write: the report says
+   whether it exists.
+2. **The threshold file**, only when absent:
+   `<planning directory>/visual-ux/baselines/screen-check.json` holding
+   `{"max_changed_percent": 0.1}`. A state differs when more than that
+   share of its pixels do, anti-aliasing ignored. The number is the
+   owner's: one that is there is never changed, by you or by a fixer.
+3. **`.github/workflows/screens.yml`**, one job named `screens`:
+   - `on`, `permissions: contents: read`, `concurrency` and
+     `timeout-minutes` as in section 2.
+   - `runs-on: ubuntu-24.04`: one named image, never `-latest` and no
+     matrix. Pixels are compared, and two images, or two systems, render
+     the same page differently with no change in the code.
+   - Steps: checkout with `fetch-depth: 0` (the comparison reads the
+     default branch's screen designs) and `persist-credentials: false`;
+     Node set up (the project's version; 24 when the project is not a
+     Node one), with the project's own toolchain as in section 2;
+     the project installed with its frozen lockfile, since the capture
+     starts the built app; then, as separate named steps:
+
+     ```
+     - name: Install the pinned browser
+       working-directory: screens
+       run: npm ci && npx playwright install --with-deps chromium
+     - name: Capture every state
+       run: node screens/capture.mjs --out screens-out/captures
+     - name: Compare with the baselines
+       if: always()
+       env:
+         BASE: ${{ github.base_ref }}
+         HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+       run: python3 -I tools/screen_check.py compare --planning '<planning directory>' --captures screens-out/captures --out screens-out --base "${BASE:+origin/}${BASE:-HEAD}" --head "$HEAD_SHA"
+     - name: Keep the captures and the differences
+       if: always()
+       uses: actions/upload-artifact@<sha> # <tag>
+       with:
+         name: screens
+         path: screens-out
+     ```
+
+     The artifact is named `screens` and holds `captures/`, `diff/`,
+     `screen-check.txt` and `screen-check.json`: `delivery` downloads it
+     by that name.
+   - **CI stays read-only.** No step commits, pushes or opens anything,
+     and no permission is widened: a baseline is committed by the loop,
+     at delivery, from the artifact. Every `uses:` pinned as in section
+     2, `actions/upload-artifact` looked up the same way.
+4. Validate the YAML as in section 2, then commit by name: `git add
+   .github/workflows/screens.yml screens/capture.mjs screens/package.json
+   screens/package-lock.json tools/screen_check.py` and the threshold
+   file when you wrote it, `git commit -m 'CI: the screen-change check on
+   pull requests'`. Never push here.
+
+## 4. Report
 
 - **Written** — the file, the host, the toolchain version and where it came
   from.
@@ -109,6 +192,10 @@ and the report says the README was not there). Never push here;
 - **Pinned** — each action, tag and SHA.
 - **Not run in CI** — any gate command the workflow could not include and
   why.
+- **Screens** — only when section 3 ran: the workflow, the image it runs
+  on, the Playwright version `screens/package.json` pins, the threshold
+  file (written, or there already with its number), and whether
+  `screens/states.mjs` exists yet.
 - **Review** — that `devsecops-engineer:operational-readiness` reviews this
   once a deployment path exists; a test-only workflow needs no readiness
   review.
@@ -116,7 +203,9 @@ and the report says the README was not there). Never push here;
 ## What this skill never does
 
 Write deployment, environment or infrastructure configuration; add
-secrets; touch an existing workflow; push; write for a host other than
+secrets; touch an existing workflow; push; commit a baseline image or
+give a workflow leave to; edit the copies of the plugin's screen files,
+or the threshold once it exists; write for a host other than
 GitHub (report instead); invent a test, lint or typecheck command the
 project does not document. The `flexion-ai-devops-tools:ci-pipeline-setup`
 skill, where installed, is a reference for hardening rules, not a

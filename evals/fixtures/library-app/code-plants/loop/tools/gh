@@ -11,6 +11,10 @@
 #                 exits 1, as the real command does); a later push is green
 #   ci-failed.log what `run view --log-failed` prints
 #   issues.json   what `issue list` prints
+#   ci-check      the name of the failing check when it is not `checks`
+#                 (`screens`); `checks` is then listed as passing beside it
+#   ci-artifact/  what `run download` puts in its `--dir` while the check
+#                 is red: the failing run's uploaded artifact
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 log="$here/gh-calls.log"
 printf '%s\n' "$*" >> "$log"
@@ -31,14 +35,43 @@ case "${1:-} ${2:-}" in
   "pr edit") echo "https://github.com/$repo/pull/7" ;;
   "pr view") echo "{\"number\":7,\"url\":\"https://github.com/$repo/pull/7\",\"state\":\"OPEN\",\"headRefName\":\"$branch\",\"baseRefName\":\"main\",\"headRefOid\":\"$pushed\"}" ;;
   "pr checks")
+    failing=checks
+    [ ! -f "$here/ci-check" ] || failing="$(cat "$here/ci-check")"
     if [ -n "$red" ]; then
-      printf 'X\tchecks\t2m14s\thttps://github.com/%s/actions/runs/9101/job/50177\n' "$repo"
+      [ "$failing" = checks ] || printf '✓\tchecks\t1m52s\thttps://github.com/%s/actions/runs/9100/job/50170\n' "$repo"
+      printf 'X\t%s\t2m14s\thttps://github.com/%s/actions/runs/9101/job/50177\n' "$failing" "$repo"
       exit 1
     fi
-    printf '✓\tchecks\t1m52s\thttps://github.com/%s/actions/runs/9102/job/50190\n' "$repo" ;;
+    printf '✓\tchecks\t1m52s\thttps://github.com/%s/actions/runs/9102/job/50190\n' "$repo"
+    [ "$failing" = checks ] || printf '✓\t%s\t1m41s\thttps://github.com/%s/actions/runs/9103/job/50191\n' "$failing" "$repo" ;;
+  "run download")
+    dir=.
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --dir|-D) dir="${2:-.}"; shift ;;
+        --dir=*) dir="${1#--dir=}" ;;
+      esac
+      shift
+    done
+    if [ -n "$red" ] && [ -d "$here/ci-artifact" ]; then
+      mkdir -p "$dir"
+      cp -R "$here/ci-artifact/." "$dir/"
+    else
+      echo "no valid artifacts found to download" >&2
+      exit 1
+    fi ;;
   "run view")
-    if [ -f "$here/ci-failed.log" ]; then cat "$here/ci-failed.log"; else echo "run 9102: completed, success"; fi ;;
-  "run list") echo "[{\"databaseId\":$([ -n "$red" ] && echo 9101 || echo 9102),\"conclusion\":\"$([ -n "$red" ] && echo failure || echo success)\",\"status\":\"completed\",\"headSha\":\"$pushed\",\"workflowName\":\"ci\"}]" ;;
+    # The failing log while the check is red; where no state says which
+    # commit is red (no ci-red file), the log whenever one is there.
+    if [ -f "$here/ci-failed.log" ] && { [ -n "$red" ] || [ ! -f "$here/ci-red" ]; }; then cat "$here/ci-failed.log"; else echo "run ${3:-9102}: completed, success"; fi ;;
+  "run list")
+    if [ -n "$red" ]; then
+      echo "[{\"databaseId\":9101,\"conclusion\":\"failure\",\"status\":\"completed\",\"headSha\":\"$pushed\",\"workflowName\":\"$([ -f "$here/ci-check" ] && cat "$here/ci-check" || echo ci)\"}]"
+    elif [ -f "$here/ci-check" ]; then
+      echo "[{\"databaseId\":9102,\"conclusion\":\"success\",\"status\":\"completed\",\"headSha\":\"$pushed\",\"workflowName\":\"ci\"},{\"databaseId\":9103,\"conclusion\":\"success\",\"status\":\"completed\",\"headSha\":\"$pushed\",\"workflowName\":\"$(cat "$here/ci-check")\"}]"
+    else
+      echo "[{\"databaseId\":9102,\"conclusion\":\"success\",\"status\":\"completed\",\"headSha\":\"$pushed\",\"workflowName\":\"ci\"}]"
+    fi ;;
   "issue create") n=$((40 + $(grep -c '^issue create' "$log"))); echo "https://github.com/$repo/issues/$n" ;;
   "issue list") if [ -f "$here/issues.json" ]; then cat "$here/issues.json"; else echo "[]"; fi ;;
   "issue comment") echo "https://github.com/$repo/issues/14#issuecomment-1" ;;
