@@ -32,11 +32,17 @@ change is the user's to ask for).
 - **What the gate runs** is in the orchestrator's log and the project's
   documented test command; CI runs exactly those commands, so a local green
   and a remote green mean the same thing. When the project root has a
-  `gate-checks.json`, each entry's `cmd` that is a manifest script (`pnpm
-  run <name>`, `npm run <name>`) is one of those commands too, with the
-  baseline the file or the tool holds; an entry whose tool is a binary
-  the manifest does not install is listed under "Not run in CI" in the
-  report, never installed by a third-party action. Coverage thresholds stay where
+  `gate-checks.json`, an entry's `cmd` is one of those commands too when
+  two things hold: it is a script of the project's manifest, run through
+  the runner the project uses (pnpm, npm, yarn or bun; `uv run` or the
+  project's own task for Python), and its exit code is its verdict,
+  which is an entry with no `count` (the tool keeps its own baseline) or
+  a counted one whose `baseline` is 0. A counted entry with a baseline
+  above 0 exits non-zero on the violations the owner already accepted,
+  and only the gate compares the count: CI would be red on a tree the
+  gate passes, so it is listed under "Not run in CI" with its baseline.
+  So is an entry whose tool is a binary the manifest does not install,
+  which is never installed by a third-party action. Coverage thresholds stay where
   the project enforces them (the test runner's configuration); CI adds
   none of its own.
 

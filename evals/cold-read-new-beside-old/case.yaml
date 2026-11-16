@@ -49,6 +49,17 @@ graders:
       path: docs/cancel-hold/implementation/slice-r0-cold.md
     pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity:?\*\*:?\s*(?:Critical|High|Medium)(?=(?:(?!\n###)[\s\S])*?confirmed by execution)(?:(?!\n###)[\s\S])*?position'
     flags: i
+  - type: tool_used
+    name: a-probe-was-run
+    # "Confirmed by execution" in the report is a claim; this is the run:
+    # a script under the scratch folder's probes directory executed with
+    # node, or node run on the clone's code directly.
+    tool: Bash
+    # (The input is matched as JSON, where a line break is the two
+    # characters `\n`: `\bnode` does not match after one, which failed a
+    # run whose probe was written and run in one command.)
+    input_match: '(?:\\n|\b)node\b[^\n]*(?:probes?/|--import|--experimental|-e\b|--eval|--test)'
+    min: 1
   - type: regex
     name: pairs-probed-listed
     target:

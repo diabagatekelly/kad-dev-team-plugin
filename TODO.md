@@ -500,6 +500,21 @@ counts and what it fails without):
 The check of B1 without a run is done too (the same README section:
 counts only).
 
+Deferred from the external review of that pull request (#62), to the
+next change that touches `skills/orchestrator/` (C1 or C2), since each
+stales that directory's 38 cases and none is a defect in ordinary use:
+
+- [ ] B4a The mutants file `changed` writes is created with private
+  permissions and removed after the pass, also when the pass fails.
+- [ ] B4b The mutation pass runs in a disposable clone or worktree, so
+  a run killed between a mutant's write and its restore cannot leave
+  the mutant in the project's tree (today the lock file left in `.git/`
+  makes the next run refuse, and `git status` shows the file).
+- [ ] B5a `deferrals.py --out` creates the parent directory (a branch
+  name with a `/` in it, delivered outside the loop, fails today).
+- [ ] B1a A `nosemgrep` note on `added_lines`' git call in
+  `validation_gate.py` (an argument list, no shell, file names from git).
+
 From the eval suite (E6's decisions of 2026-11-15 and what E7 found;
 `evals/README.md`, "With and without the plugin" and "Retired and cut
 down"). Skill text and scripts, so none of it was E7's:

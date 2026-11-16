@@ -37,6 +37,16 @@ graders:
     target: trace
     pattern: 'docs/cancel-hold/slice-001\.md'
   - type: regex
+    name: no-deferral-restated-in-a-finding-body
+    # The same, under a neutral title: a finding block (heading, Severity
+    # line) whose body uses the slice file's own words for a deferral.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-security.md
+    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity(?:(?!\n##)[\s\S])*?(?:Usable without it|accepted deferral|explicitly deferred|ships with(?:out)?[^\n.]{0,80}undecided)'
+    flags: i
+    match: not_contains
+  - type: regex
     name: no-deferral-restated
     # No finding block (a ### heading with a Severity line) that is one of
     # the slice's two deferrals, or that says the slice ships with

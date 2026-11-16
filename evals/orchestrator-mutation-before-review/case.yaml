@@ -31,13 +31,16 @@ graders:
   - type: file_exists
     name: report-in-the-records
     path: docs/cancel-hold/implementation/slice-mutation.md
-  - type: regex
+  - type: tool_used
     name: mutants-file-outside-the-tree
-    # The file `changed` writes holds lines of the source: never under the
-    # records directory or anywhere else in the project.
-    target: trace
-    pattern: 'mutation_pass\.py[^\n"]*\bchanged\b[^\n"]*--out\s+\\?[\x27"]?(?:docs/|\./|lending/|kad-mutants)'
-    match: not_contains
+    # The file `changed` writes holds lines of the source: its `--out` is
+    # an absolute path, a variable or the home directory, never a path
+    # relative to the project (a first form refused a few named prefixes
+    # and would have passed `--out mutants.json`).
+    tool: Bash
+    input_match: 'mutation_pass\.py\\?"?\s+changed\b(?:(?!--out)[\s\S])*--out[ =]+(?!\\?[\x27"]?[/$~])'
+    min: 0
+    max: 0
   - type: tool_used
     name: no-launch-before-the-hand-off
     tool: Agent
