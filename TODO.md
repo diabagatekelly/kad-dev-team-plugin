@@ -1,912 +1,259 @@
-# Work list: implementation flow v4
+# Open work
 
-Read first, in this order: this file; `.synthesis/implementation-flow-v4.md`
-(the design: every item below cites its section); the audit that produced
-it, `audit-docs/personal-finance-tracker-2-slice-1/plugin-review/2026-10-25-slice-1-review.md`
-(the nested `audit-docs/` clone, or github.com/diabagatekelly/audit-docs);
-then `.synthesis/implementation-flow-v3.md` for what v4 amends. The three
-failures being fixed: not production quality, too costly ($346 for one
-slice), too slow (14.5 h). The owner's two additions on 2026-10-25: comments
-only when absolutely needed, the code self-documenting (§8, D8); the tests
-fake too much and there are no integration tests (§6, D6, D13).
+One list, ordered by pull request, written 2026-11-16 after kad 0.15.0's
+first pull request (#62). Everything finished, with the owner's decisions
+and the "done" notes, is in `docs/todo-archive.md` (and the eval suite's
+own old list in `docs/todo-archive-evals.md`); the items here keep the
+letters and numbers they had there.
 
-Rules for working this list: one PR per phase; every skill change gets its
-eval case in PR 3, and v4 is not done (0.8.1 not used for slice 2, this
-list not closed) until those cases and the evidence for every case the v4
-edits reach are recorded and the gate passes (the owner merged PR 1 with
-its eval-gate check red on purpose, 2026-10-26); keep the eval
-playbook's rule (read every failure before re-recording a bar); nothing
-here changes `evals/TODO.md`'s own items. Tick an item only when its
-"done when" holds. Questions in §13 of the design are answered by the
-owner, not guessed; until answered, the stated default applies.
+**Why it is grouped this way.** What a pull request costs at the eval
+gate follows the files it touches, not the number of items it closes: any
+change under `skills/orchestrator/` sends that directory's 38 cases back
+through the gate, the shared loop fixture 25, a review skill about 17.
+#62 cost 626 runs and $231.92 over four usage windows. So the open work is
+three gated pull requests, each touching one group of files once, and
+nothing is fixed between them that would stale a group twice.
 
-## PR 1 — the loop (orchestrator, tdd skills, review skills, scripts)
+**Order, decided by the owner 2026-11-16:** PR 1 (the loop's fixes), then
+PR 3 (the screen-change check) before slice 3; PR 2 (reviews and planning
+skills) alongside, before or after the slice, since it changes how
+findings are ranked and not what the loop does. Then slice 3.
 
-Status (2026-10-25): built and committed on `implementation-flow-v4`
-(`8033f43` scripts, `db17d28` skills and agents, `7fc4eab` docs and
-version). Two things went in beyond the list because the loop needs them:
-the five owning planning skills accept a delegation file as the owner's
-approval for a mid-build decision (1.10 cannot complete without it), and
-`release-engineer` is `background: false` since `repo-bootstrap` asks.
-Open until PR 3: `cost_by_role.py` (the E line says `cost not measured`
-until it exists) and the eval evidence the pre-push hook wants for every
-case these skills touch.
+## Rules for every gated pull request
 
-### Orchestrator `skills/orchestrator/SKILL.md`
+From what #62 cost, and the owner's answers of 2026-11-16:
 
-- [x] 1.1 A: one question per `AskUserQuestion`, in order settings → sandbox → policy → delegation (§3.A.2). Done when: the A step text names four separate calls and forbids bundling.
-- [x] 1.2 A: the delegation question and `planning/delegation-slice-<nnn>.md` (what it covers, what it never covers, committed in the planning commit) (§3.A.2, D5).
-- [x] 1.3 A: the budget line (`budget — 5h, 2 reviews/chunk, 1 fix/scope (+1 regressions), 8 consults`), counted at every chunk boundary, the flow ending at the boundary when exceeded (§3.A.3, D10).
-- [x] 1.4 A: no git repository or no `origin` → `flow not started: no repository`, route to `release-engineer:repo-bootstrap` (§3.A.4).
-- [x] 1.5 A.5: the design-readiness gate, run with `readiness_check.py`; each failed check a backward route entry to the persona it names; `readiness — PASS` on the A line (§5, D4).
-- [x] 1.6 B: the plan check's fourth item, every chunk names a seam test (§3.B, D6).
-- [x] 1.7 C.2: gate `--allow` = Files line + `--module-dir` for each design module; in-module off-list file = `scope: deviation`, recorded on the C line; out-of-module = FAIL to the fixer once. Delete the "add it to the plan entry" sentence (§3.C.2, D9).
-- [x] 1.8 C.3: one combined reviewer (`code-reviewer`, Opus, invokes `code-review` + `test-quality-review` + `reliability-review` by Touches) and one smoke agent per round; never more than two launches (§3.C.3, §4, D1, D6).
-- [x] 1.9 C.4: one fixer; regressions-only re-review on the fix diff; a second and last fixer for regressions; pre-existing findings standing; standing C/H stops the flow, standing M to the PR body (§3.C.4, D2).
-- [x] 1.10 C.5: the gap step, `needs-decision (<persona>)` → one consult with the delegation file → persona commits its own document → one `decision <n> <sha> (<persona>)` line. Without the file: recommendation only, flow stops for the owner (§3.C.5, D5).
-- [x] 1.11 C line fields: `deviations`, `smoke`, `standing`, `decision` lines, `budget`. Only `rounds_record.py` output reaches the log (§3.C.6, §4).
-- [x] 1.12 D: Definition of Done before D's reviewers (`done_check.py`, one Sonnet fixer for the batch), then the six reviewers once with one fix round as C.4; Lows allowed at D only (§3.D, §7, D3, D7).
-- [x] 1.13 E: nothing in the background; Lows to the PR body under "Known Lows" (grouped by theme), standing Mediums filed one issue each; PR body links, E line, `cost_by_role.py` total on the E line, audit sync, all in the same turn (§3.E, D11).
-- [x] 1.14 "Pausing and resuming": the handoff file and the `Resumed` line (§3, last subsection).
-- [x] 1.15 Log entry format: one bold line per step; indented plain bullets for decisions and corrections; never a second bold A/D/E line (§9).
-- [x] 1.16 Delete: "every Low becomes an issue"; "until clean, capped at five"; the six-reviewer territory table; every orchestrator-writes-a-script path.
+- A new case runs once and its trace is read before any three-run pass.
+  Its first failures are read before the grader is believed.
+- Skill wording is tried on one or two cases at single runs. The full
+  three-run gate runs once, at the end.
+- Bars are recorded (`record_thresholds.py --gate-only`, the case list
+  through `xargs`) from three-run results only, then `--stale` once more.
+- **No single pass of every affected case, and no cost-per-pass or
+  re-run-rate figure** (the owner: three-run results only). The write-up
+  gives the three-run counts, the bars that moved, and the gate's total
+  cost from the result files.
+- A rule a skill states in several places survives the removal of one: a
+  known-bad reference removes every place.
+- The code commit is pushed alone for the external reviewer (its limit is
+  300,000 characters); the evidence, bars and generated tables follow.
+  A fix it asks for that would stale a batch of cases is weighed first,
+  and deferred to that group's next pull request unless it is a defect.
+- `docs/flow-map.html` is updated in the same pull request as any change
+  to a stage, a launch or a script.
 
-### `skills/tdd-implementation/SKILL.md` and `skills/tdd-implementation-lite/SKILL.md`
+## PR 1: the loop's fixes (0.15.1)
 
-- [x] 1.17 Chunk plan: Done-when names the seam test; Touches drives `reliability-review` (§3.B).
-- [x] 1.18 Building one chunk: the seam test first in the Test List (through the real composition root, real adapters and local store, only the external service faked at its wire boundary); port fakes only for a branch the seam test cannot reach, each named with its branch (§6, D6, D13).
-- [x] 1.19 Comments: the §8 writing rule in GREEN and REFACTOR; never cite a planning document, decision number or criterion in code (D8).
-- [x] 1.20 Deviations named in the report section; the plan entry never edited by the builder or fixer (§3.C.2).
-- [x] 1.21 Reporting: `Fix r<i>` lines directly after `Commit`; no `### Lows` section (§9).
+Files: `skills/chunk-runner`, `skills/orchestrator` and its scripts,
+`skills/delivery`, the loop fixture, two tools. About 48 cases at the
+gate; the two `chunk-runner` replay histories are captured again once,
+from a real `kad` session on the library fixture.
 
-### Review skills
-
-- [x] 1.22 The shared report format stated identically in `code-review`, `test-quality-review`, `reliability-review`, `security-review`, `architecture-review`, `accessibility-review`, with `needs-decision (<persona>)` as a severity value (§4).
-- [x] 1.23 `code-review`: the combined-review paragraph (three skills in turn, one report, ≤ 8 findings, C/H/M only per chunk); WHAT-comment and planning-reference comments Medium; function > 80 lines / file > 300 lines a finding at D (§4, §8, D8, D14).
-- [x] 1.24 `test-quality-review`: the seam check (all tests fake at the port → High); the fake inventory per chunk (own-code fake with a real local equivalent → High; hand-rolled DOM harness → High pointing at D7.4); padding measures at D (test/src ratio, share of tests asserting on source text / package.json / script bodies, > 10% Medium) (§6, §7.9, D13).
-- [x] 1.25 `accessibility-review`: the smoke-run mode (start the app, drive the chunk's Done-when, check the chunk's criteria, shared format); the full design-time review at D only (§6).
-
-### Scripts `skills/orchestrator/scripts/`
-
-- [x] 1.26 `validation_gate.py`: `--module-dir` (repeatable) and the deviation line; run `typecheck` and `lint` from the manifest when present; report comment density (comment lines / non-blank, `src/`), files > 300, functions > 40, lines at depth ≥ 4 (report-only) (§3.C.2, §8, D14).
-- [x] 1.27 `rounds_record.py` (new): review/smoke report in the shared format → sidecar rows (`class` by hunk against a range) → C-line counts; `--standing` (§4, D9).
-- [x] 1.28 `readiness_check.py` (new): the eight §5 checks over the planning directory → PASS or failing checks with the persona each routes to.
-- [x] 1.29 `done_check.py` (new): the nine §7 checks (README sections; lint and formatter config present and clean; typecheck; code-in-strings scan; planning-reference scan; comment density; "Kept for later slices" columns exist; env defaults not production; test padding figures).
-- [x] 1.30 `sandbox_check.py`: exit-2 `--write-settings` writes `permissions.deny` and `sandbox.filesystem.denyRead` only, never `sandbox.enabled`/`failIfUnavailable`, and says so (D9).
-- [x] 1.31 `skills/map-update/scripts/extract_map.py` for TS/JS and Python; the "no extractor" rule in `map-update` SKILL.md (§9, D9).
-
-### New skills and agents
-
-- [x] 1.32 `release-engineer:repo-bootstrap`, smallest form: `git init`, default branch, `.gitignore`, `gh repo create` private, first push, decided with the owner, recorded in the technology-bootstrap doc (§3.A.4).
-- [x] 1.33 `docs-writer:readme`: README from manifest + design + slice (§7.1); never invents a command the manifest lacks; the smoke agent follows it on a clean clone in D's last round.
-- [x] 1.34 `agents/code-reviewer/AGENT.md`: the combined-review launch; `agents/accessibility-engineer/AGENT.md`: the smoke role; `agents/tdd-coach/AGENT.md`: `maxTurns` 120 builders / 160 D fixer, passed on launch (§9).
-- [x] 1.35 README "The chunk loop", PERSONAS (Orchestrator paragraph → v4; `release-engineer` + `repo-bootstrap`; `docs-writer` + `readme`); version 0.7.0.
-
-## PR 2 — planning (from the two planning reviews, §9 "Planning skills", D12)
-
-Status (2026-10-26): built and committed on `implementation-flow-v4-pr2`
-(`8cfa1e0` 2.1, `ce099af` 2.2–2.7, `9743da6` 2.8). The §13 defaults were
-applied as stated (one question per `AskUserQuestion`; indented outcome
-bullets allowed under any entry; report after every step and ask only
-when the next row needs an owner decision). 2.8's done-when holds: the
-checker on the run-2 log with its three sessions and their 243 subagent
-transcripts reports 5 errors (entries 4 and 11's Artifact lines, and
-entry 28's three real deviations: repeated A/D/E lines, chunk 6 with no
-`commits` field, no E line) and none of the 76 "no log entry written
-before it in this session" false positives; the run-1 log reports the
-same 13 errors as before; a v4 entry written from the orchestrator's
-template parses with 0 errors. One fix outside the list, made with 2.8
-because the same rule produced it: a stage redone after a backward route
-(entry 22) is no longer "goes back without saying". Left out, from the
-planning review's finding 12 and not on this list: `vertical-slicing`
-re-consulting `acceptance-criteria` when a revision rewrites a
-criterion. Open until PR 3: the eval evidence the pre-push hook wants for
-every skill these commits touch. Pushed as PR #24 (2026-10-26, hook
-bypassed at the owner's direction, evidence check red on purpose).
-External review round 1 (Sourcery, 13 findings): 12 fixed in `f7e891d`
-(owed v4 follow-up rounds, the loop's allowed subagent skills, exact
-`none (<reason>)`, the E line closing only its own loop, the sidecar
-read inside the project and per slice with the same C/H/M filter as the
-log, added log lines must be indented bullets, "in place" as a backward
-declaration, problem-framing asks for every unanswered section, "via
-AskUserQuestion" changes how not whether); 1 deferred as issue #25 (a
-non-UI slice's accessibility placeholder has no row that fills it).
-
-- [x] 2.1 `requirements-refinement`: the full question pass before writing ("a question not yet asked is owed, not Not yet confirmed"); walk the problem doc's Open questions; revise in place while the document is still yours, supersede once a later stage has built on it. Same revise-in-place wording in `scope-map`, `adr`, orchestrator step 3; `vertical-slicing`: revised in place, never `-v2`; three placeholders (security, reliability, accessibility).
-- [x] 2.2 `architecture-design`: every criterion and placeholder failure path has a structural home or an Open question with owner and re-entry note; "Kept for later slices" line; a consequence that changes a confirmed requirement is a hand-back to `product-manager`; "informed by a consult" names the Skill call and records the answer.
-- [x] 2.3 `reliability-requirements`: a number on every retry/wait/poll/give-up/stale or "unbounded, owner approved"; read the security file first, reconcile or escalate overlaps; the unusable-reply row; a routed question is answered or re-routed with a reason, never to the implementer.
-- [x] 2.4 `screen-design`: every state the security, reliability and accessibility files name gets a mockup; omitting a declared shell element is a proposal to `design-system`.
-- [x] 2.5 `security-requirements`, `reliability-requirements`, `accessibility-review`: replace the slice's placeholder line with a one-line pointer and edit nothing else; the story is `docs-writer`'s; a narrowed criterion is a finding for `product-slicer`; consult answers as visible text under `## Consult answer`.
-- [x] 2.6 `problem-framing-doc`: gather through `AskUserQuestion`, one question per section. `map-query`: emit the header for "no map" after checking the path.
-- [x] 2.7 Orchestrator steps 3–5: Skill arguments say where to save and nothing about other stages' documents; "via `AskUserQuestion`" passed to every routed skill; re-inspect without asking; reports as visible text; one entry per owner and one continue prompt for a fact that ripples requirement → slice → story; the outcome-bullet rule per §13's answer; non-routed entry shape (`Routed to: none (<reason>)`, one Artifact path).
-- [x] 2.8 `evals/tools/orchestrator_log_check.py`: Agent launches under an open entry across sessions; sidecar for round counts; clean rounds without a split; `Policy:`/`policy —`; parentheticals; consult-tagged Skill calls (`NARROW CONSULT`/`INLINE CONSULT`) under the latest entry; the v4 fields. Done when: on the run-2 log it reports none of the ~60 false positives and all three real deviations (§11 case 11).
-
-## PR 3 — evals (§11)
-
-Status (2026-10-31): built on `implementation-flow-v4-pr3`. Cases 1–12
-are seventeen case directories plus one script check, all on the
-library-app fixture: the chunk loop's states come from
-`evals/fixtures/library-app/code-plants/loop/state.sh` (eleven states,
-each the git history, gate files, sidecar and handoff a previous session
-would have left; its README and `answer-key.md`'s `L` and `P` rows list
-the plants), three planted planning sets under
-`evals/fixtures/library-app/planning/`, and `cost_by_role.py` under
-`evals/tools/`. Case 11 is `evals/orchestrator-log-format/check.sh`, no
-model: the v4 template entry parses clean, and the run-2 part runs when
-the private log is given (verified 2026-10-26 under 2.8). Case 7's
-builder half is three graders on `tdd-implementation-one-chunk`; the
-seam test is a grader on both chunk-plan cases. 3.3: no remaining v3 case
-assumed six reviewers per chunk or "until clean" rounds (J5 had rewritten
-them on 2026-10-24); the two routing cases' graders gained the delegation
-question and the readiness gate. Found on the first local run (a Mac,
-after Windows and WSL): `sed -i` without a suffix in two scripts and a
-`slice-fixed` snapshot verify.sh type-checked without its base, fixed;
-Node 24 is needed for the fixture's test flag (`evals/tools/gate.sh`
-puts Homebrew's on the path on a Mac). The first calibration pass (2026-10-31, one
-run each, the Mac) found: the recorder read a smoke report whose
-`**Severity:**` sat in a list item as zero findings and printed `smoke
-PASS` (fixed: a list marker is tolerated, and a smoke report with no
-parsed finding must say `PASS` or the script exits 1); the E step never
-committed the log, so `delivery`'s clean-tree rule stopped every real
-delivery (fixed: E.1 commits the log and removes the handoff as
-`Records: slice <nnn> delivery`); the handoff file is committed with the
-records, so the fixture's states now commit it; the gap state lacked the
-reliability document its planted review cites; the scope-consequence
-criterion was vacuous for an in-memory queue (now it needs the other
-holds to survive the restart); the readiness case ran the whole loop once
-the gate passed, as the skill says, so its prompt now hands off at the A
-line. What the Mac cannot measure: inside the eval sandbox `git` by name
-is Apple's shim and fails (see the evals README's gate section), so the
-chunk-loop, delegation-with-file and tdd cases could not be measured
-until a `git` shim in Homebrew's `sbin` was found to be reachable there
-(`gate.sh` checks for it); the scripts gained a working-git fallback as
-well. All seventeen bars are recorded from the Mac (K3 in `evals/TODO.md`,
-2026-10-31); the second pass over the loop cases found and fixed two more
-defects (the gate command never allowed the loop's own uncommitted log;
-a handoff naming E was resumed by invoking `delivery` directly). K4, the
-stale re-record of every case the skill edits reach, is done (68/68 with
-evidence, 2026-10-31; four history chains re-frozen after PR 2 on the
-way); PR 3 is pushed as PR #26 (2026-11-01), the evidence check green.
-
-- [x] 3.1 Cases 1–12 on `evals/fixtures/library-app/`, each with graders, per `evals/README.md`; bars recorded with `record_thresholds.py` after calibration.
-- [x] 3.2 `evals/tools/cost_by_role.py` (copy from `audit-docs/personal-finance-tracker-2-slice-1/plugin-review/tools/cost_by_role.py`; per-model prices; prints the E-line total).
-- [x] 3.3 Rewrite or retire the v3 cases that assume six reviewers per chunk or "until clean" rounds; the two routing cases' A step gains the delegation question and the readiness gate.
-
-## After the PRs
-
-- [x] 4.1 Run slice 2 on 0.8.1 (v4 complete: PR 1 to PR 3, the launcher and the no-screen slice rule, #23, #24, #26, #27, #29) with the budget line, in a fresh repository for a one-to-one comparison, started with `bin/kad` (the sandbox runtime, audit mode and the audit repository set up by it); audit it the same way (`audit-review` skill; the audit-docs tools); compare the E-line cost and the §10 estimate. Done as run 3, slice 1 of a fresh repository on 0.9.2 (the comparison is in the review below); the E-line cost covered the planning session only (H1.4). Slice 2 itself is the next run, on the version that carries H1 to H3, not on 0.8.1.
-- [x] 4.2 Decide D9 phase 2 (a chunk-runner agent per chunk) on the orchestrator's measured context from 4.1 (> ~250k tokens → build it). Decided 2026-11-08: slice 2 measured about 427k cache-read tokens per call; build it (`.synthesis/handoff-slice2.md` P3.1).
-- [x] 4.3 Won't do (owner, 2026-11-08). Open items from run 2, in the project not the plugin: PR #2's issue-links placeholder, the untracked `pr-r1-comments.json`, the missing E line, the three suspected bugs in repo 2 (orphaned vault row before the record write; `complete()` without a held claim; the year missing from the date column), repo 1's single-account rule and cursor persistence.
-
-## After run 3 (2026-11-01)
-
-Run 3 (`personal-finance-tracker-3` slice 1, 0.9.2) is reviewed; 4.1's
-comparison is done in `audit-docs/personal-finance-tracker-3-slice-1/plugin-review/`.
-The work list that came out of it is `.synthesis/handoff-run3.md`: audit
-and measurement that failed silently (H1), the loop (H2, including the cold-read
-protocol for every reviewer), planning (H3), the project's own open bugs
-(H4), the slice 2 audit of the lite policy's tests (H5) and two questions
-for the owner (H6). Slice 2 runs on the version
-that carries H1 to H3.
-
-Status 2026-11-03: H1 merged as PR #34 (0.10.0: the audit clone before the
-fence, a sync after every records commit, failures on the line, transcript
-snapshots, Chrome under the fence, no browser owed); H2 as PR #35 (0.11.0:
-the cold pass first for every round-0 reviewer, decided by a three-run Opus
-check, deviation zones, the fixer's rename and shell-edit rules, no chunk
-Lows, the README's CI line); H4 filed on the project as #6 to #13, all
-still open; H3 is PR #37, 0.12.0 (built-ins by default approved once in
-`technology-bootstrap`, the readiness check reading Strategic and Tactical
-headings by name and the design template naming them, the design's tests
-line saying what lite's seam rule says, `reliability-review`'s
-created-then-timeout-then-retry row with the refund overlay planting it;
-Sourcery's eleven comments triaged, five fixed and six declined), merged
-2026-11-06. H6's budget and heavy-policy questions decided and built as
-0.13.0 (8 h for a UI slice, 5 h otherwise; `tdd-implementation` retired
-with its five cases, lite the only implementation skill); D9 phase 2
-waits for slice 2's measurement; the review cadence is a policy arm for
-after H5 (`.synthesis/review-cadence-survey.md`). Next: H4's fixes in the
-project (issues #6 to #13 on personal-finance-tracker-3, on 0.13.0, the
-first real `bin/kad` session with audit on since H1), then slice 2 under
-`bin/kad --chrome` with audit on (after `kad --reset`: the stored audit
-repository is the project's own origin), whose audit is H5. Two eval bars were re-recorded for drift under Claude Code
-2.1.316 (the handoff's H2 note): a directly-invoked reviewer skipping
-`why-comments`, a directly-invoked heavy builder skipping its reviews; a
-candidate agent-file fix, not scheduled.
-
-## After slice 2 (2026-11-08)
-
-Slice 2 (`personal-finance-tracker-3` PR #20, 0.13.1) is reviewed in
-`audit-docs/personal-finance-tracker-3-slice-2/plugin-review/`. The work list
-that came out of it, with everything left from `.synthesis/handoff-run3.md`
-and the owner's decisions of 2026-11-08, is `.synthesis/handoff-slice2.md`:
-start (the launcher as the one way in, Chrome always, no questions), screen
-checks (the acceptance criteria walked in a real browser), the loop (the
-chunk runner, the light cadence arm with the builder as fixer, deferred
-decisions as blockers), planning data (nothing of the owner's by value) and
-audit. 4.2 is decided there (build the chunk runner); 4.3 is dropped.
-P1 shipped as 0.14.0 (PR #41) and P2 with P3 as 0.14.1 (PR #42, merged
-2026-11-09): the chunk runner, the criteria walk, the data rule, the
-open-work routing, the triaged deferrals, the counted shell edits and the
-light cadence arm (measured at slice 3). P4 (planning data) shipped as
-0.14.2 (PR #44, merged 2026-11-09): the "described, never quoted"
-rule in five planning skills, `source_scan.py` behind the readiness
-gate's tenth check, the chunk gate's `sources` check and delivery's scan
-before a push, and delivery's removal procedure. P5 (audit and
-measurement) shipped as 0.14.3 (PR #47, merged 2026-11-10): transcripts
-by session id, withheld when they hold a listed source's value, the
-sync's lock, the cold-read brief and the mutation runner for the slice
-reviews. The list is done. Next: slice 2's fix round on
-`personal-finance-tracker-3`, then slice 3, both under `kad` with 0.14.3
-installed. The handoff's first section, "Where the list stands", is the
-current state.
-
-## After slice 2's fix round (2026-11-12)
-
-The fix round ran 2026-11-10 on 0.14.3 (PR #20 round 1) and was reviewed the
-same day; its review's fixes merged as 0.14.4 (PRs #49 and #50: the mutation
-runner's reporters, the source scan's one-word cells and tab column, the
-Definition of Done's README list, a structural size finding as the architect's
-decision, the anchoring pass with `INCIDENTS.md`). Next: slice 3 on 0.14.4
-under the light cadence, as `.synthesis/handoff-slice2.md` "After this list"
-says; nothing of the fix round is left to run.
-
-## Work list: 0.14.5 and 0.15.0 (written 2026-11-12, after the issue #33 fix)
-
-The sixth run (issue #33 on `personal-finance-tracker-3`, kad 0.14.4, PR #42)
-was reviewed 2026-11-12: `~/.claude/kad-audit/reviews/2026-11-12.md`, and in
-the audit repository as
-`personal-finance-tracker-3-slice-1/plugin-review/2026-11-12-issue33-fix-review.md`
-with the cold read (4/3/4/4/3/4) and the mutation pass (39 of 44). The finding
-numbers below are that review's. The tooling behind phase B is surveyed in
-`.synthesis/quality-tooling-survey.md`. Slice 3 has not run; it is the test
-of 0.15.0 below, not the next thing to do.
-
-Rules as before: one PR per phase; every skill change gets its eval case on
-the library fixture, never the project's content; the gate passes before the
-PR opens (a usage window sustains about 100 to 120 cases); Sourcery's
-comments are triaged without being asked. Tick an item only when its "done
-when" holds.
-
-### Phase A, 0.14.5: what broke the run
-
-- [x] A1 **A runner waits, and a result is only a hand-back** (finding 1).
-  `chunk-runner`: waiting is ending the turn with no tool call; never a
-  background command, a poll or a monitor to wait; an agent has returned
-  only when its hand-back message is there; a hash is real only when `git
-  cat-file -e` says so; the stall rule applies to a hand-back message,
-  never to an empty `git log`; never hand back while a launched agent has
-  not returned. `tdd-implementation-lite`: a skill invoked inside a build
-  (the map query) is a note, the turn goes on, the only final message is
-  the hand-back. The orchestrator checks every hash on a runner's line
-  before it writes the line or asks the owner anything built on it. Done
-  when: cases `chunk-runner-waits-for-handback` and
-  `orchestrator-runner-handback-unverified` pass and fail without the
-  change.
-- [x] A2 **Red CI is not done** (finding 2, the owner's draft of
-  2026-11-12). A "CI watch" section in `delivery`, called by the
-  orchestrator's E step after every push and by step 1b for an open pull
-  request with red checks: wait bounded by the workflow's timeout plus 5
-  minutes (no result is never green); green goes on to the comments; red
-  reads the failing job (`gh run view --log-failed`, then the job page in
-  Chrome, then the owner with the URL), writes the failing tests to
-  `<records>/pr-ci-r<i>.md`, one fresh fixer told the platform difference
-  and that the failing tests are not weakened, the gate, the push, the
-  watch again; three rounds at most; the report leads with the CI state
-  and the E line needs `CI green <sha>`. Done when: case
-  `delivery-ci-red-not-done` passes.
-- [x] A3 **The gate does not fail scope on the flow's own records**
-  (finding 8): `validation_gate.py` exempts the orchestrator log and the
-  sidecar. Done when: a tool test shows it and a real out-of-scope file
-  still fails.
-- [x] A4 **An issue fix has a convention and a scoped readiness gate**
-  (findings 4b and 5): records prefix `issue<n>-`; `readiness_check.py`
-  checks the documents and criteria the fix revised, lists older gaps as
-  INFO and the orchestrator files them once as one issue; the
-  numbers-on-waits check stops matching a button label. Done when: case
-  `orchestrator-issue-fix-records` passes and the readiness tool tests
-  cover the scoped mode and the false match.
-
-Built 2026-11-12 on branch `phase-a-0.14.5`. The gate: 53 cases reached,
-all with current evidence. Against main's skill text the four new cases
-fail (0.88, 0.86, 0.77, 0.30 against bars of 0.97, 1.00, 0.97, 0.97), with
-two limits to know: `chunk-runner-waits-for-handback` and
-`orchestrator-runner-handback-unverified` fail there on the hash check
-alone (the old orchestrator also declined to write the C line from a line
-whose commit was missing, without the check), and no case can make a
-runner wait, since a launch blocks under the eval (E2's replay case).
-`delivery-ci-red-not-done` stops before the fixer.
-
-**Test of 0.14.5: one issue fix on `personal-finance-tracker-3`, before any
-of phase B is built.** Issue #49 (stopping soon after connecting waits the
-full 10 s and leaves the claim), with #54 and #40 if the owner wants them
-in the same fix. It is the right size and shape: it needs a design
-decision, it touches the close and a wait (so the runner is exercised on
-the code that tripped it), and its tests must pass on Linux. Measured
-against the issue #33 run: no result named before its hand-back, no stall
-message to a working agent, no readiness route about an untouched
-document, the pull request never reported as built while a check is red,
-and the owner's questions in the loop (7 last time). About $30 to $60.
-
-**Run and reviewed 2026-11-13** (`~/.claude/kad-audit/reviews/2026-11-13.md`;
-$33.17, 1 h 28 m to green CI, 34 launches). Held: no runner named a result
-before its hand-back or started anything to wait (12 launches, five
-wake-ups that were not the hand-back, one of them a 12-minute platform
-stall); no stall message; no readiness route about an untouched document;
-the pull request reported only after `CI green`; no owner question in the
-loop; every record prefixed. **Not exercised, so not shown:** the stall
-rule (no agent stalled), a false hash refused (none appeared), the CI
-watch's red path (CI was green), older gaps filed as one issue (there
-were none). The cold read's reliability score went from 3 to 4.
-
-### After the issue #49 fix (2026-11-13), from its review
-
-Small and mechanical, for the next plugin change that reaches each file:
-
-- [ ] F1 **The gate reads an absolute `--allow` inside the project as the
-  path relative to it** (finding 1): two of three runners passed the
-  records directory as handed, absolute, and the gate failed scope on the
-  run's own records; `--module-dir` and `--deviation-zone` the same way.
-  Done when: a tool test in `validation_gate_test.py` shows it.
-- [ ] F2 **The fixer cap says whether a gate fixer counts** (finding 4): a
-  gate that fails after the r1 fix has no rule, and a runner that sent a
-  gate fixer then left a regression unfixed under "no third fixer".
-  Proposed: the cap counts review fixers; each gate gets its one fixer.
-  Done when: a `chunk-runner` case with a gate failure after r1 passes.
-- [ ] F3 **The log checker reads an r2 fix of several commits** written
-  with spaces between the hashes (finding 5). Done when: a tool test.
-- [ ] F4 **`cost_by_role.py --log` skips a session with no transcript**,
-  names it and totals the rest (finding 6, second run). Done when: a tool
-  test.
-
-Decided by the owner 2026-11-13 (all three yes), to build with 0.15.0:
-
-- [ ] F5 **A last fix that changes behaviour gets one diff-scoped review**
-  (finding 2): the slice review's last fix is read by nobody, and the cold
-  read's three unknown bugs and two of four mutation survivors were in
-  it. Proposed as one more stop on C2's autopilot list: when the last fix
-  touches a source file no finding handed to it names, or changes an
-  exported signature; its findings are reported, not fixed in the loop.
-  **The owner, 2026-11-13: yes, and "any change should always be
-  reviewed".** So not conditional: every commit that changes source or
-  tests after a scope's last review (a chunk's r2 fix, the slice review's
-  last fix, a gate fixer's, a CI fixer's, a triage fix's) gets one
-  diff-scoped review before delivery reports. Still to design, with C2:
-  how the chain ends (proposed: that review's Critical and High stop for
-  the owner or autopilot's one fixer, Mediums and Lows are filed, and a
-  fix of its findings is reviewed the same way, capped). Done when: a
-  case shows a last fix with a planted defect reviewed and the defect
-  reported, and a clean last fix adding one review and no fixer.
-- [ ] F6 **Delivery waits for an external review only where a bot has
-  reviewed before** (finding 3; the owner ended a fifteen-minute wait on
-  a repository with no review bot). Otherwise it says so and returns.
-  The owner, 2026-11-13: yes.
-  Done when: a case on the fixture's `gh` stub.
-- [ ] F7 **The target-directory question** offers guesses as its options
-  (finding 7): take the directory a project memory or `CLAUDE.md` names,
-  and say so. The owner, 2026-11-13: yes. Done when: a variant of
-  `orchestrator-asks-for-target` with the directory named in the
-  project's memory takes it without a question, and the existing case
-  still asks.
-
-### From E5 (2026-11-14): the chunk runner's hand-back
-
-Two misses in `skills/chunk-runner`, shown by the regex checks that
-replaced its hand-back judges (`evals/README.md`, "Judges turned into
-tool checks"). Not E6's: `chunk-runner` is outside it. Both go with
-phase B's other `chunk-runner` changes, in one edit, because a change to
-the skill's text stales every `chunk-runner` case and the two replay
-histories, which are then captured again from a real session. **G1 is
-due before slice 3 whichever comes first**: it only costs anything when
-a real loop runs.
+The chunk runner (one edit to its text):
 
 - [ ] G1 **The runner hands back while its builder is still working.**
   One run of seven of `chunk-runner-waits-for-handback` ended on "The
-  chunk 1 builder is running. Next I'll wait for its report": the class
-  of issue #33, and the first time a case has shown it. One run is not
-  a rate. Done when: the cause is read from that run's trace
+  chunk 1 builder is running. Next I'll wait for its report". Done when:
+  the cause is read from that run's trace
   (`evals/results/gate-20261114T222734-rerun-chunk-runner-waits-for-handback-run2.trace.jsonl`),
   the skill's wait rule is changed for it, and
-  `hand-back-is-one-line-for-what-ran` passes ten runs of ten.
-- [ ] G2 **The hand-back is not the one line in about a quarter of
-  runs**: a paragraph before the line (7 of 25 earlier runs of
-  `chunk-runner-one-fix-round`, 1 of 7 and 2 of 7 on 2026-11-14), once
-  a bulleted report. Whether the orchestrator reads its line past a
-  preamble was not checked: check that first, it decides how much this
-  matters. Done when: `hand-back-is-one-line-and-nothing-else` has a
-  bar of 3 of 3 on `chunk-runner-one-fix-round`, and
+  `hand-back-is-one-line-for-what-ran` passes ten runs of ten. **Due
+  before slice 3.**
+- [ ] G2 **The hand-back is not the one line in about a quarter of runs**
+  (a paragraph before the line; 2 of 3 on 2026-11-16). First check
+  whether the orchestrator reads its line past a preamble: that decides
+  how much it matters. Done when: `hand-back-is-one-line-and-nothing-else`
+  has a bar of 3 of 3 on `chunk-runner-one-fix-round`, and
   `skill_mutation.py run --case chunk-runner-one-fix-round --rule
-  handback-one-line` exits 0 (the tool does not count the reference
-  while the bar is 2 of 3).
+  handback-one-line` exits 0.
+- [ ] F2 **The fixer cap says whether a gate fixer counts**: a gate that
+  fails after the r1 fix has no rule, and a runner that sent a gate fixer
+  then left a regression unfixed under "no third fixer". The cap counts
+  review fixers; each gate gets its one fixer. Done when: a
+  `chunk-runner` case with a gate failure after r1 passes (the same new
+  case as E2's, below).
+- [ ] E2 **The `chunk-runner` deletion pass's proposals, all of them**
+  (the owner, 2026-11-16; the table is `evals/README.md`, "Rule deletions
+  on a skill"): five graders on cases that already run
+  (`allow-list-not-widened` on `chunk-runner-gate-deviation`; "no report
+  opened" on `chunk-runner-gap-handback`; the gate's `--protect`,
+  `--expect-tests-from` and `--agent` on `chunk-runner-gate-deviation`;
+  `"model": "sonnet"` on the fixer's launch in `chunk-runner-gate-outside`;
+  `sandbox_check.py` run before that launch); the prompts that state
+  the rule reworded to name the state; one new case for the first half
+  of step 4 (round 0 recorded, findings standing, a gate failure after
+  r1); two rules dropped from the skill ("Keep its agent id", "Read its
+  last line; read the rest only on `FAIL`"). **The weak `--planning`
+  reference is dropped.** **The two replay cases are kept only if G1's
+  fix, removed, makes one fail**; otherwise they go. Done when: each is
+  in, the deletions the reworded prompts were hiding are run again, and
+  E2 is closed in the archive's terms (a survivors list where every
+  survivor is a new grader, a dropped rule or an accepted gap).
 
-### Phase B, 0.15.0: the review rebalance (finding 10)
+The orchestrator and delivery:
 
-**The order, decided by the owner 2026-11-15** (after E7): part 2 first,
-the review rebalance, B1 to B6, as 0.15.0's first pull request; then
-part 1, the measured fixes (B7 to B10, with G1 and G2 above), each
-checked again before it is built, since the rebalance may have changed
-or removed it ("I'd do part 2 first, then see if all part 1 is still
-relevant"). The items below are numbered as they were written, not in
-the order they are done. Phase C and slice 3 come after both parts.
+- [ ] C2 **Autopilot.** A standing `planning/autopilot.md`, asked once
+  per project like the delegation file: the loop takes its own
+  recommendation and logs "taken as recommended" for a budget overrun
+  caused by a relaunch, one extra review to verify a standing Critical
+  or High after the last fix, one fixer for a finding that verification
+  confirmed, and a readiness route that changes no decision. It always
+  asks when the recommendation changes a number or decision the owner
+  approved, deletes or rewrites committed work, pushes anything red, or
+  touches scope or requirements. Planning forks that carry a
+  recommendation stay questions. Done when: cases show one stop taken
+  without a question and one always-ask stop still asked.
+- [ ] F5 **Every commit that changes source or tests after a scope's
+  last review gets one diff-scoped review** before delivery reports (a
+  chunk's r2 fix, the slice review's last fix, a gate fixer's, a CI
+  fixer's, a triage fix's; the owner, 2026-11-13: "any change should
+  always be reviewed"). Designed with C2: that review's Critical and
+  High stop for the owner or autopilot's one fixer, Mediums and Lows are
+  filed, and a fix of its findings is reviewed the same way, capped.
+  Done when: a case shows a last fix with a planted defect reviewed and
+  the defect reported, and a clean last fix adding one review and no
+  fixer.
+- [ ] F6 **Delivery waits for an external review only where a bot has
+  reviewed before**; otherwise it says so and returns. Done when: a case
+  on the fixture's `gh` stand-in.
+- [ ] F7 **The target-directory question takes the directory a project
+  memory or `CLAUDE.md` names**, and says so. Done when: a variant of
+  `orchestrator-asks-for-target` with the directory named in the
+  project's memory takes it without a question, and the existing case
+  still asks.
+- [ ] **Two steps of 0.15.0 with no case** (the owner, 2026-11-16: one
+  cheap, bounded case each): the A step's route back to
+  `technology-bootstrap` when the project has no `gate-checks.json` and
+  the bootstrap has no Gate checks section (no launch); and the slice
+  review's round-0 launches, stopped at the hand-off after launching and
+  graded on the launch text alone (the cold reader named with
+  `cold-read` and handed no planning document; the test-quality reviewer
+  handed the mutation report). The wiring launch itself is slice 3's.
 
-- [x] B1 **Gate categories, picked per stack.** The plugin names the
-  categories (type-aware lint, stricter compiler flags, complexity and
-  length limits, duplication, unused code, changed-line coverage, test
-  timeouts and random order, secret and workflow scans);
-  `technology-bootstrap` picks the tool for the project's language from
-  the survey's lists (a) and (b) and records it; the gate runs what the
-  manifest names. Existing code is taken as the baseline so only new
-  violations fail. Done when: the library fixture carries the checks, a
-  planted violation of each category fails the gate, and a clean chunk
-  passes.
-- [x] B2 **The chunk reviewer's brief is narrowed.** `code-review`,
-  `test-quality-review` and `reliability-review` in the combined chunk
-  review say what the gate already covers and do not report it; what is
-  left is behaviour, names and comments that tell the truth, and the
-  design. Done when: a case with a planted duplication and a planted
-  behaviour bug gets the bug reported and the duplication left to the
-  gate.
-- [x] B3 **The cold read inside the slice review.** D's stranger test
-  becomes the full `cold_read.md` brief (whole app, no planning document,
-  every suspicion probed by execution), plus one instruction: for each
-  thing the slice adds, name the older code it runs alongside or depends
-  on and probe the pair. Its confirmed bugs go to D's fix round. The
-  audit's own cold read stays as a second reader. Done when: a case on the
-  fixture with a planted bug where new code meets old code is found by
-  execution.
-- [x] B4 **Mutation on the changed lines at D**, with the plugin's own
-  `mutation_pass.py` (the survey could not verify Stryker on this stack);
-  the test-quality reviewer reads the survivors and says which matter.
-  Done when: a planted unguarded rule on the fixture comes back as a
-  survivor and a D finding.
-- [x] B5 **Deferred items listed once, by a script**, in the pull
-  request's body; the security, reliability and architecture reviewers
-  stop restating them (25 of 83 findings last run). Done when: a case
-  shows none restated.
-- [x] B6 **CI on a second operating system** in `ci-pipeline` (Linux and
-  macOS), since the gate runs on one. Done when: the generated workflow
-  has the matrix and the case passes.
+Scripts under `skills/orchestrator/scripts/`, each with a tool test:
 
-Done 2026-11-15 and 16 as kad 0.15.0's first pull request
-(`evals/README.md`, "The review rebalance", has each item's case, its
-counts and what it fails without):
-
-- B1: `gate-checks.json` at the project root, read by
-  `validation_gate.py` (three entry forms, a count held against its
-  baseline, `--record-gate-baselines`, changed-line coverage from the
-  lcov report); `technology-bootstrap`'s "Gate checks, picked per
-  stack"; the orchestrator's A.5 launches the wiring. The library
-  fixture carries the eight categories as stand-in commands and
-  `evals/tools/gate_checks_test.py` holds the "done when" with no model.
-  **Not held by a case:** A.5's four branches (present, wire, after
-  chunk 1, back to the bootstrap); slice 3 is their first run.
-- B2: `code-review`'s "What the gate holds is not yours to report", with
-  the exemption repeated at the duplication rule itself (the paragraph
-  alone did not hold on its first run); a sentence each in
-  `test-quality-review` and `reliability-review`.
-- B3: the `cold-read` skill, launched by D.4 with round 0's reviewers in
-  place of the stranger test. **Not held by a case:** the orchestrator's
-  launch of it (one unplanned whole-D run did launch it, with no
-  planning document in the task).
-- B4: `mutation_pass.py` beside the orchestrator's scripts, with
-  `changed` and `--allow-dirty`; D runs it after the Definition of Done;
-  `test-quality-review`'s "the survivors".
-- B5: `deferrals.py`, `delivery`'s body part, and the restating
-  paragraph gone from all four criteria reviews (the three named here
-  and `accessibility-review`, which carried the same text).
-- B6: `ci-pipeline`'s checks job on Linux and macOS; the skill's first
-  case.
-
-The check of B1 without a run is done too (the same README section:
-counts only).
-
-Deferred from the external review of that pull request (#62), to the
-next change that touches `skills/orchestrator/` (C1 or C2), since each
-stales that directory's 38 cases and none is a defect in ordinary use:
-
+- [ ] F1 **The gate reads an absolute `--allow` inside the project as
+  the path relative to it**; `--module-dir` and `--deviation-zone` the
+  same way. Done when: a test in `validation_gate_test.py`.
 - [ ] B4a The mutants file `changed` writes is created with private
   permissions and removed after the pass, also when the pass fails.
-- [ ] B4b The mutation pass runs in a disposable clone or worktree, so
-  a run killed between a mutant's write and its restore cannot leave
-  the mutant in the project's tree (today the lock file left in `.git/`
-  makes the next run refuse, and `git status` shows the file).
-- [ ] B5a `deferrals.py --out` creates the parent directory (a branch
-  name with a `/` in it, delivered outside the loop, fails today).
+- [ ] B4b The mutation pass runs in a disposable clone or worktree, so a
+  run killed between a mutant's write and its restore cannot leave the
+  mutant in the project's tree.
+- [ ] B5a `deferrals.py --out` creates the parent directory.
 - [ ] B1a A `nosemgrep` note on `added_lines`' git call in
-  `validation_gate.py` (an argument list, no shell, file names from git).
+  `validation_gate.py`.
 
-From the eval suite (E6's decisions of 2026-11-15 and what E7 found;
-`evals/README.md`, "With and without the plugin" and "Retired and cut
-down"). Skill text and scripts, so none of it was E7's:
+The loop fixture (`evals/fixtures/library-app/code-plants/loop/`; the
+owner, 2026-11-16: both):
 
-- [ ] B7 **A review reports nothing above Low on a sound module**
-  (decision 3). The plugin's Mediums on the clean catalog module are
-  over-reporting: `architecture-review` 2 runs of 3 in E6,
-  `code-review` 1 of 3 (9 of 19 before), and `test-quality-review`
-  calls sound exact-value tests brittle 2 runs of 3. The cases keep
-  their bar. Done when: the four clean-module cases and
-  `test-quality-review-fines`'s `no-false-alarm-exact-tests` pass three
-  runs of three.
+- [ ] The "why only the first hold is removed" comment is false by the
+  code, and `code-review-comments-chunk` treats it as a comment that
+  earns its place (`why-comment-is-not-flagged` fails 2 runs of 3 since
+  reviewers probe it). Rewritten so it is true.
+- [ ] The repeated block planted for `code-review-chunk-gate-covers` is
+  needless code as well as repetition. Replaced by one that is
+  reasonable on its own, so `duplication-left-to-the-gate` can read
+  "repeated" in a title again.
+
+No gate (tools under `evals/tools/`, which reach no case):
+
+- [ ] F3 **The log checker reads an r2 fix of several commits** written
+  with spaces between the hashes. Done when: a tool test.
+- [ ] F4 **`cost_by_role.py --log` skips a session with no transcript**,
+  names it and totals the rest. Done when: a tool test.
+
+## PR 2: reviews and planning skills (0.15.x)
+
+Files: the six review skills, `skills/map-update`,
+`skills/architecture-design`, and case-only edits. About 40 to 45 cases.
+Does not block slice 3.
+
+- [ ] B7 **A review reports nothing above Low on a sound module.** On
+  2026-11-16: `library-app-catalog-review` 2 of 3, `code-review-catalog`
+  2 of 3, `test-quality-review-fines`' `no-false-alarm-exact-tests` 1 of
+  3 and `no-false-alarm-fake-ledger` 2 of 3. The cases keep their bar.
+  Done when: the four clean-module cases and those two graders pass
+  three runs of three.
 - [ ] B8 **A serious problem a review reads past is named and handed
-  on** (decision 4): one line at the top (what, where, the severity it
-  appears to have, which review owns it), never rated down to fit the
-  review's own categories, never ranked among its findings. Every
-  review skill. `code-review`'s mocking rule becomes this rule
-  (decision 7), and `leaves-mocking-to-test-quality-review` is
-  rewritten to pass the one line (`code-review-fine-notices-pr` and its
+  on**: one line at the top (what, where, the severity it appears to
+  have, which review owns it), never rated down to fit the review's own
+  categories, never ranked among its findings. Every review skill.
+  `code-review`'s mocking rule becomes this rule, and
+  `leaves-mocking-to-test-quality-review` is rewritten to pass the one
+  line (1 of 3 on `code-review-fine-notices-pr`, 0 of 3 on its
   `-via-agent` twin). Done when: a case per review skill with a planted
   out-of-subject problem shows the line, and the mocking judge passes
   three runs of three.
 - [ ] B9 **`map-update`'s changes section calls old edges and exports
-  new** (decision 12; `map-update-cancel-hold`,
-  `pre-existing-flags-not-new`, 0 of 3 in E6 and 13 of 18 before).
-  Diagnosed 2026-11-15 with no model time. The cause is in
-  `skills/map-update/scripts/extract_map.py`, `parse_prior`: it takes a
-  prior row's edges, external packages and exports from the names
-  between backticks in each cell (``re.findall(r"`([^`]+)`", cell)``),
-  which is how the script itself writes a row. A prior map whose cells
-  are bare (`catalog/book.ts, catalog/catalog-reader.port.ts`, `none`)
-  gives three empty sets for every module, while the path and the tier
-  are still read from the first two cells, so nothing looks wrong: the
-  tiers carry forward and `render` then lists every edge and every
-  export of every module the prior map already had as `new` (`now -
-  before` with `before` empty). The fixture's prior map
-  (`evals/fixtures/library-app/code-plants/map/update/docs/architecture-map.md`,
-  written 2026-10-11, two weeks before the script) is in that bare
-  form, as is any map a model wrote by hand before 0.14.2. Reproduced
-  with the script alone on a scratch copy of the case's scaffold: 151
-  change lines (52 "new internal edges", 68 "new exports", none
-  removed), the same 151 as the failed run's map
-  (`~/kad-eval-ablation/work-2/map-update-cancel-hold-with-run0.trace.jsonl`),
-  among them `lending/return-book.ts`: new internal edges
-  `main/wiring.ts`. Run again with its own output as the prior, the
-  script prints "No change in modules, edges or exports". The
-  wrong-direction list is right in the same map (both old candidates
-  "carried forward"): that label is matched on the prior map's bullet,
-  whose names are in backticks. The model does not cause it and does
-  not repair it; the run's reply says the changes section "also lists
-  new edges and exports for most of the other modules". Two ways to fix
-  it, the owner's to pick: `parse_prior` reads a bare cell too (split
-  on commas and semicolons, `none` and a dash as empty), or it refuses
-  a prior row it cannot read and says so in the changes section instead
-  of diffing against nothing. Either way the first is needed for maps
-  already in projects. Done when: `pre-existing-flags-not-new` passes
+  new.** The cause is `extract_map.py`'s `parse_prior`, which reads a
+  prior row's names only between backticks (the full account is in the
+  archive). **The owner, 2026-11-16: both halves.** It reads a plain
+  cell too (commas, semicolons, `none`, a dash), and a prior row it
+  still cannot read is named in the changes section instead of being
+  diffed against nothing. Done when: `pre-existing-flags-not-new` passes
   three runs of three and a test of `extract_map.py` holds a bare-cell
-  prior map.
-
-- [ ] B10 **What E7's gate runs showed, each to be read before it is
-  fixed** (`evals/README.md`, "Retired and cut down", the last list):
-  the owner-sheet cases look at the owner's file with `Read` and `Grep`
-  because they grant no `Bash` for `source_scan.py describe`, and one
-  `vertical-slicing` run searched the export for its invented names;
-  `map-update` left the new module untiered one run of three;
-  `code-review` is not invoked in `code-review-days-left-pr` about half
-  the time; `requirements-refinement`'s first turn asks what the
-  sources answer one run of three; `test-quality-review` calls the
-  designated fake a mocking problem one or two runs of three; the
-  `-via-agent` twins still carry the judges cut from their direct
-  cases and `library-app-lending-review-via-agent` the old ORM wording;
-  the overlay `code-plants/reliability-review/portal-pay/` has no case.
-
-**Check of B1 without a run:** apply the picked checks to
-`personal-finance-tracker-3` at `main` on a scratch clone and record how
-many violations each finds. This sets the baseline and shows whether the
-readability findings of the last two cold reads (long functions, wide
-lines) are what the limits measure. No tokens beyond the session.
-
-### Phase C, 0.15.0: new capabilities
-
-- [ ] C1 **The screen-change check** (finding 9; the owner 2026-11-12:
-  pixel diff, hands-off, one fixed environment). At D for a UI-touching
-  slice: every state with a saved baseline is re-driven by a scripted
-  browser on made-up data and compared; a difference in a state the
-  screen design does not list as changed is a finding; listed states
-  replace their baseline. Baselines are made and compared in CI on Linux
-  only. Done when: on the fixture, a style change meant for one state
-  that moves another is reported, and the intended change is not.
-- [ ] C2 **Autopilot** (finding 3, and finding 6's standing-finding
-  verification; the owner 2026-11-12: as recommended). A standing
-  `planning/autopilot.md`, asked once per project like the delegation
-  file: the loop takes its own recommendation and logs "taken as
-  recommended" for a budget overrun caused by a relaunch, one extra
-  review to verify a standing Critical or High after the last fix, one
-  fixer for a finding that verification confirmed, and a readiness route
-  that changes no decision. It always asks when the recommendation
-  changes a number or decision the owner approved, deletes or rewrites
-  committed work, pushes anything red, or touches scope or requirements.
-  Planning forks that carry a recommendation stay questions. Done when:
-  cases show one stop taken without a question and one always-ask stop
-  still asked.
-- [ ] C3 **The concurrency pass in `architecture-design`** (finding 4a):
-  for a change about concurrency or more than one process, the
-  interleavings are listed and answered before the decision is final (two
-  starts at once, a crash at each step, a stop during each wait, a
-  leftover removed by hand, a reused process number). Done when: case
+  prior map and an unreadable row.
+- [ ] B10 **What E7's gate runs showed**, as settled by the owner
+  2026-11-16:
+  - the four `-via-agent` twins get the cuts their direct cases got in
+    E7, and `library-app-lending-review-via-agent` the corrected ORM
+    wording (case-only);
+  - the overlay `code-plants/reliability-review/portal-pay/`, which has
+    had no case since E7, is deleted;
+  - the owner-sheet cases (`architecture-design-`, `screen-design-`,
+    `vertical-slicing-`, `requirements-refinement-owner-sheet`) grant
+    `Bash`, so the skill can run `source_scan.py describe`; a planning
+    skill's data rule is changed only if a case still opens the owner's
+    file with the scan available (2 of 3 runs of two of them today);
+  - `code-review` is not invoked in `code-review-days-left-pr` (8 of 13
+    runs): read why from a trace, then the skill's description or the
+    case;
+  - `map-update` left the new module untiered one run of three;
+  - `requirements-refinement`'s first turn asks what the sources answer
+    one run of three;
+  - `test-quality-review` calls the designated fake a mocking problem
+    (with B7).
+- [ ] C3 **The concurrency pass in `architecture-design`**: for a change
+  about concurrency or more than one process, the interleavings are
+  listed and answered before the decision is final (two starts at once,
+  a crash at each step, a stop during each wait, a leftover removed by
+  hand, a reused process number). Done when: case
   `architecture-design-concurrency-interleavings` passes.
 
-**Test of 0.15.0: slice 3 on `personal-finance-tracker-3`** (reconnect a
-lapsed login, #14), which is UI-touching and so exercises B and C1
-together. Baselines for C1 are captured from `main` before the slice
-starts. Measured against the issue #33 run and slice 2 round 1: the cold
-read's readability and reliability scores (3 and 3 for two runs), the
-bugs the audit's cold read finds that the loop's did not, findings per
-chunk, the share of added lines written by fixers (58%), reviewer and
-fixer cost, the owner's questions in the loop, and any screen difference
+## PR 3: the screen-change check (0.16.0)
+
+Its own pull request, after PR 1 and before slice 3 (the owner,
+2026-11-16). Touches the orchestrator's D step, so its 38 cases run once
+more.
+
+- [ ] C1 **The screen-change check** (the owner, 2026-11-12: pixel diff,
+  hands-off, one fixed environment). At D for a UI-touching slice: every
+  state with a saved baseline is re-driven by a scripted browser on
+  made-up data and compared; a difference in a state the screen design
+  does not list as changed is a finding; listed states replace their
+  baseline. Baselines are made and compared in CI on Linux only. Done
+  when: on the fixture, a style change meant for one state that moves
+  another is reported, and the intended change is not.
+
+## Then: slice 3
+
+**The test of 0.15 and 0.16: slice 3 on the first project** (reconnect a
+lapsed login, its issue #14), which is UI-touching. It needs PR 1 (G1)
+and PR 3 (C1, whose baselines are captured from `main` before the slice
+starts); PR 2 may land before or after. It is the first real run of the
+gate checks' wiring and of the cold read inside the loop. Measured
+against the issue fix and slice 2's fix round: the cold read's
+readability and reliability scores (3 and 3 for three runs), the bugs
+the audit's cold read finds that the loop's did not, findings per chunk,
+the share of added lines written by fixers (58%), reviewer and fixer
+cost, the owner's questions in the loop, and any screen difference
 outside the slice.
 
-The light cadence arm, decided by the owner 2026-11-12: slice 3 runs on
-0.15.0 under the normal cadence, and the light arm is measured on the slice
-after, so the two changes are not measured at once.
+The light cadence arm is measured on the slice after, so the two changes
+are not measured at once (the owner, 2026-11-12).
 
-### The eval suite itself (the owner, 2026-11-12: both agreed)
+## Not the plugin's
 
-Asked while phase A's gate ran: how do we know the suite is not garbage,
-too little or overkill. The chunk runner had six cases at 1.00 when two
-real runners invented their agents' results, because a launch blocks under
-`claude plugin eval` and runs in the background in a real session.
-
-Decided by the owner 2026-11-12: no overhaul before the work list goes on
-and no second eval folder; the suite is changed in place. The order:
-phase A merged and tested on issue #49; E1; E2 on `chunk-runner` and
-`delivery` with the replay case; phase B, its new cases written with a
-known-bad reference and a regression-or-capability tag; suite tiers and
-judge calibration after 0.15.0. Not taken from the survey: whole-loop
-fixture runs per release (the audited real runs are that) and trajectory
-matching against a reference path.
-(Revised 2026-11-14, below: the `delivery` pass is no longer in this
-order; E4 to E7 come after `chunk-runner`'s E2 and before phase B.)
-
-- [x] E1 **Which cases have ever failed.** From the results history (the
-  flat `gate-*.json` files and the archive), per case: runs, failures since
-  its bar was recorded, and the graders that failed. A case that never
-  failed is a candidate to merge or drop; no model time. Done when: the
-  table is in `evals/README.md` and the candidates are listed for the
-  owner.
-  Done 2026-11-13: `evals/tools/case_history.py` writes the table
-  (`evals/README.md`, "Which cases have ever failed"): of 164 cases, 78
-  have failed since their bar, 60 never have, 26 have not failed in
-  under six completed runs. Nothing is merged or dropped before E2's deletions have run.
-- [ ] E2 **Mutation on the skills.** Delete one rule at a time from a
-  skill and run the cases the skill reaches: a rule no case notices is
-  unguarded, a case no deletion fails is dead weight. Start with
-  `chunk-runner` and `delivery` (short, recently changed). Costs gate
-  runs, so one skill per usage window. Each deletion that a case catches
-  is kept beside that case as its known-bad reference (the skill with
-  the rule removed must fail it), so "fails without the change" is a
-  property the suite keeps. The owner, 2026-11-12: three runs per
-  variant stay; a replay case for the runner's wait may be captured from
-  a real `kad` session on the library fixture, outside the eval (never
-  from a project's transcripts), and resumed with `history_file`. Done when: both skills have a
-  survivors list and each survivor is a new grader, a dropped rule, or an
-  accepted gap.
-  `chunk-runner`, 2026-11-14: run. `evals/tools/skill_mutation.py` (rule
-  deletions on a scratch copy, known-bad references, a free `check` in
-  the pull-request workflow); 76 deletions on 101 deletion-case pairs at
-  three runs: 6 caught and kept as 7 references, 1 half noticed, 69
-  survivors, listed by why they survived with a proposal for each group
-  in `evals/README.md` ("Rule deletions on a skill"); the proposals wait
-  for the owner (changed prompts, five new graders, one new case with
-  F2's, two rules to drop, two judges to turn into regexes). Two replay
-  cases from a captured runner history ("Replay cases"): a replay cannot
-  hold the wait, since the harness tells a resumed session its agent did
-  not finish. Dead-weight candidates listed, none merged or dropped.
-  **The owner, 2026-11-14: the `delivery` pass is not next.** The
-  `chunk-runner` pass cost 309 runs and three usage windows, and most of what it taught
-  holds for the whole suite without another run: a prompt that states
-  the rule cannot test it, a judge on a one-line reply is noise, a rule
-  whose state no case reaches is unguarded, the wait cannot be tested in
-  the eval. E4 to E7 below come first; `delivery` gets a deletion pass
-  only if they leave a gap there. Done when, as it now stands:
-  `chunk-runner` has its survivors list (done), and the owner has
-  decided the three questions PR #54 left open, none decided yet: which
-  survivor proposals to apply, what to do with the weak `--planning`
-  reference (it fails 4 runs of 6), whether the two replay cases stay
-  (no deletion fails them).
-- [x] E3 **What others do.** Survey of how comparable orchestrators and
-  the wider field evaluate skills and agents:
-  `.synthesis/eval-methods-survey.md`; its recommendations are for the
-  owner to pick from before E2 is built.
-  Done: the survey was written 2026-11-12, and the owner's picks from it
-  are the decisions of 2026-11-12 above and of 2026-11-14 below.
-
-Decided by the owner 2026-11-14, after E2 on `chunk-runner`: the suite is
-still changed in place (no new eval directory). Every skill keeps cases;
-where a tool can judge the output a tool does, where it takes reading a
-judge stays, and each skill has to be shown to add something the bare
-model does not: a skill that adds nothing is one to think about keeping.
-At the end a pass of the suite should be cheaper and faster. The measure:
-one run of every case, $54 at list prices on 2026-11-14 (139 cases seen
-since 2026-11-10; 88% of the cost is the agent's own run, 12% the judges;
-the 61 never-failed cases among them are $16 of it), reported again after
-each step. (Corrected by E4 the same day: that figure counted the judges
-twice. The measure is $45.70 for the same 139 cases, 82% agent and 18%
-judges; E5 to E7 report against it.) Not taken: a run checker over real runs' records (the owner
-was not convinced), and whole-loop fixture runs, as before.
-What this plan does not yet give: `orchestrator` and `delivery` have had
-no deletion pass and E6 does not apply to them, so their proof is owed
-and not scheduled. E4 says, from reading their cases, which of their
-rules a grader could notice; a deletion pass on those alone is decided
-after it.
-
-- [x] E4 **Sort the cases.** No model time. Per case: its graders by
-  kind (judge, or a tool: regex, tool call, file), which judges a tool
-  could replace and which take reading, whether the prompt states the
-  rule it grades, what a run costs, whether it has ever failed (E1) and
-  whether a deletion failed it (E2, where run). Done when: the list is in
-  front of the owner, with the count of cases whose prompt needs
-  rewording and the expected saving beside each proposed change.
-  Done 2026-11-14: `evals/tools/case_sort.py` writes the table
-  (`evals/README.md`, "The cases sorted") from the cases, the results
-  history and `evals/tools/case_reading.json`, which holds the reading
-  of all 166 cases and is the file to correct. 471 judges, 51 a tool
-  could decide (about $0.77 a pass, an estimate; 72 runs failed on them
-  alone); 9 prompts state the rule they grade and 23 state part of it;
-  7 cases have never failed and cost $0.40 or more a run ($3.39 a pass).
-  **The baseline is $45.70, not $54**: a run's cost already includes its
-  judge cost and the $54 added the two (agent 82%, judges 18%). The
-  proposals, the order for E5, the skills E6 should take first, which
-  `orchestrator` and `delivery` rules a grader could notice, and the
-  grader findings (none fixed) are in that section; all wait for the
-  owner.
-- [x] E5 **Judges a tool can replace become tool checks.** Starting with
-  the two hand-back judges that fail correct lines
-  (`stops-with-the-decision-on-the-line`, `hand-back-is-the-one-line`).
-  If the eval's grader kinds cannot hold a check, the gate runs a
-  per-case script on the run's kept folder and counts its result with
-  the graders (to verify against the CLI's documentation first). Prompts
-  that state the rule they grade are reworded here. Done when: every
-  judge E4 marked replaceable is replaced, each changed case has its
-  gate run, and the re-run rate of the gate and the cost of one run of
-  every case are reported before and after.
-  Done 2026-11-14 (`evals/README.md`, "Judges turned into tool checks"):
-  36 of the 51 judges are regex graders and gone as judges (the six
-  `chunk-runner` hand-back judges, five hand-backs in other skills,
-  eight counts and names on a reply, 17 on a file's shape or contents);
-  the CLI has no script grader and none was needed, a regex reads the
-  last message or a file. Over 640 past runs the checks agree with the
-  judges on 602; in the other 38 the judge failed a right answer, and no
-  check fails what a judge passed. **Accepted gap: the 15 judges on the
-  orchestrator's log stay judges**, because a regex keeps the
-  destination and the path and loses the state's wording. Six
-  `chunk-runner` resume lines name the state; the stopping points, the
-  launcher hand-over and the consult's task sentence are left (they
-  bound the run or are what the orchestrator hands over). One deletion
-  is caught since (`regressions-to-a-fixer`, kept as a reference); three
-  still survive. Measured on 26 changed cases at one run each: judge
-  cost $1.91 to $1.54; so one run of every case is about $45.3 against
-  $45.70 (an estimate). The gate's re-run rate: 7.9% measured before,
-  about 7.6% estimated after. Every changed case has its gate run (32
-  cases, 150 runs).
-  Left for the owner: the one-line hand-back is missed in about a
-  quarter of `chunk-runner` runs (a paragraph before the line), so
-  `chunk-runner-one-fix-round`'s check has a bar of 2 of 3 and its
-  `handback-one-line` reference is not counted by the tool until the
-  skill is fixed; one run ended while its builder worked; 19 grader
-  findings still open; the fixture handoff's "Next action" line.
-- [x] E6 **With and without the plugin, skill by skill.** `--ablation
-  with-without` at three runs, for the review, requirements and design
-  skills; not for `orchestrator`, `chunk-runner` and `delivery`, where a
-  bare model cannot know the protocol and rule deletion is the proof.
-  One skill or family per usage window (about 1,000 runs for the whole
-  suite). The CLI scores each arm against the same graders and never
-  compares the two outputs, so equal scores are not yet "adds nothing":
-  before a skill is listed as matched, its paired outputs are read side
-  by side with `evals/tools/pairwise_judge.py`, and that judge's cost is
-  counted. Done when: each such skill has its difference recorded per
-  case with the pairwise verdict, the skills the bare model matches are
-  listed for the owner to keep, cut down or drop, and the cost of one
-  run of every case is reported again.
-  Done 2026-11-15 (`evals/README.md`, "With and without the plugin"):
-  every case that can be run bare, 68 cases and 408 runs, $120.74 with
-  the pairwise judge. The others cannot be: they resume a history,
-  grade both arms already, or name a plugin skill or agent in the
-  prompt (the one that was tried answered that the agent does not
-  exist).
-  The review skills add rank, scope and restraint more than findings;
-  the requirements, design, slicing and readiness skills add the
-  protocol (the owner is asked first, the step with nothing to build on
-  is refused, a file of the owner's is not opened), which a bare model
-  never follows and the pairwise judge marks down. Eighteen cases score
-  the same in both arms. The plugin is behind the bare model by more
-  than one run on three: `map-update-cancel-hold` (its diff calls old edges new),
-  `problem-framing-doc-payfine` (the skill asks, the case grades a
-  document; never run before), `technology-bootstrap-phase1` (split
-  votes). One run of every case is unchanged at about $45.3: E6 changed
-  no case. `tools/ablation_run.py` keeps the results outside the
-  repository, so no bar, history or evidence moves.
-
-Decided by the owner 2026-11-15, on E6's lists (one question at a time,
-after PR #59 was merged):
-
-1. E6 is finished before E7: the 27 cases not yet run bare are run
-   first.
-2. **Dropped in E7, all seven** cases that score the same in both arms
-   and that the pairwise judge prefers bare: `library-app-members-review`,
-   `-notifications-review`, `-reporting-review`, `security-review-http`,
-   `-reminders`, `reliability-review-alerts`, `-portal-pay-pr`.
-3. **The clean-module cases keep their bar** ("nothing above Low") and
-   the skills are fixed: the plugin's Mediums on a module with no
-   structural problem are over-reporting. A skill change, so phase B.
-4. **A serious problem a review reads past is named, at the severity it
-   appears to have, and handed on**: one line at the top (what, where,
-   severity as seen, which review owns it), never rated down to fit the
-   review's own categories, never ranked among its own findings. For
-   every review skill; phase B.
-5. The first-turn prompts that ask for the artefact outright stay as
-   they are: the skill holding its protocol against that pull is what
-   the case tests. The pairwise tally there is a limit of the judge.
-6. `architecture-design-owner-sheet` and `screen-design-owner-sheet`
-   lose the fixture's `sources.md`, so each skill applies the data rule
-   itself, as `requirements-refinement-owner-sheet` does. E7; a failure
-   is a finding for phase B.
-7. `code-review`'s mocking rule becomes decision 4's rule: the
-   mock-only test is named in one line with its severity and
-   `test-quality-review` as its owner, not ranked. The grader is
-   rewritten to pass that. Phase B for the text, E7 or phase B for the
-   grader, whichever changes the case first.
-8. **Judges that pass in both arms are cut in the kept cases**: each
-   case keeps every grader that differed, every false-alarm trap and
-   one judge on its most important planted problem.
-9. **The five grader findings of E6 are fixed in E7**
-   (`found-with-the-scan`, the `describeEntry` judge, the ORM judge, a
-   cycle grader for `library-app-structure-review`, an empty
-   `sources.md` so that `requirements-refinement-owner-sheet` fails
-   instead of throwing). The older open grader findings stay a separate
-   list.
-10. `evals/fixtures/bootstrap-empty` (a bank-connection slice) is fine
-    as it is: an invented example, not a project's content.
-
-Decided the same day, after PR #60 was merged (on the last 27 cases):
-
-11. **`problem-framing-doc-payfine` becomes two turns.** Phase 1 grades
-    that the skill asks and writes nothing; phase 2 resumes with the
-    answer and grades the document. The skill's question stays: the
-    case was wrong, not the skill. E7.
-12. **`map-update`'s diff (old edges listed as new) is diagnosed in E7
-    with no model time**: the script's diff logic and one failed trace.
-    The cause is written under phase B below; the fix is phase B's.
-
-And on what PR #60 measured against decisions 2, 6 and 8:
-`user-story-writeup-payfine-phase1` fits the same pattern and is kept,
-cut down to one judge: `-phase2` resumes a history frozen from it, and
-with phase 1 gone that history could not be frozen again;
-`vertical-slicing-owner-sheet` loses its fixture `sources.md`
-with the other two; `supply-chain-review-build`, `-workflows` and
-`test-quality-review-reminders` are kept and cut down by decision 8 like
-every other kept case.
-
-- [x] E7 **Retire or merge what guards nothing.** From E1, E2, E4 and
-  E6: a case that has never failed, that no deletion fails and that the
-  bare model passes as well. Each candidate is named with the evidence
-  that exists for it: a deletion result only where its skill has had a
-  pass (`chunk-runner` so far), a bare-model result only where E6 ran;
-  a case with neither is not a candidate yet. Nothing is dropped without
-  the owner's word. Done when: the suite's full-pass cost is reported against the
-  $54 baseline and each retired case is named with its reason.
-  Done 2026-11-15 (`evals/README.md`, "Retired and cut down"), by the
-  twelve decisions above: seven cases dropped, each with its E1 and E6
-  evidence (no deletion pass has run on their skills); 41 judges that
-  passed in both arms cut from 25 kept cases, each keeping what
-  differed, its traps and one judge on its most important planted
-  problem; `user-story-writeup-payfine-phase1` kept with one judge as
-  the source of phase 2's history; the three owner-sheet cases without
-  the fixture's `sources.md` (the skills list the file and quote
-  nothing, nine runs of nine); the five graders fixed;
-  `problem-framing-doc-payfine` as `-phase1` and `-phase2`. 160 cases,
-  372 judges (435), every changed case with its gate run at three runs
-  and its bar re-recorded (162 runs, $47.38, one window). One run of
-  every case is about $41.7 against the $45.70 baseline (the $54 here
-  was corrected by E4), an estimate built from measured parts: the
-  dropped cases $2.34, the changed cases $9.02 to $7.76 at one run
-  each. The gate re-ran 6 of the 34 changed cases on one single pass.
-  What E7 found and did not fix is B7 to B10 under phase B.
-
-Phase B's new cases are written after E4: the prompt names the state and
-leaves the action to the skill, a tool grades what a tool can, and each
-carries a known-bad reference and a regression-or-capability tag, as
-decided 2026-11-12.
-
-### Open on the project
-
-Issues #49 to #56 from this review (filed 2026-11-12); #43 to #47 from the
-fix itself; pull request #48 (records only) to merge or close.
+On the first project: issues #43 to #47 and #49 to #56, and pull request
+#48 (records only) to merge or close.
