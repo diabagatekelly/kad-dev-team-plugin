@@ -227,6 +227,61 @@ only, appended to the document (under the orchestrator's chunk loop,
 through its gap step, with `software-architect` as the persona and this
 skill named), never a choice the builder makes alone.
 
+## Gate checks, picked per stack
+
+The chunk loop's gate runs the suite, the typecheck and the lint on every
+commit. Eight more categories are things a tool decides and a reviewer
+reading by eye does not (incident 36), and which tool does it depends on
+the language, so the tool is picked here: once, with the default set
+above, inside the same one approval.
+
+| Category | What it holds | TypeScript or JavaScript | Python |
+|---|---|---|---|
+| type-aware lint | a promise nothing awaits, an `any` leaking through a call, a condition that is always true | the linter's type-checked preset (the linter's own type-aware engine when the compiler version in use has no API the preset can load) | Ruff with a wide rule selection |
+| stricter compiler flags | undefined from an index, optional against undefined, a path with no return | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noImplicitOverride`, `noPropertyAccessFromIndexSignature` | the type checker's strict mode |
+| complexity and length limits | a function, a file or a line past the size a reader holds | the linter's `complexity`, `max-depth`, `max-params`, `max-lines-per-function` (function expressions counted) and `max-lines`; the formatter's line width | Ruff's complexity and size rules; the formatter's line length |
+| duplication | a block copied across files | jscpd | jscpd |
+| unused code | a file, export or dependency nothing uses | knip | vulture and deptry |
+| changed-line coverage | new lines no test runs while the file stays above its minimum | the gate's own read of the runner's lcov report: nothing to install | diff-cover on the coverage report |
+| test timeouts and random order | a test that hangs; tests that pass only in one order | the runner's own flags in the test script | pytest-timeout and pytest-randomly |
+| secret and workflow scans | a committed credential; a workflow that injects, is unpinned or over-permitted | gitleaks; actionlint and zizmor once a workflow exists | the same |
+
+For another language, the ecosystem's equivalent of each, named with why.
+What the recommendation says, per category:
+
+- **The tool, and why that one**: what the project already has first (a
+  rule set of the linter it uses, a flag of its compiler, a flag of its
+  runner), then one single-purpose tool, exact-pinned. A category with
+  no credible tool on this stack is recorded as **not picked** with the
+  reason; it is never left out without a word.
+- **The limits, as numbers**: complexity 10, depth 4, parameters 4, a
+  function 40 lines, a file 300, a line 100 columns, a test 5 seconds,
+  unless the owner names others. A limit is a choice like any other and
+  the owner may change it; a category recommended with no number has
+  not been recommended.
+- **The existing code is the baseline.** Only a new violation fails. A
+  tool that keeps its own baseline keeps it (a suppressions file, a
+  baseline file); for the others the count the tool finds today is the
+  baseline in `gate-checks.json`, and the gate fails on one more. Never
+  recommend clearing the existing violations first: that is a slice of
+  its own, the owner's to ask for.
+
+**Recorded twice, by two hands.** This skill writes the `## Gate checks`
+section of its document (the output format below): one row per category
+with the tool and its version, the command, the limits, and how the
+baseline is held. The build wires them, never this skill: the tools
+installed, their configuration and manifest scripts written, and
+`gate-checks.json` at the project root, one entry per category
+(`{"category", "name", "cmd"}` for a tool with its own baseline;
+`{"category", "name", "cmd", "count": "<regex over its output>",
+"baseline": <n>}` for a counted one; `{"category", "covered_by":
+"suite" | "typecheck" | "lint" | "coverage", "note"}` when a check the
+gate already runs holds it; `{"category", "not_picked": "<reason>"}`).
+The orchestrator's A step launches that wiring once, from this section.
+
+A project whose bootstrap predates this section re-enters for it alone
+(below): the eight rows, one approval, nothing else reopened.
+
 ## Leave the rest explicitly open
 
 Name the categories no chunk of this slice forces as *not yet decided*,
@@ -266,6 +321,13 @@ exact-pinned client, plain HTML, or the named dependency with its
 reason) and what the default gives up; then the approval line, who
 approved the set and when, and any category the user changed.
 
+## Gate checks
+One row per category of the eight: the tool and its exact version (or
+what already in the project holds it), the command, the limits as
+numbers, how the baseline is held (the tool's own file, or a count in
+`gate-checks.json`); or `not picked` and why. Approved with the set
+above.
+
 ## Considered and rejected
 Per category, the options declined and the concrete reason.
 
@@ -288,7 +350,7 @@ for a place to put it.
 
 ## Re-entering this skill
 
-This runs once per project and then stays additive. Two things bring it
+This runs once per project and then stays additive. Three things bring it
 back, and only these:
 
 - **A later slice forces a category that was left open** — the first
@@ -298,6 +360,10 @@ back, and only these:
 - **A chunk forces a dependency the set excluded**: the one mid-build
   re-entry, for that category only, appended with the chunk that forced
   it and why the built-in could not do the job.
+
+- **The document has no `## Gate checks` section** (it was written before
+  the gate took the eight categories): the orchestrator's A step sends
+  the flow back here for that section only.
 
 A chunk that stays inside the set is not a re-entry. Never reopen a
 settled choice unless the user asks; a bootstrap decision that keeps

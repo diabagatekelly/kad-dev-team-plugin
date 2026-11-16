@@ -1,0 +1,28 @@
+{
+ "skill": "code-review",
+ "rule": "what the gate holds is not the chunk reviewer's to report (the paragraph, and the exemption at the duplication rule)",
+ "edits": [
+  {
+   "file": "skills/code-review/SKILL.md",
+   "old": "**What the gate holds is not yours to report.** The gate output the task\nnames ends its checks with one line, `INFO  gate covers: \u2026`: every check\nthat ran on this commit, the project's own among them by category\n(type-aware lint, stricter compiler flags, complexity and length limits,\nduplication, unused code, changed-line coverage, test timeouts and\nrandom order, secret and workflow scans). A category on that line was\ncounted by a tool, with the existing code as its baseline, and one new\nviolation would have failed the gate before you were launched. So\nnothing in a listed category is a finding in a chunk report, at any\nseverity, under any of the three lenses: not a duplicated block, not an\nunused export or option, not a long or deeply nested function, not a\nline no test runs, not a promise nothing awaits. The tool's count is not\nrestated as a finding either, and \"the gate allows it but\" is the same\nfinding with a preamble. What no tool holds is what the launch is for\n(incident 36): **behaviour**, whether the code does what its names and\nits tests say, probed by execution; **names and comments that tell the\ntruth**; **the design as the code shows it**, a rule in the wrong\nplace, a state the app can reach that nothing handles. A category\nmissing from the line (no `gate-checks.json` in the project, or an\nentry that says not picked) is still yours, by the sections below. And\na tool's pass settles its own question only: when the block it counts\nas existing duplication, or the function it counts as long, is where\nthe code does the wrong thing, the wrong thing is your finding.\n\n",
+   "new": ""
+  },
+  {
+   "file": "skills/code-review/SKILL.md",
+   "old": "**Not in a chunk report when the gate's line lists `duplication`** (above):\nthe project's tool has counted the copies, at the size the owner approved,\nand a block it does not count is not a finding you add back by eye,\nhowever many times you see it. This section is for a review with no such\nline: a pull request reviewed on its own, a project with no gate checks.\n\n",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "duplication-left-to-the-gate"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "duplication-left-to-the-gate": 0.0
+  },
+  "note": "a first run removed the paragraph alone and the grader still passed 3 of 3: the exemption at the duplication rule held by itself"
+ }
+}

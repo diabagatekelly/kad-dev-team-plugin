@@ -20,7 +20,7 @@ import tempfile
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SCRIPT = os.path.join(ROOT, "evals", "tools", "mutation_pass.py")
+SCRIPT = os.path.join(ROOT, "skills", "orchestrator", "scripts", "mutation_pass.py")
 TEST_CMD = f"{sys.executable} -B -m unittest -q tests.test_calc"  # no -I (the scratch repo is the import root); -B so no stale bytecode survives a same-size mutant
 
 
@@ -134,6 +134,73 @@ class MutationPass(unittest.TestCase):
             rows = [json.loads(l) for l in f]
         self.assertEqual([r.get("caught") for r in rows], [None, True, False])
 
+    def add_a_slice(self):
+        """A branch whose one commit adds a guarded rule and an unguarded one."""
+        git(self.repo, "checkout", "-q", "-b", "slice")
+        with open(os.path.join(self.repo, "calc", "fees.py"), "a") as f:
+            f.write("\n\ndef capped(days):\n    # days >= 40 is the cap, in words\n    if days >= 40 and days > 0:\n        return 900\n"
+                    "    return late_fee(days)\n\n\ndef waived(member):\n    return member == 'staff'\n")
+        with open(os.path.join(self.repo, "tests", "test_calc.py"), "a") as f:
+            f.write("\n    def test_cap(self):\n        from calc.fees import capped\n"
+                    "        self.assertEqual(capped(40), 900)\n        self.assertEqual(capped(39), 975)\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "cap and waiver")
+
+    def test_changed_writes_mutants_for_the_added_lines_only(self):
+        self.add_a_slice()
+        out_file = os.path.join(self.tmp, "changed.json")
+        out = self.run_tool("changed", "--repo", self.repo, "--base", "main", "--out", out_file)
+        mutants = json.load(open(out_file))
+        notes = sorted(m["note"] for m in mutants)
+        # the cap line has three operators, the waiver line one; the comment's `>=`, the older
+        # `days <= 0` lines and the test file give none
+        self.assertEqual(notes, ["line 13: > to >=", "line 13: >= to >", "line 13: and to or", "line 19: == to !="], out)
+        self.assertTrue(all(m["file"] == "calc/fees.py" for m in mutants))
+        self.assertIn("4 written", out)
+        self.run_tool("check", "--repo", self.repo, "--mutants", out_file)
+
+    def test_changed_survivor_is_the_unguarded_rule(self):
+        self.add_a_slice()
+        out_file = os.path.join(self.tmp, "changed.json")
+        self.run_tool("changed", "--repo", self.repo, "--base", "main", "--out", out_file)
+        report = os.path.join(self.tmp, "report.md")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", out_file, "--test", TEST_CMD, "--base", "main", "--out", report)
+        text = open(report).read()
+        self.assertRegex(text, r"calc/fees\.py:19 \| line 19: == to != \| SURVIVED")
+        self.assertRegex(text, r"calc/fees\.py:13 \| line 13: >= to > \| CAUGHT")
+        self.assertNotIn("staff", text)  # the report never carries the line
+        self.assertRegex(out, r"mutation: 4 mutants, \d caught, \d survived")
+
+    def test_changed_caps_evenly_and_skips_a_line_that_is_not_unique(self):
+        git(self.repo, "checkout", "-q", "-b", "slice")
+        with open(os.path.join(self.repo, "calc", "more.py"), "w") as f:
+            f.write("".join(f"def f{i}(a):\n    return a == {i}\n" for i in range(10)) + "def g(a):\n    return a > 1\ndef g(a):\n    return a > 1\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "more")
+        out_file = os.path.join(self.tmp, "changed.json")
+        out = self.run_tool("changed", "--repo", self.repo, "--base", "main", "--out", out_file, "--max", "5")
+        mutants = json.load(open(out_file))
+        self.assertEqual([m["note"] for m in mutants], [f"line {n}: == to !=" for n in (2, 6, 10, 14, 18)], out)
+        self.assertIn("10 found, capped at 5", out)
+        self.assertIn("2 skipped, line not unique", out)
+
+    def test_allow_dirty_runs_beside_an_uncommitted_log_and_refuses_a_dirty_target(self):
+        with open(os.path.join(self.repo, "log.md"), "w") as f:
+            f.write("entry 1\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "log")
+        with open(os.path.join(self.repo, "log.md"), "a") as f:
+            f.write("entry 2\n")
+        self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "", expect=1)
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "", "--allow-dirty",
+                            "--out", os.path.join(self.repo, "report.md"), "--log", os.path.join(self.repo, "pass.jsonl"))
+        self.assertIn("mutation: 2 mutants, 1 caught, 1 survived", out)
+        self.assertEqual(open(os.path.join(self.repo, "log.md")).read(), "entry 1\nentry 2\n")
+        with open(os.path.join(self.repo, "calc", "fees.py"), "a") as f:
+            f.write("# an edit nobody committed\n")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "", "--allow-dirty", expect=1)
+        self.assertIn("calc/fees.py has uncommitted changes and a mutant", out)
+
     def test_a_base_that_is_not_a_ref_is_said_not_swallowed(self):
         report = os.path.join(self.tmp, "report.md")
         out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD,
@@ -182,6 +249,38 @@ class ReadResult(unittest.TestCase):
 
     def test_node_tap_reporter_still_reads(self):
         self.assertEqual(self.read(1, "not ok 1 - multiplies\n# tests 2\n# pass 1\n# fail 1\n"), ("caught", 1, ["multiplies"]))
+
+
+STATE = os.path.join(ROOT, "evals", "fixtures", "library-app", "code-plants", "loop", "state.sh")
+
+
+def node_major():
+    node = shutil.which("node")
+    try:
+        return int(subprocess.run([node, "--version"], capture_output=True, text=True).stdout.strip().lstrip("v").split(".")[0]) if node else 0
+    except ValueError:
+        return 0
+
+
+@unittest.skipUnless(shutil.which("bash") and node_major() >= 24, "needs bash and Node 24 for the fixture's suite")
+class TheFixturesSlice(unittest.TestCase):
+    """TODO.md's B4 "done when", the tool's half: on the library fixture's
+    built slice, the rule no test holds comes back as a survivor of the
+    changed-lines pass the `slice-review-r0` state runs for real."""
+
+    def test_the_unguarded_rule_survives_and_the_report_says_where(self):
+        project = os.path.realpath(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, project, True)
+        r = subprocess.run(["bash", STATE, "slice-review-r0"], cwd=project, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr[-400:])
+        with open(os.path.join(project, "docs", "cancel-hold", "implementation", "slice-mutation.md"), encoding="utf-8") as f:
+            report = f.read()
+        self.assertRegex(report, r"\| lending/cancel-hold\.ts:\d+ \| line \d+: > to >= \| SURVIVED \| yes \|")
+        self.assertRegex(report, r"\| lending/cancel-hold\.ts:\d+ \| line \d+: \|\| to && \| SURVIVED \| yes \|")
+        self.assertRegex(report, r"Mutants: \*\*11\*\*\. Caught: \*\*9\*\*\. Survived: \*\*2\*\*")
+        self.assertNotIn("cardNumber.length", report)  # counts, lines and test names only
+        status = subprocess.run(["git", "-C", project, "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout
+        self.assertEqual(status.strip(), "M docs/cancel-hold/orchestrator-log.md")
 
 
 if __name__ == "__main__":

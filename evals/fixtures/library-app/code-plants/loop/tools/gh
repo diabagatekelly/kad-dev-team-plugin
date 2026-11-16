@@ -45,6 +45,15 @@ case "${1:-} ${2:-}" in
   "label create") echo "✓ Label \"tech-debt\" created in $repo" ;;
   "label list") echo "tech-debt" ;;
   "auth status") echo "Logged in to github.com account example" ;;
-  "api "*|"api") echo "[]" ;;
+  "api "*|"api")
+    # A tag lookup (`repos/<owner>/<action>/git/ref/tags/<tag>`) answers
+    # with a commit made up from the path, the same one every time, so a
+    # workflow written from it carries a full 40-character pin.
+    case "${2:-}" in
+      *git/ref/tags/*|*git/refs/tags/*)
+        sha="$(printf '%s' "$2" | git hash-object --stdin)"
+        echo "{\"ref\":\"refs/tags/${2##*/}\",\"object\":{\"type\":\"commit\",\"sha\":\"$sha\"}}" ;;
+      *) echo "[]" ;;
+    esac ;;
   *) echo "gh (stand-in): unsupported command: $*" >&2; exit 1 ;;
 esac

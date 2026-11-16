@@ -26,6 +26,12 @@
 #                     commit's test written with two card numbers of that
 #                     sheet; next: the gate
 #   chunk1-gated      gate PASS saved; next: the review and smoke launches
+#   chunk1-gate-covers  as chunk1-gated, the commit's in-memory queue
+#                     written with one behaviour bug (a hold is found by
+#                     the start of its card number) and the same five-line
+#                     opening in each of its four methods, short of what
+#                     the duplication check counts; the gate passes and
+#                     its output lists what it covers; next: the review
 #   chunk1-gap        reviewer and smoke returned; the review has a
 #                     needs-decision finding that cites the reliability
 #                     document (present, committed as planning); no
@@ -49,6 +55,17 @@
 #   slice-built       three chunks done, map committed, no README, a script
 #                     in a template literal, comment density over the line;
 #                     next: the Definition of Done
+#   slice-review-r0   as slice-built with a README committed, one more
+#                     commit that adds a card-number length rule no test
+#                     holds (and a guard written twice over), and D's
+#                     mutation pass run for real on the slice's changed
+#                     lines (`slice-mutation.md` in the records: one
+#                     survivor on the rule, one that changes nothing);
+#                     next: D.3, the slice reviewers and the cold read
+#   no-ci             as slice-review-r0, with `origin` named as a
+#                     github.com repository (nothing is fetched or pushed)
+#                     and `tools/gh` the recording stand-in; the
+#                     repository has no workflow; next: the CI
 #   delivery-ready    D done (two standing Mediums, three Lows), origin a
 #                     local bare repository, `tools/gh` a recording stand-in;
 #                     next: E
@@ -379,6 +396,10 @@ case "$state" in
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     handoff "C.2 done for chunk 1 of 3: gate PASS on $plan_sha..$c1_sha, saved as $records/gate-chunk-1-r0.txt" "C.3: the review and smoke launches for round 0" ;;
+  chunk1-gate-covers)
+    planning; plan; chunk1 chunk1-gate-covers "none"
+    gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
+    handoff "C.2 done for chunk 1 of 3: gate PASS on $plan_sha..$c1_sha, saved as $records/gate-chunk-1-r0.txt" "C.3: the review and smoke launches for round 0" ;;
   chunk1-gap|chunk1-gap-handback)
     delegation=no; deleg_note="; no delegation file was written (the owner answered no at A)"
     # The gap review cites the reliability document, so the state carries
@@ -488,7 +509,7 @@ LOG
     records_commit "Records: slice 001 chunk 1"; budget_h=5.9 cline1
     started="$(hours_ago 6)" reviews=2 fixers=1 handoff "chunk 1 of 3 done: C line written, records committed as $rec_sha" \
       "the budget check at the chunk boundary, then chunk 2" ;;
-  slice-built|delivery-ready|delivery-ready-source|delivery-ci-red)
+  slice-built|slice-review-r0|no-ci|delivery-ready|delivery-ready-source|delivery-ci-red)
     planning; plan; chunk1 chunk1 "none"
     if [ "$state" = delivery-ready-source ]; then plant_cards; fi
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
@@ -499,6 +520,32 @@ LOG
     if [ "$state" = slice-built ]; then
       reviews=6 fixers=1 handoff "D.1 done: map-update ran and committed the map as $map_sha" "D.2: the Definition of Done, then the slice reviewers" \
         "**Standing:** none"
+    elif [ "$state" = slice-review-r0 ] || [ "$state" = no-ci ]; then
+      cp "$loop/docs/README-slice.md" README.md
+      git add README.md
+      git commit -qm "README: clone to running, tests and checks, where things live, what this slice does"
+      cp "$loop/snapshots/slice-unguarded/lending/cancel-hold.ts" lending/cancel-hold.ts
+      git add lending/cancel-hold.ts
+      git commit -qm "Reject a card number longer than a library card's"
+      mutants="${TMPDIR:-/tmp}/kad-mutants-fixture-$$.json"
+      "$py" -I "$scripts/mutation_pass.py" changed --repo . --base "$base_sha" --out "$mutants" > /dev/null
+      "$py" -I "$scripts/mutation_pass.py" run --repo . --mutants "$mutants" --test 'npm test' --base "$base_sha" \
+        --allow-dirty --out "$records/slice-mutation.md" > /dev/null
+      rm -f "$mutants"
+      [ -f "$records/slice-mutation.md" ] || { echo "state.sh: the mutation pass wrote no report" >&2; exit 1; }
+      if [ "$state" = no-ci ]; then
+        git remote set-url origin https://github.com/example/library-lending.git
+        mkdir -p tools
+        cp "$loop/tools/gh" tools/gh
+        chmod +x tools/gh
+        : > tools/gh-calls.log
+        printf 'tools/gh-calls.log\n' >> .git/info/exclude
+        git add tools/gh
+        git commit -qm "Tools: the GitHub CLI stand-in"
+      fi
+      # no-ci leaves no handoff file: nothing in that state is mid-loop.
+      [ "$state" = no-ci ] || reviews=6 fixers=1 handoff "D.2 done: the Definition of Done passes and the mutation pass ran on the slice's changed lines (\`$records/slice-mutation.md\`)" \
+        "D.3: the slice reviewers, the criteria reviewers among them, and the cold read" "**Standing:** none"
     else
       cp "$loop/docs/README-slice.md" README.md
       git add README.md

@@ -38,6 +38,39 @@ module directories as the orchestrator's B step lists them):
    `uncovered lines` column, which Node truncates with `…` when it is
    long; with another test command the table is all there is, and a
    truncated column means no discount, which the output says.
+   With the lcov report the same check also reads the **changed lines**:
+   of the lines this change added to those files (`git diff -U0` against
+   the base; every line of a new file) that hold runtime code, the share
+   a test ran must reach `--min-line` too. A file can stay above its
+   minimum while thirty new lines in it are never run; this is the
+   figure that says so, and the output names the lines.
+2b. gate checks: the project's own checks, from `gate-checks.json` at the
+   project root (written when `technology-bootstrap`'s gate checks are
+   wired; the skill names the eight categories and how a tool is picked
+   per stack). The file is `{"checks": [...]}`, one entry per category
+   (`CATEGORIES` below), each in one of three forms:
+   `{"category", "name", "cmd"}` runs the command the way the test
+   command is run and passes on exit 0, for a tool that keeps its own
+   baseline (ESLint's suppressions file, a gitleaks baseline);
+   `{"category", "name", "cmd", "count": "<regex>", "baseline": <n>}`
+   counts violations in the command's output (the number of matches, or,
+   when the regex has a group, the number its last match captured) and
+   fails only when there are more than `baseline`: the existing code is
+   the baseline, a new violation fails, and the tool's own exit code is
+   not read except that a non-zero exit with nothing counted is a tool
+   that did not run, which fails; `{"category", "covered_by": "suite" |
+   "typecheck" | "lint" | "coverage", "note"}` says the category is held
+   by a check above (flags in the test script, rules in the linter's
+   configuration) and fails if that check did not run;
+   `{"category", "not_picked": "<reason>"}` is the owner's recorded
+   choice to leave one out. A category with no entry, an unknown
+   category, a malformed entry: `FAIL  gate-checks`. No file: one `SKIP`
+   line. `--record-gate-baselines` runs every counted check, writes what
+   it counted as that entry's `baseline` and exits: the step that takes
+   the existing code as the baseline, and the one that lowers it after a
+   clean-up (a count under its baseline is an `INFO` line saying so,
+   never a failure). The last `INFO  gate covers:` line lists what ran,
+   by category: the chunk reviewer reads it and reports none of it.
 3. changes: the change set is not empty. A build that changed nothing is
    not an implementation, whatever the suite says.
 4. scope: every file changed since the baseline is inside one of the
@@ -195,6 +228,7 @@ Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/validation_gate.py [--project DIR]
            [--module-dir src/lending ...] [--protect docs/x/design.md ...]
            [--test-cmd "npm test"] [--typecheck-cmd CMD] [--lint-cmd CMD] [--timeout 600]
            [--coverage] [--min-line 90] [--min-branch 80] [--json out.json]
+           [--record-gate-baselines]
            [--planning DIR] [--agent-transcript PATH | --agent ID [--projects-dir DIR] [--session ID]]
        python3 -I .../validation_gate.py [--project DIR] --record-baseline FILE
        python3 -I .../validation_gate.py [--project DIR] --baseline FILE --protect PATH ... --accept-protected PATH
@@ -511,6 +545,196 @@ def run_script(project, name, explicit_cmd, test_cmd, timeout):
     return run_command(project, f"{script_runner(test_cmd)} run {name}", timeout, f"--{name}-cmd")
 
 
+# ---- the project's own gate checks (gate-checks.json) ------------------------
+
+GATE_CHECKS_FILE = "gate-checks.json"
+CATEGORIES = ("type-aware lint", "stricter compiler flags", "complexity and length limits", "duplication",
+              "unused code", "changed-line coverage", "test timeouts and random order",
+              "secret and workflow scans")
+COVERED_BY = ("suite", "typecheck", "lint", "coverage")
+CHECK_NAME = re.compile(r"[a-z0-9][a-z0-9-]*$")
+
+
+def load_gate_checks(project):
+    """(entries, problems) from the project's `gate-checks.json`, or (None,
+    []) when there is none. Every problem is a sentence for the FAIL line:
+    the file is the owner's approved set, so a category it does not hold
+    is a gap in the gate, not a default."""
+    path = os.path.join(project, GATE_CHECKS_FILE)
+    if not os.path.isfile(path):
+        return None, []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError) as e:
+        return [], [f"{GATE_CHECKS_FILE} cannot be read as JSON ({e})"]
+    entries = data.get("checks") if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        return [], [f'{GATE_CHECKS_FILE} holds no "checks" list']
+    problems, names, seen = [], set(), set()
+    for i, e in enumerate(entries, 1):
+        if not isinstance(e, dict):
+            problems.append(f"entry {i} is not an object")
+            continue
+        category = e.get("category")
+        if category not in CATEGORIES:
+            problems.append(f"entry {i}: unknown category {category!r}")
+            continue
+        seen.add(category)
+        forms = [k for k in ("cmd", "covered_by", "not_picked") if k in e]
+        if len(forms) != 1:
+            problems.append(f"{category}: one of cmd, covered_by or not_picked, not {len(forms)}")
+            continue
+        if "cmd" in e:
+            name = e.get("name")
+            if not isinstance(name, str) or not CHECK_NAME.match(name) or name in names:
+                problems.append(f"{category}: a cmd entry needs its own name (lowercase, digits, hyphens), got {name!r}")
+            names.add(name)
+            if not isinstance(e["cmd"], str) or not e["cmd"].strip():
+                problems.append(f"{category}: cmd is empty")
+            if "count" in e:
+                try:
+                    re.compile(e["count"])
+                except (re.error, TypeError) as err:
+                    problems.append(f"{category}: count is not a regular expression ({err})")
+                base = e.get("baseline", 0)
+                if isinstance(base, bool) or not isinstance(base, int) or base < 0:
+                    problems.append(f"{category}: baseline must be a whole number, got {base!r}")
+            elif "baseline" in e:
+                problems.append(f"{category}: a baseline needs a count regex to compare with")
+        elif "covered_by" in e and e["covered_by"] not in COVERED_BY:
+            problems.append(f"{category}: covered_by must be one of {', '.join(COVERED_BY)}")
+        elif "not_picked" in e and not (isinstance(e["not_picked"], str) and e["not_picked"].strip()):
+            problems.append(f"{category}: not_picked needs its reason")
+    problems += [f"no entry for the category {c!r}" for c in CATEGORIES if c not in seen]
+    return entries, problems
+
+
+def count_violations(pattern, output):
+    """The number a `count` regex reads from a check's output: with a group,
+    the integer its last match captured (None when nothing matched, or the
+    capture is not a number); without one, how many times it matched."""
+    rx = re.compile(pattern, re.M)
+    if not rx.groups:
+        return len(rx.findall(output))
+    last = None
+    for m in rx.finditer(output):
+        last = m
+    if last is None:
+        return None
+    try:
+        return int(next(g for g in last.groups() if g is not None))
+    except (StopIteration, ValueError):
+        return None
+
+
+def run_gate_check(project, entry, timeout):
+    """One `cmd` entry: (result, output). Never raises: a tool that is not
+    installed is this check's failure, not the gate's crash."""
+    cmd = entry["cmd"]
+    result = {"category": entry["category"], "command": cmd}
+    try:
+        ran, out = run_command(project, cmd, timeout, "gate-checks.json")
+    except SystemExit as e:
+        return {**result, "passed": False, "reason": str(e).splitlines()[0].replace("FAIL  ", "")}, ""
+    result.update(exit_code=ran["exit_code"], timed_out=ran["timed_out"])
+    if ran["timed_out"]:
+        return {**result, "passed": False, "reason": f"timed out after {timeout:g}s"}, out
+    if "count" not in entry:
+        return {**result, "passed": ran["passed"]}, out
+    baseline = entry.get("baseline", 0)
+    found = count_violations(entry["count"], out)
+    result.update(found=found, baseline=baseline)
+    if found is None:
+        return {**result, "passed": False, "reason": f"no count read from its output (exit {ran['exit_code']})"}, out
+    if found == 0 and ran["exit_code"] != 0 and not re.compile(entry["count"]).groups:
+        return {**result, "passed": False,
+                "reason": f"exit {ran['exit_code']} and nothing counted: the tool did not run"}, out
+    return {**result, "passed": found <= baseline}, out
+
+
+def run_gate_checks(project, entries, checks, timeout):
+    """Every entry of the file against the checks already run (`checks`, the
+    report's own dict, for `covered_by`). Returns ({key: result}, {key:
+    output}, the categories the gate held on this run)."""
+    results, outputs, covered = {}, {}, []
+    for e in entries:
+        category = e["category"]
+        if "cmd" in e:
+            key = "check:" + e["name"]
+            results[key], outputs[key] = run_gate_check(project, e, timeout)
+            covered.append(category)
+        elif "covered_by" in e:
+            by = checks.get(e["covered_by"])
+            ran = bool(by) and not by.get("skipped")
+            results["covered:" + category] = {
+                "category": category, "covered_by": e["covered_by"], "note": e.get("note", ""), "passed": ran,
+                **({} if ran else {"reason": f"the {e['covered_by']} check did not run"})}
+            if ran:
+                covered.append(category)
+        else:
+            results["not-picked:" + category] = {"category": category, "passed": True, "skipped": True,
+                                                 "reason": f"not picked: {e['not_picked']}"}
+    return results, outputs, covered
+
+
+def record_gate_baselines(project, timeout):
+    """`--record-gate-baselines`: every counted check run once, its count
+    written as its baseline. The file is rewritten whole through a
+    sibling, with the entries in the order they were in."""
+    entries, problems = load_gate_checks(project)
+    if entries is None:
+        print(f"no {GATE_CHECKS_FILE} in {project}")
+        return 1
+    if problems:
+        for p in problems:
+            print(f"FAIL  gate-checks: {p}")
+        return 1
+    failed = False
+    for e in entries:
+        if "cmd" not in e or "count" not in e:
+            continue
+        probe = dict(e, baseline=10 ** 9)
+        r, _ = run_gate_check(project, probe, timeout)
+        if not r["passed"]:
+            print(f"FAIL  check {e['name']} [{e['category']}]: {r['reason']} ({e['cmd']})")
+            failed = True
+            continue
+        print(f"baseline {e['name']} [{e['category']}]: {e.get('baseline', 0)} -> {r['found']}")
+        e["baseline"] = r["found"]
+    if failed:
+        print("gate baselines: not recorded")
+        return 1
+    path = os.path.join(project, GATE_CHECKS_FILE)
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    data["checks"] = entries
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    os.replace(tmp, path)
+    print("gate baselines: recorded")
+    return 0
+
+
+def gate_check_line(key, c):
+    """The printed line of one gate-checks result."""
+    category = c["category"]
+    if key.startswith("covered:"):
+        note = f" ({c['note']})" if c.get("note") else ""
+        return (f"PASS  {category}: covered by {c['covered_by']}{note}" if c["passed"]
+                else f"FAIL  {category}: {c['reason']}, and {GATE_CHECKS_FILE} says it covers this")
+    name = key.split(":", 1)[1]
+    if c.get("reason"):
+        return f"FAIL  check {name} [{category}]: {c['reason']} ({c['command']})"
+    if "found" in c:
+        verdict = "PASS" if c["passed"] else "FAIL"
+        return f"{verdict}  check {name} [{category}]: {c['found']} found, baseline {c['baseline']} ({c['command']})"
+    return (f"PASS  check {name} [{category}]: exit 0 ({c['command']})" if c["passed"]
+            else f"FAIL  check {name} [{category}]: exit {c['exit_code']} ({c['command']})")
+
+
 def parse_uncovered(text):
     """The `uncovered lines` column: `3-5 12-14 16` (Node separates the
     ranges with spaces; commas are accepted too) as a set of line numbers,
@@ -561,6 +785,7 @@ def parse_lcov(path, project):
         return rows
     for record in text.split("end_of_record"):
         lines, uncovered, branches, taken = 0, set(), 0, 0
+        instrumented = set()
         name = None
         for entry in record.splitlines():
             if entry.startswith("SF:"):
@@ -568,6 +793,7 @@ def parse_lcov(path, project):
             elif entry.startswith("DA:"):
                 ln, hits = entry[3:].split(",")[:2]
                 lines += 1
+                instrumented.add(int(ln))
                 if hits.strip() in ("0", "-"):
                     uncovered.add(int(ln))
             elif entry.startswith("BRDA:"):
@@ -579,8 +805,64 @@ def parse_lcov(path, project):
         rel = os.path.relpath(name, project).replace(os.sep, "/") if os.path.isabs(name) else name.replace(os.sep, "/")
         rows[rel] = {"line": round(100.0 * (lines - len(uncovered)) / lines, 2),
                      "branch": round(100.0 * taken / branches, 2) if branches else 100.0,
-                     "uncovered": uncovered, "exact": True}
+                     "uncovered": uncovered, "instrumented": instrumented, "exact": True}
     return rows
+
+
+HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", re.M)
+
+
+def added_lines(project, base, files):
+    """{file: set of 1-based lines this change added or rewrote}: the `+`
+    side of `git diff -U0 <base>` for a tracked file, every line of an
+    untracked one. A file git cannot diff is left out."""
+    out = {}
+    try:
+        untracked = set(git(project, "ls-files", "--others", "--exclude-standard").stdout.splitlines())
+    except SystemExit:
+        untracked = set()
+    for f in files:
+        if f in untracked:
+            lines = source_lines(project, f)
+            if lines is not None:
+                out[f] = set(range(1, len(lines) + 1))
+            continue
+        proc = subprocess.run([find_git(), "diff", "-U0", "--no-renames", base, "--", f], cwd=project,
+                              capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if proc.returncode != 0:
+            continue
+        added = set()
+        for start, count in HUNK.findall(proc.stdout):
+            added.update(range(int(start), int(start) + int(count or 1)))
+        out[f] = added
+    return out
+
+
+def changed_line_coverage(rows, runtime, added, files, min_line):
+    """The changed-lines figure of docstring point 2: over the source files
+    of the change that the lcov report lists, the added lines Node
+    instrumented (and, where the helper answered, that hold runtime
+    code), and which of them no test ran. None when no file has exact
+    data or the change added no such line."""
+    instrumented = uncovered = 0
+    per_file = {}
+    for f in files:
+        row = rows.get(f)
+        if not row or not row.get("exact") or f not in added:
+            continue
+        lines = added[f] & row["instrumented"]
+        if f in runtime:
+            lines &= runtime[f]
+        missed = sorted(lines & row["uncovered"])
+        instrumented += len(lines)
+        uncovered += len(missed)
+        if missed:
+            per_file[f] = missed
+    if not instrumented:
+        return None
+    line = round(100.0 * (instrumented - uncovered) / instrumented, 2)
+    return {"passed": line >= min_line, "instrumented": instrumented, "uncovered": uncovered, "line": line,
+            "files": per_file}
 
 
 SOURCE = (".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs")
@@ -1182,7 +1464,7 @@ def runtime_lines(project, files):
     return {a["file"]: set(a["lines"]) for a in answers if isinstance(a, dict) and "lines" in a}
 
 
-def check_coverage(output, files, min_line, min_branch, project, lcov_path=None):
+def check_coverage(output, files, min_line, min_branch, project, lcov_path=None, added=None):
     """`files`: the changed files that exist. Node lists every file the tests
     loaded, so a changed source file with no row was never loaded: that is
     zero coverage, not nothing to check. Except a file with no runtime code
@@ -1226,7 +1508,9 @@ def check_coverage(output, files, min_line, min_branch, project, lcov_path=None)
                                        "type_only_lines_discounted": sorted(erased)})
         if line < min_line or branch < min_branch:
             low.append(f)
-    return {"passed": not low and not unmeasured, "files": checked, "below_minimum": low,
+    changed = changed_line_coverage(rows, runtime, added or {}, [f for f in checked], min_line)
+    return {"passed": not low and not unmeasured and (changed is None or changed["passed"]),
+            "changed_lines": changed, "files": checked, "below_minimum": low,
             "not_measured": unmeasured, "type_only": type_only, "undiscounted": undiscounted,
             "exact": bool(lcov_path) and any(r.get("exact") for r in rows.values()),
             "min_line": min_line, "min_branch": min_branch}
@@ -1264,6 +1548,8 @@ def main():
     p.add_argument("--agent", metavar="ID", help="the agent id instead of its path: resolved under --projects-dir / this project / $CLAUDE_CODE_SESSION_ID / subagents/")
     p.add_argument("--projects-dir", default=os.path.expanduser("~/.claude/projects"))
     p.add_argument("--session", default=os.environ.get("CLAUDE_CODE_SESSION_ID"), help="the session whose subagent --agent names (default: CLAUDE_CODE_SESSION_ID)")
+    p.add_argument("--record-gate-baselines", action="store_true",
+                   help="run every counted check of gate-checks.json, write its count as that entry's baseline, and exit")
     p.add_argument("--json")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -1272,6 +1558,8 @@ def main():
     if a.record_baseline:
         record_baseline(project, a.record_baseline)
         return 0
+    if a.record_gate_baselines:
+        return record_gate_baselines(project, a.timeout)
     if a.accept_protected:
         if not a.baseline:
             print("--accept-protected needs --baseline")
@@ -1301,10 +1589,21 @@ def main():
         if a.coverage:
             present = [f for f in files if os.path.isfile(os.path.join(project, f))]
             report["checks"]["coverage"] = check_coverage(output, present, a.min_line, a.min_branch,
-                                                          project, lcov_path)
+                                                          project, lcov_path, added_lines(project, base, present))
     finally:
         if lcov_dir:
             shutil.rmtree(lcov_dir, ignore_errors=True)
+    gate_entries, gate_problems = load_gate_checks(project)
+    covered = []
+    if gate_entries is None:
+        report["checks"]["gate-checks"] = {"passed": True, "skipped": True,
+                                           "reason": f"no {GATE_CHECKS_FILE} in the project"}
+    elif gate_problems:
+        report["checks"]["gate-checks"] = {"passed": False, "problems": gate_problems}
+    else:
+        results, gate_outputs, covered = run_gate_checks(project, gate_entries, report["checks"], a.timeout)
+        report["checks"].update(results)
+        outputs.update(gate_outputs)
     report["checks"]["changes"] = {"passed": bool(files), "count": len(files),
                                    "files": sorted(files)}
     module_dirs = [d.replace("\\", "/") for d in a.module_dir]
@@ -1336,8 +1635,14 @@ def main():
             json.dump(report, f, indent=2)
     for name, c in report["checks"].items():
         detail = ""
+        if name.startswith(("check:", "covered:")):
+            print(gate_check_line(name, c))
+            continue
+        if name == "gate-checks" and not c["passed"]:
+            print("FAIL  gate-checks: " + "; ".join(c["problems"]))
+            continue
         if c.get("skipped"):
-            print(f"SKIP  {name}: {c['reason']}")
+            print(f"SKIP  {c['category'] if name.startswith('not-picked:') else name}: {c['reason']}")
             continue
         if name == "tests":
             detail = (f" registered in no test file: {json.dumps(c['missing'])}" if not c["passed"]
@@ -1355,9 +1660,14 @@ def main():
             detail = (f" {c['count']} file(s): " + json.dumps(c["files"]) if c["passed"]
                       else " 0 file(s), nothing changed")
         elif name == "coverage":
-            if not c["passed"]:
+            if not c["passed"] and (c.get("reason") or c["below_minimum"] or c["not_measured"]):
                 detail = " " + (c.get("reason") or "below minimum: " + ", ".join(
                     c["below_minimum"] + [f + " (not in the coverage table)" for f in c["not_measured"]]))
+            cl = c.get("changed_lines")
+            if cl:
+                detail += (f" changed lines {cl['line']:g}% ({cl['uncovered']} of {cl['instrumented']} not run"
+                           + ("".join(f"; {f}:{','.join(str(n) for n in lines[:12])}{',…' if len(lines) > 12 else ''}"
+                                      for f, lines in cl["files"].items())) + ")")
             if c.get("type_only"):
                 detail += " (types only, exempt: " + ", ".join(c["type_only"]) + ")"
             discounted = [f for f, v in c.get("files", {}).items() if "reported_line" in v]
@@ -1388,10 +1698,13 @@ def main():
         if name == "sources":
             for line in ([] if c["passed"] else c["lines"]) + c["info"]:
                 print(line if line.startswith("hit:") or line.startswith("in:") else f"INFO  sources: {line}")
-    for name in ("suite", "typecheck", "lint"):
-        if not report["checks"][name]["passed"]:
+    for name in ["suite", "typecheck", "lint"] + [k for k in report["checks"] if k.startswith("check:")]:
+        if not report["checks"][name]["passed"] and outputs.get(name):
             tail = "\n".join(outputs[name].splitlines()[-30:])
             print(f"--- {name} output, last 30 lines ---\n" + tail + "\n---")
+    ran = [n for n in ("suite", "typecheck", "lint", "coverage", "scope", "protected", "tests", "sources")
+           if n in report["checks"] and not report["checks"][n].get("skipped")]
+    print("INFO  gate covers: " + ", ".join(ran) + ("; " + ", ".join(dict.fromkeys(covered)) if covered else ""))
     for line in metric_lines(report["metrics"]):
         print(line)
     if "transcript" in report:

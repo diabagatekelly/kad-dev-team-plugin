@@ -1,0 +1,45 @@
+{
+ "skill": "orchestrator",
+ "rule": "the slice's changed lines are mutated after the Definition of Done and before the reviewers (the step, and the three other places the skill names it)",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "   **Mutation on the changed lines**, inline with Bash, while the tree\n   is still (no reviewer is running yet): a tool breaks each line the\n   slice added, one operator at a time, and the suite says whether any\n   test notices.\n\n   ```\n   python3 -I \"${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py\" changed --repo '<project root>' --base '<base>' --out \"${TMPDIR:-/tmp}/kad-mutants-<slice>.json\"\n   python3 -I \"${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py\" run --repo '<project root>' --mutants \"${TMPDIR:-/tmp}/kad-mutants-<slice>.json\" --test '<documented test command>' --base '<base>' --allow-dirty --out '<records dir>/slice-mutation.md'\n   ```\n\n   The mutants file holds lines of the source and stays outside the\n   tree; the report carries counts, lines and test names only. The\n   run's last line, `mutation: <n> mutants, <c> caught, <s> survived`,\n   goes on the D line as printed. You read no survivor and judge none:\n   the test-quality reviewer is handed the report and says which\n   matter. A run that cannot start (the baseline fails, a file would\n   not restore) is `mutation: not run (<the script's line>)` on the D\n   line and the reviewers go ahead without it. Only then:\n",
+   "new": "   Only then:\n"
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "   Done table). Then:\n",
+   "new": "   Done table).\n"
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "owner's questions; the whole slice is held to a Definition of Done, its\nchanged lines are mutated against the suite, it is reviewed once more at\nthe end",
+   "new": "owner's questions; the whole slice is held to a Definition of Done, it is reviewed once more at\nthe end"
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": " The test-quality reviewer is handed a sixth: the\n   path of `slice-mutation.md`.",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "; mutation `<<n> mutants, <c> caught, <s> survived | not run (<why>)>`",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "mutants-written-for-the-changed-lines",
+  "mutation-pass-run-on-the-loop-tree"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "mutants-written-for-the-changed-lines": 0.0,
+   "mutation-pass-run-on-the-loop-tree": 0.0
+  },
+  "note": "a first run removed the step alone and the pass still ran 3 of 3, from the three other places the skill names it and the script's own help"
+ }
+}

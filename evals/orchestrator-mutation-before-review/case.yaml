@@ -1,0 +1,59 @@
+schema_version: "1.0"
+name: orchestrator-mutation-before-review
+description: "TODO.md's B4 (0.15.0), the orchestrator's half: resumed at D with the Definition of Done acted on and checked again, the orchestrator mutates the slice's changed lines against the suite before any reviewer is launched. It writes the mutants outside the tree, runs the pass on the loop's own tree (the log is modified and uncommitted), keeps the report in the records directory, carries the script's count (11 mutants, 2 survived on this fixture) and judges no survivor itself; it hands off before round 0's launches as told. A first form of these checks sat on orchestrator-definition-of-done, where two runs of three never reached this step (a second fixer after a gate failure ended the review's fix budget first)."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off when the next thing to do is launching round 0 of the slice review itself (the six reviewers and the cold read).
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: mutants-written-for-the-changed-lines
+    tool: Bash
+    input_match: 'mutation_pass\.py[^\n]*\bchanged\b[^\n]*--base'
+    min: 1
+  - type: tool_used
+    name: mutation-pass-run-on-the-loop-tree
+    tool: Bash
+    input_match: 'mutation_pass\.py[^\n]*\brun\b(?=[^\n]*--allow-dirty)(?=[^\n]*slice-mutation\.md)'
+    min: 1
+  - type: file_exists
+    name: report-in-the-records
+    path: docs/cancel-hold/implementation/slice-mutation.md
+  - type: regex
+    name: mutants-file-outside-the-tree
+    # The file `changed` writes holds lines of the source: never under the
+    # records directory or anywhere else in the project.
+    target: trace
+    pattern: 'mutation_pass\.py[^\n"]*\bchanged\b[^\n"]*--out\s+\\?[\x27"]?(?:docs/|\./|lending/|kad-mutants)'
+    match: not_contains
+  - type: tool_used
+    name: no-launch-before-the-hand-off
+    tool: Agent
+    input_match: 'subagent_type'
+    min: 0
+    max: 0
+  - type: regex
+    name: count-carried-as-the-script-printed-it
+    target: last_message
+    pattern: '(?:\b11 mutants\b[\s\S]{0,80}\b2 survived\b)|(?:\b2\b[^\n]{0,30}surviv)'
+    flags: i
+  - type: regex
+    name: no-survivor-judged-by-the-orchestrator
+    # The reading of a survivor is the test-quality reviewer's; a hand-off
+    # that calls one equivalent, or says which matters, has done it.
+    target: last_message
+    pattern: '\bequivalent\b|redundant guard|does not matter|doesn.t matter|false positive'
+    flags: i
+    match: not_contains

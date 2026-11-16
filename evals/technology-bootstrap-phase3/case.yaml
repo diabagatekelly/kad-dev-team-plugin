@@ -58,7 +58,14 @@ graders:
       posture), and, if the first test drives a UI or crosses HTTP, a UI or
       HTTP framework.
 
-      Two things do not count against this check. (1) A category listed as
+      Three things do not count against this check. (0) The skill's gate
+      checks (0.15.0), recommended with the set and recorded under a `Gate
+      checks` heading: a tool per category the local gate runs (a
+      type-aware lint, compiler flags, size limits, a duplication and an
+      unused-code tool, coverage of changed lines, test timeouts, a secret
+      scanner, and a workflow scanner named for when a workflow exists).
+      They are checks on the code, not a pipeline, a host or a product
+      from the list above. (1) A category listed as
       deliberately not decided, with an owner. (2) The skill's default set for
       what a later chunk of the slice may force, "the runtime's built-in unless
       a chunk forces a dependency", approved once as a whole: an in-memory
@@ -117,3 +124,17 @@ graders:
       Score 0 if rejected options go unrecorded, if unforced categories are
       silently absent rather than listed as open, or if persistence is deferred
       with no reason (or chosen). Score 1 if all of it holds.
+  # 0.15.0 (TODO.md B1): the document records the gate checks, one row per
+  # category of the eight, for the build to wire.
+  - type: regex
+    name: gate-checks-section-holds-the-eight
+    target:
+      source: file
+      path: docs/technology-bootstrap-001.md
+    pattern: '(?:^|\n)##\s*Gate checks\s*\n(?=(?:(?!\n## )[\s\S])*?type-aware)(?=(?:(?!\n## )[\s\S])*?compiler flags)(?=(?:(?!\n## )[\s\S])*?complexity)(?=(?:(?!\n## )[\s\S])*?duplication)(?=(?:(?!\n## )[\s\S])*?unused)(?=(?:(?!\n## )[\s\S])*?coverage)(?=(?:(?!\n## )[\s\S])*?(?:timeout|random))(?=(?:(?!\n## )[\s\S])*?secret)'
+    flags: i
+  - type: regex
+    name: gate-checks-file-left-to-the-build
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*gate-checks\.json"'
+    match: not_contains

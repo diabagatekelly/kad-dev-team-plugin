@@ -1,0 +1,33 @@
+{
+ "skill": "delivery",
+ "rule": "the deferrals file's section is a part of the pull request's body (delivery's half; the orchestrator's E step names the script too, so the script still ran in 2 runs of 3 without this text)",
+ "edits": [
+  {
+   "file": "skills/delivery/SKILL.md",
+   "old": "First the slice's deferrals, by a script, when a slice file was handed\nor the branch's planning names one:\n\n```\npython3 -I \"${CLAUDE_SKILL_DIR}/../orchestrator/scripts/deferrals.py\" --slice-file '<the slice file>' --out \"${TMPDIR:-/tmp}/kad-pr-deferred-<branch>.md\"\n```\n\nIt writes one section, `## Deferred with this slice`: every item of the\nslice file's `Explicitly deferred` and `Still open` sections, once, with\nits triage sentence. Its last line (`deferrals: <n> listed \u2026`) goes in\nthe report. That file's text is a part of the body exactly as written:\nnever reworded, summarised, reordered or merged into another part, and\nnothing is added to it from a reviewer's report, since no review\nrestates a deferral now (incident 37). With no slice file (a branch\ndelivered outside the chunk loop) the part is left out and the report\nsays so.\n\n",
+   "new": ""
+  },
+  {
+   "file": "skills/delivery/SKILL.md",
+   "old": "sidecar, the Definition of Done results and the deferrals file, and tell",
+   "new": "sidecar and the Definition of Done results, and tell"
+  },
+  {
+   "file": "skills/delivery/SKILL.md",
+   "old": "step 4; **Deferred with this slice**, the deferrals file's section\nverbatim; **Known Lows**,",
+   "new": "step 4; **Known Lows**,"
+  }
+ ],
+ "fails": [
+  "body-carries-the-deferrals-section"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "body-carries-the-deferrals-section": 0.0,
+   "deferrals-listed-by-the-script": 0.667
+  }
+ }
+}

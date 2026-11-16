@@ -69,9 +69,7 @@ built screen; you walk the slice's acceptance criteria in the real
 browser as the **criteria walker** (the skill's "Criteria walk": one
 table row per criterion, PASS / FAIL / NOT REACHABLE, how it was driven,
 a screenshot; the screen-reader announcements the owner's only manual
-check); and once, in its last round, the stranger test: a fresh clone,
-the README from its first command, the slice's thin path, the app again
-through the launcher.
+check).
 
 **You review; you don't design.** Not what capability gets built
 (`product-manager`/`product-slicer`), not how a screen looks or behaves

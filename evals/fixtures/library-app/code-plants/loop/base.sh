@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The ground every chunk-loop case stands on: the library app with the
 # in-place test runner and the loop fixture's manifest, linter and
-# formatter configuration and tool stand-ins, one planning set copied into
+# formatter configuration, tool stand-ins and gate checks, one planning set copied into
 # docs/cancel-hold/, the planning-stage log entries, and a git repository
 # on `main` with one commit and a local bare `origin` (the loop's A step
 # refuses to start without a remote, and delivery pushes to it).
@@ -26,6 +26,16 @@ mkdir -p node_modules/.bin
 cp "$loop/bin/eslint" "$loop/bin/tsc" node_modules/.bin/
 chmod +x node_modules/.bin/eslint node_modules/.bin/tsc
 cp "$loop/docs/orchestrator-log-planning.md" "$target/orchestrator-log.md"
+# The project's gate checks (0.15.0): the eight categories as stand-in
+# commands, and the older code as their baseline, counted by the gate
+# itself before the first commit.
+mkdir -p tools
+cp "$loop/tools/gate-check.py" tools/gate-check.py
+cp "$loop/gate-checks.json" gate-checks.json
+for py in python3 python; do
+  if "$py" -I -c "pass" >/dev/null 2>&1; then break; fi
+done
+"$py" -I "$fixture/../../../skills/orchestrator/scripts/validation_gate.py" --project . --record-gate-baselines >/dev/null
 printf 'node_modules/\ndist/\n' > .gitignore
 git init -q
 git config user.name "library-app"

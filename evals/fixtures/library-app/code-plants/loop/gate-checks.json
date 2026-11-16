@@ -1,0 +1,12 @@
+{
+  "checks": [
+    {"category": "type-aware lint", "name": "floating-promise", "cmd": "python3 tools/gate-check.py floating-promise", "count": "^violation: ", "baseline": 0},
+    {"category": "stricter compiler flags", "name": "any-type", "cmd": "python3 tools/gate-check.py any-type", "count": "^violation: ", "baseline": 0},
+    {"category": "complexity and length limits", "name": "deep-nesting", "cmd": "python3 tools/gate-check.py deep-nesting", "count": "^violation: ", "baseline": 0},
+    {"category": "duplication", "name": "duplication", "cmd": "python3 tools/gate-check.py duplication", "count": "^violation: ", "baseline": 0},
+    {"category": "unused code", "name": "unused-export", "cmd": "python3 tools/gate-check.py unused-export", "count": "^violation: ", "baseline": 0},
+    {"category": "changed-line coverage", "covered_by": "coverage", "note": "the gate's own lcov read"},
+    {"category": "test timeouts and random order", "covered_by": "suite", "note": "--test-timeout=5000 in the test script"},
+    {"category": "secret and workflow scans", "name": "secret-scan", "cmd": "python3 tools/gate-check.py secrets", "count": "^violation: ", "baseline": 0}
+  ]
+}

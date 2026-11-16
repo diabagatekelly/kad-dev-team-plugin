@@ -354,6 +354,15 @@
   "judges": {},
   "findings": []
  },
+ "ci-pipeline-os-matrix": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the prompt says the repository has no CI and asks for it; where the job runs, the pins and the permissions are the skill's"
+  },
+  "judges": {},
+  "findings": []
+ },
  "code-review-catalog": {
   "prompt": {
    "states_rule": "no",
@@ -369,6 +378,15 @@
     "why": "whether at least two of the named points are given as reasons, in paraphrase"
    }
   },
+  "findings": []
+ },
+ "code-review-chunk-gate-covers": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the runner's own launch text (the skill and its two sections by name, the five things); what the gate covers is in the gate output, never in the prompt"
+  },
+  "judges": {},
   "findings": []
  },
  "code-review-comments-chunk": {
@@ -545,6 +563,15 @@
   "findings": [
    "`a-long-single-job-function-stays-a-plain-finding` (judge) failed 6 of 7 runs before E7 rewrote it as a trap on the size alone."
   ]
+ },
+ "cold-read-new-beside-old": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the orchestrator's launch: the skill by name and the five things handed; nothing about pairs, probes or planning documents"
+  },
+  "judges": {},
+  "findings": []
  },
  "delegation-consult-with-file": {
   "prompt": {
@@ -1128,7 +1155,9 @@
     "why": "whether the reply reports the pull request, the issues, the Lows and the cost outcome, and asks nothing about pushing"
    }
   },
-  "findings": []
+  "findings": [
+   "`body-carries-the-deferrals-section` (0.15.0) passes on the script's file spliced into the body command or on the heading written out; a body built in two commands with the splice in a third, alone, would pass on the splice without the body"
+  ]
  },
  "orchestrator-delivery-removal": {
   "prompt": {
@@ -1173,6 +1202,15 @@
    "`branch-names-the-slice-and-the-issue` allows a quote before the branch name (`['\"]?`), but a double quote is `\\\"` in the trace's JSON, so `git switch -c \"slice-001-issue14-...\"` would not match and a correct run would fail. Read from the pattern; the one failure held (2026-11-12) was a run that created no branch.",
    "`handoff-carries-the-issue-prefix` matches the file name within 1,500 characters after the start of any Write or Bash call, so a later call or a tool result that names it passes a run that never wrote it."
   ]
+ },
+ "orchestrator-mutation-before-review": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off when the next thing to do is launching round 0 of the slice review itself",
+   "note": "the stopping point bounds the run; the handoff file says the Definition of Done is behind and \"the rest of D\", and names no mutation pass"
+  },
+  "judges": {},
+  "findings": []
  },
  "orchestrator-plan-check-seam": {
   "prompt": {
@@ -2258,6 +2296,15 @@
   },
   "findings": []
  },
+ "security-review-deferrals-not-restated": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the orchestrator's launch for a slice reviewer; the deferrals are in the slice file the second pass opens"
+  },
+  "judges": {},
+  "findings": []
+ },
  "security-review-neg-architecture": {
   "prompt": {
    "states_rule": "no",
@@ -2797,6 +2844,15 @@
     "why": "whether the fixed clock is a finding at Medium or above"
    }
   },
+  "findings": []
+ },
+ "test-quality-review-survivors-at-d": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the orchestrator's launch with the sixth thing, the mutation report's path; what to do with a survivor is the skill's"
+  },
+  "judges": {},
   "findings": []
  },
  "user-facing-docs-renewals": {

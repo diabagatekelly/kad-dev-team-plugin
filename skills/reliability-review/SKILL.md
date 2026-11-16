@@ -67,20 +67,25 @@ code, in this order.
    below, ranked. A cold finding never cites a planning document: it
    stands on the code and the run.
 
+As a lens of a chunk's combined review, what the gate's output lists as
+covered (`INFO  gate covers: …`) is the gate's and not a finding: with
+`type-aware lint` there, a promise nothing awaits; with `test timeouts
+and random order`, a test with no bound. How the code behaves when a
+dependency fails is never on that line and is always yours.
+
 **Only then the second pass.** Open the slice's planning documents (they
 live in the target directory above the report's records directory: the
 slice file, the design, the criteria this skill owns) and check the code
 against those criteria, under its own heading, `## Against the
 criteria`, in the same format; a finding here may cite the criterion it
-fails. In the same section, restate every accepted deferral the slice
-file carries (its `Still open` and `Explicitly deferred` items, each
-marked `Usable without it`) as a finding of its own, "the slice ships
-with <X> undecided; consequence <Y>", Medium when the consequence is one
-a person meets (a permanent state, an action with no way back, a failure
-nobody designed a path out of), Low otherwise: an accepted deferral is a
-fact about what ships, not something a review drops because a document
-accepted it (six reviewers accepted a deferral a cold read then found
-to leave a first choice permanent with no undo, incident 14). The
+fails. An accepted deferral of the slice
+file (its `Still open` and `Explicitly deferred` items) is not restated
+as a finding: `deferrals.py` lists each one once in the pull request's
+body, and the same handful said by every criteria reviewer was a
+quarter of one slice review's findings (incident 37). What the code
+does because of a deferral is still yours: a state a person can reach
+with no way out is a finding on the code, at its own severity, whether
+or not a document accepted it (incident 14). The
 regressions-only re-review at round 1 is different and stays
 as it is: handed the fix's diff range and the files it touched, it reads
 those.

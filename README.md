@@ -102,10 +102,10 @@ evals/
   thresholds.json      # each case's bar for the eval gate
   tools/               # eval_gate.py, affected_cases.py, record_thresholds.py, rejudge.py,
                        # freeze-history.sh, audit_report.py, orchestrator_log_check.py (a real
-                       # project's log against the orchestrator's rules), cold_read.md and
-                       # mutation_pass.py (a slice review's two probes: the stranger's assessment
-                       # with execution probes, and scripted exact-string mutants against the
-                       # suite), implementation_judge.py (the
+                       # project's log against the orchestrator's rules), cold_read.md (the
+                       # audit's own cold read of a delivered slice; the loop's is the
+                       # cold-read skill, and mutation_pass.py is beside the orchestrator's
+                       # scripts since 0.15.0), implementation_judge.py (the
                        # blind pairwise judge of two implementations, kept for the evals), pairwise_judge.py
                        # (with/without arms, over that judge), new-case.sh,
                        # summarize_results.py and report_evidence.py (read a results dir or CI artifact),
@@ -302,8 +302,9 @@ none), `evals/tools/orchestrator_log_check.py <project dir>` checks a
 project's `orchestrator-log.md` against the orchestrator's rules and the
 kept transcripts, and a slice review's two probes are
 `evals/tools/cold_read.md` (the stranger's assessment, launched as an
-Opus agent against a clone) and `evals/tools/mutation_pass.py` (scripted
-exact-string mutants against the suite).
+Opus agent against a clone) and `skills/orchestrator/scripts/mutation_pass.py`
+(scripted exact-string mutants against the suite; the loop's slice review
+runs it on the slice's changed lines).
 
 ## The implementation skill
 
@@ -433,9 +434,13 @@ place. In order:
   finding for the fix round, a NOT REACHABLE row goes to the owner's
   checklist issue. One fix round as in C (under `light`, each chunk's
   findings go back to that chunk's own builder by message, an Opus fixer
-  for what it cannot clear), and the **stranger test**: the smoke agent
-  follows the README on a fresh clone in the last round, the app again
-  through `scratch_run.py`.
+  for what it cannot clear). Since 0.15.0 the slice review also runs
+  **mutation on the changed lines** before the reviewers (the
+  test-quality reviewer reads the survivors) and the **cold read** with
+  them (`cold-read`: a fresh clone, the README from its first command,
+  no planning document, each thing the slice adds probed beside the
+  older code it meets; its confirmed bugs go to the fix round), which
+  replaces the stranger test.
 - **E. Delivery, all in the foreground:** the log and the records are
   committed first (`Records: slice <nnn> delivery`, the handoff file
   removed), since `delivery` refuses a dirty tree; CI is written if the
@@ -498,7 +503,9 @@ covers the write check against the launcher's folders, `python3 -I
 evals/tools/source_scan_test.py` the source scan, its two gates and the
 planning rule's wording in the five skills that carry it, `python3 -I
 evals/tools/audit_sync_test.py` the audit sync's transcript rules, and
-`python3 -I evals/tools/mutation_pass_test.py` the mutation runner.
+`python3 -I evals/tools/mutation_pass_test.py` the mutation runner,
+`python3 -I evals/tools/gate_checks_test.py` the gate's per-project checks on the library fixture and
+`python3 -I evals/tools/deferrals_test.py` the deferrals list.
 
 The runtime (`npm install -g @anthropic-ai/sandbox-runtime`) wraps the
 whole Claude Code process in the platform's boundary, Seatbelt on macOS

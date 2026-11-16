@@ -1,0 +1,22 @@
+{
+ "skill": "test-quality-review",
+ "rule": "at the slice review every survivor of the mutation pass is read: a finding or equivalent",
+ "edits": [
+  {
+   "file": "skills/test-quality-review/SKILL.md",
+   "old": "**At the slice review, the survivors.** The task hands you a sixth\nthing at D: the path of the mutation report (`slice-mutation.md`). A\nscript changed each line the slice added, one operator at a time (a\ncomparison's boundary, an equality, a connective, a boolean), ran the\nsuite on each, and listed under `## Survivors` every change no test\nnoticed. You do not run the pass; you read every survivor:\n\n- Open the line. Say what rule it holds and whether the app behaves\n  differently with the operator changed.\n- **It does, and no test fails**: a finding titled `no test holds <the\n  rule, in words>`, `**Category:** unguarded rule`, the line as its\n  Location, High when the rule decides money, access, or what is stored\n  or removed, Medium otherwise, and as its fix the test to write: the\n  input and the result it must assert, never a change to the code.\n  Several survivors on one rule are one finding naming them all.\n- **It does not** (a guard another guard already covers, a boundary no\n  input can reach, the condition of a log line): one line under a `##\n  Survivors read` heading, `#<n> equivalent: <why>`, and no finding.\n\nEvery survivor is in one of the two places, by its number. A report\nthat says the task handed no mutation report, or `mutation: not run`,\nsays so under `## Checks run` and goes on without it.\n\n",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "equivalent-survivor-read-not-reported"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "equivalent-survivor-read-not-reported": 0.0
+  }
+ }
+}

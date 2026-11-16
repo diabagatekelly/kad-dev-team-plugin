@@ -123,15 +123,14 @@ live in the target directory above the report's records directory: the
 slice file, the design, the criteria this skill owns) and check the code
 against those criteria, under its own heading, `## Against the
 criteria`, in the same format; a finding here may cite the criterion it
-fails. In the same section, restate every accepted deferral the slice
-file carries (its `Still open` and `Explicitly deferred` items, each
-marked `Usable without it`) as a finding of its own, "the slice ships
-with <X> undecided; consequence <Y>", Medium when the consequence is
-something a person meets on the screen (a permanent state, an action
-with no way back), Low otherwise: an accepted deferral is a fact about
-what ships, not something a review drops because a document accepted it
-(a deferral accepted by six reviewers was found by a cold read to be a
-misclick with no undo, incident 14). The
+fails. An accepted deferral of the slice
+file (its `Still open` and `Explicitly deferred` items) is not restated
+as a finding: `deferrals.py` lists each one once in the pull request's
+body, and the same handful said by every criteria reviewer was a
+quarter of one slice review's findings (incident 37). What the code
+does because of a deferral is still yours: a state a person can reach
+with no way out is a finding on the code, at its own severity, whether
+or not a document accepted it (incident 14). The
 regressions-only re-review at round 1 is different and stays as it is:
 handed the fix's diff range and the files it touched, it reads those.
 
@@ -194,12 +193,9 @@ browser-driving launch per round:
    chunk; nothing about what you would have liked to redesign.
 
 Read nothing else: not the diff, not the design doc, not another
-reviewer's report. Write no criteria. **The stranger test** at D (the task
-says so) is the same procedure after a `git clone` of the repository into
-a fresh temporary directory, following the README from its first command
-and nothing else, with the slice's thin path as the Done when; a README
-that does not get you to a running app is the Critical above, and the
-clone is removed afterwards.
+reviewer's report. Write no criteria. (The clone-and-README run this
+section once carried at D is `cold-read`'s since 0.15.0, and is not
+launched through this skill.)
 
 ## Criteria walk: the acceptance criteria in a real browser, at D
 

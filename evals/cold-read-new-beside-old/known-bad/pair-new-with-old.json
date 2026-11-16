@@ -1,0 +1,30 @@
+{
+ "skill": "cold-read",
+ "rule": "each thing the slice adds is paired with the older code it meets and the pair is probed",
+ "edits": [
+  {
+   "file": "skills/cold-read/SKILL.md",
+   "old": "4. **Pair the new with the old.** `git diff --name-only <base>..HEAD`\n   names what the slice touched. For each thing it adds (a function, a\n   route, a stored field, a state, a message), name the older code it\n   runs beside or depends on: what else reads or writes the same record,\n   what ran before this existed and still runs, what assumed the thing\n   the slice changed. Write the pairs down, then probe each pair\n   together: the old path after the new one has run, the new path on\n   what the old one left behind, both at once where they can be. A\n   slice's own code tested alone is what every other reviewer already\n   did.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/cold-read/SKILL.md",
+   "old": "- `## Pairs probed`: one line per pair of step 4, new beside old, and\n  what the probe printed.\n",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "pairs-probed-listed",
+  "positions-bug-confirmed-by-execution"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "pairs-probed-listed": 0.0,
+   "positions-bug-confirmed-by-execution": 0.0
+  },
+  "note": "without the step the position bug was not reported in any of three runs"
+ }
+}

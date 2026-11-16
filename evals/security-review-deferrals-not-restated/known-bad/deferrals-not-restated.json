@@ -1,0 +1,23 @@
+{
+ "skill": "security-review",
+ "rule": "an accepted deferral is not restated as a finding",
+ "edits": [
+  {
+   "file": "skills/security-review/SKILL.md",
+   "old": "An accepted deferral of the slice\nfile (its `Still open` and `Explicitly deferred` items) is not restated\nas a finding: `deferrals.py` lists each one once in the pull request's\nbody, and the same handful said by every criteria reviewer was a\nquarter of one slice review's findings (incident 37). What the code\ndoes because of a deferral is still yours: a state a person can reach\nwith no way out is a finding on the code, at its own severity, whether\nor not a document accepted it (incident 14). ",
+   "new": "In the same section, restate every accepted deferral the slice\nfile carries (its `Still open` and `Explicitly deferred` items, each\nmarked `Usable without it`) as a finding of its own, \"the slice ships\nwith <X> undecided; consequence <Y>\", Medium when the consequence is one\na person meets (data kept that a decision would have removed, an action\nwith no way back), Low otherwise. "
+  }
+ ],
+ "fails": [
+  "no-deferral-restated"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "no-deferral-restated": 0.0
+  },
+  "note": "the reference puts the old restating sentence back"
+ }
+}

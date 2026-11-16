@@ -77,15 +77,14 @@ live in the target directory above the report's records directory: the
 slice file, the design, the criteria this skill owns) and check the code
 against those criteria, under its own heading, `## Against the
 criteria`, in the same format; a finding here may cite the criterion it
-fails. In the same section, restate every accepted deferral the slice
-file carries (its `Still open` and `Explicitly deferred` items, each
-marked `Usable without it`) as a finding of its own, "the slice ships
-with <X> undecided; consequence <Y>", Medium when the consequence is one
-a person meets (data kept that a decision would have removed, an action
-with no way back), Low otherwise: an accepted deferral is a fact about
-what ships, not something a review drops because a document accepted it
-(six reviewers accepted a deferral a cold read then found to leave a
-first choice permanent, incident 14). The regressions-only re-review at
+fails. An accepted deferral of the slice
+file (its `Still open` and `Explicitly deferred` items) is not restated
+as a finding: `deferrals.py` lists each one once in the pull request's
+body, and the same handful said by every criteria reviewer was a
+quarter of one slice review's findings (incident 37). What the code
+does because of a deferral is still yours: a state a person can reach
+with no way out is a finding on the code, at its own severity, whether
+or not a document accepted it (incident 14). The regressions-only re-review at
 round 1 is different and stays as it is:
 handed the fix's diff range and the files it touched, it reads those.
 

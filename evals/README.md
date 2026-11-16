@@ -446,6 +446,12 @@ score is history, not a claim about today.
 | `chunk-runner-replay-unheld-commit` | new 2026-11-13 (E2, "Replay cases"): the same history; the next turn is the builder's real hand-back naming `72ba4bb`, which the replayed repository does not hold. The runner checks the hash against the repository and never puts it on its line. Bar 1.00 at three runs. |
 | `orchestrator-runner-handback-unverified` | new 2026-11-12 (0.14.5, finding 1, answer key L11): the `chunk1-handback-phantom` state, a runner's line naming an r1 fix commit the repository does not hold; the orchestrator checks the line with `git cat-file -e`, writes no C line and no records commit from it, launches nothing (the prompt forbids a launch), and hands off with the runner's relaunch as the next action. 1.00 in 3/3 twice (`results/gate-20261112T2242*`); bar recorded from it | yes |
 | `delivery-ci-red-not-done` | new 2026-11-12 (0.14.5, finding 2, incident 33, answer key L12): the `delivery-ci-red` state, resumed at E.4 with pull request #7's check failing on the pushed commit; the checks read, the failing job read with `gh run view --log-failed`, the failing tests and the platform difference written to `pr-ci-r1.md`, no E line that says clean or green, the report opening with the CI state and "not ready", the handoff briefing one fresh fixer with the platform difference and the not-weakened rule. Bounded before the fixer (the prompt forbids a launch): the fix, the push, the second watch and the three-round cap are not run by any case. First round errored on the graders (an inline `(?m)` flag the eval's regex engine refuses; a `Write` call expected where the runs wrote the file with a shell heredoc); 0.97 in 3/3 after (`results/gate-20261112T2242*`); bar recorded from it | yes |
+| `ci-pipeline-os-matrix` | new 2026-11-15 (0.15.0, B6; the skill's first case): a github.com repository with a built slice and no workflow; the checks job on Linux and macOS, read-only permissions, every action pinned to a commit looked up through the `gh` stand-in, the frozen install, nothing pushed. Bar 1.00; regression. Known-bad: `two-operating-systems` |
+| `code-review-chunk-gate-covers` | new 2026-11-15 (0.15.0, B2): the chunk's queue matches a card by its start and repeats four lines in four methods, under what the duplication check counts; the wrong match is a finding, the repetition is not. Bar 1.00; regression. Known-bad: `gate-holds` |
+| `cold-read-new-beside-old` | new 2026-11-15 (0.15.0, B3): the cold reader clones, opens no planning document and confirms by execution that a hold's stored position is wrong after a cancel. Bar 1.00; capability. Known-bad: `pair-new-with-old` |
+| `orchestrator-mutation-before-review` | new 2026-11-15 (0.15.0, B4): resumed after the Definition of Done, the orchestrator runs the changed-lines mutation pass on the loop's tree before any reviewer and carries the count. Bar 0.92; regression. Known-bad: `mutation-before-reviewers` |
+| `security-review-deferrals-not-restated` | new 2026-11-15 (0.15.0, B5): the slice review's security reviewer raises no finding on the slice file's two accepted deferrals. Bar 0.93; regression. Known-bad: `deferrals-not-restated` |
+| `test-quality-review-survivors-at-d` | new 2026-11-15 (0.15.0, B4): handed the real mutation report of the fixture's slice, the reviewer reports the unguarded length rule with the test to write and reads the equivalent survivor as equivalent. Bar 0.95; regression. Known-bad: `survivors-read` |
 | `orchestrator-issue-fix-records` | new 2026-11-12 (0.14.5, findings 4b and 5, incident 35, answer key L13): the `issue14-planned` state; the branch `slice-001-issue14-…`, `Planning: issue 14 ready for implementation`, the readiness gate with `--fix-base` passing on what the fix revised, no backward route for the three older gaps, one `Older planning gaps: slice 001` issue through the stand-in, the A line with the fix base and `older gaps 3 → #41`, the handoff as `handoff-issue14.md`. 0.97 in 3/3 (`results/gate-20261112T2242*`; one run's branch command did not match the grader's two spellings); bar recorded from it | yes |
 | `orchestrator-delivery-removal` | new 2026-11-09 (0.14.2, P4.3, answer key PD5): resumed at E with a clean tree and one commit of the branch still holding two card numbers of the export, the owner's words for a rewrite in the prompt; delivery's scan over every commit finds them, the map is written outside the repository, the branch rewritten by `source_scan.py rewrite`, every commit scanned again, the branch pushed with no force; what the remote received (its post-receive hook's dump) holds no value, nor does the log, and the report names counts, files and the copies left to the owner. 0.60 on the first round: every run opened the export with `cat`, built its own pattern file and its own `filter-branch` before any skill was loaded, one expired the reflog, two quoted the values in their report, which is slice 2's improvised removal reproduced; fixed by the listing's own warning in `sources.md`, delivery's description and the orchestrator's E paragraph, then 1.00 in 3/3 at the gate of 2026-11-09 (`results/gate-20261109T*`, the Mac); bar recorded from it | yes |
 | `security-review-source-value` | new 2026-11-09 (0.14.2, P4.3's pointer, answer key PD3): a new test fixture carries two card numbers and two fees of the listed export; `security-review` finds them with the scan and never opens the export, the saved review quotes no value, and its suggested fix names invented values in the tree and delivery's removal procedure for the commits. 1.00 in 3/3 at the gate of 2026-11-09 (`results/gate-20261109T*`, the Mac); bar recorded from it | yes |
@@ -2559,6 +2565,242 @@ not tested.
   them as not finding it, and no scan ran; but the bare arm can see an
   installed copy of the plugin on this machine.
 - The overlay `code-plants/reliability-review/portal-pay/` has no case.
+
+### The review rebalance
+
+`TODO.md`'s phase B, part 2 (B1 to B6; 2026-11-15 and 16, kad 0.15.0,
+Claude Code 2.1.325, every case on Sonnet). The owner's order: this
+part before part 1 (B7 to B10, G1, G2), then part 1 checked again
+against what these runs show (the last table here). What changed: the
+gate holds eight more categories from a per-project file, the chunk
+reviewer no longer reports what the gate holds, the slice review runs a
+mutation pass on the changed lines and a cold read, the slice's
+deferrals are listed once by a script, and CI runs on two systems. 166
+cases (160 before): six new, graders added to four.
+
+**Per item: what was built, its "done when", and what it fails without.**
+
+| Item | Built | "Done when", and the counts | Fails without |
+|---|---|---|---|
+| B1 gate categories per stack | `validation_gate.py` reads `gate-checks.json` at the project root: one entry per category, as a command that passes on exit 0, a command whose violations are counted against a `baseline`, `covered_by` a check the gate already runs, or `not_picked` with a reason; `--record-gate-baselines`; changed-line coverage from the lcov report. `technology-bootstrap` picks the tool per stack and records a `Gate checks` section; the orchestrator's A.5 launches the wiring | `tools/gate_checks_test.py`, no model (15 tests): on the library fixture, whose loop base now carries the eight categories, a clean chunk passes with every category on the `gate covers` line and the older code's violations as the baseline (unused exports 10, deep nesting 4, duplication 1), and one planted violation per category fails the gate on that category's line and no other. `technology-bootstrap-phase2`'s `gate-checks-recommended-with-the-set` 3 of 3 and `-phase3`'s `gate-checks-section-holds-the-eight` 3 of 3 | reference `gate-checks-recorded` on `technology-bootstrap-phase3` (the section removed from the skill): below |
+| B2 the chunk reviewer's brief | `code-review`: "What the gate holds is not yours to report", and the same exemption at the top of its Duplication section; one sentence each in `test-quality-review` and `reliability-review` | `code-review-chunk-gate-covers` (new): chunk 1's queue finds a hold by the start of its card number and opens each of its four methods with the same four lines, short of what the duplication check counts, so the gate passes. `wrong-match-is-a-finding` 3 of 3, `duplication-left-to-the-gate` 3 of 3 | reference `gate-holds` |
+| B3 the cold read in the slice review | the `cold-read` skill; the orchestrator's D.4 launches it with round 0's reviewers in place of the stranger test, and its confirmed findings go to the fix round | `cold-read-new-beside-old` (new, capability): the reader finds, by running it, that a hold's stored position is wrong after the slice's new cancel (the older `PlaceHold` numbers a new hold from the queue's length). `positions-bug-confirmed-by-execution` 3 of 3; the finding is in the report of all nine runs made (the first, single, run failed two checks that were narrower than its right answer) | reference `pair-new-with-old` |
+| B4 mutation on the changed lines | `mutation_pass.py` moved beside the orchestrator's scripts, with `changed` (one mutant per operator on the lines a range added) and `run --allow-dirty`; D runs both after the Definition of Done; `test-quality-review` reads every survivor | `tools/mutation_pass_test.py` (13 tests): on the fixture's built slice the pass gives 11 mutants, 9 caught, 2 survived, one of them the card-length rule no test holds. `test-quality-review-survivors-at-d` (new): `unguarded-rule-is-a-finding` 3 of 3, `equivalent-survivor-read-not-reported` 3 of 3. `orchestrator-mutation-before-review` (new): the pass run after the Definition of Done and before any reviewer, 3 of 3 | references `survivors-read` and `mutation-before-reviewers` |
+| B5 deferrals listed once | `deferrals.py` writes the body's `Deferred with this slice` section from the slice file; `delivery` splices it in; the restating paragraph is gone from `architecture-review`, `security-review`, `reliability-review` and `accessibility-review` (the item named three; the fourth carried the same text) | `tools/deferrals_test.py` (5 tests). `security-review-deferrals-not-restated` (new): `no-deferral-restated` 3 of 3. `orchestrator-delivery-foreground`: `deferrals-listed-by-the-script` 3 of 3, `body-carries-the-deferrals-section` 3 of 3 | references `deferrals-not-restated` and `deferrals-by-script` |
+| B6 CI on two systems | `ci-pipeline`'s checks job on `[ubuntu-latest, macos-latest]`, the audit job on Linux alone, gate checks that are manifest scripts as steps | `ci-pipeline-os-matrix` (new, the skill's first case): `checks-run-on-linux-and-macos` 3 of 3, every action pinned to a looked-up commit 3 of 3 | reference `two-operating-systems` |
+
+**Known-bad references** (`skill_mutation.py run`, three runs each on
+a scratch copy with the rule's text removed; 2026-11-16). Each must
+fail the graders named, and does:
+
+| Reference, case | The text removed | Graders that failed (passes of three) |
+|---|---|---|
+| `gate-holds`, `code-review-chunk-gate-covers` | the "What the gate holds" paragraph and the exemption at the Duplication rule | `duplication-left-to-the-gate` 0 of 3. With the paragraph alone removed it still passed 3 of 3: the exemption at the rule holds by itself |
+| `pair-new-with-old`, `cold-read-new-beside-old` | step 4, "Pair the new with the old", and the report's Pairs section | `pairs-probed-listed` 0 of 3 and `positions-bug-confirmed-by-execution` 0 of 3: without the step no run reported the position bug |
+| `survivors-read`, `test-quality-review-survivors-at-d` | "At the slice review, the survivors" | `equivalent-survivor-read-not-reported` 0 of 3 |
+| `mutation-before-reviewers`, `orchestrator-mutation-before-review` | D's mutation step and the three other places the skill names the pass | `mutants-written-for-the-changed-lines` and `mutation-pass-run-on-the-loop-tree` 0 of 3. With the step alone removed the pass still ran 3 of 3 |
+| `deferrals-not-restated`, `security-review-deferrals-not-restated` | the new sentence, replaced by the old restating one | `no-deferral-restated` 0 of 3 |
+| `deferrals-by-script`, `orchestrator-delivery-foreground` | `delivery`'s deferrals paragraph and body part | `body-carries-the-deferrals-section` 0 of 3; the script itself still ran 2 of 3, since the orchestrator's E step names it too |
+| `two-operating-systems`, `ci-pipeline-os-matrix` | the two-systems rule, back to one `ubuntu-latest` job | `checks-run-on-linux-and-macos` 0 of 3 |
+| `gate-checks-recorded`, `technology-bootstrap-phase3` | "Gate checks, picked per stack", its output-format part and its re-entry line | `gate-checks-section-holds-the-eight` 0 of 3 |
+
+A rule the skill states in several places survives the removal of one:
+three of the eight references passed their case on a first run for that
+reason and were widened.
+
+**Not held by a case.** The orchestrator's A.5 (a present file, the
+wiring launch, "after chunk 1", the route back to the bootstrap) and its
+launch of the cold reader. One unplanned run is the only evidence for
+the second: the first form of `ci-pipeline-os-matrix` left a handoff
+file in its state, the model resumed the loop instead of writing CI,
+and the orchestrator ran D.3 whole: the test-quality reviewer handed the
+mutation report, the cold reader launched with `cold-read` named and no
+planning document in its task. That run cost $4.85 and its result is
+kept outside the results history. Slice 3 is the first real run of
+both.
+
+**B1's check without a run: the picked checks on the first project.**
+Applied to `personal-finance-tracker-3` at `main` on a scratch clone,
+counts only; its existing gate is clean there (typecheck, lint and
+format at 0, 495 tests pass).
+
+| Category | Picked check (TypeScript, the survey's list (a)) | `src/` | `test/` | Baseline form |
+|---|---|---|---|---|
+| Type-aware lint | typescript-eslint `strictTypeChecked`, already installed (its lint resolves TypeScript 6.0.3) | 96 | 945 | ESLint's suppressions file |
+| Stricter compiler flags | `noUncheckedIndexedAccess` | 5 | 263 | a count in `gate-checks.json` |
+| | `exactOptionalPropertyTypes` | 35 | 16 | |
+| | `noPropertyAccessFromIndexSignature` | 37 | 115 | |
+| | `noImplicitReturns` | 1 | 0 | |
+| | `noImplicitOverride`, `noFallthroughCasesInSwitch` | 0 | 0 | |
+| Complexity and length | ESLint core: `complexity` over 10 | 8 | 4 | ESLint's suppressions file |
+| | `max-params` over 4 | 8 | 3 | |
+| | `max-lines-per-function` over 40, IIFEs counted | 8 | 12 | |
+| | `max-statements` over 25 | 5 | 3 | |
+| | `max-lines` over 300 | 0 | 11 | |
+| | `max-depth` over 4 | 0 | 0 | |
+| Duplication | jscpd 5 (5 lines, 50 tokens) | 0 clones | 93 clones, 988 lines, 8.5% | a count |
+| Unused code | knip 6 | 2 files, 3 exports, 3 types | | a count |
+| Changed-line coverage | the gate's own lcov read | 5 uncovered lines of 3,849; 32 untaken branches of 1,339 | | none: only changed lines are judged |
+| Test timeouts and random order | `--test-randomize`, five seeds | 0 failures | | none |
+| | `--test-timeout=5000` | 3 tests cancelled, and the run then never exits | | those three fixed, or a higher limit |
+| Secret scan | gitleaks 8.30.1, history and tree | 0 | 1 | gitleaks' baseline file |
+| Workflow scan | actionlint 1.7.12, zizmor 1.31.1 offline | 0 and 0 | | none |
+
+Whether the limits measure the cold reads' readability findings ("140-column
+lines and two 190-to-220-line IIFEs"): the long functions, yes, with one
+option set (`src/` has two functions over 80 lines at `main`, 154 and
+189, both function expressions called on the spot, which ESLint skips by
+default and the gate's own size line never saw); the wide lines, no lint
+does (the formatter's width is 140 and `eslint-config-prettier` switches
+`max-len` off: 418 `src/` lines are over 100 columns, 204 over 120), so
+the bootstrap records a width with this category. 474 of the 945 test
+hits are `no-floating-promises` on the runner's own `test()` calls,
+which a configuration exempts instead of baselining.
+
+**Read from the first failures** (the rule of "Judges turned into tool
+checks", and what it found this time):
+
+- Two of my checks stopped at the first brace of a shell command
+  (`[^{}]*` before `git clone` and before the body's heading), so
+  `${TMPDIR:-/tmp}` in the command failed right runs. Both are
+  `tool_used` checks on the command now.
+- `body-carries-the-deferrals-section` looked for the heading in the
+  body's text; all three runs had spliced the script's file in
+  (`cat "$TMPDIR/kad-pr-deferred.md" >> body`), which is the verbatim
+  the skill asks for. It reads the splice or the heading.
+- `positions-bug-confirmed-by-execution` asked for `PlaceHold` by name
+  and failed a right finding that said "at placement".
+- **B2's paragraph did not hold on its first run**: the review reported
+  the repeated lines as a Medium under the skill's own Duplication
+  rule, further down the file. The exemption now also stands at that
+  rule. A rule that exempts something wants to sit where the thing is
+  prescribed.
+- `duplication-left-to-the-gate` then failed three runs that reported
+  no duplication: one finding was the test lens's "two tests assert the
+  same thing" (Category "duplicate"), two said the repeated lines are
+  needless in themselves ("a ternary that does nothing"). The planted
+  block is ceremony as well as repetition. The check now reads a
+  finding on the source whose title or Category is duplication; a
+  review that reports the copies under another Category passes it,
+  which is its limit.
+- `orchestrator-definition-of-done` first carried B4's orchestrator
+  checks. My reworded stopping point ("before any slice reviewer") made
+  two runs of three stop before the comments review, which is a
+  reviewer; restored. Then two runs of three never reached the pass: a
+  gate failure after the fix sent a second fixer, the review's fix
+  budget was spent and the flow stopped for the owner. Two of those
+  gate failures were the older "a file no test loads"; one was a new
+  check at work (an export nothing imports, 11 against a baseline of
+  10). The step has its own case and state now.
+- `technology-bootstrap-phase3-reject`'s `asks-only-what-the-first-test-forces`
+  failed documents whose `Gate checks` section names a workflow scanner
+  "for when a workflow exists" (a judge on a 9,000-character file: split
+  and full votes on like documents). Its criterion now says what the
+  section is, in the three phases that carry it.
+- `code-review-comments-chunk`: the reviewer applied the test-quality
+  and reliability lenses without invoking their skills in 7 of the first 13 runs
+  on this branch (11 of 44 before), and said so in its hand-back. One
+  sentence in `code-review` ("a lens applied without its `Skill` call
+  has not been applied"): 3 of 3 invoke both since. The case's prompt
+  now hands the gate output the real launch always hands. With the
+  lenses invoked and the cold pass's probes, two runs of three call the
+  fixture's "why only the first hold is removed" comment false, and by
+  the code they are right (it says a doubled hold "must not take two
+  cancels to clear" and one cancel removes one): `why-comment-is-not-flagged`
+  is a trap on a comment that is wrong. Not fixed: the fixture is shared.
+- `tdd-implementation-lite-cancel-hold`'s `escalates-queue-question`
+  failed three reports on split votes that say what nineteen earlier
+  passing reports say; left alone, it passed 3 of 3 on the next pass.
+
+**Every bar that moved** (`record_thresholds.py --gate-only`, from
+three-run gate results only; a first recording took the single pass
+below as each case's newest result and was redone with it excluded).
+110 cases were re-recorded; these 31 moved, and six are new.
+
+| Case | Bar before | Now | The graders behind it (passes of three, before→now) |
+|---|---|---|---|
+| `architecture-design-owner-sheet` | 0.89 | 1.00 | `fixtures-are-invented` 2→3 of 3 |
+| `code-review-catalog` | 0.89 | 0.94 | `nothing-above-low` 1→2 of 3 |
+| `code-review-days-left-pr` | 1.00 | 0.92 | `skill-invoked-display` 3→1 of 3 |
+| `code-review-fine-notices-pr` | 0.93 | 0.89 | `consults-why-comments` 3→2 of 3 |
+| `code-review-fine-notices-pr-via-agent` | 0.83 | 0.92 | `consults-why-comments` 0→3 of 3 |
+| `code-review-fines-report-pr` | 0.95 | 1.00 | `finds-month-as-raw-string` 2→3 of 3 |
+| `delegation-consult-without-file` | 0.92 | 1.00 | `recommendation-only-named-as-undelegated` 2→3 of 3 |
+| `library-app-catalog-review` | 1.00 | 0.93 | `reports-nothing-above-low` 3→2 of 3 |
+| `library-app-lending-review-via-agent` | 1.00 | 0.96 | `finds-orm-inside-checkout-use-case` 3→2 of 3 |
+| `orchestrator-backward-route` | 0.91 | 1.00 | `log-names-the-hand-back` 2→3 of 3; `routes-back-to-the-owner` 2→3 of 3 |
+| `orchestrator-budget-exceeded` | 0.80 | 0.87 | `flow-ends-saying-what-is-built` 0→1 of 3 |
+| `orchestrator-chunk-runner-launch` | 1.00 | 0.96 | `handoff-says-the-runner-is-in-flight` 3→2 of 3 |
+| `orchestrator-delivery-foreground` | 0.96 | 0.91 | `body-carries-the-deferrals-section` new→3 of 3; `cost-script-run` 2→1 of 3; `deferrals-listed-by-the-script` new→3 of 3; `pr-writeup-invoked` 3→2 of 3 |
+| `orchestrator-issue-fix-records` | 0.97 | 1.00 | `branch-names-the-slice-and-the-issue` 2→3 of 3 |
+| `orchestrator-plan-check-seam` | 0.95 | 1.00 | `plan-sent-back-not-edited` 2→3 of 3 |
+| `orchestrator-readiness-gate` | 1.00 | 0.96 | `backward-routes-name-the-checks` 3→2 of 3 |
+| `orchestrator-readme-stale-not-done` | 0.83 | 0.89 | `one-fixer-for-the-batch-plus-at-most-a-gate-fixer` new→2 of 3 (the bar on main still named `one-fixer-for-the-batch`) |
+| `orchestrator-route-accessibility` | 0.96 | 1.00 | `screen-design-only-after-the-review` 2→3 of 3 |
+| `orchestrator-route-reliability` | 1.00 | 0.96 | `log-names-row-and-artifact` 3→2 of 3 |
+| `orchestrator-route-scope-decision` | 0.94 | 1.00 | `stops-after-the-routed-step` 2→3 of 3 |
+| `orchestrator-route-screen-design` | 0.95 | 1.00 | `log-names-row-and-artifact` 2→3 of 3 |
+| `orchestrator-route-tech-bootstrap` | 1.00 | 0.95 | `log-names-row-and-artifact` 3→2 of 3 |
+| `reliability-review-fine-payment` | 1.00 | 0.93 | `no-false-alarm-settled-fine-guard` 3→2 of 3 |
+| `tdd-implementation-lite-cancel-hold-via-agent` | 0.91 | 0.89 | `escalates-queue-question` 3→2 of 3; `final-review-runs` 1→0 of 3; `no-queue-behaviour-built` 3→2 of 3; `tests-check-behaviour` 1→3 of 3 |
+| `tdd-implementation-lite-named-fix` | 1.00 | 0.95 | `final-review-runs` 3→1 of 3 |
+| `tdd-implementation-lite-rename-fix` | 1.00 | 0.98 | `no-shell-writes-into-the-tree` 3→2 of 3 |
+| `technology-bootstrap-phase2` | 1.00 | 0.96 | `gate-checks-recommended-with-the-set` new→3 of 3; `recommends-the-built-in-default-set-once` 3→2 of 3 |
+| `technology-bootstrap-phase3` | 0.89 | 0.96 | `asks-only-what-the-first-test-forces` 3→2 of 3; `gate-checks-file-left-to-the-build` new→3 of 3; `gate-checks-section-holds-the-eight` new→3 of 3; `records-non-choices-and-open-categories` 1→3 of 3 |
+| `technology-bootstrap-phase3-reject` | 0.91 | 0.95 | `does-not-relitigate` 1→2 of 3 |
+| `vertical-slicing-handback` | 0.92 | 1.00 | `leaves-the-what-to-requirements` 2→3 of 3 |
+| `vertical-slicing-payfine-phase1` | 1.00 | 0.96 | `stays-in-confirmed-scope` 3→2 of 3 |
+
+New: `ci-pipeline-os-matrix` 1.00, `code-review-chunk-gate-covers`
+1.00, `cold-read-new-beside-old` 1.00, `test-quality-review-survivors-at-d`
+0.95 (one run read the equivalent survivor as equivalent and also
+raised its redundant guard as a finding), `security-review-deferrals-not-restated`
+0.93 (one run wrote no criteria pass at all), `orchestrator-mutation-before-review`
+0.92 (one run launched a fixer first and did not carry the count).
+Most moves are one grader by one run in either direction. Three are
+this change: `technology-bootstrap`'s (a longer document, more judge
+noise on it), `orchestrator-delivery-foreground`'s (two new checks at 3
+of 3; `cost-script-run` 1 of 3, the script not readable from the
+sandbox in those runs) and `code-review-days-left-pr`'s, which is not a
+move so much as E7's finding measured again (the review written without
+the skill: 8 of 13 runs on this branch).
+
+**What it cost, and one run of every case.**
+
+| | Figure | How it is known |
+|---|---|---|
+| This change's gate runs: the affected cases at three runs (two passes cut by the usage limit and resumed with `--stale`), the re-runs after each fix, the single pass, the references | 611 runs, $228.70 | measured: the CLI's `costUsd`, list prices; four usage windows, cut three times. The session that ran and read them is not in the figure |
+| One single run of the 110 affected cases (2026-11-16) | $37.95 | measured |
+| The 104 of them that had single runs before, one run each | $35.46 before, $36.65 after | measured: before is the mean of each case's single gate runs of 2026-11-10 to 15 |
+| The six new cases, one run each | $1.31 | measured ($0.16 to $0.35 each) |
+| **One run of every case** | **about $44.2**, against about $41.7 after E7 | estimated from the measured parts: $41.7, plus $1.19 on the existing cases and $1.31 for the new ones. The 56 cases this change does not reach were not run |
+| The gate's re-run rate, the single pass | 7 of 110 first runs re-run (6.4%) | measured; 7.9% over all cases before E5, 6 of 34 on E7's changed cases. Four passed on the re-run. Three did not: two bars recorded from a clean three-run pass that the next runs did not repeat (`code-review-comments-chunk`, `code-review-days-left-pr`), one the judge on the bootstrap's longer document, above |
+
+The first estimate given to the owner was 370 runs and $100 to $115;
+the fixes read from failures and the second code-review pass are the
+difference.
+
+**Part 1, checked against these runs.** Nothing was fixed.
+
+| Item | Verdict | The evidence here |
+|---|---|---|
+| B7 nothing above Low on a sound module | still needed | the four clean-module cases at three runs: `library-app-catalog-review` 2 of 3 (3 of 3 at its bar), `code-review-catalog` 2 of 3 (1 of 3), `reliability-review-catalog` and `security-review-catalog` 3 of 3; `test-quality-review-fines`' `no-false-alarm-exact-tests` 1 of 3 and `no-false-alarm-fake-ledger` 2 of 3, both as before. B2 narrows the chunk review only; these cases are standalone reviews and no gate line reaches them |
+| B8 a serious problem read past is handed on; the mocking rule | still needed | `leaves-mocking-to-test-quality-review` 1 of 3 on `code-review-fine-notices-pr` and 0 of 3 on its `-via-agent` twin, both as before |
+| B9 `map-update`'s diff | still needed, unchanged | the case is not reached by this change and was not run; the cause is the script's |
+| B10 owner-sheet cases open the owner's file | still needed | `Read` or `Grep` on the export in 2 of 3 runs of `architecture-design-owner-sheet` and of `vertical-slicing-owner-sheet` |
+| B10 `map-update` untiered module; `requirements-refinement`'s first turn | still needed, no new evidence | neither case is reached by this change |
+| B10 `code-review` not invoked in `code-review-days-left-pr` | still needed, and worse than recorded | not invoked in 8 of 13 runs here; its bar is now 0.92 with the grader at 1 of 3 |
+| B10 `test-quality-review` on the designated fake | still needed | `no-false-alarm-fake-ledger` 2 of 3 |
+| B10 the `-via-agent` twins' old judges and wording | still needed | untouched; `library-app-lending-review-via-agent` lost its ORM judge once (2 of 3) on the old wording |
+| B10 the overlay with no case | still needed | untouched |
+| G1 the runner hands back while its builder works | still needed before slice 3 | `hand-back-is-one-line-for-what-ran` 3 of 3 on `chunk-runner-waits-for-handback`, as at its bar; no run showed it, and one case cannot (the wait cannot be held in the eval) |
+| G2 a paragraph before the one line | still needed | `hand-back-is-one-line-and-nothing-else` 2 of 3 on `chunk-runner-one-fix-round`, as before. `chunk-runner`'s text was not touched by this change, so G1 and G2 are still one edit |
+
+Two things part 2 adds to part 1's list: the planted block of
+`code-review-chunk-gate-covers` is ceremony as well as repetition (a
+block that is reasonable once would make its check exact), and the
+fixture's "why only the first hold" comment is false
+(`why-comment-is-not-flagged`).
 
 ### Run backlog
 

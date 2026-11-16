@@ -1,0 +1,69 @@
+schema_version: "1.0"
+name: ci-pipeline-os-matrix
+description: "TODO.md's B6 (0.15.0), and the skill's first case: a github.com repository with a built slice, a manifest with test, typecheck and lint scripts, a README and no workflow. ci-pipeline writes one workflow whose checks job runs on Linux and macOS (the gate runs on one machine), with read-only permissions, every action pinned to a full commit looked up through the GitHub CLI, the frozen install, and commits it without pushing."
+tags: [ci-pipeline, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold` whose `origin` is a github.com repository. The repository has no continuous integration yet: add it, so the pull request for this branch runs its checks. On this machine the GitHub CLI is the stand-in at `tools/gh` (run it as `tools/gh …`; there is no network and nothing is to be pushed).
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: ci-pipeline-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:ci-pipeline"'
+    min: 1
+  - type: file_exists
+    name: workflow-written
+    path: .github/workflows/ci.yml
+  - type: regex
+    name: checks-run-on-linux-and-macos
+    # The matrix names both systems (inline or as a list) and a job runs on it.
+    target:
+      source: file
+      path: .github/workflows/ci.yml
+    pattern: '^(?=[\s\S]*\bos:\s*(?:\[\s*ubuntu-latest\s*,\s*macos-latest\s*\]|\n\s*-\s*ubuntu-latest\s*\n\s*-\s*macos-latest))(?=[\s\S]*runs-on:\s*\$\{\{\s*matrix\.os\s*\}\})[\s\S]*$'
+  - type: regex
+    name: read-only-permissions
+    target:
+      source: file
+      path: .github/workflows/ci.yml
+    pattern: '(?:^|\n)permissions:\s*\n\s+contents:\s*read'
+  - type: regex
+    name: every-action-pinned-to-a-commit
+    # No `uses:` with anything but a 40-character hash after the @.
+    target:
+      source: file
+      path: .github/workflows/ci.yml
+    pattern: 'uses:\s*[^\s@]+@(?![0-9a-f]{40}\b)'
+    match: not_contains
+  - type: regex
+    name: pins-looked-up-not-remembered
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: 'api repos/actions/checkout/git/refs?/tags/'
+  - type: regex
+    name: frozen-install-and-the-three-checks
+    target:
+      source: file
+      path: .github/workflows/ci.yml
+    pattern: '^(?=[\s\S]*npm ci)(?=[\s\S]*npm run typecheck)(?=[\s\S]*npm run lint)(?=[\s\S]*npm test)[\s\S]*$'
+  - type: regex
+    name: no-secret-and-no-deploy
+    target:
+      source: file
+      path: .github/workflows/ci.yml
+    pattern: 'secrets\.|\bdeploy'
+    flags: i
+    match: not_contains
+  - type: regex
+    name: committed-not-pushed
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*git push'
+    match: not_contains

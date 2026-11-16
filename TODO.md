@@ -421,7 +421,15 @@ a real loop runs.
 
 ### Phase B, 0.15.0: the review rebalance (finding 10)
 
-- [ ] B1 **Gate categories, picked per stack.** The plugin names the
+**The order, decided by the owner 2026-11-15** (after E7): part 2 first,
+the review rebalance, B1 to B6, as 0.15.0's first pull request; then
+part 1, the measured fixes (B7 to B10, with G1 and G2 above), each
+checked again before it is built, since the rebalance may have changed
+or removed it ("I'd do part 2 first, then see if all part 1 is still
+relevant"). The items below are numbered as they were written, not in
+the order they are done. Phase C and slice 3 come after both parts.
+
+- [x] B1 **Gate categories, picked per stack.** The plugin names the
   categories (type-aware lint, stricter compiler flags, complexity and
   length limits, duplication, unused code, changed-line coverage, test
   timeouts and random order, secret and workflow scans);
@@ -431,14 +439,14 @@ a real loop runs.
   violations fail. Done when: the library fixture carries the checks, a
   planted violation of each category fails the gate, and a clean chunk
   passes.
-- [ ] B2 **The chunk reviewer's brief is narrowed.** `code-review`,
+- [x] B2 **The chunk reviewer's brief is narrowed.** `code-review`,
   `test-quality-review` and `reliability-review` in the combined chunk
   review say what the gate already covers and do not report it; what is
   left is behaviour, names and comments that tell the truth, and the
   design. Done when: a case with a planted duplication and a planted
   behaviour bug gets the bug reported and the duplication left to the
   gate.
-- [ ] B3 **The cold read inside the slice review.** D's stranger test
+- [x] B3 **The cold read inside the slice review.** D's stranger test
   becomes the full `cold_read.md` brief (whole app, no planning document,
   every suspicion probed by execution), plus one instruction: for each
   thing the slice adds, name the older code it runs alongside or depends
@@ -446,18 +454,51 @@ a real loop runs.
   audit's own cold read stays as a second reader. Done when: a case on the
   fixture with a planted bug where new code meets old code is found by
   execution.
-- [ ] B4 **Mutation on the changed lines at D**, with the plugin's own
+- [x] B4 **Mutation on the changed lines at D**, with the plugin's own
   `mutation_pass.py` (the survey could not verify Stryker on this stack);
   the test-quality reviewer reads the survivors and says which matter.
   Done when: a planted unguarded rule on the fixture comes back as a
   survivor and a D finding.
-- [ ] B5 **Deferred items listed once, by a script**, in the pull
+- [x] B5 **Deferred items listed once, by a script**, in the pull
   request's body; the security, reliability and architecture reviewers
   stop restating them (25 of 83 findings last run). Done when: a case
   shows none restated.
-- [ ] B6 **CI on a second operating system** in `ci-pipeline` (Linux and
+- [x] B6 **CI on a second operating system** in `ci-pipeline` (Linux and
   macOS), since the gate runs on one. Done when: the generated workflow
   has the matrix and the case passes.
+
+Done 2026-11-15 and 16 as kad 0.15.0's first pull request
+(`evals/README.md`, "The review rebalance", has each item's case, its
+counts and what it fails without):
+
+- B1: `gate-checks.json` at the project root, read by
+  `validation_gate.py` (three entry forms, a count held against its
+  baseline, `--record-gate-baselines`, changed-line coverage from the
+  lcov report); `technology-bootstrap`'s "Gate checks, picked per
+  stack"; the orchestrator's A.5 launches the wiring. The library
+  fixture carries the eight categories as stand-in commands and
+  `evals/tools/gate_checks_test.py` holds the "done when" with no model.
+  **Not held by a case:** A.5's four branches (present, wire, after
+  chunk 1, back to the bootstrap); slice 3 is their first run.
+- B2: `code-review`'s "What the gate holds is not yours to report", with
+  the exemption repeated at the duplication rule itself (the paragraph
+  alone did not hold on its first run); a sentence each in
+  `test-quality-review` and `reliability-review`.
+- B3: the `cold-read` skill, launched by D.4 with round 0's reviewers in
+  place of the stranger test. **Not held by a case:** the orchestrator's
+  launch of it (one unplanned whole-D run did launch it, with no
+  planning document in the task).
+- B4: `mutation_pass.py` beside the orchestrator's scripts, with
+  `changed` and `--allow-dirty`; D runs it after the Definition of Done;
+  `test-quality-review`'s "the survivors".
+- B5: `deferrals.py`, `delivery`'s body part, and the restating
+  paragraph gone from all four criteria reviews (the three named here
+  and `accessibility-review`, which carried the same text).
+- B6: `ci-pipeline`'s checks job on Linux and macOS; the skill's first
+  case.
+
+The check of B1 without a run is done too (the same README section:
+counts only).
 
 From the eval suite (E6's decisions of 2026-11-15 and what E7 found;
 `evals/README.md`, "With and without the plugin" and "Retired and cut

@@ -1,0 +1,37 @@
+{
+ "skill": "ci-pipeline",
+ "rule": "the checks job runs on Linux and macOS",
+ "edits": [
+  {
+   "file": "skills/ci-pipeline/SKILL.md",
+   "old": "- One `checks` job on **two operating systems**, `strategy.matrix.os:\n  [ubuntu-latest, macos-latest]` with `runs-on: ${{ matrix.os }}` and\n  `fail-fast: false`: the gate runs on one machine, and a defect only\n  the other system shows (a path's case, a rename over an open file, a\n  signal, a line ending) reaches the pull request red with nothing local\n  to explain it (incident 33). Both always; never one \"to save minutes\",\n  and never a third unless the project's manifest says it supports it.\n  Its steps: checkout, toolchain setup with the",
+   "new": "- One `checks` job on `ubuntu-latest`: checkout, toolchain setup with the"
+  },
+  {
+   "file": "skills/ci-pipeline/SKILL.md",
+   "old": " (the operating-system matrix above is the only other one)",
+   "new": ""
+  },
+  {
+   "file": "skills/ci-pipeline/SKILL.md",
+   "old": ", that they match the\n  gate's, and the two operating systems the checks job runs on.",
+   "new": ", and that they match the\n  gate's."
+  },
+  {
+   "file": "skills/ci-pipeline/SKILL.md",
+   "old": " on Linux and macOS, hardened",
+   "new": ", hardened"
+  }
+ ],
+ "fails": [
+  "checks-run-on-linux-and-macos"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "checks-run-on-linux-and-macos": 0.0
+  }
+ }
+}

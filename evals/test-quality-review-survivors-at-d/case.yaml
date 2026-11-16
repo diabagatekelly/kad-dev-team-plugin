@@ -1,0 +1,63 @@
+schema_version: "1.0"
+name: test-quality-review-survivors-at-d
+description: "TODO.md's B4 (0.15.0): at the slice review the test-quality reviewer is handed the mutation report of the slice's changed lines, which the fixture's state produced by running the pass for real. Two changes survived: `>` to `>=` on the card-number length rule in lending/cancel-hold.ts, which no test holds at its boundary, and `||` to `&&` on a guard whose two halves say the same thing, which changes nothing. The review reports the first as a finding with the test to write and reads the second as equivalent, not a finding."
+tags: [test-quality-review, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the test-quality reviewer the orchestrator launched for the slice review (its D step) of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:test-quality-review` first and follow its "Cold pass first"; this is the whole slice.
+
+    You are handed six things and nothing else: the project root (the current directory); the documented test command, `npm test`; the slice's commit range, from the commit `Planning: slice 001 ready for implementation` to `HEAD`; your report path, `docs/cancel-hold/implementation/slice-r0-test-quality.md`; the path of the last gate output on this tree, `docs/cancel-hold/implementation/gate-chunk-3-r0.txt`; and the path of the mutation report, `docs/cancel-hold/implementation/slice-mutation.md`. Hand back the counts and the path.
+  model: sonnet
+  max_turns: 50
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: test-quality-review-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:test-quality-review"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/implementation/slice-r0-test-quality.md
+  - type: regex
+    name: unguarded-rule-is-a-finding
+    # A finding block, High or Medium, located in lending/cancel-hold.ts,
+    # that speaks of the length rule or its boundary.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-test-quality.md
+    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity:?\*\*:?\s*(?:Critical|High|Medium)(?=(?:(?!\n###)[\s\S])*?lending/cancel-hold\.ts)(?:(?!\n###)[\s\S])*?(?:19|nineteen|twenty|\b20\b|too long|length|boundary)'
+    flags: i
+  - type: regex
+    name: finding-names-the-test-to-write
+    # Its fix is a test, not a change to the code under test.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-test-quality.md
+    pattern: '(?:^|\n)###[^\n]*\n(?=(?:(?!\n###)[\s\S])*?(?:too long|length|\b19\b|nineteen))(?:(?!\n###)[\s\S])*?\*\*Suggested fix:?\*\*:?(?:(?!\n###)[\s\S])*?(?:\btest\b|\bassert)'
+    flags: i
+  - type: regex
+    name: equivalent-survivor-read-not-reported
+    # Survivor #10 is on the list of survivors read, as equivalent.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-test-quality.md
+    pattern: '##\s*Survivors read(?:(?!\n## )[\s\S])*?#?10\b[^\n]*(?:equivalent|same|no (?:change|difference)|cannot change|redundant)'
+    flags: i
+  - type: regex
+    name: equivalent-survivor-is-no-finding
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-test-quality.md
+    pattern: '(?:^|\n)###[^\n]*(?:\|\||&&|#10\b|line 57|redundant guard|double guard)'
+    flags: i
+    match: not_contains
+  - type: regex
+    name: pass-not-run-again
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*mutation_pass\.py[^{}]*\brun\b'
+    match: not_contains
