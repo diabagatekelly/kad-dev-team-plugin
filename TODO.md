@@ -68,10 +68,9 @@ Left open by it, for the next change to each file group:
 
 - [ ] F2 has no case that fails without its text: the run that left a
   regression as "no third fixer" was not reproduced by removing it.
-- [ ] The autopilot round, the last-fix review at D and E, and a
-  readiness correction taken without a question are held by no case.
-  Slice 3 is their first run; a case for the round needs a state with a
-  standing High and three launches a run.
+- [ ] The autopilot round, the last-fix review at D and the autopilot
+  question get cases in PR 3; a readiness correction taken without a
+  question gets one in PR 2 (both listed there).
 - [ ] `chunk-runner-fix-gate-fails` and
   `orchestrator-autopilot-counts-over` carry no known-bad reference
   (eight deletions and the autopilot text each survived).
@@ -158,17 +157,60 @@ Does not block slice 3.
 ## PR 3: the screen-change check (0.16.0)
 
 Its own pull request, after PR 1 and before slice 3 (the owner,
-2026-11-16). Touches the orchestrator's D step, so its 38 cases run once
-more.
+2026-11-16). Files: the orchestrator's E step, `delivery`,
+`ci-pipeline`, one section of `screen-design`, the readiness check, the
+loop fixture. The orchestrator's cases run once more (three runs where a
+bar can move, one elsewhere).
 
 - [ ] C1 **The screen-change check** (the owner, 2026-11-12: pixel diff,
-  hands-off, one fixed environment). At D for a UI-touching slice: every
-  state with a saved baseline is re-driven by a scripted browser on
-  made-up data and compared; a difference in a state the screen design
-  does not list as changed is a finding; listed states replace their
-  baseline. Baselines are made and compared in CI on Linux only. Done
-  when: on the fixture, a style change meant for one state that moves
-  another is reported, and the intended change is not.
+  hands-off, one fixed environment). Every state with a saved baseline
+  is re-driven by a scripted browser on made-up data and compared; a
+  difference in a state the screen design does not list as changed is a
+  finding; listed states replace their baseline. Done when: on the
+  fixture, a style change meant for one state that moves another is
+  reported, and the intended change is not.
+
+  **Decided by the owner, 2026-11-16, one question at a time:**
+  - **The browser** is a real headless one, Playwright's Chromium,
+    pinned, in the fixture's workflow and in the workflow `ci-pipeline`
+    writes for a UI project. No stand-in for the fixture.
+  - **A difference** is more than 0.1% of a state's pixels changed, with
+    anti-aliasing differences ignored. The number is written in the
+    project's records and is the owner's to change.
+  - **Baselines are committed in the project**, beside the screen
+    designs, so a pull request shows a replaced image in its diff.
+  - **The loop commits them, from a CI artifact.** CI stays read-only:
+    its screen job uploads the new screenshots and the difference
+    images. At delivery the loop downloads the artifact, commits the
+    baselines of the states listed as changed and the first baselines
+    of new states, pushes, and the CI watch runs again.
+  - **The check runs at delivery, as a CI check**, not at D (it replaces
+    "At D" in the item as first written: the comparison exists only in
+    CI and nothing is pushed before E). A stray difference turns the
+    check red and takes the red-CI path: the failing states and their
+    difference images to one fixer, three rounds at most, never
+    reported as built while red; its fix gets the last-fix review.
+  - **`screen-design` writes the list**: a `## States this slice
+    changes` section, one line per state by name and the new states it
+    adds, checked for by the readiness gate on a UI-touching slice. Only
+    that section of the skill changes in this pull request.
+
+- [ ] **Three cases for what PR 1 left unheld** (the owner asked,
+  2026-11-16, whether those stay unheld; these do not), in this pull
+  request because its cases run anyway:
+  - the autopilot round: a state with one planted High left standing
+    and the autopilot file, stopped once the verify reviewer is
+    launched, graded on that launch;
+  - the last-fix review at the slice review: a state after D's
+    regressions fix, graded on the one diff-scoped launch;
+  - the autopilot question: a first slice with no `autopilot.md` is
+    asked once and the file written.
+
+  Still unheld after it, by decision: the gate-checks wiring launch and
+  the last-fix review at delivery (slice 3 is their first run, read by
+  the audit review); F6 where a bot has reviewed before (the behaviour
+  is a fifteen-minute wait). A readiness correction written without a
+  question gets its case in PR 2, with the planning skills.
 
 ## Then: slice 3
 
