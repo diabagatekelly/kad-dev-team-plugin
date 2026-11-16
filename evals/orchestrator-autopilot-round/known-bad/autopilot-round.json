@@ -32,5 +32,15 @@
   "verify-reviewer-launched-once",
   "verify-reviewer-on-opus",
   "handed-the-standing-finding-by-report"
- ]
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "verify-reviewer-launched-once": 0.0,
+   "verify-reviewer-on-opus": 0.0,
+   "handed-the-standing-finding-by-report": 0.0
+  }
+ }
 }

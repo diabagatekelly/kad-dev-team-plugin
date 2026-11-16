@@ -35,5 +35,15 @@
   "artifact-downloaded",
   "its-images-kept-in-the-records",
   "handoff-briefs-the-fixer-not-to-weaken-the-check"
- ]
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "artifact-downloaded": 0.0,
+   "its-images-kept-in-the-records": 0.0,
+   "handoff-briefs-the-fixer-not-to-weaken-the-check": 0.33
+  }
+ }
 }

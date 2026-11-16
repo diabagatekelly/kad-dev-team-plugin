@@ -16,5 +16,14 @@
  "fails": [
   "listed-states-asked-of-the-script",
   "handoff-names-the-fixer-and-the-missing-state"
- ]
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "listed-states-asked-of-the-script": 0.0,
+   "handoff-names-the-fixer-and-the-missing-state": 0.0
+  }
+ }
 }

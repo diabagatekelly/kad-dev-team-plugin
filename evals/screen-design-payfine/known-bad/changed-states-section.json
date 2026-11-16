@@ -16,5 +16,14 @@
  "fails": [
   "changed-states-section-lists-three-states",
   "a-listed-state-is-named-as-its-mockup-file"
- ]
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "changed-states-section-lists-three-states": 0.0,
+   "a-listed-state-is-named-as-its-mockup-file": 0.0
+  }
+ }
 }

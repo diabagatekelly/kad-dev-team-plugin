@@ -37,8 +37,10 @@ graders:
     pattern: 'screens\.yml(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)[\s\S]{0,6000}?tools/screen_check\.py compare[^"]{0,200}?docs/cancel-hold'
   - type: regex
     name: captures-uploaded-as-the-screens-artifact
+    # The commit after the @ is a hash or the shell variable a looked-up
+    # hash was put in (two right runs of three wrote `@$UA`).
     target: trace
-    pattern: 'screens\.yml(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)[\s\S]{0,6000}?actions/upload-artifact@[0-9a-f]{40}[\s\S]{0,300}?name:\s*screens'
+    pattern: 'screens\.yml(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)[\s\S]{0,6000}?actions/upload-artifact@(?:[0-9a-f]{40}|\$\{?\w+\}?)[\s\S]{0,300}?name:\s*screens'
   - type: regex
     name: browser-installed-from-the-pinned-package
     target: trace

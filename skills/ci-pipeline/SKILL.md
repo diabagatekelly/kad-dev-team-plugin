@@ -49,6 +49,16 @@ change is the user's to ask for).
   the project enforces them (the test runner's configuration); CI adds
   none of its own.
 
+- **A screen:** list the screen designs, `ls '<planning
+  directory>'/visual-ux/screen-*.md` (the planning directory is the one
+  the orchestrator named, or the one the project keeps its documents
+  in). Any, with no `.github/workflows/screens.yml`: section 3 is owed
+  in this run, after section 2, and it is not a judgement call. A
+  project with no capture file, no baseline and no route yet is the
+  ordinary first state, which section 3 is written for; "nothing to
+  capture yet" is never a reason to leave it out, and the report never
+  says the screen job was skipped.
+
 ## 2. Write one workflow
 
 `.github/workflows/ci.yml`, and nothing else:
@@ -106,10 +116,9 @@ and the report says the README was not there). Never push here;
 
 ## 3. The screen job, for a project with a screen
 
-Only when the planning directory (the one the orchestrator named, or the
-one the project keeps its documents in) holds a screen design
-(`visual-ux/screen-*.md`) and `.github/workflows/screens.yml` does not
-exist. One that exists is left alone, like any workflow. The check: a
+Whenever section 1 found a screen design and no
+`.github/workflows/screens.yml`. One that exists is left alone, like any
+workflow. The check: a
 real headless browser renders every state the project's capture file
 drives, on made-up data, and a script compares each image with the
 baseline committed beside the screen designs; a difference in a state
@@ -131,7 +140,8 @@ workflow file, so no existing workflow is touched. In this order:
    and are not edited; nothing is installed here. `capture.mjs` is the
    harness; its header says what `screens/states.mjs`, the project's own
    file, has to export. That file is not yours to write: the report says
-   whether it exists.
+   whether it exists. The orchestrator has the states written before
+   the push.
 2. **The threshold file**, only when absent:
    `<planning directory>/visual-ux/baselines/screen-check.json` holding
    `{"max_changed_percent": 0.1}`. A state differs when more than that

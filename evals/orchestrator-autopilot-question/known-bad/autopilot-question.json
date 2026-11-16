@@ -20,5 +20,14 @@
  ],
  "fails": [
   "asks-the-autopilot-question"
- ]
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "asks-the-autopilot-question": 0.0
+  },
+  "note": "two passes of three; three runs were clean and all three failed the grader, three errored (with no question the run goes on to build the slice and runs out of time)"
+ }
 }

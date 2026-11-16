@@ -22,5 +22,15 @@
   "last-fix-reviewer-launched",
   "last-fix-reviewer-on-opus",
   "scoped-to-the-fixs-range"
- ]
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "last-fix-reviewer-launched": 0.0,
+   "last-fix-reviewer-on-opus": 0.0,
+   "scoped-to-the-fixs-range": 0.0
+  }
+ }
 }

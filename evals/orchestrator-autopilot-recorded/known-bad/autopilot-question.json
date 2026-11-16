@@ -19,7 +19,14 @@
   }
  ],
  "fails": [
-  "autopilot-file-written",
   "file-holds-the-owners-words-the-stops-and-the-always-asked"
- ]
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "file-holds-the-owners-words-the-stops-and-the-always-asked": 0.0
+  }
+ }
 }

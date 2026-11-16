@@ -88,6 +88,16 @@ class SkillMutationTest(unittest.TestCase):
         found = sm.problems("r", "demo-case", reference(fails=("output-saved", "no-such-grader")), self.root)
         self.assertEqual(found, ["not graders of demo-case: no-such-grader"])
 
+    def test_a_second_skill_may_be_edited_only_when_the_reference_names_it(self):
+        other = reference()
+        other["edits"][0]["file"] = "skills/other/SKILL.md"
+        self.assertEqual(sm.problems("r", "demo-case", other, self.root), ["edits skills/other/SKILL.md, not skills/demo/SKILL.md"])
+        other["also"] = ["other"]
+        self.assertTrue(sm.editable(other, "skills/other/SKILL.md"))
+        self.assertTrue(sm.editable(other, "skills/demo/SKILL.md"))
+        other["also"] = ["../../evals"]
+        self.assertFalse(sm.editable(other, "skills/../../evals/SKILL.md"))
+
     def test_an_empty_fails_list_and_an_edit_outside_the_skill_are_named(self):
         empty = sm.problems("r", "demo-case", reference(fails=()), self.root)
         self.assertIn("no grader named", empty[0])

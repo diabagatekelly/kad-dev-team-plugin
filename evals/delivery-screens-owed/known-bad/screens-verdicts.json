@@ -33,7 +33,15 @@
  ],
  "fails": [
   "artifact-downloaded",
-  "baselines-adopted-by-the-script",
   "the-two-listed-baselines-pushed-in-one-commit"
- ]
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "artifact-downloaded": 0.33,
+   "the-two-listed-baselines-pushed-in-one-commit": 0.0
+  }
+ }
 }

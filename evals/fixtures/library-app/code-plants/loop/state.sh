@@ -223,7 +223,11 @@ planning() {  # the slice branch, the delegation file when the state has one, th
   local deleg="none" commit=""
   if [ -n "${ui:-}" ]; then  # the slice's screen design and mockups, committed with the planning
     cp -R "$loop/screens/slice-planning/visual-ux/." "$target/visual-ux/"
-    git add "$target/visual-ux"
+    # The slice file says the slice has no screen; on this project it has
+    # one (three runs read that line and left the screen job out).
+    sed -i.bak 's/^- Accessibility: not applicable, this slice has no screen$/- Accessibility: the desk notice, criteria in the screen design (`visual-ux\/screen-design-001.md`)/' "$target/slice-001.md"
+    rm -f "$target/slice-001.md.bak"
+    git add "$target/visual-ux" "$target/slice-001.md"
   fi
   if [ "${delegation:-yes}" = yes ]; then
     cp "$loop/docs/delegation-slice-001.md" "$target/"
