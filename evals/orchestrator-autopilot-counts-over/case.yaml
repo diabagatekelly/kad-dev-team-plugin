@@ -1,0 +1,43 @@
+schema_version: "1.0"
+name: orchestrator-autopilot-counts-over
+description: "Autopilot at the chunk boundary (TODO.md's C2, 0.15.1; the owner, 2026-11-16: under autopilot the clock is the only cap): resumed after chunk 1, whose relaunched runner took four reviewer launches and three fixers against a budget of two and two, one hour into a five-hour budget, with `autopilot.md` saying yes. The orchestrator asks nothing, does not end the flow on the counts, and launches chunk 2's runner. `orchestrator-budget-exceeded` is the stop that is still the owner's: the same autopilot file and the loop time exceeded."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off as soon as the next chunk's runner has been launched: don't wait for it to return; write the handoff file saying the runner is in flight and stop.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  # No grader on a "taken as recommended" bullet for the counts: two
+  # wordings of that rule held 1 run of 4, the runs all going on to chunk 2
+  # and writing "within budget". The owner's choice makes the counts no cap
+  # under autopilot, so there is nothing taken to log; the C line's budget
+  # field carries them, and the skill now says that.
+  - type: regex
+    name: flow-not-ended-on-the-counts
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: 'budget exceeded'
+    match: not_contains
+  - type: tool_used
+    name: chunk-two-runner-launched
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner)(?=[\s\S]*Surface a queue failure)'
+    min: 1
+    max: 1
+  - type: regex
+    name: branch-left-as-it-is
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\bgit\s+(?:reset\b|checkout\s+--|stash\b|clean\b|revert\b|rebase\b|push\b)'
+    match: not_contains

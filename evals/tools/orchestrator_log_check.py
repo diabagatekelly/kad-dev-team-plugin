@@ -347,7 +347,7 @@ def check_format(text, entries, malformed, findings):
             findings.append(("ERROR", tag, f"Artifact is conditional or offers alternatives: {art}"))
 
 
-FIX = re.compile(r"\br(\d+) fix(?:es)?\s+`?(" + SHA + r"(?:\.\." + SHA + r")?)`?(?:,\s*`?" + SHA + r"`?)*"
+FIX = re.compile(r"\br(\d+) fix(?:es)?\s+`?(" + SHA + r"(?:\.\." + SHA + r")?)`?(?:(?:,\s*|\s+)`?" + SHA + r"`?)*"
                  r"(?:[^;\n]*?(?:→|->)\s*`?" + COUNTS + r"`?(?:\s*\(reg\s+`?(\d+)`?,\s*pre\s+`?(\d+)`?\))?"
                  r"|\s+gate\s+`?PASS)")
 
@@ -356,7 +356,8 @@ def rounds_of(text):
     """The fix-round segments on a C, D or E line: [(round, sha, counts, reg, pre)]; counts is
     (C, H, M, L-or-0) or None for a v4 `r2 fix <sha> gate PASS`; reg/pre None when absent.
     A parenthetical that isn't the split is skipped, so `(plan Files += …)` and `+ gate fix …`
-    between the sha and the arrow don't hide a round."""
+    between the sha and the arrow don't hide a round. A fix of several commits is one round, its
+    hashes written with commas or with spaces between them; the first is the one returned."""
     out = []
     for m in FIX.finditer(strip_parens(text)):
         counts = None

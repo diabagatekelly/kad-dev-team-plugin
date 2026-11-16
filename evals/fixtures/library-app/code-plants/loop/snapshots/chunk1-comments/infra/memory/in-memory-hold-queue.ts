@@ -22,8 +22,8 @@ export class InMemoryHoldQueue implements HoldQueue {
     const queue = this.holds.get(isbn);
     if (!queue) return false;
     // Only the first hold with this card is removed: PlaceHold does not
-    // check for duplicates, so a hold placed twice by a retried request
-    // must not take two cancels to clear.
+    // check for duplicates, so a card can be in one queue twice, and each
+    // entry is a hold of its own that takes its own cancel.
     const at = queue.findIndex((hold) => hold.cardNumber === cardNumber);
     if (at === -1) return false;
     queue.splice(at, 1);

@@ -111,7 +111,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
 <body>
 <div class="wrap">
   <h1>How kad-dev-team takes a new project from an idea to a pull request</h1>
-  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.15.0 (pull request #62).</p>
+  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.15.1.</p>
 
   <div class="legend" role="group" aria-label="Highlight one kind of work">
     <button type="button" id="f-all" data-show="" aria-pressed="true">Show all</button>
@@ -133,7 +133,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <div class="row"><div class="what"><strong>Check for open work first</strong><span>An open slice pull request or a Critical or High issue is routed before any planning.</span></div>
         <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span></div>
         <div class="chips"><span class="chip t">gh pr list</span><span class="chip t">gh issue list</span></div></div>
-      <div class="row"><div class="what"><strong>Inspect and route</strong><span>Reads which documents exist in the target folder and picks the first missing stage. A stage that finds a problem in an earlier one routes back to that document's owner.</span></div>
+      <div class="row"><div class="what"><strong>Inspect and route</strong><span>The target folder is the one given, else the one the project's <code>CLAUDE.md</code> or memory names, else it is asked for once. Reads which documents exist there and picks the first missing stage. A stage that finds a problem in an earlier one routes back to that document's owner.</span></div>
         <div class="chips"><span class="chip m"><b>orchestrator</b> · routing table <span class="tag">inline</span></span></div>
         <div class="none">None. Routing is the model reading files.</div></div>
       <div class="row"><div class="what"><strong>Log and report</strong><span>One entry per routed step in <code>orchestrator-log.md</code>.</span></div>
@@ -190,7 +190,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <div class="row"><div class="what"><strong>Is the session fenced?</strong><span>The agents run unattended with a shell, so the sandbox is probed from inside before any launch, and again before every launch after.</span></div>
         <div class="chips"><span class="chip o">Only if it fails: fix or continue unfenced</span></div>
         <div class="chips"><span class="chip t">sandbox_check.py</span></div></div>
-      <div class="row"><div class="what"><strong>Two questions at most</strong><span>May personas settle design gaps themselves (a delegation file), and which review cadence.</span></div>
+      <div class="row"><div class="what"><strong>Three questions at most</strong><span>Each asked once per project and stored: may the loop take its own recommendation at three named stops (an autopilot file). May personas settle design gaps themselves (a delegation file), and which review cadence.</span></div>
         <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span><span class="chip o">Delegation, cadence</span></div><div class="none">None</div></div>
       <div class="row"><div class="what"><strong>Is the planning ready to build from?</strong><span>Ten mechanical checks over the documents. A failure routes back to the persona that owns the document, not to a fixer.</span></div>
         <div class="chips"><span class="chip m">The owning persona, on a failure <span class="tag">inline</span></span></div>
@@ -237,21 +237,27 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
         <div class="row"><div class="what"><strong>3. Review and smoke, in parallel</strong><span>One reviewer carries three lenses and reports behaviour, names, comments and design, not what the gate covers. One agent starts the real app on made-up data and drives the chunk's "done when".</span></div>
           <div class="chips"><span class="chip m"><b>code-reviewer</b> · code-review + test-quality-review + reliability-review <span class="tag">agent · Opus</span></span><span class="chip m"><b>accessibility-engineer</b> · accessibility-review, or <b>tdd-coach</b> with no screen <span class="tag">smoke · Opus</span></span></div>
           <div class="chips"><span class="chip t">scratch_run.py</span><span class="chip t">Chrome, driven</span><span class="chip t">rounds_record.py</span></div></div>
-        <div class="row"><div class="what"><strong>4. One fix round</strong><span>Every finding to one fresh fixer, the gate again, a re-review of the fix's diff only, and a second fixer for regressions. No third review.</span></div>
+        <div class="row"><div class="what"><strong>4. One fix round</strong><span>Every finding to one fresh fixer, the gate again, a re-review of the fix's diff only, and a second fixer for regressions. A gate that fails on a fix gets its own one fixer, which is not counted as one of the two.</span></div>
           <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span><span class="chip m"><b>code-reviewer</b> · the same three lenses <span class="tag">re-review · Opus</span></span></div>
           <div class="chips"><span class="chip t">validation_gate.py</span><span class="chip t">rounds_record.py --range</span></div></div>
+        <div class="row"><div class="what"><strong>5. The last-fix review</strong><span>Only when a regressions fix ran: that fix is read once, on its diff. Nothing it raises is fixed here; its findings stand on the hand-back line.</span></div>
+          <div class="chips"><span class="chip m"><b>code-reviewer</b> · the same three lenses <span class="tag">last-fix review · Opus</span></span></div>
+          <div class="chips"><span class="chip t">rounds_record.py --last</span></div></div>
       </div>
     </div>
 
     <div class="rows after">
       <div class="row head"><div>Back with the orchestrator</div><div>Who</div><div>Tools that decide</div></div>
-      <div class="row"><div class="what"><strong>Check the hand-back line</strong><span>Every commit hash on it must exist in the chunk's range before anything is written or asked.</span></div>
+      <div class="row"><div class="what"><strong>Check the hand-back line</strong><span>The line is the last line of what the runner sent. Every commit hash on it must exist in the chunk's range before anything is written or asked.</span></div>
         <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span></div>
         <div class="chips"><span class="chip t">git cat-file</span><span class="chip t">git rev-list</span><span class="chip t">scratch_run.py --hash</span></div></div>
       <div class="row"><div class="what"><strong>A finding that needs a decision</strong><span>No document states the rule. The owning persona decides and commits it, or recommends and the owner decides.</span></div>
         <div class="chips"><span class="chip m"><b>software-architect</b>, <b>devsecops-engineer</b>, <b>ux-designer</b> or <b>accessibility-engineer</b> <span class="tag">consult · Opus</span></span><span class="chip o">Without a delegation file</span></div><div class="none">None</div></div>
-      <div class="row"><div class="what"><strong>Records, audit copy, budget</strong><span>Commit the reports, copy the transcripts to the audit repository, count hours and launches.</span></div>
-        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span><span class="chip o">If the budget is exceeded</span></div>
+      <div class="row"><div class="what"><strong>A Critical or High left standing</strong><span>Without an autopilot file the flow stops for the owner. With one, up to two rounds: one reviewer verifies each finding by running it, one fixer takes what was confirmed, and that fix gets its last-fix review. The same at D and E.</span></div>
+        <div class="chips"><span class="chip m"><b>code-reviewer</b> · code-review <span class="tag">verify · Opus</span></span><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span><span class="chip o">Without autopilot, or after round two</span></div>
+        <div class="chips"><span class="chip t">validation_gate.py</span><span class="chip t">rounds_record.py --last</span></div></div>
+      <div class="row"><div class="what"><strong>Records, audit copy, budget</strong><span>Commit the reports, copy the transcripts to the audit repository, count hours and launches. Under autopilot a per-chunk count over its number is logged and stops nothing; the loop time always ends the flow.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span><span class="chip o">If the loop time is exceeded; a count too, without autopilot</span></div>
         <div class="chips"><span class="chip t">audit_sync.py</span></div></div>
     </div>
   </section>
@@ -268,7 +274,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <div class="row"><div class="what"><strong>Definition of Done</strong><span>Nine checks: README, lint and format, typecheck, no code in strings, comment density and more. Failures are fixed in one batch.</span></div>
         <div class="chips"><span class="chip m"><b>docs-writer</b> · readme <span class="tag">inline</span></span><span class="chip m"><b>code-reviewer</b> · why-comments <span class="tag">agent · Opus</span></span><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span></div>
         <div class="chips"><span class="chip t">done_check.py</span><span class="chip t">validation_gate.py</span></div></div>
-      <div class="row"><div class="what"><strong>Mutate the changed lines</strong><span>Each operator on a line the slice added is flipped and the suite run. What survives is a line no test holds.</span></div>
+      <div class="row"><div class="what"><strong>Mutate the changed lines</strong><span>Each operator on a line the slice added is flipped and the suite run, in a disposable clone, never in the project's tree. What survives is a line no test holds.</span></div>
         <div class="none">Nobody. The orchestrator reads no survivor.</div>
         <div class="chips"><span class="chip t">mutation_pass.py changed</span><span class="chip t">mutation_pass.py run</span></div></div>
       <div class="row"><div class="what"><strong>Six reviewers, in parallel</strong><span>Each reads the code cold first, then four of them check their own criteria. The test-quality reviewer reads the mutation survivors.</span></div>
@@ -280,7 +286,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <div class="row"><div class="what"><strong>The cold read</strong><span>A fresh clone, the README from its first command, no planning document. Each thing the slice adds is run beside the older code it meets; only bugs confirmed by running go to the fixer.</span></div>
         <div class="chips"><span class="chip m"><b>tdd-coach</b> · cold-read <span class="tag">agent · Opus</span></span></div>
         <div class="chips"><span class="chip t">scratch_run.py</span><span class="chip t">git clone</span></div></div>
-      <div class="row"><div class="what"><strong>One fix round, then regressions only</strong><span>A Critical or High still standing stops the flow for the owner. Mediums go to the pull request.</span></div>
+      <div class="row"><div class="what"><strong>One fix round, then regressions only, then the last-fix review</strong><span>The regressions fix is read once on its diff. A Critical or High still standing gets the autopilot rounds, or stops the flow for the owner. Mediums go to the pull request.</span></div>
         <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span><span class="chip m">The same reviewers, on the fix's diff <span class="tag">Opus</span></span><span class="chip o">Standing Critical or High</span></div>
         <div class="chips"><span class="chip t">validation_gate.py</span><span class="chip t">rounds_record.py --range</span><span class="chip t">audit_sync.py</span></div></div>
     </div>
@@ -301,7 +307,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <div class="row"><div class="what"><strong>Watch the checks</strong><span>Red goes to a fixer told which system failed, three rounds at most. No result is never green.</span></div>
         <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet, on red</span></span></div>
         <div class="chips"><span class="chip t">gh pr checks</span><span class="chip t">gh run view</span></div></div>
-      <div class="row"><div class="what"><strong>Triage the external review</strong><span>One verdict per comment: fix, decline with the reason, defer to an issue, or already resolved. Up to five rounds.</span></div>
+      <div class="row"><div class="what"><strong>Triage the external review</strong><span>Waited for only where a bot has reviewed in the repository before. One verdict per comment: fix, decline with the reason, defer to an issue, or already resolved. Up to five rounds; then one last-fix review of every CI and triage fix together.</span></div>
         <div class="chips"><span class="chip m"><b>code-reviewer</b> · external-review-triage <span class="tag">agent · Opus</span></span><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span></div>
         <div class="chips"><span class="chip t">gh api, comments</span></div></div>
       <div class="row"><div class="what"><strong>Cost and audit</strong><span>Dollars by role from the transcripts; every session's transcript copied to the audit repository, withheld if it holds a value of the owner's.</span></div>
@@ -322,13 +328,13 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
           <tr><td>readiness_check.py</td><td>Whether the planning documents are complete enough to build from (ten checks)</td><td>A</td></tr>
           <tr><td>source_scan.py</td><td>Whether any file or transcript holds a value from a file the owner provided</td><td>Planning, the gate, delivery, the audit copy</td></tr>
           <tr><td>validation_gate.py</td><td>Whether a commit passes: suite, typecheck, lint, coverage, the eight check categories against their baselines, scope, test names</td><td>C after every build and fix; D</td></tr>
-          <tr><td>rounds_record.py</td><td>How many findings at each severity, and which are regressions of a fix</td><td>C and D, after every review</td></tr>
+          <tr><td>rounds_record.py</td><td>How many findings at each severity, which are regressions of a fix, and which stand (a last-fix review's all do)</td><td>C, D and E, after every review</td></tr>
           <tr><td>scratch_run.py</td><td>That the app starts only on made-up data inside a scratch folder, and that the owner's real data did not change</td><td>Every smoke run, the criteria walk, the cold read</td></tr>
           <tr><td>extract_map.py</td><td>The real import edges and exports, and what changed since the last map</td><td>D</td></tr>
           <tr><td>done_check.py</td><td>The Definition of Done (nine checks)</td><td>D</td></tr>
           <tr><td>mutation_pass.py</td><td>Which changed lines no test would notice breaking</td><td>D</td></tr>
           <tr><td>deferrals.py</td><td>The list of what the slice ships without, for the pull request body</td><td>E</td></tr>
-          <tr><td>cost_by_role.py</td><td>What the slice cost, by role</td><td>E</td></tr>
+          <tr><td>cost_by_role.py</td><td>What the slice cost, by role, and which session it could not cover</td><td>E</td></tr>
           <tr><td>audit_sync.py</td><td>Which transcripts are copied to the audit repository and which are withheld</td><td>After every chunk, D and E</td></tr>
         </tbody>
       </table>
@@ -343,7 +349,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
         <div class="chips"><span class="chip m"><b>devsecops-engineer</b> · supply-chain-review</span><span class="chip m"><b>devsecops-engineer</b> · operational-readiness</span><span class="chip m"><b>docs-writer</b> · staleness-audit</span><span class="chip m"><b>docs-writer</b> · user-facing-docs</span><span class="chip m"><b>code-reviewer</b> · why-comments</span></div></div>
       <div><h3>After delivery, by the plugin's owner</h3><p>A review of the recorded sessions against the skills' own rules. It runs a second cold read and a hand-written mutation pass that the loop never sees.</p>
         <div class="chips"><span class="chip m">audit-review</span><span class="chip t">audit_report.py</span><span class="chip t">orchestrator_log_check.py</span></div></div>
-      <div><h3>No case holds these yet</h3><p>Two steps new in 0.15.0 have not been exercised by an eval case: wiring the gate's checks at A, and the launch of the cold reader at D. The next real slice is their first run.</p></div>
+      <div><h3>No case holds these yet</h3><p>Three things are stated by the skills and exercised by no eval case: wiring the gate's checks at A (the launch itself; the route back to the bootstrap has a case since 0.15.1), the autopilot round of verify, fix and review, and the last-fix review at D and E (the chunk's has a case). The next real slice is their first run.</p></div>
     </div>
   </div>
 </div>

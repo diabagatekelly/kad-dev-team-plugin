@@ -254,12 +254,43 @@
       "test-quality-review"
     ]
   },
+  "chunk-runner-fix-gate-fails": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T174051-chunk-runner-fix-gate-fails.json",
+    "graders": {
+      "allow-list-not-widened": 1.0,
+      "chunk-runner-invoked": 1.0,
+      "fix-gate-fails-on-scope": 1.0,
+      "gate-run-on-the-fix-and-again": 1.0,
+      "hand-back-counts-the-gate-fixer-and-stops": 1.0,
+      "log-not-written": 1.0,
+      "no-records-commit": 1.0,
+      "no-smoke-agent-after-a-smoke-pass": 1.0,
+      "one-re-reviewer": 1.0,
+      "orchestrator-not-invoked": 1.0,
+      "re-review-handed-nothing-of-round-zero": 1.0,
+      "re-review-named-for-round-one": 1.0,
+      "round-one-recorded-with-the-range": 1.0,
+      "second-gate-saved-under-its-own-name": 1.0,
+      "the-gates-one-fixer": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "code-review",
+      "reliability-review",
+      "tdd-implementation-lite",
+      "test-quality-review"
+    ]
+  },
   "chunk-runner-gap-handback": {
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-chunk-runner-gap-handback.json",
+    "source": "results/gate-20261116T174051-chunk-runner-gap-handback.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "hand-back-line-ends-on-the-decision": 1.0,
@@ -267,6 +298,8 @@
       "log-not-written": 1.0,
       "no-planning-document-written": 1.0,
       "no-records-commit": 1.0,
+      "no-report-opened": 1.0,
+      "no-report-opened-through-the-shell": 1.0,
       "nothing-launched": 1.0,
       "orchestrator-not-invoked": 1.0,
       "round-recorded-by-the-script": 1.0
@@ -280,13 +313,17 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-chunk-runner-gate-deviation.json",
+    "source": "results/gate-20261116T200905-chunk-runner-gate-deviation.json",
     "graders": {
+      "allow-list-not-widened": 1.0,
       "chunk-runner-invoked": 1.0,
       "gate-file-saved": 1.0,
+      "gate-handed-the-builders-agent-id": 1.0,
       "gate-names-the-test-file-deviation": 1.0,
       "gate-passes-and-names-the-deviation": 1.0,
+      "gate-reads-the-done-when-from-the-report": 1.0,
       "gate-run-with-the-design-modules": 1.0,
+      "gate-run-with-the-protect-list": 1.0,
       "hand-back-line-counts-two-deviations": 1.0,
       "log-not-written": 1.0,
       "no-fixer-no-reviewer": 1.0,
@@ -303,18 +340,20 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-chunk-runner-gate-outside.json",
+    "source": "results/gate-20261116T174051-chunk-runner-gate-outside.json",
     "graders": {
       "allow-list-not-widened": 1.0,
       "chunk-runner-invoked": 1.0,
       "failure-handed-to-the-fixer-once": 1.0,
       "first-gate-fails-on-scope": 1.0,
+      "fixer-launched-as-sonnet": 1.0,
       "gate-run-twice": 1.0,
       "hand-back-line-says-pass-after-the-fix": 1.0,
       "log-not-written": 1.0,
       "no-records-commit": 1.0,
       "no-reviewer-before-the-pass": 1.0,
-      "orchestrator-not-invoked": 1.0
+      "orchestrator-not-invoked": 1.0,
+      "sandbox-checked-before-the-fixer": 1.0
     },
     "skills_invoked": [
       "chunk-runner",
@@ -326,7 +365,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-chunk-runner-gate-sources.json",
+    "source": "results/gate-20261116T174051-chunk-runner-gate-sources.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "failure-handed-to-the-fixer-once": 1.0,
@@ -344,68 +383,61 @@
       "tdd-implementation-lite"
     ]
   },
-  "chunk-runner-one-fix-round": {
-    "score": 0.97,
+  "chunk-runner-last-fix-review": {
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-chunk-runner-one-fix-round.json",
+    "source": "results/gate-20261116T211026-chunk-runner-last-fix-review.json",
+    "graders": {
+      "chunk-runner-invoked": 1.0,
+      "hand-back-is-one-line-with-last-and-standing": 1.0,
+      "last-review-written": 1.0,
+      "log-not-written": 1.0,
+      "no-fixer-after-the-last-review": 1.0,
+      "no-records-commit": 1.0,
+      "one-last-fix-reviewer": 1.0,
+      "orchestrator-not-invoked": 1.0,
+      "recorded-as-the-last-review": 1.0,
+      "reviewer-handed-nothing-of-earlier-rounds": 1.0,
+      "reviewer-handed-the-last-review-path": 1.0,
+      "short-card-defect-reported": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "code-review",
+      "reliability-review",
+      "test-quality-review"
+    ]
+  },
+  "chunk-runner-one-fix-round": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T174051-chunk-runner-one-fix-round.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "gate-on-the-fix": 1.0,
       "hand-back-carries-the-split": 1.0,
-      "hand-back-is-one-line-and-nothing-else": 0.667,
+      "hand-back-is-one-line-and-nothing-else": 1.0,
       "hand-back-leaves-the-medium-standing": 1.0,
       "log-not-written": 1.0,
+      "no-other-review": 1.0,
       "no-records-commit": 1.0,
-      "no-third-review": 1.0,
+      "one-last-fix-review-and-no-other": 1.0,
       "orchestrator-not-invoked": 1.0,
       "round-one-recorded-with-the-range": 1.0,
       "second-and-last-fixer": 1.0
     },
     "skills_invoked": [
       "chunk-runner",
+      "code-review",
       "map-query",
-      "tdd-implementation-lite"
-    ]
-  },
-  "chunk-runner-replay-not-the-handback": {
-    "score": 1.0,
-    "runs": 3,
-    "mode": "gate",
-    "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-chunk-runner-replay-not-the-handback.json",
-    "graders": {
-      "no-monitor": 1.0,
-      "no-poll-of-the-branch": 1.0,
-      "no-reviewer-launched": 1.0,
-      "nothing-started-in-the-background-to-wait": 1.0,
-      "the-siblings-commit-not-taken": 1.0,
-      "the-siblings-result-is-not-the-builders": 1.0
-    },
-    "skills_invoked": [
-      "map-query",
-      "tdd-implementation-lite"
-    ]
-  },
-  "chunk-runner-replay-unheld-commit": {
-    "score": 1.0,
-    "runs": 3,
-    "mode": "gate",
-    "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-chunk-runner-replay-unheld-commit.json",
-    "graders": {
-      "commit-checked-against-the-repository": 1.0,
-      "no-monitor": 1.0,
-      "no-poll-of-the-branch": 1.0,
-      "no-reviewer-launched": 1.0,
-      "nothing-started-in-the-background-to-wait": 1.0,
-      "treats-the-hand-back-as-having-no-commit": 1.0,
-      "unheld-commit-never-on-the-line": 1.0
-    },
-    "skills_invoked": [
-      "map-query",
-      "tdd-implementation-lite"
+      "reliability-review",
+      "tdd-implementation-lite",
+      "test-quality-review",
+      "why-comments"
     ]
   },
   "chunk-runner-review-round": {
@@ -413,7 +445,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261116T114900-chunk-runner-review-round.json",
+    "source": "results/gate-20261116T174051-chunk-runner-review-round.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "cold-findings-cite-no-planning-document": 1.0,
@@ -444,7 +476,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-chunk-runner-waits-for-handback.json",
+    "source": "results/gate-20261116T174051-chunk-runner-waits-for-handback.json",
     "graders": {
       "chunk-runner-invoked": 1.0,
       "commit-confirmed-by-the-repository": 1.0,
@@ -510,7 +542,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261116T120608-code-review-chunk-gate-covers.json",
+    "source": "results/gate-20261116T200905-code-review-chunk-gate-covers.json",
     "graders": {
       "code-review-invoked-first": 1.0,
       "duplication-left-to-the-gate": 1.0,
@@ -528,21 +560,21 @@
     ]
   },
   "code-review-comments-chunk": {
-    "score": 0.9,
+    "score": 0.933,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261116T114900-code-review-comments-chunk.json",
+    "source": "results/gate-20261116T174051-code-review-comments-chunk.json",
     "graders": {
       "code-review-invoked-first": 1.0,
-      "hand-back-is-counts-and-path": 0.667,
+      "hand-back-is-counts-and-path": 0.333,
       "no-low-per-chunk": 1.0,
       "planning-reference-is-a-medium": 1.0,
       "reliability-lens-invoked-for-storage": 1.0,
       "report-written": 1.0,
       "test-quality-lens-invoked": 1.0,
       "what-comments-are-a-medium": 1.0,
-      "why-comment-is-not-flagged": 0.333,
+      "why-comment-is-not-flagged": 1.0,
       "writes-only-the-report": 1.0
     },
     "skills_invoked": [
@@ -1112,7 +1144,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-orchestrator-asks-for-target.json",
+    "source": "results/gate-20261116T200905-orchestrator-asks-for-target.json",
     "graders": {
       "asks-where-artifacts-live": 1.0,
       "does-not-grep-for-artifacts": 1.0,
@@ -1121,6 +1153,27 @@
     },
     "skills_invoked": [
       "orchestrator"
+    ]
+  },
+  "orchestrator-autopilot-counts-over": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T200905-orchestrator-autopilot-counts-over.json",
+    "graders": {
+      "branch-left-as-it-is": 1.0,
+      "chunk-two-runner-launched": 1.0,
+      "flow-not-ended-on-the-counts": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "chunk-runner",
+      "code-review",
+      "orchestrator",
+      "reliability-review",
+      "test-quality-review",
+      "why-comments"
     ]
   },
   "orchestrator-backward-route": {
@@ -1147,15 +1200,15 @@
     ]
   },
   "orchestrator-budget-exceeded": {
-    "score": 0.867,
+    "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-orchestrator-budget-exceeded.json",
+    "source": "results/gate-20261116T203512-orchestrator-budget-exceeded.json",
     "graders": {
       "branch-left-as-it-is": 1.0,
       "budget-exceeded-on-the-log": 1.0,
-      "flow-ends-saying-what-is-built": 0.333,
+      "flow-ends-on-the-clock-and-says-what-is-built": 1.0,
       "nothing-launched": 1.0,
       "orchestrator-invoked": 1.0
     },
@@ -1241,23 +1294,25 @@
     ]
   },
   "orchestrator-delivery-foreground": {
-    "score": 0.909,
+    "score": 0.949,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T220308-orchestrator-delivery-foreground.json",
+    "source": "results/gate-20261116T200905-orchestrator-delivery-foreground.json",
     "graders": {
-      "body-carries-the-deferrals-section": 1.0,
-      "cost-script-run": 0.333,
+      "body-carries-the-deferrals-section": 0.667,
+      "cost-script-run": 1.0,
       "deferrals-listed-by-the-script": 1.0,
       "delivery-skill-invoked": 1.0,
       "e-line-written": 1.0,
+      "no-wait-for-a-bot-that-never-reviewed": 1.0,
       "nothing-in-the-background": 1.0,
       "one-issue-per-standing-medium-none-for-a-low": 1.0,
       "orchestrator-invoked": 1.0,
-      "pr-writeup-invoked": 0.667,
+      "pr-writeup-invoked": 1.0,
       "pull-request-then-issues-then-body-edit": 1.0,
-      "reports-the-delivery-in-the-same-turn": 1.0
+      "reports-the-delivery-in-the-same-turn": 1.0,
+      "review-history-asked-before-any-wait": 0.667
     },
     "skills_invoked": [
       "delivery",
@@ -1313,12 +1368,30 @@
       "reliability-requirements"
     ]
   },
+  "orchestrator-gate-checks-route-back": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T200905-orchestrator-gate-checks-route-back.json",
+    "graders": {
+      "gate-checks-file-not-written-by-the-orchestrator": 1.0,
+      "no-baseline-recorded": 1.0,
+      "nothing-launched": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-back-to-the-bootstrap": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "technology-bootstrap"
+    ]
+  },
   "orchestrator-issue-fix-records": {
     "score": 1.0,
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261115T171407-orchestrator-issue-fix-records.json",
+    "source": "results/gate-20261116T200905-orchestrator-issue-fix-records.json",
     "graders": {
       "a-line-carries-the-fix-base-and-the-older-gaps": 1.0,
       "branch-names-the-slice-and-the-issue": 1.0,
@@ -1341,7 +1414,7 @@
     "runs": 3,
     "mode": "gate",
     "claude_version": "2.1.325",
-    "source": "results/gate-20261116T122447-orchestrator-mutation-before-review.json",
+    "source": "results/gate-20261116T200905-orchestrator-mutation-before-review.json",
     "graders": {
       "count-carried-as-the-script-printed-it": 1.0,
       "mutants-file-outside-the-tree": 1.0,
@@ -1840,6 +1913,35 @@
       "problem-framing-doc"
     ]
   },
+  "orchestrator-slice-review-launches": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T200905-orchestrator-slice-review-launches.json",
+    "graders": {
+      "cold-reader-handed-no-planning-document": 1.0,
+      "cold-reader-launched-once-with-its-skill": 1.0,
+      "cold-reader-on-opus": 1.0,
+      "no-accessibility-reviewer-on-a-slice-with-no-screen": 1.0,
+      "no-other-reviewer-handed-the-mutation-report": 1.0,
+      "orchestrator-invoked": 1.0,
+      "test-quality-reviewer-handed-the-mutation-report": 1.0,
+      "the-four-other-reviewers-launched": 1.0
+    },
+    "skills_invoked": [
+      "architecture-review",
+      "code-review",
+      "cold-read",
+      "map-query",
+      "orchestrator",
+      "reliability-review",
+      "security-review",
+      "tdd-implementation-lite",
+      "test-quality-review",
+      "why-comments"
+    ]
+  },
   "orchestrator-superseded-scope-map": {
     "score": 1.0,
     "runs": 3,
@@ -1857,6 +1959,26 @@
     "skills_invoked": [
       "orchestrator",
       "requirements-refinement"
+    ]
+  },
+  "orchestrator-target-from-project": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.325",
+    "source": "results/gate-20261116T211026-orchestrator-target-from-project.json",
+    "graders": {
+      "does-not-ask-where": 1.0,
+      "does-not-grep-for-artifacts": 1.0,
+      "does-not-search-for-artifacts": 1.0,
+      "log-says-where-the-target-came-from": 1.0,
+      "log-written-in-the-named-directory": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routed-to-the-first-stage": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "problem-framing-doc"
     ]
   },
   "pr-writeup-portal-fines": {

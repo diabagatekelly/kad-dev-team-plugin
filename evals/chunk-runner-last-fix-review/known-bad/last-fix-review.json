@@ -1,0 +1,39 @@
+{
+ "skill": "chunk-runner",
+ "rule": "every commit after the chunk's last review is read once: step 5, its mention at the prohibition and at the end of step 4, and its field on the line",
+ "edits": [
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "5. **The last-fix review**, only when a `Fix r2` was committed (`loop`\n   only): the regressions fix, and its gate fixer's commit if there was\n   one, have been read by nobody, and every change is read once.\n   Sandbox check, then the same combined reviewer kind, `model: \"opus\"`,\n   diff-scoped as the re-review was (the range `<before fix r2>..HEAD`,\n   the files it touched, the report path `chunk-<k>-last-review.md`,\n   this chunk's last gate output; no cold pass, nothing of rounds 0 and\n   1). Then:\n\n   ```\n   python3 -I '<scripts>/rounds_record.py' --sidecar '<sidecar>' --report '<last review>' --chunk <k> --round 2 --last --project '<project root>' --range '<before fix r2>..HEAD' --fix '<sha>' --fixer '<agent id>' --turns <n>\n   ```\n\n   It prints `last <C/H/M>` and one `standing:` line per finding:\n   **nothing this review raises is fixed by you**. No fixer, no gate, no\n   further review follows it, whatever its severity; its counts go on\n   the line as `last <C/H/M>` and into `standing <C/H/M>` with the\n   pre-existing ones, and a Critical or High among them is the\n   orchestrator's to act on. A chunk whose round ended before a `Fix r2`\n   (a clean round 0, a round 1 with no regression) has no step 5.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "Launch a\nreview after the last-fix review (step 5),",
+   "new": "Launch a third\nreview,"
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": ", then step 5: **no third fix\n   round**.",
+   "new": "; the chunk is\n   done: **no third review**."
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "gate PASS; last `<C/H/M>`><; owed",
+   "new": "gate PASS><; owed"
+  }
+ ],
+ "fails": [
+  "one-last-fix-reviewer",
+  "last-review-written"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "one-last-fix-reviewer": 0.0,
+   "last-review-written": 0.0
+  }
+ }
+}

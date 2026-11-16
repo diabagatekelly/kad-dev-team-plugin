@@ -1,0 +1,32 @@
+{
+ "skill": "orchestrator",
+ "rule": "the cold read is launched with round 0's reviewers: D.4, the overview's clause, the data rule's mention and the D line's field",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "4. **The cold read**, an eighth launch with round 0's reviewers (it was\n   the stranger test, a README followed on a clone in the last round;\n   it is now the whole reading a stranger gives the code, and early\n   enough for its bugs to be fixed): `kad-dev-team:tdd-coach:AGENT`,\n   `model: \"opus\"`, a real async `Agent` call, told to invoke\n   `kad-dev-team:cold-read` first, by name, and handed: the project\n   root (it clones from it and never works in it), the branch, the\n   base commit, the scratch launcher and a scratch folder of its own\n   (the data rule holds on a clone too), and the report path\n   `slice-r0-cold.md`. **Nothing else**: no planning document or its\n   path, no criteria, no report, no gate output, no word on what the\n   slice is for. Its skill is the procedure: a fresh clone, the README\n   from its first command, every source and test file read, each thing\n   the slice adds paired with the older code it runs beside or depends\n   on, every suspicion probed by execution, the clone removed. The\n   data hash runs around it and goes on the D line.\n\n   Its report is in the shared finding format and is recorded with\n   round 0's (`rounds_record.py` reads `slice-r0-cold.md` as reviewer\n   `cold`). A finding marked `confirmed by execution` goes to D's fix\n   round with the others, at the severity the reader gave it, whether\n   the code is the slice's or older (older code the slice runs beside\n   is what this reader is for; a bug in it that the slice cannot ship\n   with is fixed here, and one it can is a standing finding for the\n   body). A `verify` finding is not handed to the fixer: it stands,\n   named in the body, for the owner. A README that does not get the\n   reader to a running app is a High for `docs-writer:readme`, inline,\n   then the fixer's gate, as before. The cold read is not launched\n   again at round 1: the regressions-only re-review covers the fix's\n   diff. The audit's own cold read after delivery stays as it is, a\n   second reader the loop does not see.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": " and read cold by an agent with no planning document",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "; cold `<<n> confirmed, <m> verify | PASS>`",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "cold-reader-launched-once-with-its-skill"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "cold-reader-launched-once-with-its-skill": 0.0
+  }
+ }
+}

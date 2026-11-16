@@ -1,0 +1,59 @@
+schema_version: "1.0"
+name: orchestrator-target-from-project
+description: "The target directory taken from the project (TODO.md's F7, 0.15.1): no folder is given, and the project's `CLAUDE.md` names `docs/planning/` as where its planning artifacts live. The orchestrator takes that directory without asking, says where it read it, searches for nothing, and routes: its log's first entry lands there. `orchestrator-asks-for-target` is the same request on a project that names no directory, and still asks."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We want members to be able to pay their fines online. What's next for that?
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: does-not-search-for-artifacts
+    # Listing the named directory itself is step 2's inspection, not a
+    # search for a target (the first run did exactly that and no more).
+    tool: Glob
+    input_match: '^(?![\s\S]*docs/planning)'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: does-not-grep-for-artifacts
+    tool: Grep
+    input_match: '^(?![\s\S]*docs/planning)'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written-in-the-named-directory
+    path: docs/planning/orchestrator-log.md
+  # The two checks on the log read the write to it in the trace, not the
+  # file: a regex on a file that was never written throws and voids the
+  # run, and "never written" is exactly what this case fails on without
+  # its rule (the first runs of its known-bad reference all errored so).
+  - type: regex
+    name: routed-to-the-first-stage
+    target: trace
+    pattern: 'docs/planning/orchestrator-log\.md"[^{}]{0,6000}?Routed to:\*\*\s*`?docs-writer:problem-framing-doc'
+  - type: regex
+    name: log-says-where-the-target-came-from
+    # The bullet the first entry carries. A check on a sentence in the
+    # reply held 1 run of 3: the directory was taken each time and said
+    # once.
+    target: trace
+    pattern: 'docs/planning/orchestrator-log\.md"[^{}]{0,6000}?target:[^{}]{0,200}?docs/planning[^{}]{0,200}?CLAUDE\.md'
+    flags: i
+  - type: regex
+    name: does-not-ask-where
+    target: last_message
+    pattern: 'where (?:do|does|should|are|is|would)\b[^?\n]{0,120}(?:artifacts?|documents?|planning)[^?\n]{0,80}\?'
+    flags: i
+    match: not_contains

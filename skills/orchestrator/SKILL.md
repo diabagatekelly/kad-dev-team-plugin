@@ -94,6 +94,21 @@ it is made.
 a parameter, or not:
 - **Given one** — that's the target. Skip straight to step 2. Don't
   second-guess it, don't search for a different one.
+- **Not given one, and the project says where** — when the project's own
+  memory (what this session was started with) or the `CLAUDE.md` at its
+  root names the directory its planning artifacts live in, that directory
+  is the target: take it and go to step 1b. Nothing is asked. **Say so
+  before the next tool call**, in one line of text that names the
+  directory and where it is written ("target: `planning/`, as the
+  project's `CLAUDE.md` names it"), and again as the first line of step
+  5's report: a target taken silently looks to the owner like a guess.
+  The first log entry written carries it too, as one indented bullet,
+  `target: <dir> (named by <where>)`. One read of the root's
+  `CLAUDE.md` is the whole of the looking: no search, no listing of
+  directories, no guess from a folder's name. Two directories named, or a
+  sentence that could mean either of two, is not the project saying
+  where: ask. An owner once typed a folder their project's memory already
+  named, after being offered two guesses that did not exist.
 - **Not given one** — ask once, before doing anything else: "Where do this
   problem's artifacts already exist, or where should they be created if
   we're starting from scratch?" Whatever the user answers becomes the
@@ -556,8 +571,16 @@ parses one.
 **Budget** (the A line records it; counted at every chunk boundary):
 loop time 8 h for a UI-touching slice and 5 h otherwise (a UI slice
 reached 5 h at chunk 7 of 8 and the owner lifted it, incident 11; decided
-2026-11-06), 2 reviewer launches per chunk, 1 fixer per scope plus 1
-for regressions, unless the owner's message named other numbers.
+2026-11-06), 2 reviewer launches per chunk plus the last-fix review when
+a regressions fix ran, 1 fixer per scope plus 1 for regressions (a
+gate's own fixer is not counted), unless the owner's message named other
+numbers. **Under autopilot the clock is the only cap** (the owner,
+2026-11-16): the per-chunk counts are then no cap at all. They are
+counted and written in the C line's `budget` field as always, a count
+above its number ends nothing and asks nothing, and the budget check at
+a chunk boundary reads the clock alone. The loop time still ends the
+flow, with or without autopilot, since it is a number the owner
+approved.
 Consults are counted, never capped: the count goes on the E line
 (0.13.1's cap of 8 per slice produced owner questions nobody wanted;
 dropped 2026-11-08). At each chunk boundary read the clock and the
@@ -565,6 +588,91 @@ counts; when one is exceeded, the flow ends there: the branch stays as
 it is, the C line says `budget exceeded: <which>`, and step 5 says what
 is built. The dollar figure is not estimated during the run;
 `cost_by_role.py` computes it at E.
+
+**Autopilot.** A standing answer in `<target>/autopilot.md`, asked once
+per project at A.2 like the delegation file. With it, at the stops
+listed here and no others, the loop takes its own recommendation
+without a question and, for the last two, writes an indented bullet
+under the line it belongs to, `taken as recommended: <what>
+(autopilot)`:
+
+- a per-chunk count above its number (the budget paragraph above; the
+  C line's `budget` field is its record, and it gets no bullet);
+- **the autopilot round** for a Critical or High left standing when a
+  scope's rounds are over (below), twice at most per scope;
+- a readiness route that changes no decision (A.4).
+
+**It always asks**, autopilot or not, when what it would do changes a
+number or a decision the owner approved (the loop time, a criterion, a
+design decision, a delegation), deletes, reverts or rewrites committed
+work, pushes anything whose gate or checks are red, or touches scope or
+requirements. A planning fork that carries a recommendation stays a
+question: those are the owner's product decisions, and autopilot is
+read by nothing outside the chunk loop. Without the file every stop
+below is the owner's, as it was. Why: 41 of 47 questions that carried a
+recommendation were answered with it, and three of one loop's seven
+were the loop asking leave to keep its own bar.
+
+**The last-fix review** (the owner, 2026-11-13: "any change should
+always be reviewed"). Every commit that changes source or tests after a
+scope's last review is read once, by one reviewer, on its diff, before
+that scope is reported: in a chunk, the regressions fix and its gate
+fixer's commit (the runner's step 5, on its line as `last <C/H/M>`);
+at D, the last fix of the fix round; at E, once, every CI fix and
+triage fix together. One launch per scope, never one per commit:
+`kad-dev-team:code-reviewer:AGENT`, `model: "opus"`, `code-review`'s
+"Combined chunk review" on the diff only (no cold pass), handed the
+project root, the test command, the range `<the scope's last reviewed
+commit>..HEAD`, the files it touched, the report path
+(`chunk-<k>-last-review.md`, `slice-last-review.md`,
+`pr-last-review.md`) and the last gate output, and nothing of any
+earlier round. Recorded with `rounds_record.py … --round <i> --last
+--project '<project root>' --range '<range>'`: nothing it raises is
+handed to a fixer in the scope's own rounds, so its Critical, High and
+Medium all stand (the script prints them), its Mediums are filed at E
+like any standing Medium and its Lows go to the body. A range that
+changes no source or test file (a records commit, the map, a README)
+gets no review. A last fix nobody read held three bugs a later cold
+read found.
+
+**The autopilot round.** When a scope's rounds are over and a Critical
+or High stands (the runner's line says so, D's fix round left one, or a
+last-fix review raised one): without `autopilot.md` the flow stops for
+the owner, as before. With it, at most **two** rounds per scope (the
+owner, 2026-11-16), each in this order, every launch after a sandbox
+check, and one `taken as recommended` bullet per round:
+
+1. **Verify.** One `kad-dev-team:code-reviewer:AGENT`, `model: "opus"`,
+   handed the standing Critical and High findings by report path and
+   title, the project root, the test command and a report path
+   (`<scope>-auto-r<i>-verify.md`, the scope being `chunk-<k>`, `slice`
+   or `pr`), and told one thing: for each, run the code at `HEAD` and
+   say whether the finding is still true. What it reproduces it writes
+   as a finding in the shared format at the severity it finds; what it
+   cannot reproduce it lists under `## Not reproduced`, one line each
+   with what it ran. A last-fix review's own Critical or High was read
+   on the diff minutes ago and is not verified again: it goes straight
+   to step 2. Record the report (`--chunk <k | D | pr> --round <i>
+   --last`).
+2. **Fix.** Nothing confirmed and nothing from a last-fix review: the
+   round ends here, `auto r<i> verify 0 confirmed, <n> not reproduced`,
+   and the scope goes on (the unreproduced findings stay in the sidecar
+   and are filed at E with that sentence). Otherwise one fresh fixer
+   (`model: "sonnet"`, `maxTurns: 120`, `tdd-implementation-lite`, its
+   handed-back path, chunks are committed) with the confirmed findings
+   by report path, then the gate on its range (its own one fixer on a
+   `FAIL`, as everywhere).
+3. **Read the fix.** The last-fix review on that fix's range
+   (`<scope>-auto-r<i>-last-review.md`), recorded with `--last`.
+
+A Critical or High after round 1 gets round 2; one after round 2 stops
+the flow for the owner at step 5, with both rounds' reports named. The
+fragment on the C, D or E line: `auto r<i> verify <c> confirmed, <n>
+not reproduced< fix <sha> → last <C/H/M>>`. The round never runs for a
+`gate FAIL … ended`, a `stall: ended`, a hand-back that failed its hash
+check, `data CHANGED` or the loop time: those end the flow as they did.
+A stop once went to the owner over a Critical the last fix had already
+removed, and the extra review they allowed found a real High.
 
 **An issue fix** (the owner answered "fix it first on its own branch"
 at step 1b, or asked for one issue to be fixed) is this same loop on the
@@ -750,8 +858,8 @@ gate sent it back four times over documents it had not touched
    `PASS` that turns into a `FAIL` between steps ends the flow the way a
    second gate failure does, unless the user opted out at A, in which
    case the later checks are logged and the flow continues.
-2. **Questions: two at most in this step, one per `AskUserQuestion`
-   call, in this order: browser, delegation.** Never bundle two of them
+2. **Questions: three at most in this step, one per `AskUserQuestion`
+   call, in this order: browser, delegation, autopilot.** Never bundle two of them
    into one call, whatever the tool allows: a call carrying two questions
    is this rule broken. A question the owner's own message already
    answered is skipped (a plain "go ahead" answers none). The settings,
@@ -780,6 +888,24 @@ gate sent it back four times over documents it had not touched
      answers for this slice only ("no delegation on this one") applies to
      this slice and leaves the standing file as it is. The per-slice file
      stays the record C.5 reads and the planning commit carries.
+   - **Autopilot**, asked once per project and stored. When
+     `<target>/autopilot.md` exists it holds the owner's standing answer:
+     read it and ask nothing. Without it, ask: "May the loop take its
+     own recommendation without asking you, on this slice and every
+     later one, at three stops: a per-chunk review or fixer count that
+     is exceeded (the loop time still ends the flow), up to two rounds
+     of verify, fix and review for a Critical or High left standing, and
+     a planning correction that changes no decision? Each round and
+     each correction is logged as taken as recommended. Anything that changes a number or decision
+     you approved, deletes or rewrites committed work, pushes anything
+     red, or touches scope or requirements is still asked." Write
+     `<target>/autopilot.md` with the answer either way: the owner's
+     words, the date, the slice it was asked on, the three stops, the
+     always-ask list, and how it is changed (the owner says so in a
+     message, or edits the file). It is committed with the planning
+     commit. A message that answers for this slice only applies to this
+     slice and leaves the file as it is. The A line carries `autopilot —
+     <file path | none>`.
 3. **Branch and base.** Inline with Bash: `git status --porcelain` on the
    target directory. Then `git switch -c slice-<nnn>-<slug>` (an issue
    fix: `slice-<nnn>-issue<n>-<slug>`, and the current commit is its fix
@@ -819,7 +945,15 @@ gate sent it back four times over documents it had not touched
    own log entry naming the check and the document, run the named skill
    inline with the `Skill` tool (telling it which check failed and which
    document to revise in place), and when it returns run the gate again.
-   Repeat until it passes; no builder is launched meanwhile.
+   Repeat until it passes; no builder is launched meanwhile. Under
+   autopilot the routed skill is told one more thing with the failed
+   check: the autopilot file by path, and that a revision which changes
+   no decision (a number the documents already state, written where the
+   check looks for it; a heading; a home for a failure path the design
+   already decides) is written without a question, while a new number,
+   a choice between two readings or anything of scope is still asked.
+   The entry's bullet says `taken as recommended: <check> (autopilot)`
+   when nothing was asked.
 
    **A blocker** (`route: open-items-triaged -> the owner (blocker)`) is
    the one readiness failure that goes to the owner, not a persona: one
@@ -1008,8 +1142,12 @@ orchestrator's side.
      recorded; the fixer has not run): C.5 below, then relaunch a runner
      for the same chunk with the hand-back line and the decision commit,
      telling it to resume at the fix round (its resume rule).
-   - `gate FAIL: <checks>; ended`, `stall: ended` or a standing Critical
-     or High: the flow ends there, the C line says why, step 5 says what
+   - A standing Critical or High (the line's `standing`, its `last`
+     counts among them): the autopilot round above when `autopilot.md`
+     says yes, its fragment appended to the C line; without the file, or
+     after its second round, the flow ends there for the owner.
+   - `gate FAIL: <checks>; ended` or `stall: ended`: the flow ends there,
+     the C line says why, step 5 says what
      is built; the branch stays as it is. `gate FAIL: sources; ended` (a
      changed file still holds a value of a file the owner provided after
      the runner's one fixer) ends it the same way, and step 5 carries
@@ -1019,6 +1157,11 @@ orchestrator's side.
    - `flaky: <test>`: information on the C line; the runner already
      handled it (one re-run, then one fixer at the cause on the second
      sighting, counted as the gate fixer).
+   **The line is the last line of the hand-back.** A runner that put
+   sentences before it has still handed back: read the last line as the
+   line and nothing above it as a result (what it says there is in no
+   field, so it goes on no C line and to no question).
+
    **Check the line before anything rests on it.** Every hash the
    hand-back names (`commits`, `PASS after`, `red commit`, `r1 fix`, `r2
    fix`) goes through `git cat-file -e '<sha>^{commit}'` and is looked
@@ -1112,7 +1255,7 @@ orchestrator's side.
    with `KAD_AUDIT` unset `off`, and nothing runs. **Then the C line**
    (the runner's fields, then `records`, `audit`, `data`), then the
    budget check (the hand-back's `reviews` and `fixers` counts and the
-   clock), then the next chunk. Between launches the only thing you say
+   clock; under autopilot the clock alone ends the flow), then the next chunk. Between launches the only thing you say
    to the user is one short paragraph per event, with the hashes; you
    never restate a finding, keep a digest, or narrate an agent's turns.
 
@@ -1163,11 +1306,15 @@ orchestrator's side.
 
    ```
    python3 -I "${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py" changed --repo '<project root>' --base '<base>' --out "${TMPDIR:-/tmp}/kad-mutants-<slice>.json"
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py" run --repo '<project root>' --mutants "${TMPDIR:-/tmp}/kad-mutants-<slice>.json" --test '<documented test command>' --base '<base>' --allow-dirty --out '<records dir>/slice-mutation.md'
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py" run --repo '<project root>' --mutants "${TMPDIR:-/tmp}/kad-mutants-<slice>.json" --test '<documented test command>' --base '<base>' --allow-dirty --remove-mutants --out '<records dir>/slice-mutation.md'
    ```
 
-   The mutants file holds lines of the source and stays outside the
-   tree; the report carries counts, lines and test names only. The
+   The mutants file holds lines of the source: it stays outside the
+   tree, readable by its owner alone, and `--remove-mutants` deletes it
+   when the pass ends, however it ends. With `--allow-dirty` the pass
+   runs in a disposable clone under the temp directory and never writes
+   to the project's tree, so a run that is killed leaves no mutant in
+   it. The report carries counts, lines and test names only. The
    run's last line, `mutation: <n> mutants, <c> caught, <s> survived`,
    goes on the D line as printed. You read no survivor and judge none:
    the test-quality reviewer is handed the report and says which
@@ -1228,8 +1375,12 @@ orchestrator's side.
    regressions-only re-review by the same reviewers on the fix's diff
    (`slice-r1-<reviewer>.md`; the walk re-driven only for its FAIL rows,
    `slice-r1-walk.md`), `rounds_record.py` with `--range`, a second and
-   last fixer for the regressions, the gate, no third review; standing
-   Criticals and Highs stop the flow before E, standing Mediums go to the
+   last fixer for the regressions, the gate; then **the last-fix
+   review** on that second fix's range (above; `--chunk D --round 2
+   --last`), whose findings stand. A Critical or High standing after
+   that gets the autopilot round when `autopilot.md` says yes; without
+   the file, or after its second round, it stops the flow before E.
+   Standing Mediums go to the
    body, NOT REACHABLE rows go to the owner's checklist issue.
 
    **Who fixes, by cadence.** Under `loop`, the fixer is one fresh
@@ -1389,7 +1540,19 @@ the values back in its own log bullet (incident 18).
    reviewer back: the CI watch first, as above, then its
    new comments on the fix are the next round, through the same triage,
    until a round has no comment to fix or round 5 is done. Comments that
-   arrive after that are the user's. Every comment and verdict goes to
+   arrive after that are the user's.
+
+   **Then the last-fix review, once.** When this step committed any
+   change to source or tests (a CI fix, a triage fix), one last-fix
+   review reads them together (above; the range from the head D left to
+   `HEAD`, `--chunk pr --round <i> --last`), after the checks are green
+   and the comments are done, before the cost. Its Mediums are filed by
+   `delivery` like D's standing ones and its Lows join the body. A
+   Critical or High gets the autopilot round when `autopilot.md` says
+   yes, and its fix is pushed only after its gate passes and is watched
+   like every push; without the file, or after the second round, the
+   report at step 5 opens with it and says the pull request is not
+   ready. Every comment and verdict goes to
    the sidecar with `"chunk": "pr"`; the comments file is committed with
    the records.
 5. **Cost.** Inline with Bash:
@@ -1403,10 +1566,15 @@ the values back in its own log bullet (incident 18).
    recorded a round, and `--session` adds this one; the script finds
    each one's transcript (the project's
    own directory, else the snapshots audit mode kept) with its subagents'
-   and prints the total by role class, or `cost not measured: transcript
-   missing for <id>` and no total when one is absent. Its last line goes
-   on the E line as printed: a total that does not cover the loop's own
-   sessions is never written (incident 20).
+   and prints the total by role class. A session the log or the sidecar
+   names whose transcript is nowhere is skipped and named: the last line
+   then reads `cost $<n>, not covering <id> (no transcript)`. This
+   session's own (`--session`) is never skipped: without its transcript
+   the last line is `cost not measured: transcript missing for <id>` and
+   there is no total. Its last line goes
+   on the E line as printed, the `not covering` part included: a total
+   that leaves a session of the loop out without saying so is never
+   written (incident 20).
 6. **Audit sync.** With `KAD_AUDIT=1`, the snapshot and the sync exactly
    as C.6 (the sync's `--transcripts` carries every session of the
    project, withholding one that holds a listed source's value), its
@@ -1434,7 +1602,7 @@ invoking the next step's skill directly; the A–E state (which step, which
 chunk, which round), the next action, the standing list, the budget
 counters (start time, reviewer launches, consults), the environment facts
 a successor needs (test command, module directories, records directory,
-whether the owner opted out of the sandbox, the cadence, each finished
+whether the owner opted out of the sandbox, the autopilot answer, the cadence, each finished
 chunk's `builder <id>`, and a runner's hand-back line when a chunk ended
 mid-round), and the owner's standing directions; commit it with the
 records; and write a memory pointer to it.
@@ -1466,12 +1634,13 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk, 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
+- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; autopilot — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS>; <; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> verify `<c>` confirmed, `<n>` not reproduced< fix `<sha>` → last `<C/H/M>`>>; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
-- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; mutation `<<n> mutants, <c> caught, <s> survived | not run (<why>)>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; cold `<<n> confirmed, <m> verify | PASS>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
-- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; checks `<CI green <sha> | CI red r<i>: <jobs> | CI no result>`<; ci r<i> fix `<sha>`>; issues `<#…>` (M `<m>`, deferred `<x>`); deferrals `<n>` listed; Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`; consults `<n>`; cost `$<n> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
+  - taken as recommended: `<what>` (autopilot)
+- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; mutation `<<n> mutants, <c> caught, <s> survived | not run (<why>)>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; cold `<<n> confirmed, <m> verify | PASS>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> …, as the C line>; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
+- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; checks `<CI green <sha> | CI red r<i>: <jobs> | CI no result>`<; ci r<i> fix `<sha>`>; issues `<#…>` (M `<m>`, deferred `<x>`); deferrals `<n>` listed; Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`<; last `<C/H/M>`<; auto r<i> …, as the C line>>; consults `<n>`; cost `$<n><, not covering <id> (no transcript)> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
   - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```
 

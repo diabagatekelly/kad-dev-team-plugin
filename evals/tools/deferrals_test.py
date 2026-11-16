@@ -70,6 +70,13 @@ class Deferrals(unittest.TestCase):
         with open(dest, encoding="utf-8") as f:
             self.assertTrue(f.read().startswith("## Deferred with this slice\n"))
 
+    def test_out_creates_the_directory_it_is_given(self):
+        dest = os.path.join(self.tmp, "not", "there", "yet", "pr-deferred.md")
+        r = run("--slice-file", self.slice, "--out", dest)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        with open(dest, encoding="utf-8") as f:
+            self.assertTrue(f.read().startswith("## Deferred with this slice\n"))
+
     def test_no_section_and_an_empty_section_say_none(self):
         for body in ("# Slice\n\n## Thin path\n- a step\n", "# Slice\n\n## Explicitly deferred\nNone.\n\n## Still open\n- None\n"):
             with open(self.slice, "w", encoding="utf-8") as f:

@@ -88,3 +88,18 @@ graders:
     tool: Bash
     input_match: '(?=[\s\S]*deferred[\w.-]*\.md)(?=[\s\S]*(?:Known Lows|What was built))|Deferred with this slice'
     min: 1
+  - type: regex
+    name: review-history-asked-before-any-wait
+    # F6 (0.15.1): delivery waits for an external review only where a bot
+    # has reviewed before, and asks the repository's own history first.
+    # The stand-in answers every `gh api` list with `[]`: no bot.
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)api [^\n]*(?:pulls|issues)/comments'
+  - type: tool_used
+    name: no-wait-for-a-bot-that-never-reviewed
+    tool: Bash
+    input_match: '\bsleep\s+(?:[6-9]\d|\d{3,})\b'
+    min: 0
+    max: 0

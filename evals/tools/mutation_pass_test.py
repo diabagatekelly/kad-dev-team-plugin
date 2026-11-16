@@ -201,6 +201,90 @@ class MutationPass(unittest.TestCase):
         out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "", "--allow-dirty", expect=1)
         self.assertIn("calc/fees.py has uncommitted changes and a mutant", out)
 
+    def dirty_tree(self):
+        """The slice review's tree: a tracked log with an uncommitted line,
+        an untracked note, and an ignored dependency directory."""
+        with open(os.path.join(self.repo, "log.md"), "w") as f:
+            f.write("entry 1\n")
+        with open(os.path.join(self.repo, ".gitignore"), "w") as f:
+            f.write("deps/\n")
+        git(self.repo, "add", "-A")
+        git(self.repo, "commit", "-qm", "log")
+        with open(os.path.join(self.repo, "log.md"), "a") as f:
+            f.write("entry 2\n")
+        with open(os.path.join(self.repo, "note.txt"), "w") as f:
+            f.write("untracked\n")
+        os.makedirs(os.path.join(self.repo, "deps"))
+        with open(os.path.join(self.repo, "deps", "marker.txt"), "w") as f:
+            f.write("installed\n")
+
+    def suite_script(self, kill_on=None):
+        """A test command that says where it ran and what it found there,
+        then runs the suite; with `kill_on`, it kills the runner (its
+        parent) the moment that text is in the mutated file."""
+        script = os.path.join(self.tmp, "suite.py")
+        self.cwds = os.path.join(self.tmp, "cwds.txt")
+        with open(script, "w") as f:
+            f.write("import os, signal, subprocess, sys\n"
+                    f"open({self.cwds!r}, 'a').write(os.path.realpath(os.getcwd()) + '|' + open('log.md').read().replace('\\n', ' ')"
+                    " + '|' + str(os.path.exists('deps/marker.txt')) + '|' + str(os.path.exists('note.txt')) + '\\n')\n"
+                    + (f"if {kill_on!r} in open('calc/fees.py').read():\n    os.kill(os.getppid(), signal.SIGKILL)\n" if kill_on else "")
+                    + "sys.exit(subprocess.run([sys.executable, '-B', '-m', 'unittest', '-q', 'tests.test_calc']).returncode)\n")
+        return f"{sys.executable} -B {script}"
+
+    def test_allow_dirty_runs_in_a_disposable_clone_as_the_tree_stands(self):
+        self.dirty_tree()
+        before = git(self.repo, "status", "--porcelain")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", self.suite_script(), "--base", "", "--allow-dirty")
+        self.assertIn("mutation: 2 mutants, 1 caught, 1 survived", out)
+        self.assertIn("disposable clone", out)
+        rows = [line.split("|") for line in open(self.cwds).read().splitlines()]
+        self.assertEqual(len(rows), 3)  # the baseline and two mutants
+        for cwd, log, deps, note in rows:
+            self.assertNotEqual(cwd, self.repo)                 # never the project's tree
+            self.assertEqual(log, "entry 1 entry 2 ")            # the uncommitted line came along
+            self.assertEqual((deps, note), ("True", "True"))     # so did what is ignored and what is untracked
+            self.assertFalse(os.path.exists(cwd), cwd)           # and the clone is gone
+        self.assertEqual(git(self.repo, "status", "--porcelain"), before)
+
+    @unittest.skipIf(os.name == "nt", "kills the runner with SIGKILL")
+    def test_a_run_killed_mid_mutant_leaves_no_mutant_in_the_project(self):
+        self.dirty_tree()
+        source = open(os.path.join(self.repo, "calc", "fees.py")).read()
+        before = git(self.repo, "status", "--porcelain")
+        r = subprocess.run([sys.executable, "-I", SCRIPT, "run", "--repo", self.repo, "--mutants", self.mutants,
+                            "--test", self.suite_script(kill_on="days * 20"), "--base", "", "--allow-dirty"], capture_output=True, text=True)
+        self.assertEqual(r.returncode, -9, r.stdout + r.stderr)  # killed between the write and the restore
+        self.assertEqual(open(os.path.join(self.repo, "calc", "fees.py")).read(), source)
+        self.assertEqual(git(self.repo, "status", "--porcelain"), before)
+        clone = open(self.cwds).read().splitlines()[-1].split("|")[0]
+        self.addCleanup(shutil.rmtree, os.path.dirname(clone), True)
+        self.assertIn("days * 20", open(os.path.join(clone, "calc", "fees.py")).read())  # the mutant stayed in the clone
+
+    @unittest.skipIf(os.name == "nt", "POSIX permission bits")
+    def test_changed_writes_a_private_mutants_file(self):
+        self.add_a_slice()
+        dest = os.path.join(self.tmp, "changed.json")
+        with open(dest, "w") as f:
+            f.write("[]")
+        os.chmod(dest, 0o644)  # a file already there is narrowed too
+        for path in (dest, os.path.join(self.tmp, "fresh.json")):
+            self.run_tool("changed", "--repo", self.repo, "--base", "main", "--out", path)
+            self.assertEqual(os.stat(path).st_mode & 0o777, 0o600, path)
+
+    def test_remove_mutants_removes_the_file_when_the_pass_ends_or_fails(self):
+        keep = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "")
+        self.assertIn("mutation: 2 mutants", keep)
+        self.assertTrue(os.path.exists(self.mutants))  # a reviewer's own file stays without the flag
+        copy = os.path.join(self.tmp, "generated.json")
+        shutil.copy(self.mutants, copy)
+        self.run_tool("run", "--repo", self.repo, "--mutants", copy, "--test", f"{sys.executable} -c 'raise SystemExit(1)'",
+                      "--base", "", "--remove-mutants", expect=2)
+        self.assertFalse(os.path.exists(copy))  # the baseline failed and the file is gone all the same
+        shutil.copy(self.mutants, copy)
+        self.run_tool("run", "--repo", self.repo, "--mutants", copy, "--test", TEST_CMD, "--base", "", "--remove-mutants")
+        self.assertFalse(os.path.exists(copy))
+
     def test_a_base_that_is_not_a_ref_is_said_not_swallowed(self):
         report = os.path.join(self.tmp, "report.md")
         out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD,

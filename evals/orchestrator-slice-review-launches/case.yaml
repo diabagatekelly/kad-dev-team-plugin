@@ -1,0 +1,64 @@
+schema_version: "1.0"
+name: orchestrator-slice-review-launches
+description: "The slice review's round-0 launches (0.15.0's D.3 and D.4, held by no case until 0.15.1), graded on the launch text alone: from the state where the Definition of Done has passed and the mutation pass has run, the orchestrator launches the five reviewers of a slice with no screen and the cold reader, hands the test-quality reviewer the mutation report and no other reviewer, names `cold-read` to the cold reader on Opus and hands it no planning document, and hands off without waiting."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off as soon as round 0 of the slice review has been launched: don't wait for any of those agents to return; write the handoff file saying they are in flight and stop.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: cold-reader-launched-once-with-its-skill
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*kad-dev-team:cold-read)(?=[\s\S]*slice-r0-cold\.md)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: cold-reader-on-opus
+    tool: Agent
+    input_match: '(?=[\s\S]*kad-dev-team:cold-read)(?=[\s\S]*"model"\s*:\s*"opus")'
+    min: 1
+  - type: tool_used
+    name: cold-reader-handed-no-planning-document
+    # Its own report path is the one path under the target directory it
+    # may be given; any other (a slice file, the design, a gate output,
+    # another report) fails.
+    tool: Agent
+    input_match: '(?=[\s\S]*kad-dev-team:cold-read)(?=[\s\S]*docs/cancel-hold/(?!implementation/slice-r0-cold\.md))'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: test-quality-reviewer-handed-the-mutation-report
+    tool: Agent
+    input_match: '(?=[\s\S]*kad-dev-team:test-quality-review)(?=[\s\S]*slice-r0-test-quality\.md)(?=[\s\S]*slice-mutation\.md)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: no-other-reviewer-handed-the-mutation-report
+    tool: Agent
+    input_match: '(?=[\s\S]*slice-r0-(?:code|architecture|security|reliability|cold)\.md)(?=[\s\S]*slice-mutation\.md)'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: the-four-other-reviewers-launched
+    tool: Agent
+    input_match: 'slice-r0-(?:code|architecture|security|reliability)\.md'
+    min: 4
+    max: 4
+  - type: tool_used
+    name: no-accessibility-reviewer-on-a-slice-with-no-screen
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?accessibility-engineer'
+    min: 0
+    max: 0

@@ -37,8 +37,10 @@ orchestrator asks). Launch a persona for a decision (a `needs-decision`
 finding ends your run: the orchestrator consults and relaunches you).
 Write to `orchestrator-log.md`, commit the records, run the audit sync,
 check the budget's clock. Edit the plan entry, the code, a test or a
-planning document; widen `--allow`; drop a `--protect`. Launch a third
-review, a third fixer, or a second reviewer kind. Open a report to read a
+planning document; widen `--allow`; drop a `--protect`. Launch a
+review after the last-fix review (step 5), a third review fixer (the cap is on the fixers a review's
+findings go to, `Fix r1` and `Fix r2`; a gate's own one fixer is not one
+of them, step 4), or a second reviewer kind. Open a report to read a
 finding: the counts you hand back are `rounds_record.py`'s as it printed
 them, and the fixer reads the reports itself.
 
@@ -66,8 +68,12 @@ launch in the background, the message that names that agent's id and
 carries its report. Until then you know nothing of its work, however long
 it takes; a build of ten minutes is ordinary.
 
-- **Waiting is ending your turn with no tool call** (one short sentence
-  on what you are waiting for, or nothing). The hand-back wakes you.
+- **Waiting is ending your turn with no tool call**, on nothing or on
+  the two words `waiting: <agent>` (`waiting: builder`). The hand-back
+  wakes you. A turn you end to wait is not your hand-back and is read by
+  nobody as one, so it says nothing else: not what the agent is doing,
+  not what you will do next, no field of the line. Your hand-back is the
+  one message you end on when no agent of yours is in flight.
   Never start a background command, a sleep, a poll or a monitor to wait,
   and never watch the branch for a commit: a notice that a command of
   your own finished is not an agent's hand-back, and nothing else that
@@ -90,7 +96,10 @@ it takes; a build of ten minutes is ordinary.
 
 A runner that could not wait wrote its builder's result itself, with a
 commit nobody made, and sent the stall message to agents that were still
-working (incident 31).
+working (incident 31). A runner that did wait ended that turn on "The
+builder is running. Next I'll wait for its report, then run the gate",
+and the sentence was read as its reply: a run that had waited correctly
+was recorded as one that handed back early.
 
 1. **Build.** One fresh implementer, `kad-dev-team:tdd-coach:AGENT`,
    `model: "sonnet"`, `maxTurns: 120`, with: `kad-dev-team:tdd-implementation-lite`
@@ -103,8 +112,7 @@ working (incident 31).
    chunk" applies: the chunk ends with one commit whose subject is the
    chunk's title, the report section appended in the same commit, nothing
    pushed). Nothing about reviewers, other chunks' findings, scope rules,
-   or the flow's state. Wait for its hand-back, as above. Keep its agent
-   id: the gate and the hand-back need it.
+   or the flow's state. Wait for its hand-back, as above.
 
    **Stall rule.** It reads a hand-back, never the branch. When the
    agent's hand-back is in front of you and says it is not done (or it
@@ -164,7 +172,7 @@ working (incident 31).
    file holds a value of a listed source: the `hit:` lines name the file,
    the line and the cell, never the value, so the output is safe in the
    records. Save the output as `gate-chunk-<k>-r0.txt` in the records
-   directory. Read its last line; read the rest only on `FAIL`.
+   directory.
 
    **The flaky rule.** A `FAIL` whose only failing test passed on the same
    range in an earlier gate file of this chunk (compare the suite's
@@ -280,7 +288,19 @@ working (incident 31).
    Wait for its hand-back; a fixer that hands back with no commit the
    repository holds gets the stall rule's one message, and a second such
    hand-back ends the round with `stall: ended`. Then the gate on the fix's range (`--base` the commit before the fix,
-   `--agent` the fixer's id, saved as `gate-chunk-<k>-r1.txt`). Then the
+   `--agent` the fixer's id, saved as `gate-chunk-<k>-r1.txt`).
+
+   **Every gate gets its own one fixer, and the cap does not count it.**
+   A `FAIL` on a fix's gate (round 1's or round 2's) is handled as step
+   2 handles round 0's: the failing checks to one fresh gate fixer, the
+   gate again on the same `--base` (`gate-chunk-<k>-r<i>-fix.txt`), and
+   a second `FAIL` of that gate ends the round with `gate FAIL: <checks>;
+   ended`. The two fixers this step caps are the ones a review's findings
+   go to, `Fix r1` and `Fix r2`: a gate fixer sent in round 0 or round 1
+   takes neither place, so a regression the re-review finds still gets
+   its `Fix r2` after one. `fixers <m>` on your line counts every fixer
+   launched, the gates' included. A runner once sent a gate fixer after
+   round 1 and then left a regression unfixed as "no third fixer". Then the
    **re-review**: the same combined reviewer kind, `model: "opus"`, on
    the fix's diff only (`<before fix>..HEAD`) and the files it touched
    (handed as before: the range, the files, the report path; no cold
@@ -296,12 +316,33 @@ working (incident 31).
    inside the fix's diff (a smoke finding always is), **pre-existing**
    otherwise, and prints the `(reg <r>, pre <p>)` split and one
    `standing:` line per pre-existing Critical, High or Medium. Regressions
-   go to a **second and last** fixer (a fresh launch, the same shape,
-   `Fix r2` line), then the gate (`gate-chunk-<k>-r2.txt`); the chunk is
-   done: **no third review**. Pre-existing findings are never fixed in
+   go to a **second and last** review fixer (a fresh launch, the same
+   shape, `Fix r2` line; whatever gate fixers ran before it), then the
+   gate (`gate-chunk-<k>-r2.txt`), then step 5: **no third fix
+   round**. Pre-existing findings are never fixed in
    this scope: they stand, and the hand-back's `standing <C/H/M>` carries
    them; a standing Critical or High is the orchestrator's to stop on. A
    round 0 with nothing to fix is clean and the chunk is done.
+5. **The last-fix review**, only when a `Fix r2` was committed (`loop`
+   only): the regressions fix, and its gate fixer's commit if there was
+   one, have been read by nobody, and every change is read once.
+   Sandbox check, then the same combined reviewer kind, `model: "opus"`,
+   diff-scoped as the re-review was (the range `<before fix r2>..HEAD`,
+   the files it touched, the report path `chunk-<k>-last-review.md`,
+   this chunk's last gate output; no cold pass, nothing of rounds 0 and
+   1). Then:
+
+   ```
+   python3 -I '<scripts>/rounds_record.py' --sidecar '<sidecar>' --report '<last review>' --chunk <k> --round 2 --last --project '<project root>' --range '<before fix r2>..HEAD' --fix '<sha>' --fixer '<agent id>' --turns <n>
+   ```
+
+   It prints `last <C/H/M>` and one `standing:` line per finding:
+   **nothing this review raises is fixed by you**. No fixer, no gate, no
+   further review follows it, whatever its severity; its counts go on
+   the line as `last <C/H/M>` and into `standing <C/H/M>` with the
+   pre-existing ones, and a Critical or High among them is the
+   orchestrator's to act on. A chunk whose round ended before a `Fix r2`
+   (a clean round 0, a round 1 with no regression) has no step 5.
 
 ## Resuming mid-round
 
@@ -313,7 +354,9 @@ the fix round, the decision commit passed to the fixer with the
 findings), run nothing twice, and hand back the whole line, the earlier
 facts included. A task that names a stopping point (an owner's hand-off,
 an eval's bound) ends there with the line for what ran and `stopped at
-<step>` appended.
+<step>` appended: the line and nothing else, as below. That you stopped
+where you were told, and what did not run, is what `stopped at` says;
+no sentence before the line says it again.
 
 ## Hand-back
 
@@ -325,10 +368,15 @@ cannot hold (a transcript not found, a builder's turns unknown) is a `?`
 in its field; a finding's title belongs in the report, not in your
 reply. Every hash on it is one `git cat-file -e` confirmed in this run,
 and no agent you launched is still working when you send it. Your whole
-reply is the line.
+reply is the line: its first character is the backtick that opens the
+title and its last is the end of the last field. A check that failed
+for information, a commit in the range that is not the chunk's, a
+transcript the gate did not find: each is a field's value or a `?`, or
+it is not said. The orchestrator reads the last line of what you send
+and nothing above it, so a paragraph before the line is read by nobody.
 
 ```
-`<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>
+`<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>
 ```
 
 The orchestrator adds `records`, `audit`, `data` and `budget`, writes the

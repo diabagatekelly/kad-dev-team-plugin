@@ -14,8 +14,13 @@
   },
   {
    "file": "skills/chunk-runner/SKILL.md",
-   "old": " Your whole\nreply is the line.",
-   "new": ""
+   "old": " Your whole\nreply is the line: its first character is the backtick that opens the\ntitle and its last is the end of the last field. A check that failed\nfor information, a commit in the range that is not the chunk's, a\ntranscript the gate did not find: each is a field's value or a `?`, or\nit is not said. The orchestrator reads the last line of what you send\nand nothing above it, so a paragraph before the line is read by nobody.\n",
+   "new": "\n"
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": ": the line and nothing else, as below. That you stopped\nwhere you were told, and what did not run, is what `stopped at` says;\nno sentence before the line says it again.",
+   "new": "."
   },
   {
    "file": "skills/chunk-runner/SKILL.md",
@@ -27,12 +32,11 @@
   "hand-back-is-one-line-and-nothing-else"
  ],
  "observed": {
-  "date": "2026-11-14",
+  "date": "2026-11-16",
   "runs": 3,
   "claude_version": "2.1.325",
   "rates": {
    "hand-back-is-one-line-and-nothing-else": 0.0
-  },
-  "note": "the grader is a regex since E5; on the unchanged skill it passed 2 runs of 3 at its bar (one run wrote a paragraph before the line), so `run` does not count it and exits 1 until the bar is 1.00"
+  }
  }
 }

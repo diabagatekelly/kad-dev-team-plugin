@@ -1,0 +1,22 @@
+{
+ "skill": "orchestrator",
+ "rule": "the directory the project's memory or CLAUDE.md names is the target, taken without a question",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "- **Not given one, and the project says where** — when the project's own\n  memory (what this session was started with) or the `CLAUDE.md` at its\n  root names the directory its planning artifacts live in, that directory\n  is the target: take it and go to step 1b. Nothing is asked. **Say so\n  before the next tool call**, in one line of text that names the\n  directory and where it is written (\"target: `planning/`, as the\n  project's `CLAUDE.md` names it\"), and again as the first line of step\n  5's report: a target taken silently looks to the owner like a guess.\n  The first log entry written carries it too, as one indented bullet,\n  `target: <dir> (named by <where>)`. One read of the root's\n  `CLAUDE.md` is the whole of the looking: no search, no listing of\n  directories, no guess from a folder's name. Two directories named, or a\n  sentence that could mean either of two, is not the project saying\n  where: ask. An owner once typed a folder their project's memory already\n  named, after being offered two guesses that did not exist.\n",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "log-written-in-the-named-directory"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "log-written-in-the-named-directory": 0.0
+  }
+ }
+}

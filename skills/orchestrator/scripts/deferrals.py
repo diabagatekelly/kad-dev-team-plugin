@@ -115,6 +115,7 @@ def main():
     items = items_of(text)
     section = render(items, os.path.basename(a.slice_file))
     if a.out:
+        os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
         with open(a.out, "w", encoding="utf-8") as f:
             f.write(section)
     else:
