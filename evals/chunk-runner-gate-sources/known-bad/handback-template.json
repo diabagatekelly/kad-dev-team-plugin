@@ -12,8 +12,11 @@
   "hands-back-pass-after-the-fix-and-stops"
  ],
  "observed": {
-  "date": null,
-  "runs": 0,
-  "note": "rewritten for 0.15.1; not run yet"
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "hands-back-pass-after-the-fix-and-stops": 0.0
+  }
  }
 }

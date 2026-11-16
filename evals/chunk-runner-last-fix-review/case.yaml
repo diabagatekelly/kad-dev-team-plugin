@@ -73,12 +73,13 @@ graders:
     min: 1
   - type: regex
     name: short-card-defect-reported
-    # A finding block (Critical to Medium) that says a short card number
-    # is still shown whole. It grades the launched reviewer's file.
-    target:
-      source: file
-      path: docs/cancel-hold/implementation/chunk-1-last-review.md
-    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity:?\*\*:?\s*(?:Critical|High|Medium)(?:(?!\n###)[\s\S])*?(?:four or fewer|4 or fewer|fewer than (?:five|5)|shorter|short card|short number|in full|whole|unmasked|not masked|<= ?4|length (?:of )?(?:4|four))'
+    # The launched reviewer's own Write of the report, read in the trace
+    # (a regex on a file that was never written throws and voids the run,
+    # which is what the case's known-bad reference produces): a Severity
+    # line of Critical to Medium, then words for a short card number
+    # still shown whole.
+    target: trace
+    pattern: 'chunk-1-last-review\.md","content":"(?:[^"\\]|\\.)*?\*\*Severity:?\*\*:?\s*(?:Critical|High|Medium)(?:[^"\\]|\\.)*?(?:four or fewer|4 or fewer|fewer than (?:five|5)|shorter|short card|short number|in full|whole|unmasked|not masked|<= ?4|length (?:of )?(?:4|four))'
     flags: i
   - type: regex
     name: hand-back-is-one-line-with-last-and-standing

@@ -24,11 +24,10 @@ graders:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
     pattern: 'Routed to:\*\*\s*`?software-architect:technology-bootstrap'
-  - type: tool_used
-    name: bootstrap-skill-invoked
-    tool: Skill
-    input_match: '"skill"\s*:\s*"kad-dev-team:technology-bootstrap"'
-    min: 1
+  # No grader on the bootstrap skill's own invocation: the prompt lets the
+  # run stop at the first thing that needs the owner, the skill's first
+  # act is a question, and two runs of three logged the route and stopped
+  # there, which is right.
   - type: tool_used
     name: nothing-launched
     tool: Agent

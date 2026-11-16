@@ -32,8 +32,11 @@
   "hand-back-is-one-line-and-nothing-else"
  ],
  "observed": {
-  "date": null,
-  "runs": 0,
-  "note": "rewritten for 0.15.1; not run yet"
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "hand-back-is-one-line-and-nothing-else": 0.0
+  }
  }
 }

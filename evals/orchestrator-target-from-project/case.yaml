@@ -35,17 +35,22 @@ graders:
   - type: file_exists
     name: log-written-in-the-named-directory
     path: docs/planning/orchestrator-log.md
+  # The two checks on the log read the write to it in the trace, not the
+  # file: a regex on a file that was never written throws and voids the
+  # run, and "never written" is exactly what this case fails on without
+  # its rule (the first runs of its known-bad reference all errored so).
   - type: regex
     name: routed-to-the-first-stage
-    target:
-      source: file
-      path: docs/planning/orchestrator-log.md
-    pattern: 'Routed to:\*\*\s*`?docs-writer:problem-framing-doc'
-  - type: regex
-    name: says-where-the-target-came-from
-    # An assistant message that names the directory and CLAUDE.md together.
     target: trace
-    pattern: '"type":"text","text":"(?:[^"\\]|\\.){0,1500}?(?:docs/planning(?:[^"\\]|\\.){0,300}?CLAUDE\.md|CLAUDE\.md(?:[^"\\]|\\.){0,300}?docs/planning)'
+    pattern: 'docs/planning/orchestrator-log\.md"[^{}]{0,6000}?Routed to:\*\*\s*`?docs-writer:problem-framing-doc'
+  - type: regex
+    name: log-says-where-the-target-came-from
+    # The bullet the first entry carries. A check on a sentence in the
+    # reply held 1 run of 3: the directory was taken each time and said
+    # once.
+    target: trace
+    pattern: 'docs/planning/orchestrator-log\.md"[^{}]{0,6000}?target:[^{}]{0,200}?docs/planning[^{}]{0,200}?CLAUDE\.md'
+    flags: i
   - type: regex
     name: does-not-ask-where
     target: last_message

@@ -22,8 +22,11 @@
   "cold-reader-launched-once-with-its-skill"
  ],
  "observed": {
-  "date": null,
-  "runs": 0,
-  "note": "new in 0.15.1; not run yet"
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "cold-reader-launched-once-with-its-skill": 0.0
+  }
  }
 }

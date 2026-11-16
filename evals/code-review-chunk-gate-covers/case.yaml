@@ -51,10 +51,14 @@ graders:
     # for "repeated"; the block is now one line that is reasonable once
     # (the ISBN's normalisation), and the only thing to say about it is
     # that it is written four times.
+    # A title about a duplicate position in the queue (the stale-position
+    # bug, which two of the first three runs reported) is not about
+    # repeated code and passes: only `duplicated`, `duplication` and the
+    # like are read, never the bare word before a noun of the domain.
     target:
       source: file
       path: docs/cancel-hold/implementation/chunk-1-r0-review.md
-    pattern: '(?:^|\n)###(?=(?:(?!\n###)[\s\S])*?\*\*Location:?\*\*:?\s*`?(?:infra|lending)/)(?:[^\n]*(?:duplicat|repeat|copy-?past|\bDRY\b|(?:four|4|every|each)\s+(?:times|methods?|places))|(?:(?!\n###)[\s\S])*?\*\*Category:?\*\*:?[^\n]*duplicat)'
+    pattern: '(?:^|\n)###(?=(?:(?!\n###)[\s\S])*?\*\*Location:?\*\*:?\s*`?(?:infra|lending)/)(?:[^\n]*(?:duplicat(?:ed|ion|es|ing)\b(?! (?:positions?|holds?|entr))|repeat|copy-?past|\bDRY\b|(?:four|4)\s+(?:times|methods|places))|(?:(?!\n###)[\s\S])*?\*\*Category:?\*\*:?[^\n]*duplicat)'
     flags: i
     match: not_contains
   - type: regex

@@ -260,10 +260,19 @@
   "judges": {},
   "findings": []
  },
+ "chunk-runner-fix-gate-fails": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Stop once round 1 is recorded",
+   "note": "the resume line names the step the round stopped at and the handoff holds the facts; the stopping point bounds the run. The stop names round 1's recording, which `round-one-recorded-with-the-range` grades by its `--range`, not by its happening."
+  },
+  "judges": {},
+  "findings": []
+ },
  "chunk-runner-gap-handback": {
   "prompt": {
    "states_rule": "no",
-   "note": "reworded in E5: the resume line names the state (\"round 0 is not recorded yet\") and no longer the action `round-recorded-by-the-script` grades. The fixture's handoff file still carries a \"Next action\" line, as the loop's own handoff does. Naming the skill is the launch (the runner is only invoked by name)."
+   "note": "reworded in E5: the resume line names the state (\"round 0 is not recorded yet\") and no longer the action `round-recorded-by-the-script` grades. The fixture's handoff file still carries a \"Next action\" line, as the loop's own handoff does. Naming the skill is the launch (the runner is only invoked by name). Since 0.15.1 the resume line names only the step (\"after both hand-backs\")."
   },
   "judges": {},
   "findings": []
@@ -298,39 +307,21 @@
   "judges": {},
   "findings": []
  },
- "chunk-runner-one-fix-round": {
+ "chunk-runner-last-fix-review": {
   "prompt": {
-   "states_rule": "partly",
-   "quote": "the sandbox checks in this round are information and never end it",
-   "note": "reworded in E5: the resume line names the state (\"round 1 is not recorded yet\") and no longer the action `round-one-recorded-with-the-range` grades. What is left is a handed-over fact the E2 pass found the run follows instead of the skill's sentence. Naming the skill to invoke is the launch, not a leak."
+   "states_rule": "no",
+   "note": "\"Finish the round and hand back the line\"; the handoff names step 5 as the next action and nothing of what step 5 is"
   },
   "judges": {},
   "findings": []
  },
- "chunk-runner-replay-not-the-handback": {
+ "chunk-runner-one-fix-round": {
   "prompt": {
-   "states_rule": "no",
-   "note": "the prompt is the notification itself"
+   "states_rule": "partly",
+   "quote": "the sandbox checks in this round are information and never end it",
+   "note": "reworded in E5: the resume line names the state (\"round 1 is not recorded yet\") and no longer the action `round-one-recorded-with-the-range` grades. What is left is a handed-over fact the E2 pass found the run follows instead of the skill's sentence. Naming the skill to invoke is the launch, not a leak. Since 0.15.1 the resume line names only the step (\"after the re-reviewer's hand-back\") and the fixture's handoff names the step, not the command."
   },
-  "judges": {
-   "the-siblings-result-is-not-the-builders": {
-    "by": "reading",
-    "why": "the hash off the line is already `the-siblings-commit-not-taken`; what is left is whether the reply only says it is still waiting, or reports chunk 1 built on the notification's strength"
-   }
-  },
-  "findings": []
- },
- "chunk-runner-replay-unheld-commit": {
-  "prompt": {
-   "states_rule": "no",
-   "note": "the prompt is the builder's hand-back itself"
-  },
-  "judges": {
-   "treats-the-hand-back-as-having-no-commit": {
-    "by": "reading",
-    "why": "the hash off the line is already `unheld-commit-never-on-the-line`; what is left is whether the reply says the commit does not exist and reports nothing built without a commit of its own"
-   }
-  },
+  "judges": {},
   "findings": []
  },
  "chunk-runner-review-round": {
@@ -1068,6 +1059,17 @@
   },
   "findings": []
  },
+ "orchestrator-autopilot-counts-over": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off as soon as the next chunk's runner has been launched",
+   "note": "the bound names the launch the case grades; without the stop the run would be a whole chunk. The state's `autopilot.md` states the rule in the owner's words, as a real project's file does, so no deletion from the skill makes the case fail."
+  },
+  "judges": {},
+  "findings": [
+   "No known-bad reference: with the skill's autopilot text on the counts removed, the run still went on to chunk 2 in 3 runs of 3, from the fixture's `autopilot.md`."
+  ]
+ },
  "orchestrator-backward-route": {
   "prompt": {
    "states_rule": "no",
@@ -1090,14 +1092,9 @@
    "states_rule": "no",
    "note": "\"Keep going\"; the handoff file holds the state"
   },
-  "judges": {
-   "flow-ends-saying-what-is-built": {
-    "by": "reading",
-    "why": "whether the reply says which budget ended the flow and what is and is not built; `budget exceeded` on the log and no launch are already tool checks"
-   }
-  },
+  "judges": {},
   "findings": [
-   "`flow-ends-saying-what-is-built` (judge) failed 30 of 43 runs; whether the reply or the criterion is short was not read here."
+   "Its judge `flow-ends-saying-what-is-built` failed 30 of 43 runs and, on 2026-11-16, three votes of three on a reply that was right; it is the regex `flow-ends-on-the-clock-and-says-what-is-built` since 0.15.1."
   ]
  },
  "orchestrator-chunk-runner-handback": {
@@ -1184,6 +1181,14 @@
     "why": "whether the reply presents the persona's recommendation and stops for the owner without deciding"
    }
   },
+  "findings": []
+ },
+ "orchestrator-gate-checks-route-back": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "\"What's next?\" with the issue named; \"stop at the first thing that needs me\" bounds the run at the bootstrap's first question"
+  },
+  "judges": {},
   "findings": []
  },
  "orchestrator-issue-fix-records": {
@@ -1584,6 +1589,15 @@
   },
   "findings": []
  },
+ "orchestrator-slice-review-launches": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off as soon as round 0 of the slice review has been launched",
+   "note": "the bound names the launches the case grades by their text; the harness lets the six agents finish, so a run costs about $4"
+  },
+  "judges": {},
+  "findings": []
+ },
  "orchestrator-superseded-scope-map": {
   "prompt": {
    "states_rule": "no",
@@ -1595,6 +1609,14 @@
     "why": "whether the work is on scope-map-002's step 1 and not the superseded map's"
    }
   },
+  "findings": []
+ },
+ "orchestrator-target-from-project": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "the same request as `orchestrator-asks-for-target`; the directory is in the project's CLAUDE.md, which the fixture writes"
+  },
+  "judges": {},
   "findings": []
  },
  "pr-writeup-portal-fines": {

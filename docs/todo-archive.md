@@ -912,3 +912,124 @@ decided 2026-11-12.
 
 Issues #49 to #56 from this review (filed 2026-11-12); #43 to #47 from the
 fix itself; pull request #48 (records only) to merge or close.
+
+## PR 1: the loop's fixes (0.15.1), done 2026-11-16 as pull request #64
+
+Files: `skills/chunk-runner`, `skills/orchestrator` and its scripts,
+`skills/delivery`, the loop fixture, two tools. About 48 cases at the
+gate; the two `chunk-runner` replay histories are captured again once,
+from a real `kad` session on the library fixture.
+
+The chunk runner (one edit to its text):
+
+- [x] G1 **The runner hands back while its builder is still working.**
+  One run of seven of `chunk-runner-waits-for-handback` ended on "The
+  chunk 1 builder is running. Next I'll wait for its report". Done when:
+  the cause is read from that run's trace
+  (`evals/results/gate-20261114T222734-rerun-chunk-runner-waits-for-handback-run2.trace.jsonl`),
+  the skill's wait rule is changed for it, and
+  `hand-back-is-one-line-for-what-ran` passes ten runs of ten. **Due
+  before slice 3.**
+- [x] G2 **The hand-back is not the one line in about a quarter of runs**
+  (a paragraph before the line; 2 of 3 on 2026-11-16). First check
+  whether the orchestrator reads its line past a preamble: that decides
+  how much it matters. Done when: `hand-back-is-one-line-and-nothing-else`
+  has a bar of 3 of 3 on `chunk-runner-one-fix-round`, and
+  `skill_mutation.py run --case chunk-runner-one-fix-round --rule
+  handback-one-line` exits 0.
+- [x] F2 **The fixer cap says whether a gate fixer counts**: a gate that
+  fails after the r1 fix has no rule, and a runner that sent a gate fixer
+  then left a regression unfixed under "no third fixer". The cap counts
+  review fixers; each gate gets its one fixer. Done when: a
+  `chunk-runner` case with a gate failure after r1 passes (the same new
+  case as E2's, below).
+- [x] E2 **The `chunk-runner` deletion pass's proposals, all of them**
+  (the owner, 2026-11-16; the table is `evals/README.md`, "Rule deletions
+  on a skill"): five graders on cases that already run
+  (`allow-list-not-widened` on `chunk-runner-gate-deviation`; "no report
+  opened" on `chunk-runner-gap-handback`; the gate's `--protect`,
+  `--expect-tests-from` and `--agent` on `chunk-runner-gate-deviation`;
+  `"model": "sonnet"` on the fixer's launch in `chunk-runner-gate-outside`;
+  `sandbox_check.py` run before that launch); the prompts that state
+  the rule reworded to name the state; one new case for the first half
+  of step 4 (round 0 recorded, findings standing, a gate failure after
+  r1); two rules dropped from the skill ("Keep its agent id", "Read its
+  last line; read the rest only on `FAIL`"). **The weak `--planning`
+  reference is dropped.** **The two replay cases are kept only if G1's
+  fix, removed, makes one fail**; otherwise they go. Done when: each is
+  in, the deletions the reworded prompts were hiding are run again, and
+  E2 is closed in the archive's terms (a survivors list where every
+  survivor is a new grader, a dropped rule or an accepted gap).
+
+The orchestrator and delivery:
+
+- [x] C2 **Autopilot.** A standing `planning/autopilot.md`, asked once
+  per project like the delegation file: the loop takes its own
+  recommendation and logs "taken as recommended" for a budget overrun
+  caused by a relaunch, one extra review to verify a standing Critical
+  or High after the last fix, one fixer for a finding that verification
+  confirmed, and a readiness route that changes no decision. It always
+  asks when the recommendation changes a number or decision the owner
+  approved, deletes or rewrites committed work, pushes anything red, or
+  touches scope or requirements. Planning forks that carry a
+  recommendation stay questions. Done when: cases show one stop taken
+  without a question and one always-ask stop still asked.
+- [x] F5 **Every commit that changes source or tests after a scope's
+  last review gets one diff-scoped review** before delivery reports (a
+  chunk's r2 fix, the slice review's last fix, a gate fixer's, a CI
+  fixer's, a triage fix's; the owner, 2026-11-13: "any change should
+  always be reviewed"). Designed with C2: that review's Critical and
+  High stop for the owner or autopilot's one fixer, Mediums and Lows are
+  filed, and a fix of its findings is reviewed the same way, capped.
+  Done when: a case shows a last fix with a planted defect reviewed and
+  the defect reported, and a clean last fix adding one review and no
+  fixer.
+- [x] F6 **Delivery waits for an external review only where a bot has
+  reviewed before**; otherwise it says so and returns. Done when: a case
+  on the fixture's `gh` stand-in.
+- [x] F7 **The target-directory question takes the directory a project
+  memory or `CLAUDE.md` names**, and says so. Done when: a variant of
+  `orchestrator-asks-for-target` with the directory named in the
+  project's memory takes it without a question, and the existing case
+  still asks.
+- [x] **Two steps of 0.15.0 with no case** (the owner, 2026-11-16: one
+  cheap, bounded case each): the A step's route back to
+  `technology-bootstrap` when the project has no `gate-checks.json` and
+  the bootstrap has no Gate checks section (no launch); and the slice
+  review's round-0 launches, stopped at the hand-off after launching and
+  graded on the launch text alone (the cold reader named with
+  `cold-read` and handed no planning document; the test-quality reviewer
+  handed the mutation report). The wiring launch itself is slice 3's.
+
+Scripts under `skills/orchestrator/scripts/`, each with a tool test:
+
+- [x] F1 **The gate reads an absolute `--allow` inside the project as
+  the path relative to it**; `--module-dir` and `--deviation-zone` the
+  same way. Done when: a test in `validation_gate_test.py`.
+- [x] B4a The mutants file `changed` writes is created with private
+  permissions and removed after the pass, also when the pass fails.
+- [x] B4b The mutation pass runs in a disposable clone or worktree, so a
+  run killed between a mutant's write and its restore cannot leave the
+  mutant in the project's tree.
+- [x] B5a `deferrals.py --out` creates the parent directory.
+- [x] B1a A `nosemgrep` note on `added_lines`' git call in
+  `validation_gate.py`.
+
+The loop fixture (`evals/fixtures/library-app/code-plants/loop/`; the
+owner, 2026-11-16: both):
+
+- [x] The "why only the first hold is removed" comment is false by the
+  code, and `code-review-comments-chunk` treats it as a comment that
+  earns its place (`why-comment-is-not-flagged` fails 2 runs of 3 since
+  reviewers probe it). Rewritten so it is true.
+- [x] The repeated block planted for `code-review-chunk-gate-covers` is
+  needless code as well as repetition. Replaced by one that is
+  reasonable on its own, so `duplication-left-to-the-gate` can read
+  "repeated" in a title again.
+
+No gate (tools under `evals/tools/`, which reach no case):
+
+- [x] F3 **The log checker reads an r2 fix of several commits** written
+  with spaces between the hashes. Done when: a tool test.
+- [x] F4 **`cost_by_role.py --log` skips a session with no transcript**,
+  names it and totals the rest. Done when: a tool test.

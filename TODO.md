@@ -25,14 +25,25 @@ From what #62 cost, and the owner's answers of 2026-11-16:
 
 - A new case runs once and its trace is read before any three-run pass.
   Its first failures are read before the grader is believed.
-- Skill wording is tried on one or two cases at single runs. The full
-  three-run gate runs once, at the end.
-- Bars are recorded (`record_thresholds.py --gate-only`, the case list
-  through `xargs`) from three-run results only, then `--stale` once more.
-- **No single pass of every affected case, and no cost-per-pass or
-  re-run-rate figure** (the owner: three-run results only). The write-up
-  gives the three-run counts, the bars that moved, and the gate's total
-  cost from the result files.
+- Skill wording is tried on one or two cases at single runs.
+- **Three runs where a bar can move, one run elsewhere** (the owner,
+  2026-11-16, on PR 1; it replaces "the full three-run gate"). At three
+  runs, once, at the end: every new case, every case whose graders,
+  prompt or state changed in purpose, every case of a skill whose text
+  the change rewrote most (PR 1: all of `chunk-runner`'s), and every
+  known-bad reference. Every other case the change reaches runs once
+  against the bar it has (`gate.sh --stale`), and the gate re-runs at
+  three any that lands under its bar. What this gives up, knowingly: a
+  miss that happens one run in three passes a single run two times in
+  three, so an occasional new miss in an unchanged case can go unseen
+  until a later change.
+- Bars are recorded (`record_thresholds.py --gate-only`) from three-run
+  results only, **for the three-run cases by name**, never for the whole
+  affected list: the tool takes each case's newest result, and a one-run
+  result must not become a bar. Then `--stale` once more.
+- **No cost-per-pass or re-run-rate figure.** The write-up gives the
+  three-run counts, the bars that moved, which cases ran once, and the
+  gate's total cost from the result files.
 - A rule a skill states in several places survives the removal of one: a
   known-bad reference removes every place.
 - The code commit is pushed alone for the external reviewer (its limit is
@@ -42,126 +53,31 @@ From what #62 cost, and the owner's answers of 2026-11-16:
 - `docs/flow-map.html` is updated in the same pull request as any change
   to a stage, a launch or a script.
 
-## PR 1: the loop's fixes (0.15.1)
+## PR 1: the loop's fixes (0.15.1): done
 
-Files: `skills/chunk-runner`, `skills/orchestrator` and its scripts,
-`skills/delivery`, the loop fixture, two tools. About 48 cases at the
-gate; the two `chunk-runner` replay histories are captured again once,
-from a real `kad` session on the library fixture.
+Pull request #64, 2026-11-16. Every item is built; the counts, what
+each fails without, the bars that moved, the cost ($225.78 over 286
+runs) and what no case holds are in `evals/README.md`, "The loop's
+fixes"; the items as they stood are in `docs/todo-archive.md` under the
+same heading. Decided on the way, by the owner: under autopilot the
+clock is the only cap; the last-fix review runs once per scope; two
+autopilot rounds, then the owner; three runs where a bar can move and
+one elsewhere. The two replay cases are dropped.
 
-The chunk runner (one edit to its text):
+Left open by it, for the next change to each file group:
 
-- [ ] G1 **The runner hands back while its builder is still working.**
-  One run of seven of `chunk-runner-waits-for-handback` ended on "The
-  chunk 1 builder is running. Next I'll wait for its report". Done when:
-  the cause is read from that run's trace
-  (`evals/results/gate-20261114T222734-rerun-chunk-runner-waits-for-handback-run2.trace.jsonl`),
-  the skill's wait rule is changed for it, and
-  `hand-back-is-one-line-for-what-ran` passes ten runs of ten. **Due
-  before slice 3.**
-- [ ] G2 **The hand-back is not the one line in about a quarter of runs**
-  (a paragraph before the line; 2 of 3 on 2026-11-16). First check
-  whether the orchestrator reads its line past a preamble: that decides
-  how much it matters. Done when: `hand-back-is-one-line-and-nothing-else`
-  has a bar of 3 of 3 on `chunk-runner-one-fix-round`, and
-  `skill_mutation.py run --case chunk-runner-one-fix-round --rule
-  handback-one-line` exits 0.
-- [ ] F2 **The fixer cap says whether a gate fixer counts**: a gate that
-  fails after the r1 fix has no rule, and a runner that sent a gate fixer
-  then left a regression unfixed under "no third fixer". The cap counts
-  review fixers; each gate gets its one fixer. Done when: a
-  `chunk-runner` case with a gate failure after r1 passes (the same new
-  case as E2's, below).
-- [ ] E2 **The `chunk-runner` deletion pass's proposals, all of them**
-  (the owner, 2026-11-16; the table is `evals/README.md`, "Rule deletions
-  on a skill"): five graders on cases that already run
-  (`allow-list-not-widened` on `chunk-runner-gate-deviation`; "no report
-  opened" on `chunk-runner-gap-handback`; the gate's `--protect`,
-  `--expect-tests-from` and `--agent` on `chunk-runner-gate-deviation`;
-  `"model": "sonnet"` on the fixer's launch in `chunk-runner-gate-outside`;
-  `sandbox_check.py` run before that launch); the prompts that state
-  the rule reworded to name the state; one new case for the first half
-  of step 4 (round 0 recorded, findings standing, a gate failure after
-  r1); two rules dropped from the skill ("Keep its agent id", "Read its
-  last line; read the rest only on `FAIL`"). **The weak `--planning`
-  reference is dropped.** **The two replay cases are kept only if G1's
-  fix, removed, makes one fail**; otherwise they go. Done when: each is
-  in, the deletions the reworded prompts were hiding are run again, and
-  E2 is closed in the archive's terms (a survivors list where every
-  survivor is a new grader, a dropped rule or an accepted gap).
-
-The orchestrator and delivery:
-
-- [ ] C2 **Autopilot.** A standing `planning/autopilot.md`, asked once
-  per project like the delegation file: the loop takes its own
-  recommendation and logs "taken as recommended" for a budget overrun
-  caused by a relaunch, one extra review to verify a standing Critical
-  or High after the last fix, one fixer for a finding that verification
-  confirmed, and a readiness route that changes no decision. It always
-  asks when the recommendation changes a number or decision the owner
-  approved, deletes or rewrites committed work, pushes anything red, or
-  touches scope or requirements. Planning forks that carry a
-  recommendation stay questions. Done when: cases show one stop taken
-  without a question and one always-ask stop still asked.
-- [ ] F5 **Every commit that changes source or tests after a scope's
-  last review gets one diff-scoped review** before delivery reports (a
-  chunk's r2 fix, the slice review's last fix, a gate fixer's, a CI
-  fixer's, a triage fix's; the owner, 2026-11-13: "any change should
-  always be reviewed"). Designed with C2: that review's Critical and
-  High stop for the owner or autopilot's one fixer, Mediums and Lows are
-  filed, and a fix of its findings is reviewed the same way, capped.
-  Done when: a case shows a last fix with a planted defect reviewed and
-  the defect reported, and a clean last fix adding one review and no
-  fixer.
-- [ ] F6 **Delivery waits for an external review only where a bot has
-  reviewed before**; otherwise it says so and returns. Done when: a case
-  on the fixture's `gh` stand-in.
-- [ ] F7 **The target-directory question takes the directory a project
-  memory or `CLAUDE.md` names**, and says so. Done when: a variant of
-  `orchestrator-asks-for-target` with the directory named in the
-  project's memory takes it without a question, and the existing case
-  still asks.
-- [ ] **Two steps of 0.15.0 with no case** (the owner, 2026-11-16: one
-  cheap, bounded case each): the A step's route back to
-  `technology-bootstrap` when the project has no `gate-checks.json` and
-  the bootstrap has no Gate checks section (no launch); and the slice
-  review's round-0 launches, stopped at the hand-off after launching and
-  graded on the launch text alone (the cold reader named with
-  `cold-read` and handed no planning document; the test-quality reviewer
-  handed the mutation report). The wiring launch itself is slice 3's.
-
-Scripts under `skills/orchestrator/scripts/`, each with a tool test:
-
-- [ ] F1 **The gate reads an absolute `--allow` inside the project as
-  the path relative to it**; `--module-dir` and `--deviation-zone` the
-  same way. Done when: a test in `validation_gate_test.py`.
-- [ ] B4a The mutants file `changed` writes is created with private
-  permissions and removed after the pass, also when the pass fails.
-- [ ] B4b The mutation pass runs in a disposable clone or worktree, so a
-  run killed between a mutant's write and its restore cannot leave the
-  mutant in the project's tree.
-- [ ] B5a `deferrals.py --out` creates the parent directory.
-- [ ] B1a A `nosemgrep` note on `added_lines`' git call in
-  `validation_gate.py`.
-
-The loop fixture (`evals/fixtures/library-app/code-plants/loop/`; the
-owner, 2026-11-16: both):
-
-- [ ] The "why only the first hold is removed" comment is false by the
-  code, and `code-review-comments-chunk` treats it as a comment that
-  earns its place (`why-comment-is-not-flagged` fails 2 runs of 3 since
-  reviewers probe it). Rewritten so it is true.
-- [ ] The repeated block planted for `code-review-chunk-gate-covers` is
-  needless code as well as repetition. Replaced by one that is
-  reasonable on its own, so `duplication-left-to-the-gate` can read
-  "repeated" in a title again.
-
-No gate (tools under `evals/tools/`, which reach no case):
-
-- [ ] F3 **The log checker reads an r2 fix of several commits** written
-  with spaces between the hashes. Done when: a tool test.
-- [ ] F4 **`cost_by_role.py --log` skips a session with no transcript**,
-  names it and totals the rest. Done when: a tool test.
+- [ ] F2 has no case that fails without its text: the run that left a
+  regression as "no third fixer" was not reproduced by removing it.
+- [ ] The autopilot round, the last-fix review at D and E, and a
+  readiness correction taken without a question are held by no case.
+  Slice 3 is their first run; a case for the round needs a state with a
+  standing High and three launches a run.
+- [ ] `chunk-runner-fix-gate-fails` and
+  `orchestrator-autopilot-counts-over` carry no known-bad reference
+  (eight deletions and the autopilot text each survived).
+- [ ] The slice-review state (`slice-review-r0`) has no gate output on
+  its last commits, so the orchestrator ran `npm test` into a file of
+  its own to have one to hand the reviewers.
 
 ## Before slice 3, no gate: why fixers regress
 

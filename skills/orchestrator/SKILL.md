@@ -101,7 +101,9 @@ a parameter, or not:
   before the next tool call**, in one line of text that names the
   directory and where it is written ("target: `planning/`, as the
   project's `CLAUDE.md` names it"), and again as the first line of step
-  5's report: a target taken silently looks to the owner like a guess. One read of the root's
+  5's report: a target taken silently looks to the owner like a guess.
+  The first log entry written carries it too, as one indented bullet,
+  `target: <dir> (named by <where>)`. One read of the root's
   `CLAUDE.md` is the whole of the looking: no search, no listing of
   directories, no guess from a folder's name. Two directories named, or a
   sentence that could mean either of two, is not the project saying
@@ -573,10 +575,12 @@ reached 5 h at chunk 7 of 8 and the owner lifted it, incident 11; decided
 a regressions fix ran, 1 fixer per scope plus 1 for regressions (a
 gate's own fixer is not counted), unless the owner's message named other
 numbers. **Under autopilot the clock is the only cap** (the owner,
-2026-11-16): a per-chunk count that is exceeded, whatever exceeded it,
-is written on the C line as `counts over: <which> (autopilot)` and
-stops nothing; the loop time still ends the flow, with or without
-autopilot, since it is a number the owner approved.
+2026-11-16): the per-chunk counts are then no cap at all. They are
+counted and written in the C line's `budget` field as always, a count
+above its number ends nothing and asks nothing, and the budget check at
+a chunk boundary reads the clock alone. The loop time still ends the
+flow, with or without autopilot, since it is a number the owner
+approved.
 Consults are counted, never capped: the count goes on the E line
 (0.13.1's cap of 8 per slice produced owner questions nobody wanted;
 dropped 2026-11-08). At each chunk boundary read the clock and the
@@ -588,10 +592,12 @@ is built. The dollar figure is not estimated during the run;
 **Autopilot.** A standing answer in `<target>/autopilot.md`, asked once
 per project at A.2 like the delegation file. With it, at the stops
 listed here and no others, the loop takes its own recommendation
-without a question and writes an indented bullet under the line it
-belongs to, `taken as recommended: <what> (autopilot)`:
+without a question and, for the last two, writes an indented bullet
+under the line it belongs to, `taken as recommended: <what>
+(autopilot)`:
 
-- a per-chunk count exceeded (the budget paragraph above);
+- a per-chunk count above its number (the budget paragraph above; the
+  C line's `budget` field is its record, and it gets no bullet);
 - **the autopilot round** for a Critical or High left standing when a
   scope's rounds are over (below), twice at most per scope;
 - a readiness route that changes no decision (A.4).
@@ -889,8 +895,8 @@ gate sent it back four times over documents it had not touched
      later one, at three stops: a per-chunk review or fixer count that
      is exceeded (the loop time still ends the flow), up to two rounds
      of verify, fix and review for a Critical or High left standing, and
-     a planning correction that changes no decision? Each is logged as
-     taken as recommended. Anything that changes a number or decision
+     a planning correction that changes no decision? Each round and
+     each correction is logged as taken as recommended. Anything that changes a number or decision
      you approved, deletes or rewrites committed work, pushes anything
      red, or touches scope or requirements is still asked." Write
      `<target>/autopilot.md` with the answer either way: the owner's
@@ -1249,8 +1255,7 @@ orchestrator's side.
    with `KAD_AUDIT` unset `off`, and nothing runs. **Then the C line**
    (the runner's fields, then `records`, `audit`, `data`), then the
    budget check (the hand-back's `reviews` and `fixers` counts and the
-   clock; under autopilot a count over is a bullet and the clock alone
-   ends the flow), then the next chunk. Between launches the only thing you say
+   clock; under autopilot the clock alone ends the flow), then the next chunk. Between launches the only thing you say
    to the user is one short paragraph per event, with the hashes; you
    never restate a finding, keep a digest, or narrate an agent's turns.
 
@@ -1631,7 +1636,7 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 **Artifact:** see sub-entries below
 - **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; autopilot — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> verify `<c>` confirmed, `<n>` not reproduced< fix `<sha>` → last `<C/H/M>`>>; builder `<agent id>`; budget `<h>`h `<reviews>`r<; counts over: <which> (autopilot)>; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> verify `<c>` confirmed, `<n>` not reproduced< fix `<sha>` → last `<C/H/M>`>>; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
   - taken as recommended: `<what>` (autopilot)
 - **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; mutation `<<n> mutants, <c> caught, <s> survived | not run (<why>)>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; cold `<<n> confirmed, <m> verify | PASS>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> …, as the C line>; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`

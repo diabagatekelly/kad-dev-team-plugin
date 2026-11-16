@@ -1,15 +1,35 @@
 {
  "skill": "chunk-runner",
- "rule": "regressions go to a second fixer, then the gate",
+ "rule": "regressions go to a second and last review fixer, then the gate: the sentence in step 4, and the three other places 0.15.1 names `Fix r2` (the paragraph on a gate's own fixer, the parenthesis at the prohibition, step 5 and its field on the line). With the sentence alone removed the case passed 3 runs of 3 on 2026-11-16.",
  "edits": [
   {
    "file": "skills/chunk-runner/SKILL.md",
    "old": "Regressions\n   go to a **second and last** review fixer (a fresh launch, the same\n   shape, `Fix r2` line; whatever gate fixers ran before it), then the\n   gate (`gate-chunk-<k>-r2.txt`), then step 5: **no third fix\n   round**.",
-   "new": "The chunk is done: **no third fix round**."
+   "new": "The chunk is done: **no third review**."
   },
   {
    "file": "skills/chunk-runner/SKILL.md",
-   "old": ", so a regression the re-review finds still gets\n   its `Fix r2` after one",
+   "old": "   **Every gate gets its own one fixer, and the cap does not count it.**\n   A `FAIL` on a fix's gate (round 1's or round 2's) is handled as step\n   2 handles round 0's: the failing checks to one fresh gate fixer, the\n   gate again on the same `--base` (`gate-chunk-<k>-r<i>-fix.txt`), and\n   a second `FAIL` of that gate ends the round with `gate FAIL: <checks>;\n   ended`. The two fixers this step caps are the ones a review's findings\n   go to, `Fix r1` and `Fix r2`: a gate fixer sent in round 0 or round 1\n   takes neither place, so a regression the re-review finds still gets\n   its `Fix r2` after one. `fixers <m>` on your line counts every fixer\n   launched, the gates' included. A runner once sent a gate fixer after\n   round 1 and then left a regression unfixed as \"no third fixer\". ",
+   "new": ""
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "a third review fixer (the cap is on the fixers a review's\nfindings go to, `Fix r1` and `Fix r2`; a gate's own one fixer is not one\nof them, step 4)",
+   "new": "a third fixer"
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "5. **The last-fix review**, only when a `Fix r2` was committed (`loop`\n   only): the regressions fix, and its gate fixer's commit if there was\n   one, have been read by nobody, and every change is read once.\n   Sandbox check, then the same combined reviewer kind, `model: \"opus\"`,\n   diff-scoped as the re-review was (the range `<before fix r2>..HEAD`,\n   the files it touched, the report path `chunk-<k>-last-review.md`,\n   this chunk's last gate output; no cold pass, nothing of rounds 0 and\n   1). Then:\n\n   ```\n   python3 -I '<scripts>/rounds_record.py' --sidecar '<sidecar>' --report '<last review>' --chunk <k> --round 2 --last --project '<project root>' --range '<before fix r2>..HEAD' --fix '<sha>' --fixer '<agent id>' --turns <n>\n   ```\n\n   It prints `last <C/H/M>` and one `standing:` line per finding:\n   **nothing this review raises is fixed by you**. No fixer, no gate, no\n   further review follows it, whatever its severity; its counts go on\n   the line as `last <C/H/M>` and into `standing <C/H/M>` with the\n   pre-existing ones, and a Critical or High among them is the\n   orchestrator's to act on. A chunk whose round ended before a `Fix r2`\n   (a clean round 0, a round 1 with no regression) has no step 5.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "Launch a\nreview after the last-fix review (step 5),",
+   "new": "Launch a third\nreview,"
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "<; r2 fix `<sha>` gate PASS; last `<C/H/M>`>",
    "new": ""
   }
  ],
@@ -18,8 +38,12 @@
   "gate-on-the-fix"
  ],
  "observed": {
-  "date": null,
-  "runs": 0,
-  "note": "rewritten for 0.15.1; not run yet"
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "second-and-last-fixer": 0.0,
+   "gate-on-the-fix": 0.0
+  }
  }
 }
