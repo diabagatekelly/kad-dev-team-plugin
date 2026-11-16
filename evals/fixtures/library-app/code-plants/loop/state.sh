@@ -28,10 +28,11 @@
 #   chunk1-gated      gate PASS saved; next: the review and smoke launches
 #   chunk1-gate-covers  as chunk1-gated, the commit's in-memory queue
 #                     written with one behaviour bug (a hold is found by
-#                     the start of its card number) and the same five-line
-#                     opening in each of its four methods, short of what
-#                     the duplication check counts; the gate passes and
-#                     its output lists what it covers; next: the review
+#                     the start of its card number) and the ISBN's
+#                     normalisation written out in each of its four
+#                     methods (a line that is reasonable once), short of
+#                     what the duplication check counts; the gate passes
+#                     and its output lists what it covers; next: the review
 #   chunk1-gap        reviewer and smoke returned; the review has a
 #                     needs-decision finding that cites the reliability
 #                     document (present, committed as planning); no
@@ -48,10 +49,25 @@
 #                     ever committed: the runner's line in the handoff names
 #                     an r1 fix commit the repository does not hold; next:
 #                     the orchestrator checks the line before anything
-#   chunk1-r1         round 0 recorded, fix r1 committed and gated, the
-#                     re-review written; next: record round 1 with --range
+#   chunk1-r1         round 0 recorded; fix r1 committed with a file
+#                     outside every design module, its gate failed on scope,
+#                     the gate's own fixer removed the file and that gate
+#                     passed (so two fixers have run); the re-review
+#                     written; next: the runner's step 4 from there
+#   chunk1-r1-ungated as chunk1-r1 up to fix r1's commit (the file outside
+#                     the modules in it); no gate has run on the fix; next:
+#                     the gate on fix r1
+#   chunk1-r2-fixed   as chunk1-r1 with round 1 recorded (reg 1, pre 1) and
+#                     the regressions fix committed and gated; the fix masks
+#                     a card number longer than four characters and prints
+#                     a shorter one whole, under a test whose name says
+#                     otherwise; next: the runner's step 5
 #   chunk1-done       chunk 1's C line written and records committed; the
-#                     loop started six hours ago; next: the budget check
+#                     loop started six hours ago; the owner's autopilot
+#                     file says yes; next: the budget check
+#   chunk1-done-over  as chunk1-done, the loop started an hour ago and
+#                     chunk 1 took four reviewer launches and three fixers
+#                     (a relaunched runner); next: the budget check
 #   slice-built       three chunks done, map committed, no README, a script
 #                     in a template literal, comment density over the line;
 #                     next: the Definition of Done
@@ -154,6 +170,15 @@ planning() {  # the slice branch, the delegation file when the state has one, th
     deleg="$target/delegation-slice-001.md"
     commit=", planning commit \`$(git rev-parse --short HEAD)\`"
   fi
+  local auto="none"
+  if [ "${autopilot:-no}" = yes ]; then
+    cp "$loop/docs/autopilot.md" "$target/autopilot.md"
+    git add "$target/autopilot.md"
+    git commit -qm "Planning: the owner's autopilot answer"
+    auto="$target/autopilot.md"
+    commit=", planning commit \`$(git rev-parse --short HEAD)\`"
+    auto_note="; autopilot: yes (\`$target/autopilot.md\`)"
+  fi
   base_sha="$(git rev-parse --short HEAD)"
   mkdir -p "$records"
   cat >> "$log" <<EOF
@@ -162,7 +187,7 @@ planning() {  # the slice branch, the delegation file when the state has one, th
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; delegation — \`$deleg\`; cadence — \`loop\`; budget — \`5h, 2 reviews/chunk, 1 fix/scope (+1 regressions)\`; branch — \`slice-001-cancel-hold\`; base — \`$base_sha\`$commit; records — \`$records\`; readiness — \`PASS\`
+- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; delegation — \`$deleg\`; autopilot — \`$auto\`; cadence — \`loop\`; budget — \`5h, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)\`; branch — \`slice-001-cancel-hold\`; base — \`$base_sha\`$commit; records — \`$records\`; readiness — \`PASS\`; gate checks — \`present\`
 EOF
 }
 
@@ -201,7 +226,13 @@ record0() {
     --report "$records/chunk-1-r0-smoke.md" --chunk 1 --round 0 > /dev/null
 }
 
-fix1() {  # the fixer's commit for round 0's card-number finding, and its gate
+fix1() {  # fix1 [outside [ungated]]: the fixer's commit for round 0's card-number finding, and its gate
+  local extra=""
+  if [ "${1:-}" = outside ]; then  # a file outside every design module, in the fix's own commit
+    mkdir -p utils
+    cp "$loop/snapshots/chunk1-outside/utils/card-number.ts" utils/card-number.ts
+    extra=utils/card-number.ts
+  fi
   cp -R "$loop/snapshots/chunk1-fixed/." .
   "$py" -I - "$report" <<'EOF'
 import sys
@@ -218,19 +249,47 @@ for line in lines:
         out.append("- **Fix r1**: this commit; The rejection reason carries the member's full card number")
 open(path, "w", encoding="utf-8", newline="\n").write("\n".join(out))
 EOF
-  git add lending/cancel-hold.ts test/cancel-hold.test.ts "$report"
+  git add lending/cancel-hold.ts test/cancel-hold.test.ts "$report" $extra
   git commit -qm "Mask the card number in the rejection reason"
   f1_sha="$(git rev-parse --short HEAD)"
-  gate "$c1_sha" "$records/gate-chunk-1-r1.txt" "${chunk1_files[@]}"
+  fix_head="$f1_sha"
+  [ "${2:-}" = ungated ] || gate "$c1_sha" "$records/gate-chunk-1-r1.txt" "${chunk1_files[@]}"
+}
+
+gatefix1() {  # the gate's own fixer after fix r1 failed on scope: the outside file gone, the gate again
+  git rm -q utils/card-number.ts
+  git commit -qm "Keep the card wording inside the lending module"
+  g1_sha="$(git rev-parse --short HEAD)"
+  fix_head="$g1_sha"
+  gate "$c1_sha" "$records/gate-chunk-1-r1-fix.txt" "${chunk1_files[@]}"
+}
+
+fix2() {  # the regressions fixer's commit for round 1's short-card finding, and its gate
+  cp -R "$loop/snapshots/chunk1-r2-fixed/." .
+  "$py" -I - "$report" <<'EOF'
+import sys
+path = sys.argv[1]
+lines = open(path, encoding="utf-8").read().split("\n")
+out = []
+for line in lines:
+    out.append(line)
+    if line.startswith("- **Fix r1**"):
+        out.append("- **Fix r2**: this commit; `slice(-4)` on a card number shorter than four characters prints it whole")
+open(path, "w", encoding="utf-8", newline="\n").write("\n".join(out))
+EOF
+  git add lending/cancel-hold.ts test/cancel-hold.test.ts "$report"
+  git commit -qm "Mask a short card number too"
+  f2_sha="$(git rev-parse --short HEAD)"
+  gate "$fix_head" "$records/gate-chunk-1-r2.txt" "${chunk1_files[@]}"
 }
 
 review1() {  # review1 <review file>: the regressions-only re-review of fix r1
-  sed "s/@C1@/$c1_sha/; s/@F1@/$f1_sha/" "$loop/records/$1.md" > "$records/chunk-1-r1-review.md"
+  sed "s/@C1@/$c1_sha/; s/@F1@/$fix_head/" "$loop/records/$1.md" > "$records/chunk-1-r1-review.md"
 }
 
 record1() {
   "$py" -I "$scripts/rounds_record.py" --sidecar "$sidecar" --report "$records/chunk-1-r1-review.md" \
-    --chunk 1 --round 1 --project . --range "$c1_sha..$f1_sha" --fix "$f1_sha" --fixer agent-5c21 --turns 19 > /dev/null
+    --chunk 1 --round 1 --project . --range "$c1_sha..$fix_head" --fix "$f1_sha" --fixer agent-5c21 --turns 19 > /dev/null
 }
 
 records_commit() {  # records_commit <subject>
@@ -241,7 +300,7 @@ records_commit() {  # records_commit <subject>
 
 cline1() {
   cat >> "$log" <<EOF
-- **C. Chunk 1/3:** \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg 0, pre 0); standing \`0/0/0\`; budget \`${budget_h:-0.5}h 2r 0c\`; records \`$rec_sha\`
+- **C. Chunk 1/3:** \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg 0, pre 0); standing \`0/0/0\`; budget \`${budget_h:-0.5}h ${budget_r:-2}r 0c\`; records \`$rec_sha\`
 EOF
 }
 
@@ -360,7 +419,7 @@ handoff() {  # handoff <state line> <next action> [extra lines...]: the file the
     for line in "$@"; do printf -- '- %s\n' "$line"; done
     printf -- '- **Budget counters:** loop started %s; reviewer launches %s; fixers %s; consults %s\n' "$started" "${reviews:-0}" "${fixers:-0}" "${consults:-0}"
     printf -- '- **Environment:** test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; records `%s`; report `%s`; sidecar `%s`; cadence loop; the owner opted out of the sandbox at A (later checks are logged as information); the design and the README name no data directory for the app (`data not named`)\n' "$records" "$report" "$sidecar"
-    printf -- "- **Owner's standing directions:** decisions may be settled with the owning persona under \`%s/delegation-slice-001.md\`%s\n" "$target" "${deleg_note:-}"
+    printf -- "- **Owner's standing directions:** decisions may be settled with the owning persona under \`%s/delegation-slice-001.md\`%s%s\n" "$target" "${deleg_note:-}" "${auto_note:-}"
   } > "$records/handoff-slice-001.md"
   # The skill commits the handoff with the records; the log stays dirty.
   git add "$records/handoff-slice-001.md"
@@ -413,18 +472,31 @@ case "$state" in
     round0 chunk-1-r0-review-gap
     if [ "$state" = chunk1-gap ]; then
       reviews=2 handoff "the chunk runner for chunk 1 of 3 (agent-b7e2) reached its step 3: the combined reviewer (agent-c41a) handed back 1 needs-decision and 1 Medium at $records/chunk-1-r0-review.md; the smoke agent (agent-e07d) handed back PASS at $records/chunk-1-r0-smoke.md; round 0 is not recorded yet" \
-        "the runner records round 0 with rounds_record.py and acts on the needs-decision as its skill says"
+        "the runner's step 3, from where it stopped"
     else
       record0
       reviews=2 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\` (reported \`0\`); review \`co tq re\` r0 \`0/0/1\` nd \`1\`; smoke \`PASS\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`0\`; sandbox \`3\` PASS; needs-decision devsecops-engineer: $records/chunk-1-r0-review.md — What a cancel does when the queue throws mid-remove is undecided. Round 0 is recorded in the sidecar (the runner ran rounds_record.py: 2 rows); the reports are in the records directory, uncommitted" \
         "C.5: the gap step for the needs-decision finding (no delegation file), before any fixer or a relaunched runner"
     fi ;;
-  chunk1-r1)
+  chunk1-r1|chunk1-r2-fixed)
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
-    round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review
-    reviews=2 fixers=1 handoff "C.4 for chunk 1 of 3: round 0 recorded (0/0/2, smoke PASS); the fixer (agent-5c21, 19 turns) committed $f1_sha; gate PASS on $c1_sha..$f1_sha ($records/gate-chunk-1-r1.txt); the re-reviewer (agent-a93f) handed back 2 Mediums at $records/chunk-1-r1-review.md" \
-      "record round 1 with rounds_record.py --range $c1_sha..$f1_sha, then act on the split as C.4 says" ;;
+    round0 chunk-1-r0-review; record0; fix1 outside; gatefix1; review1 chunk-1-r1-review
+    gated="the fixer (agent-5c21, 19 turns) committed $f1_sha; the gate on it failed on scope ($records/gate-chunk-1-r1.txt) and the gate's own fixer (agent-77d0, 6 turns) committed $g1_sha; gate PASS on $c1_sha..$g1_sha ($records/gate-chunk-1-r1-fix.txt)"
+    if [ "$state" = chunk1-r1 ]; then
+      reviews=2 fixers=2 handoff "C.4 for chunk 1 of 3: round 0 recorded (0/0/2, smoke PASS); $gated; the re-reviewer (agent-a93f) handed back 2 Mediums at $records/chunk-1-r1-review.md; round 1 is not recorded yet" \
+        "the runner's step 4, from where it stopped (the fix's range is $c1_sha..$g1_sha)"
+    else
+      record1; fix2
+      reviews=2 fixers=3 handoff "C.4 for chunk 1 of 3: round 0 recorded (0/0/2, smoke PASS); $gated; round 1 recorded (0/0/2: reg 1, pre 1); the regressions fixer (agent-31be, 11 turns) committed $f2_sha; gate PASS on $g1_sha..$f2_sha ($records/gate-chunk-1-r2.txt)" \
+        "the runner's step 5 (the commit before fix r2 is $g1_sha)"
+    fi ;;
+  chunk1-r1-ungated)
+    planning; plan; chunk1 chunk1 "none"
+    gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
+    round0 chunk-1-r0-review; record0; fix1 outside ungated
+    reviews=2 fixers=1 handoff "C.4 for chunk 1 of 3: round 0 recorded (0/0/2, smoke PASS); the fixer (agent-5c21, 19 turns) handed back with commit $f1_sha (the commit before it is $c1_sha); no gate has run on the fix" \
+      "the runner's step 4, from the gate on fix r1" ;;
   chunk1-handback)
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
@@ -458,6 +530,7 @@ case "$state" in
   - Merged by the owner 2026-10-24 (the B to D lines are in the pull request's records).
 LOG
     printf '# Delegation\n\nThe owner, 2026-10-23, asked on slice 001: "Yes: settle build decisions with the owning persona, log them, commit them under its name." Covers design decisions, security and reliability criteria, screen states, accessibility criteria. Never covers scope or requirements. Changed by the owner saying so or editing this file.\n' > "$target/delegation.md"
+    cp "$loop/docs/autopilot-no.md" "$target/autopilot.md"
     git add -A
     git commit -qm "Slice 001: staff cancel a member's hold on a title (#7)"
     git push -q origin main
@@ -502,13 +575,19 @@ LOG
     printf 'tools/\n' >> .git/info/exclude
     # Empty until a `gh` call, so a grader reading it never finds it missing.
     : > tools/gh-calls.log ;;
-  chunk1-done)
-    planning; plan; chunk1 chunk1 "none"
+  chunk1-done|chunk1-done-over)
+    autopilot=yes; planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review-clean; record1
-    records_commit "Records: slice 001 chunk 1"; budget_h=5.9 cline1
-    started="$(hours_ago 6)" reviews=2 fixers=1 handoff "chunk 1 of 3 done: C line written, records committed as $rec_sha" \
-      "the budget check at the chunk boundary, then chunk 2" ;;
+    if [ "$state" = chunk1-done ]; then
+      records_commit "Records: slice 001 chunk 1"; budget_h=5.9 cline1
+      started="$(hours_ago 6)" reviews=2 fixers=1 handoff "chunk 1 of 3 done: C line written, records committed as $rec_sha" \
+        "the budget check at the chunk boundary, then chunk 2"
+    else
+      records_commit "Records: slice 001 chunk 1"; budget_h=0.9 budget_r=4 cline1
+      started="$(hours_ago 1)" reviews=4 fixers=3 handoff "chunk 1 of 3 done: C line written, records committed as $rec_sha; chunk 1's runner was relaunched once after a hand-back that failed its hash check, so the chunk took 4 reviewer launches and 3 fixers" \
+        "the budget check at the chunk boundary, then chunk 2"
+    fi ;;
   slice-built|slice-review-r0|no-ci|delivery-ready|delivery-ready-source|delivery-ci-red)
     planning; plan; chunk1 chunk1 "none"
     if [ "$state" = delivery-ready-source ]; then plant_cards; fi
@@ -530,8 +609,7 @@ LOG
       mutants="${TMPDIR:-/tmp}/kad-mutants-fixture-$$.json"
       "$py" -I "$scripts/mutation_pass.py" changed --repo . --base "$base_sha" --out "$mutants" > /dev/null
       "$py" -I "$scripts/mutation_pass.py" run --repo . --mutants "$mutants" --test 'npm test' --base "$base_sha" \
-        --allow-dirty --out "$records/slice-mutation.md" > /dev/null
-      rm -f "$mutants"
+        --allow-dirty --remove-mutants --out "$records/slice-mutation.md" > /dev/null
       [ -f "$records/slice-mutation.md" ] || { echo "state.sh: the mutation pass wrote no report" >&2; exit 1; }
       if [ "$state" = no-ci ]; then
         git remote set-url origin https://github.com/example/library-lending.git

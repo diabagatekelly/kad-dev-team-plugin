@@ -1,0 +1,54 @@
+schema_version: "1.0"
+name: orchestrator-target-from-project
+description: "The target directory taken from the project (TODO.md's F7, 0.15.1): no folder is given, and the project's `CLAUDE.md` names `docs/planning/` as where its planning artifacts live. The orchestrator takes that directory without asking, says where it read it, searches for nothing, and routes: its log's first entry lands there. `orchestrator-asks-for-target` is the same request on a project that names no directory, and still asks."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We want members to be able to pay their fines online. What's next for that?
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: does-not-search-for-artifacts
+    # Listing the named directory itself is step 2's inspection, not a
+    # search for a target (the first run did exactly that and no more).
+    tool: Glob
+    input_match: '^(?![\s\S]*docs/planning)'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: does-not-grep-for-artifacts
+    tool: Grep
+    input_match: '^(?![\s\S]*docs/planning)'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written-in-the-named-directory
+    path: docs/planning/orchestrator-log.md
+  - type: regex
+    name: routed-to-the-first-stage
+    target:
+      source: file
+      path: docs/planning/orchestrator-log.md
+    pattern: 'Routed to:\*\*\s*`?docs-writer:problem-framing-doc'
+  - type: regex
+    name: says-where-the-target-came-from
+    # An assistant message that names the directory and CLAUDE.md together.
+    target: trace
+    pattern: '"type":"text","text":"(?:[^"\\]|\\.){0,1500}?(?:docs/planning(?:[^"\\]|\\.){0,300}?CLAUDE\.md|CLAUDE\.md(?:[^"\\]|\\.){0,300}?docs/planning)'
+  - type: regex
+    name: does-not-ask-where
+    target: last_message
+    pattern: 'where (?:do|does|should|are|is|would)\b[^?\n]{0,120}(?:artifacts?|documents?|planning)[^?\n]{0,80}\?'
+    flags: i
+    match: not_contains

@@ -163,6 +163,24 @@ No gate (tools under `evals/tools/`, which reach no case):
 - [ ] F4 **`cost_by_role.py --log` skips a session with no transcript**,
   names it and totals the rest. Done when: a tool test.
 
+## Before slice 3, no gate: why fixers regress
+
+- [ ] H1 **Read why the fixers' regressions happen** (the owner,
+  2026-11-16, on choosing two autopilot rounds: "we need to figure out
+  how to reduce fixer regressions"). One in four actionable findings has
+  been a regression a fixer introduced (incident 19), and every round
+  autopilot adds is another fix on a fix. Nothing in the loop reduces
+  them: the re-review and the last-fix review find them afterwards, and
+  the light cadence (fixes by the chunk's own builder) is one experiment
+  on a later slice. From the sidecars and the audit transcripts of the
+  runs so far, sort each regression by cause (a neighbouring test or
+  caller not read, a finding misread, a batch too large for one fixer, a
+  fix that grew past its finding) with counts. No eval runs. Done when:
+  the table is in `evals/README.md` with one proposed change per cause
+  that has more than a handful, each named with the file group it would
+  send through the gate (most likely `tdd-implementation-lite`'s
+  handed-back path, its own gated change).
+
 ## PR 2: reviews and planning skills (0.15.x)
 
 Files: the six review skills, `skills/map-update`,

@@ -19,11 +19,16 @@ under `--projects-dir` (default `~/.claude/projects`, the project's own
 directory, the one Claude Code writes to: `C--Users-...-app/` for
 `C:\\Users\\...\\app`), then under `<audit dir>/transcripts/` (the
 snapshots `hooks/audit.sh` keeps), with `<session>/subagents/` next to
-it. **A required id with no transcript means no total**: the output ends
-with `cost not measured: transcript missing for <id>` and the E line
-carries that. Run 3's loop session had 79 subagent transcripts on disk
-and no main one; the planning session's figure went on the E line as if
-it were the run's.
+it. **A total says what it does not cover.** A session the log or the
+sidecar names whose transcript is nowhere (Claude Code saved none for it,
+or it is another machine's) is skipped and named: the rest is totalled
+and the last line reads `cost $<n>, not covering <id> (no transcript)`,
+so one lost session of an old entry does not hide the cost of every
+other. A session passed with `--session` is the caller's own and stays
+required: without its transcript, or with none found for any id, the
+output ends with `cost not measured: transcript missing for <id>`. Run
+3's loop session had 79 subagent transcripts on disk and no main one; the
+planning session's figure went on the E line as if it were the run's.
 
 Without any id, `--transcript <session.jsonl>` (repeatable) names the
 sessions outright; failing that, `--project <root>` takes every kept
@@ -298,6 +303,7 @@ def main():
             required.append(sid)
     sessions = list(a.transcript)
     source = "--transcript"
+    skipped = []
     if required:
         sessions, missing = [], []
         for sid in required:
@@ -308,9 +314,14 @@ def main():
                 missing.append((sid, looked))
         for sid, looked in missing:
             print(f"transcript missing for {sid}: looked at {', '.join(looked)}")
-        if missing:
-            print(f"cost not measured: transcript missing for {', '.join(sid for sid, _ in missing)}")
+        # A named session with no transcript is skipped and said so on the
+        # last line; the caller's own (`--session`), or nothing found at
+        # all, is no total.
+        owed = [sid for sid, _ in missing if sid in a.session] or ([] if sessions else [sid for sid, _ in missing])
+        if owed:
+            print(f"cost not measured: transcript missing for {', '.join(owed)}")
             return 0
+        skipped = [sid for sid, _ in missing]
         source = f"{len(required)} session id(s) from " + ", ".join(x for x in ("--log" if a.log else "", "--sidecar" if a.sidecar else "", "--session" if a.session else "") if x)
     if not sessions and a.project:
         sessions = audit_sessions(a.audit_dir, a.project)
@@ -360,9 +371,9 @@ def main():
         print(f"Models with no price, counted at the highest known price: {', '.join(unknown)} (add --price model=in,out,read,write)")
     if a.json:
         with open(a.json, "w", encoding="utf-8") as f:
-            json.dump({"sessions": sessions, "total": round(total, 2), "unknown_models": unknown,
+            json.dump({"sessions": sessions, "total": round(total, 2), "not_covered": skipped, "unknown_models": unknown,
                        "rows": [dict(session=n, role=r, description=d, **u) for n, r, d, u in rows]}, f, indent=2)
-    print(f"cost ${total:.2f}")
+    print(f"cost ${total:.2f}" + (f", not covering {', '.join(skipped)} (no transcript)" if skipped else ""))
     return 0
 
 

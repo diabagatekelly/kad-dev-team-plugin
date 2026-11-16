@@ -225,9 +225,23 @@ checks were failing on a defect only the runner's platform showed
 
 ## 5. The external reviewer's comments
 
-Once the CI watch says green, wait for the reviews to settle (a review
+Once the CI watch says green, **wait for an external review only where
+a bot has reviewed before**. One look at the repository's own history
+decides, inline:
+
+```
+gh api 'repos/<owner>/<repo>/pulls/comments?per_page=100&sort=created&direction=desc' --jq '[.[] | select(.user.type == "Bot") | .user.login] | unique'
+gh api 'repos/<owner>/<repo>/issues/comments?per_page=100&sort=created&direction=desc' --jq '[.[] | select(.user.type == "Bot") | .user.login] | unique'
+```
+
+Both empty (no bot has ever left a review comment or a comment on a
+pull request or issue here): there is nobody to wait for. Read what is
+on the pull request now, once, and say in the report `External review:
+no review bot has reviewed in this repository; not waited for`. An
+owner once ended a fifteen-minute wait on a repository no bot reviews.
+A bot named by either: wait for the reviews to settle (a review
 bot posts after the checks start), for
-at most fifteen minutes; then read the reviews, the review comments and
+at most fifteen minutes. Then read the reviews, the review comments and
 the issue comments (`gh api repos/<owner>/<repo>/pulls/<number>/reviews`,
 `.../pulls/<number>/comments` and `.../issues/<number>/comments`). A
 review bot that has not posted within the bound is treated as having
@@ -353,7 +367,8 @@ the CI state has not said whether the delivery is done.
 - **Issues** — each one: number, title, from which standing finding; and
   how many Lows stay in the body unfiled.
 - **External review** — per round: comments collected, and for each the
-  verdict acted on and what was posted or filed.
+  verdict acted on and what was posted or filed; or that no review bot
+  has reviewed in this repository and none was waited for.
 - **Removal** — only when "Removing a value from history" ran: its one
   record line, and the copies left for the owner to decide about.
 - **Refused** — anything this skill would not do (a dirty tree, a push to

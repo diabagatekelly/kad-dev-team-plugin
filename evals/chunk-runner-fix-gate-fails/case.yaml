@@ -1,0 +1,102 @@
+schema_version: "1.0"
+name: chunk-runner-fix-gate-fails
+description: "The first half of the chunk runner's step 4 after the review fixer has committed (TODO.md's E2 and F2, 0.15.1): round 0 is recorded with two Mediums, fix r1 is committed and carries a file outside every design module, and no gate has run on it. The runner runs the gate on the fix, which fails on scope; hands the failure to the gate's own one fixer without widening `--allow`; runs the gate again under its own file name; launches the regressions-only re-review on the fix's diff with nothing of round 0; launches no smoke agent (round 0's smoke passed); and records round 1 with the range. Bounded at round 1 recorded."
+tags: [chunk-runner, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the chunk runner the orchestrator launched for chunk 1 of 3 of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:chunk-runner` first and follow it.
+
+    What the orchestrator hands you. Chunk 1 of 3: **Title**: Cancel a member's hold on a title. **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes". **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts. **Done when**: seam "cancels a member's hold through the real in-memory queue", `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green. **Touches**: storage.
+
+    The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
+
+    Resume point: the round stopped in step 4, after the review fixer's hand-back. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Stop once round 1 is recorded: hand back the line as far as it goes with `stopped at step 4` appended.
+  model: opus
+  max_turns: 70
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: chunk-runner-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:chunk-runner"'
+    min: 1
+  - type: tool_used
+    name: orchestrator-not-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 0
+    max: 0
+  - type: regex
+    name: log-not-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
+    match: not_contains
+  - type: regex
+    name: no-records-commit
+    target: trace
+    pattern: 'git commit[\s\S]{0,300}?Records:'
+    match: not_contains
+  - type: tool_used
+    name: gate-run-on-the-fix-and-again
+    tool: Bash
+    input_match: 'validation_gate\.py'
+    min: 2
+  - type: regex
+    name: fix-gate-fails-on-scope
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r1.txt
+    pattern: 'FAIL  scope[^\n]*utils/card-number\.ts'
+  - type: file_exists
+    name: second-gate-saved-under-its-own-name
+    path: docs/cancel-hold/implementation/gate-chunk-1-r1-fix.txt
+  - type: tool_used
+    name: the-gates-one-fixer
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: allow-list-not-widened
+    tool: Bash
+    input_match: '--allow[ =]+\W{0,3}(?:[^\s\x27"\\]*/)?utils/'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: one-re-reviewer
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: re-review-named-for-round-one
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*chunk-1-r1-review\.md)'
+    min: 1
+  - type: tool_used
+    name: re-review-handed-nothing-of-round-zero
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*chunk-1-r0-)'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-smoke-agent-after-a-smoke-pass
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?(?:tdd-coach|accessibility-engineer))(?=[\s\S]*scratch_run)'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: round-one-recorded-with-the-range
+    tool: Bash
+    input_match: 'rounds_record\.py[\s\S]*--range'
+    min: 1
+  - type: regex
+    name: hand-back-counts-the-gate-fixer-and-stops
+    # One line: the r1 fix with a real hash, two fixers (the review's and
+    # the gate's own) and the stop.
+    target: last_message
+    pattern: '^\s*[^\n]*r1 fix \W{0,2}[0-9a-f]{7,40}\b[^\n]*fixers \W{0,2}2\b[^\n]*stopped at[^\n]*\s*$'

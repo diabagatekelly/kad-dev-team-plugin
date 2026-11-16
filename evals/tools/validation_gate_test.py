@@ -61,6 +61,67 @@ class ScopeAndTheFlowsRecords(unittest.TestCase):
         r = gate.check_scope(["docs/cancel-hold/design-001.md"], ["lending/"], planning="docs/cancel-hold")
         self.assertEqual(r["outside"], ["docs/cancel-hold/design-001.md"])
 
+    def test_an_absolute_path_inside_the_project_is_read_relative_to_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = os.path.join(tmp, "app")
+            os.makedirs(os.path.join(project, "docs", "feature", "implementation"))
+            rel = gate.project_relative
+            self.assertEqual(rel(project, os.path.join(project, "docs", "feature", "implementation") + "/"), "docs/feature/implementation/")
+            self.assertEqual(rel(project, os.path.join(project, "lending", "hold.py")), "lending/hold.py")
+            self.assertEqual(rel(project, "lending/"), "lending/")
+            self.assertEqual(rel(project, "lending\\hold.py"), "lending/hold.py")
+            # outside the project it is left alone, and matches no changed file
+            outside = os.path.join(tmp, "elsewhere") + "/"
+            self.assertEqual(rel(project, outside), outside)
+            self.assertEqual(rel(project, project + "/"), project + "/")
+
+    def test_the_gate_takes_absolute_allow_module_dir_zone_and_protect(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = os.path.realpath(tmp)
+            git(tmp, "init", "-q")
+            git(tmp, "config", "user.name", "t")
+            git(tmp, "config", "user.email", "t@example.test")
+            git(tmp, "config", "commit.gpgsign", "false")
+            for d in ("lending", "main", os.path.join("docs", "feature", "implementation")):
+                os.makedirs(os.path.join(tmp, d))
+            design = os.path.join(tmp, "docs", "feature", "design.md")
+            for path, text in ((os.path.join(tmp, "lending", "hold.py"), "A = 1\n"), (design, "# Design\n")):
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(text)
+            git(tmp, "add", "-A")
+            git(tmp, "commit", "-qm", "base")
+            records = os.path.join(tmp, "docs", "feature", "implementation")
+            for path, text in ((os.path.join(tmp, "lending", "hold.py"), "A = 2\n"), (os.path.join(tmp, "lending", "queue.py"), "B = 1\n"),
+                               (os.path.join(tmp, "main", "wiring.py"), "C = 1\n"), (os.path.join(records, "chunk-1-r0-review.md"), "# Review\n")):
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(text)
+            out = os.path.join(tempfile.gettempdir(), f"kad-gate-abs-test-{os.getpid()}.json")
+
+            def run(*extra):
+                r = subprocess.run([sys.executable, "-I", SCRIPT, "--project", tmp, "--base", "HEAD", "--test-cmd", "true",
+                                    "--allow", os.path.join(tmp, "lending", "hold.py"), "--allow", records + "/",
+                                    "--module-dir", os.path.join(tmp, "lending") + "/", "--deviation-zone", os.path.join(tmp, "main") + "/",
+                                    "--protect", design, "--planning", os.path.join(tmp, "docs", "feature"), "--json", out, *extra],
+                                   capture_output=True, text=True)
+                with open(out, encoding="utf-8") as f:
+                    return r, json.load(f)["checks"]
+
+            try:
+                r, checks = run()
+                # the records directory, handed absolute, is in scope; the module and the zone are deviations
+                self.assertTrue(checks["scope"]["passed"], r.stdout)
+                self.assertEqual(checks["scope"]["outside"], [])
+                self.assertEqual(sorted(checks["scope"]["deviations"]), ["lending/queue.py", "main/wiring.py"])
+                self.assertTrue(checks["protected"]["passed"], r.stdout)
+                # and a protected document named by its absolute path still fails when it changes
+                with open(design, "a", encoding="utf-8") as f:
+                    f.write("An edit.\n")
+                r, checks = run("--allow", design)
+                self.assertFalse(checks["protected"]["passed"], r.stdout)
+            finally:
+                if os.path.exists(out):
+                    os.remove(out)
+
     def test_the_whole_gate_passes_on_a_dirty_log_and_fails_on_a_stray_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             git(tmp, "init", "-q")

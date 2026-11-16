@@ -45,6 +45,30 @@ graders:
     tool: Bash
     input_match: 'validation_gate\.py[\s\S]*--module-dir'
     min: 1
+  - type: tool_used
+    name: gate-run-with-the-protect-list
+    tool: Bash
+    input_match: 'validation_gate\.py[\s\S]*--protect'
+    min: 1
+  - type: tool_used
+    name: gate-reads-the-done-when-from-the-report
+    tool: Bash
+    input_match: 'validation_gate\.py(?=[\s\S]*--expect-tests-from)(?=[\s\S]*--chunk[ =]+\W{0,2}1\b)'
+    min: 1
+  - type: tool_used
+    name: gate-handed-the-builders-agent-id
+    tool: Bash
+    input_match: 'validation_gate\.py[\s\S]*--agent'
+    min: 1
+  - type: tool_used
+    name: allow-list-not-widened
+    # Any --allow beyond the Files line, the records directory and the log
+    # (each also as an absolute path): the runner that adds one of its own
+    # passes a gate the chunk should have reported on.
+    tool: Bash
+    input_match: 'validation_gate\.py[\s\S]*--allow[ =]+\W{0,3}(?!(?:/[^\s\x27"\\]*/)?(?:lending/hold-queue\.ts|lending/cancel-hold\.ts|infra/memory/in-memory-hold-queue\.ts|test/cancel-hold\.test\.ts|test/in-memory-hold-queue\.test\.ts|docs/cancel-hold/implementation/?|docs/cancel-hold/orchestrator-log\.md)[\s\x27"\\])[^\s\x27"\\-]'
+    min: 0
+    max: 0
   - type: file_exists
     name: gate-file-saved
     path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt

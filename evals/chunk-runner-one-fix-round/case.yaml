@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: chunk-runner-one-fix-round
-description: "The chunk runner's step 4 (the orchestrator's old C.4, design §11 case 4): resumed after fix r1 was re-reviewed, with one regression and one pre-existing Medium in the re-review, the runner records round 1 with --range so the script classifies by hunk, sends only the regression to a second and last fixer, runs the gate on the fix, launches no third review, writes no log and commits no records, and hands back the line with the (reg 1, pre 1) split and the pre-existing Medium standing."
+description: "The chunk runner's fix round from the re-review on (0.14.1; F2 and F5 since 0.15.1): round 0 is recorded, fix r1 is committed, its gate failed on scope and the gate's own fixer has already run (two fixers so far), and the re-review is written with one regression and one pre-existing finding. The runner records round 1 with `--range`, sends the regression to the second and last review fixer although a gate fixer ran before it, runs the gate, launches the one last-fix review on fix r2 and no fixer after it, leaves the pre-existing Medium standing, and hands back the one line."
 tags: [chunk-runner, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -12,7 +12,7 @@ execution:
 
     The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
 
-    Resume point: the round stopped in step 4: round 0 is recorded (0/0/2, smoke PASS), the fixer committed fix r1, the gate on it passed (`gate-chunk-1-r1.txt`), and the regressions-only re-reviewer wrote `chunk-1-r1-review.md`; round 1 is not recorded yet. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Finish the round and hand back the line.
+    Resume point: the round stopped in step 4, after the re-reviewer's hand-back. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Finish the round and hand back the line.
   model: opus
   max_turns: 70
   timeout_seconds: 2400
@@ -47,14 +47,24 @@ graders:
     min: 1
   - type: tool_used
     name: second-and-last-fixer
+    # The regressions fixer, launched although the state's history holds a
+    # gate fixer (F2: the cap does not count one). At most two: fix r2's
+    # own gate may fail and get its one fixer.
     tool: Agent
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
     min: 1
+    max: 2
+  - type: tool_used
+    name: one-last-fix-review-and-no-other
+    # F5: fix r2 is read once, on its diff; nothing is reviewed after that.
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*chunk-1-last-review\.md)'
+    min: 1
     max: 1
   - type: tool_used
-    name: no-third-review
+    name: no-other-review
     tool: Agent
-    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?![\s\S]*chunk-1-last-review\.md)'
     min: 0
     max: 0
   - type: tool_used
@@ -69,7 +79,7 @@ graders:
   - type: regex
     name: hand-back-leaves-the-medium-standing
     target: trace
-    pattern: 'standing `?0/0/1'
+    pattern: 'standing `?0/\d+/[1-9]'
   - type: regex
     name: hand-back-is-one-line-and-nothing-else
     # Was the judge `hand-back-is-the-one-line` until E5: it failed correct
@@ -77,4 +87,4 @@ graders:
     # split, the standing count, in that order, with nothing before or after.
     # The known-bad reference `handback-one-line` names this grader.
     target: last_message
-    pattern: '^\s*[^\n]*commits\b[^\n]*gate \W{0,2}PASS\b[^\n]*\(reg \W{0,2}1\W{0,2}, pre \W{0,2}1\W{0,2}\)[^\n]*standing \W{0,2}0/0/1[^\n]*\s*$'
+    pattern: '^\s*[^\n]*commits\b[^\n]*gate \W{0,2}PASS\b[^\n]*\(reg \W{0,2}1\W{0,2}, pre \W{0,2}1\W{0,2}\)[^\n]*standing \W{0,2}\d+/\d+/[1-9]\d*[^\n]*\s*$'

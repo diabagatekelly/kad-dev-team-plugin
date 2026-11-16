@@ -1,0 +1,47 @@
+schema_version: "1.0"
+name: orchestrator-gate-checks-route-back
+description: "The A step's gate checks when the project has neither the file nor the section (0.15.0's A.5, held by no case until 0.15.1): an issue fix whose planning is done, on a project with no `gate-checks.json` and no technology-bootstrap document. The orchestrator routes back to `software-architect:technology-bootstrap` for the Gate checks section as its own log entry, launches no agent, writes no `gate-checks.json` and records no baseline itself."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. Issue #14 is the one I told you to fix first on its own branch, and its planning is done (entries 10 to 12 of the log). What's next? On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command). If the sandbox check fails here, write no settings and continue unsandboxed. I won't be around to answer questions while you work: stop at the first thing that needs me.
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: regex
+    name: routes-back-to-the-bootstrap
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: 'Routed to:\*\*\s*`?software-architect:technology-bootstrap'
+  - type: tool_used
+    name: bootstrap-skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:technology-bootstrap"'
+    min: 1
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: gate-checks-file-not-written-by-the-orchestrator
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*gate-checks\.json"'
+    match: not_contains
+  - type: tool_used
+    name: no-baseline-recorded
+    tool: Bash
+    input_match: '--record-gate-baselines'
+    min: 0
+    max: 0

@@ -371,6 +371,26 @@ def changed_files(project, base, baseline):
     return sorted(set(files))
 
 
+def project_relative(project, path):
+    """A path handed on the command line as the gate compares it: relative
+    to the project, `/`-separated, its trailing `/` kept. An absolute path
+    inside the project is read as the path relative to it (a runner once
+    passed the records directory as it was handed, absolute, and the gate
+    failed scope on the run's own records); one outside the project is left
+    as it is and matches nothing."""
+    text = path.replace("\\", "/")
+    if not os.path.isabs(path):
+        return text
+    try:
+        rel = os.path.relpath(os.path.realpath(path), os.path.realpath(project))
+    except ValueError:  # another drive on Windows
+        return text
+    if rel == os.curdir or rel == os.pardir or rel.startswith(os.pardir + os.sep):
+        return text
+    rel = rel.replace(os.sep, "/")
+    return rel + "/" if text.endswith("/") else rel
+
+
 def allowed(path, entry):
     return path.startswith(entry) if entry.endswith("/") else path == entry
 
@@ -827,7 +847,8 @@ def added_lines(project, base, files):
             if lines is not None:
                 out[f] = set(range(1, len(lines) + 1))
             continue
-        proc = subprocess.run([find_git(), "diff", "-U0", "--no-renames", base, "--", f], cwd=project,
+        # An argument list and no shell: `base` and `f` reach git as single arguments, after `--` for the path.
+        proc = subprocess.run([find_git(), "diff", "-U0", "--no-renames", base, "--", f], cwd=project,  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
                               capture_output=True, text=True, encoding="utf-8", errors="replace")
         if proc.returncode != 0:
             continue
@@ -1606,13 +1627,14 @@ def main():
         outputs.update(gate_outputs)
     report["checks"]["changes"] = {"passed": bool(files), "count": len(files),
                                    "files": sorted(files)}
-    module_dirs = [d.replace("\\", "/") for d in a.module_dir]
+    module_dirs = [project_relative(project, d) for d in a.module_dir]
     if a.allow:
         target = os.path.abspath(a.planning) if a.planning else os.path.join(project, "planning")
-        report["checks"]["scope"] = check_scope(files, a.allow, module_dirs, [z.replace("\\", "/") for z in a.deviation_zone],
+        report["checks"]["scope"] = check_scope(files, [project_relative(project, e) for e in a.allow], module_dirs,
+                                                [project_relative(project, z) for z in a.deviation_zone],
                                                 os.path.relpath(os.path.realpath(target), os.path.realpath(project)).replace(os.sep, "/"))
     if a.protect:
-        report["checks"]["protected"] = check_protected(project, a.protect, files)
+        report["checks"]["protected"] = check_protected(project, [project_relative(project, p) for p in a.protect], files)
     expected = list(a.expect_test)
     if a.expect_tests_from:
         if a.chunk is None:

@@ -36,7 +36,7 @@ Each finding becomes one sidecar row:
 
     {"chunk": 3, "round": 1, "reviewer": "review", "severity": "Medium",
      "persona": null, "title": "...", "file": "src/x.ts", "line": 12,
-     "class": "regression" | "pre-existing" | "owed" | null, "fix": "<sha>" | null,
+     "class": "regression" | "pre-existing" | "last-fix" | "owed" | null, "fix": "<sha>" | null,
      "fixer": "<agent id>" | null, "turns": n | null,
      "report": "chunk-3-r1-review.md", "session": "<the session that recorded it>"}
 
@@ -65,6 +65,14 @@ never a fixer's (no fix makes a browser appear), it is left out of the
 counts and the smoke count, it is printed as an `owed:` line, and it
 stands like a pre-existing finding: `--standing` lists it, so it reaches
 the pull request body and its issue as the owner's checklist.
+
+**The last-fix review** (`--last`, 0.15.1): the one diff-scoped review of
+what a scope committed after its last review (a regressions fix, a gate
+fixer's commit, a CI or triage fix). No fixer follows it in the scope's
+own rounds, so there is no split to make: every Critical, High and Medium
+it raises is class `last-fix` and stands, printed as a `standing:` line
+and listed by `--standing` with the pre-existing ones. Its fragment is
+`last <C>/<H>/<M>` in place of `r<i> …`.
 
 **The criteria walk** (0.14.1, handoff-slice2 P2.1): a report whose
 filename ends in `-walk.md` (`slice-r0-walk.md`, the AC walk at D) carries,
@@ -125,7 +133,7 @@ Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/rounds_record.py --sidecar <path>
            --report <path> [--report <path> ...] [--reviewer NAME ...]
            --chunk <k|D|pr> --round <i>
            [--project <root> --range <before>..<after>]
-           [--fix <sha>] [--fixer <agent id>] [--turns <n>] [--json <out>]
+           [--last] [--fix <sha>] [--fixer <agent id>] [--turns <n>] [--json <out>]
        python3 -I .../rounds_record.py --sidecar <path> --standing [--chunk <k>]
 """
 import argparse
@@ -392,7 +400,8 @@ def record(a):
             rows.append({"chunk": chunk_value(a.chunk), "round": a.round, "reviewer": reviewer,
                          "severity": f["severity"], "persona": f["persona"], "title": f["title"],
                          "file": f["file"], "line": f["line"],
-                         "class": classify(f, reviewer, changed),
+                         "class": ("last-fix" if a.last and f["severity"] in ACTIONABLE and not OWED.match(f["title"] or "")
+                                   else classify(f, reviewer, changed)),
                          "fix": a.fix, "fixer": a.fixer, "turns": a.turns, "report": key,
                          "session": a.session or None})
 
@@ -416,7 +425,7 @@ def record(a):
     counts = {s: sum(1 for r in counted if r["severity"] == s) for s in ("Critical", "High", "Medium", "Low", "needs-decision")}
     actionable = [r for r in counted if r["severity"] in ACTIONABLE]
     regressions = sum(1 for r in actionable if r["class"] == "regression")
-    standing = [r for r in actionable if r["class"] == "pre-existing"]
+    standing = [r for r in actionable if r["class"] in ("pre-existing", "last-fix")]
     smoke_findings = sum(1 for r in counted if r["reviewer"] == "smoke")
 
     for r in walked:
@@ -430,10 +439,10 @@ def record(a):
     for r in owed:
         print(f"owed: {r['severity']} — {r['title']} ({where(r)}); stands, never handed to a fixer")
 
-    line = f"r{a.round} {counts['Critical']}/{counts['High']}/{counts['Medium']}"
+    line = f"{'last' if a.last else 'r' + str(a.round)} {counts['Critical']}/{counts['High']}/{counts['Medium']}"
     if counts["needs-decision"]:
         line += f" nd {counts['needs-decision']}"
-    if changed is not None:
+    if changed is not None and not a.last:
         line += f" (reg {regressions}, pre {len(standing)})"
     if smoke_seen:
         smoke_owed = any(r["reviewer"] == "smoke" for r in owed)
@@ -460,7 +469,7 @@ def list_standing(a):
         if r.get("kind") == "criterion" and r.get("result") == "NOT REACHABLE" and (a.chunk is None or str(r.get("chunk")) == a.chunk):
             print(f"walk: NOT REACHABLE — {r.get('criterion')} ({r.get('how')})")
     rows = [r for r in rows if r.get("kind") != "criterion"]
-    rows = [r for r in rows if r.get("class") in ("pre-existing", "owed") and r.get("severity") in ACTIONABLE]
+    rows = [r for r in rows if r.get("class") in ("pre-existing", "last-fix", "owed") and r.get("severity") in ACTIONABLE]
     if a.chunk is not None:
         rows = [r for r in rows if str(r.get("chunk")) == a.chunk]
     order = {s: n for n, s in enumerate(ACTIONABLE)}
@@ -480,6 +489,8 @@ def main():
     p.add_argument("--round", type=int, help="round number: 0 the first review, 1 the re-review of the first fix, ...")
     p.add_argument("--project", default=".", help="the repository, for --range")
     p.add_argument("--range", help="<before>..<after> of the fix being re-reviewed; classifies each finding by hunk")
+    p.add_argument("--last", action="store_true",
+                   help="the review of a scope's last fix: no fixer follows, so every Critical, High and Medium stands (class last-fix)")
     p.add_argument("--fix", help="the fix commit these findings were raised against")
     p.add_argument("--fixer", help="the fixer agent's id")
     p.add_argument("--turns", type=int, help="the fixer's turn count")

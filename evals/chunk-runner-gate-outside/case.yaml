@@ -52,6 +52,15 @@ graders:
     min: 1
     max: 1
   - type: tool_used
+    name: fixer-launched-as-sonnet
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*"model"\s*:\s*"sonnet")'
+    min: 1
+  - type: tool_order
+    name: sandbox-checked-before-the-fixer
+    before: {tool: Bash, input_match: 'sandbox_check\.py'}
+    after: {tool: Agent, input_match: 'tdd-coach'}
+  - type: tool_used
     name: no-reviewer-before-the-pass
     tool: Agent
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'

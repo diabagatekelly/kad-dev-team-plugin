@@ -12,7 +12,7 @@ execution:
 
     The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
 
-    Resume point: the round stopped in step 3: the combined reviewer and the smoke agent have returned and written `chunk-1-r0-review.md` and `chunk-1-r0-smoke.md`; round 0 is not recorded yet. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Then act as the skill says.
+    Resume point: the round stopped in step 3, after both hand-backs. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only).
   model: opus
   max_turns: 40
   timeout_seconds: 1500
@@ -45,6 +45,20 @@ graders:
     tool: Bash
     input_match: 'rounds_record\.py'
     min: 1
+  - type: tool_used
+    name: no-report-opened
+    # Nothing is launched in this case, so a Read of a round-0 report is
+    # the runner's own: the counts are the script's, never read by eye.
+    tool: Read
+    input_match: 'chunk-1-r0-(?:review|smoke)\.md'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-report-opened-through-the-shell
+    tool: Bash
+    input_match: '\b(?:cat|head|tail|less|more|sed|awk|grep|rg)\b[^|;&]*chunk-1-r0-(?:review|smoke)\.md'
+    min: 0
+    max: 0
   - type: tool_used
     name: nothing-launched
     tool: Agent

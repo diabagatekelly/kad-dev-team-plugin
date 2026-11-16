@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: code-review-chunk-gate-covers
-description: "TODO.md's B2 (0.15.0): the chunk reviewer reports what the gate does not hold. Chunk 1's in-memory queue opens each of its four methods with the same four lines (short of what the project's duplication check counts, so the gate passes and its output lists duplication among what it covers) and finds a hold by the start of its card number, so a cancel for card 100 removes card 1001's hold. The combined review reports the wrong match as a finding and raises no finding on the repeated lines."
+description: "TODO.md's B2 (0.15.0): the chunk reviewer reports what the gate does not hold. Chunk 1's in-memory queue writes the ISBN's normalisation out in each of its four methods, a line that is reasonable once (short of what the project's duplication check counts, so the gate passes and its output lists duplication among what it covers) and finds a hold by the start of its card number, so a cancel for card 100 removes card 1001's hold. The combined review reports the wrong match as a finding and raises no finding on the repeated lines."
 tags: [code-review, library-app, regression]
 context:
   scaffold_script: scaffold.sh
@@ -41,19 +41,20 @@ graders:
   - type: regex
     name: duplication-left-to-the-gate
     # No finding on the slice's source (a Location under infra/ or
-    # lending/) whose title or Category is duplication. A sentence that
-    # says duplication is the gate's passes: it is not a finding. Two
-    # things a first form failed and this one does not: a test-quality
-    # finding on two tests that assert the same thing (its Category said
-    # "duplicate"; that is the test lens's own subject), and a finding
-    # that the repeated lines are needless on their own ("a ternary that
-    # does nothing ... in every method", Category "more than needed"):
-    # the planted block is ceremony as well as repetition, and saying so
-    # is not counting copies.
+    # lending/) whose title says the code is repeated or duplicated, or
+    # whose Category is duplication. A sentence that says duplication is
+    # the gate's passes: it is not a finding. A test-quality finding on
+    # two tests that assert the same thing is the test lens's own subject
+    # (its Location is under test/) and passes. Until 0.15.1 the planted
+    # block was needless in itself as well as repeated ("a ternary that
+    # does nothing ... in every method"), so a title could not be read
+    # for "repeated"; the block is now one line that is reasonable once
+    # (the ISBN's normalisation), and the only thing to say about it is
+    # that it is written four times.
     target:
       source: file
       path: docs/cancel-hold/implementation/chunk-1-r0-review.md
-    pattern: '(?:^|\n)###(?=(?:(?!\n###)[\s\S])*?\*\*Location:?\*\*:?\s*`?(?:infra|lending)/)(?:[^\n]*(?:duplicat|copy-?past|\bDRY\b)|(?:(?!\n###)[\s\S])*?\*\*Category:?\*\*:?[^\n]*duplicat)'
+    pattern: '(?:^|\n)###(?=(?:(?!\n###)[\s\S])*?\*\*Location:?\*\*:?\s*`?(?:infra|lending)/)(?:[^\n]*(?:duplicat|repeat|copy-?past|\bDRY\b|(?:four|4|every|each)\s+(?:times|methods?|places))|(?:(?!\n###)[\s\S])*?\*\*Category:?\*\*:?[^\n]*duplicat)'
     flags: i
     match: not_contains
   - type: regex

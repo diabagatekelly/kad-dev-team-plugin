@@ -4,7 +4,7 @@
  "edits": [
   {
    "file": "skills/orchestrator/SKILL.md",
-   "old": "   **Mutation on the changed lines**, inline with Bash, while the tree\n   is still (no reviewer is running yet): a tool breaks each line the\n   slice added, one operator at a time, and the suite says whether any\n   test notices.\n\n   ```\n   python3 -I \"${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py\" changed --repo '<project root>' --base '<base>' --out \"${TMPDIR:-/tmp}/kad-mutants-<slice>.json\"\n   python3 -I \"${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py\" run --repo '<project root>' --mutants \"${TMPDIR:-/tmp}/kad-mutants-<slice>.json\" --test '<documented test command>' --base '<base>' --allow-dirty --out '<records dir>/slice-mutation.md'\n   ```\n\n   The mutants file holds lines of the source and stays outside the\n   tree; the report carries counts, lines and test names only. The\n   run's last line, `mutation: <n> mutants, <c> caught, <s> survived`,\n   goes on the D line as printed. You read no survivor and judge none:\n   the test-quality reviewer is handed the report and says which\n   matter. A run that cannot start (the baseline fails, a file would\n   not restore) is `mutation: not run (<the script's line>)` on the D\n   line and the reviewers go ahead without it. Only then:\n",
+   "old": "   **Mutation on the changed lines**, inline with Bash, while the tree\n   is still (no reviewer is running yet): a tool breaks each line the\n   slice added, one operator at a time, and the suite says whether any\n   test notices.\n\n   ```\n   python3 -I \"${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py\" changed --repo '<project root>' --base '<base>' --out \"${TMPDIR:-/tmp}/kad-mutants-<slice>.json\"\n   python3 -I \"${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py\" run --repo '<project root>' --mutants \"${TMPDIR:-/tmp}/kad-mutants-<slice>.json\" --test '<documented test command>' --base '<base>' --allow-dirty --remove-mutants --out '<records dir>/slice-mutation.md'\n   ```\n\n   The mutants file holds lines of the source: it stays outside the\n   tree, readable by its owner alone, and `--remove-mutants` deletes it\n   when the pass ends, however it ends. With `--allow-dirty` the pass\n   runs in a disposable clone under the temp directory and never writes\n   to the project's tree, so a run that is killed leaves no mutant in\n   it. The report carries counts, lines and test names only. The\n   run's last line, `mutation: <n> mutants, <c> caught, <s> survived`,\n   goes on the D line as printed. You read no survivor and judge none:\n   the test-quality reviewer is handed the report and says which\n   matter. A run that cannot start (the baseline fails, a file would\n   not restore) is `mutation: not run (<the script's line>)` on the D\n   line and the reviewers go ahead without it. Only then:\n",
    "new": "   Only then:\n"
   },
   {
@@ -33,13 +33,8 @@
   "mutation-pass-run-on-the-loop-tree"
  ],
  "observed": {
-  "date": "2026-11-16",
-  "runs": 3,
-  "claude_version": "2.1.325",
-  "rates": {
-   "mutants-written-for-the-changed-lines": 0.0,
-   "mutation-pass-run-on-the-loop-tree": 0.0
-  },
-  "note": "a first run removed the step alone and the pass still ran 3 of 3, from the three other places the skill names it and the script's own help"
+  "date": null,
+  "runs": 0,
+  "note": "rewritten for 0.15.1; not run yet"
  }
 }

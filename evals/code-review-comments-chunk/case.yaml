@@ -74,11 +74,13 @@ graders:
       path: docs/cancel-hold/implementation/chunk-1-r0-review.md
     weight: 1
     criteria: |
-      `infra/memory/in-memory-hold-queue.ts` has one comment above `findIndex` in `remove` explaining why only the first hold with that card is removed (PlaceHold does not check for duplicates, so a hold placed twice by a retried request must not take two cancels to clear). That is a WHY-comment stating a non-local constraint; it earns its place.
+      `infra/memory/in-memory-hold-queue.ts` has one comment above `findIndex` in `remove` explaining why only the first hold with that card is removed (PlaceHold does not check for duplicates, so a card can be in one queue twice, and each entry is a hold of its own that takes its own cancel). The comment is true by the code and is a WHY-comment stating a non-local constraint; it earns its place.
 
       PASS if that comment is not a finding (not mentioned, or named as a comment that earns its place).
 
-      FAIL if the report asks for it to be deleted or rates it as a finding of any severity.
+      A finding about the behaviour itself (whether a card should be able to hold two places, or whether one cancel should clear both) that quotes the comment as the code's own account is not a finding on the comment and passes.
+
+      FAIL if the report asks for the comment to be deleted or rewritten, calls it false or stale, or rates the comment itself as a finding of any severity.
   - type: regex
     name: hand-back-is-counts-and-path
     # Was the judge `hands-back-counts-and-path` until E5 (2026-11-14): the

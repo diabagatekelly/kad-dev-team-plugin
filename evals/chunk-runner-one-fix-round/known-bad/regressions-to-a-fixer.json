@@ -4,8 +4,13 @@
  "edits": [
   {
    "file": "skills/chunk-runner/SKILL.md",
-   "old": "Regressions\n   go to a **second and last** fixer (a fresh launch, the same shape,\n   `Fix r2` line), then the gate (`gate-chunk-<k>-r2.txt`); the chunk is\n   done: **no third review**.",
-   "new": "The chunk is done: **no third review**."
+   "old": "Regressions\n   go to a **second and last** review fixer (a fresh launch, the same\n   shape, `Fix r2` line; whatever gate fixers ran before it), then the\n   gate (`gate-chunk-<k>-r2.txt`), then step 5: **no third fix\n   round**.",
+   "new": "The chunk is done: **no third fix round**."
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": ", so a regression the re-review finds still gets\n   its `Fix r2` after one",
+   "new": ""
   }
  ],
  "fails": [
@@ -13,13 +18,8 @@
   "gate-on-the-fix"
  ],
  "observed": {
-  "date": "2026-11-14",
-  "runs": 3,
-  "claude_version": "2.1.325",
-  "rates": {
-   "second-and-last-fixer": 0.0,
-   "gate-on-the-fix": 0.0
-  },
-  "note": "caught only since E5 reworded the prompt's resume line, which used to say \"then acting on the split\""
+  "date": null,
+  "runs": 0,
+  "note": "rewritten for 0.15.1; not run yet"
  }
 }

@@ -22,3 +22,12 @@ test('a title nobody holds has no head, no length and nothing to remove', async 
   assert.equal(await queue.lengthFor('9780000000000'), 0);
   assert.equal(await queue.remove('9780000000000', '1001'), false);
 });
+
+test('an ISBN written with hyphens or spaces names the same title', async () => {
+  const queue = new InMemoryHoldQueue();
+  await queue.enqueue(new Hold('978-0-14-044913-6', '1001', 1, placedOn));
+  assert.equal(await queue.lengthFor(isbn), 1);
+  assert.equal((await queue.headFor('978 0140449136'))?.cardNumber, '1001');
+  assert.equal(await queue.remove('978-0140449136', '1001'), true);
+  assert.equal(await queue.lengthFor(isbn), 0);
+});

@@ -67,16 +67,27 @@ the cap thins the pass evenly instead of dropping the last files. The
 mutants file holds lines of the source: write it outside the tree.
 
 `run --allow-dirty` is for the slice review's own tree, where the
-orchestrator's log is modified and never committed inside the loop: the
-tree's tracked changes must be the same after every mutant as before the
-run, and no mutant's file may be among them.
+orchestrator's log is modified and never committed inside the loop. That
+tree is somebody's work, so the pass never writes to it: it runs in a
+disposable clone under the temp directory, at the tree's HEAD, with the
+tree's uncommitted changes to tracked files applied, its untracked files
+copied and its ignored entries (the installed dependencies) linked, and
+the clone is removed when the pass ends, however it ends. A run killed
+between a mutant's write and its restore leaves the mutant in a folder
+under the temp directory and nothing in the project. No mutant's file
+may be among the uncommitted changes.
+
+`run --remove-mutants` deletes the mutants file when the pass ends, also
+when it fails or refuses: for a file `changed` wrote, which holds lines
+of the source (`changed` creates it readable by its owner alone). A
+reviewer's own hand-written file is kept by leaving the flag out.
 
 Usage:
   python3 -I <scripts>/mutation_pass.py check --repo DIR --mutants FILE
   python3 -I <scripts>/mutation_pass.py changed --repo DIR --base REF --out FILE [--max 40]
   python3 -I <scripts>/mutation_pass.py run --repo DIR --mutants FILE --test 'CMD'
       [--typecheck 'CMD'] [--base origin/main] [--out REPORT.md] [--log LOG.jsonl]
-      [--timeout SECONDS] [--title TEXT] [--allow-dirty]
+      [--timeout SECONDS] [--title TEXT] [--allow-dirty] [--remove-mutants]
   (from this repository: python3 -I skills/orchestrator/scripts/mutation_pass.py ...)
 Exit codes: 0 ran (survivors are findings, not failures); 1 usage, a
 mutant that does not match once, or a tree that is not clean; 2 the
@@ -89,9 +100,11 @@ import json
 import os
 import re
 import shlex
+import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 
 FAIL_LINE = re.compile(
@@ -334,7 +347,14 @@ def changed(a):
     if a.max and total > a.max:
         step = total / a.max
         mutants = [mutants[int(i * step)] for i in range(a.max)]
-    with open(a.out, "w", encoding="utf-8") as f:
+    # The file holds lines of the source: its owner alone reads it, whatever
+    # the umask, and a file already there is narrowed before it is written.
+    fd = os.open(a.out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.chmod(a.out, 0o600)
+    except OSError:
+        pass
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(mutants, f, indent=1)
         f.write("\n")
     say(f"mutants: {len(mutants)} written to {a.out} ({lines_read} added lines in {len(files)} source files; "
@@ -344,6 +364,49 @@ def changed(a):
 
 def tracked_changes(repo):
     return git(repo, "status", "--porcelain", "--untracked-files=no").stdout
+
+
+def scratch_clone(repo, holder):
+    """A disposable clone of `repo` inside `holder` as the tree stands: HEAD
+    checked out, the uncommitted changes to tracked files applied, the
+    untracked files copied, and every ignored entry (installed dependencies,
+    build output) linked from the tree, so the test command finds what it
+    finds there. Returns (clone, None) or (None, why)."""
+    clone = os.path.join(holder, "tree")
+    head = git(repo, "rev-parse", "HEAD").stdout.strip()
+    made = git(holder, "clone", "-q", "--no-checkout", repo, clone)
+    if made.returncode != 0:
+        return None, f"git clone failed: {(made.stderr.strip().splitlines() or ['no message'])[-1]}"
+    out = git(clone, "checkout", "-q", "--detach", head)
+    if out.returncode != 0:
+        return None, f"git checkout {head[:7]} failed in the clone: {(out.stderr.strip().splitlines() or ['no message'])[-1]}"
+    patch = subprocess.run(["git", "diff", "--binary", "HEAD"], cwd=repo, capture_output=True)
+    if patch.returncode != 0:
+        return None, "git diff HEAD failed"
+    if patch.stdout.strip():
+        applied = subprocess.run(["git", "apply", "--whitespace=nowarn"], cwd=clone, input=patch.stdout, capture_output=True)
+        if applied.returncode != 0:
+            return None, "the tree's uncommitted changes did not apply to the clone"
+    for rel in git(repo, "ls-files", "-z", "--others", "--exclude-standard").stdout.split("\0"):
+        if rel:
+            dest = os.path.join(clone, rel)
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            shutil.copy2(os.path.join(repo, rel), dest, follow_symlinks=False)
+    for rel in git(repo, "ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory").stdout.split("\0"):
+        rel = rel.rstrip("/")
+        dest = os.path.join(clone, rel)
+        if not rel or os.path.lexists(dest):
+            continue
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        source = os.path.join(repo, rel)
+        try:
+            os.symlink(source, dest, target_is_directory=os.path.isdir(source))
+        except OSError:  # no symlinks for this user (Windows): a copy does
+            if os.path.isdir(source):
+                shutil.copytree(source, dest, symlinks=True)
+            else:
+                shutil.copy2(source, dest)
+    return clone, None
 
 
 def run(a, mutants):
@@ -385,24 +448,37 @@ def run(a, mutants):
     except OSError as e:
         say(f"mutation_pass: cannot create {lock}: {e}")
         return 1
+    holder = None
     try:
-        return run_locked(a, repo, mutants, head, changed, log, record)
+        work = repo
+        if a.allow_dirty:
+            holder = tempfile.mkdtemp(prefix="kad-mutation-")
+            work, why = scratch_clone(repo, holder)
+            if why:
+                say(f"mutation_pass: no disposable clone of {repo} ({why}); nothing mutated")
+                return 1
+            say(f"mutation_pass: running in a disposable clone, {work}; {repo} is not written to")
+        return run_locked(a, repo, work, mutants, head, changed, log, record)
     finally:
+        if holder:
+            shutil.rmtree(holder, ignore_errors=True)
         try:
             os.unlink(lock)
         except OSError:
             pass
 
 
-def run_locked(a, repo, mutants, head, changed, log, record):
+def run_locked(a, repo, work, mutants, head, changed, log, record):
+    """The pass itself, in `work`: the repository, or its disposable clone
+    under `--allow-dirty`. The report and the messages name `repo`."""
     if a.typecheck:
-        tcode, tout, _ = run_cmd(a.typecheck, repo, a.timeout)
+        tcode, tout, _ = run_cmd(a.typecheck, work, a.timeout)
         if tcode != 0:
             say(f"mutation_pass: the typecheck fails on the baseline (exit {tcode}); nothing mutated")
             say(tout.strip().splitlines()[-1] if tout.strip() else "")
             return 2
     say(f"mutation_pass: baseline `{a.test}` in {repo} at {head}")
-    code, out, secs = run_cmd(a.test, repo, a.timeout)
+    code, out, secs = run_cmd(a.test, work, a.timeout)
     verdict, count, names = read_result(code, out)
     if verdict != "survived":
         why = out.strip().splitlines()[-1] if code in (TIMED_OUT, NOT_RUN) and out.strip() else ""
@@ -417,13 +493,13 @@ def run_locked(a, repo, mutants, head, changed, log, record):
     record({"mutant": 0, "baseline": True, "exit": 0, "tests": base_count, "seconds": round(secs, 1)})
 
     results = []
-    before = tracked_changes(repo) if a.allow_dirty else ""
+    before = tracked_changes(work) if a.allow_dirty else ""
     # A termination (Ctrl-C, a kill) raises through the `finally` below, so
     # the mutant in flight is restored before the runner exits.
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     for i, m in enumerate(mutants, 1):
-        line, _ = locate(repo, m)
-        path, _ = mutant_path(repo, m)
+        line, _ = locate(work, m)
+        path, _ = mutant_path(work, m)
         with open(path, encoding="utf-8") as f:
             text = f.read()
         try:
@@ -432,13 +508,13 @@ def run_locked(a, repo, mutants, head, changed, log, record):
                 f.write(text.replace(m["old"], m["new"], 1))
             type_caught = False
             if a.typecheck:
-                tcode, _, _ = run_cmd(a.typecheck, repo, a.timeout)
+                tcode, _, _ = run_cmd(a.typecheck, work, a.timeout)
                 type_caught = tcode not in (0, TIMED_OUT, NOT_RUN)
-            code, out, secs = run_cmd(a.test, repo, a.timeout)
+            code, out, secs = run_cmd(a.test, work, a.timeout)
         finally:
-            git(repo, "checkout", "--", m["file"])
+            git(work, "checkout", "--", m["file"])
         verdict, count, names = read_result(code, out)
-        after = tracked_changes(repo) if a.allow_dirty else git(repo, "status", "--porcelain").stdout.strip()
+        after = tracked_changes(work) if a.allow_dirty else git(work, "status", "--porcelain").stdout.strip()
         if after != before:
             say(f"mutation_pass: the tree is not clean after mutant {i} ({m['file']}); stopped")
             record({"mutant": i, "file": m["file"], "line": line, "restored": False})
@@ -541,7 +617,9 @@ def main():
     r.add_argument("--timeout", type=int, default=1800, help="seconds per command (1800)")
     r.add_argument("--title", help="the report's title (default: the repo's basename)")
     r.add_argument("--allow-dirty", action="store_true",
-                   help="run on a tree with uncommitted changes to other tracked files (the loop's log); they must be the same after every mutant")
+                   help="for a tree with uncommitted changes to other tracked files (the loop's log): the pass runs in a disposable clone and the tree is never written to")
+    r.add_argument("--remove-mutants", action="store_true",
+                   help="delete the mutants file when the pass ends, also when it fails (for a file `changed` wrote)")
     g = sub.add_parser("changed", help="write one mutant per operator on the lines a range added to the source files")
     g.add_argument("--repo", required=True)
     g.add_argument("--base", required=True, help="the range is <base>...HEAD")
@@ -550,10 +628,16 @@ def main():
     a = ap.parse_args()
     if a.cmd == "changed":
         return changed(a)
-    mutants = load_mutants(a.mutants)
     if a.cmd == "check":
-        return check(os.path.abspath(a.repo), mutants)
-    return run(a, mutants)
+        return check(os.path.abspath(a.repo), load_mutants(a.mutants))
+    try:
+        return run(a, load_mutants(a.mutants))
+    finally:
+        if a.remove_mutants:
+            try:
+                os.unlink(a.mutants)
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":

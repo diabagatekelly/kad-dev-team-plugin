@@ -1,0 +1,20 @@
+{
+ "skill": "orchestrator",
+ "rule": "with no gate-checks.json and no Gate checks section, the A step routes back to technology-bootstrap for that section",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "   - **No file and no section**: a backward route, its own entry, to\n     `software-architect:technology-bootstrap` for that section alone\n     (its re-entry rule), then step 2 again. Nothing else of the\n     bootstrap is reopened.\n",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "routes-back-to-the-bootstrap",
+  "bootstrap-skill-invoked"
+ ],
+ "observed": {
+  "date": null,
+  "runs": 0,
+  "note": "new in 0.15.1; not run yet"
+ }
+}
