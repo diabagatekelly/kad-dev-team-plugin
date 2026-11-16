@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The plugin's flow for a brand-new project, as one page. Open it in a browser.
+     Keep it current: when a change moves a stage, a persona, a skill, a launch's model or a script
+     in skills/orchestrator, skills/chunk-runner or skills/delivery, change the matching row here in
+     the same pull request, and the version in the lede. -->
+<title>kad-dev-team flow map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one vertical route, top to bottom, on a left rail. Each stop is a row:
+   what happens | who does it (persona and skill) | which tools decide. Three kinds of work, three hues. */
+:root {
+  --bg: #f5f6f8; --surface: #ffffff; --sunk: #eceef2; --ink: #1a2130; --muted: #5d6677; --line: #d5d9e1;
+  --model: #4348b8; --model-bg: #e9eafb; --tool: #0b7466; --tool-bg: #dff3ee; --owner: #a85d00; --owner-bg: #fbecd2;
+  --rail: #9aa3b5;
+  --display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12151c; --surface: #1b1f29; --sunk: #232836; --ink: #e7eaf1; --muted: #a0a8b9; --line: #343b4c;
+  --model: #a9adff; --model-bg: #2a2d5c; --tool: #6fdcc8; --tool-bg: #143f39; --owner: #f2b866; --owner-bg: #4a3411;
+  --rail: #5c6578; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12151c; --surface: #1b1f29; --sunk: #232836; --ink: #e7eaf1; --muted: #a0a8b9; --line: #343b4c;
+  --model: #a9adff; --model-bg: #2a2d5c; --tool: #6fdcc8; --tool-bg: #143f39; --owner: #f2b866; --owner-bg: #4a3411;
+  --rail: #5c6578; color-scheme: dark }
+
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font-family: var(--display); font-size: clamp(26px, 4vw, 38px); line-height: 1.1; margin: 0 0 10px; text-wrap: balance; letter-spacing: -0.01em; }
+.lede { color: var(--muted); max-width: 66ch; margin: 0 0 22px; }
+h2 { font-family: var(--display); font-size: 21px; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--display); font-size: 16px; margin: 0; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+
+/* legend and filter */
+.legend { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
+.legend button { font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; border-radius: 999px; padding: 6px 14px 6px 10px;
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); display: inline-flex; align-items: center; gap: 8px; }
+.legend button:focus-visible { outline: 2px solid var(--model); outline-offset: 2px; }
+.legend button[aria-pressed="true"] { border-color: var(--ink); }
+.dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.dot.m { background: var(--model); } .dot.t { background: var(--tool); border-radius: 50%; } .dot.o { background: var(--owner); transform: rotate(45deg); border-radius: 1px; }
+.legend-note { color: var(--muted); font-size: 13.5px; margin: 0 0 28px; max-width: 80ch; }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: baseline; gap: 6px; border-radius: 6px; padding: 3px 8px; font-size: 13px; line-height: 1.35; border: 1px solid transparent; min-width: 0; overflow-wrap: anywhere; }
+.chip.m { background: var(--model-bg); color: var(--model); }
+.chip.t { background: var(--tool-bg); color: var(--tool); font-family: var(--mono); font-size: 12.25px; border-radius: 999px; }
+.chip.o { background: var(--owner-bg); color: var(--owner); }
+.chip b { font-weight: 600; }
+.tag { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; opacity: 0.85; white-space: nowrap; }
+
+/* phases on a rail */
+.phase { position: relative; padding-left: 30px; margin-bottom: 34px; }
+.phase::before { content: ""; position: absolute; left: 8px; top: 12px; bottom: -34px; width: 2px; background: var(--rail); }
+.phase:last-of-type::before { bottom: 0; }
+.phase > header { position: relative; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-bottom: 12px; }
+.phase > header::before { content: ""; position: absolute; left: -29px; top: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink); border: 3px solid var(--bg); }
+.phase > header p { margin: 0; color: var(--muted); font-size: 14px; flex-basis: 100%; max-width: 78ch; }
+.letter { font-family: var(--display); font-weight: 700; color: var(--muted); }
+
+.rows { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.row { background: var(--surface); display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.2fr) minmax(0, 1.15fr); gap: 8px 18px; padding: 11px 14px; align-items: start; }
+.row.head { background: var(--sunk); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; color: var(--muted); padding-block: 7px; }
+.row > div { min-width: 0; }
+.what strong { font-weight: 600; }
+.what span { display: block; color: var(--muted); font-size: 13.5px; }
+.cond { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 6px; white-space: nowrap; }
+.none { color: var(--muted); font-size: 13px; }
+
+/* nested box: what one chunk runner carries */
+.nest { border: 1.5px dashed var(--rail); border-radius: 12px; padding: 12px; margin-top: 10px; background: color-mix(in srgb, var(--sunk) 55%, transparent); }
+.nest > .cap { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; margin: 0 2px 10px; }
+.nest > .cap p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.repeat { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--surface); background: var(--ink); border-radius: 4px; padding: 1px 7px; }
+.after { margin-top: 10px; }
+
+/* script table */
+.scripts { width: 100%; border-collapse: collapse; font-size: 14px; }
+.scripts th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; padding: 8px 12px; background: var(--sunk); }
+.scripts td { padding: 9px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+.scripts td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(--tool); white-space: nowrap; }
+.tablebox { border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; background: var(--surface); }
+.section { margin-top: 44px; }
+.section > p { color: var(--muted); max-width: 72ch; margin: 6px 0 14px; }
+.aside-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.aside-grid > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.aside-grid p { margin: 6px 0 8px; color: var(--muted); font-size: 13.5px; }
+
+/* filter states */
+body[data-show="m"] .chip:not(.m), body[data-show="t"] .chip:not(.t), body[data-show="o"] .chip:not(.o) { opacity: 0.16; }
+body[data-show="t"] .scripts td:first-child { font-weight: 500; }
+@media (prefers-reduced-motion: no-preference) { .chip { transition: opacity 0.15s; } }
+
+@media (max-width: 760px) {
+  .row { grid-template-columns: minmax(0, 1fr); }
+  .row.head { display: none; }
+  .row > div:nth-child(2)::before, .row > div:nth-child(3)::before { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .row > div:nth-child(2)::before { content: "Who"; } .row > div:nth-child(3)::before { content: "Tools"; }
+  .scripts td:first-child { white-space: normal; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>How kad-dev-team takes a new project from an idea to a pull request</h1>
+  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.15.0 (pull request #62).</p>
+
+  <div class="legend" role="group" aria-label="Highlight one kind of work">
+    <button type="button" id="f-all" data-show="" aria-pressed="true">Show all</button>
+    <button type="button" id="f-m" data-show="m" aria-pressed="false"><span class="dot m"></span>Model judgement</button>
+    <button type="button" id="f-t" data-show="t" aria-pressed="false"><span class="dot t"></span>Tool, no model</button>
+    <button type="button" id="f-o" data-show="o" aria-pressed="false"><span class="dot o"></span>The owner decides</button>
+  </div>
+  <p class="legend-note">A model chip reads <b>persona</b> · skill, with where it runs: <span class="tag">inline</span> is the main session following the skill, <span class="tag">agent</span> is a separate agent launched on Sonnet or Opus. A tool chip is a script or command whose output is taken as it prints: the model runs it and does not second-guess it.</p>
+
+  <!-- ============ SESSION ============ -->
+  <section class="phase">
+    <header><h2>Every turn: the orchestrator finds the next step</h2>
+      <p>The owner says "what's next" and never has to name a persona. The orchestrator is a skill the main session loads. It inspects what exists, routes exactly one step, logs it, and reports.</p></header>
+    <div class="rows">
+      <div class="row head"><div>What happens</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>Start the session</strong><span>The whole session is fenced and logged before any model call.</span></div>
+        <div class="chips"><span class="chip o">The owner runs the launcher once per session</span></div>
+        <div class="chips"><span class="chip t">bin/kad</span><span class="chip t">sandbox runtime</span><span class="chip t">hooks/audit.sh</span></div></div>
+      <div class="row"><div class="what"><strong>Check for open work first</strong><span>An open slice pull request or a Critical or High issue is routed before any planning.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span></div>
+        <div class="chips"><span class="chip t">gh pr list</span><span class="chip t">gh issue list</span></div></div>
+      <div class="row"><div class="what"><strong>Inspect and route</strong><span>Reads which documents exist in the target folder and picks the first missing stage. A stage that finds a problem in an earlier one routes back to that document's owner.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> · routing table <span class="tag">inline</span></span></div>
+        <div class="none">None. Routing is the model reading files.</div></div>
+      <div class="row"><div class="what"><strong>Log and report</strong><span>One entry per routed step in <code>orchestrator-log.md</code>.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span></div>
+        <div class="none">None in the flow. A log checker exists for reviews.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ PLANNING ============ -->
+  <section class="phase">
+    <header><h2>Planning: one document per stage, in this order</h2>
+      <p>Every planning skill runs inline in the main session, because most of them stop to ask the owner. Nothing here writes code. Stages marked UI only run when the slice has a screen.</p></header>
+    <div class="rows">
+      <div class="row head"><div>Stage and its document</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>1. Frame the problem</strong><span>A one-page problem doc.</span></div>
+        <div class="chips"><span class="chip m"><b>docs-writer</b> · problem-framing-doc <span class="tag">inline</span></span><span class="chip o">Why now, who is affected</span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>2. Map the scope</strong><span class="cond" style="display:inline-block;margin:0 0 2px">large problems</span><span>A named list of steps, or a decision to treat the problem as one unit.</span></div>
+        <div class="chips"><span class="chip m"><b>docs-writer</b> · scope-map <span class="tag">inline</span></span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>3. Pin the requirement</strong><span>Who benefits, what they want, why. Files the owner provides are listed by location and never opened.</span></div>
+        <div class="chips"><span class="chip m"><b>product-manager</b> · requirements-refinement <span class="tag">inline</span></span><span class="chip o">Confirms the what</span></div>
+        <div class="chips"><span class="chip t">source_scan.py describe</span></div></div>
+      <div class="row"><div class="what"><strong>4. Cut the first slice</strong><span>Thin path, acceptance criteria, placeholders for the three criteria stages, deferrals with a triage sentence each.</span></div>
+        <div class="chips"><span class="chip m"><b>product-slicer</b> · vertical-slicing <span class="tag">inline</span></span><span class="chip m"><b>product-slicer</b> · acceptance-criteria <span class="tag">inline</span></span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>5. Write the user story</strong><span>And decide whether it is filed, and in which tracker.</span></div>
+        <div class="chips"><span class="chip m"><b>docs-writer</b> · user-story-writeup <span class="tag">inline</span></span><span class="chip o">Which tracker</span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>6. Design the structure</strong><span>Module boundaries and dependency direction, one decision at a time. Consults the map and the security persona; hands ADR-worthy decisions on.</span></div>
+        <div class="chips"><span class="chip m"><b>software-architect</b> · architecture-design <span class="tag">inline</span></span><span class="chip m"><b>architecture-cartographer</b> · map-query <span class="tag">consult</span></span><span class="chip m"><b>docs-writer</b> · adr <span class="tag">if needed</span></span><span class="chip o">Approves each boundary</span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>7. Security criteria</strong><span>A threat pass turned into testable criteria.</span></div>
+        <div class="chips"><span class="chip m"><b>devsecops-engineer</b> · security-requirements <span class="tag">inline</span></span><span class="chip o">Data and obligations in play</span></div>
+        <div class="chips"><span class="chip t">source_scan.py scan</span></div></div>
+      <div class="row"><div class="what"><strong>8. Reliability criteria</strong><span>Failure modes, what degrades and what fails loudly, with numbers.</span></div>
+        <div class="chips"><span class="chip m"><b>devsecops-engineer</b> · reliability-requirements <span class="tag">inline</span></span><span class="chip o">Targets</span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>9. Design system</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI, once per project</span><span>Tokens and core component patterns.</span></div>
+        <div class="chips"><span class="chip m"><b>ux-designer</b> · design-system <span class="tag">inline</span></span><span class="chip o">Picks a direction</span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>10. Screen design</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI</span><span>A mockup of every state the slice names.</span></div>
+        <div class="chips"><span class="chip m"><b>ux-designer</b> · screen-design <span class="tag">inline</span></span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>11. Accessibility criteria</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI</span><span>The mockup is driven, not only read: keyboard order, computed contrast, structure.</span></div>
+        <div class="chips"><span class="chip m"><b>accessibility-engineer</b> · accessibility-review <span class="tag">inline</span></span></div>
+        <div class="chips"><span class="chip t">Chrome, driven</span></div></div>
+      <div class="row"><div class="what"><strong>12. Choose the stack</strong><span>Only what the first failing test forces, a default set for the rest, and a tool for each of the gate's eight categories.</span></div>
+        <div class="chips"><span class="chip m"><b>software-architect</b> · technology-bootstrap <span class="tag">inline</span></span><span class="chip m"><b>devsecops-engineer</b> · supply-chain-review <span class="tag">consult</span></span><span class="chip o">Approves each choice, then the set</span></div><div class="none">None. It records which tools the gate will run.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ A ============ -->
+  <section class="phase">
+    <header><h2><span class="letter">A</span> Start the build</h2>
+      <p>From here on it is the chunk loop. The orchestrator stays in the main session and keeps the log, the records and the owner's questions; everything that writes or reviews code is a separate agent.</p></header>
+    <div class="rows">
+      <div class="row head"><div>What happens</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>Is there a repository with a remote?</strong><span>A brand-new project usually has none: the flow routes back once to create one.</span></div>
+        <div class="chips"><span class="chip m"><b>release-engineer</b> · repo-bootstrap <span class="tag">inline</span></span><span class="chip o">Name, visibility, default branch</span></div>
+        <div class="chips"><span class="chip t">git rev-parse</span><span class="chip t">git remote get-url</span></div></div>
+      <div class="row"><div class="what"><strong>Is the session fenced?</strong><span>The agents run unattended with a shell, so the sandbox is probed from inside before any launch, and again before every launch after.</span></div>
+        <div class="chips"><span class="chip o">Only if it fails: fix or continue unfenced</span></div>
+        <div class="chips"><span class="chip t">sandbox_check.py</span></div></div>
+      <div class="row"><div class="what"><strong>Two questions at most</strong><span>May personas settle design gaps themselves (a delegation file), and which review cadence.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span><span class="chip o">Delegation, cadence</span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>Is the planning ready to build from?</strong><span>Ten mechanical checks over the documents. A failure routes back to the persona that owns the document, not to a fixer.</span></div>
+        <div class="chips"><span class="chip m">The owning persona, on a failure <span class="tag">inline</span></span></div>
+        <div class="chips"><span class="chip t">readiness_check.py</span><span class="chip t">source_scan.py</span></div></div>
+      <div class="row"><div class="what"><strong>Wire the gate's checks</strong><span>The tools the bootstrap picked are installed and the existing code is recorded as their baseline. On an empty repository this waits until chunk 1 has made a manifest.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">agent · Sonnet</span></span></div>
+        <div class="chips"><span class="chip t">validation_gate.py --record-gate-baselines</span></div></div>
+    </div>
+  </section>
+
+  <!-- ============ B ============ -->
+  <section class="phase">
+    <header><h2><span class="letter">B</span> Plan the chunks</h2></header>
+    <div class="rows">
+      <div class="row head"><div>What happens</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>Split the slice into two to eight chunks</strong><span>Each with a title, the criteria it delivers, its files, its "done when" tests (one a seam test) and what it touches.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">agent · Sonnet</span></span><span class="chip m"><b>architecture-cartographer</b> · map-query <span class="tag">consult</span></span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>Check the plan's shape</strong><span>Every line present, every path inside the design's modules. The plan is never edited: a bad one goes back once.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> · a fixed checklist <span class="tag">inline</span></span></div><div class="none">None. The model applies the checklist.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ C ============ -->
+  <section class="phase">
+    <header><h2><span class="letter">C</span> Build, one chunk at a time</h2>
+      <p>One chunk runner per chunk carries the whole round on a short context and hands back a single line. It never asks the owner and never decides anything that is not mechanical.</p></header>
+    <div class="rows">
+      <div class="row head"><div>The orchestrator's side</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>Launch the runner</strong><span>After a sandbox check and a hash of the owner's real data folder.</span></div>
+        <div class="chips"><span class="chip m"><b>chunk-runner</b> · chunk-runner <span class="tag">agent · Opus</span></span></div>
+        <div class="chips"><span class="chip t">sandbox_check.py</span><span class="chip t">scratch_run.py --hash</span></div></div>
+    </div>
+
+    <div class="nest">
+      <div class="cap"><span class="repeat">Repeats for each chunk</span><h3>Inside one chunk runner</h3><p>Four steps, at most two reviews and two fixers.</p></div>
+      <div class="rows">
+        <div class="row head"><div>Step</div><div>Who</div><div>Tools that decide</div></div>
+        <div class="row"><div class="what"><strong>1. Build</strong><span>Tests first, seen failing on their own assertions, then the code, then one commit.</span></div>
+          <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">agent · Sonnet</span></span><span class="chip m"><b>architecture-cartographer</b> · map-query <span class="tag">consult</span></span></div>
+          <div class="chips"><span class="chip t">git cat-file</span><span class="chip t">git rev-list</span></div></div>
+        <div class="row"><div class="what"><strong>2. Gate</strong><span>Suite, typecheck, lint, coverage of changed files and changed lines, the project's eight check categories against their baselines, scope, protected documents, the "done when" test names, the owner's values, and a replay of the builder's transcript for shell edits. A failure goes to one fixer.</span></div>
+          <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet, on FAIL</span></span></div>
+          <div class="chips"><span class="chip t">validation_gate.py</span><span class="chip t">gate-checks.json</span><span class="chip t">source_scan.py</span><span class="chip t">ts_runtime_lines.mjs</span></div></div>
+        <div class="row"><div class="what"><strong>3. Review and smoke, in parallel</strong><span>One reviewer carries three lenses and reports behaviour, names, comments and design, not what the gate covers. One agent starts the real app on made-up data and drives the chunk's "done when".</span></div>
+          <div class="chips"><span class="chip m"><b>code-reviewer</b> · code-review + test-quality-review + reliability-review <span class="tag">agent · Opus</span></span><span class="chip m"><b>accessibility-engineer</b> · accessibility-review, or <b>tdd-coach</b> with no screen <span class="tag">smoke · Opus</span></span></div>
+          <div class="chips"><span class="chip t">scratch_run.py</span><span class="chip t">Chrome, driven</span><span class="chip t">rounds_record.py</span></div></div>
+        <div class="row"><div class="what"><strong>4. One fix round</strong><span>Every finding to one fresh fixer, the gate again, a re-review of the fix's diff only, and a second fixer for regressions. No third review.</span></div>
+          <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span><span class="chip m"><b>code-reviewer</b> · the same three lenses <span class="tag">re-review · Opus</span></span></div>
+          <div class="chips"><span class="chip t">validation_gate.py</span><span class="chip t">rounds_record.py --range</span></div></div>
+      </div>
+    </div>
+
+    <div class="rows after">
+      <div class="row head"><div>Back with the orchestrator</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>Check the hand-back line</strong><span>Every commit hash on it must exist in the chunk's range before anything is written or asked.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span></div>
+        <div class="chips"><span class="chip t">git cat-file</span><span class="chip t">git rev-list</span><span class="chip t">scratch_run.py --hash</span></div></div>
+      <div class="row"><div class="what"><strong>A finding that needs a decision</strong><span>No document states the rule. The owning persona decides and commits it, or recommends and the owner decides.</span></div>
+        <div class="chips"><span class="chip m"><b>software-architect</b>, <b>devsecops-engineer</b>, <b>ux-designer</b> or <b>accessibility-engineer</b> <span class="tag">consult · Opus</span></span><span class="chip o">Without a delegation file</span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>Records, audit copy, budget</strong><span>Commit the reports, copy the transcripts to the audit repository, count hours and launches.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span><span class="chip o">If the budget is exceeded</span></div>
+        <div class="chips"><span class="chip t">audit_sync.py</span></div></div>
+    </div>
+  </section>
+
+  <!-- ============ D ============ -->
+  <section class="phase">
+    <header><h2><span class="letter">D</span> Review the whole slice</h2>
+      <p>Once, after the last chunk. Three tool passes come before any reviewer is launched.</p></header>
+    <div class="rows">
+      <div class="row head"><div>What happens</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>Regenerate the architecture map</strong><span>Real import edges and exports, diffed against the last map; wrong-direction edges flagged.</span></div>
+        <div class="chips"><span class="chip m"><b>architecture-cartographer</b> · map-update <span class="tag">inline</span></span></div>
+        <div class="chips"><span class="chip t">extract_map.py</span></div></div>
+      <div class="row"><div class="what"><strong>Definition of Done</strong><span>Nine checks: README, lint and format, typecheck, no code in strings, comment density and more. Failures are fixed in one batch.</span></div>
+        <div class="chips"><span class="chip m"><b>docs-writer</b> · readme <span class="tag">inline</span></span><span class="chip m"><b>code-reviewer</b> · why-comments <span class="tag">agent · Opus</span></span><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span></div>
+        <div class="chips"><span class="chip t">done_check.py</span><span class="chip t">validation_gate.py</span></div></div>
+      <div class="row"><div class="what"><strong>Mutate the changed lines</strong><span>Each operator on a line the slice added is flipped and the suite run. What survives is a line no test holds.</span></div>
+        <div class="none">Nobody. The orchestrator reads no survivor.</div>
+        <div class="chips"><span class="chip t">mutation_pass.py changed</span><span class="chip t">mutation_pass.py run</span></div></div>
+      <div class="row"><div class="what"><strong>Six reviewers, in parallel</strong><span>Each reads the code cold first, then four of them check their own criteria. The test-quality reviewer reads the mutation survivors.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · test-quality-review <span class="tag">Opus</span></span><span class="chip m"><b>code-reviewer</b> · code-review <span class="tag">Opus</span></span><span class="chip m"><b>software-architect</b> · architecture-review <span class="tag">Opus</span></span><span class="chip m"><b>devsecops-engineer</b> · security-review <span class="tag">Opus</span></span><span class="chip m"><b>devsecops-engineer</b> · reliability-review <span class="tag">Opus</span></span><span class="chip m"><b>accessibility-engineer</b> · accessibility-review <span class="tag">Opus, UI</span></span></div>
+        <div class="chips"><span class="chip t">rounds_record.py</span></div></div>
+      <div class="row"><div class="what"><strong>Walk the criteria in a browser</strong><span class="cond" style="display:inline-block;margin:0 0 2px">UI</span><span>Every acceptance criterion a browser can reach: pass, fail or not reachable, with a screenshot.</span></div>
+        <div class="chips"><span class="chip m"><b>accessibility-engineer</b> · accessibility-review, criteria walk <span class="tag">agent · Opus</span></span></div>
+        <div class="chips"><span class="chip t">scratch_run.py</span><span class="chip t">Chrome, driven</span></div></div>
+      <div class="row"><div class="what"><strong>The cold read</strong><span>A fresh clone, the README from its first command, no planning document. Each thing the slice adds is run beside the older code it meets; only bugs confirmed by running go to the fixer.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · cold-read <span class="tag">agent · Opus</span></span></div>
+        <div class="chips"><span class="chip t">scratch_run.py</span><span class="chip t">git clone</span></div></div>
+      <div class="row"><div class="what"><strong>One fix round, then regressions only</strong><span>A Critical or High still standing stops the flow for the owner. Mediums go to the pull request.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span><span class="chip m">The same reviewers, on the fix's diff <span class="tag">Opus</span></span><span class="chip o">Standing Critical or High</span></div>
+        <div class="chips"><span class="chip t">validation_gate.py</span><span class="chip t">rounds_record.py --range</span><span class="chip t">audit_sync.py</span></div></div>
+    </div>
+  </section>
+
+  <!-- ============ E ============ -->
+  <section class="phase">
+    <header><h2><span class="letter">E</span> Deliver</h2>
+      <p>No question is asked here. The slice is done only when the pull request's checks are green.</p></header>
+    <div class="rows">
+      <div class="row head"><div>What happens</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>Write the CI</strong><span class="cond" style="display:inline-block;margin:0 0 2px">if the repository has none</span><span>The gate's commands on Linux and macOS, actions pinned to commits, read-only permissions.</span></div>
+        <div class="chips"><span class="chip m"><b>release-engineer</b> · ci-pipeline <span class="tag">inline</span></span></div>
+        <div class="chips"><span class="chip t">gh api, tag to commit</span></div></div>
+      <div class="row"><div class="what"><strong>Push and open the pull request</strong><span>History is scanned for the owner's values first. The body is written from the records; the slice's deferrals are listed once by a script; standing Mediums become issues.</span></div>
+        <div class="chips"><span class="chip m"><b>release-engineer</b> · delivery <span class="tag">inline</span></span><span class="chip m"><b>docs-writer</b> · pr-writeup <span class="tag">inline</span></span></div>
+        <div class="chips"><span class="chip t">source_scan.py scan --history</span><span class="chip t">deferrals.py</span><span class="chip t">rounds_record.py --standing</span><span class="chip t">git push</span><span class="chip t">gh pr create</span><span class="chip t">gh issue create</span></div></div>
+      <div class="row"><div class="what"><strong>Watch the checks</strong><span>Red goes to a fixer told which system failed, three rounds at most. No result is never green.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet, on red</span></span></div>
+        <div class="chips"><span class="chip t">gh pr checks</span><span class="chip t">gh run view</span></div></div>
+      <div class="row"><div class="what"><strong>Triage the external review</strong><span>One verdict per comment: fix, decline with the reason, defer to an issue, or already resolved. Up to five rounds.</span></div>
+        <div class="chips"><span class="chip m"><b>code-reviewer</b> · external-review-triage <span class="tag">agent · Opus</span></span><span class="chip m"><b>tdd-coach</b> · tdd-implementation-lite <span class="tag">fixer · Sonnet</span></span></div>
+        <div class="chips"><span class="chip t">gh api, comments</span></div></div>
+      <div class="row"><div class="what"><strong>Cost and audit</strong><span>Dollars by role from the transcripts; every session's transcript copied to the audit repository, withheld if it holds a value of the owner's.</span></div>
+        <div class="none">Nobody</div>
+        <div class="chips"><span class="chip t">cost_by_role.py</span><span class="chip t">audit_sync.py</span></div></div>
+    </div>
+  </section>
+
+  <!-- ============ SCRIPTS ============ -->
+  <div class="section">
+    <h2>The scripts, and what each one decides without a model</h2>
+    <p>All but two live beside the orchestrator skill. The model runs them and carries their last line; it does not re-count or overrule them.</p>
+    <div class="tablebox">
+      <table class="scripts">
+        <thead><tr><th>Script</th><th>Decides</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td>sandbox_check.py</td><td>Whether the session is fenced from the machine's keys and the network</td><td>A, and before every launch</td></tr>
+          <tr><td>readiness_check.py</td><td>Whether the planning documents are complete enough to build from (ten checks)</td><td>A</td></tr>
+          <tr><td>source_scan.py</td><td>Whether any file or transcript holds a value from a file the owner provided</td><td>Planning, the gate, delivery, the audit copy</td></tr>
+          <tr><td>validation_gate.py</td><td>Whether a commit passes: suite, typecheck, lint, coverage, the eight check categories against their baselines, scope, test names</td><td>C after every build and fix; D</td></tr>
+          <tr><td>rounds_record.py</td><td>How many findings at each severity, and which are regressions of a fix</td><td>C and D, after every review</td></tr>
+          <tr><td>scratch_run.py</td><td>That the app starts only on made-up data inside a scratch folder, and that the owner's real data did not change</td><td>Every smoke run, the criteria walk, the cold read</td></tr>
+          <tr><td>extract_map.py</td><td>The real import edges and exports, and what changed since the last map</td><td>D</td></tr>
+          <tr><td>done_check.py</td><td>The Definition of Done (nine checks)</td><td>D</td></tr>
+          <tr><td>mutation_pass.py</td><td>Which changed lines no test would notice breaking</td><td>D</td></tr>
+          <tr><td>deferrals.py</td><td>The list of what the slice ships without, for the pull request body</td><td>E</td></tr>
+          <tr><td>cost_by_role.py</td><td>What the slice cost, by role</td><td>E</td></tr>
+          <tr><td>audit_sync.py</td><td>Which transcripts are copied to the audit repository and which are withheld</td><td>After every chunk, D and E</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Not on this route</h2>
+    <p>These skills run when the owner asks, or once a slice is delivered. The orchestrator never routes to them on its own.</p>
+    <div class="aside-grid">
+      <div><h3>On request</h3><p>Reviews and audits of code or docs that already exist.</p>
+        <div class="chips"><span class="chip m"><b>devsecops-engineer</b> · supply-chain-review</span><span class="chip m"><b>devsecops-engineer</b> · operational-readiness</span><span class="chip m"><b>docs-writer</b> · staleness-audit</span><span class="chip m"><b>docs-writer</b> · user-facing-docs</span><span class="chip m"><b>code-reviewer</b> · why-comments</span></div></div>
+      <div><h3>After delivery, by the plugin's owner</h3><p>A review of the recorded sessions against the skills' own rules. It runs a second cold read and a hand-written mutation pass that the loop never sees.</p>
+        <div class="chips"><span class="chip m">audit-review</span><span class="chip t">audit_report.py</span><span class="chip t">orchestrator_log_check.py</span></div></div>
+      <div><h3>No case holds these yet</h3><p>Two steps new in 0.15.0 have not been exercised by an eval case: wiring the gate's checks at A, and the launch of the cold reader at D. The next real slice is their first run.</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var buttons = document.querySelectorAll('.legend button');
+  function show(kind) {
+    if (kind) { document.body.setAttribute('data-show', kind); } else { document.body.removeAttribute('data-show'); }
+    buttons.forEach(function (b) { b.setAttribute('aria-pressed', String((b.getAttribute('data-show') || '') === kind)); });
+  }
+  buttons.forEach(function (b) { b.addEventListener('click', function () { show(b.getAttribute('data-show') || ''); }); });
+})();
+</script>
+</body>
+</html>

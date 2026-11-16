@@ -14,6 +14,8 @@ One skill, `orchestrator`, isn't tied to any single persona — it routes a
 problem to whichever persona/skill applies next by inspecting what already
 exists, instead of you having to name the right one each time.
 
+**The flow at a glance:** [`docs/flow-map.html`](docs/flow-map.html) is one page (open it in a browser) that follows a brand-new project from the first "what's next" to a pull request: every stage, the persona and skill that does it, whether it runs inline or as a Sonnet or Opus agent, and which scripts decide something with no model. It is kept by hand: a change that moves a stage, a launch or a script updates its row in the same pull request.
+
 ## Start
 
 From the project's root, in a terminal:
