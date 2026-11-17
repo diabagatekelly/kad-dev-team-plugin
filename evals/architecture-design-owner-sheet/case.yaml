@@ -45,6 +45,9 @@ graders:
     # B10: with a shell, the file's shape comes from `source_scan.py
     # describe` or is not looked at; a Read or Grep of the export itself,
     # or a command that prints it, is the miss the item asks about.
+    # `sed` and `wc` are not in the list: the first run that failed here
+    # was a `sed -i` on sources.md whose text names the export, and a line
+    # count prints no cell.
     target: trace
-    pattern: '"name":"(?:Read|Grep)","input":\{[^{}]*desk-fees\.csv|"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\b(?:cat|head|tail|less|more|awk|sed|cut|sort|grep|rg|wc)\b[^|;&"]*desk-fees\.csv'
+    pattern: '"name":"(?:Read|Grep)","input":\{[^{}]*desk-fees\.csv|"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\b(?:cat|head|tail|less|more|awk|cut|sort|grep|rg)\b[^|;&"]*desk-fees\.csv'
     match: not_contains

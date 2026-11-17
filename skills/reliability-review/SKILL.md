@@ -337,6 +337,19 @@ lower it.
 - **Low** — instrumentation worth having; minor cleanups; speed
   improvements with a real but modest story.
 
+**Above Low needs a failure you can point to in this code today**: which
+call, failing how, leaves what state or tells nobody. On a path that
+already bounds its work, times out, catches, reports and answers with a
+defined error, what is left to say is refinement: a finer failure
+reason, a runbook whose wording could match the fields better, a
+saturation that would need a load nothing in the repository suggests.
+That is Low, said once, however sure you are that it would be better.
+A review of such a path that has a Medium has usually rated its own
+thoroughness. This lowers nothing the sections above name as a
+finding whatever the load: an unbounded result, a query per item, a
+leak, a call with no timeout keep their severity on a path that has
+one.
+
 An observability or error-context gap is Medium only when a failure on
 that path could not be told apart from the others with what is already
 reported; when the cause is already distinguishable (a failure reason, a

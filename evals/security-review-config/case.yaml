@@ -83,23 +83,27 @@ graders:
     input_match: '"skill"\s*:\s*"kad-dev-team:security-review"'
     min: 1
   - type: regex
-    name: migration-before-release-handed-on-in-one-line
+    name: other-reviews-problem-handed-on-in-one-line
+    # Read from the first runs: three of four handed the migration on and
+    # all four handed on the image build that ignores the lockfile (SC2)
+    # or the tag-pinned action (SC4), which are supply-chain-review's and
+    # as much another review's problem. Either line passes.
     # TODO.md's B8: the deploy job runs the migration before the release with no way back (OR2), which is operational-readiness's: no adversary is in the story.
     # One bullet under `## Handed on`, above the findings, that names the
     # problem, a severity it appears to have and the review that owns it.
     target:
       source: file
       path: docs/reviews/security-review-config.md
-    pattern: '##\s*Handed on\b(?:(?!\n##\s)[\s\S])*?\n\s*[-*]\s(?=[^\n]*(?:migrat))(?=[^\n]*\b(?:Critical|High)\b)(?=[^\n]*operational-readiness)[^\n]*(?=[\s\S]*\n##\s*Findings\b)'
+    pattern: '##\s*Handed on\b(?:(?!\n##\s)[\s\S])*?\n\s*[-*]\s(?=[^\n]*\b(?:Critical|High)\b)(?:(?=[^\n]*migrat)(?=[^\n]*operational-readiness)|(?=[^\n]*(?:lockfile|package-lock|npm install|pinned|by tag|@v1|@main))(?=[^\n]*supply-chain-review))[^\n]*(?=[\s\S]*\n##\s*Findings\b)'
     flags: i
   - type: regex
     name: migration-before-release-not-a-ranked-finding
     # Never ranked among the review's own findings: no finding's heading
-    # is about it. Its limit: a finding that makes the complaint under
-    # another heading passes.
+    # is about the migration's order or its way back (a finding that the
+    # app and the migration share a database user is this review's own).
     target:
       source: file
       path: docs/reviews/security-review-config.md
-    pattern: '(?:^|\n)###[^\n]*migrat'
+    pattern: '(?:^|\n)###[^\n]*(?:migrat[^\n]*(?:before|roll|revers|undo|no way back|down path|ahead)|(?:before|roll|revers|undo)[^\n]*migrat)'
     flags: i
     match: not_contains

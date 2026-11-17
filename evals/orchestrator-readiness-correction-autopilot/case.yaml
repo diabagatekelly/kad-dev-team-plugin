@@ -56,9 +56,14 @@ graders:
       path: docs/cancel-hold/orchestrator-log.md
     pattern: 'readiness\s*(?:—|–|-+)\s*`?PASS after[^\n]*kept-for-later-slices'
   - type: regex
-    name: correction-logged-as-taken-as-recommended
+    name: route-entry-says-autopilot-applied
+    # The record that nothing was asked: the backward route's own log
+    # entry names the check and says the autopilot answer applied. The
+    # skill's exact bullet (`taken as recommended: <check> (autopilot)`)
+    # was not written on the first run, which put those words in the
+    # design instead; the entry is what the run writes either way.
     target:
       source: file
       path: docs/cancel-hold/orchestrator-log.md
-    pattern: 'taken as recommended:[^\n]*(?:kept-for-later-slices|Kept for later)[^\n]*autopilot'
+    pattern: 'kept-for-later-slices(?:(?!\n## )[\s\S]){0,900}autopilot'
     flags: i

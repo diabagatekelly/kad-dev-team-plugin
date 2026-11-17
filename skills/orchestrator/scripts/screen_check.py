@@ -330,7 +330,7 @@ def diff_images(base, shot, want_image=True):
 def git(cwd, *args):
     for exe in ("git", "/opt/homebrew/bin/git", "/usr/local/bin/git", "/usr/bin/git"):
         try:
-            r = subprocess.run([exe, *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+            r = subprocess.run([exe, *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
         except OSError:
             continue
         if r.returncode == 0:

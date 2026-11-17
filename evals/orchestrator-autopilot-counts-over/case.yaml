@@ -35,7 +35,9 @@ graders:
     tool: Agent
     input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner)(?=[\s\S]*Surface a queue failure)'
     min: 1
-    max: 1
+    # No upper bound: the harness wakes the session for every launched
+    # agent's end, and a run that went through chunk 2's whole round
+    # relaunched its runner at the fix, which is the loop working.
   - type: regex
     name: branch-left-as-it-is
     target: trace

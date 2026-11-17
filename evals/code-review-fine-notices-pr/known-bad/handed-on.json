@@ -1,0 +1,32 @@
+{
+ "skill": "code-review",
+ "rule": "a serious problem that is another review's is named in one line under `## Handed on`, with the severity it appears to have and its owner (TODO.md's B8)",
+ "edits": [
+  {
+   "file": "skills/code-review/SKILL.md",
+   "old": "## A serious problem that is another review's\n\nWhile reading for this review you will sometimes see a problem that is\nserious and is not this review's subject: a test that replaces the very thing it tests, a secret written to a log, a payment retried after a refusal, business code importing the database client.\nIt is not yours to rank, and it is not yours to read past. Write it at\nthe top of the report, above `## Findings`, under `## Handed on`, one\nline per problem:\n\n```markdown\n## Handed on\n\n- <what is wrong, in a clause>; `<path>:<line>`; appears <Critical | High>; owner: `<the review that owns it>`\n```\n\nThe severity is the one the problem appears to have on its owner's\nscale, never one rated down to fit this review's categories (a test that never runs the real code is not a Medium \"naming\" finding because names are what this review rates).\nThe line is never one of your findings: no `###` heading, no\n`**Severity:**` line, no place in the ranking and no suggested fix, so\nno fixer is handed it on a judgement this review is not the one to\nmake. One line is all of it: the owning review verifies it, sizes it\nand says what to do. Only what appears Critical or High goes there; a\nsmaller thing outside your subject is left unsaid. The owners:\n`code-review` (readability, names, comments, code the change does not\nneed), `test-quality-review` (what the tests prove),\n`architecture-review` (boundaries and the direction of dependencies),\n`security-review` (anything whose harm needs an adversary),\n`reliability-review` (what happens when something fails),\n`accessibility-review` (a rendered screen), `supply-chain-review`\n(dependencies and their pinning), `operational-readiness` (shipping and\nrolling back). In a combined chunk report, a problem one of the\nlaunch's own lenses owns is that lens's finding, not a line here. With\nnothing of the kind seen, the section is left out.\n\n",
+   "new": ""
+  },
+  {
+   "file": "skills/code-review/SKILL.md",
+   "old": "different judgment call — that's `tdd-coach:test-quality-review`'s, not\nyours: one that is serious (a test that replaces the thing it tests, a\ntest that cannot fail) is a `## Handed on` line, at the severity it\nappears to have there, and no finding of yours makes that complaint, in\nits title, its reasoning or its fix.\n",
+   "new": "different judgment call — that's `tdd-coach:test-quality-review`'s job, not\nyours.\n"
+  },
+  {
+   "file": "skills/code-review/SKILL.md",
+   "old": " A serious\nproblem of another review's is the `## Handed on` line at the top, not\nthis section.\n",
+   "new": "\n"
+  }
+ ],
+ "fails": [
+  "mock-only-test-handed-on-in-one-line"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "mock-only-test-handed-on-in-one-line": 0.0
+  }
+ }
+}

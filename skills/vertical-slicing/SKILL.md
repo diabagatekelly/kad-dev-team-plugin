@@ -1,6 +1,6 @@
 ---
 name: vertical-slicing
-description: Cut the smallest end-to-end shippable slice from a problem — picking what to build first, applying slicing techniques when the thinnest path isn't obvious, catching too-big/too-thin scope, and handling scope-creep pushback. Use once a problem framing doc exists and it's time to decide what to build first, when a proposed slice looks too big, too thin to demo, or scoped by layer instead of by user value, or when a later stage (security, reliability, architecture) hands back a scope change: a capability nobody scoped that a slice turns out to need.
+description: Cut the smallest end-to-end shippable slice from a problem — picking what to build first, applying slicing techniques when the thinnest path isn't obvious, catching too-big/too-thin scope, and handling scope-creep pushback. Use once a problem framing doc exists and it's time to decide what to build first, when a proposed slice looks too big, too thin to demo, or scoped by layer instead of by user value, or when a later stage (security, reliability, architecture) hands back a scope change: a capability nobody scoped that a slice turns out to need. When the request points at a file of the owner's (a sheet, an export, a screenshot), invoke this skill before opening that file with any tool: the skill says how such a file is read.
 ---
 
 # Vertical Slicing

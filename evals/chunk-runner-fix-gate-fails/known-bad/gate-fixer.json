@@ -1,0 +1,44 @@
+{
+ "skill": "chunk-runner",
+ "rule": "a gate's FAIL goes to its own one fixer, which the cap on review fixers does not count (F2): every place the skill states it, step 2's among them",
+ "edits": [
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "(the cap is on the fixers a review's\nfindings go to, `Fix r1` and `Fix r2`; a gate's own one fixer is not one\nof them, step 4)",
+   "new": "(step 4)"
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "   On any other `FAIL`, hand the failing checks to a fresh fixer (`model:\n   \"sonnet\"`, `maxTurns: 120`, `tdd-implementation-lite`, its \"Applying a\n   fix handed back from review\" path, the gate's output verbatim, chunks\n   are committed), once; run the gate again on the fix's range with the\n   same `--base`, saved as `gate-chunk-<k>-r0-fix.txt`. A second `FAIL`\n   ",
+   "new": "   Any other `FAIL`\n   "
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "   **Every gate gets its own one fixer, and the cap does not count it.**\n   A `FAIL` on a fix's gate (round 1's or round 2's) is handled as step\n   2 handles round 0's: the failing checks to one fresh gate fixer, the\n   gate again on the same `--base` (`gate-chunk-<k>-r<i>-fix.txt`), and\n   a second `FAIL` of that gate ends the round with `gate FAIL: <checks>;\n   ended`. The two fixers this step caps are the ones a review's findings\n   go to, `Fix r1` and `Fix r2`: a gate fixer sent in round 0 or round 1\n   takes neither place, so a regression the re-review finds still gets\n   its `Fix r2` after one. `fixers <m>` on your line counts every fixer\n   launched, the gates' included. A runner once sent a gate fixer after\n   round 1 and then left a regression unfixed as \"no third fixer\". ",
+   "new": ""
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "; whatever gate fixers ran before it)",
+   "new": ")"
+  },
+  {
+   "file": "skills/chunk-runner/SKILL.md",
+   "old": "the regressions fix, and its gate fixer's commit if there was\n   one, have been read by nobody",
+   "new": "the regressions fix has been read by nobody"
+  }
+ ],
+ "fails": [
+  "the-gates-one-fixer",
+  "gate-run-on-the-fix-and-again"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "the-gates-one-fixer": 0.0,
+   "gate-run-on-the-fix-and-again": 0.0
+  }
+ }
+}

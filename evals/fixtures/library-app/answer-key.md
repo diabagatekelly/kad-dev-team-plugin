@@ -533,6 +533,6 @@ of another review; one is planted for this.
 | H1 | CT3: the second `'works'` test in the `fine-notices` overlay mocks `build` and asserts the mock ran | `code-review-fine-notices-pr` and its `-via-agent` twin | `test-quality-review` |
 | H2 | R7: `fines/collect-fine.ts` charges the card again, up to three times, after any refusal | `test-quality-review-fines` (its coverage sweep reads the file) | `reliability-review` |
 | H3 | S8: `main/wiring.ts` `mailer()` falls back to a provider key written in the source | `library-app-structure-review` | `security-review` |
-| H4 | OR2: `deploy.yml` runs the migration before the release, with no way back | `security-review-config` | `operational-readiness` |
+| H4 | OR2: `deploy.yml` runs the migration before the release, with no way back; or SC2, the image build that ignores the lockfile, or SC4, the tag-pinned action | `security-review-config` | `operational-readiness`; `supply-chain-review` for SC2 and SC4 |
 | H5 | S7: `infra/postgres/postgres-loan-history.ts` builds its SQL from the portal's `?title=` | `reliability-review-http` | `security-review` |
 | H6 | `ui-plants/accessibility-review/visual-ux/pay-fine-declined.html`: on submit the page's script keeps the card number in `localStorage` (planted 2026-11-16) | `accessibility-review-payfine` | `security-review` |

@@ -121,6 +121,9 @@ graders:
     target:
       source: file
       path: docs/reviews/library-app-structure-review.md
-    pattern: '(?:^|\n)###[^\n]*(?:hard-?coded|api key|secret|credential|SendGrid key)'
+    # ("Secrets and configuration read in several places" is this review's
+    # own finding, about where configuration is read: the first form of
+    # this check failed it.)
+    pattern: '(?:^|\n)###[^\n]*(?:hard-?coded|api key|SendGrid key|key (?:in|committed)|committed (?:key|secret|credential))'
     flags: i
     match: not_contains
