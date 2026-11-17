@@ -862,7 +862,11 @@ gate sent it back four times over documents it had not touched
    call, in this order: browser, delegation, autopilot.** Never bundle two of them
    into one call, whatever the tool allows: a call carrying two questions
    is this rule broken. A question the owner's own message already
-   answered is skipped (a plain "go ahead" answers none). The settings,
+   answered is skipped (a plain "go ahead" answers none). **A session
+   with no question tool asks in plain text and ends its turn on the
+   question**: a question is never skipped, and its answer never
+   assumed, because the tool is missing; nothing after this step (the
+   branch, the gate, a launch) runs until the owner has answered. The settings,
    sandbox and transcript questions of 0.13.1 no longer exist: the
    launcher guarantees what they asked about (2026-11-08).
    - **Browser**: as A.1 says, only on a UI-touching slice with no
@@ -926,10 +930,13 @@ gate sent it back four times over documents it had not touched
    python3 -I "${CLAUDE_SKILL_DIR}/scripts/readiness_check.py" --planning '<target directory>' --slice <nnn>
    ```
 
-   Ten mechanical checks over the planning documents: every criterion
+   Eleven mechanical checks over the planning documents: every criterion
    quoted under a design component; every failure path homed; a number on
    every retry, wait, poll and give-up; security and reliability agreeing
-   on shared failure paths; a mockup for every named state; no open
+   on shared failure paths; a mockup for every named state; on a slice
+   with a screen design, its `## States this slice changes` section, each
+   state by its mockup's name (the list the screen-change check reads at
+   delivery); no open
    question routed to the implementer; a "Kept for later slices" line;
    every open or deferred item in the slice file triaged (`usable without
    it`, with how, or a blocker); a failure-mode row for an external
@@ -1476,6 +1483,43 @@ the values back in its own log bullet (incident 18).
    fix for a fresh Sonnet fixer with `supply-chain-review`'s
    recommendation, then the gate; you edit no manifest or lockfile
    yourself.
+
+   **The screen-change check**, when the target directory holds a screen
+   design for this slice (`visual-ux/screen-*<nnn>*.md`, the file the
+   readiness gate read). Every state with a saved baseline is rendered
+   again in CI and compared with it; two things have to be in the branch
+   before the push:
+   - **The check itself.** No `.github/workflows/screens.yml`: invoke
+     `release-engineer:ci-pipeline` inline, telling it the target
+     directory, for its screen job (the workflow, the capture harness
+     with its pinned browser, the comparison's copy, the threshold
+     file); it commits them by name. One that exists is left as it is.
+   - **A capture for each state the slice lists.** Inline with Bash:
+
+     ```
+     python3 -I "${CLAUDE_SKILL_DIR}/scripts/screen_check.py" states --planning '<target directory>' --capture screens/states.mjs --base '<default branch>'
+     ```
+
+     Its last line is `states: <n> listed, <m> not driven`, with one
+     `missing: <state>` line per state the screen design lists as
+     changed or new and the project's capture file does not drive. None
+     missing: go on. Otherwise sandbox check, then **one** fresh fixer
+     (`model: "sonnet"`, `maxTurns: 120`, `tdd-implementation-lite`, its
+     handed-back path, chunks are committed) handed the screen design
+     and `screens/capture.mjs` by path (its header is the contract), the
+     `missing:` lines as printed, and one named fix: in
+     `screens/states.mjs`, one quoted key per missing state, named
+     exactly as its line names it, whose function drives the built app
+     to that state on made-up data (the data rule: a temporary folder,
+     the project's fake credential tool, no provider connection, never
+     the owner's data directory), and nothing else changed: no source
+     file, no test, no baseline, no threshold, no screen design. Then
+     the gate on its range (with `--allow screens/`: the capture file
+     is outside the design's modules on purpose) and the script once
+     more. A state still
+     missing is not asked about: CI reports it and E.4's red path takes
+     it. The fixer's commit is read by E's one last-fix review with the
+     other fixes of this step. You write no capture code yourself.
 3. **Push and pull request.** Invoke `release-engineer:delivery` inline
    with the `Skill` tool, telling it: the branch, the base, the report's
    path, the records directory and the sidecar, the Definition of Done
@@ -1515,6 +1559,24 @@ the values back in its own log bullet (incident 18).
      sidecar with `"chunk": "pr"`.
    - `CI no result`, or red after the third fix: the flow stops at step
      5. Nothing after this point runs.
+
+   **The screens check has two red verdicts, and `delivery` reads which
+   before any fixer is thought of** (its "The screens check"). `screens:
+   BASELINES OWED` is no failure: only states the slice's screen design
+   lists changed, `delivery` adopts their new images as baselines from
+   the run's artifact with `screen_check.py adopt`, commits them, pushes
+   and watches again; no fixer, no round counted, and the E line carries
+   `baselines <sha> (<c> changed, <n> new, <r> removed)`. `screens:
+   FAIL` is `CI red r<i>` like any other, the same one fixer and the same
+   three rounds, with these two lines word for word in place of the
+   platform ones: the states the file names changed on screen and the
+   slice's screen design does not list them, so the cause is a style or
+   markup change that reached them from something the slice did change;
+   and the check is not weakened (no edit to a baseline image, the
+   threshold file, the screen design's changed-states list, the workflow
+   or the capture of a failing state: the code is made to leave those
+   states as they were). You never copy an image out of an artifact or
+   commit a baseline yourself.
 
    **A red or unsettled check is never reported as built.** Whenever
    the last watch did not say green, the report at step 5 opens with the
@@ -1640,7 +1702,7 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
   - decision `<n>` `<sha>` (`<persona>`)
   - taken as recommended: `<what>` (autopilot)
 - **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; mutation `<<n> mutants, <c> caught, <s> survived | not run (<why>)>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; cold `<<n> confirmed, <m> verify | PASS>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> …, as the C line>; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
-- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; checks `<CI green <sha> | CI red r<i>: <jobs> | CI no result>`<; ci r<i> fix `<sha>`>; issues `<#…>` (M `<m>`, deferred `<x>`); deferrals `<n>` listed; Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`<; last `<C/H/M>`<; auto r<i> …, as the C line>>; consults `<n>`; cost `$<n><, not covering <id> (no transcript)> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
+- **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; checks `<CI green <sha> | CI red r<i>: <jobs> | CI no result>`<; ci r<i> fix `<sha>`><; screens — states fix `<sha>`><; baselines `<sha>` (`<c>` changed, `<n>` new, `<r>` removed)>; issues `<#…>` (M `<m>`, deferred `<x>`); deferrals `<n>` listed; Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`<; last `<C/H/M>`<; auto r<i> …, as the C line>>; consults `<n>`; cost `$<n><, not covering <id> (no transcript)> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
   - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```
 

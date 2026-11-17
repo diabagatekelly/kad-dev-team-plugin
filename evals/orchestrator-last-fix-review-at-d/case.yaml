@@ -1,0 +1,42 @@
+schema_version: "1.0"
+name: orchestrator-last-fix-review-at-d
+description: "The last-fix review at the slice review (0.15.1's F5 at D, held by no case until 0.16.0): resumed in D's fix round after the regressions fixer's commit and its gate. The orchestrator launches exactly one agent, a code-reviewer on Opus, on that fix's range alone with `slice-last-review.md` as its report, and none of round 0's reviewers again. Graded on that one diff-scoped launch."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. Hand off as soon as the next agent has been launched: don't wait for it to return; write the handoff file saying it is in flight and stop.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: last-fix-reviewer-launched
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer)(?=[\s\S]*slice-last-review\.md)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: last-fix-reviewer-on-opus
+    tool: Agent
+    input_match: '(?=[\s\S]*slice-last-review\.md)(?=[\s\S]*"model"\s*:\s*"opus")'
+    min: 1
+  - type: tool_used
+    name: scoped-to-the-fixs-range
+    tool: Agent
+    input_match: '(?=[\s\S]*slice-last-review\.md)(?=[\s\S]*[0-9a-f]{7,40}\.\.(?:HEAD|[0-9a-f]{7,40}))'
+    min: 1
+  # No second review of the slice, no fixer for what it raises: one launch per scope.
+  - type: tool_used
+    name: one-launch-and-no-other
+    tool: Agent
+    min: 1
+    max: 1

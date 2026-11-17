@@ -10,6 +10,9 @@
 #      app, and its tests pass when run in place (`npm test`'s command),
 #      except code-review/days-left, whose test needs the planted runtime
 #      cycle and is only type-checked.
+#   7. the holds desk's screen (code-plants/loop/screens/base: the page
+#      the screen-change check's states drive) type-checks and its test
+#      passes the same way.
 # Run from anywhere: bash evals/fixtures/library-app/verify.sh
 set -euo pipefail
 
@@ -56,7 +59,7 @@ echo "ok: $(grep -m1 '^ℹ pass' "$out/test.log")"
 
 echo "== code overlays type-check and their tests pass"
 tdd="$(cd "$(dirname "${BASH_SOURCE[0]}")/code-plants/tdd" && pwd)"
-for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/* "$(dirname "$tdd")"/reliability-review/* "$(dirname "$tdd")"/loop/snapshots/*; do
+for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/code-review/* "$(dirname "$tdd")"/reliability-review/* "$(dirname "$tdd")"/loop/snapshots/* "$(dirname "$tdd")"/loop/screens/base; do
   dir="$out/overlay-$(basename "$overlay")"
   mkdir -p "$dir"
   cp -R "$app"/. "$dir"/
@@ -65,6 +68,12 @@ for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/cod
     # A delta over slice-built (the notice with escaping, for the delivery
     # state), checked the way state.sh layers it: on top of that snapshot.
     cp -R "$(dirname "$overlay")/slice-built"/. "$dir"/
+  fi
+  if [ "$(basename "$overlay")" = slice-r2-fixed ]; then
+    # A delta over slice-fixed (one more test of the notice's escaping,
+    # the regressions fix of the slice review's second round).
+    cp -R "$(dirname "$overlay")/slice-built"/. "$dir"/
+    cp -R "$(dirname "$overlay")/slice-fixed"/. "$dir"/
   fi
   cp -R "$overlay"/. "$dir"/
   (cd "$dir" && "$out/deps/node_modules/.bin/tsc" -p tsconfig.json --noEmit --typeRoots "$out/deps/node_modules/@types")

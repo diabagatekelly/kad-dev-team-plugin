@@ -3046,5 +3046,85 @@
    }
   },
   "findings": []
+ },
+ "ci-pipeline-screen-job": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for continuous integration and names the planning directory; that the project has a screen, and what a screen needs in CI, is left to the skill"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-capture-states": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there",
+   "note": "`nothing-launched` grades what the prompt forbids and the handoff is asked for; that a listed state needs a capture before the push is left to the skill"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "delivery-screens-stray": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there",
+   "note": "as `delivery-ci-red-not-done`: the handoff is asked for; that the screens check has a verdict to read, and that a stray state is no baseline, is left to the skill"
+  },
+  "judges": {
+   "report-leads-with-the-red-screens-check": {
+    "by": "reading",
+    "why": "whether the reply leads with the red check, names the unlisted state and calls nothing ready; a word list would pass a reply that says both"
+   }
+  },
+  "findings": []
+ },
+ "delivery-screens-owed": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "says where the build stopped and where the GitHub CLI is; what a red screens check means is left to the skill"
+  },
+  "judges": {},
+  "findings": [
+   "`baselines-adopted-by-the-script` does not fail with the skills' screens text removed: the project's own copy of `screen_check.py` documents `adopt`, and runs found it."
+  ]
+ },
+ "orchestrator-autopilot-round": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Hand off as soon as the next agent has been launched",
+   "note": "the bound names a launch, not which one; that a standing High gets a verification and not a stop is left to the skill. The state's `autopilot.md` says yes and names no stop"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-last-fix-review-at-d": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Hand off as soon as the next agent has been launched",
+   "note": "the bound names a launch, not which one; that the second fix is read once on its diff is left to the skill"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-autopilot-question": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "answers the delegation question and the sandbox one, and says nothing of autopilot"
+  },
+  "judges": {},
+  "findings": [
+   "Its reference loses runs to the clock: with no question the run builds the slice. Three clean runs over two passes, all failing."
+  ]
+ },
+ "orchestrator-autopilot-recorded": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "And yes to autopilot: take your own recommendation at the stops the chunk loop would otherwise put to me, and log each one",
+   "note": "the owner's answer is the state; the file, its name and what it holds are left to the skill"
+  },
+  "judges": {},
+  "findings": [
+   "`autopilot-file-written` does not fail with the A.2 bullet removed: the skill's Autopilot paragraph still names the file and the owner said yes. The file's content does fail."
+  ]
  }
 }

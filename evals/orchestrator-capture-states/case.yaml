@@ -1,0 +1,52 @@
+schema_version: "1.0"
+name: orchestrator-capture-states
+description: "C1 (0.16.0), the orchestrator's E.2 on a slice with a screen: resumed after D on a project whose screen-change check is in place, where the slice's screen design lists `queue-failure` as new and the capture file does not drive it. Before any push the orchestrator asks screen_check.py which listed states are not driven, writes no capture code itself, and (this run may launch no agent) hands off with the next action one fixer for `screens/states.mjs`, the missing state named."
+tags: [orchestrator, delivery, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command); the remote is already set up. This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there.
+  model: sonnet
+  max_turns: 50
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: listed-states-asked-of-the-script
+    tool: Bash
+    input_match: 'screen_check\.py[^\n]*\bstates\b[^\n]*--capture'
+    min: 1
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: no-capture-code-written-by-the-orchestrator
+    target: trace
+    pattern: '"name":"(?:Write|Edit)","input":\{"(?:file_path|path)":"[^"]*screens/states\.mjs"'
+    match: not_contains
+  - type: regex
+    name: nothing-pushed-while-a-state-is-not-driven
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)pr create'
+    match: not_contains
+  # The handoff for the launch this session may not make: the capture file and the state it does not drive.
+  - type: regex
+    name: handoff-names-the-fixer-and-the-missing-state
+    target: trace
+    pattern: 'handoff-slice-001\.md(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)(?=[\s\S]{0,8000}?queue-failure)(?=[\s\S]{0,8000}?states\.mjs)'
+  - type: regex
+    name: nothing-in-the-background
+    target: trace
+    pattern: '"run_in_background"\s*:\s*true'
+    match: not_contains

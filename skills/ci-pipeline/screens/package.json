@@ -1,0 +1,9 @@
+{
+  "name": "screens",
+  "private": true,
+  "description": "The screen-change check's browser, pinned. Installed by CI with `npm ci` in this folder; the project's own manifest does not carry it.",
+  "type": "module",
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}

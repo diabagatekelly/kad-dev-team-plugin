@@ -31,8 +31,9 @@ item or table cell that starts with `Given` (continuation lines joined
 until the next bullet or blank line), or one that carries an identifier
 like `AC-1`, `S1`, `SEC-3`, `R2`, `REL-4`, `A11Y-2`.
 
-The ten checks, in the order they run and print, how each decides, and
-where a failure routes:
+The eleven checks, in the order they run and print, how each decides, and
+where a failure routes (the eleventh, changed-states-listed, is described
+after the tenth and runs after the fifth):
 
 1. criteria-homed -> software-architect:architecture-design. Every
    criterion in the slice, security, reliability and accessibility files
@@ -146,6 +147,17 @@ where a failure routes:
    criterion "nothing from the workbook in the repository" was written
    five minutes later, and nothing checked the documents until D. No
    `sources.md`: pass with a note.
+11. changed-states-listed -> ux-designer:screen-design. On a UI-touching
+   slice (one with a screen design document), the screen design has a
+   `## States this slice changes` section, one line per state by name
+   (`<name>`: changed, new or removed; or `none`), every state it lists
+   as changed or new has a mockup whose file stem is that name under
+   `visual-ux/`, and a state listed as new has no baseline image yet
+   (`visual-ux/baselines/<name>.png`): the name is the one thing the
+   screen design, the capture script and the baseline share, and the
+   screen-change check at delivery (`screen_check.py` beside this script,
+   which parses the section for both) treats a difference in any state
+   the section does not list as a finding. No screen design: skipped.
 
 An issue fix (`--fix-base COMMIT`). A fix to a slice that was planned,
 built and merged revises a few of its documents; the rest were written
@@ -457,6 +469,17 @@ def check_states(docs, mockups):
     return True, f"{len(names)} named states appear in the screen design or a mockup file", []
 
 
+def check_changed_states(planning, screen):
+    """The eleventh check, by `screen_check.py`: the section the
+    screen-change check reads at delivery is there and names real states."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # `-I` leaves the script's directory out
+    import screen_check
+    problems = screen_check.section_problems(planning, screen)
+    if problems:
+        return False, "problem(s) with the screen design's `States this slice changes` section", problems
+    return True, "the screen design lists the states this slice changes, each with a mockup of its name", []
+
+
 OPEN_HEADINGS = re.compile(r"still open|explicitly deferred|open items|deferred", re.I)
 USABLE = re.compile(r"usable without", re.I)
 BLOCKER = re.compile(r"\bblock(?:er|ing|s)\b", re.I)
@@ -583,7 +606,7 @@ def resolve(planning, nnn, given):
 
 
 def evaluate(planning, names):
-    """The first nine checks over one planning directory, as
+    """Every check but the source scan over one planning directory, as
     [(check, passed, detail, route, failing items)], each failing item a
     (key, display) pair: the key is the item's whole text, what `--fix-base`
     compares; the display is what is printed. `None` when the slice or the
@@ -602,6 +625,8 @@ def evaluate(planning, names):
         if "security" in docs:
             results.append(("security-reliability-agree", *check_agree(docs, names), rel))
     results.append(("states-have-mockups", *check_states(docs, mockups), ux))
+    if "screen" in docs:
+        results.append(("changed-states-listed", *check_changed_states(planning, names["screen"]), ux))
     asked = False
     for doc, hits in check_questions(planning):
         asked = True
@@ -618,8 +643,9 @@ def evaluate(planning, names):
 
 def planning_at(planning, commit, into):
     """The planning directory as `commit` holds it, written under `into`:
-    every Markdown file with its content, every mockup as an empty file
-    (its name is all the checks read). Returns an error line, or None."""
+    every Markdown file with its content, every mockup and every image (a
+    baseline among them) as an empty file (its name is all the checks
+    read). Returns an error line, or None."""
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # `-I` leaves the script's directory out
     import source_scan
     project = source_scan.repo_root(planning)
@@ -635,7 +661,7 @@ def planning_at(planning, commit, into):
     listing = source_scan.git(project, "ls-tree", "-r", "--name-only", "-z", commit, "--", ":(literal)" + rel + "/") or ""
     root = os.path.realpath(into)
     for path in [p for p in listing.split("\0") if p]:
-        if not path.startswith(rel + "/") or not path.endswith((".md", ".html")):
+        if not path.startswith(rel + "/") or not path.endswith((".md", ".html", ".png")):
             continue
         inside = path[len(rel) + 1:]
         out = os.path.realpath(os.path.join(root, inside))

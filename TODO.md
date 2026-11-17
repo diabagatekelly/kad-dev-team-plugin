@@ -68,10 +68,9 @@ Left open by it, for the next change to each file group:
 
 - [ ] F2 has no case that fails without its text: the run that left a
   regression as "no third fixer" was not reproduced by removing it.
-- [ ] The autopilot round, the last-fix review at D and E, and a
-  readiness correction taken without a question are held by no case.
-  Slice 3 is their first run; a case for the round needs a state with a
-  standing High and three launches a run.
+- [ ] The autopilot round, the last-fix review at D and the autopilot
+  question get cases in PR 3; a readiness correction taken without a
+  question gets one in PR 2 (both listed there).
 - [ ] `chunk-runner-fix-gate-fails` and
   `orchestrator-autopilot-counts-over` carry no known-bad reference
   (eight deletions and the autopilot text each survived).
@@ -155,27 +154,60 @@ Does not block slice 3.
   hand, a reused process number). Done when: case
   `architecture-design-concurrency-interleavings` passes.
 
-## PR 3: the screen-change check (0.16.0)
+## PR 3: the screen-change check (0.16.0): done
 
-Its own pull request, after PR 1 and before slice 3 (the owner,
-2026-11-16). Touches the orchestrator's D step, so its 38 cases run once
-more.
+Pull request #65, 2026-11-16. C1 and the three cases are built; what
+each is, its counts, what it fails without, the bars that moved, which
+cases ran once and what no case holds are in `evals/README.md`, "The
+screen-change check"; the item and the owner's six decisions as they
+stood are in `docs/todo-archive.md` under the same heading. Decided on
+the way, by the owner: the fixture's screen is the holds desk's notice;
+a state's name is its mockup's file stem; the comparison is a copy of
+the plugin's script in the project; one fixer at E writes a missing
+capture; the threshold is `visual-ux/baselines/screen-check.json`; a
+workflow in this repository runs a real browser on the fixture; and the
+gate's dependencies are narrowed three ways (`evals/README.md`, "Eval
+gate"), which took this pull request's stale list from 71 cases to 25.
 
-- [ ] C1 **The screen-change check** (the owner, 2026-11-12: pixel diff,
-  hands-off, one fixed environment). At D for a UI-touching slice: every
-  state with a saved baseline is re-driven by a scripted browser on
-  made-up data and compared; a difference in a state the screen design
-  does not list as changed is a finding; listed states replace their
-  baseline. Baselines are made and compared in CI on Linux only. Done
-  when: on the fixture, a style change meant for one state that moves
-  another is reported, and the intended change is not.
+Left open by it:
+
+- [ ] The external reviewer's weekly budget was used up when the pull
+  request opened: ask for its review (`@sourcery-ai review`) and triage
+  it, weighing any fix that stales cases.
+- [ ] `evals/loop_states_before.json` is read only while the base has no
+  `loop_states.json`: delete it in the first change after the merge.
+- [ ] `verify.sh` fails on the `monthly-statement` overlay (a `.ts`
+  import path the TypeScript it installs refuses); not this change's.
+- [ ] `baselines-adopted-by-the-script` and `autopilot-file-written` do
+  not fail with their rule's text removed (the project's copy of the
+  script, and the owner's own "yes", carry them).
+- [ ] The orchestrator's steps rule is a bet (an edit in one step is not
+  run against cases of another). If a miss turns up in a case that was
+  not run, `tools/orchestrator_steps.json` is where that case gets the
+  step added.
 
 ## Then: slice 3
 
 **The test of 0.15 and 0.16: slice 3 on the first project** (reconnect a
-lapsed login, its issue #14), which is UI-touching. It needs PR 1 (G1)
-and PR 3 (C1, whose baselines are captured from `main` before the slice
-starts); PR 2 may land before or after. It is the first real run of the
+lapsed login, its issue #14), which is UI-touching. PR 1 and PR 3 are
+done; PR 2 may land before or after. Before the slice starts, on the
+first project, from the owner:
+
+- [ ] the installed plugin updated to 0.16.0 (after #65 merges);
+- [ ] **the baselines from `main`**, as one small pull request on the
+  project: `ci-pipeline`'s screen job (it finds the screen designs and
+  writes `screens.yml`, the harness, the script's copy and the threshold
+  file), a `screens/states.mjs` that drives the states of slices 1 and 2
+  on made-up data (the project's `test/support/test-main.ts` start), one
+  CI run (every capture is a first baseline while there is none), the
+  artifact adopted with `screen_check.py adopt`, committed, green,
+  merged. Which of the 25 mockup states get a capture is the owner's
+  call: a state with no capture is not watched. The existing mockups
+  live in per-slice folders and are numbered (`02-retrieving`); those
+  stems are the state names;
+- [ ] the autopilot question answered when slice 3's A step asks it
+  (there is no `autopilot.md` on that project yet);
+- [ ] H1 (why fixers regress), which is due before the slice. It is the first real run of the
 gate checks' wiring and of the cold read inside the loop. Measured
 against the issue fix and slice 2's fix round: the cold read's
 readability and reliability scores (3 and 3 for three runs), the bugs

@@ -45,8 +45,7 @@ def fingerprint(case, files=None, reach=None):
     """sha256 over the path and CRLF-normalised content of every file the
     case loads, in path order."""
     h = hashlib.sha256()
-    for f in affected_cases.inputs_of(case, files, reach):
-        data = open(os.path.join(ROOT, f), "rb").read().replace(b"\r\n", b"\n")
+    for f, data in affected_cases.inputs_of(case, files, reach):
         h.update(f.encode() + b"\0" + str(len(data)).encode() + b"\0")
         h.update(data)
     return h.hexdigest()
@@ -134,6 +133,35 @@ def check(cases, tolerance):
     return out
 
 
+def carry(base):
+    """Re-stamp evidence recorded under the whole-file rule with the
+    fingerprint of the narrower one (0.16.0), for a case whose run still
+    stands: its whole-file fingerprint matches the tree as it is, or the
+    change against `base` does not reach it under the narrower rule (its
+    evidence was good at the base, whose own check held it). Nothing is
+    carried for a case the change reaches and whose files moved since
+    its run. Returns (carried, left)."""
+    table = load()
+    files = affected_cases.repo_files()
+    new, old = affected_cases.Reach(), affected_cases.Reach(whole_files=True)
+    reached = set(affected_cases.affected(affected_cases.changed_files(base), base))
+    carried, left = [], []
+    for case, e in sorted(table.items()):
+        if not os.path.isdir(os.path.join(EVALS, case)):
+            continue
+        now = fingerprint(case, files, new)
+        if e["inputs"] == now:
+            continue
+        if case not in reached or e["inputs"] == fingerprint(case, files, old):
+            e["inputs"] = now
+            e["carried"] = "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
+            carried.append(case)
+        else:
+            left.append(case)
+    save(table)
+    return carried, left
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     p = argparse.ArgumentParser()
@@ -141,7 +169,18 @@ def main():
     p.add_argument("--cases", nargs="*")
     p.add_argument("--all", action="store_true")
     p.add_argument("--tolerance", type=float, default=0.1)
+    p.add_argument("--carry", action="store_true",
+                   help="once, for the change that narrows the fingerprint: re-stamp the evidence of every case whose run still stands")
     a = p.parse_args()
+    import loop_states
+    stale_states = loop_states.check()
+    if stale_states:
+        print("**Eval evidence: FAIL** — " + stale_states)
+        return 1
+    if a.carry:
+        carried, left = carry(a.base)
+        print(f"carried {len(carried)} entries to the narrower fingerprint; {len(left)} left stale (the change reaches them and their files moved): {' '.join(left)}")
+        return 0
     if a.all:
         cases = list(affected_cases.case_dirs())
     else:

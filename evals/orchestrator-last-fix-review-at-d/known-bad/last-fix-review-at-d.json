@@ -1,0 +1,36 @@
+{
+ "skill": "orchestrator",
+ "rule": "the last fix of D's fix round is read once, on its diff",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "**The last-fix review** (the owner, 2026-11-13: \"any change should\nalways be reviewed\"). Every commit that changes source or tests after a\nscope's last review is read once, by one reviewer, on its diff, before\nthat scope is reported: in a chunk, the regressions fix and its gate\nfixer's commit (the runner's step 5, on its line as `last <C/H/M>`);\nat D, the last fix of the fix round; at E, once, every CI fix and\ntriage fix together. One launch per scope, never one per commit:\n`kad-dev-team:code-reviewer:AGENT`, `model: \"opus\"`, `code-review`'s\n\"Combined chunk review\" on the diff only (no cold pass), handed the\nproject root, the test command, the range `<the scope's last reviewed\ncommit>..HEAD`, the files it touched, the report path\n(`chunk-<k>-last-review.md`, `slice-last-review.md`,\n`pr-last-review.md`) and the last gate output, and nothing of any\nearlier round. Recorded with `rounds_record.py … --round <i> --last\n--project '<project root>' --range '<range>'`: nothing it raises is\nhanded to a fixer in the scope's own rounds, so its Critical, High and\nMedium all stand (the script prints them), its Mediums are filed at E\nlike any standing Medium and its Lows go to the body. A range that\nchanges no source or test file (a records commit, the map, a README)\ngets no review. A last fix nobody read held three bugs a later cold\nread found.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "; then **the last-fix\n   review** on that second fix's range (above; `--chunk D --round 2\n   --last`), whose findings stand",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "<; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> …, as the C line>; records",
+   "new": "<; r2 fix `<sha>` gate PASS><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> …, as the C line>; records"
+  }
+ ],
+ "fails": [
+  "last-fix-reviewer-launched",
+  "last-fix-reviewer-on-opus",
+  "scoped-to-the-fixs-range"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "last-fix-reviewer-launched": 0.0,
+   "last-fix-reviewer-on-opus": 0.0,
+   "scoped-to-the-fixs-range": 0.0
+  }
+ }
+}

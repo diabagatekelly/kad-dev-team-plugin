@@ -127,3 +127,21 @@ graders:
     # the value is enough; three-mockups-in-visual-ux counts the files. The
     # HTML is a JSON string in the trace, so its content is matched as one.
     pattern: '"name":"Write","input":\{(?:"(?:file_path|path)":"[^"]*visual-ux/[^"]*\.(?:html|css)","content":"(?:[^"\\]|\\.)*#1[Ff]5[Ff]5[Bb]|"content":"(?:[^"\\]|\\.)*#1[Ff]5[Ff]5[Bb](?:[^"\\]|\\.)*","(?:file_path|path)":"[^"]*visual-ux/[^"]*\.(?:html|css)")'
+  # 0.16.0 (C1): the screen design lists the states the slice changes,
+  # each by its mockup's file stem; the screen-change check reads the list
+  # at delivery. All three states of this slice are new.
+  - type: regex
+    name: changed-states-section-lists-three-states
+    target:
+      source: file
+      path: docs/pay-fine/visual-ux/screen-design-001.md
+    pattern: '(?:^|\n)#{2,3}\s+States this slice changes\s*\n(?:(?!\n#{1,3}\s)[\s\S])*?(?:[-*]\s+`?[a-z0-9][a-z0-9._-]*`?\s*(?::|—|–|-)\s*\**(?:new|changed)\b(?:(?!\n#{1,3}\s)[\s\S])*?){3}'
+  - type: regex
+    name: a-listed-state-is-named-as-its-mockup-file
+    # A name on the list is the stem of a mockup the document references
+    # (`visual-ux/<name>.html`). One is enough here; the readiness gate's
+    # check holds every line (tools/readiness_check_test.py).
+    target:
+      source: file
+      path: docs/pay-fine/visual-ux/screen-design-001.md
+    pattern: '(?:^|[/`(\s])([a-z0-9][a-z0-9._-]*)\.html[\s\S]*\n#{2,3}\s+States this slice changes\s*\n(?:(?!\n#{1,3}\s)[\s\S])*?[-*]\s+`?\1`?\s*(?::|—|–|-)\s*\**(?:new|changed)\b|\n#{2,3}\s+States this slice changes\s*\n(?:(?!\n#{1,3}\s)[\s\S])*?[-*]\s+`?([a-z0-9][a-z0-9._-]*)`?\s*(?::|—|–|-)\s*\**(?:new|changed)\b[\s\S]*(?:^|[/`(\s])\2\.html'

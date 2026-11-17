@@ -1,0 +1,22 @@
+{
+ "about": "Which steps of the orchestrator's chunk loop a case reaches (affected_cases.py). An orchestrator case depends on the skill's text outside the five step sections, plus the sections of the steps listed for it: by the loop state its scaffold builds, `base` for a scaffold that builds the loop's base (a flow that starts at A), `cases` for a case by name, and `default` (no step: routing only) for any other case that loads the skill. A state not listed here keeps the whole file. The owner's decision, 2026-11-16: an edit inside one step's section stales only the cases that reach that step, knowing the whole text is still in the model's context.",
+ "default": [],
+ "base": ["A"],
+ "states": {
+  "planned": ["C"], "plan-no-seam": ["B"],
+  "chunk1-built": ["C"], "chunk1-deviation": ["C"], "chunk1-outside": ["C"], "chunk1-source-value": ["C"], "chunk1-gated": ["C"],
+  "chunk1-gate-covers": ["C"], "chunk1-gap": ["C"], "chunk1-gap-handback": ["C"], "chunk1-handback": ["C"], "chunk1-handback-phantom": ["C"],
+  "chunk1-handback-high": ["C"], "chunk1-r1": ["C"], "chunk1-r1-ungated": ["C"], "chunk1-r2-fixed": ["C"], "chunk1-done": ["C"], "chunk1-done-over": ["C"],
+  "slice-built": ["D"], "slice-review-r0": ["D"], "slice-review-r2-fixed": ["D"],
+  "no-ci": ["E"], "no-ci-ui": ["E"],
+  "delivery-ready": ["E"], "delivery-ready-ui": ["E"], "delivery-ready-source": ["E"], "delivery-ci-red": ["E"],
+  "delivery-screens-stray": ["E"], "delivery-screens-owed": ["E"],
+  "issue14-planned": ["A"]
+ },
+ "cases": {
+  "orchestrator-route-implementation": ["A"],
+  "orchestrator-route-implementation-prenamed": ["A"],
+  "orchestrator-route-open-pr": ["A", "E"],
+  "orchestrator-log-format": ["A", "B", "C", "D", "E"]
+ }
+}

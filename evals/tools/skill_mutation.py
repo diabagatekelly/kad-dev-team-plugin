@@ -13,6 +13,7 @@ A reference (one JSON object):
     {"skill": "chunk-runner",
      "rule": "the rule in words",
      "edits": [{"file": "skills/chunk-runner/SKILL.md", "old": "...", "new": ""}],
+     "also": ["orchestrator"],          (optional: other skills whose SKILL.md the edits may touch)
      "fails": ["grader-name", ...],
      "observed": {"date": "2026-11-13", "runs": 3, "claude_version": "...",
                   "rates": {"grader-name": 0.0}}}
@@ -98,6 +99,15 @@ def skill_file(ref):
     return f"skills/{ref.get('skill')}/SKILL.md"
 
 
+def editable(ref, file):
+    """The files a reference may edit: its own skill's, and the `SKILL.md`
+    of each skill it names under `also` (a rule two skills state, such as
+    the screens check in `delivery` and in the orchestrator's E step, is
+    only removed when both places go)."""
+    return file in [skill_file(ref)] + [f"skills/{name}/SKILL.md" for name in ref.get("also", [])
+                                        if re.fullmatch(r"[a-z0-9-]+", str(name))]
+
+
 def grader_names(case):
     """The names of a case's graders, read from its case.yaml as text (the
     tools here carry no YAML parser)."""
@@ -115,7 +125,7 @@ def problems(ident, case, ref, root=None):
     if "fails" in ref and not ref["fails"]:
         found.append("no grader named in `fails`: nothing would show the deletion is caught")
     for e in ref.get("edits", []):
-        if e.get("file") != skill_file(ref):
+        if not editable(ref, e.get("file")):
             # the one file a reference may edit: a path elsewhere would guard
             # nothing of the skill, and one outside the tree would be written to
             found.append(f"edits {e.get('file')}, not {skill_file(ref)}")
@@ -156,7 +166,7 @@ def apply(ref, dest, root=None):
         shutil.copy2(os.path.join(root, f), target)
     marker = json.dumps(f"Base directory for this skill: <plugin-root>/skills/{ref.get('skill')}")[1:-1]
     for e in ref["edits"]:
-        if e.get("file") != skill_file(ref):
+        if not editable(ref, e.get("file")):
             raise SystemExit(f"edits {e.get('file')}, not {skill_file(ref)}")
         path = os.path.join(dest, e["file"])
         text = open(path, encoding="utf-8").read()

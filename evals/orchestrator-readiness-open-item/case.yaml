@@ -6,7 +6,7 @@ context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Decisions that come up during the build may be settled with the owning persona without asking me, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed. I'll answer questions about scope myself. On this machine the GitHub CLI is the wrapper at `tools/gh` (nothing is open there).
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Decisions that come up during the build may be settled with the owning persona without asking me, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed. No autopilot: put every stop to me. I'll answer questions about scope myself. On this machine the GitHub CLI is the wrapper at `tools/gh` (nothing is open there).
   model: sonnet
   max_turns: 50
   timeout_seconds: 2400

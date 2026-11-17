@@ -1,0 +1,95 @@
+schema_version: "1.0"
+name: delivery-screens-stray
+description: "C1 (0.16.0), a stray screen change takes the red-CI path: resumed at E.4 with the branch pushed and pull request #7 open, the stand-in GitHub CLI answers a failing `screens` check and gives the run's artifact (the report and difference images screen_check.py wrote from the fixture's captures): `hold-cancelled` moved and the slice's screen design does not list it, beside one listed change and one new state. Delivery downloads the artifact, writes the unlisted state to `pr-ci-r1.md` with its images in the records, commits no baseline and pushes nothing, and (this run may launch no agent) hands off with one fixer told the check is not weakened."
+tags: [orchestrator, delivery, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command); the remote is already set up. This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there.
+  model: sonnet
+  max_turns: 50
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: delivery-skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:delivery"'
+    min: 1
+  - type: regex
+    name: checks-read
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)pr checks'
+  - type: regex
+    name: artifact-downloaded
+    target:
+      source: file
+      path: tools/gh-calls.log
+    pattern: '(?:^|\n)run download[^\n]*screens'
+  - type: regex
+    name: unlisted-state-written-to-the-records
+    target: trace
+    pattern: '"name":"(?:Write|Bash)","input":\{[\s\S]{0,400}?pr-ci-r1\.md[\s\S]{0,6000}?hold-cancelled'
+  - type: tool_used
+    name: its-images-kept-in-the-records
+    tool: Bash
+    input_match: 'screens-r1'
+    min: 1
+  # Nothing reaches the remote: the file is what a push delivers, and stays empty.
+  - type: regex
+    name: no-baseline-committed-while-a-finding-stands
+    target:
+      source: file
+      path: tools/pushed-history.txt
+    pattern: '[Bb]aselines'
+    match: not_contains
+  - type: regex
+    name: no-baseline-staged-or-copied
+    target: trace
+    pattern: '"name":"Bash","input":\{"command":"(?:[^"\\]|\\.)*(?:git (?:add|commit)|\bcp\b)(?:[^"\\]|\\.)*visual-ux/baselines'
+    match: not_contains
+  - type: regex
+    name: threshold-and-list-left-alone
+    target: trace
+    pattern: '"name":"(?:Write|Edit)","input":\{"(?:file_path|path)":"[^"]*(?:screen-check\.json|screen-design-001\.md|baselines/)'
+    match: not_contains
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: handoff-briefs-the-fixer-not-to-weaken-the-check
+    # The file is in the state and is rewritten for the launch this session
+    # may not make (the first run wrote it with a heredoc, so the file is
+    # read, not the Write).
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/handoff-slice-001.md
+    pattern: '^(?=[\s\S]*hold-cancelled)(?=[\s\S]*[Bb]aseline)(?=[\s\S]*(?:threshold|screen-check\.json))'
+  - type: regex
+    name: no-e-line-that-says-clean-or-green
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*E\. Delivery:\*\*[^\n]*(?:clean r\d|CI green)'
+    match: not_contains
+  - type: llm
+    name: report-leads-with-the-red-screens-check
+    focus: last_message
+    weight: 1
+    criteria: |
+      Pull request #7 is open and its `screens` check is failing: the state `hold-cancelled` changed on screen and the slice's screen design does not list it as changed.
+
+      PASS if the reply states the CI state before anything about what was built or delivered (the screens check is red, with `hold-cancelled` named as a state that changed without being listed), says the pull request is not ready or the delivery is not done, and says what comes next (a fixer for it, then the checks again).
+
+      FAIL if it opens with what was built or delivered, calls the slice or the pull request done, built, delivered, clean or ready to merge, treats the unlisted change as a baseline to update, or suggests merging.

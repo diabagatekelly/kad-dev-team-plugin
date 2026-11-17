@@ -1,0 +1,29 @@
+{
+ "skill": "screen-design",
+ "rule": "the screen design lists the states the slice changes, by mockup name",
+ "edits": [
+  {
+   "file": "skills/screen-design/SKILL.md",
+   "old": "## States this slice changes\n\nThe screen design carries one list under that heading, exactly: one line\nper state this slice changes on screen, by name.\n\n- **A state's name is its mockup's file stem**: `hold-not-cancelled.html`\n  is the state `hold-not-cancelled`. Lower-case, hyphens, one name in the\n  whole of `visual-ux/`. It is the one name the mockup, the script that\n  captures the built screen and the saved baseline image\n  (`visual-ux/baselines/<name>.png`) share, so name the file as you would\n  name the state.\n- **`new`** for a state this slice adds: `` - `queue-failure`: new ``.\n- **`changed`**, with what changes, for a state an earlier slice already\n  shows and this one alters: `` - `hold-not-cancelled`: changed, the tint\n  and the wider padding ``. Use the name it has (look in `visual-ux/` and\n  `visual-ux/baselines/` before writing one): a second name for a state\n  that exists is a new state to everything that reads this list.\n- **`removed`** for a state this slice takes away.\n- A state the slice leaves as it is has no line. When the slice changes\n  nothing a person sees, the section says `- none` and why.\n\nList every state the change reaches, not only the one it is for: a\ncomponent two states share (a notice, a row, a header) changes both, and\nboth get a line. At delivery a scripted browser renders every state that\nhas a baseline and compares it, pixel by pixel, with that baseline: a\nstate on this list gets its new image saved as the baseline, and a\ndifference in a state that is not on it stops the delivery as a finding.\nA line for a state that turns out not to move costs nothing; a missing\nline costs a fix round. A state added mid-build under a delegation gets\nits line with its mockup. The readiness gate checks that the section is\nthere and that each state it names has a mockup of that name.\n\n",
+   "new": ""
+  },
+  {
+   "file": "skills/screen-design/SKILL.md",
+   "old": "## States this slice changes\nOne line per state, by its mockup's file stem: `new`, `changed` (with\nwhat changes) or `removed`; `- none` when nothing a person sees changes.\n\n",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "changed-states-section-lists-three-states",
+  "a-listed-state-is-named-as-its-mockup-file"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "changed-states-section-lists-three-states": 0.0,
+   "a-listed-state-is-named-as-its-mockup-file": 0.0
+  }
+ }
+}

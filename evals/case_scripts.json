@@ -1,0 +1,316 @@
+{
+ "acceptance-criteria-payfine": [],
+ "accessibility-review-ac-walk": [
+  "scratch_run.py"
+ ],
+ "accessibility-review-neg-readability": [],
+ "accessibility-review-payfine": [],
+ "accessibility-review-payfine-subtle": [],
+ "adr-payment-gateway": [],
+ "architecture-design-neg-review": [],
+ "architecture-design-owner-sheet": [
+  "source_scan.py"
+ ],
+ "architecture-design-payfine-phase1": [],
+ "architecture-design-payfine-phase2": [],
+ "architecture-design-payfine-via-agent": [],
+ "architecture-design-scope-consequence": [],
+ "architecture-review-neg-security-review": [],
+ "architecture-review-neg-test-quality-review": [],
+ "chunk-runner-fix-gate-fails": [
+  "rounds_record.py",
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "chunk-runner-gap-handback": [
+  "rounds_record.py",
+  "sandbox_check.py"
+ ],
+ "chunk-runner-gate-deviation": [
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "chunk-runner-gate-outside": [
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "chunk-runner-gate-sources": [
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "chunk-runner-last-fix-review": [
+  "rounds_record.py",
+  "sandbox_check.py"
+ ],
+ "chunk-runner-one-fix-round": [
+  "rounds_record.py",
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "chunk-runner-review-round": [
+  "rounds_record.py",
+  "sandbox_check.py",
+  "scratch_run.py"
+ ],
+ "chunk-runner-waits-for-handback": [
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "ci-pipeline-os-matrix": [],
+ "ci-pipeline-screen-job": [
+  "screen_check.py"
+ ],
+ "code-review-catalog": [],
+ "code-review-chunk-gate-covers": [],
+ "code-review-comments-chunk": [],
+ "code-review-days-left-pr": [],
+ "code-review-fine-notices-pr": [],
+ "code-review-fine-notices-pr-via-agent": [],
+ "code-review-fines-report-pr": [],
+ "code-review-neg-architecture": [],
+ "code-review-structural-high-at-d": [],
+ "cold-read-new-beside-old": [
+  "scratch_run.py"
+ ],
+ "delegation-consult-with-file": [],
+ "delegation-consult-without-file": [],
+ "delivery-ci-red-not-done": [
+  "sandbox_check.py"
+ ],
+ "delivery-screens-owed": [
+  "screen_check.py"
+ ],
+ "delivery-screens-stray": [
+  "screen_check.py"
+ ],
+ "design-system-payfine-phase1": [],
+ "design-system-payfine-phase2": [],
+ "design-system-payfine-phase3": [],
+ "design-system-payfine-reference": [],
+ "design-system-payfine-review": [],
+ "external-review-triage-cancel-hold": [],
+ "library-app-catalog-review": [],
+ "library-app-fines-review": [],
+ "library-app-lending-review": [],
+ "library-app-lending-review-via-agent": [],
+ "library-app-reporting-pr": [],
+ "library-app-structure-review": [],
+ "map-query-consults": [],
+ "map-query-no-map": [],
+ "map-update-cancel-hold": [
+  "extract_map.py"
+ ],
+ "operational-readiness-neg-reliability": [],
+ "operational-readiness-neg-security": [],
+ "orchestrator-asks-for-target": [],
+ "orchestrator-autopilot-counts-over": [
+  "rounds_record.py",
+  "sandbox_check.py",
+  "scratch_run.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-autopilot-question": [
+  "readiness_check.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-autopilot-recorded": [
+  "readiness_check.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-autopilot-round": [
+  "rounds_record.py",
+  "sandbox_check.py",
+  "scratch_run.py"
+ ],
+ "orchestrator-backward-route": [],
+ "orchestrator-budget-exceeded": [
+  "sandbox_check.py"
+ ],
+ "orchestrator-capture-states": [
+  "sandbox_check.py",
+  "screen_check.py"
+ ],
+ "orchestrator-chunk-runner-handback": [
+  "scratch_run.py"
+ ],
+ "orchestrator-chunk-runner-launch": [
+  "rounds_record.py",
+  "sandbox_check.py",
+  "scratch_run.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-definition-of-done": [
+  "done_check.py",
+  "extract_map.py",
+  "mutation_pass.py",
+  "rounds_record.py",
+  "sandbox_check.py",
+  "scratch_run.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-delivery-foreground": [
+  "deferrals.py",
+  "done_check.py",
+  "rounds_record.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-delivery-removal": [
+  "audit_sync.py",
+  "deferrals.py",
+  "rounds_record.py",
+  "sandbox_check.py",
+  "source_scan.py"
+ ],
+ "orchestrator-gap-without-delegation": [
+  "rounds_record.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-gate-checks-route-back": [
+  "readiness_check.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-issue-fix-records": [
+  "audit_sync.py",
+  "readiness_check.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-last-fix-review-at-d": [
+  "rounds_record.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-mutation-before-review": [
+  "mutation_pass.py",
+  "rounds_record.py",
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-plan-check-seam": [
+  "sandbox_check.py",
+  "scratch_run.py"
+ ],
+ "orchestrator-readiness-gate": [
+  "audit_sync.py",
+  "readiness_check.py",
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-readiness-open-item": [
+  "readiness_check.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-readiness-sources": [
+  "audit_sync.py",
+  "readiness_check.py",
+  "sandbox_check.py",
+  "source_scan.py"
+ ],
+ "orchestrator-readme-stale-not-done": [
+  "done_check.py",
+  "mutation_pass.py",
+  "rounds_record.py",
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-route-accessibility": [],
+ "orchestrator-route-backward-requirements": [],
+ "orchestrator-route-design": [],
+ "orchestrator-route-design-system": [],
+ "orchestrator-route-implementation": [],
+ "orchestrator-route-implementation-prenamed": [],
+ "orchestrator-route-open-pr": [],
+ "orchestrator-route-problem-framing": [],
+ "orchestrator-route-reliability": [],
+ "orchestrator-route-scope-decision": [],
+ "orchestrator-route-screen-design": [],
+ "orchestrator-route-slicer-accessibility-mistake": [],
+ "orchestrator-route-slicing": [],
+ "orchestrator-route-tech-bootstrap": [],
+ "orchestrator-route-user-story": [],
+ "orchestrator-runner-handback-unverified": [],
+ "orchestrator-security-stage": [],
+ "orchestrator-session-setup": [],
+ "orchestrator-slice-review-launches": [
+  "sandbox_check.py",
+  "scratch_run.py",
+  "test_measures.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-superseded-scope-map": [],
+ "orchestrator-target-from-project": [],
+ "problem-framing-doc-payfine-phase1": [],
+ "problem-framing-doc-payfine-phase2": [],
+ "reliability-requirements-neg-review": [],
+ "reliability-requirements-payfine-phase1": [],
+ "reliability-requirements-payfine-phase2": [],
+ "reliability-requirements-payfine-phase2-proceed": [],
+ "reliability-requirements-payfine-phase2-stop": [],
+ "reliability-requirements-payfine-phase3": [],
+ "reliability-review-catalog": [],
+ "reliability-review-fine-payment": [],
+ "reliability-review-http": [],
+ "reliability-review-neg-architecture": [],
+ "reliability-review-neg-security": [],
+ "reliability-review-nightly": [],
+ "reliability-review-nightly-via-agent": [],
+ "reliability-review-refund-pr": [],
+ "requirements-refinement-open-question": [],
+ "requirements-refinement-owner-sheet": [
+  "source_scan.py"
+ ],
+ "requirements-refinement-payfine-phase1": [],
+ "requirements-refinement-payfine-phase2": [],
+ "screen-design-owner-sheet": [
+  "source_scan.py"
+ ],
+ "screen-design-payfine": [],
+ "security-requirements-neg-review": [],
+ "security-requirements-payfine-phase1": [],
+ "security-requirements-payfine-phase2": [],
+ "security-requirements-payfine-phase2-proceed": [],
+ "security-requirements-payfine-phase2-stop": [],
+ "security-requirements-payfine-phase3": [],
+ "security-requirements-placeholder-pointer": [],
+ "security-requirements-source-criterion": [
+  "source_scan.py"
+ ],
+ "security-review-catalog": [],
+ "security-review-config": [],
+ "security-review-deferrals-not-restated": [],
+ "security-review-neg-architecture": [],
+ "security-review-neg-reliability": [],
+ "security-review-portal-pr": [],
+ "security-review-source-value": [
+  "source_scan.py"
+ ],
+ "staleness-audit-docs": [],
+ "supply-chain-review-accepted": [],
+ "supply-chain-review-build": [],
+ "supply-chain-review-neg-reliability": [],
+ "supply-chain-review-workflows": [],
+ "tdd-implementation-lite-cancel-hold": [],
+ "tdd-implementation-lite-cancel-hold-via-agent": [],
+ "tdd-implementation-lite-chunk-plan": [],
+ "tdd-implementation-lite-named-fix": [],
+ "tdd-implementation-lite-one-chunk": [],
+ "tdd-implementation-lite-rename-fix": [],
+ "technology-bootstrap-phase1": [],
+ "technology-bootstrap-phase2": [],
+ "technology-bootstrap-phase3": [],
+ "technology-bootstrap-phase3-reject": [],
+ "test-quality-review-fines": [],
+ "test-quality-review-neg-code-review": [],
+ "test-quality-review-reminders": [],
+ "test-quality-review-seam-fake": [],
+ "test-quality-review-survivors-at-d": [
+  "test_measures.py"
+ ],
+ "user-story-writeup-payfine-phase1": [],
+ "vertical-slicing-handback": [],
+ "vertical-slicing-no-requirements": [],
+ "vertical-slicing-no-screen": [],
+ "vertical-slicing-owner-sheet": [
+  "source_scan.py"
+ ],
+ "vertical-slicing-payfine-phase1": [],
+ "why-comments-collect-fine": []
+}
