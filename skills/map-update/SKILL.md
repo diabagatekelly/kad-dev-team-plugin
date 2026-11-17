@@ -35,8 +35,9 @@ when no map exists yet; leave out `--write` for a dry run that only
 prints.) It walks the source roots, extracts edges, externals and exports
 for TypeScript, JavaScript and Python, carries tiers forward from the
 prior map, diffs, flags the two candidate kinds, and writes the map in the
-output shape below; its last line says what it wrote and which languages
-it had no extractor for.
+output shape below; its last lines say what it wrote, which languages
+it had no extractor for, and which new modules have no tier yet (see
+"Tiers" below).
 
 **A language the script has no extractor for** (Go, Rust, Java, Ruby, C#,
 Kotlin, Swift, SQL, anything else it lists) still appears in the map's
@@ -91,8 +92,20 @@ this skill derives. When updating the map:
 
 - If a module already carries a tier from a prior map version, keep it
   unless something explicitly tells you it changed.
-- If a module is newly touched by a slice whose design doc states an
-  importance ordering, apply that ordering to the modules it names.
+- If a module is new and the slice's design states an importance
+  ordering that names it, the tier goes to the script, one `--tier` per
+  module, and the script is run again:
+
+  ```
+  python3 -I "${CLAUDE_SKILL_DIR}/scripts/extract_map.py" --project '<app root>' --tier 'lending/cancel-hold.ts=1' --write
+  ```
+
+  The script's last line names every new module it left untiered (`new
+  and untiered: <paths>`): that line is the prompt to open the slice's
+  design. The tier is never put on the row by editing the map: the
+  script sorts a module's edges into the wrong-direction list by its
+  tier, so a row patched after the run leaves its edge under "direction
+  unknown", which is the one fact the map was regenerated to show.
 - If a module has no tier from either source, record it as **untiered** —
   explicitly, not omitted and not inferred from its imports. Inferring a
   tier from the import graph is circular: a module that already violates
@@ -118,6 +131,13 @@ recorded, and report, in plain terms:
 - **New modules** and **removed modules**.
 - **New edges** and **removed edges** (internal and external, separately).
 - **New exports** and **removed exports**, per module.
+
+The script reads a prior map written by hand too (names with or without
+backticks, split by commas or semicolons, a dash or `none` for nothing).
+A prior row it still cannot read is named in the changes section (`the
+prior map's row could not be read`) and nothing is diffed against it:
+repeat that line in your report, and never list that module's edges or
+exports as new.
 
 ## Two mechanical candidate flags — facts, never verdicts
 

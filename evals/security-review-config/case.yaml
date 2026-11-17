@@ -82,3 +82,24 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:security-review"'
     min: 1
+  - type: regex
+    name: migration-before-release-handed-on-in-one-line
+    # TODO.md's B8: the deploy job runs the migration before the release with no way back (OR2), which is operational-readiness's: no adversary is in the story.
+    # One bullet under `## Handed on`, above the findings, that names the
+    # problem, a severity it appears to have and the review that owns it.
+    target:
+      source: file
+      path: docs/reviews/security-review-config.md
+    pattern: '##\s*Handed on\b(?:(?!\n##\s)[\s\S])*?\n\s*[-*]\s(?=[^\n]*(?:migrat))(?=[^\n]*\b(?:Critical|High)\b)(?=[^\n]*operational-readiness)[^\n]*(?=[\s\S]*\n##\s*Findings\b)'
+    flags: i
+  - type: regex
+    name: migration-before-release-not-a-ranked-finding
+    # Never ranked among the review's own findings: no finding's heading
+    # is about it. Its limit: a finding that makes the complaint under
+    # another heading passes.
+    target:
+      source: file
+      path: docs/reviews/security-review-config.md
+    pattern: '(?:^|\n)###[^\n]*migrat'
+    flags: i
+    match: not_contains

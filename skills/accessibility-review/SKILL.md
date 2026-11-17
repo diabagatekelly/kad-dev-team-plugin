@@ -80,6 +80,39 @@ Review the artifact you were asked to check. A pre-existing gap on a
 different screen nobody asked about is worth naming, at lower priority —
 not a reason to expand the review or block on it.
 
+## A serious problem that is another review's
+
+While reading for this review you will sometimes see a problem that is
+serious and is not this review's subject: a page script that keeps a card number or a password where it outlives the visit, a form that sends a secret in the address, a notice that prints a provider's raw error.
+It is not yours to rank, and it is not yours to read past. Write it at
+the top of the report, above `## Findings`, under `## Handed on`, one
+line per problem:
+
+```markdown
+## Handed on
+
+- <what is wrong, in a clause>; `<path>:<line>`; appears <Critical | High>; owner: `<the review that owns it>`
+```
+
+The severity is the one the problem appears to have on its owner's
+scale, never one rated down to fit this review's categories (a script that stores a card number is not a Low note beside the contrast findings because conformance is what this review rates).
+The line is never one of your findings: no `###` heading, no
+`**Severity:**` line, no place in the ranking and no suggested fix, so
+no fixer is handed it on a judgement this review is not the one to
+make. One line is all of it: the owning review verifies it, sizes it
+and says what to do. Only what appears Critical or High goes there; a
+smaller thing outside your subject is left unsaid. The owners:
+`code-review` (readability, names, comments, code the change does not
+need), `test-quality-review` (what the tests prove),
+`architecture-review` (boundaries and the direction of dependencies),
+`security-review` (anything whose harm needs an adversary),
+`reliability-review` (what happens when something fails),
+`accessibility-review` (a rendered screen), `supply-chain-review`
+(dependencies and their pinning), `operational-readiness` (shipping and
+rolling back). In a combined chunk report, a problem one of the
+launch's own lenses owns is that lens's finding, not a line here. With
+nothing of the kind seen, the section is left out.
+
 ## Cold pass first, under the chunk loop
 
 When the orchestrator's chunk loop launches you at a round 0 (the

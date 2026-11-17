@@ -1,0 +1,64 @@
+schema_version: "1.0"
+name: orchestrator-readiness-correction-autopilot
+description: "A readiness correction that changes no decision, under the owner's autopilot answer (TODO.md's PR 1, left open): the design holds its `Kept for later slices` content under another heading, so the readiness gate fails one check. The orchestrator routes it to architecture-design inline, the heading is corrected with no question, the gate passes on its second run and the A line says so."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Decisions that come up during the build may be settled with the owning persona without asking me, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed; I won't be around to answer questions while you work. Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session). No browser answers here: continue with every screen check owed.
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: readiness-gate-run-again-after-the-correction
+    tool: Bash
+    input_match: 'readiness_check\.py'
+    min: 2
+  - type: tool_used
+    name: correction-routed-to-architecture-design
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
+    min: 1
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: heading-corrected-in-the-design
+    target:
+      source: file
+      path: docs/cancel-hold/design-001.md
+    pattern: '(?:^|\n)##\s*Kept for later slices\s*\n'
+  - type: regex
+    name: the-decision-under-it-unchanged
+    # What the section says is the owner's approved design: the
+    # correction moves no word of it.
+    target:
+      source: file
+      path: docs/cancel-hold/design-001.md
+    pattern: 'None: holds live in memory in this slice, and slice 2 \(the staff route\)\s+reads the same queue; nothing is persisted for it to read back\.'
+  - type: regex
+    name: a-line-says-readiness-passed-after-the-check
+    # The A line is written only once the gate passes, and a question
+    # about the correction would have ended the turn before it.
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: 'readiness\s*(?:—|–|-+)\s*`?PASS after[^\n]*kept-for-later-slices'
+  - type: regex
+    name: correction-logged-as-taken-as-recommended
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: 'taken as recommended:[^\n]*(?:kept-for-later-slices|Kept for later)[^\n]*autopilot'
+    flags: i

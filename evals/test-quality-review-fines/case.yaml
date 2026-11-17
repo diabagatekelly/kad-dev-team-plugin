@@ -107,3 +107,24 @@ graders:
       FAIL if it reports any of them as a false positive, as unable to fail, as asserting the wrong thing, as brittle because the expected value is exact, or as testing implementation details.
 
       An empty or findings-free review does not pass this check: the review must also report at least one real finding of its own (a problem it asks to be fixed, at any severity). FAIL if it reports none.
+  - type: regex
+    name: repeated-charge-handed-on-in-one-line
+    # TODO.md's B8: `CollectFine` charges the card again, up to three times, after any refusal (R7), which is reliability-review's. The review reads the file for its coverage sweep; that the class is untested is its own finding.
+    # One bullet under `## Handed on`, above the findings, that names the
+    # problem, a severity it appears to have and the review that owns it.
+    target:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
+    pattern: '##\s*Handed on\b(?:(?!\n##\s)[\s\S])*?\n\s*[-*]\s(?=[^\n]*(?:retr|again|twice|three times|up to three|re-?charg|repeat))(?=[^\n]*\b(?:Critical|High)\b)(?=[^\n]*reliability-review)[^\n]*(?=[\s\S]*\n##\s*Findings\b)'
+    flags: i
+  - type: regex
+    name: repeated-charge-not-a-ranked-finding
+    # Never ranked among the review's own findings: no finding's heading
+    # is about it. Its limit: a finding that makes the complaint under
+    # another heading passes.
+    target:
+      source: file
+      path: docs/reviews/test-quality-review-fines.md
+    pattern: '(?:^|\n)###(?![^\n]*(?:untested|no tests?|not tested|never tested|coverage|uncovered))[^\n]*(?:retr|re-?charg|charges?[^\n]{0,30}(?:again|twice|three))'
+    flags: i
+    match: not_contains

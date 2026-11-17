@@ -94,6 +94,9 @@
       document.getElementById('paying-for').textContent = fines[id];
       document.querySelector('.btn-primary').textContent = 'Pay ' + fines[id].split(', ')[1];
     }
+    document.querySelector('form').addEventListener('submit', () => {
+      localStorage.setItem('lastCardNumber', document.querySelector('input[name="card"]').value);
+    });
   </script>
 </body>
 </html>

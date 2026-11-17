@@ -58,7 +58,8 @@ languages are named under `## Coverage`: their edges are unknown, never
 guessed.
 
 Tiers are never inferred. The prior map's `## Modules` table gives each
-module its tier by path; a module not in it is `untiered`. The prior map
+module its tier by path; `--tier <path>=<n>` gives one the slice's design
+states; a module in neither is `untiered`. The prior map
 also supplies the diff (new/removed modules, edges, externals, exports) and
 the carried-forward wrong-direction candidates (its own bullets, kept with
 `— carried forward`).
@@ -481,7 +482,20 @@ def main():
     p.add_argument("--write", action="store_true")
     p.add_argument("--date", default=datetime.date.today().isoformat())
     p.add_argument("--json")
+    p.add_argument("--tier", action="append", default=[], metavar="PATH=TIER",
+                   help="a module's tier as the slice's design states it (lending/cancel-hold.ts=1); repeatable; "
+                        "it replaces the prior map's tier for that module")
     a = p.parse_args()
+    given = {}
+    for item in a.tier:
+        path, sep, tier = item.partition("=")
+        tier = tier.strip().lower()
+        if tier.isdigit():
+            tier = f"tier {tier}"
+        if not sep or not re.fullmatch(r"tier \d+|untiered", tier):
+            print(f"map: --tier takes <path>=<number>, as in lending/cancel-hold.ts=1 (got {item!r})")
+            return 1
+        given[path.strip().strip("`").replace("\\", "/")] = tier
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     project = os.path.abspath(a.project)
     if not os.path.isdir(project):
@@ -499,7 +513,7 @@ def main():
     for name in known:
         ext = os.path.splitext(name)[1].lower()
         lang = LANG.get(ext, ext)
-        tier = "test-support" if name in support else prior.get(name, {}).get("tier", "untiered")
+        tier = "test-support" if name in support else given.get(name) or prior.get(name, {}).get("tier", "untiered")
         if ext in TS_EXT:
             edges, externals, exports = extract_ts(project, name, alias_list, set(known))
         elif ext == ".py":
@@ -508,6 +522,10 @@ def main():
             edges, externals, exports = {}, set(), set()
             no_extractor.add(lang)
         modules[name] = {"tier": tier, "lang": lang, "edges": edges, "externals": externals, "exports": exports}
+    unknown = sorted(set(given) - set(modules))
+    if unknown:
+        print(f"map: --tier names no module of this project: {', '.join(unknown)}")
+        return 1
     text = render(project, a.date, modules, prior, prior_wrong, no_extractor)
     print(text)
     if a.json:
@@ -525,6 +543,9 @@ def main():
         print(f"map written: {out} {figures}")
     else:
         print(f"map: {figures}")
+    untiered_new = sorted(n for n, m in modules.items() if m["tier"] == "untiered" and n not in prior)
+    if untiered_new and prior:
+        print(f"new and untiered: {', '.join(untiered_new)} (a tier the slice's design states goes in with --tier <path>=<n>, and the script is run again)")
     return 0
 
 

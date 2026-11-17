@@ -103,3 +103,24 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"(?:[\w-]+:)?architecture-review"'
     min: 1
+  - type: regex
+    name: key-in-source-handed-on-in-one-line
+    # TODO.md's B8: `main/wiring.ts` falls back to a mail provider key written in the source (S8), which is security-review's.
+    # One bullet under `## Handed on`, above the findings, that names the
+    # problem, a severity it appears to have and the review that owns it.
+    target:
+      source: file
+      path: docs/reviews/library-app-structure-review.md
+    pattern: '##\s*Handed on\b(?:(?!\n##\s)[\s\S])*?\n\s*[-*]\s(?=[^\n]*(?:key|secret|credential|SendGrid))(?=[^\n]*\b(?:Critical|High)\b)(?=[^\n]*security-review)[^\n]*(?=[\s\S]*\n##\s*Findings\b)'
+    flags: i
+  - type: regex
+    name: key-in-source-not-a-ranked-finding
+    # Never ranked among the review's own findings: no finding's heading
+    # is about it. Its limit: a finding that makes the complaint under
+    # another heading passes.
+    target:
+      source: file
+      path: docs/reviews/library-app-structure-review.md
+    pattern: '(?:^|\n)###[^\n]*(?:hard-?coded|api key|secret|credential|SendGrid key)'
+    flags: i
+    match: not_contains

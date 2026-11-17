@@ -229,23 +229,24 @@
     "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
   },
   "ci-pipeline-os-matrix": {
-    "inputs": "e0e656cd41726a308516623a2661bc777e5b31e2dc9812c695c6500c7d86a065",
+    "inputs": "3e3917dbd7f09b4e694ccc88a6c9491aab6cf03ae1435ef0d62e597b8cc3c22d",
     "score": 1.0,
     "bar": 0.963,
     "runs": 1,
     "source": "results/gate-20261116T233148-ci-pipeline-os-matrix.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T23:37:20Z"
+    "recorded": "2026-11-16T23:37:20Z",
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "ci-pipeline-screen-job": {
-    "inputs": "39b7a7df7ea6d34e9e1806be3e8386ede2137d1a72a150b3851a223b25bc19ee",
+    "inputs": "91b80ec0df63717d1798ec7f90ddbe90e865f9c89c45f98ffb8e77f20f43deb5",
     "score": 1.0,
     "bar": null,
     "runs": 3,
     "source": "results/gate-20261116T222834-ci-pipeline-screen-job.json",
     "claude_version": "2.1.325",
     "recorded": "2026-11-16T22:29:27Z",
-    "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "code-review-catalog": {
     "inputs": "8e84dd38cfefd2fa26f3aa16d2ec2271389af19aa7699a3d6702d6c80ea9fe42",
@@ -361,31 +362,34 @@
     "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
   },
   "delivery-ci-red-not-done": {
-    "inputs": "b775c7fad8508928686ddfaea26121c93671553653561f720e571788f18fe9c0",
+    "inputs": "67ebbfadabb91495937193d0782cb5f048ff818413081833c14377b160aeb086",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T233148-delivery-ci-red-not-done.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T23:37:20Z"
+    "recorded": "2026-11-16T23:37:20Z",
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "delivery-screens-owed": {
-    "inputs": "8f4b8c69510f6badfc5e8847c80146b19c2453ea841faabc925751a31b8ebf43",
+    "inputs": "1a22b913e17587f29a0b4a89d4a26c3b6c530d0b3c8465db561d49df6071c2d8",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T233148-delivery-screens-owed.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T23:37:20Z"
+    "recorded": "2026-11-16T23:37:20Z",
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "delivery-screens-stray": {
-    "inputs": "060942ec010971064229b3e3c459719e8487e650593d881dac9c30bb029bb2eb",
+    "inputs": "bc8c41da6ac4fa9429c773f6cc8a44d4d28337344c2f05ce70a3250c836ae767",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T233148-delivery-screens-stray.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T23:37:20Z"
+    "recorded": "2026-11-16T23:37:20Z",
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "design-system-payfine-phase1": {
     "inputs": "3d0b287e749357ba8f4c5a2acdff2915e692aba3a36b5852ae8efc6aa03ea926",
@@ -616,13 +620,14 @@
     "recorded": "2026-11-16T23:37:20Z"
   },
   "orchestrator-autopilot-round": {
-    "inputs": "ff725ba2b585f7af951ef7a2367c07a9254008fbc4c407ed37a5151907205a1a",
+    "inputs": "e4193af70a4d4bce7f8208c4af7f09d206668c4674ecef34e692c901524b0d2c",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T233148-orchestrator-autopilot-round.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T23:37:20Z"
+    "recorded": "2026-11-16T23:37:20Z",
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-backward-route": {
     "inputs": "3b88c037629e68a94e8eb9522dcacefad44f246f288be8e041dd26e33128d9e8",
@@ -635,33 +640,34 @@
     "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
   },
   "orchestrator-budget-exceeded": {
-    "inputs": "3edad4d265ffdcf360358abef83afcebc6a59db1ecfaa3112016fd73509b6d60",
+    "inputs": "a1561b60443485a9c4d2d191ba05406efb207ce6b3567fa57c4be7fa575054a1",
     "score": 1.0,
     "bar": 0.867,
     "runs": 3,
     "source": "results/gate-20261116T203512-orchestrator-budget-exceeded.json",
     "claude_version": "2.1.325",
     "recorded": "2026-11-16T20:35:41Z",
-    "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-capture-states": {
-    "inputs": "eb01c92fdada3934962c51b22798d01bdfd6a35271631269a0b1fcdec3885692",
+    "inputs": "0c17a29380e0c12eec6a27560baefa2e4d05f1adb86f22a1ee6d6715490d589c",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T233148-orchestrator-capture-states.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T23:37:20Z"
+    "recorded": "2026-11-16T23:37:20Z",
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-chunk-runner-handback": {
-    "inputs": "5a14f27ba4481686d4efe33557ac5180f9bfc9395ab2ee73df2f63125fb6807c",
+    "inputs": "3ec8e1f8d6393122729d97e5efcf9236da19ec346ce022fa98f96396c1bd3e74",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T201846-orchestrator-chunk-runner-handback.json",
     "claude_version": "2.1.325",
     "recorded": "2026-11-16T20:34:23Z",
-    "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-chunk-runner-launch": {
     "inputs": "6cf39ff9a23a65a1f422085327d26f162e33f23888982830e1c2b3f2722ee0a6",
@@ -684,32 +690,34 @@
     "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
   },
   "orchestrator-delivery-foreground": {
-    "inputs": "8ad1e309315b9f001604fa35681c43d5947c8a200a63ded2e81f255d64b2225a",
+    "inputs": "e76dfee93475823f916ab8dde5e1d3c39536706245dfd966314199e159bad620",
     "score": 0.923,
     "bar": 0.949,
     "runs": 1,
     "source": "results/gate-20261116T233148-orchestrator-delivery-foreground.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T23:37:20Z"
+    "recorded": "2026-11-16T23:37:20Z",
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-delivery-removal": {
-    "inputs": "7987d4219e6702459f117a705b028f3b357df1d236865e4e6026c99b8d395b28",
+    "inputs": "37e6f49572161da9f248d2945d28747c861dfa54528d6c56a3f73bf5fd66ff05",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T233148-orchestrator-delivery-removal.json",
     "claude_version": "2.1.325",
-    "recorded": "2026-11-16T23:37:20Z"
+    "recorded": "2026-11-16T23:37:20Z",
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-gap-without-delegation": {
-    "inputs": "26ac33fa7562f6ee45da193e2d6cb689c887615d23f0be909fcb8915f04a92a6",
+    "inputs": "0ea3f5488bfa77393c138722ebde3c5e6e799f0af74d0f08fc8748bc3a7b1c93",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T201846-orchestrator-gap-without-delegation.json",
     "claude_version": "2.1.325",
     "recorded": "2026-11-16T20:34:23Z",
-    "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-gate-checks-route-back": {
     "inputs": "63d31d7e54d2740f2e8f5be4bc2e1185202791b2b0a320676a185fb1639e62fc",
@@ -786,14 +794,14 @@
     "recorded": "2026-11-16T23:40:38Z"
   },
   "orchestrator-readme-stale-not-done": {
-    "inputs": "74f69751d6947188706f3910b8a6cf292ff84018aa552fefd0779a50cee5b54c",
+    "inputs": "78ac01c6a2c51569359892a117f89e30dff7751f22543697d50b1fbaef3d63da",
     "score": 0.917,
     "bar": 0.889,
     "runs": 1,
     "source": "results/gate-20261116T201846-orchestrator-readme-stale-not-done.json",
     "claude_version": "2.1.325",
     "recorded": "2026-11-16T20:34:23Z",
-    "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-route-accessibility": {
     "inputs": "7688669a0206f550a808d4eddae4e9235e3da11b112fbb5abeefc39092a9fa74",
@@ -940,14 +948,14 @@
     "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
   },
   "orchestrator-runner-handback-unverified": {
-    "inputs": "ca42ce38237e671fb05b8ac6bcaf0fa214d9661b1ba1542e85cdce6b9323e46e",
+    "inputs": "6b677552926da0a659e1080f7bb9a49d403a3bde81bda8e2a33619008d5cecc8",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
     "source": "results/gate-20261116T201846-orchestrator-runner-handback-unverified.json",
     "claude_version": "2.1.325",
     "recorded": "2026-11-16T20:34:23Z",
-    "carried": "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
+    "carried": "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
   },
   "orchestrator-security-stage": {
     "inputs": "e14d79439727e938aa6778d54fee9e6aaf649bedda2e99afbcd6cf73be330b7f",

@@ -12,7 +12,9 @@ execution:
   model: sonnet
   max_turns: 30
   timeout_seconds: 600
-  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+  # Bash since TODO.md's B10: without a shell the skill could not run
+  # `source_scan.py describe` and looked at the file's shape with Read and Grep.
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
 runs: 3
 graders:
   - type: tool_used
@@ -49,3 +51,11 @@ graders:
       Naming the file's columns and saying how many rows it has is the shape, and passes.
 
       FAIL if it presents any row, member, title or fee as taken from the export, reports what the rows contain (a typical fee, the largest fee, who owes what), or delivers finished requirements without asking.
+  - type: regex
+    name: owner-file-not-opened-with-the-scan-available
+    # B10: with a shell, the file's shape comes from `source_scan.py
+    # describe` or is not looked at; a Read or Grep of the export itself,
+    # or a command that prints it, is the miss the item asks about.
+    target: trace
+    pattern: '"name":"(?:Read|Grep)","input":\{[^{}]*desk-fees\.csv|"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\b(?:cat|head|tail|less|more|awk|sed|cut|sort|grep|rg|wc)\b[^|;&"]*desk-fees\.csv'
+    match: not_contains

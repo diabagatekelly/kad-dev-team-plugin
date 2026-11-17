@@ -28,6 +28,39 @@ adapters reaching their stores through different libraries or idioms
 (raw SQL in one, an ORM in another) is not a finding when each stays
 behind its port — hiding exactly that choice is what the port is for.
 
+## A serious problem that is another review's
+
+While reading for this review you will sometimes see a problem that is
+serious and is not this review's subject: a credential written into the source, a query built from a request's text, a call whose failure nobody would see, a test that cannot fail.
+It is not yours to rank, and it is not yours to read past. Write it at
+the top of the report, above `## Findings`, under `## Handed on`, one
+line per problem:
+
+```markdown
+## Handed on
+
+- <what is wrong, in a clause>; `<path>:<line>`; appears <Critical | High>; owner: `<the review that owns it>`
+```
+
+The severity is the one the problem appears to have on its owner's
+scale, never one rated down to fit this review's categories (a key committed in the wiring module is not a Low "configuration belongs elsewhere" note because structure is what this review rates).
+The line is never one of your findings: no `###` heading, no
+`**Severity:**` line, no place in the ranking and no suggested fix, so
+no fixer is handed it on a judgement this review is not the one to
+make. One line is all of it: the owning review verifies it, sizes it
+and says what to do. Only what appears Critical or High goes there; a
+smaller thing outside your subject is left unsaid. The owners:
+`code-review` (readability, names, comments, code the change does not
+need), `test-quality-review` (what the tests prove),
+`architecture-review` (boundaries and the direction of dependencies),
+`security-review` (anything whose harm needs an adversary),
+`reliability-review` (what happens when something fails),
+`accessibility-review` (a rendered screen), `supply-chain-review`
+(dependencies and their pinning), `operational-readiness` (shipping and
+rolling back). In a combined chunk report, a problem one of the
+launch's own lenses owns is that lens's finding, not a line here. With
+nothing of the kind seen, the section is left out.
+
 ## Cold pass first, under the chunk loop
 
 When the orchestrator's chunk loop launches you at a round 0 (the
@@ -282,6 +315,16 @@ intimacy.
 - **Medium** — an interface parked on the wrong side; inconsistent pattern
   use across similar modules; a moderate over- or under-engineering call.
 - **Low** — naming, a minor abstraction cleanup, style.
+
+**Above Low needs a cost you can point to in this code today**: a change
+that is blocked or made dearer and which one, a caller that has to know
+something it should not and where. An interface that could be narrower
+or split, a contract that could say more, a type that also happens to
+be the wire shape, with nothing in the code paying for it yet, is Low:
+a preference between two structures that both hold. "Moderate over- or
+under-engineering" is Medium when you can name what it costs now, not
+when you can name a tidier design. On a module whose dependencies point
+the right way this is most of what there is to say.
 
 ## Stance
 

@@ -32,6 +32,39 @@ export or branch with nothing exercising it is a finding on its own,
 found by this sweep — not something left to surface incidentally while
 reading through the tests for other issues.
 
+## A serious problem that is another review's
+
+While reading for this review you will sometimes see a problem that is
+serious and is not this review's subject: the code under test doing something dangerous (money taken twice, a secret in a log, input pasted into a query), a module reaching into the database client.
+It is not yours to rank, and it is not yours to read past. Write it at
+the top of the report, above `## Findings`, under `## Handed on`, one
+line per problem:
+
+```markdown
+## Handed on
+
+- <what is wrong, in a clause>; `<path>:<line>`; appears <Critical | High>; owner: `<the review that owns it>`
+```
+
+The severity is the one the problem appears to have on its owner's
+scale, never one rated down to fit this review's categories (code that takes a payment twice is not a Medium "missing coverage" finding because coverage is what this review rates; the untested code is your finding, what the code does wrong is the owner's).
+The line is never one of your findings: no `###` heading, no
+`**Severity:**` line, no place in the ranking and no suggested fix, so
+no fixer is handed it on a judgement this review is not the one to
+make. One line is all of it: the owning review verifies it, sizes it
+and says what to do. Only what appears Critical or High goes there; a
+smaller thing outside your subject is left unsaid. The owners:
+`code-review` (readability, names, comments, code the change does not
+need), `test-quality-review` (what the tests prove),
+`architecture-review` (boundaries and the direction of dependencies),
+`security-review` (anything whose harm needs an adversary),
+`reliability-review` (what happens when something fails),
+`accessibility-review` (a rendered screen), `supply-chain-review`
+(dependencies and their pinning), `operational-readiness` (shipping and
+rolling back). In a combined chunk report, a problem one of the
+launch's own lenses owns is that lens's finding, not a line here. With
+nothing of the kind seen, the section is left out.
+
 ## Cold pass first, under the chunk loop
 
 When the orchestrator's chunk loop launches you at a round 0 (the
@@ -260,7 +293,20 @@ test infrastructure, not a mocking violation — the subject under test is
 still genuinely exercised; only its external dependency is standing in for
 the real thing. Only flag stub usage when the stub itself has grown
 complex enough to need its own tests, or when assertions target the
-stub's internals rather than the outcome it produces.
+stub's internals rather than the outcome it produces. Setting one
+method of that fake for one test (a spy or a return value put on it in
+the test body) is the same thing: the subject still runs for real, and
+"seeding it through its constructor would be simpler" is a note, not a
+wrong-boundary, over-mocking or unreliable-test finding.
+
+A test that calls the real code and asserts the exact result is a sound
+test, and it is not filed under any category above: not "useless", not
+"false positive", not "brittle" for being exact, not "implementation
+detail". When it is thin (one data point, a boundary nobody tries, a
+field of the result nobody reads) the finding is the missing case, under
+**Missing coverage** or **Incomplete edge-case coverage**, at Medium at
+most; it names the case to add and says the test that exists is valid.
+The test itself is never the thing rated.
 
 ## Severity
 

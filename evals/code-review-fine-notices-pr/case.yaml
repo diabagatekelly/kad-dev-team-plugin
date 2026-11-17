@@ -99,7 +99,7 @@ graders:
     criteria: |
       Judge substance only. The second `'works'` test wraps `notices.build` in `mock.fn` with a replacement implementation and asserts the mock was called once, so it never runs the real code. Judging whether a test is over-mocked or proves nothing belongs to a test-quality review, not a readability review.
 
-      PASS if the review does not make that judgment in a ranked finding of its own. These all pass: not mentioning the mocking; naming it as something for a test-quality review (or `test-quality-review`) to look at, in a hand-off or out-of-scope section or in one deferring sentence inside a finding; describing what the second test does (it calls a mock and asserts the call) as context inside the finding about the duplicate test names, as long as that finding's complaint, in its heading, its "why it matters" and its fix, is the names.
+      PASS if the review does not make that judgment in a ranked finding of its own. These all pass: not mentioning the mocking; naming it in one line under a `## Handed on` heading (what it is, where, the severity it appears to have, `test-quality-review` as its owner), which is what the skill asks for, or as something for a test-quality review to look at in another hand-off or out-of-scope section or in one deferring sentence inside a finding; describing what the second test does (it calls a mock and asserts the call) as context inside the finding about the duplicate test names, as long as that finding's complaint, in its heading, its "why it matters" and its fix, is the names.
 
       FAIL if a ranked finding's own complaint is that the test is over-mocked, proves nothing, never runs the real code or covers nothing: in its heading (for example "...and the second doesn't exercise real code"), its severity reasoning or its suggested fix, whether or not the review also hands the point off elsewhere.
 
@@ -109,3 +109,24 @@ graders:
     tool: Skill
     input_match: '"skill"\s*:\s*"kad-dev-team:why-comments"'
     min: 1
+  - type: regex
+    name: mock-only-test-handed-on-in-one-line
+    # TODO.md's B8: the second 'works' test replaces `build` with a mock and asserts the mock ran (CT3), which is test-quality-review's.
+    # One bullet under `## Handed on`, above the findings, that names the
+    # problem, a severity it appears to have and the review that owns it.
+    target:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
+    pattern: '##\s*Handed on\b(?:(?!\n##\s)[\s\S])*?\n\s*[-*]\s(?=[^\n]*(?:mock|never runs|real code|cannot fail))(?=[^\n]*\b(?:Critical|High)\b)(?=[^\n]*test-quality-review)[^\n]*(?=[\s\S]*\n##\s*Findings\b)'
+    flags: i
+  - type: regex
+    name: mock-only-test-not-a-ranked-finding
+    # Never ranked among the review's own findings: no finding's heading
+    # is about it. Its limit: a finding that makes the complaint under
+    # another heading passes.
+    target:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr.md
+    pattern: '(?:^|\n)###[^\n]*(?:mock|never runs|real code|proves nothing|exercis)'
+    flags: i
+    match: not_contains
