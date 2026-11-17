@@ -466,10 +466,6 @@
    "note": "\"Use the `kad-dev-team:code-reviewer` agent\" is the path the case exists to run; the eight judges are `code-review-fine-notices-pr`'s, word for word, on the agent's report"
   },
   "judges": {
-   "finds-triplicated-notice-logic": {
-    "by": "reading",
-    "why": "as `code-review-fine-notices-pr`"
-   },
    "guard-clause-not-the-finding": {
     "by": "reading",
     "why": "as `code-review-fine-notices-pr`"
@@ -479,14 +475,6 @@
     "why": "as `code-review-fine-notices-pr`"
    },
    "finds-wrong-name": {
-    "by": "reading",
-    "why": "as `code-review-fine-notices-pr`"
-   },
-   "finds-what-comment": {
-    "by": "reading",
-    "why": "as `code-review-fine-notices-pr`"
-   },
-   "finds-duplicate-test-names": {
     "by": "reading",
     "why": "as `code-review-fine-notices-pr`"
    },
@@ -816,15 +804,7 @@
     "by": "reading",
     "why": "as `library-app-lending-review`"
    },
-   "finds-http-request-in-place-hold": {
-    "by": "reading",
-    "why": "as `library-app-lending-review`"
-   },
    "no-false-alarm-type-only-cycle": {
-    "by": "reading",
-    "why": "as `library-app-lending-review`"
-   },
-   "finds-use-case-reaching-into-wiring": {
     "by": "reading",
     "why": "as `library-app-lending-review`"
    },
@@ -1913,22 +1893,6 @@
     "by": "reading",
     "why": "as `reliability-review-nightly`"
    },
-   "finds-no-isolation-in-fine-loop": {
-    "by": "reading",
-    "why": "as `reliability-review-nightly`"
-   },
-   "finds-member-directory-pool-leak": {
-    "by": "reading",
-    "why": "as `reliability-review-nightly`"
-   },
-   "finds-mailer-without-timeout": {
-    "by": "reading",
-    "why": "as `reliability-review-nightly`"
-   },
-   "finds-postal-queue-swallows-errors": {
-    "by": "reading",
-    "why": "as `reliability-review-nightly`"
-   },
    "no-false-alarm-reminder-loop-catch": {
     "by": "reading",
     "why": "as `reliability-review-nightly`"
@@ -2492,15 +2456,7 @@
    "note": "\"Use the `kad-dev-team:devsecops-engineer` agent\" is the path the case exists to run; the five judges are `supply-chain-review-build`'s, word for word, on the agent's report"
   },
   "judges": {
-   "finds-base-image-tag": {
-    "by": "reading",
-    "why": "as `supply-chain-review-build`"
-   },
    "finds-image-build-ignores-lockfile": {
-    "by": "reading",
-    "why": "as `supply-chain-review-build`"
-   },
-   "finds-install-scripts-enabled": {
     "by": "reading",
     "why": "as `supply-chain-review-build`"
    },
@@ -3125,6 +3081,24 @@
   "judges": {},
   "findings": [
    "`autopilot-file-written` does not fail with the A.2 bullet removed: the skill's Autopilot paragraph still names the file and the owner said yes. The file's content does fail."
+  ]
+ },
+ "architecture-design-concurrency-interleavings": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "asks for the design; the engineer's lock file with a process number is the planted proposal, and nothing in the prompt says interleavings"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-readiness-correction-autopilot": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "answers the delegation question and the sandbox one; says nothing of autopilot (the state's file says yes and names no stop) or of the correction"
+  },
+  "judges": {},
+  "findings": [
+   "The skill's exact bullet (`taken as recommended: <check> (autopilot)`) was not written on the first run; the grader reads the route's log entry instead."
   ]
  }
 }

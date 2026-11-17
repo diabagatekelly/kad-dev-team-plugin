@@ -7,6 +7,7 @@
  "accessibility-review-payfine": [],
  "accessibility-review-payfine-subtle": [],
  "adr-payment-gateway": [],
+ "architecture-design-concurrency-interleavings": [],
  "architecture-design-neg-review": [],
  "architecture-design-owner-sheet": [
   "source_scan.py"
@@ -188,6 +189,10 @@
   "sandbox_check.py",
   "scratch_run.py"
  ],
+ "orchestrator-readiness-correction-autopilot": [
+  "readiness_check.py",
+  "sandbox_check.py"
+ ],
  "orchestrator-readiness-gate": [
   "audit_sync.py",
   "readiness_check.py",
@@ -230,6 +235,7 @@
  "orchestrator-security-stage": [],
  "orchestrator-session-setup": [],
  "orchestrator-slice-review-launches": [
+  "rounds_record.py",
   "sandbox_check.py",
   "scratch_run.py",
   "test_measures.py",
@@ -285,6 +291,7 @@
  "staleness-audit-docs": [],
  "supply-chain-review-accepted": [],
  "supply-chain-review-build": [],
+ "supply-chain-review-build-via-agent": [],
  "supply-chain-review-neg-reliability": [],
  "supply-chain-review-workflows": [],
  "tdd-implementation-lite-cancel-hold": [],
