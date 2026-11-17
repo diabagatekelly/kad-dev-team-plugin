@@ -142,8 +142,6 @@ rejection terminates the process.
 | R11 | `infra/memory/in-memory-hold-queue.ts` (wired as a singleton in `main/wiring.ts`) | Resource lifecycle; state that must survive | Holds exist only in process memory: every deploy, restart or crash (R1) silently drops every hold, and nothing ever removes one, so the map only grows. | High. Fix: persist holds behind the existing `HoldQueue` port. |
 | R12 | `ops/alerts.yml` `request-errors` | Alert fatigue | Pages on any error event in five minutes; since `respond.ts` reports every refusal (R9), routine validation failures page on-call. | High/Medium. Fix: alert on the rate of unexpected errors against a target; ticket rather than page below it. |
 | R13 | `ops/alerts.yml` `high-cpu` | Actionable alerts | Pages on CPU above 70% with no objective, no user-facing symptom and no runbook: nobody can say what to do when it fires. | Medium. Fix: drop it, or tie it to a symptom and make it a ticket. |
-| R14 | overlay `code-plants/reliability-review/portal-pay/`: `fines/pay-own-fine.ts` + `infra/payments/stripe-fine-payments.ts` + `types/vendor.d.ts` (case `reliability-review-portal-pay-pr`, retired 2026-11-15 in E7; no case copies this overlay now) | A guarantee claimed on one side of a boundary and not delivered on the other (the same thing happens twice) | The defect only shows across files. The use case charges with `{ idempotencyKey: fine.id }` and the port's comment promises a repeat is not charged again; the adapter puts the key into the charge's `metadata`, which the SDK types describe as labels Stripe never reads, and never passes the request option (`charges.create(params, { idempotencyKey })`) that deduplicates. The use case's own test asserts the key reaches the port, not Stripe. With the route telling the member "Payment failed, please try again" on a timeout, the retry creates a second charge when the first went through. | Critical/High. Fix: pass the key as the request option (and keep metadata if wanted). That covers Stripe's window only (24 hours in the SDK's contract); a retry after it is R15's territory, the attempt recorded against the fine, and a review that says so is right. A reviewer that only worries about a duplicate on retry without finding the key ineffective has the right worry for the wrong reason. |
-| R15 | same overlay: `PayOwnFine.chargeWithin`, `POST /portal/fines/:id/pay` | Partial completion leaves defined state; how would anyone know | The charge is raced against a 10-second timer; when the timer wins, the charge promise is abandoned, so a success at second 12 is never settled, nothing records the attempt, and the route answers "Payment failed" without logging or reporting the timeout. Paid, still outstanding, invisible. | High. Fix: record the attempt before charging and reconcile late outcomes, or handle the promise's late resolution, or at least report the timeout with the fine id. |
 | R16 | overlay `code-plants/reliability-review/refund/`: `infra/payments/stripe-fine-refunds.ts` + `fines/refund-fine.ts` + `infra/http/fines-routes.ts` + `types/vendor.d.ts` (case `reliability-review-refund-pr`) | A remote resource created, then a timeout, then a retry (H3.4) | The adapter calls `refunds.create` with a 10-second client timeout; a `StripeTimeout` becomes `RefundTimedOut`, and the route tells staff "The refund did not complete. Try again." Stripe may already have refunded. The vendor types say a fully refunded charge is refused with `charge_already_refunded`; the adapter returns it as `{ ok: false }`, `RefundFine` throws `RefundRefused`, `markRefunded` never runs, the route answers 409 "refused". The member has the money back, the fine reads paid and not refunded, nothing records the refund, and the desk refunds it again by hand. Run 3's orphaned Plaid Item, in Stripe's vocabulary: the repeat refused, the first recorded nowhere. | Critical/High. Fix: treat `charge_already_refunded` as success and record the refund (look it up at the provider, or record the attempt before the call so the repeat can find it), or an idempotency key the provider honours. A review that only fears a duplicate refund has the wrong ending: Stripe refuses one. |
 
 ### Traps
@@ -159,8 +157,6 @@ rejection terminates the process.
 | RT7 | `ops/alerts.yml` catalog-search burn alerts | Two alerts for one route. | Multi-window error-budget burn against the stated 99.5% objective, page for the fast burn and ticket for the slow one, both with a runbook. |
 | RT9 | `main/wiring.ts` `publicSearchClient()`, `rateLimit` on `/books` in `main/server.ts` | A second connection pool, and an unauthenticated route. | The bulkhead done right: public search gets its own memoized 4-connection pool with a 2 s timeout, connecting as a separate `catalog_reader` role, so a slow database or a search burst exhausts only search, never the 20-connection pool that session checks, checkout and fines share; search is also rate-limited per client. Contrast R3, where a pool is created per call and never closed. |
 | RT8 | Every `PgClient` | Database calls with no visible timeout. | `pgOptions()` sets `queryTimeoutMs: 10_000` (client-side, covering the wait for a connection), and every client, including the member directory's, is built from it. |
-| RT10 | overlay `code-plants/reliability-review/portal-pay/`: the 10-second bound in `PayOwnFine.chargeWithin` | A hand-rolled timeout around a provider call. | The SDK offers no timeout option and the existing `CollectFine` waits indefinitely (R4's pattern); bounding the wait is right. What happens after it fires is R14 and R15; the bound itself is not a finding. |
-| RT11 | same overlay: `POST /portal/fines/:id/pay` answers 404 "fine not found" for a missing fine and for another member's | Two refusals indistinguishable to the caller. | Both are expected refusals, told apart server-side (`log.info('portal payment refused', { fineId, reason })`) and from faults (error reporter, 500). The shared answer is the security-correct one; a Low note on the status code is the most a reliability review should say. |
 | RT12 | overlay `code-plants/reliability-review/refund/`: no retry in `StripeFineRefunds` or `RefundFine` | A provider call with no automatic retry. | A timeout reaches staff as a 504 with "Try again"; nothing is lost that a retry would save, and a retry of a call that creates something at the provider is R16's hazard, not its fix. Asking for backoff and retries without making the repeat safe is the wrong recommendation. |
 | RT13 | same overlay: `POST /fines/:id/refund` on `RefundTimedOut` | A timeout answered with a generic 504. | The route reports it to the error reporter with the path, the fine id and the charge id before answering, so the attempt can be found and told apart from a refusal; the record against the fine is what is missing (R16), not the report. |
 
@@ -175,14 +171,6 @@ can both reach the provider (one is refused as already refunded and
 lands in R16's ending); and a `processing_error` is answered as a
 refusal rather than a transient the staff member should retry. None is
 planted; a review that raises any of them is right.
-
-In the portal-pay overlay, ungraded but not false alarms: the portal and
-desk payment paths (`PayOwnFine`, `CollectFine`) and a staff waiver can
-overlap on one fine with no atomic claim, so two charges, or a waiver and
-a charge, can both land (RR2's race, now across two routes); and
-`ledger.settle` failing after a successful charge leaves a paid fine
-outstanding (R6, newly routed through). Neither is planted; a review that
-raises either is right, and no grader fails it.
 
 Ungraded but not false alarms: the nightly loops issue a query per loan
 (`outstandingFor`, `findByCard`); `findOpen()` loads every open loan;
@@ -531,3 +519,20 @@ bare model passed it as well, three runs of three).
 The agent prompt says to state the importance ordering being assumed rather
 than asserting a universal one. `library-app-lending-review` carries a
 half-weight grader for it.
+
+## Handed on (`H`): a serious problem that is another review's (TODO.md's B8)
+
+Each review skill names, in one line under `## Handed on` above its
+findings, a serious problem it reads past that another review owns: what,
+where, the severity it appears to have, the owner. Never one of its own
+ranked findings. Five of the six are plants listed above, read by a case
+of another review; one is planted for this.
+
+| # | Where | Read by | Owner on the line |
+|---|---|---|---|
+| H1 | CT3: the second `'works'` test in the `fine-notices` overlay mocks `build` and asserts the mock ran | `code-review-fine-notices-pr` and its `-via-agent` twin | `test-quality-review` |
+| H2 | R7: `fines/collect-fine.ts` charges the card again, up to three times, after any refusal | `test-quality-review-fines` (its coverage sweep reads the file) | `reliability-review` |
+| H3 | S8: `main/wiring.ts` `mailer()` falls back to a provider key written in the source | `library-app-structure-review` | `security-review` |
+| H4 | OR2: `deploy.yml` runs the migration before the release, with no way back; or SC2, the image build that ignores the lockfile, or SC4, the tag-pinned action | `security-review-config` | `operational-readiness`; `supply-chain-review` for SC2 and SC4 |
+| H5 | S7: `infra/postgres/postgres-loan-history.ts` builds its SQL from the portal's `?title=` | `reliability-review-http` | `security-review` |
+| H6 | `ui-plants/accessibility-review/visual-ux/pay-fine-declined.html`: on submit the page's script keeps the card number in `localStorage` (planted 2026-11-16) | `accessibility-review-payfine` | `security-review` |

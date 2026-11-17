@@ -145,7 +145,6 @@ ORCHESTRATOR = "skills/orchestrator/SKILL.md"
 SCRIPTS_FILE = os.path.join(EVALS, "case_scripts.json")
 STEPS_FILE = os.path.join(EVALS, "tools", "orchestrator_steps.json")
 LOOP_MANIFEST = "evals/loop_states.json"
-LOOP_BEFORE = os.path.join(EVALS, "loop_states_before.json")
 
 
 def scoped(text, steps):
@@ -357,10 +356,7 @@ class Reach:
             if key is None:
                 return None
             if data is None:
-                # No manifest on that side (the base of the change that
-                # introduced it): what that side built, when it was recorded.
-                before = json.load(open(LOOP_BEFORE, encoding="utf-8")) if os.path.isfile(LOOP_BEFORE) else {}
-                return str(before.get("states", {}).get(key, "no manifest")).encode()
+                return b"no manifest"
             try:
                 return str(json.loads(data).get("states", {}).get(key, "no entry")).encode()
             except ValueError:

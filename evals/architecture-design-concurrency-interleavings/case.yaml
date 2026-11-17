@@ -1,0 +1,69 @@
+schema_version: "1.0"
+name: architecture-design-concurrency-interleavings
+description: "TODO.md's C3: a slice about two processes (the nightly run started by hand beside the timer's). The decision about keeping them apart is presented with its interleavings listed and answered before approval is asked, the two holes of the engineer's lock-file proposal among them, and nothing is written."
+tags: [architecture-design, library-app, capability]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a change to it; the planning documents are in `docs/nightly-run/` (problem, requirements, the slice and its user story). Design the structure for `slice-001` before any code is written, and save the design in `docs/nightly-run/`.
+
+    The engineer who'll build it adds: "Simple enough: the run writes a lock file with its process number in it when it starts and deletes it when it ends. A run that finds the file checks whether that process is still running; if it is, it says a run is in progress and exits, and if it isn't, it takes the lock over."
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked-display
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
+    min: 1
+  - type: regex
+    name: writes-nothing-under-nightly-run
+    # The decision is presented and waits; the design is written only
+    # after approval, in a later turn.
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*docs/nightly-run/'
+    match: not_contains
+  - type: regex
+    name: decision-put-to-the-owner
+    # A recommendation, an alternative, and a question left open.
+    target: last_message
+    pattern: '(?=[\s\S]*\brecommend)(?=[\s\S]*(?:alternative|instead|rejected|option))(?=[\s\S]*\?)'
+    flags: i
+  - type: regex
+    name: two-starts-at-once-answered
+    target: last_message
+    pattern: '(?:two|both|second)\b[^\n]{0,80}\b(?:start|run|process)[^\n]{0,120}\b(?:same (?:moment|time|instant)|at once|simultaneous|together|race|before either|both (?:check|see|find))|\b(?:race|simultaneous)[^\n]{0,120}\b(?:start|check|creat|writ)'
+    flags: i
+  - type: regex
+    name: crash-mid-run-answered
+    target: last_message
+    pattern: '\b(?:crash|killed|kill -9|dies|died|power|abrupt|SIGKILL)\b'
+    flags: i
+  - type: regex
+    name: stop-during-a-wait-answered
+    target: last_message
+    pattern: '\b(?:shut(?:s|ting)? ?down|shutdown|SIGTERM|SIGINT|stopp?(?:ed|ing)?\b[^\n]{0,60}\b(?:while|during|mid|wait)|asked to stop|deploy[^\n]{0,60}(?:while|during|mid))'
+    flags: i
+  - type: regex
+    name: leftover-removed-by-hand-answered
+    target: last_message
+    pattern: '\b(?:by hand|manual(?:ly)?|someone (?:deletes|removes)|operator (?:deletes|removes)|delet(?:es|ed|ing) the (?:lock|file|marker)|remov(?:es|ed|ing) the (?:lock|file|marker)|rm\b)'
+    flags: i
+  - type: regex
+    name: reused-process-number-named
+    # The first hole of the proposal: the number in a stale file now
+    # belongs to another live program, so the lock is never taken over.
+    target: last_message
+    pattern: '(?:\b(?:pid|process (?:number|id))\b[^\n]{0,160}\b(?:reus|recycl|another (?:process|program)|different (?:process|program)|unrelated|wrap|handed out again|belongs to))|(?:\b(?:reus|recycl)\w*[^\n]{0,80}\b(?:pid|process (?:number|id))\b)'
+    flags: i
+  - type: regex
+    name: check-then-write-race-named
+    # The second hole: two runs that both find no file (or both find a
+    # dead owner) before either writes.
+    target: last_message
+    pattern: '(?:both|two|each)\b[^\n]{0,160}\b(?:no (?:lock|file)|absent|missing|dead|stale|not running|take (?:it|the lock) over|takeover|take-over)[^\n]{0,160}\b(?:both|two|each|either|second)\b|check[- ]then[- ](?:write|act|create)|TOCTOU|time[- ]of[- ]check|not atomic|non-atomic|exclusive(?:ly)? creat|O_EXCL|\bwx\b'
+    flags: i

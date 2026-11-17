@@ -71,18 +71,22 @@
 #   chunk1-done       chunk 1's C line written and records committed; the
 #                     loop started six hours ago; the owner's autopilot
 #                     file says yes; next: the budget check
-#   chunk1-done-over  as chunk1-done, the loop started an hour ago and
+#   chunk1-done-over  as chunk1-done (the owner's autopilot file the short
+#                     one: yes, no stop spelled out), the loop started an hour ago and
 #                     chunk 1 took four reviewer launches and three fixers
 #                     (a relaunched runner); next: the budget check
 #   slice-built       three chunks done, map committed, no README, a script
 #                     in a template literal, comment density over the line;
 #                     next: the Definition of Done
 #   slice-review-r0   as slice-built with a README committed, one more
-#                     commit that adds a card-number length rule no test
-#                     holds (and a guard written twice over), and D's
+#                     commit that adds a card-number length rule whose
+#                     limit no test holds (one test runs it far from the
+#                     limit; and a guard written twice over), and D's
 #                     mutation pass run for real on the slice's changed
 #                     lines (`slice-mutation.md` in the records: one
-#                     survivor on the rule, one that changes nothing);
+#                     survivor on the rule, one that changes nothing),
+#                     and the gate's output on D's own commits
+#                     (`gate-slice-r0.txt`);
 #                     next: D.3, the slice reviewers and the cold read
 #   slice-review-r2-fixed  D's fix round as far as its second fix: round 0
 #                     recorded, fix r1 committed and gated, round 1
@@ -678,7 +682,7 @@ LOG
     # Empty until a `gh` call, so a grader reading it never finds it missing.
     : > tools/gh-calls.log ;;
   chunk1-done|chunk1-done-over)
-    autopilot=yes; planning; plan; chunk1 chunk1 "none"
+    autopilot=yes; if [ "$state" = chunk1-done-over ]; then autopilot_file=autopilot-short; fi; planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review-clean; record1
     if [ "$state" = chunk1-done ]; then
@@ -702,12 +706,30 @@ LOG
       reviews=6 fixers=1 handoff "D.1 done: map-update ran and committed the map as $map_sha" "D.2: the Definition of Done, then the slice reviewers" \
         "**Standing:** none"
     elif [ "$state" = slice-review-r0 ] || [ "$state" = no-ci ] || [ "$state" = no-ci-ui ]; then
+      before_d="$(git rev-parse --short HEAD)"
       cp "$loop/docs/README-slice.md" README.md
       git add README.md
       git commit -qm "README: clone to running, tests and checks, where things live, what this slice does"
       cp "$loop/snapshots/slice-unguarded/lending/cancel-hold.ts" lending/cancel-hold.ts
       git add lending/cancel-hold.ts
+      d_files=(README.md lending/cancel-hold.ts)
+      if [ "$state" = slice-review-r0 ]; then
+        # A test that runs the rule far from its limit: every changed line
+        # is run, so the gate's coverage passes, and no test says where
+        # the limit is, which is the survivor.
+        cp "$loop/snapshots/slice-unguarded/test/cancel-hold-card-length.test.ts" test/cancel-hold-card-length.test.ts
+        git add test/cancel-hold-card-length.test.ts
+        d_files+=(test/cancel-hold-card-length.test.ts)
+      fi
       git commit -qm "Reject a card number longer than a library card's"
+      # The gate on D's own two commits, so "the last gate output on this
+      # tree" exists for the reviewers (without it the orchestrator ran
+      # the suite into a file of its own to have one to hand them).
+      d_gate=""
+      if [ "$state" = slice-review-r0 ]; then
+        gate "$before_d" "$records/gate-slice-r0.txt" "${d_files[@]}"
+        d_gate="; the gate's last output on this tree is \`$records/gate-slice-r0.txt\`"
+      fi
       mutants="${TMPDIR:-/tmp}/kad-mutants-fixture-$$.json"
       "$py" -I "$scripts/mutation_pass.py" changed --repo . --base "$base_sha" --out "$mutants" > /dev/null
       "$py" -I "$scripts/mutation_pass.py" run --repo . --mutants "$mutants" --test 'npm test' --base "$base_sha" \
@@ -724,7 +746,7 @@ LOG
         git commit -qm "Tools: the GitHub CLI stand-in"
       fi
       # no-ci leaves no handoff file: nothing in that state is mid-loop.
-      [ "$state" = no-ci ] || [ "$state" = no-ci-ui ] || reviews=6 fixers=1 handoff "D.2 done: the Definition of Done passes and the mutation pass ran on the slice's changed lines (\`$records/slice-mutation.md\`)" \
+      [ "$state" = no-ci ] || [ "$state" = no-ci-ui ] || reviews=6 fixers=1 handoff "D.2 done: the Definition of Done passes and the mutation pass ran on the slice's changed lines (\`$records/slice-mutation.md\`)$d_gate" \
         "D.3: the slice reviewers, the criteria reviewers among them, and the cold read" "**Standing:** none"
     else
       cp "$loop/docs/README-slice.md" README.md

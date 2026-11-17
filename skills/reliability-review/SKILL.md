@@ -29,6 +29,39 @@ introduced.
 The question: **what does this do when its dependencies misbehave, and
 would anyone find out?**
 
+## A serious problem that is another review's
+
+While reading for this review you will sometimes see a problem that is
+serious and is not this review's subject: a query built from a request's text, a route that returns one person's data to another, a credential in source, a test that cannot fail.
+It is not yours to rank, and it is not yours to read past. Write it at
+the top of the report, above `## Findings`, under `## Handed on`, one
+line per problem:
+
+```markdown
+## Handed on
+
+- <what is wrong, in a clause>; `<path>:<line>`; appears <Critical | High>; owner: `<the review that owns it>`
+```
+
+The severity is the one the problem appears to have on its owner's
+scale, never one rated down to fit this review's categories (a query built from user input is not a Medium "unbounded result" finding because failure is what this review rates).
+The line is never one of your findings: no `###` heading, no
+`**Severity:**` line, no place in the ranking and no suggested fix, so
+no fixer is handed it on a judgement this review is not the one to
+make. One line is all of it: the owning review verifies it, sizes it
+and says what to do. Only what appears Critical or High goes there; a
+smaller thing outside your subject is left unsaid. The owners:
+`code-review` (readability, names, comments, code the change does not
+need), `test-quality-review` (what the tests prove),
+`architecture-review` (boundaries and the direction of dependencies),
+`security-review` (anything whose harm needs an adversary),
+`reliability-review` (what happens when something fails),
+`accessibility-review` (a rendered screen), `supply-chain-review`
+(dependencies and their pinning), `operational-readiness` (shipping and
+rolling back). In a combined chunk report, a problem one of the
+launch's own lenses owns is that lens's finding, not a line here. With
+nothing of the kind seen, the section is left out.
+
 ## Cold pass first, under the chunk loop
 
 When the orchestrator's chunk loop launches you at a round 0 (the
@@ -303,6 +336,19 @@ lower it.
   handling.
 - **Low** — instrumentation worth having; minor cleanups; speed
   improvements with a real but modest story.
+
+**Above Low needs a failure you can point to in this code today**: which
+call, failing how, leaves what state or tells nobody. On a path that
+already bounds its work, times out, catches, reports and answers with a
+defined error, what is left to say is refinement: a finer failure
+reason, a runbook whose wording could match the fields better, a
+saturation that would need a load nothing in the repository suggests.
+That is Low, said once, however sure you are that it would be better.
+A review of such a path that has a Medium has usually rated its own
+thoroughness. This lowers nothing the sections above name as a
+finding whatever the load: an unbounded result, a query per item, a
+leak, a call with no timeout keep their severity on a path that has
+one.
 
 An observability or error-context gap is Medium only when a failure on
 that path could not be told apart from the others with what is already

@@ -17,6 +17,8 @@ execution:
   allowed_tools: [Task, Agent, Skill, Read, Grep, Glob, Write]
 runs: 3
 graders:
+  # Cut 2026-11-16 (TODO.md's B10, as its direct case was in E7): finds-triplicated-notice-logic, finds-what-comment, finds-duplicate-test-names:
+  # judges that passed three runs of three with and without the plugin.
   - type: file_exists
     name: review-written
     path: docs/reviews/code-review-fine-notices-pr-via-agent.md
@@ -31,20 +33,6 @@ graders:
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
     min: 1
     arm: with-only
-  - type: llm
-    name: finds-triplicated-notice-logic
-    focus:
-      source: file
-      path: docs/reviews/code-review-fine-notices-pr-via-agent.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      `emailFineNotice`, `smsFineNotice` and `letterFineNotice` each repeat the same four lines (filter outstanding fines, return null if none, format the dollar amount, build the "1 fine / N fines" phrase), differing only in the final sentence.
-
-      PASS if the review flags this three-way repetition as a real finding and proposes pulling the shared part into one place (a helper that returns the count phrase and amount, or similar).
-
-      FAIL if it is missed, or only noted as something to watch.
   - type: llm
     name: guard-clause-not-the-finding
     focus:
@@ -88,34 +76,6 @@ graders:
 
       FAIL if it is missed, or ranked at or below a vague-name finding on `build`.
   - type: llm
-    name: finds-what-comment
-    focus:
-      source: file
-      path: docs/reviews/code-review-fine-notices-pr-via-agent.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      In `build`, the comment "Check the member's contact preference." says only what the next lines plainly do.
-
-      PASS if the review recommends deleting it.
-
-      FAIL if it is missed or kept.
-  - type: llm
-    name: finds-duplicate-test-names
-    focus:
-      source: file
-      path: docs/reviews/code-review-fine-notices-pr-via-agent.md
-    weight: 1
-    criteria: |
-      Judge substance only: rule names, category labels and the exact severity word do not matter unless this criterion says otherwise. What matters is whether the review identifies the problem described and proposes a fix that would address it.
-
-      Both tests in `test/fine-notice.test.ts` are named `'works'`.
-
-      PASS if the review flags the identical, uninformative test names and suggests names that say what each test checks.
-
-      FAIL if the test file's names aren't mentioned.
-  - type: llm
     name: keeps-the-why-comment
     focus:
       source: file
@@ -138,7 +98,7 @@ graders:
     criteria: |
       Judge substance only. The second `'works'` test wraps `notices.build` in `mock.fn` with a replacement implementation and asserts the mock was called once, so it never runs the real code. Judging whether a test is over-mocked or proves nothing belongs to a test-quality review, not a readability review.
 
-      PASS if the review does not make that judgment in a ranked finding of its own. These all pass: not mentioning the mocking; naming it as something for a test-quality review (or `test-quality-review`) to look at, in a hand-off or out-of-scope section or in one deferring sentence inside a finding; describing what the second test does (it calls a mock and asserts the call) as context inside the finding about the duplicate test names, as long as that finding's complaint, in its heading, its "why it matters" and its fix, is the names.
+      PASS if the review does not make that judgment in a ranked finding of its own. These all pass: not mentioning the mocking; naming it in one line under a `## Handed on` heading (what it is, where, the severity it appears to have, `test-quality-review` as its owner), which is what the skill asks for, or as something for a test-quality review to look at in another hand-off or out-of-scope section or in one deferring sentence inside a finding; describing what the second test does (it calls a mock and asserts the call) as context inside the finding about the duplicate test names, as long as that finding's complaint, in its heading, its "why it matters" and its fix, is the names.
 
       FAIL if a ranked finding's own complaint is that the test is over-mocked, proves nothing, never runs the real code or covers nothing: in its heading (for example "...and the second doesn't exercise real code"), its severity reasoning or its suggested fix, whether or not the review also hands the point off elsewhere.
 
@@ -150,3 +110,24 @@ graders:
     # tool calls reach the trace but not tool_used; same form as the tdd
     # via-agent case's trace regexes.
     pattern: '"name":"Skill","input":\{"skill":"kad-dev-team:why-comments"'
+  - type: regex
+    name: mock-only-test-handed-on-in-one-line
+    # TODO.md's B8: the second 'works' test replaces `build` with a mock and asserts the mock ran (CT3), which is test-quality-review's.
+    # One bullet under `## Handed on`, above the findings, that names the
+    # problem, a severity it appears to have and the review that owns it.
+    target:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr-via-agent.md
+    pattern: '##\s*Handed on\b(?:(?!\n##\s)[\s\S])*?\n\s*[-*]\s(?=[^\n]*(?:mock|never runs|real code|cannot fail))(?=[^\n]*\b(?:Critical|High)\b)(?=[^\n]*test-quality-review)[^\n]*(?=[\s\S]*\n##\s*Findings\b)'
+    flags: i
+  - type: regex
+    name: mock-only-test-not-a-ranked-finding
+    # Never ranked among the review's own findings: no finding's heading
+    # is about it. Its limit: a finding that makes the complaint under
+    # another heading passes.
+    target:
+      source: file
+      path: docs/reviews/code-review-fine-notices-pr-via-agent.md
+    pattern: '(?:^|\n)###[^\n]*(?:mock|never runs|real code|proves nothing|exercis)'
+    flags: i
+    match: not_contains

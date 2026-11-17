@@ -133,33 +133,58 @@ def check(cases, tolerance):
     return out
 
 
-def carry(base):
-    """Re-stamp evidence recorded under the whole-file rule with the
-    fingerprint of the narrower one (0.16.0), for a case whose run still
-    stands: its whole-file fingerprint matches the tree as it is, or the
-    change against `base` does not reach it under the narrower rule (its
-    evidence was good at the base, whose own check held it). Nothing is
-    carried for a case the change reaches and whose files moved since
-    its run. Returns (carried, left)."""
+def carry(base, checkout):
+    """Re-stamp the evidence of cases whose loop state's entry in
+    `loop_states.json` changed and whose state did not: the manifest is
+    written again by a fixed hasher (0.16.1: the session id the sidecar
+    carries was hashed, so a manifest written in one session matched no
+    build made in another), and every state is built here and from
+    `checkout` (the base branch's tree) under the hasher as it is now. A
+    state both build alike is unchanged, and a case on it whose recorded
+    fingerprint is the one it has with the base's manifest put back has
+    had nothing else move. Nothing is carried for a state the two trees
+    build differently, or for a case whose other files moved. Returns
+    (carried, left, changed states)."""
+    import concurrent.futures
+    import subprocess
+    import loop_states
+    keys = sorted(loop_states.keys_in_use())
+    root = os.path.abspath(checkout)
+    with concurrent.futures.ThreadPoolExecutor(4) as pool:
+        there = dict(zip(keys, pool.map(lambda k: loop_states.settled(k, root, absent_ok=True), keys)))
+        here = dict(zip(keys, pool.map(loop_states.settled, keys)))
+    same = {k for k in keys if there[k] == here[k]}
+    old = subprocess.check_output(["git", "show", f"{base}:{affected_cases.LOOP_MANIFEST}"], cwd=ROOT)
     table = load()
     files = affected_cases.repo_files()
-    new, old = affected_cases.Reach(), affected_cases.Reach(whole_files=True)
-    reached = set(affected_cases.affected(affected_cases.changed_files(base), base))
+    reach = affected_cases.Reach()
+    cases = [c for c in sorted(table) if os.path.isdir(os.path.join(EVALS, c))]
+
+    def with_manifest(case, manifest):
+        h = hashlib.sha256()
+        for f in files:
+            if reach.may_reach(case, f):
+                data = reach.view(case, f, manifest if f == affected_cases.LOOP_MANIFEST else affected_cases.working(f))
+                if data is not None:
+                    h.update(f.encode() + b"\0" + str(len(data)).encode() + b"\0")
+                    h.update(data)
+        return h.hexdigest()
+
+    now = {c: fingerprint(c, files, reach) for c in cases}
+    with_base = {c: with_manifest(c, old) for c in cases}
     carried, left = [], []
-    for case, e in sorted(table.items()):
-        if not os.path.isdir(os.path.join(EVALS, case)):
-            continue
-        now = fingerprint(case, files, new)
-        if e["inputs"] == now:
-            continue
-        if case not in reached or e["inputs"] == fingerprint(case, files, old):
-            e["inputs"] = now
-            e["carried"] = "0.16.0: fingerprint narrowed to the state built, the scripts run and the steps reached"
+    for case in cases:
+        e = table[case]
+        if e["inputs"] == now[case] or now[case] == with_base[case]:
+            continue  # current, or stale for another reason than its state's entry
+        if loop_states.key_of(case) in same and e["inputs"] == with_base[case]:
+            e["inputs"] = now[case]
+            e["carried"] = "0.16.1: the state hasher no longer reads the recording session's id; the state builds as the base builds it"
             carried.append(case)
         else:
             left.append(case)
     save(table)
-    return carried, left
+    return carried, left, sorted(set(keys) - same)
 
 
 def main():
@@ -169,8 +194,9 @@ def main():
     p.add_argument("--cases", nargs="*")
     p.add_argument("--all", action="store_true")
     p.add_argument("--tolerance", type=float, default=0.1)
-    p.add_argument("--carry", action="store_true",
-                   help="once, for the change that narrows the fingerprint: re-stamp the evidence of every case whose run still stands")
+    p.add_argument("--carry", metavar="CHECKOUT",
+                   help="once, for a change to the state hasher: re-stamp the evidence of every case whose loop state "
+                        "builds here as it does in CHECKOUT (the base branch's tree, e.g. a git worktree of main)")
     a = p.parse_args()
     import loop_states
     stale_states = loop_states.check()
@@ -178,8 +204,9 @@ def main():
         print("**Eval evidence: FAIL** — " + stale_states)
         return 1
     if a.carry:
-        carried, left = carry(a.base)
-        print(f"carried {len(carried)} entries to the narrower fingerprint; {len(left)} left stale (the change reaches them and their files moved): {' '.join(left)}")
+        carried, left, changed = carry(a.base, a.carry)
+        print(f"carried {len(carried)} entries; {len(left)} left stale (their state changed, or another file of theirs moved): {' '.join(left)}")
+        print(f"states the two trees build differently: {' '.join(changed) or 'none'}")
         return 0
     if a.all:
         cases = list(affected_cases.case_dirs())

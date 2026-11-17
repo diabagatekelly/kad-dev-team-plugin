@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { produceMonthlyStatements } from "../reporting/monthly-statement.ts";
-import { describeEntry } from "../reporting/statement-table.ts";
+import { produceMonthlyStatements } from "../reporting/monthly-statement";
+import { describeEntry } from "../reporting/statement-table";
 
 test("writes one statement per member with activity and tells the desk", async () => {
   const written: string[] = [];

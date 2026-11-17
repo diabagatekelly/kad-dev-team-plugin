@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Invoke first, before reading the code yourself, for a general review of a change or PR with no narrower focus (security, architecture or reliability have their own skills), when asked about readability, DRY, naming or comments, or before marking a slice's implementation as done. Reviews local, code-level readability — duplication, naming, comments, function/class clarity — and code the change doesn't need (unused options, flags nothing sets, impossible-case checks, ceremony). Not whether a capability should exist (product-slicer's) or structural abstraction (architecture-review's).
+description: Invoke first, before reading any code yourself, for any request to review a change, a pull request or new files — including a plain "review this before I merge" or "can you review this PR" that names no focus — when asked about readability, DRY, naming or comments, or before marking a slice's implementation as done. Never review a change without it; a request that names security, architecture, reliability or the tests alone goes to that skill instead. Reviews local, code-level readability — duplication, naming, comments, function/class clarity — and code the change doesn't need (unused options, flags nothing sets, impossible-case checks, ceremony). Not whether a capability should exist (product-slicer's) or structural abstraction (architecture-review's).
 ---
 
 # Code Review
@@ -31,6 +31,39 @@ On code you didn't just touch, review only what changed or was newly added.
 Note a pre-existing issue in untouched code separately, as a lower priority
 than anything in scope — the Boy Scout Rule: leave what you touched better,
 don't demand the whole file be clean first.
+
+## A serious problem that is another review's
+
+While reading for this review you will sometimes see a problem that is
+serious and is not this review's subject: a test that replaces the very thing it tests, a secret written to a log, a payment retried after a refusal, business code importing the database client.
+It is not yours to rank, and it is not yours to read past. Write it at
+the top of the report, above `## Findings`, under `## Handed on`, one
+line per problem:
+
+```markdown
+## Handed on
+
+- <what is wrong, in a clause>; `<path>:<line>`; appears <Critical | High>; owner: `<the review that owns it>`
+```
+
+The severity is the one the problem appears to have on its owner's
+scale, never one rated down to fit this review's categories (a test that never runs the real code is not a Medium "naming" finding because names are what this review rates).
+The line is never one of your findings: no `###` heading, no
+`**Severity:**` line, no place in the ranking and no suggested fix, so
+no fixer is handed it on a judgement this review is not the one to
+make. One line is all of it: the owning review verifies it, sizes it
+and says what to do. Only what appears Critical or High goes there; a
+smaller thing outside your subject is left unsaid. The owners:
+`code-review` (readability, names, comments, code the change does not
+need), `test-quality-review` (what the tests prove),
+`architecture-review` (boundaries and the direction of dependencies),
+`security-review` (anything whose harm needs an adversary),
+`reliability-review` (what happens when something fails),
+`accessibility-review` (a rendered screen), `supply-chain-review`
+(dependencies and their pinning), `operational-readiness` (shipping and
+rolling back). In a combined chunk report, a problem one of the
+launch's own lenses owns is that lens's finding, not a line here. With
+nothing of the kind seen, the section is left out.
 
 ## Cold pass first, under the chunk loop
 
@@ -159,8 +192,11 @@ is a Medium naming the deepest functions. Per chunk those are the
 
 Test files get the same read as any other file for naming, comments, and
 duplication. Over-mocking, false positives, and coverage-as-theater are a
-different judgment call — that's `tdd-coach:test-quality-review`'s job, not
-yours.
+different judgment call — that's `tdd-coach:test-quality-review`'s, not
+yours: one that is serious (a test that replaces the thing it tests, a
+test that cannot fail) is a `## Handed on` line, at the severity it
+appears to have there, and no finding of yours makes that complaint, in
+its title, its reasoning or its fix.
 
 ## Duplication
 
@@ -222,6 +258,10 @@ together, name that but leave the structural call to `architecture-review`.
 - A name that's actively wrong — claims something the code doesn't do —
   outranks a name that's merely vague. The first misleads; the second just
   under-informs.
+- A name that could be sharper and misleads nobody is Low: a plural for
+  a single value, a conventional `run` or `execute` on a class named for
+  what it does, a short name inside a five-line function. Say it once,
+  as polish, or not at all.
 
 ## Function- and class-level readability
 
@@ -323,6 +363,15 @@ how urgent it feels to whoever's mid-task right now.
 - **Low** — nice-to-have polish that costs little either way: a minor
   naming or style inconsistency.
 
+**Above Low needs a cost you can point to in this code today**: a reader
+who would be misled and where, a caller that would break, an edit that
+would go wrong. A preference between two forms that both work (a name
+that could be sharper, a comment that could say a little more, a
+contract that could be spelled out further) is Low, however sure you
+are of the better form. On code that reads well this is most of what
+there is to say, and a review that turns one of them into a Medium to
+have a finding has reported its own taste as the code's problem.
+
 ## Finding report format
 
 Every review skill in this roster reports a finding in this shape, so one
@@ -367,4 +416,6 @@ If nothing rises above Low, say so plainly rather than padding the report
 with findings to look thorough. Note anything you saw that's really
 `architecture-review`'s or `product-slicer`'s call in its own short
 section at the end (`## For other reviewers`), clearly separated from your
-own findings, not folded into the severity-ranked list above.
+own findings, not folded into the severity-ranked list above. A serious
+problem of another review's is the `## Handed on` line at the top, not
+this section.

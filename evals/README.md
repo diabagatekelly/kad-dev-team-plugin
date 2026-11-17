@@ -324,10 +324,14 @@ What the gate does:
      next runs. A new state needs a line in that file (a test fails
      without it); a skill whose section openings moved is taken whole.
 
-   `loop_states_before.json` is what `main` built at the change that
-   introduced the first rule (its base had no manifest to compare with);
-   it is read only when the base has none and can go after that merge.
-   `eval_evidence.py --carry` re-stamped the existing evidence once.
+   The first rule had a defect until 0.16.1: the hasher read the id of
+   the session that recorded a state's sidecar rows, so a manifest
+   written in one session matched no build made in another (19 states
+   read as changed on identical trees). It strips the id now. When the
+   hasher itself changes, `eval_evidence.py --carry <checkout of the
+   base>` builds every state from both trees and re-stamps the evidence
+   of a case whose state builds alike and whose other files did not
+   move; it names the states that really differ.
 2. `tools/eval_gate.py` runs them once each, up to six cases and eight
    agent runs at a time (`--jobs`, `--parallel`). A case at several runs
    (`--runs 3`, or a re-run) gets its runs as concurrent children of one
@@ -632,141 +636,143 @@ a judge's single flip included (marked `(judge)`), so "failed" is not
 "caught a regression".
 
 <!-- case-history:start -->
-Written by `tools/case_history.py` on 2026-11-16 from 7698 result files under `results/`, `kad-eval-results-archive/`: 5345 plugin-arm runs, 2026-10-31 to 2026-11-16. 905 of them errored before any grader ran (usage limit 892, sign-in 11, results folder over the entry limit 2); 129 grader results threw for a reason outside the run (usage limit 100, interrupted 16, grader pattern does not compile 13).
+Written by `tools/case_history.py` on 2026-11-16 from 7990 result files under `results/`, `kad-eval-results-archive/`: 5591 plugin-arm runs, 2026-10-31 to 2026-11-17. 905 of them errored before any grader ran (usage limit 892, sign-in 11, results folder over the entry limit 2); 129 grader results threw for a reason outside the run (usage limit 100, interrupted 16, grader pattern does not compile 13).
 
 | Case | Bar since | Completed runs | Since the bar | Failed | Graders that failed (runs) | Last failure | Errored, thrown |
 |---|---|---|---|---|---|---|---|
 | `acceptance-criteria-payfine` | 2026-10-11 | 15 | 15 | 0 |  |  | 1, 1 |
-| `accessibility-review-ac-walk` | 2026-11-09 | 22 | 18 | 1 | `honest-about-what-was-driven` (judge) ×1 | 2026-11-11 | 0, 0 |
-| `accessibility-review-neg-readability` | 2026-10-11 | 17 | 17 | 0 |  |  | 0, 0 |
-| `accessibility-review-payfine` | 2026-10-11 | 34 | 34 | 7 | `slice-placeholder-filled` (judge) ×4, `criteria-split-now-and-later` (judge) ×2, `no-false-alarm-focus-style` (judge) ×1 | 2026-11-14 | 6, 2 |
-| `accessibility-review-payfine-subtle` | 2026-10-11 | 34 | 34 | 5 | `slice-placeholder-filled` (judge) ×4, `no-false-alarm-card-number-label` (judge) ×1 | 2026-11-11 | 3, 4 |
+| `accessibility-review-ac-walk` | 2026-11-09 | 23 | 19 | 1 | `honest-about-what-was-driven` (judge) ×1 | 2026-11-11 | 0, 0 |
+| `accessibility-review-neg-readability` | 2026-10-11 | 18 | 18 | 0 |  |  | 0, 0 |
+| `accessibility-review-payfine` | 2026-10-11 | 41 | 41 | 8 | `slice-placeholder-filled` (judge) ×4, `criteria-split-now-and-later` (judge) ×3, `no-false-alarm-focus-style` (judge) ×1 | 2026-11-17 | 6, 2 |
+| `accessibility-review-payfine-subtle` | 2026-10-11 | 35 | 35 | 5 | `slice-placeholder-filled` (judge) ×4, `no-false-alarm-card-number-label` (judge) ×1 | 2026-11-11 | 3, 4 |
 | `adr-neg-rename` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `adr-payment-gateway` | 2026-10-11 | 4 | 4 | 0 |  |  | 3, 0 |
-| `architecture-design-neg-review` | 2026-10-11 | 21 | 21 | 0 |  |  | 3, 0 |
-| `architecture-design-owner-sheet` | 2026-11-09 | 37 | 23 | 1 | `fixtures-are-invented` (judge) ×1 | 2026-11-15 | 6, 2 |
-| `architecture-design-payfine-phase1` | 2026-10-11 | 24 | 24 | 0 |  |  | 0, 2 |
-| `architecture-design-payfine-phase2` | 2026-10-11 | 25 | 25 | 20 | `decisions-show-approval` (judge) ×19, `stays-conceptual` (judge) ×2, `builds-on-the-existing-payment-path` (judge) ×1, `notes-the-leaky-payment-port` (judge) ×1, `keeps-the-one-implementation-port` (judge) ×1 | 2026-11-12 | 0, 6 |
-| `architecture-design-payfine-via-agent` | 2026-10-11 | 19 | 19 | 0 |  |  | 6, 4 |
-| `architecture-design-scope-consequence` | 2026-10-31 | 41 | 34 | 15 | `hands-back-to-the-requirements-owner` (judge) ×12, `does-not-approve-around-it` (judge) ×10 | 2026-11-11 | 0, 4 |
-| `architecture-review-neg-security-review` | 2026-10-12 | 16 | 16 | 0 |  |  | 0, 0 |
-| `architecture-review-neg-test-quality-review` | 2026-10-12 | 17 | 17 | 0 |  |  | 0, 0 |
-| `chunk-runner-fix-gate-fails` | 2026-11-16 | 6 | 5 | 0 |  |  | 0, 0 |
+| `architecture-design-concurrency-interleavings` | none | 5 | 5 | 0 |  |  | 0, 0 |
+| `architecture-design-neg-review` | 2026-10-11 | 22 | 22 | 0 |  |  | 3, 0 |
+| `architecture-design-owner-sheet` | 2026-11-09 | 44 | 30 | 3 | `fixtures-are-invented` (judge) ×2, `owner-file-not-opened-with-the-scan-available` ×1 | 2026-11-17 | 6, 2 |
+| `architecture-design-payfine-phase1` | 2026-10-11 | 25 | 25 | 0 |  |  | 0, 2 |
+| `architecture-design-payfine-phase2` | 2026-10-11 | 26 | 26 | 21 | `decisions-show-approval` (judge) ×20, `stays-conceptual` (judge) ×2, `builds-on-the-existing-payment-path` (judge) ×1, `notes-the-leaky-payment-port` (judge) ×1, `keeps-the-one-implementation-port` (judge) ×1 | 2026-11-17 | 0, 6 |
+| `architecture-design-payfine-via-agent` | 2026-10-11 | 20 | 20 | 0 |  |  | 6, 4 |
+| `architecture-design-scope-consequence` | 2026-10-31 | 42 | 35 | 15 | `hands-back-to-the-requirements-owner` (judge) ×12, `does-not-approve-around-it` (judge) ×10 | 2026-11-11 | 0, 4 |
+| `architecture-review-neg-security-review` | 2026-10-12 | 17 | 17 | 0 |  |  | 0, 0 |
+| `architecture-review-neg-test-quality-review` | 2026-10-12 | 18 | 18 | 0 |  |  | 0, 0 |
+| `chunk-runner-fix-gate-fails` | 2026-11-16 | 7 | 6 | 0 |  |  | 0, 0 |
 | `chunk-runner-gap-handback` | 2026-11-09 | 39 | 35 | 8 | `stops-with-the-decision-on-the-line` (judge) ×8 | 2026-11-13 | 3, 0 |
 | `chunk-runner-gate-deviation` | 2026-11-09 | 36 | 32 | 3 | `allow-list-not-widened` ×3 | 2026-11-16 | 3, 0 |
 | `chunk-runner-gate-outside` | 2026-11-09 | 31 | 27 | 0 |  |  | 2, 0 |
 | `chunk-runner-gate-sources` | 2026-11-09 | 38 | 24 | 1 | `hands-back-pass-after-the-fix-and-stops` ×1 | 2026-11-11 | 8, 0 |
-| `chunk-runner-last-fix-review` | 2026-11-16 | 9 | 3 | 0 |  |  | 0, 0 |
-| `chunk-runner-one-fix-round` | 2026-11-09 | 44 | 40 | 7 | `hand-back-is-the-one-line` (judge) ×5, `hand-back-is-one-line-and-nothing-else` ×2 | 2026-11-15 | 5, 0 |
-| `chunk-runner-review-round` | 2026-11-09 | 34 | 30 | 1 | `cold-findings-cite-no-planning-document` ×1, `hand-back-line-carries-the-script-counts` ×1, `report-names-the-suite-run` ×1, `two-launches-never-more` ×1, `smoke-report-written` ×1, `one-smoke-agent` ×1, and 5 more | 2026-11-11 | 2, 0 |
+| `chunk-runner-last-fix-review` | 2026-11-16 | 13 | 7 | 1 | `hand-back-is-one-line-with-last-and-standing` ×1 | 2026-11-17 | 0, 0 |
+| `chunk-runner-one-fix-round` | 2026-11-09 | 45 | 41 | 7 | `hand-back-is-the-one-line` (judge) ×5, `hand-back-is-one-line-and-nothing-else` ×2 | 2026-11-15 | 5, 0 |
+| `chunk-runner-review-round` | 2026-11-09 | 35 | 31 | 1 | `smoke-report-written` ×1, `review-report-written` ×1, `report-names-the-suite-run` ×1, `hand-back-line-carries-the-script-counts` ×1, `review-report-in-the-shared-shape` ×1, `smoke-agent-handed-the-launcher` ×1, and 5 more | 2026-11-11 | 2, 0 |
 | `chunk-runner-waits-for-handback` | 2026-11-12 | 32 | 29 | 6 | `hand-back-is-one-line-for-what-ran` ×4, `hand-back-is-the-one-line-for-what-ran` (judge) ×2 | 2026-11-14 | 0, 0 |
 | `ci-pipeline-os-matrix` | 2026-11-15 | 14 | 9 | 1 | `frozen-install-and-the-three-checks` ×1 | 2026-11-16 | 0, 0 |
-| `ci-pipeline-screen-job` | none | 11 | 11 | 7 | `captures-uploaded-as-the-screens-artifact` ×7, `browser-installed-from-the-pinned-package` ×5, `comparison-run-by-the-projects-copy` ×5, `one-named-image` ×5, `screens-workflow-written` ×4, `harness-in-the-project` ×4, and 3 more | 2026-11-16 | 0, 0 |
-| `code-review-catalog` | 2026-10-11 | 29 | 29 | 13 | `nothing-above-low` (judge) ×12, `consults-why-comments` ×1 | 2026-11-16 | 4, 2 |
-| `code-review-chunk-gate-covers` | 2026-11-16 | 23 | 11 | 2 | `duplication-left-to-the-gate` ×2 | 2026-11-16 | 3, 0 |
-| `code-review-comments-chunk` | 2026-10-31 | 64 | 63 | 34 | `reliability-lens-invoked-for-storage` ×18, `test-quality-lens-invoked` ×17, `hand-back-is-counts-and-path` ×13, `hands-back-counts-and-path` (judge) ×12, `why-comment-is-not-flagged` (judge) ×7, `planning-reference-is-a-medium` ×1, and 3 more | 2026-11-16 | 14, 8 |
-| `code-review-days-left-pr` | 2026-10-11 | 30 | 30 | 11 | `skill-invoked-display` ×11 | 2026-11-16 | 1, 0 |
-| `code-review-fine-notices-pr` | 2026-10-11 | 24 | 24 | 13 | `leaves-mocking-to-test-quality-review` (judge) ×11, `consults-why-comments` ×3, `finds-wrong-name` (judge) ×1 | 2026-11-16 | 1, 0 |
-| `code-review-fine-notices-pr-via-agent` | 2026-10-11 | 27 | 27 | 26 | `leaves-mocking-to-test-quality-review` (judge) ×23, `consults-why-comments` ×22 | 2026-11-16 | 1, 7 |
-| `code-review-fines-report-pr` | 2026-10-11 | 24 | 24 | 5 | `hands-sdk-to-architecture-review` (judge) ×4, `finds-month-as-raw-string` (judge) ×2, `finds-feature-envy` (judge) ×1 | 2026-11-16 | 4, 0 |
-| `code-review-neg-architecture` | 2026-10-11 | 18 | 18 | 0 |  |  | 1, 0 |
-| `code-review-structural-high-at-d` | 2026-11-11 | 19 | 17 | 4 | `a-long-single-job-function-stays-a-plain-finding` (judge) ×4 | 2026-11-12 | 1, 0 |
-| `cold-read-new-beside-old` | 2026-11-15 | 16 | 11 | 1 | `a-probe-was-run` ×1, `positions-bug-confirmed-by-execution` ×1 | 2026-11-16 | 0, 0 |
+| `ci-pipeline-screen-job` | 2026-11-16 | 15 | 7 | 2 | `comparison-copied-into-the-project` ×2, `harness-in-the-project` ×2, `threshold-file-written` ×2, `pinned-browser-lockfile-in-the-project` ×2, `browser-installed-from-the-pinned-package` ×1, `captures-uploaded-as-the-screens-artifact` ×1, and 3 more | 2026-11-17 | 0, 0 |
+| `code-review-catalog` | 2026-10-11 | 33 | 33 | 13 | `nothing-above-low` (judge) ×12, `consults-why-comments` ×1 | 2026-11-16 | 4, 2 |
+| `code-review-chunk-gate-covers` | 2026-11-16 | 24 | 12 | 2 | `duplication-left-to-the-gate` ×2 | 2026-11-16 | 3, 0 |
+| `code-review-comments-chunk` | 2026-10-31 | 65 | 64 | 34 | `reliability-lens-invoked-for-storage` ×18, `test-quality-lens-invoked` ×17, `hand-back-is-counts-and-path` ×13, `hands-back-counts-and-path` (judge) ×12, `why-comment-is-not-flagged` (judge) ×7, `planning-reference-is-a-medium` ×1, and 3 more | 2026-11-16 | 14, 8 |
+| `code-review-days-left-pr` | 2026-10-11 | 34 | 34 | 11 | `skill-invoked-display` ×11 | 2026-11-16 | 1, 0 |
+| `code-review-fine-notices-pr` | 2026-10-11 | 28 | 28 | 13 | `leaves-mocking-to-test-quality-review` (judge) ×11, `consults-why-comments` ×3, `finds-wrong-name` (judge) ×1 | 2026-11-16 | 1, 0 |
+| `code-review-fine-notices-pr-via-agent` | 2026-10-11 | 30 | 30 | 27 | `consults-why-comments` ×23, `leaves-mocking-to-test-quality-review` (judge) ×23 | 2026-11-17 | 1, 7 |
+| `code-review-fines-report-pr` | 2026-10-11 | 25 | 25 | 5 | `hands-sdk-to-architecture-review` (judge) ×4, `finds-month-as-raw-string` (judge) ×2, `finds-feature-envy` (judge) ×1 | 2026-11-16 | 4, 0 |
+| `code-review-neg-architecture` | 2026-10-11 | 19 | 19 | 0 |  |  | 1, 0 |
+| `code-review-structural-high-at-d` | 2026-11-11 | 20 | 18 | 4 | `a-long-single-job-function-stays-a-plain-finding` (judge) ×4 | 2026-11-12 | 1, 0 |
+| `cold-read-new-beside-old` | 2026-11-15 | 17 | 12 | 1 | `positions-bug-confirmed-by-execution` ×1, `a-probe-was-run` ×1 | 2026-11-16 | 0, 0 |
 | `delegation-consult-with-file` | 2026-10-31 | 33 | 26 | 13 | `hand-back-is-the-hash-and-a-few-sentences` ×7, `decision-written-in-place-under-the-delegation` (judge) ×5, `hands-back-the-hash-and-one-sentence` (judge) ×3 | 2026-11-15 | 1, 0 |
 | `delegation-consult-without-file` | 2026-10-31 | 28 | 27 | 5 | `recommendation-only-named-as-undelegated` (judge) ×5 | 2026-11-16 | 4, 0 |
 | `delivery-ci-red-not-done` | 2026-11-12 | 19 | 16 | 5 | `handoff-briefs-the-fixer` (judge) ×4, `report-leads-with-red-ci-and-not-ready` (judge) ×1 | 2026-11-16 | 0, 6 |
-| `delivery-screens-owed` | none | 6 | 6 | 1 | `e-line-says-green-and-carries-the-baselines` ×1 | 2026-11-16 | 0, 0 |
-| `delivery-screens-stray` | none | 5 | 5 | 1 | `handoff-briefs-the-fixer-not-to-weaken-the-check` ×1 | 2026-11-16 | 0, 0 |
+| `delivery-screens-owed` | 2026-11-16 | 7 | 5 | 0 |  |  | 0, 0 |
+| `delivery-screens-stray` | 2026-11-16 | 6 | 5 | 0 |  |  | 0, 0 |
 | `design-system-payfine-phase1` | 2026-10-11 | 7 | 7 | 0 |  |  | 1, 0 |
 | `design-system-payfine-phase2` | 2026-10-11 | 7 | 7 | 0 |  |  | 1, 2 |
 | `design-system-payfine-phase3` | 2026-10-11 | 16 | 16 | 7 | `accessibility-by-construction` (judge) ×5, `rejected-candidates-in-prose` (judge) ×2, `chosen-direction-committed` (judge) ×1 | 2026-11-14 | 5, 0 |
 | `design-system-payfine-reference` | 2026-10-17 | 6 | 6 | 1 | `mock-carries-reference-brand` ×1 | 2026-11-11 | 5, 0 |
 | `design-system-payfine-review` | 2026-10-17 | 11 | 11 | 0 |  |  | 1, 4 |
 | `external-review-triage-cancel-hold` | 2026-10-24 | 10 | 10 | 0 |  |  | 0, 0 |
-| `library-app-catalog-review` | 2026-10-11 | 18 | 18 | 4 | `reports-nothing-above-low` (judge) ×4 | 2026-11-15 | 8, 0 |
-| `library-app-fines-review` | 2026-10-11 | 17 | 17 | 0 |  |  | 3, 0 |
-| `library-app-lending-review` | 2026-10-11 | 26 | 26 | 5 | `finds-orm-inside-checkout-use-case` (judge) ×4, `finds-runtime-import-cycle` (judge) ×1 | 2026-11-15 | 6, 0 |
-| `library-app-lending-review-via-agent` | 2026-10-11 | 16 | 16 | 2 | `finds-orm-inside-checkout-use-case` (judge) ×2 | 2026-11-15 | 3, 0 |
-| `library-app-reporting-pr` | 2026-10-11 | 13 | 13 | 0 |  |  | 3, 0 |
-| `library-app-structure-review` | 2026-10-11 | 17 | 17 | 0 |  |  | 3, 0 |
-| `map-query-consults` | 2026-10-11 | 8 | 8 | 0 |  |  | 3, 0 |
+| `library-app-catalog-review` | 2026-10-11 | 22 | 22 | 4 | `reports-nothing-above-low` (judge) ×4 | 2026-11-15 | 8, 0 |
+| `library-app-fines-review` | 2026-10-11 | 18 | 18 | 0 |  |  | 3, 0 |
+| `library-app-lending-review` | 2026-10-11 | 27 | 27 | 5 | `finds-orm-inside-checkout-use-case` (judge) ×4, `finds-runtime-import-cycle` (judge) ×1 | 2026-11-15 | 6, 0 |
+| `library-app-lending-review-via-agent` | 2026-10-11 | 19 | 19 | 2 | `finds-orm-inside-checkout-use-case` (judge) ×2 | 2026-11-15 | 3, 0 |
+| `library-app-reporting-pr` | 2026-10-11 | 14 | 14 | 0 |  |  | 3, 0 |
+| `library-app-structure-review` | 2026-10-11 | 24 | 24 | 1 | `key-in-source-not-a-ranked-finding` ×1 | 2026-11-17 | 3, 0 |
+| `map-query-consults` | 2026-10-11 | 9 | 9 | 0 |  |  | 3, 0 |
 | `map-query-no-map` | 2026-10-11 | 9 | 9 | 1 | `no-live-scan-answer` ×1 | 2026-11-14 | 1, 0 |
-| `map-update-cancel-hold` | 2026-10-11 | 26 | 26 | 25 | `pre-existing-flags-not-new` (judge) ×21, `no-bash-writes` ×7, `keeps-existing-rows-and-tiers` (judge) ×5, `new-rows-extracted` ×2, `flags-new-wrong-direction-edge` (judge) ×2 | 2026-11-15 | 3, 0 |
-| `operational-readiness-neg-reliability` | 2026-10-11 | 15 | 15 | 0 |  |  | 3, 0 |
-| `operational-readiness-neg-security` | 2026-10-11 | 14 | 14 | 0 |  |  | 3, 0 |
+| `map-update-cancel-hold` | 2026-10-11 | 30 | 30 | 25 | `pre-existing-flags-not-new` (judge) ×21, `no-bash-writes` ×7, `keeps-existing-rows-and-tiers` (judge) ×5, `flags-new-wrong-direction-edge` (judge) ×2, `new-rows-extracted` ×2 | 2026-11-15 | 3, 0 |
+| `operational-readiness-neg-reliability` | 2026-10-11 | 16 | 16 | 0 |  |  | 3, 0 |
+| `operational-readiness-neg-security` | 2026-10-11 | 15 | 15 | 0 |  |  | 3, 0 |
 | `operational-readiness-ops-phase1` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `operational-readiness-ops-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `operational-readiness-release-phase1` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `operational-readiness-release-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `orchestrator-asks-for-target` | 2026-10-11 | 48 | 48 | 0 |  |  | 4, 0 |
-| `orchestrator-autopilot-counts-over` | 2026-11-16 | 10 | 5 | 0 |  |  | 3, 0 |
-| `orchestrator-autopilot-question` | none | 6 | 6 | 1 | `asks-the-autopilot-question` ×1, `no-branch-before-the-answer` ×1, `nothing-launched-before-the-answer` ×1 | 2026-11-16 | 0, 0 |
-| `orchestrator-autopilot-recorded` | none | 5 | 5 | 1 | `file-holds-the-owners-words-the-stops-and-the-always-asked` ×1 | 2026-11-16 | 0, 0 |
-| `orchestrator-autopilot-round` | none | 5 | 5 | 0 |  |  | 0, 0 |
-| `orchestrator-backward-route` | 2026-10-11 | 54 | 54 | 19 | `routes-back-to-the-owner` (judge) ×14, `log-names-the-hand-back` (judge) ×8, `does-not-go-forward-to-reliability` ×3, `invokes-vertical-slicing` ×3 | 2026-11-12 | 11, 2 |
+| `orchestrator-autopilot-counts-over` | 2026-11-16 | 17 | 12 | 1 | `chunk-two-runner-launched` ×1 | 2026-11-17 | 3, 0 |
+| `orchestrator-autopilot-question` | 2026-11-16 | 7 | 5 | 0 |  |  | 0, 0 |
+| `orchestrator-autopilot-recorded` | 2026-11-16 | 6 | 5 | 0 |  |  | 0, 0 |
+| `orchestrator-autopilot-round` | 2026-11-16 | 5 | 4 | 0 |  |  | 0, 0 |
+| `orchestrator-backward-route` | 2026-10-11 | 55 | 55 | 19 | `routes-back-to-the-owner` (judge) ×14, `log-names-the-hand-back` (judge) ×8, `does-not-go-forward-to-reliability` ×3, `invokes-vertical-slicing` ×3 | 2026-11-12 | 11, 2 |
 | `orchestrator-budget-exceeded` | 2026-10-31 | 59 | 55 | 31 | `flow-ends-saying-what-is-built` (judge) ×29, `flow-ends-on-the-clock-and-says-what-is-built` ×2 | 2026-11-16 | 6, 1 |
-| `orchestrator-capture-states` | none | 5 | 5 | 0 |  |  | 0, 0 |
+| `orchestrator-capture-states` | 2026-11-16 | 6 | 5 | 0 |  |  | 0, 0 |
 | `orchestrator-chunk-runner-handback` | 2026-11-09 | 27 | 24 | 0 |  |  | 5, 1 |
-| `orchestrator-chunk-runner-launch` | 2026-11-09 | 49 | 46 | 16 | `handoff-says-the-runner-is-in-flight` (judge) ×16 | 2026-11-16 | 12, 1 |
-| `orchestrator-definition-of-done` | 2026-10-31 | 85 | 78 | 71 | `three-named-fixes-in-one-batch` (judge) ×67, `one-fixer-for-the-batch` ×34, `gate-on-the-fix` ×16, `no-slice-reviewer-yet` ×13, `one-comments-review` ×5, `code-reviewer-only-for-the-comments` ×5, and 7 more | 2026-11-16 | 22, 0 |
+| `orchestrator-chunk-runner-launch` | 2026-11-09 | 50 | 47 | 17 | `handoff-says-the-runner-is-in-flight` (judge) ×17 | 2026-11-17 | 12, 1 |
+| `orchestrator-definition-of-done` | 2026-10-31 | 86 | 79 | 72 | `three-named-fixes-in-one-batch` (judge) ×68, `one-fixer-for-the-batch` ×35, `gate-on-the-fix` ×16, `no-slice-reviewer-yet` ×13, `check-before-any-launch` ×5, `code-reviewer-only-for-the-comments` ×5, and 7 more | 2026-11-17 | 22, 0 |
 | `orchestrator-delivery-foreground` | 2026-10-31 | 92 | 88 | 37 | `cost-script-run` ×26, `reports-the-delivery-in-the-same-turn` (judge) ×13, `pr-writeup-invoked` ×8, `pull-request-then-issues-then-body-edit` ×6, `one-issue-per-standing-medium-none-for-a-low` (judge) ×5, `body-carries-the-deferrals-section` ×5, and 2 more | 2026-11-16 | 6, 0 |
 | `orchestrator-delivery-removal` | 2026-11-09 | 40 | 26 | 2 | `record-names-counts-and-files-never-values` (judge) ×2 | 2026-11-10 | 7, 0 |
 | `orchestrator-gap-without-delegation` | 2026-10-31 | 64 | 60 | 12 | `round-zero-not-recorded-again` ×9, `stops-for-the-owner-with-the-recommendation` (judge) ×5, `owning-persona-launched-once` ×2, `needs-decision-on-the-c-line` ×2 | 2026-11-12 | 10, 0 |
-| `orchestrator-gate-checks-route-back` | 2026-11-16 | 10 | 6 | 1 | `routes-back-to-the-bootstrap` ×1 | 2026-11-16 | 3, 0 |
-| `orchestrator-issue-fix-records` | 2026-11-12 | 18 | 15 | 2 | `branch-names-the-slice-and-the-issue` ×1, `a-line-carries-the-fix-base-and-the-older-gaps` ×1, `reports-the-fix-started-and-the-gaps-filed` (judge) ×1, `older-gaps-filed-once` ×1 | 2026-11-16 | 3, 6 |
-| `orchestrator-last-fix-review-at-d` | none | 6 | 6 | 0 |  |  | 0, 0 |
-| `orchestrator-mutation-before-review` | 2026-11-16 | 14 | 14 | 1 | `no-launch-before-the-hand-off` ×1, `count-carried-as-the-script-printed-it` ×1 | 2026-11-16 | 5, 0 |
+| `orchestrator-gate-checks-route-back` | 2026-11-16 | 11 | 7 | 1 | `routes-back-to-the-bootstrap` ×1 | 2026-11-16 | 3, 0 |
+| `orchestrator-issue-fix-records` | 2026-11-12 | 19 | 16 | 2 | `branch-names-the-slice-and-the-issue` ×1, `older-gaps-filed-once` ×1, `reports-the-fix-started-and-the-gaps-filed` (judge) ×1, `a-line-carries-the-fix-base-and-the-older-gaps` ×1 | 2026-11-16 | 3, 6 |
+| `orchestrator-last-fix-review-at-d` | 2026-11-16 | 7 | 6 | 0 |  |  | 0, 0 |
+| `orchestrator-mutation-before-review` | 2026-11-16 | 15 | 15 | 1 | `count-carried-as-the-script-printed-it` ×1, `no-launch-before-the-hand-off` ×1 | 2026-11-16 | 5, 0 |
 | `orchestrator-plan-check-seam` | 2026-10-31 | 56 | 52 | 2 | `plan-sent-back-not-edited` (judge) ×2 | 2026-11-14 | 7, 0 |
-| `orchestrator-readiness-gate` | 2026-10-31 | 77 | 73 | 22 | `backward-routes-name-the-checks` (judge) ×20, `stops-at-the-routed-skill-or-reports-the-route` (judge) ×7, `readiness-gate-run-by-the-script` ×6, `gate-before-the-routed-skill` ×6, `first-failed-check-routed-inline` ×6, `a-line-carries-session-and-audit` ×6, and 1 more | 2026-11-16 | 8, 0 |
-| `orchestrator-readiness-open-item` | 2026-11-09 | 45 | 42 | 11 | `puts-the-blocker-to-the-owner` (judge) ×11, `blocker-named-in-the-log` ×4, `readiness-gate-run-by-the-script` ×4 | 2026-11-16 | 5, 0 |
-| `orchestrator-readiness-sources` | 2026-11-09 | 42 | 29 | 4 | `places-read-with-show-for-the-question` ×4, `puts-the-places-to-the-owner` (judge) ×4, `readiness-gate-run-by-the-script` ×4, `check-named-in-the-log` ×4 | 2026-11-16 | 7, 0 |
+| `orchestrator-readiness-correction-autopilot` | none | 12 | 12 | 4 | `the-decision-under-it-unchanged` ×3, `correction-logged-as-taken-as-recommended` ×1 | 2026-11-17 | 0, 0 |
+| `orchestrator-readiness-gate` | 2026-10-31 | 79 | 75 | 22 | `backward-routes-name-the-checks` (judge) ×20, `stops-at-the-routed-skill-or-reports-the-route` (judge) ×7, `gate-before-the-routed-skill` ×6, `readiness-gate-run-by-the-script` ×6, `a-line-carries-session-and-audit` ×6, `first-failed-check-routed-inline` ×6, and 1 more | 2026-11-16 | 8, 0 |
+| `orchestrator-readiness-open-item` | 2026-11-09 | 49 | 46 | 13 | `puts-the-blocker-to-the-owner` (judge) ×13, `blocker-named-in-the-log` ×4, `readiness-gate-run-by-the-script` ×4 | 2026-11-17 | 5, 0 |
+| `orchestrator-readiness-sources` | 2026-11-09 | 43 | 30 | 4 | `puts-the-places-to-the-owner` (judge) ×4, `places-read-with-show-for-the-question` ×4, `readiness-gate-run-by-the-script` ×4, `check-named-in-the-log` ×4 | 2026-11-16 | 7, 0 |
 | `orchestrator-readme-stale-not-done` | 2026-11-11 | 13 | 11 | 10 | `three-named-fixes-in-one-batch` (judge) ×10, `one-fixer-for-the-batch` ×1, `gate-on-the-fix` ×1, `one-fixer-for-the-batch-plus-at-most-a-gate-fixer` ×1 | 2026-11-16 | 8, 1 |
-| `orchestrator-route-accessibility` | 2026-10-11 | 60 | 60 | 11 | `log-names-row-and-artifact` (judge) ×6, `screen-design-only-after-the-review` ×3, `stops-after-the-routed-step` (judge) ×2, `not-screen-design` ×1 | 2026-11-11 | 15, 2 |
-| `orchestrator-route-backward-requirements` | 2026-10-11 | 45 | 45 | 4 | `log-names-row-and-artifact` (judge) ×4, `stops-after-the-routed-step` (judge) ×2, `routes-to-requirements-refinement` ×2 | 2026-11-13 | 11, 0 |
-| `orchestrator-route-design` | 2026-10-11 | 43 | 43 | 1 | `stops-after-the-routed-step` (judge) ×1 | 2026-10-31 | 11, 0 |
+| `orchestrator-route-accessibility` | 2026-10-11 | 61 | 61 | 11 | `log-names-row-and-artifact` (judge) ×6, `screen-design-only-after-the-review` ×3, `stops-after-the-routed-step` (judge) ×2, `not-screen-design` ×1 | 2026-11-11 | 15, 2 |
+| `orchestrator-route-backward-requirements` | 2026-10-11 | 46 | 46 | 4 | `log-names-row-and-artifact` (judge) ×4, `routes-to-requirements-refinement` ×2, `stops-after-the-routed-step` (judge) ×2 | 2026-11-13 | 11, 0 |
+| `orchestrator-route-design` | 2026-10-11 | 45 | 45 | 1 | `stops-after-the-routed-step` (judge) ×1 | 2026-10-31 | 11, 0 |
 | `orchestrator-route-design-system` | 2026-10-11 | 41 | 41 | 0 |  |  | 11, 0 |
 | `orchestrator-route-implementation` | 2026-10-11 | 48 | 48 | 2 | `stops-after-the-routed-step` (judge) ×2 | 2026-11-01 | 11, 0 |
 | `orchestrator-route-implementation-prenamed` | 2026-10-18 | 44 | 44 | 1 | `routes-to-tdd-implementation-lite` (judge) ×1 | 2026-11-09 | 11, 0 |
 | `orchestrator-route-open-pr` | 2026-11-09 | 27 | 24 | 0 |  |  | 8, 0 |
 | `orchestrator-route-problem-framing` | 2026-10-11 | 42 | 42 | 1 | `stops-after-the-routed-step` (judge) ×1 | 2026-11-11 | 12, 0 |
-| `orchestrator-route-reliability` | 2026-10-11 | 50 | 50 | 7 | `log-names-row-and-artifact` (judge) ×7, `routes-to-reliability-requirements` ×2, `stops-after-the-routed-step` (judge) ×2 | 2026-11-16 | 11, 1 |
-| `orchestrator-route-scope-decision` | 2026-10-11 | 116 | 116 | 63 | `stops-after-the-routed-step` (judge) ×63, `not-requirements-refinement` ×3 | 2026-11-12 | 20, 6 |
-| `orchestrator-route-screen-design` | 2026-10-11 | 57 | 57 | 13 | `stops-after-the-routed-step` (judge) ×6, `log-names-row-and-artifact` (judge) ×6, `not-accessibility-review` ×2, `accessibility-review-only-after-screen-design` ×1 | 2026-11-11 | 14, 0 |
-| `orchestrator-route-slicer-accessibility-mistake` | 2026-11-01 | 44 | 41 | 1 | `log-names-the-mismatch` (judge) ×1, `routes-back-to-the-slicer` ×1 | 2026-11-09 | 12, 0 |
-| `orchestrator-route-slicing` | 2026-10-11 | 55 | 55 | 6 | `stops-after-the-routed-step` (judge) ×6, `not-user-story-writeup` ×4 | 2026-11-01 | 12, 2 |
+| `orchestrator-route-reliability` | 2026-10-11 | 50 | 50 | 7 | `log-names-row-and-artifact` (judge) ×7, `stops-after-the-routed-step` (judge) ×2, `routes-to-reliability-requirements` ×2 | 2026-11-16 | 11, 1 |
+| `orchestrator-route-scope-decision` | 2026-10-11 | 117 | 117 | 63 | `stops-after-the-routed-step` (judge) ×63, `not-requirements-refinement` ×3 | 2026-11-12 | 20, 6 |
+| `orchestrator-route-screen-design` | 2026-10-11 | 58 | 58 | 13 | `stops-after-the-routed-step` (judge) ×6, `log-names-row-and-artifact` (judge) ×6, `not-accessibility-review` ×2, `accessibility-review-only-after-screen-design` ×1 | 2026-11-11 | 14, 0 |
+| `orchestrator-route-slicer-accessibility-mistake` | 2026-11-01 | 45 | 42 | 1 | `routes-back-to-the-slicer` ×1, `log-names-the-mismatch` (judge) ×1 | 2026-11-09 | 12, 0 |
+| `orchestrator-route-slicing` | 2026-10-11 | 56 | 56 | 6 | `stops-after-the-routed-step` (judge) ×6, `not-user-story-writeup` ×4 | 2026-11-01 | 12, 2 |
 | `orchestrator-route-tech-bootstrap` | 2026-10-11 | 44 | 44 | 3 | `log-names-row-and-artifact` (judge) ×3 | 2026-11-15 | 14, 1 |
 | `orchestrator-route-user-story` | 2026-10-11 | 48 | 48 | 5 | `stops-after-the-routed-step` (judge) ×4, `routes-to-user-story-writeup` ×3, `log-names-row-and-artifact` ×1, `log-written` ×1, `not-vertical-slicing` ×1 | 2026-11-16 | 13, 2 |
 | `orchestrator-runner-handback-unverified` | 2026-11-12 | 12 | 9 | 0 |  |  | 3, 0 |
 | `orchestrator-security-stage` | 2026-10-11 | 41 | 41 | 0 |  |  | 14, 0 |
 | `orchestrator-session-setup` | 2026-11-01 | 45 | 45 | 8 | `not-problem-framing-doc-yet` ×5, `asks-about-the-session-first` (judge) ×5, `routes-to-problem-framing-doc` ×3, `asks-nothing-about-the-session` (judge) ×3 | 2026-11-09 | 13, 0 |
-| `orchestrator-slice-review-launches` | 2026-11-16 | 9 | 5 | 0 |  |  | 3, 0 |
-| `orchestrator-superseded-scope-map` | 2026-10-11 | 41 | 41 | 0 |  |  | 14, 0 |
+| `orchestrator-slice-review-launches` | 2026-11-16 | 13 | 9 | 0 |  |  | 3, 0 |
+| `orchestrator-superseded-scope-map` | 2026-10-11 | 42 | 42 | 0 |  |  | 14, 0 |
 | `orchestrator-target-from-project` | 2026-11-16 | 15 | 3 | 0 |  |  | 3, 0 |
 | `pr-writeup-portal-fines` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `problem-framing-doc-payfine-phase1` | 2026-11-15 | 4 | 4 | 0 |  |  | 0, 0 |
 | `problem-framing-doc-payfine-phase2` | 2026-11-15 | 10 | 4 | 0 |  |  | 0, 0 |
-| `reliability-requirements-neg-review` | 2026-10-11 | 16 | 16 | 0 |  |  | 8, 0 |
+| `reliability-requirements-neg-review` | 2026-10-11 | 17 | 17 | 0 |  |  | 8, 0 |
 | `reliability-requirements-payfine-phase1` | 2026-10-11 | 4 | 4 | 0 |  |  | 0, 0 |
 | `reliability-requirements-payfine-phase2` | 2026-10-11 | 10 | 10 | 0 |  |  | 0, 0 |
 | `reliability-requirements-payfine-phase2-proceed` | 2026-10-18 | 10 | 10 | 0 |  |  | 0, 0 |
 | `reliability-requirements-payfine-phase2-stop` | 2026-10-17 | 10 | 10 | 3 | `does-not-lay-out-scope-options` (judge) ×3 | 2026-11-14 | 0, 0 |
 | `reliability-requirements-payfine-phase3` | 2026-10-11 | 3 | 3 | 0 |  |  | 0, 0 |
-| `reliability-review-catalog` | 2026-10-11 | 22 | 22 | 6 | `reports-nothing-above-low` (judge) ×6 | 2026-11-12 | 14, 0 |
-| `reliability-review-fine-payment` | 2026-10-11 | 23 | 23 | 2 | `no-false-alarm-settled-fine-guard` (judge) ×2 | 2026-11-15 | 8, 0 |
-| `reliability-review-http` | 2026-10-11 | 20 | 20 | 0 |  |  | 8, 0 |
-| `reliability-review-neg-architecture` | 2026-10-11 | 16 | 16 | 0 |  |  | 8, 0 |
-| `reliability-review-neg-security` | 2026-10-11 | 17 | 17 | 0 |  |  | 8, 0 |
-| `reliability-review-nightly` | 2026-10-11 | 29 | 29 | 7 | `no-false-alarm-sms-retry` (judge) ×6, `finds-no-isolation-in-fine-loop` (judge) ×1 | 2026-11-11 | 8, 0 |
-| `reliability-review-nightly-via-agent` | 2026-10-11 | 23 | 23 | 6 | `no-false-alarm-sms-retry` (judge) ×6 | 2026-11-11 | 11, 0 |
-| `reliability-review-refund-pr` | 2026-11-07 | 20 | 19 | 1 | `no-false-alarm-timeout-is-reported` (judge) ×1 | 2026-11-09 | 8, 0 |
-| `requirements-refinement-open-question` | 2026-10-31 | 11 | 10 | 0 |  |  | 2, 0 |
-| `requirements-refinement-owner-sheet` | 2026-11-09 | 26 | 13 | 0 |  |  | 2, 0 |
-| `requirements-refinement-payfine-phase1` | 2026-10-11 | 19 | 19 | 6 | `does-not-ask-what-the-sources-answer` (judge) ×6 | 2026-11-15 | 5, 0 |
-| `requirements-refinement-payfine-phase2` | 2026-10-11 | 13 | 13 | 11 | `finishes-without-reasking` (judge) ×10, `keeps-the-users-trade-off` (judge) ×1 | 2026-11-14 | 2, 0 |
+| `reliability-review-catalog` | 2026-10-11 | 34 | 34 | 8 | `reports-nothing-above-low` (judge) ×8 | 2026-11-17 | 14, 0 |
+| `reliability-review-fine-payment` | 2026-10-11 | 24 | 24 | 2 | `no-false-alarm-settled-fine-guard` (judge) ×2 | 2026-11-15 | 8, 0 |
+| `reliability-review-http` | 2026-10-11 | 30 | 30 | 1 | `finds-unbounded-loan-history` (judge) ×1 | 2026-11-17 | 8, 0 |
+| `reliability-review-neg-architecture` | 2026-10-11 | 17 | 17 | 0 |  |  | 8, 0 |
+| `reliability-review-neg-security` | 2026-10-11 | 18 | 18 | 0 |  |  | 8, 0 |
+| `reliability-review-nightly` | 2026-10-11 | 30 | 30 | 7 | `no-false-alarm-sms-retry` (judge) ×6, `finds-no-isolation-in-fine-loop` (judge) ×1 | 2026-11-11 | 8, 0 |
+| `reliability-review-nightly-via-agent` | 2026-10-11 | 32 | 32 | 6 | `no-false-alarm-sms-retry` (judge) ×6 | 2026-11-11 | 11, 0 |
+| `reliability-review-refund-pr` | 2026-11-07 | 21 | 20 | 1 | `no-false-alarm-timeout-is-reported` (judge) ×1 | 2026-11-09 | 8, 0 |
+| `requirements-refinement-open-question` | 2026-10-31 | 12 | 11 | 0 |  |  | 2, 0 |
+| `requirements-refinement-owner-sheet` | 2026-11-09 | 35 | 22 | 0 |  |  | 2, 0 |
+| `requirements-refinement-payfine-phase1` | 2026-10-11 | 22 | 22 | 6 | `does-not-ask-what-the-sources-answer` (judge) ×6 | 2026-11-15 | 5, 0 |
+| `requirements-refinement-payfine-phase2` | 2026-10-11 | 14 | 14 | 11 | `finishes-without-reasking` (judge) ×10, `keeps-the-users-trade-off` (judge) ×1 | 2026-11-14 | 2, 0 |
 | `scope-map-self-service` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `screen-design-owner-sheet` | 2026-11-09 | 24 | 14 | 0 |  |  | 5, 0 |
+| `screen-design-owner-sheet` | 2026-11-09 | 30 | 20 | 1 | `owner-file-not-opened-with-the-scan-available` ×1 | 2026-11-17 | 5, 0 |
 | `screen-design-payfine` | 2026-10-11 | 16 | 16 | 2 | `copy-rules` (judge) ×2 | 2026-11-11 | 3, 0 |
-| `security-requirements-neg-review` | 2026-10-11 | 14 | 14 | 0 |  |  | 6, 0 |
+| `security-requirements-neg-review` | 2026-10-11 | 15 | 15 | 0 |  |  | 6, 0 |
 | `security-requirements-payfine-phase1` | 2026-10-11 | 12 | 12 | 0 |  |  | 2, 0 |
 | `security-requirements-payfine-phase2` | 2026-10-11 | 21 | 21 | 4 | `does-not-decide-the-fork-itself` (judge) ×4 | 2026-11-14 | 5, 0 |
 | `security-requirements-payfine-phase2-proceed` | 2026-10-18 | 16 | 16 | 0 |  |  | 2, 0 |
@@ -774,52 +780,52 @@ Written by `tools/case_history.py` on 2026-11-16 from 7698 result files under `r
 | `security-requirements-payfine-phase3` | 2026-10-11 | 15 | 15 | 13 | `decisions-all-approved` (judge) ×10, `criterion-card-details-never-reach-the-server` (judge) ×4 | 2026-11-12 | 5, 0 |
 | `security-requirements-placeholder-pointer` | 2026-10-31 | 11 | 10 | 0 |  |  | 2, 0 |
 | `security-requirements-source-criterion` | 2026-11-09 | 19 | 9 | 0 |  |  | 5, 0 |
-| `security-review-catalog` | 2026-10-11 | 17 | 17 | 1 | `reports-nothing-above-low` (judge) ×1 | 2026-11-09 | 6, 0 |
-| `security-review-config` | 2026-10-11 | 18 | 18 | 0 |  |  | 7, 0 |
-| `security-review-deferrals-not-restated` | 2026-11-15 | 9 | 8 | 2 | `criteria-pass-written` ×1, `slice-file-read` ×1 | 2026-11-16 | 3, 0 |
-| `security-review-neg-architecture` | 2026-10-11 | 14 | 14 | 0 |  |  | 6, 0 |
-| `security-review-neg-reliability` | 2026-10-11 | 17 | 17 | 0 |  |  | 8, 0 |
-| `security-review-portal-pr` | 2026-10-11 | 24 | 24 | 3 | `pre-existing-issues-not-blocking` (judge) ×3 | 2026-11-11 | 7, 0 |
-| `security-review-source-value` | 2026-11-09 | 24 | 17 | 0 |  |  | 9, 0 |
+| `security-review-catalog` | 2026-10-11 | 20 | 20 | 1 | `reports-nothing-above-low` (judge) ×1 | 2026-11-09 | 6, 0 |
+| `security-review-config` | 2026-10-11 | 25 | 25 | 3 | `migration-before-release-not-a-ranked-finding` ×2, `migration-before-release-handed-on-in-one-line` ×1 | 2026-11-17 | 7, 0 |
+| `security-review-deferrals-not-restated` | 2026-11-15 | 13 | 12 | 5 | `criteria-pass-written` ×3, `slice-file-read` ×2 | 2026-11-17 | 3, 0 |
+| `security-review-neg-architecture` | 2026-10-11 | 15 | 15 | 0 |  |  | 6, 0 |
+| `security-review-neg-reliability` | 2026-10-11 | 18 | 18 | 0 |  |  | 8, 0 |
+| `security-review-portal-pr` | 2026-10-11 | 25 | 25 | 3 | `pre-existing-issues-not-blocking` (judge) ×3 | 2026-11-11 | 7, 0 |
+| `security-review-source-value` | 2026-11-09 | 25 | 18 | 0 |  |  | 9, 0 |
 | `staleness-audit-docs` | 2026-10-11 | 7 | 7 | 3 | `finds-ceremony` (judge) ×3 | 2026-11-15 | 0, 0 |
 | `supply-chain-review-accept-phase1` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `supply-chain-review-accept-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `supply-chain-review-accepted` | 2026-10-11 | 4 | 4 | 1 | `no-false-alarm-dev-only-advisory` (judge) ×1 | 2026-11-15 | 0, 0 |
 | `supply-chain-review-build` | 2026-10-11 | 7 | 7 | 1 | `no-false-alarm-manifest-ranges` (judge) ×1 | 2026-11-15 | 0, 0 |
-| `supply-chain-review-build-via-agent` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `supply-chain-review-neg-reliability` | 2026-10-11 | 15 | 15 | 0 |  |  | 8, 0 |
+| `supply-chain-review-build-via-agent` | 2026-10-11 | 3 | 3 | 0 |  |  | 0, 0 |
+| `supply-chain-review-neg-reliability` | 2026-10-11 | 16 | 16 | 0 |  |  | 8, 0 |
 | `supply-chain-review-neg-security` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `supply-chain-review-workflows` | 2026-10-11 | 4 | 4 | 0 |  |  | 0, 0 |
-| `tdd-implementation-lite-cancel-hold` | 2026-10-18 | 29 | 29 | 29 | `test-run-after-each-test-edit` ×29, `escalates-queue-question` (judge) ×3, `tests-check-behaviour` (judge) ×1 | 2026-11-16 | 15, 0 |
-| `tdd-implementation-lite-cancel-hold-via-agent` | 2026-10-18 | 41 | 41 | 41 | `test-run-after-each-test-edit` ×41, `final-review-runs` ×19, `escalates-queue-question` (judge) ×9, `tests-check-behaviour` (judge) ×7, `break-and-restore-in-trace` ×2, `no-queue-behaviour-built` (judge) ×2, and 2 more | 2026-11-16 | 9, 0 |
+| `tdd-implementation-lite-cancel-hold` | 2026-10-18 | 30 | 30 | 30 | `test-run-after-each-test-edit` ×30, `escalates-queue-question` (judge) ×3, `tests-check-behaviour` (judge) ×1 | 2026-11-17 | 15, 0 |
+| `tdd-implementation-lite-cancel-hold-via-agent` | 2026-10-18 | 42 | 42 | 42 | `test-run-after-each-test-edit` ×42, `final-review-runs` ×20, `escalates-queue-question` (judge) ×9, `tests-check-behaviour` (judge) ×7, `break-and-restore-in-trace` ×2, `no-queue-behaviour-built` (judge) ×2, and 2 more | 2026-11-17 | 9, 0 |
 | `tdd-implementation-lite-chunk-plan` | 2026-10-24 | 29 | 29 | 14 | `plan-is-vertical-and-inside-the-slice` (judge) ×11, `plan-has-the-shape` (judge) ×5 | 2026-11-14 | 5, 2 |
-| `tdd-implementation-lite-named-fix` | 2026-10-18 | 36 | 36 | 10 | `final-review-runs` ×9, `no-bash-writes` ×1 | 2026-11-16 | 18, 0 |
+| `tdd-implementation-lite-named-fix` | 2026-10-18 | 37 | 37 | 10 | `final-review-runs` ×9, `no-bash-writes` ×1 | 2026-11-16 | 18, 0 |
 | `tdd-implementation-lite-one-chunk` | 2026-11-07 | 29 | 29 | 6 | `ends-on-the-hand-back-line` (judge) ×4, `no-bash-writes` ×1, `one-commit-titled-as-the-chunk` ×1, `hand-back-carries-its-five-fields` ×1 | 2026-11-14 | 6, 0 |
-| `tdd-implementation-lite-rename-fix` | 2026-11-02 | 29 | 29 | 5 | `no-shell-writes-into-the-tree` ×4, `report-names-the-rename-and-its-sites` ×1 | 2026-11-16 | 9, 0 |
+| `tdd-implementation-lite-rename-fix` | 2026-11-02 | 30 | 30 | 5 | `no-shell-writes-into-the-tree` ×4, `report-names-the-rename-and-its-sites` ×1 | 2026-11-16 | 9, 0 |
 | `technology-bootstrap-phase1` | 2026-10-11 | 17 | 17 | 1 | `asks-only-what-the-first-test-forces` (judge) ×1 | 2026-11-11 | 13, 0 |
 | `technology-bootstrap-phase2` | 2026-10-11 | 26 | 26 | 10 | `asks-only-what-the-first-test-forces` (judge) ×6, `recommends-the-built-in-default-set-once` (judge) ×2, `recommends-ui-framework-and-waits` (judge) ×2 | 2026-11-16 | 4, 0 |
 | `technology-bootstrap-phase3` | 2026-10-11 | 26 | 26 | 12 | `records-non-choices-and-open-categories` (judge) ×9, `asks-only-what-the-first-test-forces` (judge) ×3, `records-the-built-in-default-set` (judge) ×2, `writes-nothing-else` ×1 | 2026-11-16 | 4, 0 |
 | `technology-bootstrap-phase3-reject` | 2026-10-14 | 21 | 21 | 10 | `does-not-relitigate` (judge) ×8, `asks-only-what-the-first-test-forces` (judge) ×4 | 2026-11-16 | 4, 0 |
-| `test-quality-review-fines` | 2026-10-11 | 29 | 29 | 17 | `no-false-alarm-exact-tests` (judge) ×11, `no-false-alarm-fake-ledger` (judge) ×10, `finds-subject-mocked` (judge) ×1 | 2026-11-16 | 9, 2 |
-| `test-quality-review-neg-code-review` | 2026-10-11 | 18 | 18 | 0 |  |  | 6, 0 |
-| `test-quality-review-reminders` | 2026-10-11 | 16 | 16 | 0 |  |  | 6, 1 |
-| `test-quality-review-seam-fake` | 2026-10-31 | 33 | 29 | 0 |  |  | 12, 4 |
-| `test-quality-review-survivors-at-d` | 2026-11-15 | 6 | 5 | 1 | `equivalent-survivor-is-no-finding` ×1 | 2026-11-15 | 3, 0 |
+| `test-quality-review-fines` | 2026-10-11 | 33 | 33 | 17 | `no-false-alarm-exact-tests` (judge) ×11, `no-false-alarm-fake-ledger` (judge) ×10, `finds-subject-mocked` (judge) ×1 | 2026-11-16 | 9, 2 |
+| `test-quality-review-neg-code-review` | 2026-10-11 | 19 | 19 | 0 |  |  | 6, 0 |
+| `test-quality-review-reminders` | 2026-10-11 | 17 | 17 | 0 |  |  | 6, 1 |
+| `test-quality-review-seam-fake` | 2026-10-31 | 37 | 33 | 2 | `hand-back-is-counts-and-path` ×2 | 2026-11-17 | 12, 4 |
+| `test-quality-review-survivors-at-d` | 2026-11-15 | 9 | 8 | 1 | `equivalent-survivor-is-no-finding` ×1 | 2026-11-15 | 3, 0 |
 | `user-facing-docs-renewals` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
 | `user-story-writeup-payfine-phase1` | 2026-10-11 | 11 | 11 | 0 |  |  | 3, 0 |
 | `user-story-writeup-payfine-phase2` | 2026-10-11 | 0 | 0 | 0 |  |  | 0, 0 |
-| `vertical-slicing-handback` | 2026-10-11 | 21 | 21 | 1 | `leaves-the-what-to-requirements` (judge) ×1 | 2026-11-15 | 7, 0 |
-| `vertical-slicing-no-requirements` | 2026-10-11 | 15 | 15 | 0 |  |  | 7, 0 |
-| `vertical-slicing-no-screen` | 2026-11-01 | 24 | 21 | 1 | `accessibility-line-matches-the-thin-path` (judge) ×1 | 2026-11-01 | 7, 0 |
-| `vertical-slicing-owner-sheet` | 2026-11-09 | 34 | 27 | 2 | `consults-acceptance-criteria` ×2 | 2026-11-11 | 9, 1 |
-| `vertical-slicing-payfine-phase1` | 2026-10-11 | 15 | 15 | 1 | `stays-in-confirmed-scope` (judge) ×1 | 2026-11-15 | 7, 1 |
+| `vertical-slicing-handback` | 2026-10-11 | 22 | 22 | 1 | `leaves-the-what-to-requirements` (judge) ×1 | 2026-11-15 | 7, 0 |
+| `vertical-slicing-no-requirements` | 2026-10-11 | 16 | 16 | 0 |  |  | 7, 0 |
+| `vertical-slicing-no-screen` | 2026-11-01 | 25 | 22 | 1 | `accessibility-line-matches-the-thin-path` (judge) ×1 | 2026-11-01 | 7, 0 |
+| `vertical-slicing-owner-sheet` | 2026-11-09 | 43 | 36 | 3 | `consults-acceptance-criteria` ×2, `owner-file-not-opened-with-the-scan-available` ×1, `no-cell-of-the-sheet-in-the-session` ×1 | 2026-11-17 | 9, 1 |
+| `vertical-slicing-payfine-phase1` | 2026-10-11 | 16 | 16 | 1 | `stays-in-confirmed-scope` (judge) ×1 | 2026-11-15 | 7, 1 |
 | `why-comments-collect-fine` | 2026-10-11 | 8 | 8 | 0 |  |  | 0, 3 |
 
-Of 178 cases, 99 have failed at least once since their bar (however few their runs), 53 never have over 6 or more completed runs, and 26 have not failed but have fewer than 6 runs to go by.
+Of 180 cases, 103 have failed at least once since their bar (however few their runs), 50 never have over 6 or more completed runs, and 27 have not failed but have fewer than 6 runs to go by.
 
-**Never failed since the bar (53):** `acceptance-criteria-payfine`, `accessibility-review-neg-readability`, `architecture-design-neg-review`, `architecture-design-payfine-phase1`, `architecture-design-payfine-via-agent`, `architecture-review-neg-security-review`, `architecture-review-neg-test-quality-review`, `chunk-runner-gate-outside`, `code-review-neg-architecture`, `design-system-payfine-phase1`, `design-system-payfine-phase2`, `design-system-payfine-review`, `external-review-triage-cancel-hold`, `library-app-fines-review`, `library-app-reporting-pr`, `library-app-structure-review`, `map-query-consults`, `operational-readiness-neg-reliability`, `operational-readiness-neg-security`, `orchestrator-asks-for-target`, `orchestrator-chunk-runner-handback`, `orchestrator-last-fix-review-at-d`, `orchestrator-route-design-system`, `orchestrator-route-open-pr`, `orchestrator-runner-handback-unverified`, `orchestrator-security-stage`, `orchestrator-superseded-scope-map`, `reliability-requirements-neg-review`, `reliability-requirements-payfine-phase2`, `reliability-requirements-payfine-phase2-proceed`, `reliability-review-http`, `reliability-review-neg-architecture`, `reliability-review-neg-security`, `requirements-refinement-open-question`, `requirements-refinement-owner-sheet`, `screen-design-owner-sheet`, `security-requirements-neg-review`, `security-requirements-payfine-phase1`, `security-requirements-payfine-phase2-proceed`, `security-requirements-payfine-phase2-stop`, `security-requirements-placeholder-pointer`, `security-requirements-source-criterion`, `security-review-config`, `security-review-neg-architecture`, `security-review-neg-reliability`, `security-review-source-value`, `supply-chain-review-neg-reliability`, `test-quality-review-neg-code-review`, `test-quality-review-reminders`, `test-quality-review-seam-fake`, `user-story-writeup-payfine-phase1`, `vertical-slicing-no-requirements`, `why-comments-collect-fine`.
+**Never failed since the bar (50):** `acceptance-criteria-payfine`, `accessibility-review-neg-readability`, `architecture-design-neg-review`, `architecture-design-payfine-phase1`, `architecture-design-payfine-via-agent`, `architecture-review-neg-security-review`, `architecture-review-neg-test-quality-review`, `chunk-runner-fix-gate-fails`, `chunk-runner-gate-outside`, `code-review-neg-architecture`, `design-system-payfine-phase1`, `design-system-payfine-phase2`, `design-system-payfine-review`, `external-review-triage-cancel-hold`, `library-app-fines-review`, `library-app-reporting-pr`, `map-query-consults`, `operational-readiness-neg-reliability`, `operational-readiness-neg-security`, `orchestrator-asks-for-target`, `orchestrator-chunk-runner-handback`, `orchestrator-last-fix-review-at-d`, `orchestrator-route-design-system`, `orchestrator-route-open-pr`, `orchestrator-runner-handback-unverified`, `orchestrator-security-stage`, `orchestrator-slice-review-launches`, `orchestrator-superseded-scope-map`, `reliability-requirements-neg-review`, `reliability-requirements-payfine-phase2`, `reliability-requirements-payfine-phase2-proceed`, `reliability-review-neg-architecture`, `reliability-review-neg-security`, `requirements-refinement-open-question`, `requirements-refinement-owner-sheet`, `security-requirements-neg-review`, `security-requirements-payfine-phase1`, `security-requirements-payfine-phase2-proceed`, `security-requirements-payfine-phase2-stop`, `security-requirements-placeholder-pointer`, `security-requirements-source-criterion`, `security-review-neg-architecture`, `security-review-neg-reliability`, `security-review-source-value`, `supply-chain-review-neg-reliability`, `test-quality-review-neg-code-review`, `test-quality-review-reminders`, `user-story-writeup-payfine-phase1`, `vertical-slicing-no-requirements`, `why-comments-collect-fine`.
 
-**Too few runs to say (26, no failure in under 6 runs):** `adr-neg-rename`, `adr-payment-gateway`, `chunk-runner-fix-gate-fails`, `chunk-runner-last-fix-review`, `operational-readiness-ops-phase1`, `operational-readiness-ops-phase2`, `operational-readiness-release-phase1`, `operational-readiness-release-phase2`, `orchestrator-autopilot-counts-over`, `orchestrator-autopilot-round`, `orchestrator-capture-states`, `orchestrator-slice-review-launches`, `orchestrator-target-from-project`, `pr-writeup-portal-fines`, `problem-framing-doc-payfine-phase1`, `problem-framing-doc-payfine-phase2`, `reliability-requirements-payfine-phase1`, `reliability-requirements-payfine-phase3`, `scope-map-self-service`, `supply-chain-review-accept-phase1`, `supply-chain-review-accept-phase2`, `supply-chain-review-build-via-agent`, `supply-chain-review-neg-security`, `supply-chain-review-workflows`, `user-facing-docs-renewals`, `user-story-writeup-payfine-phase2`.
+**Too few runs to say (27, no failure in under 6 runs):** `adr-neg-rename`, `adr-payment-gateway`, `architecture-design-concurrency-interleavings`, `delivery-screens-owed`, `delivery-screens-stray`, `operational-readiness-ops-phase1`, `operational-readiness-ops-phase2`, `operational-readiness-release-phase1`, `operational-readiness-release-phase2`, `orchestrator-autopilot-question`, `orchestrator-autopilot-recorded`, `orchestrator-autopilot-round`, `orchestrator-capture-states`, `orchestrator-target-from-project`, `pr-writeup-portal-fines`, `problem-framing-doc-payfine-phase1`, `problem-framing-doc-payfine-phase2`, `reliability-requirements-payfine-phase1`, `reliability-requirements-payfine-phase3`, `scope-map-self-service`, `supply-chain-review-accept-phase1`, `supply-chain-review-accept-phase2`, `supply-chain-review-build-via-agent`, `supply-chain-review-neg-security`, `supply-chain-review-workflows`, `user-facing-docs-renewals`, `user-story-writeup-payfine-phase2`.
 
 **In the history with no case directory now (19, retired or renamed, not in the table):** `chunk-runner-replay-not-the-handback`, `chunk-runner-replay-unheld-commit`, `library-app-members-review`, `library-app-notifications-review`, `library-app-reporting-review`, `orchestrator-chunk-review-round`, `orchestrator-gate-deviation`, `orchestrator-gate-outside`, `orchestrator-one-fix-round`, `probe-sandbox`, `reliability-review-alerts`, `reliability-review-portal-pay-pr`, `security-review-http`, `security-review-reminders`, `tdd-implementation-cancel-hold`, `tdd-implementation-cancel-hold-via-agent`, `tdd-implementation-chunk-plan`, `tdd-implementation-named-fix`, `tdd-implementation-one-chunk`.
 <!-- case-history:end -->
@@ -1035,222 +1041,224 @@ Written by `tools/case_sort.py` on 2026-11-16 from the cases, `tools/case_readin
 
 | Case | Skill | Tool checks | Judges | A tool could decide | Prompt states the rule | Agent $ | Judges $ | Seconds (agent + judges) | Failed since the bar | Deletions that failed it |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `acceptance-criteria-payfine` | acceptance-criteria | 1 tool call | 1 | 0 of 1 | no | 0.07 | 0.01 | 17 (9 + 7) | 0 of 15 | no pass on the skill |
-| `accessibility-review-ac-walk` | accessibility-review | 5 regex, 2 tool call, 1 file | 1 | 0 of 1 | yes: "Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project [...] and `PORTAL_DATA` inside that folder" | 0.45 | 0.01 | 66 | 1 of 18 | no pass on the skill |
-| `accessibility-review-neg-readability` | accessibility-review | 1 tool call | 0 |  | no | 0.06 | 0.00 | 9 (9 + 1) | 0 of 17 | no pass on the skill |
-| `accessibility-review-payfine` | accessibility-review | 3 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "fill in the slice's accessibility placeholder" | 0.22 | 0.34 | 95 (67 + 28) | 7 of 34 | no pass on the skill |
-| `accessibility-review-payfine-subtle` | accessibility-review | 3 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.33 | 100 (72 + 28) | 5 of 34 | no pass on the skill |
+| `acceptance-criteria-payfine` | acceptance-criteria | 1 tool call | 1 | 0 of 1 | no | 0.07 | 0.01 | 17 | 0 of 15 | no pass on the skill |
+| `accessibility-review-ac-walk` | accessibility-review | 5 regex, 2 tool call, 1 file | 1 | 0 of 1 | yes: "Start it through the scratch launcher `tools/scratch_run.py` with the scratch folder `scratch/portal-walk` next to the project [...] and `PORTAL_DATA` inside that folder" | 0.45 | 0.01 | 66 | 1 of 19 | no pass on the skill |
+| `accessibility-review-neg-readability` | accessibility-review | 1 tool call | 0 |  | no | 0.06 | 0.00 | 9 (10 + 0) | 0 of 18 | no pass on the skill |
+| `accessibility-review-payfine` | accessibility-review | 5 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.36 | 92 (66 + 18) | 8 of 41 | 1 kept: `handed-on` |
+| `accessibility-review-payfine-subtle` | accessibility-review | 3 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "fill in the slice's accessibility placeholder" | 0.23 | 0.33 | 100 (71 + 24) | 5 of 35 | no pass on the skill |
 | `adr-neg-rename` | adr | 1 regex, 1 tool call | 1 | 0 of 1 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `adr-payment-gateway` | adr | 2 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.08 | 0.01 | 13 (11 + 2) | 0 of 4 (few runs) | no pass on the skill |
-| `architecture-design-neg-review` | architecture-design | 1 tool call | 0 |  | no | 0.09 | 0.00 | 15 (15 + 0) | 0 of 21 | no pass on the skill |
-| `architecture-design-owner-sheet` | architecture-design | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.22 | 0.01 | 44 (43 + 4) | 1 of 23 | no pass on the skill |
-| `architecture-design-payfine-phase1` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.18 | 0.02 | 38 (32 + 9) | 0 of 24 | no pass on the skill |
-| `architecture-design-payfine-phase2` | architecture-design | 1 regex | 9 | 0 of 9 | no | 0.26 | 0.32 | 102 (67 + 35) | 20 of 25 | no pass on the skill |
-| `architecture-design-payfine-via-agent` | architecture-design | 3 regex, 1 tool call | 1 | 0 of 1 | partly: "its architecture map is at `docs/architecture-map.md`" | 0.22 | 0.02 | 45 | 0 of 19 | no pass on the skill |
-| `architecture-design-scope-consequence` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.18 | 0.01 | 44 (39 + 9) | 15 of 34 | no pass on the skill |
-| `architecture-review-neg-security-review` | architecture-review | 1 tool call | 0 |  | no | 0.07 | 0.00 | 16 (15 + 0) | 0 of 16 | no pass on the skill |
-| `architecture-review-neg-test-quality-review` | architecture-review | 1 tool call | 0 |  | no | 0.09 | 0.00 | 12 (12 + 1) | 0 of 17 | no pass on the skill |
-| `chunk-runner-fix-gate-fails` | chunk-runner | 4 regex, 10 tool call, 1 file | 0 |  | partly: "Stop once round 1 is recorded" | 1.12 | 0.00 | 185 | 0 of 5 (few runs) | none run |
-| `chunk-runner-gap-handback` | chunk-runner | 5 regex, 6 tool call | 0 |  | no | 0.28 | 0.01 | 33 (27 + 6) | 8 of 35 | 0 of 7 |
-| `chunk-runner-gate-deviation` | chunk-runner | 6 regex, 8 tool call, 1 file | 0 |  | partly: "Stop once the gate has run and its result is known, before any launch" | 0.31 | 0.00 | 34 (31 + 3) | 3 of 32 | 1 of 14: `gate-design-modules` |
+| `adr-payment-gateway` | adr | 2 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.08 | 0.01 | 13 | 0 of 4 (few runs) | no pass on the skill |
+| `architecture-design-concurrency-interleavings` | architecture-design | 8 regex, 1 tool call | 0 |  | no | 0.20 | 0.00 | 41 (41 + 0) | 0 of 5 (few runs) | 1 kept: `interleavings` |
+| `architecture-design-neg-review` | architecture-design | 1 tool call | 0 |  | no | 0.09 | 0.00 | 15 (14 + 1) | 0 of 22 | no pass on the skill |
+| `architecture-design-owner-sheet` | architecture-design | 2 regex, 1 tool call | 1 | 0 of 1 | no | 0.23 | 0.01 | 46 (46 + 3) | 3 of 30 | no pass on the skill |
+| `architecture-design-payfine-phase1` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.18 | 0.02 | 38 (29 + 6) | 0 of 25 | no pass on the skill |
+| `architecture-design-payfine-phase2` | architecture-design | 1 regex | 9 | 0 of 9 | no | 0.27 | 0.32 | 103 (90 + 26) | 21 of 26 | no pass on the skill |
+| `architecture-design-payfine-via-agent` | architecture-design | 3 regex, 1 tool call | 1 | 0 of 1 | partly: "its architecture map is at `docs/architecture-map.md`" | 0.22 | 0.02 | 46 | 0 of 20 | no pass on the skill |
+| `architecture-design-scope-consequence` | architecture-design | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.18 | 0.02 | 45 (43 + 12) | 15 of 35 | no pass on the skill |
+| `architecture-review-neg-security-review` | architecture-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 16 (17 + 0) | 0 of 17 | no pass on the skill |
+| `architecture-review-neg-test-quality-review` | architecture-review | 1 tool call | 0 |  | no | 0.09 | 0.00 | 12 (13 + 1) | 0 of 18 | no pass on the skill |
+| `chunk-runner-fix-gate-fails` | chunk-runner | 4 regex, 10 tool call, 1 file | 0 |  | partly: "Stop once round 1 is recorded" | 1.12 | 0.00 | 184 | 0 of 6 | 1 kept: `gate-fixer` |
+| `chunk-runner-gap-handback` | chunk-runner | 5 regex, 6 tool call | 0 |  | no | 0.28 | 0.01 | 33 (25 + 3) | 8 of 35 | 0 of 7 |
+| `chunk-runner-gate-deviation` | chunk-runner | 6 regex, 8 tool call, 1 file | 0 |  | partly: "Stop once the gate has run and its result is known, before any launch" | 0.31 | 0.00 | 34 (31 + 2) | 3 of 32 | 1 of 14: `gate-design-modules` |
 | `chunk-runner-gate-outside` | chunk-runner | 5 regex, 6 tool call, 1 tool order | 0 |  | partly: "Stop once the gate has passed, before any reviewer is launched" | 0.56 | 0.00 | 91 | 0 of 27 | 0 of 10 |
 | `chunk-runner-gate-sources` | chunk-runner | 6 regex, 4 tool call | 0 |  | partly: "Stop once the gate has passed, before any reviewer is launched" | 0.54 | 0.00 | 81 | 1 of 24 | 1 of 8: `handback-template` |
-| `chunk-runner-last-fix-review` | chunk-runner | 4 regex, 7 tool call, 1 file | 0 |  | no | 0.85 | 0.00 | 129 | 0 of 3 (few runs) | 1 kept: `last-fix-review` |
-| `chunk-runner-one-fix-round` | chunk-runner | 5 regex, 7 tool call | 0 |  | partly: "the sandbox checks in this round are information and never end it" | 0.64 | 0.00 | 104 | 7 of 40 | 2 of 15: `handback-one-line`, `regressions-to-a-fixer` |
-| `chunk-runner-review-round` | chunk-runner | 6 regex, 8 tool call, 2 file | 0 |  | partly: "Stop once round 0 is recorded [...] don't start the fix round" | 1.25 | 0.01 | 157 | 1 of 30 | 1 of 19: `smoke-agent-kind` |
+| `chunk-runner-last-fix-review` | chunk-runner | 4 regex, 7 tool call, 1 file | 0 |  | no | 0.86 | 0.00 | 126 | 1 of 7 | 1 kept: `last-fix-review` |
+| `chunk-runner-one-fix-round` | chunk-runner | 5 regex, 7 tool call | 0 |  | partly: "the sandbox checks in this round are information and never end it" | 0.66 | 0.00 | 107 | 7 of 41 | 2 of 15: `handback-one-line`, `regressions-to-a-fixer` |
+| `chunk-runner-review-round` | chunk-runner | 6 regex, 8 tool call, 2 file | 0 |  | partly: "Stop once round 0 is recorded [...] don't start the fix round" | 1.25 | 0.01 | 157 | 1 of 31 | 1 of 19: `smoke-agent-kind` |
 | `chunk-runner-waits-for-handback` | chunk-runner | 4 regex, 8 tool call | 0 |  | yes: "end after step 2, the gate on the builder's commit (and its one fixer, if the gate fails). Launch no reviewer and no smoke agent" | 0.60 | 0.00 | 91 | 6 of 29 | 2 of 19: `handback-one-line`, `hash-is-real` |
-| `ci-pipeline-os-matrix` | ci-pipeline | 7 regex, 1 tool call, 1 file | 0 |  | no | 0.50 | 0.00 | 69 (38 + 13) | 1 of 9 | 1 kept: `two-operating-systems` |
-| `ci-pipeline-screen-job` | ci-pipeline | 9 regex, 1 tool call, 6 file | 0 |  | no | 0.21 | 0.00 | 50 (36 + 13) | 7 of 11 | 1 kept: `screen-job` |
-| `code-review-catalog` | code-review | 1 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.12 | 0.03 | 34 (26 + 9) | 13 of 29 | no pass on the skill |
-| `code-review-chunk-gate-covers` | code-review | 5 regex, 1 tool call, 1 file | 0 |  | no | 0.21 | 0.00 | 41 (38 + 3) | 2 of 11 | 1 kept: `gate-holds` |
-| `code-review-comments-chunk` | code-review | 3 regex, 3 tool call, 1 file | 3 | 0 of 3 | partly: "Write one report in the shared finding format [...] and hand back the counts and the path" | 0.24 | 0.06 | 56 (43 + 14) | 34 of 63 | no pass on the skill |
-| `code-review-days-left-pr` | code-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.14 | 0.13 | 53 (34 + 19) | 11 of 30 | no pass on the skill |
-| `code-review-fine-notices-pr` | code-review | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.15 | 0.17 | 58 (36 + 21) | 13 of 24 | no pass on the skill |
-| `code-review-fine-notices-pr-via-agent` | code-review | 2 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.22 | 0.19 | 81 | 26 of 27 | no pass on the skill |
-| `code-review-fines-report-pr` | code-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.17 | 0.15 | 66 (46 + 20) | 5 of 24 | no pass on the skill |
-| `code-review-neg-architecture` | code-review | 1 tool call | 0 |  | no | 0.17 | 0.00 | 37 (36 + 1) | 0 of 18 | no pass on the skill |
-| `code-review-structural-high-at-d` | code-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.07 | 65 (54 + 11) | 4 of 17 | no pass on the skill |
-| `cold-read-new-beside-old` | cold-read | 5 regex, 3 tool call, 1 file | 0 |  | no | 0.20 | 0.00 | 52 (39 + 13) | 1 of 11 | 1 kept: `pair-new-with-old` |
-| `delegation-consult-with-file` | reliability-requirements | 4 regex, 2 tool call | 1 | 0 of 1 | yes: "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence" | 0.15 | 0.03 | 31 (23 + 8) | 13 of 26 | no pass on the skill |
-| `delegation-consult-without-file` | reliability-requirements | 1 regex, 2 tool call | 1 | 0 of 1 | no | 0.12 | 0.02 | 21 (13 + 8) | 5 of 27 | no pass on the skill |
-| `delivery-ci-red-not-done` | delivery | 5 regex, 3 tool call, 1 file | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.40 | 0.03 | 64 (51 + 13) | 5 of 16 | no pass on the skill |
-| `delivery-screens-owed` | delivery | 8 regex, 4 tool call | 0 |  | no | 0.45 | 0.00 | 50 (40 + 10) | 1 of 6 | 1 kept: `screens-verdicts` |
-| `delivery-screens-stray` | delivery | 8 regex, 4 tool call | 1 | 0 of 1 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.41 | 0.01 | 49 (36 + 13) | 1 of 5 (few runs) | 1 kept: `screens-verdicts` |
-| `design-system-payfine-phase1` | design-system | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.10 | 0.00 | 14 (11 + 3) | 0 of 7 | no pass on the skill |
-| `design-system-payfine-phase2` | design-system | 2 regex, 2 file | 4 | 0 of 4 | no | 0.18 | 0.04 | 59 (46 + 12) | 0 of 7 | no pass on the skill |
-| `design-system-payfine-phase3` | design-system | 3 regex, 1 file | 5 | 0 of 5 | no | 0.31 | 0.26 | 132 (91 + 39) | 7 of 16 | no pass on the skill |
-| `design-system-payfine-reference` | design-system | 3 regex, 1 tool call | 2 | 0 of 2 | no | 0.22 | 0.01 | 75 (68 + 7) | 1 of 6 | no pass on the skill |
-| `design-system-payfine-review` | design-system | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.17 | 0.06 | 62 (50 + 12) | 0 of 11 | no pass on the skill |
-| `external-review-triage-cancel-hold` | external-review-triage | 2 regex, 1 tool call, 1 file | 3 | 0 of 3 | partly: "Write your report to [...] and hand back the counts and the path" | 0.35 | 0.07 | 54 (47 + 8) | 0 of 10 | no pass on the skill |
-| `library-app-catalog-review` | architecture-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.19 | 0.04 | 52 (45 + 8) | 4 of 18 | no pass on the skill |
-| `library-app-fines-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.26 | 0.11 | 91 (80 + 11) | 0 of 17 | no pass on the skill |
-| `library-app-lending-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.25 | 0.27 | 79 (59 + 20) | 5 of 26 | no pass on the skill |
-| `library-app-lending-review-via-agent` | architecture-review | 1 regex, 1 tool call, 1 file | 6 | 0 of 6 | partly: "return its findings report verbatim [...] (including its opening section on the importance ordering it assumed)" | 0.38 | 0.24 | 138 | 2 of 16 | no pass on the skill |
-| `library-app-reporting-pr` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.07 | 72 (61 + 11) | 0 of 13 | no pass on the skill |
-| `library-app-structure-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.31 | 0.18 | 116 (99 + 17) | 0 of 17 | no pass on the skill |
-| `map-query-consults` | map-query | 1 regex, 1 tool call | 4 | 0 of 4 | no | 0.10 | 0.03 | 23 (12 + 11) | 0 of 8 | no pass on the skill |
-| `map-query-no-map` | map-query | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.07 | 0.01 | 8 (5 + 3) | 1 of 9 | no pass on the skill |
-| `map-update-cancel-hold` | map-update | 5 regex, 1 tool call | 3 | 0 of 3 | no | 0.18 | 0.55 | 44 (21 + 22) | 25 of 26 | no pass on the skill |
-| `operational-readiness-neg-reliability` | operational-readiness | 1 tool call | 0 |  | no | 0.10 | 0.00 | 20 (19 + 1) | 0 of 15 | no pass on the skill |
-| `operational-readiness-neg-security` | operational-readiness | 1 tool call | 0 |  | no | 0.06 | 0.00 | 12 (12 + 0) | 0 of 14 | no pass on the skill |
+| `ci-pipeline-os-matrix` | ci-pipeline | 7 regex, 1 tool call, 1 file | 0 |  | no | 0.50 | 0.00 | 69 (29 + 14) | 1 of 9 | 1 kept: `two-operating-systems` |
+| `ci-pipeline-screen-job` | ci-pipeline | 9 regex, 1 tool call, 6 file | 0 |  | no | 0.21 | 0.00 | 50 (37 + 13) | 2 of 7 | 1 kept: `screen-job` |
+| `code-review-catalog` | code-review | 1 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.12 | 0.03 | 31 (24 + 8) | 13 of 33 | no pass on the skill |
+| `code-review-chunk-gate-covers` | code-review | 5 regex, 1 tool call, 1 file | 0 |  | no | 0.22 | 0.00 | 40 (39 + 3) | 2 of 12 | 1 kept: `gate-holds` |
+| `code-review-comments-chunk` | code-review | 3 regex, 3 tool call, 1 file | 3 | 0 of 3 | partly: "Write one report in the shared finding format [...] and hand back the counts and the path" | 0.24 | 0.06 | 56 (50 + 14) | 34 of 64 | no pass on the skill |
+| `code-review-days-left-pr` | code-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.14 | 0.14 | 52 (34 + 17) | 11 of 34 | no pass on the skill |
+| `code-review-fine-notices-pr` | code-review | 3 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.15 | 0.17 | 55 (37 + 17) | 13 of 28 | 1 kept: `handed-on` |
+| `code-review-fine-notices-pr-via-agent` | code-review | 4 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.22 | 0.19 | 78 | 27 of 30 | no pass on the skill |
+| `code-review-fines-report-pr` | code-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.17 | 0.15 | 66 (45 + 25) | 5 of 25 | no pass on the skill |
+| `code-review-neg-architecture` | code-review | 1 tool call | 0 |  | no | 0.17 | 0.00 | 37 (42 + 1) | 0 of 19 | no pass on the skill |
+| `code-review-structural-high-at-d` | code-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.07 | 65 (54 + 8) | 4 of 18 | no pass on the skill |
+| `cold-read-new-beside-old` | cold-read | 5 regex, 3 tool call, 1 file | 0 |  | no | 0.20 | 0.00 | 51 (35 + 13) | 1 of 12 | 1 kept: `pair-new-with-old` |
+| `delegation-consult-with-file` | reliability-requirements | 4 regex, 2 tool call | 1 | 0 of 1 | yes: "Decide it, revise your document in place, commit it by name as `Decision <n>: <title>`, and hand back the commit hash and one sentence" | 0.15 | 0.03 | 31 (19 + 4) | 13 of 26 | no pass on the skill |
+| `delegation-consult-without-file` | reliability-requirements | 1 regex, 2 tool call | 1 | 0 of 1 | no | 0.12 | 0.02 | 21 (9 + 8) | 5 of 27 | no pass on the skill |
+| `delivery-ci-red-not-done` | delivery | 5 regex, 3 tool call, 1 file | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.40 | 0.03 | 64 (55 + 15) | 5 of 16 | no pass on the skill |
+| `delivery-screens-owed` | delivery | 8 regex, 4 tool call | 0 |  | no | 0.45 | 0.00 | 51 (41 + 10) | 0 of 5 (few runs) | 1 kept: `screens-verdicts` |
+| `delivery-screens-stray` | delivery | 8 regex, 4 tool call | 1 | 0 of 1 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.42 | 0.01 | 52 (39 + 13) | 0 of 5 (few runs) | 1 kept: `screens-verdicts` |
+| `design-system-payfine-phase1` | design-system | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.10 | 0.00 | 14 | 0 of 7 | no pass on the skill |
+| `design-system-payfine-phase2` | design-system | 2 regex, 2 file | 4 | 0 of 4 | no | 0.18 | 0.04 | 59 | 0 of 7 | no pass on the skill |
+| `design-system-payfine-phase3` | design-system | 3 regex, 1 file | 5 | 0 of 5 | no | 0.31 | 0.26 | 132 | 7 of 16 | no pass on the skill |
+| `design-system-payfine-reference` | design-system | 3 regex, 1 tool call | 2 | 0 of 2 | no | 0.22 | 0.01 | 75 | 1 of 6 | no pass on the skill |
+| `design-system-payfine-review` | design-system | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.17 | 0.06 | 62 | 0 of 11 | no pass on the skill |
+| `external-review-triage-cancel-hold` | external-review-triage | 2 regex, 1 tool call, 1 file | 3 | 0 of 3 | partly: "Write your report to [...] and hand back the counts and the path" | 0.35 | 0.07 | 54 | 0 of 10 | no pass on the skill |
+| `library-app-catalog-review` | architecture-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.19 | 0.04 | 48 (35 + 6) | 4 of 22 | no pass on the skill |
+| `library-app-fines-review` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.26 | 0.11 | 90 (78 + 8) | 0 of 18 | no pass on the skill |
+| `library-app-lending-review` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.25 | 0.26 | 78 (54 + 13) | 5 of 27 | no pass on the skill |
+| `library-app-lending-review-via-agent` | architecture-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | partly: "return its findings report verbatim [...] (including its opening section on the importance ordering it assumed)" | 0.38 | 0.23 | 132 | 2 of 19 | no pass on the skill |
+| `library-app-reporting-pr` | architecture-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.07 | 69 (46 + 9) | 0 of 14 | no pass on the skill |
+| `library-app-structure-review` | architecture-review | 3 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.31 | 0.20 | 105 (72 + 11) | 1 of 24 | 1 kept: `handed-on` |
+| `map-query-consults` | map-query | 1 regex, 1 tool call | 4 | 0 of 4 | no | 0.10 | 0.03 | 23 (14 + 10) | 0 of 9 | no pass on the skill |
+| `map-query-no-map` | map-query | 1 regex, 1 tool call | 1 | 0 of 1 | no | 0.07 | 0.01 | 8 | 1 of 9 | no pass on the skill |
+| `map-update-cancel-hold` | map-update | 5 regex, 1 tool call | 3 | 0 of 3 | no | 0.17 | 0.49 | 39 (15 + 9) | 25 of 30 | no pass on the skill |
+| `operational-readiness-neg-reliability` | operational-readiness | 1 tool call | 0 |  | no | 0.10 | 0.00 | 20 (20 + 0) | 0 of 16 | no pass on the skill |
+| `operational-readiness-neg-security` | operational-readiness | 1 tool call | 0 |  | no | 0.06 | 0.00 | 12 (12 + 0) | 0 of 15 | no pass on the skill |
 | `operational-readiness-ops-phase1` | operational-readiness | 1 tool call | 1 | 0 of 1 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `operational-readiness-ops-phase2` | operational-readiness | 0 | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `operational-readiness-release-phase1` | operational-readiness | 1 tool call | 2 | 0 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `operational-readiness-release-phase2` | operational-readiness | 0 | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `orchestrator-asks-for-target` | orchestrator | 3 tool call | 1 | 0 of 1 | no | 0.20 | 0.00 | 13 (9 + 4) | 0 of 48 | no pass on the skill |
-| `orchestrator-autopilot-counts-over` | orchestrator | 2 regex, 2 tool call | 0 |  | partly: "hand off as soon as the next chunk's runner has been launched" | 2.34 | 0.00 | 337 | 0 of 5 (few runs) | no pass on the skill |
-| `orchestrator-autopilot-question` | orchestrator | 4 regex, 2 tool call | 0 |  | no | 0.46 | 0.00 | 50 (27 + 1) | 1 of 6 | 1 kept: `autopilot-question` |
-| `orchestrator-autopilot-recorded` | orchestrator | 3 regex, 2 tool call, 1 file | 0 |  | partly: "And yes to autopilot: take your own recommendation at the stops the chunk loop would otherwise put to me, and log each one" | 0.40 | 0.00 | 46 (45 + 2) | 1 of 5 (few runs) | 1 kept: `autopilot-question` |
-| `orchestrator-autopilot-round` | orchestrator | 5 tool call, 1 tool order | 0 |  | partly: "Hand off as soon as the next agent has been launched" | 0.59 | 0.00 | 65 | 0 of 5 (few runs) | 1 kept: `autopilot-round` |
-| `orchestrator-backward-route` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.32 | 0.01 | 61 (51 + 11) | 19 of 54 | no pass on the skill |
-| `orchestrator-budget-exceeded` | orchestrator | 3 regex, 2 tool call | 0 |  | no | 0.27 | 0.01 | 30 (23 + 7) | 31 of 55 | no pass on the skill |
-| `orchestrator-capture-states` | orchestrator | 4 regex, 3 tool call | 0 |  | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.34 | 0.00 | 45 (34 + 11) | 0 of 5 (few runs) | 1 kept: `capture-for-listed-states` |
-| `orchestrator-chunk-runner-handback` | orchestrator | 6 regex, 2 tool call | 1 | 0 of 1 | partly: "hand off once chunk 1's C line is written and its records committed, before chunk 2's runner is launched" | 0.30 | 0.01 | 38 (32 + 7) | 0 of 24 | no pass on the skill |
-| `orchestrator-chunk-runner-launch` | orchestrator | 6 tool call, 1 tool order | 1 | 0 of 1 | partly: "hand off as soon as chunk 1's runner has been launched: don't wait for it to return; write the handoff file saying the runner is in flight and stop" | 1.79 | 0.01 | 283 | 16 of 46 | no pass on the skill |
-| `orchestrator-definition-of-done` | orchestrator | 8 tool call, 1 tool order, 1 file | 1 | 0 of 1 | partly: "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)" | 1.15 | 0.01 | 224 (76 + 10) | 71 of 78 | no pass on the skill |
-| `orchestrator-delivery-foreground` | orchestrator | 5 regex, 7 tool call | 1 | 0 of 1 | no | 0.46 | 0.01 | 75 (62 + 13) | 37 of 88 | 1 kept: `deferrals-by-script` |
+| `orchestrator-asks-for-target` | orchestrator | 3 tool call | 1 | 0 of 1 | no | 0.20 | 0.00 | 13 (11 + 4) | 0 of 48 | no pass on the skill |
+| `orchestrator-autopilot-counts-over` | orchestrator | 2 regex, 2 tool call | 0 |  | partly: "hand off as soon as the next chunk's runner has been launched" | 2.74 | 0.00 | 396 | 1 of 12 | no pass on the skill |
+| `orchestrator-autopilot-question` | orchestrator | 4 regex, 2 tool call | 0 |  | no | 0.44 | 0.00 | 47 (27 + 1) | 0 of 5 (few runs) | 1 kept: `autopilot-question` |
+| `orchestrator-autopilot-recorded` | orchestrator | 3 regex, 2 tool call, 1 file | 0 |  | partly: "And yes to autopilot: take your own recommendation at the stops the chunk loop would otherwise put to me, and log each one" | 0.40 | 0.00 | 47 (46 + 2) | 0 of 5 (few runs) | 1 kept: `autopilot-question` |
+| `orchestrator-autopilot-round` | orchestrator | 5 tool call, 1 tool order | 0 |  | partly: "Hand off as soon as the next agent has been launched" | 0.59 | 0.00 | 65 | 0 of 4 (few runs) | 1 kept: `autopilot-round` |
+| `orchestrator-backward-route` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.33 | 0.01 | 61 (38 + 8) | 19 of 55 | no pass on the skill |
+| `orchestrator-budget-exceeded` | orchestrator | 3 regex, 2 tool call | 0 |  | no | 0.27 | 0.01 | 30 (24 + 5) | 31 of 55 | no pass on the skill |
+| `orchestrator-capture-states` | orchestrator | 4 regex, 3 tool call | 0 |  | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it (what the agent is to be handed, word for word where the skill gives words) and stop there" | 0.35 | 0.00 | 45 (34 + 11) | 0 of 5 (few runs) | 1 kept: `capture-for-listed-states` |
+| `orchestrator-chunk-runner-handback` | orchestrator | 6 regex, 2 tool call | 1 | 0 of 1 | partly: "hand off once chunk 1's C line is written and its records committed, before chunk 2's runner is launched" | 0.30 | 0.01 | 38 (36 + 6) | 0 of 24 | no pass on the skill |
+| `orchestrator-chunk-runner-launch` | orchestrator | 6 tool call, 1 tool order | 1 | 0 of 1 | partly: "hand off as soon as chunk 1's runner has been launched: don't wait for it to return; write the handoff file saying the runner is in flight and stop" | 1.79 | 0.01 | 282 | 17 of 47 | no pass on the skill |
+| `orchestrator-definition-of-done` | orchestrator | 8 tool call, 1 tool order, 1 file | 1 | 0 of 1 | partly: "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)" | 1.16 | 0.01 | 225 | 72 of 79 | no pass on the skill |
+| `orchestrator-delivery-foreground` | orchestrator | 5 regex, 7 tool call | 1 | 0 of 1 | no | 0.46 | 0.01 | 75 (66 + 11) | 37 of 88 | 1 kept: `deferrals-by-script` |
 | `orchestrator-delivery-removal` | orchestrator | 6 regex, 5 tool call, 1 tool order | 1 | 0 of 1 | partly: "If the scan finds anything of that file in this branch's commits, replace it and rewrite the branch before it is pushed. You have my word for that rewrite" | 0.48 | 0.01 | 109 | 2 of 26 | no pass on the skill |
 | `orchestrator-gap-without-delegation` | orchestrator | 2 regex, 5 tool call | 1 | 0 of 1 | no | 0.52 | 0.01 | 75 | 12 of 60 | no pass on the skill |
-| `orchestrator-gate-checks-route-back` | orchestrator | 2 regex, 3 tool call | 0 |  | no | 0.39 | 0.00 | 44 (42 + 2) | 1 of 6 | 1 kept: `gate-checks-route-back` |
-| `orchestrator-issue-fix-records` | orchestrator | 6 regex, 4 tool call | 1 | 0 of 1 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.37 | 0.01 | 54 (50 + 5) | 2 of 15 | no pass on the skill |
-| `orchestrator-last-fix-review-at-d` | orchestrator | 5 tool call | 0 |  | partly: "Hand off as soon as the next agent has been launched" | 0.67 | 0.00 | 83 | 0 of 6 | 1 kept: `last-fix-review-at-d` |
-| `orchestrator-mutation-before-review` | orchestrator | 2 regex, 5 tool call, 1 file | 0 |  | partly: "hand off when the next thing to do is launching round 0 of the slice review itself" | 0.34 | 0.00 | 54 | 1 of 14 | 1 kept: `mutation-before-reviewers` |
+| `orchestrator-gate-checks-route-back` | orchestrator | 2 regex, 3 tool call | 0 |  | no | 0.39 | 0.00 | 44 (42 + 2) | 1 of 7 | 1 kept: `gate-checks-route-back` |
+| `orchestrator-issue-fix-records` | orchestrator | 6 regex, 4 tool call | 1 | 0 of 1 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.37 | 0.01 | 53 (46 + 5) | 2 of 16 | no pass on the skill |
+| `orchestrator-last-fix-review-at-d` | orchestrator | 5 tool call | 0 |  | partly: "Hand off as soon as the next agent has been launched" | 0.66 | 0.00 | 81 | 0 of 6 | 1 kept: `last-fix-review-at-d` |
+| `orchestrator-mutation-before-review` | orchestrator | 2 regex, 5 tool call, 1 file | 0 |  | partly: "hand off when the next thing to do is launching round 0 of the slice review itself" | 0.34 | 0.00 | 54 | 1 of 15 | 1 kept: `mutation-before-reviewers` |
 | `orchestrator-plan-check-seam` | orchestrator | 2 regex, 4 tool call | 1 | 0 of 1 | partly: "hand off once the B line is written, before chunk 1's build" | 0.48 | 0.01 | 76 | 2 of 52 | no pass on the skill |
-| `orchestrator-readiness-gate` | orchestrator | 2 regex, 4 tool call, 1 tool order | 2 | 0 of 2 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.62 | 0.03 | 129 (112 + 13) | 22 of 73 | no pass on the skill |
-| `orchestrator-readiness-open-item` | orchestrator | 2 regex, 3 tool call | 1 | 0 of 1 | no | 0.32 | 0.01 | 44 (39 + 5) | 11 of 42 | no pass on the skill |
-| `orchestrator-readiness-sources` | orchestrator | 4 regex, 4 tool call | 1 | 0 of 1 | no | 0.34 | 0.01 | 44 (40 + 4) | 4 of 29 | no pass on the skill |
+| `orchestrator-readiness-correction-autopilot` | orchestrator | 4 regex, 4 tool call | 0 |  | no | 0.52 | 0.00 | 69 (68 + 1) | 4 of 12 | no pass on the skill |
+| `orchestrator-readiness-gate` | orchestrator | 2 regex, 4 tool call, 1 tool order | 2 | 0 of 2 | partly: "Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start B in this session)" | 0.62 | 0.03 | 128 (96 + 9) | 22 of 75 | no pass on the skill |
+| `orchestrator-readiness-open-item` | orchestrator | 2 regex, 3 tool call | 1 | 0 of 1 | no | 0.33 | 0.01 | 44 (34 + 4) | 13 of 46 | no pass on the skill |
+| `orchestrator-readiness-sources` | orchestrator | 4 regex, 4 tool call | 1 | 0 of 1 | no | 0.34 | 0.01 | 44 (36 + 4) | 4 of 30 | no pass on the skill |
 | `orchestrator-readme-stale-not-done` | orchestrator | 2 regex, 8 tool call, 1 tool order | 1 | 0 of 1 | partly: "hand off before the slice reviewers are launched (after the Definition of Done has been acted on and checked again)" | 1.22 | 0.01 | 257 | 10 of 11 | no pass on the skill |
-| `orchestrator-route-accessibility` | orchestrator | 1 regex, 4 tool call, 1 file | 2 | 0 of 2 | no | 0.49 | 0.01 | 113 (103 + 10) | 11 of 60 | no pass on the skill |
-| `orchestrator-route-backward-requirements` | orchestrator | 5 tool call, 1 file | 2 | 0 of 2 | no | 0.26 | 0.02 | 34 (26 + 8) | 4 of 45 | no pass on the skill |
-| `orchestrator-route-design` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.35 | 0.01 | 56 (47 + 9) | 1 of 43 | no pass on the skill |
-| `orchestrator-route-design-system` | orchestrator | 5 tool call, 1 file | 2 | 0 of 2 | no | 0.26 | 0.01 | 35 (25 + 10) | 0 of 41 | no pass on the skill |
-| `orchestrator-route-implementation` | orchestrator | 3 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.01 | 30 (22 + 8) | 2 of 48 | no pass on the skill |
-| `orchestrator-route-implementation-prenamed` | orchestrator | 2 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.01 | 30 (22 + 9) | 1 of 44 | no pass on the skill |
-| `orchestrator-route-open-pr` | orchestrator | 1 regex, 6 tool call | 1 | 0 of 1 | partly: "Report what is open and stop after your first question to me; don't run the triage or any fix in this session" | 0.25 | 0.01 | 25 (20 + 5) | 0 of 24 | no pass on the skill |
-| `orchestrator-route-problem-framing` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.01 | 24 (15 + 9) | 1 of 42 | no pass on the skill |
-| `orchestrator-route-reliability` | orchestrator | 5 tool call, 1 file | 2 | 0 of 2 | no | 0.28 | 0.01 | 38 (30 + 8) | 7 of 50 | no pass on the skill |
-| `orchestrator-route-scope-decision` | orchestrator | 3 tool call, 1 file | 2 | 0 of 2 | no | 0.28 | 0.02 | 42 (33 + 9) | 63 of 116 | no pass on the skill |
-| `orchestrator-route-screen-design` | orchestrator | 1 regex, 3 tool call, 1 file | 2 | 0 of 2 | no | 0.43 | 0.01 | 92 (84 + 8) | 13 of 57 | no pass on the skill |
-| `orchestrator-route-slicer-accessibility-mistake` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.31 | 0.00 | 39 (34 + 5) | 1 of 41 | no pass on the skill |
-| `orchestrator-route-slicing` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.31 | 0.01 | 47 (39 + 8) | 6 of 55 | no pass on the skill |
-| `orchestrator-route-tech-bootstrap` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.27 | 0.01 | 34 (26 + 8) | 3 of 44 | no pass on the skill |
-| `orchestrator-route-user-story` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.01 | 34 (25 + 9) | 5 of 48 | no pass on the skill |
-| `orchestrator-runner-handback-unverified` | orchestrator | 2 regex, 3 tool call | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it and stop there" | 0.29 | 0.02 | 38 (29 + 9) | 0 of 9 | no pass on the skill |
-| `orchestrator-security-stage` | orchestrator | 3 tool call, 1 file | 2 | 0 of 2 | no | 0.31 | 0.02 | 42 (35 + 7) | 0 of 41 | no pass on the skill |
-| `orchestrator-session-setup` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.24 | 0.01 | 22 (17 + 5) | 8 of 45 | no pass on the skill |
-| `orchestrator-slice-review-launches` | orchestrator | 8 tool call | 0 |  | partly: "hand off as soon as round 0 of the slice review has been launched" | 4.05 | 0.00 | 214 | 0 of 5 (few runs) | 1 kept: `cold-reader-launch` |
-| `orchestrator-superseded-scope-map` | orchestrator | 4 tool call, 1 file | 1 | 0 of 1 | no | 0.27 | 0.01 | 36 (32 + 4) | 0 of 41 | no pass on the skill |
+| `orchestrator-route-accessibility` | orchestrator | 1 regex, 4 tool call, 1 file | 2 | 0 of 2 | no | 0.49 | 0.01 | 111 (89 + 6) | 11 of 61 | no pass on the skill |
+| `orchestrator-route-backward-requirements` | orchestrator | 5 tool call, 1 file | 2 | 0 of 2 | no | 0.27 | 0.02 | 34 (27 + 6) | 4 of 46 | no pass on the skill |
+| `orchestrator-route-design` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.36 | 0.01 | 55 (38 + 6) | 1 of 45 | no pass on the skill |
+| `orchestrator-route-design-system` | orchestrator | 5 tool call, 1 file | 2 | 0 of 2 | no | 0.26 | 0.01 | 35 (22 + 10) | 0 of 41 | no pass on the skill |
+| `orchestrator-route-implementation` | orchestrator | 3 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.01 | 30 (21 + 6) | 2 of 48 | no pass on the skill |
+| `orchestrator-route-implementation-prenamed` | orchestrator | 2 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.01 | 30 (21 + 6) | 1 of 44 | no pass on the skill |
+| `orchestrator-route-open-pr` | orchestrator | 1 regex, 6 tool call | 1 | 0 of 1 | partly: "Report what is open and stop after your first question to me; don't run the triage or any fix in this session" | 0.25 | 0.01 | 25 (16 + 6) | 0 of 24 | no pass on the skill |
+| `orchestrator-route-problem-framing` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.21 | 0.01 | 24 (14 + 7) | 1 of 42 | no pass on the skill |
+| `orchestrator-route-reliability` | orchestrator | 5 tool call, 1 file | 2 | 0 of 2 | no | 0.28 | 0.01 | 38 (23 + 7) | 7 of 50 | no pass on the skill |
+| `orchestrator-route-scope-decision` | orchestrator | 3 tool call, 1 file | 2 | 0 of 2 | no | 0.29 | 0.02 | 42 (35 + 6) | 63 of 117 | no pass on the skill |
+| `orchestrator-route-screen-design` | orchestrator | 1 regex, 3 tool call, 1 file | 2 | 0 of 2 | no | 0.44 | 0.01 | 93 (95 + 6) | 13 of 58 | no pass on the skill |
+| `orchestrator-route-slicer-accessibility-mistake` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.31 | 0.00 | 38 (28 + 3) | 1 of 42 | no pass on the skill |
+| `orchestrator-route-slicing` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.31 | 0.01 | 47 (39 + 6) | 6 of 56 | no pass on the skill |
+| `orchestrator-route-tech-bootstrap` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.27 | 0.01 | 34 (25 + 7) | 3 of 44 | no pass on the skill |
+| `orchestrator-route-user-story` | orchestrator | 4 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.01 | 34 (24 + 5) | 5 of 48 | no pass on the skill |
+| `orchestrator-runner-handback-unverified` | orchestrator | 2 regex, 3 tool call | 2 | 0 of 2 | partly: "This session may launch no agent: when the next action is a launch, write the handoff file for it and stop there" | 0.29 | 0.02 | 38 (34 + 9) | 0 of 9 | no pass on the skill |
+| `orchestrator-security-stage` | orchestrator | 3 tool call, 1 file | 2 | 0 of 2 | no | 0.31 | 0.02 | 42 (33 + 6) | 0 of 41 | no pass on the skill |
+| `orchestrator-session-setup` | orchestrator | 4 tool call | 1 | 0 of 1 | no | 0.24 | 0.01 | 22 (14 + 3) | 8 of 45 | no pass on the skill |
+| `orchestrator-slice-review-launches` | orchestrator | 8 tool call | 0 |  | partly: "hand off as soon as round 0 of the slice review has been launched" | 4.00 | 0.00 | 207 | 0 of 9 | 1 kept: `cold-reader-launch` |
+| `orchestrator-superseded-scope-map` | orchestrator | 4 tool call, 1 file | 1 | 0 of 1 | no | 0.28 | 0.01 | 36 (30 + 3) | 0 of 42 | no pass on the skill |
 | `orchestrator-target-from-project` | orchestrator | 3 regex, 3 tool call, 1 file | 0 |  | no | 0.25 | 0.00 | 16 (15 + 0) | 0 of 3 (few runs) | 1 kept: `target-from-project` |
 | `pr-writeup-portal-fines` | pr-writeup | 1 tool call | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `problem-framing-doc-payfine-phase1` | problem-framing-doc | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.06 | 0.01 | 15 (7 + 8) | 0 of 4 (few runs) | no pass on the skill |
-| `problem-framing-doc-payfine-phase2` | problem-framing-doc | 1 regex, 1 file | 3 | 0 of 3 | no | 0.07 | 0.06 | 30 (13 + 17) | 0 of 4 (few runs) | no pass on the skill |
-| `reliability-requirements-neg-review` | reliability-requirements | 1 tool call | 0 |  | no | 0.10 | 0.00 | 23 (23 + 0) | 0 of 16 | no pass on the skill |
-| `reliability-requirements-payfine-phase1` | reliability-requirements | 1 tool call | 2 | 0 of 2 | no | 0.12* | 0.03 | 25 (19 + 7) | 0 of 4 (few runs) | no pass on the skill |
-| `reliability-requirements-payfine-phase2` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.13 | 0.06 | 38 (32 + 7) | 0 of 10 | no pass on the skill |
-| `reliability-requirements-payfine-phase2-proceed` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.14 | 0.06 | 41 (34 + 7) | 0 of 10 | no pass on the skill |
-| `reliability-requirements-payfine-phase2-stop` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.11 | 0.05 | 23 (14 + 9) | 3 of 10 | no pass on the skill |
-| `reliability-requirements-payfine-phase3` | reliability-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21* | 0.38 | 83 (52 + 31) | 0 of 3 (few runs) | no pass on the skill |
-| `reliability-review-catalog` | reliability-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.06 | 79 (70 + 8) | 6 of 22 | no pass on the skill |
-| `reliability-review-fine-payment` | reliability-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.23 | 0.10 | 78 (67 + 11) | 2 of 23 | no pass on the skill |
-| `reliability-review-http` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.33 | 0.19 | 117 (99 + 18) | 0 of 20 | no pass on the skill |
-| `reliability-review-neg-architecture` | reliability-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 25 (25 + 1) | 0 of 16 | no pass on the skill |
-| `reliability-review-neg-security` | reliability-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 17 (17 + 0) | 0 of 17 | no pass on the skill |
-| `reliability-review-nightly` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.33 | 0.35 | 128 (105 + 22) | 7 of 29 | no pass on the skill |
-| `reliability-review-nightly-via-agent` | reliability-review | 1 regex, 1 tool call, 1 file | 8 | 0 of 8 | no | 0.50 | 0.42 | 192 | 6 of 23 | no pass on the skill |
-| `reliability-review-refund-pr` | reliability-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.23 | 0.09 | 67 (53 + 14) | 1 of 19 | no pass on the skill |
-| `requirements-refinement-open-question` | requirements-refinement | 1 regex, 1 tool call | 3 | 0 of 3 | no | 0.11 | 0.02 | 26 (16 + 10) | 0 of 10 | no pass on the skill |
-| `requirements-refinement-owner-sheet` | requirements-refinement | 2 regex, 1 tool call | 1 | 0 of 1 | no | 0.13 | 0.01 | 31 (27 + 4) | 0 of 13 | no pass on the skill |
-| `requirements-refinement-payfine-phase1` | requirements-refinement | 1 tool call | 3 | 0 of 3 | no | 0.11 | 0.04 | 28 (16 + 12) | 6 of 19 | no pass on the skill |
-| `requirements-refinement-payfine-phase2` | requirements-refinement | 1 regex, 1 file | 7 | 0 of 7 | no | 0.13 | 0.12 | 55 (24 + 31) | 11 of 13 | no pass on the skill |
+| `problem-framing-doc-payfine-phase1` | problem-framing-doc | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.06 | 0.01 | 15 | 0 of 4 (few runs) | no pass on the skill |
+| `problem-framing-doc-payfine-phase2` | problem-framing-doc | 1 regex, 1 file | 3 | 0 of 3 | no | 0.07 | 0.06 | 30 | 0 of 4 (few runs) | no pass on the skill |
+| `reliability-requirements-neg-review` | reliability-requirements | 1 tool call | 0 |  | no | 0.10 | 0.00 | 23 (24 + 1) | 0 of 17 | no pass on the skill |
+| `reliability-requirements-payfine-phase1` | reliability-requirements | 1 tool call | 2 | 0 of 2 | no | 0.12* | 0.03 | 25 | 0 of 4 (few runs) | no pass on the skill |
+| `reliability-requirements-payfine-phase2` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.13 | 0.06 | 38 | 0 of 10 | no pass on the skill |
+| `reliability-requirements-payfine-phase2-proceed` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.14 | 0.06 | 41 | 0 of 10 | no pass on the skill |
+| `reliability-requirements-payfine-phase2-stop` | reliability-requirements | 1 regex | 3 | 0 of 3 | no | 0.11 | 0.05 | 23 | 3 of 10 | no pass on the skill |
+| `reliability-requirements-payfine-phase3` | reliability-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21* | 0.38 | 83 | 0 of 3 (few runs) | no pass on the skill |
+| `reliability-review-catalog` | reliability-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.24 | 0.06 | 71 (56 + 7) | 8 of 34 | no pass on the skill |
+| `reliability-review-fine-payment` | reliability-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.23 | 0.10 | 77 (59 + 6) | 2 of 24 | no pass on the skill |
+| `reliability-review-http` | reliability-review | 3 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.32 | 0.19 | 105 (81 + 11) | 1 of 30 | 1 kept: `handed-on` |
+| `reliability-review-neg-architecture` | reliability-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 25 (24 + 0) | 0 of 17 | no pass on the skill |
+| `reliability-review-neg-security` | reliability-review | 1 tool call | 0 |  | no | 0.08 | 0.00 | 17 (13 + 0) | 0 of 18 | no pass on the skill |
+| `reliability-review-nightly` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.33 | 0.34 | 127 (112 + 12) | 7 of 30 | no pass on the skill |
+| `reliability-review-nightly-via-agent` | reliability-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.48 | 0.32 | 175 | 6 of 32 | no pass on the skill |
+| `reliability-review-refund-pr` | reliability-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.23 | 0.09 | 65 (48 + 11) | 1 of 20 | no pass on the skill |
+| `requirements-refinement-open-question` | requirements-refinement | 1 regex, 1 tool call | 3 | 0 of 3 | no | 0.11 | 0.02 | 26 (17 + 8) | 0 of 11 | no pass on the skill |
+| `requirements-refinement-owner-sheet` | requirements-refinement | 3 regex, 1 tool call | 1 | 0 of 1 | no | 0.14 | 0.01 | 31 (28 + 3) | 0 of 22 | no pass on the skill |
+| `requirements-refinement-payfine-phase1` | requirements-refinement | 1 tool call | 3 | 0 of 3 | no | 0.11 | 0.04 | 28 (19 + 8) | 6 of 22 | no pass on the skill |
+| `requirements-refinement-payfine-phase2` | requirements-refinement | 1 regex, 1 file | 7 | 0 of 7 | no | 0.13 | 0.11 | 53 (19 + 17) | 11 of 14 | no pass on the skill |
 | `scope-map-self-service` | scope-map | 1 tool call, 1 file | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `screen-design-owner-sheet` | screen-design | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.01 | 91 (88 + 3) | 0 of 14 | no pass on the skill |
-| `screen-design-payfine` | screen-design | 5 regex, 2 tool call, 1 file | 6 | 0 of 6 | no | 0.29 | 0.10 | 108 (85 + 24) | 2 of 16 | 1 kept: `changed-states-section` |
-| `security-requirements-neg-review` | security-requirements | 1 tool call | 0 |  | no | 0.06 | 0.00 | 13 (12 + 1) | 0 of 14 | no pass on the skill |
-| `security-requirements-payfine-phase1` | security-requirements | 1 tool call | 2 | 0 of 2 | no | 0.14 | 0.02 | 33 (24 + 9) | 0 of 12 | no pass on the skill |
-| `security-requirements-payfine-phase2` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.15 | 0.08 | 43 (31 + 12) | 4 of 21 | no pass on the skill |
-| `security-requirements-payfine-phase2-proceed` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.16 | 0.06 | 49 (39 + 10) | 0 of 16 | no pass on the skill |
-| `security-requirements-payfine-phase2-stop` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.12 | 0.04 | 21 (12 + 10) | 0 of 16 | no pass on the skill |
-| `security-requirements-payfine-phase3` | security-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21 | 0.17 | 69 (46 + 23) | 13 of 15 | no pass on the skill |
-| `security-requirements-placeholder-pointer` | security-requirements | 5 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.03 | 103 (100 + 4) | 0 of 10 | no pass on the skill |
-| `security-requirements-source-criterion` | security-requirements | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | partly: "nothing from that file may end up in the repository" | 0.29 | 0.03 | 95 (90 + 5) | 0 of 9 | no pass on the skill |
-| `security-review-catalog` | security-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.19 | 0.05 | 56 (46 + 9) | 1 of 17 | no pass on the skill |
-| `security-review-config` | security-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.32 | 0.18 | 118 (103 + 15) | 0 of 18 | no pass on the skill |
-| `security-review-deferrals-not-restated` | security-review | 4 regex, 1 tool call, 1 file | 0 |  | no | 0.20 | 0.00 | 52 (40 + 12) | 2 of 8 | 1 kept: `deferrals-not-restated` |
-| `security-review-neg-architecture` | security-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 24 (24 + 1) | 0 of 14 | no pass on the skill |
-| `security-review-neg-reliability` | security-review | 1 tool call | 0 |  | no | 0.11 | 0.00 | 30 (30 + 1) | 0 of 17 | no pass on the skill |
-| `security-review-portal-pr` | security-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.19 | 0.13 | 61 (44 + 17) | 3 of 24 | no pass on the skill |
-| `security-review-source-value` | security-review | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | no | 0.15 | 0.02 | 32 (28 + 4) | 0 of 17 | no pass on the skill |
-| `staleness-audit-docs` | staleness-audit | 1 tool call | 4 | 0 of 4 | no | 0.12 | 0.07 | 40 (26 + 15) | 3 of 7 | no pass on the skill |
+| `screen-design-owner-sheet` | screen-design | 2 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.01 | 89 (85 + 3) | 1 of 20 | no pass on the skill |
+| `screen-design-payfine` | screen-design | 5 regex, 2 tool call, 1 file | 6 | 0 of 6 | no | 0.29 | 0.10 | 108 (81 + 13) | 2 of 16 | 1 kept: `changed-states-section` |
+| `security-requirements-neg-review` | security-requirements | 1 tool call | 0 |  | no | 0.06 | 0.00 | 13 (11 + 0) | 0 of 15 | no pass on the skill |
+| `security-requirements-payfine-phase1` | security-requirements | 1 tool call | 2 | 0 of 2 | no | 0.14 | 0.02 | 33 | 0 of 12 | no pass on the skill |
+| `security-requirements-payfine-phase2` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.15 | 0.08 | 43 | 4 of 21 | no pass on the skill |
+| `security-requirements-payfine-phase2-proceed` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.16 | 0.06 | 49 | 0 of 16 | no pass on the skill |
+| `security-requirements-payfine-phase2-stop` | security-requirements | 1 regex | 3 | 0 of 3 | no | 0.12 | 0.04 | 21 | 0 of 16 | no pass on the skill |
+| `security-requirements-payfine-phase3` | security-requirements | 1 regex, 1 file | 7 | 0 of 7 | no | 0.21 | 0.17 | 69 | 13 of 15 | no pass on the skill |
+| `security-requirements-placeholder-pointer` | security-requirements | 5 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.31 | 0.03 | 103 | 0 of 10 | no pass on the skill |
+| `security-requirements-source-criterion` | security-requirements | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | partly: "nothing from that file may end up in the repository" | 0.29 | 0.03 | 95 | 0 of 9 | no pass on the skill |
+| `security-review-catalog` | security-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.19 | 0.06 | 53 (41 + 6) | 1 of 20 | no pass on the skill |
+| `security-review-config` | security-review | 3 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.32 | 0.18 | 110 (90 + 9) | 3 of 25 | 1 kept: `handed-on` |
+| `security-review-deferrals-not-restated` | security-review | 4 regex, 1 tool call, 1 file | 0 |  | no | 0.20 | 0.00 | 50 (36 + 13) | 5 of 12 | 1 kept: `deferrals-not-restated` |
+| `security-review-neg-architecture` | security-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 24 (18 + 0) | 0 of 15 | no pass on the skill |
+| `security-review-neg-reliability` | security-review | 1 tool call | 0 |  | no | 0.11 | 0.00 | 30 (29 + 1) | 0 of 18 | no pass on the skill |
+| `security-review-portal-pr` | security-review | 1 regex, 1 tool call, 1 file | 4 | 0 of 4 | no | 0.19 | 0.13 | 60 (40 + 12) | 3 of 25 | no pass on the skill |
+| `security-review-source-value` | security-review | 3 regex, 2 tool call, 1 file | 1 | 0 of 1 | no | 0.15 | 0.02 | 32 (29 + 4) | 0 of 18 | no pass on the skill |
+| `staleness-audit-docs` | staleness-audit | 1 tool call | 4 | 0 of 4 | no | 0.12 | 0.07 | 40 | 3 of 7 | no pass on the skill |
 | `supply-chain-review-accept-phase1` | supply-chain-review | 1 tool call | 2 | 0 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
 | `supply-chain-review-accept-phase2` | supply-chain-review | 0 | 3 | 0 of 3 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `supply-chain-review-accepted` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.20 | 0.12 | 70 (59 + 11) | 1 of 4 (few runs) | no pass on the skill |
-| `supply-chain-review-build` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.11 | 98 (85 + 13) | 1 of 7 | no pass on the skill |
-| `supply-chain-review-build-via-agent` | supply-chain-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `supply-chain-review-neg-reliability` | supply-chain-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 19 (19 + 0) | 0 of 15 | no pass on the skill |
+| `supply-chain-review-accepted` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.20 | 0.12 | 70 | 1 of 4 (few runs) | no pass on the skill |
+| `supply-chain-review-build` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.21 | 0.11 | 98 | 1 of 7 | no pass on the skill |
+| `supply-chain-review-build-via-agent` | supply-chain-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.34 | 0.15 | 111 | 0 of 3 (few runs) | no pass on the skill |
+| `supply-chain-review-neg-reliability` | supply-chain-review | 1 tool call | 0 |  | no | 0.10 | 0.00 | 19 (21 + 1) | 0 of 16 | no pass on the skill |
 | `supply-chain-review-neg-security` | supply-chain-review | 1 tool call | 0 |  | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `supply-chain-review-workflows` | supply-chain-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.20 | 0.09 | 70 (61 + 9) | 0 of 4 (few runs) | no pass on the skill |
-| `tdd-implementation-lite-cancel-hold` | tdd-implementation-lite | 13 regex, 2 tool call, 4 tool order, 1 file | 6 | 0 of 6 | no | 0.41 | 0.10 | 98 (67 + 30) | 29 of 29 | no pass on the skill |
-| `tdd-implementation-lite-cancel-hold-via-agent` | tdd-implementation-lite | 14 regex, 2 tool call, 2 tool order, 1 file | 6 | 0 of 6 | no | 0.39 | 0.10 | 117 | 41 of 41 | no pass on the skill |
-| `tdd-implementation-lite-chunk-plan` | tdd-implementation-lite | 3 regex, 2 tool call, 1 file | 2 | 0 of 2 | partly: "Write the chunk plan [...] and build nothing" | 0.19 | 0.06 | 53 (32 + 21) | 14 of 29 | no pass on the skill |
-| `tdd-implementation-lite-named-fix` | tdd-implementation-lite | 8 regex, 2 tool call, 1 file | 3 | 0 of 3 | no | 0.36 | 0.03 | 77 (62 + 15) | 10 of 36 | no pass on the skill |
-| `tdd-implementation-lite-one-chunk` | tdd-implementation-lite | 8 regex, 3 tool call, 1 tool order | 4 | 0 of 4 | partly: "Chunks are committed." | 0.30 | 0.05 | 59 (46 + 13) | 6 of 29 | no pass on the skill |
-| `tdd-implementation-lite-rename-fix` | tdd-implementation-lite | 10 regex, 3 tool call, 1 file | 0 |  | no | 0.27 | 0.00 | 39 (38 + 1) | 5 of 29 | no pass on the skill |
-| `technology-bootstrap-phase1` | technology-bootstrap | 1 tool call | 2 | 0 of 2 | no | 0.10 | 0.02 | 26 (18 + 9) | 1 of 17 | no pass on the skill |
-| `technology-bootstrap-phase2` | technology-bootstrap | 4 regex | 4 | 0 of 4 | partly: "pick the one where that's the default [...] Give me your recommendations for the whole set in one message rather than one at a time" | 0.15 | 0.11 | 73 (51 + 21) | 10 of 26 | no pass on the skill |
-| `technology-bootstrap-phase3` | technology-bootstrap | 3 regex, 1 file | 4 | 0 of 4 | no | 0.15 | 0.20 | 42 (22 + 20) | 12 of 26 | 1 kept: `gate-checks-recorded` |
-| `technology-bootstrap-phase3-reject` | technology-bootstrap | 1 regex, 1 file | 5 | 0 of 5 | no | 0.18 | 0.21 | 61 (41 + 20) | 10 of 21 | no pass on the skill |
-| `test-quality-review-fines` | test-quality-review | 1 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.19 | 0.25 | 85 (56 + 29) | 17 of 29 | no pass on the skill |
-| `test-quality-review-neg-code-review` | test-quality-review | 1 tool call | 0 |  | no | 0.11 | 0.00 | 27 (27 + 1) | 0 of 18 | no pass on the skill |
-| `test-quality-review-reminders` | test-quality-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.15 | 0.06 | 42 (32 + 10) | 0 of 16 | no pass on the skill |
-| `test-quality-review-seam-fake` | test-quality-review | 3 regex, 1 tool call, 1 file | 3 | 0 of 3 | partly: "Write your report in the shared finding format [...] and hand back the counts and the path" | 0.18 | 0.06 | 45 (34 + 12) | 0 of 29 | no pass on the skill |
-| `test-quality-review-survivors-at-d` | test-quality-review | 5 regex, 1 tool call, 1 file | 0 |  | no | 0.23 | 0.00 | 60 (49 + 11) | 1 of 5 (few runs) | 1 kept: `survivors-read` |
+| `supply-chain-review-workflows` | supply-chain-review | 1 regex, 1 tool call, 1 file | 2 | 0 of 2 | no | 0.20 | 0.09 | 70 | 0 of 4 (few runs) | no pass on the skill |
+| `tdd-implementation-lite-cancel-hold` | tdd-implementation-lite | 13 regex, 2 tool call, 4 tool order, 1 file | 6 | 0 of 6 | no | 0.41 | 0.10 | 97 (70 + 29) | 30 of 30 | no pass on the skill |
+| `tdd-implementation-lite-cancel-hold-via-agent` | tdd-implementation-lite | 14 regex, 2 tool call, 2 tool order, 1 file | 6 | 0 of 6 | no | 0.39 | 0.10 | 116 | 42 of 42 | no pass on the skill |
+| `tdd-implementation-lite-chunk-plan` | tdd-implementation-lite | 3 regex, 2 tool call, 1 file | 2 | 0 of 2 | partly: "Write the chunk plan [...] and build nothing" | 0.19 | 0.06 | 53 | 14 of 29 | no pass on the skill |
+| `tdd-implementation-lite-named-fix` | tdd-implementation-lite | 8 regex, 2 tool call, 1 file | 3 | 0 of 3 | no | 0.36 | 0.03 | 77 (79 + 11) | 10 of 37 | no pass on the skill |
+| `tdd-implementation-lite-one-chunk` | tdd-implementation-lite | 8 regex, 3 tool call, 1 tool order | 4 | 0 of 4 | partly: "Chunks are committed." | 0.30 | 0.05 | 59 | 6 of 29 | no pass on the skill |
+| `tdd-implementation-lite-rename-fix` | tdd-implementation-lite | 10 regex, 3 tool call, 1 file | 0 |  | no | 0.26 | 0.00 | 38 (33 + 1) | 5 of 30 | no pass on the skill |
+| `technology-bootstrap-phase1` | technology-bootstrap | 1 tool call | 2 | 0 of 2 | no | 0.10 | 0.02 | 26 (16 + 8) | 1 of 17 | no pass on the skill |
+| `technology-bootstrap-phase2` | technology-bootstrap | 4 regex | 4 | 0 of 4 | partly: "pick the one where that's the default [...] Give me your recommendations for the whole set in one message rather than one at a time" | 0.15 | 0.11 | 73 (45 + 19) | 10 of 26 | no pass on the skill |
+| `technology-bootstrap-phase3` | technology-bootstrap | 3 regex, 1 file | 4 | 0 of 4 | no | 0.15 | 0.20 | 42 (23 + 20) | 12 of 26 | 1 kept: `gate-checks-recorded` |
+| `technology-bootstrap-phase3-reject` | technology-bootstrap | 1 regex, 1 file | 5 | 0 of 5 | no | 0.18 | 0.21 | 61 (44 + 22) | 10 of 21 | no pass on the skill |
+| `test-quality-review-fines` | test-quality-review | 3 regex, 1 tool call, 1 file | 5 | 0 of 5 | no | 0.19 | 0.25 | 81 (53 + 17) | 17 of 33 | 1 kept: `handed-on` |
+| `test-quality-review-neg-code-review` | test-quality-review | 1 tool call | 0 |  | no | 0.11 | 0.00 | 27 (33 + 1) | 0 of 19 | no pass on the skill |
+| `test-quality-review-reminders` | test-quality-review | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.15 | 0.06 | 42 (27 + 10) | 0 of 17 | no pass on the skill |
+| `test-quality-review-seam-fake` | test-quality-review | 3 regex, 1 tool call, 1 file | 3 | 0 of 3 | partly: "Write your report in the shared finding format [...] and hand back the counts and the path" | 0.20 | 0.06 | 45 (34 + 9) | 2 of 33 | no pass on the skill |
+| `test-quality-review-survivors-at-d` | test-quality-review | 5 regex, 1 tool call, 1 file | 0 |  | no | 0.23 | 0.00 | 59 (41 + 12) | 1 of 8 | 1 kept: `survivors-read` |
 | `user-facing-docs-renewals` | user-facing-docs | 1 tool call, 1 file | 2 | 0 of 2 | no |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `user-story-writeup-payfine-phase1` | user-story-writeup | 1 tool call | 1 | 0 of 1 | no | 0.06 | 0.01 | 13 (7 + 6) | 0 of 11 | no pass on the skill |
+| `user-story-writeup-payfine-phase1` | user-story-writeup | 1 tool call | 1 | 0 of 1 | no | 0.06 | 0.01 | 13 | 0 of 11 | no pass on the skill |
 | `user-story-writeup-payfine-phase2` | user-story-writeup | 1 regex, 1 file | 3 | 0 of 3 | partly: "Don't create the issue yourself" |  |  |  | 0 of 0 (few runs) | no pass on the skill |
-| `vertical-slicing-handback` | vertical-slicing | 1 tool call | 3 | 0 of 3 | no | 0.16 | 0.02 | 53 (40 + 13) | 1 of 21 | no pass on the skill |
-| `vertical-slicing-no-requirements` | vertical-slicing | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.09 | 0.01 | 16 (9 + 7) | 0 of 15 | no pass on the skill |
-| `vertical-slicing-no-screen` | vertical-slicing | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.17 | 0.02 | 44 (37 + 6) | 1 of 21 | no pass on the skill |
-| `vertical-slicing-owner-sheet` | vertical-slicing | 2 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.16 | 0.02 | 44 (35 + 9) | 2 of 27 | no pass on the skill |
-| `vertical-slicing-payfine-phase1` | vertical-slicing | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.15 | 0.06 | 46 (28 + 18) | 1 of 15 | no pass on the skill |
-| `why-comments-collect-fine` | why-comments | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.08 | 0.04 | 25 (14 + 12) | 0 of 8 | no pass on the skill |
+| `vertical-slicing-handback` | vertical-slicing | 1 tool call | 3 | 0 of 3 | no | 0.16 | 0.02 | 52 (31 + 10) | 1 of 22 | no pass on the skill |
+| `vertical-slicing-no-requirements` | vertical-slicing | 1 regex, 1 tool call | 2 | 0 of 2 | no | 0.09 | 0.01 | 15 (8 + 8) | 0 of 16 | no pass on the skill |
+| `vertical-slicing-no-screen` | vertical-slicing | 1 regex, 1 tool call, 1 file | 1 | 0 of 1 | no | 0.17 | 0.02 | 43 (32 + 4) | 1 of 22 | no pass on the skill |
+| `vertical-slicing-owner-sheet` | vertical-slicing | 3 regex, 2 tool call, 1 file | 2 | 0 of 2 | no | 0.17 | 0.02 | 45 (42 + 6) | 3 of 36 | no pass on the skill |
+| `vertical-slicing-payfine-phase1` | vertical-slicing | 1 regex, 2 tool call, 1 file | 5 | 0 of 5 | no | 0.15 | 0.06 | 46 (28 + 17) | 1 of 16 | no pass on the skill |
+| `why-comments-collect-fine` | why-comments | 1 regex, 1 tool call, 1 file | 3 | 0 of 3 | no | 0.08 | 0.04 | 25 | 0 of 8 | no pass on the skill |
 
-**One run of every case:** $61.22 over the 165 cases with a completed run held (agent $52.10, judges $9.12, 15% judges); $60.48 over the 163 with a run since 2026-11-10. 13 cases have no completed run held and are not priced.
+**One run of every case:** $62.72 over the 168 cases with a completed run held (agent $53.62, judges $9.10, 15% judges); $61.98 over the 166 with a run since 2026-11-10. 12 cases have no completed run held and are not priced.
 
-**Graders:** 370 judges and 839 tool checks over 178 cases; 44 cases have no judge.
+**Graders:** 359 judges and 874 tool checks over 180 cases; 46 cases have no judge.
 
-**Judges a tool could decide:** 0 of 370, in 0 cases; 0 cases would be left with no judge. Their share of the judge cost, split evenly within each case (an estimate): $0.00 per run of every case.
+**Judges a tool could decide:** 0 of 359, in 0 cases; 0 cases would be left with no judge. Their share of the judge cost, split evenly within each case (an estimate): $0.00 per run of every case.
 
-**Runs that failed only on a judge:** of 3849 completed runs since the bars, 864 failed; 516 of those failed on judges alone, and 0 on judges a tool could decide alone ($0.00 of runs at today's cost per run): none.
+**Runs that failed only on a judge:** of 4078 completed runs since the bars, 886 failed; 525 of those failed on judges alone, and 0 on judges a tool could decide alone ($0.00 of runs at today's cost per run): none.
 
-**Prompt states the rule it grades:** yes 3, partly 37, no 138.
+**Prompt states the rule it grades:** yes 3, partly 37, no 140.
 
-**Never failed since the bar (6 or more runs):** 53 cases, $11.44 of one run of every case. **Never failed and $0.40 or more a run (6, $3.15):** `orchestrator-last-fix-review-at-d` $0.67, `chunk-runner-gate-outside` $0.57, `reliability-review-http` $0.51, `security-review-config` $0.50, `library-app-structure-review` $0.49, `external-review-triage-cancel-hold` $0.42.
+**Never failed since the bar (6 or more runs):** 50 cases, $14.52 of one run of every case. **Never failed and $0.40 or more a run (5, $6.77):** `orchestrator-slice-review-launches` $4.00, `chunk-runner-fix-gate-fails` $1.12, `orchestrator-last-fix-review-at-d` $0.66, `chunk-runner-gate-outside` $0.57, `external-review-triage-cancel-hold` $0.42.
 
 By skill (one run of each of its cases; the judges a tool could decide and their estimated share):
 
 | Skill | Cases (priced) | Agent $ | Judges $ | Judges | A tool could decide | Their share $ | Prompts stating the rule (yes, partly) | Never failed |
 |---|---|---|---|---|---|---|---|---|
-| orchestrator | 44 (44) | 24.23 | 0.40 | 50 | 0 | 0.00 | 0, 17 | 8 |
-| chunk-runner | 9 (9) | 6.15 | 0.02 | 0 | 0 | 0.00 | 1, 6 | 1 |
-| reliability-review | 8 (8) | 2.04 | 1.21 | 23 | 0 | 0.00 | 0, 0 | 3 |
-| architecture-review | 8 (8) | 1.76 | 0.91 | 22 | 0 | 0.00 | 0, 1 | 5 |
-| code-review | 9 (9) | 1.63 | 0.81 | 29 | 0 | 0.00 | 0, 1 | 1 |
-| tdd-implementation-lite | 6 (6) | 1.92 | 0.35 | 21 | 0 | 0.00 | 0, 2 | 0 |
+| orchestrator | 45 (45) | 25.13 | 0.39 | 50 | 0 | 0.00 | 0, 17 | 9 |
+| chunk-runner | 9 (9) | 6.18 | 0.02 | 0 | 0 | 0.00 | 1, 6 | 2 |
+| reliability-review | 8 (8) | 2.01 | 1.09 | 19 | 0 | 0.00 | 0, 0 | 2 |
+| architecture-review | 8 (8) | 1.76 | 0.91 | 20 | 0 | 0.00 | 0, 1 | 4 |
+| code-review | 9 (9) | 1.64 | 0.81 | 26 | 0 | 0.00 | 0, 1 | 1 |
+| tdd-implementation-lite | 6 (6) | 1.92 | 0.34 | 21 | 0 | 0.00 | 0, 2 | 0 |
 | security-requirements | 8 (8) | 1.44 | 0.43 | 20 | 0 | 0.00 | 0, 1 | 6 |
+| architecture-design | 7 (7) | 1.37 | 0.38 | 15 | 0 | 0.00 | 0, 1 | 3 |
 | reliability-requirements | 8 (8) | 1.08 | 0.63 | 20 | 0 | 0.00 | 1, 0 | 3 |
-| accessibility-review | 4 (4) | 0.96 | 0.69 | 13 | 0 | 0.00 | 1, 2 | 1 |
-| security-review | 7 (7) | 1.26 | 0.38 | 10 | 0 | 0.00 | 0, 0 | 4 |
-| architecture-design | 6 (6) | 1.15 | 0.38 | 15 | 0 | 0.00 | 0, 1 | 3 |
+| accessibility-review | 4 (4) | 0.97 | 0.70 | 13 | 0 | 0.00 | 1, 2 | 1 |
+| security-review | 7 (7) | 1.25 | 0.38 | 10 | 0 | 0.00 | 0, 0 | 3 |
+| supply-chain-review | 8 (5) | 1.06 | 0.47 | 16 | 0 | 0.00 | 0, 0 | 1 |
 | design-system | 5 (5) | 0.98 | 0.37 | 15 | 0 | 0.00 | 0, 0 | 3 |
 | delivery | 3 (3) | 1.26 | 0.03 | 3 | 0 | 0.00 | 0, 2 | 0 |
-| test-quality-review | 5 (5) | 0.86 | 0.37 | 11 | 0 | 0.00 | 0, 1 | 3 |
+| test-quality-review | 5 (5) | 0.88 | 0.37 | 11 | 0 | 0.00 | 0, 1 | 2 |
 | technology-bootstrap | 4 (4) | 0.58 | 0.53 | 15 | 0 | 0.00 | 0, 1 | 0 |
-| supply-chain-review | 8 (4) | 0.71 | 0.32 | 18 | 0 | 0.00 | 0, 0 | 1 |
-| vertical-slicing | 5 (5) | 0.73 | 0.13 | 13 | 0 | 0.00 | 0, 0 | 1 |
-| map-update | 1 (1) | 0.18 | 0.55 | 3 | 0 | 0.00 | 0, 0 | 0 |
-| screen-design | 2 (2) | 0.60 | 0.11 | 7 | 0 | 0.00 | 0, 0 | 1 |
+| vertical-slicing | 5 (5) | 0.74 | 0.13 | 13 | 0 | 0.00 | 0, 0 | 1 |
+| screen-design | 2 (2) | 0.60 | 0.11 | 7 | 0 | 0.00 | 0, 0 | 0 |
 | ci-pipeline | 2 (2) | 0.71 | 0.00 | 0 | 0 | 0.00 | 0, 0 | 0 |
-| requirements-refinement | 4 (4) | 0.47 | 0.18 | 14 | 0 | 0.00 | 0, 0 | 2 |
+| requirements-refinement | 4 (4) | 0.49 | 0.18 | 14 | 0 | 0.00 | 0, 0 | 2 |
+| map-update | 1 (1) | 0.17 | 0.49 | 3 | 0 | 0.00 | 0, 0 | 0 |
 | external-review-triage | 1 (1) | 0.35 | 0.07 | 3 | 0 | 0.00 | 0, 1 | 1 |
 | problem-framing-doc | 2 (2) | 0.13 | 0.07 | 5 | 0 | 0.00 | 0, 0 | 0 |
 | map-query | 2 (2) | 0.17 | 0.04 | 5 | 0 | 0.00 | 0, 0 | 1 |
@@ -1335,6 +1343,7 @@ By skill (one run of each of its cases; the judges a tool could decide and their
 - `orchestrator-delivery-foreground`: `body-carries-the-deferrals-section` (0.15.0) passes on the script's file spliced into the body command or on the heading written out; a body built in two commands with the splice in a third, alone, would pass on the splice without the body
 - `orchestrator-issue-fix-records`: `branch-names-the-slice-and-the-issue` allows a quote before the branch name (`['"]?`), but a double quote is `\"` in the trace's JSON, so `git switch -c "slice-001-issue14-..."` would not match and a correct run would fail. Read from the pattern; the one failure held (2026-11-12) was a run that created no branch.
 - `orchestrator-issue-fix-records`: `handoff-carries-the-issue-prefix` matches the file name within 1,500 characters after the start of any Write or Bash call, so a later call or a tool result that names it passes a run that never wrote it.
+- `orchestrator-readiness-correction-autopilot`: The skill's exact bullet (`taken as recommended: <check> (autopilot)`) was not written on the first run; the grader reads the route's log entry instead.
 - `orchestrator-readme-stale-not-done`: `three-named-fixes-in-one-batch` (judge), the same criterion family as `orchestrator-definition-of-done`'s, failed 7 of 8 runs.
 - `orchestrator-route-backward-requirements`: The `stops-after-the-routed-step` criteria come in two wordings: nine cases say "exactly one routed step per invocation ... asks whether to continue; it never chains" (this one, `orchestrator-route-design`, `-design-system`, `-implementation`, `-implementation-prenamed`, `-problem-framing`, `-reliability`, `-tech-bootstrap`, `-user-story`), four say it "continues to the next row in the same conversation" (`-accessibility`, `-scope-decision`, `-screen-design`, `-slicing`). The nine fail a run the four pass; which is the skill's rule today was not checked here.
 - `requirements-refinement-payfine-phase2`: `finishes-without-reasking` (judge) failed 8 of 9 runs.
@@ -3165,6 +3174,229 @@ through a real `gh`. Without a known-bad reference: nothing new.
 `tools/fixture_screens.sh` is run by CI only. `verify.sh` fails on an
 overlay this change did not touch (`monthly-statement`'s test imports
 with a `.ts` extension, which the TypeScript 5 it installs refuses).
+
+### Why fixers regress
+
+`TODO.md`'s H1 (2026-11-16; no eval run). One in four actionable findings
+has been a regression a fixer introduced (incident 19). Every row the
+four sidecars of the first project class `regression` was read against
+its entry in the re-review's report, the fix commit and the batch the
+fixer was handed, and, where the audit kept one, the fixer's transcript:
+116 rows (slice 1: 47, slice 2's two passes: 50, the two issue fixes: 11
+and 8), 83 of them Critical, High, Medium or `needs-decision` and 33
+Low. About 107 distinct defects: at the slice review several reviewers
+report the same one. Counts and causes only; nothing of the project is
+quoted.
+
+**How each was sorted** (the owner's choice of the six-way sort,
+2026-11-16): one primary cause per row, tried in this order. Three
+readers did the sorting, one per sidecar group, each marking its
+confidence: 54 rows high, 53 medium, 9 low. The low and medium ones are
+mostly a choice between the last two causes.
+
+| Cause, in the order tried | Actionable (of 83) | Low (of 33) | What it looks like |
+|---|---|---|---|
+| 1 Not a regression: the problem was there before the fix | 8 | 9 | A line the fix only moved in a file split; a round-0 Low never handed to the fixer; a reviewer (the smoke or the stranger run) that first looked at round 1; a criterion written between the rounds. The sidecar classes by "the fix touched the line" |
+| 2 Finding misread: the fix did something other than what was asked | 2 | 0 | One defect seen by two reviewers |
+| 3 The fix grew past its finding | 2 | 0 | Both in a second commit written to satisfy the coverage gate |
+| 4 A neighbour left inconsistent: the asked change made, and a test, caller, name or comment that depended on the old behaviour left as it was | 11 | 3 | 8 of the 14 are names, 6 of those a test whose body the fix changed under a title that could not change |
+| 5 The fix's own new code is defective: the right place, as asked, and what it added has a defect of its own | 58 | 21 | Of the 58: 26 in tests the fix added or rewrote (a test that cannot fail or asserts less than its name, a new branch nothing tests, an assertion lost in a rewrite), 24 in source, 7 names or comments, 1 a style rule |
+| Unclear | 2 | 0 | The fix needed a rule no planning document held |
+
+**What the transcripts say about "not read".** A fixer's transcript was
+kept for 69 of the 116 rows (none for slice 1). In 66 of them the fixer
+had read the file the regression sits in before it committed; the three
+exceptions are documents the fix never touched. No row is a fixer that
+did not look. In 8 of slice 2's 10 rows of cause 4 the fixer had opened
+the inconsistent test or caller and edited around it: `TODO.md`'s
+"a neighbouring test or caller not read" is not what happens.
+
+**Batch size is not a cause that shows.** Regression rows per finding
+handed to the fixer, by the size of the batch:
+
+| Batch (actionable findings handed) | Batches | Findings handed | Regression rows | Actionable rows of causes 2 to 5 |
+|---|---|---|---|---|
+| 4 to 8 (a chunk's round, a pull request's triage) | 24 | 139 | 54 (0.39 a finding) | 52 (0.37) |
+| 14 to 30 (a slice review's round) | 5 | 108 | 56 (0.52) | 17 (0.16) |
+
+The slice-review batches raise more rows a finding and fewer that are a
+fixer's own serious defect: their rows run to Lows, to duplicates across
+six reviewers and to cause 1, and those fixes are also the large
+restructurings, so size and kind of work cannot be told apart. One more
+batch, a browser review of one finding and three decisions to build, gave
+6 rows. "A batch too large for one fixer" is not supported by these
+numbers; "a fix that restructures" may be, and no row count separates
+it.
+
+**One pattern the six causes do not name**, seen by all three readers:
+**the fixer did what the finding's suggested fix said, nearly word for
+word, and the re-review then found fault with exactly that** (a
+suggested signature with a parameter nobody uses, a suggested removal
+that bypasses an existing routine, a mechanism too weak for its job, a
+fix at a layer no real client reaches). At least 21 rows by the readers'
+notes (6 in slice 1, 10 in slice 2, 5 in the issue fixes), filed mostly
+under cause 5; it was not sorted row by row, so 21 is a floor. The
+origin is the round-0 report, not the fixer's care.
+
+**One proposed change per cause with six or more actionable rows**,
+each with the file group it would send through the gate. None is built
+here.
+
+| Cause | Rows | Proposed change | File group, and its cases today |
+|---|---|---|---|
+| 5 The fix's own new code | 58 (26 in its tests) | A handed-back fix shows each test it adds or rewrites failing: break the line the fix wrote, see that test fail, restore; the `Fix` line names the test and the break. Today the contract asks for one break per fix, in the place the slice's main rule lives. And a rewritten test keeps every assertion it had, or its `Fix` line names the one dropped and why | `skills/tdd-implementation-lite` (its handed-back path), 17 cases |
+| 5, the suggested fix followed to the letter | at least 21 | In the same edit: a finding's suggested fix is the reviewer's guess at a mechanism, and the finding is its "What's happening". A fixer that sees the suggestion add something nothing uses, go round an existing routine or sit at the wrong layer fixes what the finding describes and says on the `Fix` line where it left the suggestion | the same group, the same gated change |
+| 4 A neighbour left inconsistent | 11 (6 a test's title) | A test whose behaviour a fix changes is renamed to say what it now checks, the rename on the `Fix` line (`renamed <old> → <new>`), and the gate's `tests` check reads that line, so a plan's test name is no longer frozen for a fix. Today a renamed plan test fails the gate, and fixers were briefed to leave the names alone | `skills/tdd-implementation-lite` and `skills/orchestrator/scripts/validation_gate.py` (the cases that ran it) |
+| 1 Not a regression | 8 (17 with the Lows) | `rounds_record.py` classes a round-1 finding as a regression only when the fix wrote the line's content: a line it moved (the same text in the parent commit, found with move detection) is `pre-existing`, and a report from a reviewer with no round-0 report in the scope is `first-seen`. Incident 19's one in four is then measured on what fixers did | `skills/orchestrator/scripts/rounds_record.py`, 15 cases |
+
+Causes 2 and 3 have two rows each and get no change. Whether the light
+cadence (a fix by the chunk's own builder) lowers cause 5 is still the
+experiment it was; nothing here predicts it, since the fixers did read
+the code.
+
+### The final list
+
+`TODO.md`'s final pull request (#66, 2026-11-16, kad 0.16.1, Claude Code
+2.1.325; runner cases on Opus, the rest on Sonnet): PR 2 (B7 to B10, C3,
+the readiness-correction case), every item PR 1 and PR 3 left open, and
+H1, whose table is the section above. 180 cases (178 before): two new;
+graders added to twelve and cut from four. No cost figure is kept, by
+the owner's word.
+
+**What the owner decided on the way** (one question at a time): H1's
+six-way sort and six rows as "more than a handful"; on a sound module a
+Low or a missing-case note passes and anything Medium on the sound code
+fails; the hand-on line is graded on one existing case per review skill,
+on problems the fixture already holds; C3's case plants a lock file with
+a process number, in one turn. And, when the list was nearly done: close
+every loose end, which turned three things recorded as accepted into
+fixes (the last three rows of the table).
+
+**Per item: what was built, its "done when", and what it fails without.**
+
+| Item | Built | "Done when", and the counts (three runs) | Fails without |
+|---|---|---|---|
+| B7 nothing above Low on a sound module | "Above Low needs a cost you can point to today" in `code-review`, `architecture-review` and `reliability-review`, each with what a preference looks like in its subject; in `test-quality-review`, a sound exact-value test is under no category, a thin one's finding is the missing case (Medium at most), and one method of the designated fake set for one test is not a finding | `code-review-catalog` 3 of 3 (2 of 3 at its bar), `library-app-catalog-review` 3 of 3 (2 of 3), `security-review-catalog` 3 of 3, `reliability-review-catalog` 3 of 3 once the rule was in that skill too: it went 2 of 3 twice running without it, and its history (4 of 8 on 2026-11-11) says its bar of 1.00 was luck. `test-quality-review-fines`: `no-false-alarm-exact-tests` 3 of 3 (1 of 3), `no-false-alarm-fake-ledger` 3 of 3 (2 of 3) | the bars before, which are the same cases on the text without the rule. No reference was run: a grader at 2 of 3 without the rule passes a three-run reference one time in three |
+| B8 a serious problem that is another review's | `## A serious problem that is another review's` in the six review skills: one line under `## Handed on`, above the findings (what, where, the severity it appears to have, the owner), never rated down, never a finding. `code-review`'s mocking rule is this rule | A grader pair per skill on a problem the fixture holds (answer key, `H1` to `H6`): the line, and no finding's heading about it. Line 3 of 3 on all seven cases (`code-review-fine-notices-pr` and its twin, `test-quality-review-fines`, `library-app-structure-review`, `security-review-config`, `reliability-review-http`, `accessibility-review-payfine`). The mocking judge 3 of 3 on the direct case (1 of 3) and on the twin (0 of 3) | reference `handed-on` on each of the six: the line 0 of 3, six times. Without the rule `code-review` again made the mock a ranked finding (the judge 0 of 3) |
+| B9 `map-update`'s changes section | the script half (`extract_map.py` reads a bare cell and names a row it cannot read); the skill says both | `pre-existing-flags-not-new` 3 of 3 (0 of 3), 4 of 4 over every run made. `tools/extract_map_test.py`, 9 tests | the bar before; the test |
+| B10 the twins | the four `-via-agent` twins lose the eleven judges their direct cases lost in E7; `library-app-lending-review-via-agent` has the ORM wording | each twin 3 of 3 on what is left; the ORM judge 3 of 3 (2 of 3) | — |
+| B10 the overlay with no case | deleted, with its four rows of the answer key | `verify.sh` passes | — |
+| B10 the owner-sheet cases | `Bash` granted; a check that the export is not opened with `Read`, `Grep` or a command that prints it | `requirements-refinement-owner-sheet` 9 runs of 9 clean, `screen-design-` 6 of 6, `architecture-design-` 6 of 7 (one `Read` of the first line, which the skill allows only with no shell), `vertical-slicing-` 8 of 9: one run ran `head -5` on the export in its first command, before the skill was loaded, and cells reached the session. So the shell made one case worse once, and no text in a skill's body is read before that command. Fixed where it can be: see the last row | — |
+| B10 `code-review` not invoked | read from 21 traces: the review written without the skill starts with `Read`, `Read`, `Glob` on a plain "review it before I merge". The description now leads with that request | `code-review-days-left-pr` `skill-invoked-display` 3 of 3, 4 of 4 over every run (1 of 3 at its bar, 8 of 13 not invoked before). The negative-trigger cases still hold | the bar before |
+| B10 `map-update`'s untiered module | read from traces: every run patched the map by hand after the script (a `sed` or a small program) to set the new module's tier and move its edge, and one in three did not. `extract_map.py --tier <path>=<n>` puts the tier on the row and the edge in the right list, and its last line names new modules it left untiered | `new-rows-extracted` and `flags-new-wrong-direction-edge` 3 of 3 (2 of 3 each); the case 1.00 (0.81). Four tests | the bars before; the tests |
+| B10 `test-quality-review` on the designated fake | with B7 | above | above |
+| C3 the concurrency pass | `architecture-design`'s "Two things at once": a decision about keeping two things apart is put with its interleavings listed and answered (two starts at once, a crash at each step, a stop during each wait, a leftover removed by hand, a reused process number), before approval | `architecture-design-concurrency-interleavings` (new, capability; the planning set `nightly-single-run`, the engineer's lock file with a process number): the decision put with a table of interleavings answered for the proposal and for the recommendation, both holes of the proposal named, nothing written: 9 graders, 3 of 3, 5 of 5 over every run | reference `interleavings`: `stop-during-a-wait-answered` 0 of 3, `reused-process-number-named` 2 of 3, the rest 3 of 3. Without the section the model still walks most of them: the rule's measurable share is the stop during a wait |
+| The readiness correction under autopilot | case only | `orchestrator-readiness-correction-autopilot` (new, regression): the design holds its `Kept for later slices` content under another heading; the route to `architecture-design` inline, the correction written with no question, the gate passed on its second run, the A line `PASS after kept-for-later-slices`: 3 of 3 at its bar. Over the 12 runs made: the A line 12 of 12, the approved text under the heading left as it was 9 of 12 (three runs reworded it while "changing no decision") | nothing: with the autopilot text of A.4 removed the run did the same, 3 of 3. No reference is kept. The skill's bullet `taken as recommended: <check> (autopilot)` was not written on the first run; the grader reads the route's own entry |
+| Added on "close every loose end": `requirements-refinement`'s first turn | the skill holds each question against what was read before it goes out, and "I couldn't tell from the code" means look once more | `does-not-ask-what-the-sources-answer` 3 of 3 (2 of 3) | the bar before |
+| The same: the owner's file opened before the skill is read | the descriptions of `vertical-slicing` and `requirements-refinement` say to invoke the skill before opening a file the owner points at | `vertical-slicing-owner-sheet` 3 of 3 after it, no cell in the session. `architecture-design` and `screen-design` do not carry the sentence: their runs with a shell were clean of it | — |
+| The same: the external review of #65 | one comment (a `nosemgrep` note on `screen_check.py`'s `git` call, an argument list with no shell), first declined for its eleven stale cases, then applied | the eleven cases at one run | — |
+
+**The loose ends of PR 1 and PR 3, each closed how.**
+
+| Loose end | How |
+|---|---|
+| F2 has no case that fails without its text | Closed with a reference that removes every place the rule stands, step 2's "a `FAIL` goes to one fixer" among them, as the rule for references asks: `gate-fixer` on `chunk-runner-fix-gate-fails`, `the-gates-one-fixer` and six more graders 0 of 3. The run that left a regression as "no third fixer" was tried once more on `chunk-runner-one-fix-round` with the same removal and did not reproduce (the regression still got its `Fix r2`, 3 of 3): that sentence is an accepted gap |
+| `chunk-runner-fix-gate-fails` has no reference | It has `gate-fixer` now |
+| `orchestrator-autopilot-counts-over` has no reference | Still none, for another reason than was thought. The state now carries the owner's short answer (yes, no stop spelled out), so the fixture no longer states the rule; with the skill's three sentences on the counts removed the run still launched chunk 2, 3 of 3. The orchestrator does not end a flow on a per-chunk count with or without the sentence. Accepted gap |
+| `baselines-adopted-by-the-script`, `autopilot-file-written` do not fail without their text | Accepted, and not gaps in what the cases hold: each sits beside a grader that does fail on the same reference (the adoption commit 0 of 3; the file's content 0 of 3). The project's copy of the script documents `adopt`, and a file is written from the owner's own "yes" |
+| The slice-review state has no gate output | `slice-review-r0` runs the gate on D's own two commits and its handoff names the file. The planted commit gained one test that runs the length rule far from its limit: without it the gate failed on changed-line coverage, which is what a real gate would have done to that commit; the survivor (`>` to `>=`) is unchanged. `orchestrator-slice-review-launches` 3 of 3 |
+| `verify.sh` fails on an overlay | Two causes: the slice-size overlay's test imported with a `.ts` extension, and two delta snapshots added since (`chunk1-r2-fixed`, `slice-unguarded`) were checked without the snapshot they sit on. It passes |
+| `loop_states_before.json` | Deleted with its readers |
+| The external reviewer never read #65 | It had, on 2026-11-16, with one comment nobody answered. Answered, then applied (above) |
+| The steps rule is a bet | Unchanged, and no miss turned up in a case that was not run |
+
+**Read from the first failures.**
+
+- The security case's hand-on check wanted the migration and failed a
+  run that handed on the image build that ignores the lockfile and the
+  tag-pinned action, which are as much another review's. It reads any
+  of the three. The migration itself was handed on in 3 runs of 4.
+- Three "not a ranked finding" checks read a word in a heading: a
+  finding that the app and the migration share a database user, and one
+  that configuration is read in several places, are those reviews' own.
+- The owner-file check failed a `sed -i` on `sources.md` whose text
+  names the export.
+- `chunk-two-runner-launched` allowed one launch; a run the harness kept
+  waking went through chunk 2's whole round and relaunched its runner
+  at the fix, which is the loop working.
+- The first B7 text for `reliability-review` made one run of three rate
+  the unbounded loan history Low ("one member's history is small"). It
+  now says it lowers nothing the skill names as a finding whatever the
+  load; 3 of 3 since.
+- A state of the loop fixture contradicted the gate: a commit planted
+  to be unguarded could not have passed a gate with changed-line
+  coverage. Found by building the state, not by a run.
+
+**Every bar that moved** (`record_thresholds.py --gate-only`, 26 cases
+by name, three runs each; passes of three, before→now).
+
+| Case | Bar before | Now | The graders behind it |
+|---|---|---|---|
+| `code-review-catalog` | 0.94 | 1.00 | `nothing-above-low` 2→3 |
+| `library-app-catalog-review` | 0.93 | 1.00 | `reports-nothing-above-low` 2→3 |
+| `test-quality-review-fines` | 0.88 | 1.00 | `no-false-alarm-exact-tests` 1→3; `no-false-alarm-fake-ledger` 2→3; two new at 3 |
+| `code-review-fine-notices-pr` | 0.89 | 1.00 | `leaves-mocking-to-test-quality-review` 1→3; `consults-why-comments` 2→3; two new at 3 |
+| `code-review-fine-notices-pr-via-agent` | 0.92 | 0.97 | `leaves-mocking-to-test-quality-review` 0→3; `consults-why-comments` 3→2; three judges cut; two new at 3 |
+| `code-review-days-left-pr` | 0.92 | 1.00 | `skill-invoked-display` 1→3 |
+| `map-update-cancel-hold` | 0.81 | 1.00 | `pre-existing-flags-not-new` 0→3; `new-rows-extracted` 2→3; `flags-new-wrong-direction-edge` 2→3 |
+| `library-app-lending-review-via-agent` | 0.96 | 1.00 | `finds-orm-inside-checkout-use-case` 2→3; two judges cut |
+| `test-quality-review-survivors-at-d` | 0.95 | 1.00 | `equivalent-survivor-is-no-finding` 2→3 |
+| `requirements-refinement-payfine-phase1` | 0.92 | 1.00 | `does-not-ask-what-the-sources-answer` 2→3 |
+| `architecture-design-owner-sheet` | 1.00 | 0.92 | the judge `fixtures-are-invented` 3→2 (a split vote on a reply that says it, as in E7); the new check at 3 |
+
+New, each at 1.00: `architecture-design-concurrency-interleavings`,
+`orchestrator-readiness-correction-autopilot`. Recorded again at 1.00
+with graders added or cut: `library-app-structure-review`,
+`security-review-config`, `reliability-review-http`,
+`accessibility-review-payfine`, `reliability-review-nightly-via-agent`,
+`supply-chain-review-build-via-agent`, `screen-design-owner-sheet`,
+`vertical-slicing-owner-sheet`, `requirements-refinement-owner-sheet`.
+Unmoved at 1.00 over three runs: `reliability-review-catalog`,
+`security-review-catalog`, `orchestrator-slice-review-launches`,
+`orchestrator-autopilot-counts-over`.
+
+**How it was gated.** 112 cases are reached by the change. 26 ran three
+times and had their bars recorded by name before any single pass. 76 ran
+once against the bar they had, in two passes (the second after the
+three late fixes), all at or above it; the gate re-ran five of them at
+three for a first run under the bar and all five passed
+(`chunk-runner-last-fix-review`, `security-review-deferrals-not-restated`,
+`test-quality-review-seam-fake`, `ci-pipeline-screen-job`,
+`orchestrator-readiness-open-item`), each on a grader its bar already
+records as missing one run in three or on a hand-back over its length,
+read. Fifteen of the 76 are negative-trigger cases that only a
+description can reach, and three descriptions changed. The last ten
+needed no run: their state's entry changed with the hasher and their
+state did not. 246 gate runs, the wording trials and the re-runs after
+each grader fix among them, and 33 reference runs. Two frozen histories
+were frozen again (`architecture-design-payfine-phase2`,
+`requirements-refinement-payfine-phase2`).
+
+**Still not held by a case.**
+
+- Nothing in the loop acts on a `## Handed on` line: it is for the
+  report's reader, and at D all six reviews run anyway. Whether a
+  chunk's combined reviewer writes one for a problem none of its three
+  lenses owns has no case.
+- The hand-on line is graded where the fixture has a problem to hand
+  on; that a review with nothing serious in sight leaves the section
+  out is seen in the clean-module runs and graded by no check.
+- B7's rule on real code: the cases are one clean module and one test
+  file. Slice 3's slice review is the first real measure, against the
+  findings per chunk of the runs before.
+- `architecture-design-concurrency-interleavings` grades the reply, not
+  the design document that follows approval.
+- A readiness correction that changes no decision is written without a
+  question with or without the skill's text, and 3 runs of 12 reworded
+  approved text while doing it.
+- `orchestrator-autopilot-counts-over` and F2's "no third fixer"
+  sentence have no reference (above).
+- Carried from PR 1 and PR 3 unchanged: the gate-checks wiring launch
+  and "after chunk 1"; the last-fix review at E; F6 with a bot in the
+  repository's history; the second autopilot round with its fix; a
+  state owed twice running; the E.2 fixer's launch; `adopt` through a
+  real `gh`.
+- H1's four proposed changes are proposals.
 
 ### Run backlog
 

@@ -1,6 +1,6 @@
 ---
 name: requirements-refinement
-description: Pin down the concrete user requirement for one scope-map step (or one small, un-mapped problem) by asking the user directly — who benefits, what they actually want, and why — before any slice gets cut. Use once a step is about to be worked and its WHAT hasn't been confirmed with the user yet, before handing off to product-slicer.
+description: Pin down the concrete user requirement for one scope-map step (or one small, un-mapped problem) by asking the user directly — who benefits, what they actually want, and why — before any slice gets cut. Use once a step is about to be worked and its WHAT hasn't been confirmed with the user yet, before handing off to product-slicer. When the request points at a file of the owner's (a sheet, an export, a screenshot), invoke this skill before opening that file with any tool: the skill says how such a file is read.
 ---
 
 # Requirements Refinement
@@ -19,8 +19,14 @@ reshapes the slice that gets built on top of it.
 
 **Your first response is questions, not a requirements doc.** Read the
 problem doc, scope map and any code first so the questions are sharp, and
-don't ask what they already answer. Then ask in one pass and stop until
-the user answers. Engineering heuristics (risk-avoidance, smallest-first)
+don't ask what they already answer. Before the questions go out, hold
+each one against what you read: a fact a document states or the code
+shows (who signs in, which provider takes the payment, what a route
+already returns) is never put to the user as if unknown. "I couldn't
+tell from the code" means look once more, at the routes and the wiring,
+before it becomes a question. What you found is said as what you read,
+and the question is only what the user wants done about it. Then ask in
+one pass and stop until the user answers. Engineering heuristics (risk-avoidance, smallest-first)
 are `product-slicer`'s, not grounds for deciding the WHAT on the user's
 behalf.
 

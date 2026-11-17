@@ -75,6 +75,14 @@ for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/cod
     cp -R "$(dirname "$overlay")/slice-built"/. "$dir"/
     cp -R "$(dirname "$overlay")/slice-fixed"/. "$dir"/
   fi
+  if [ "$(basename "$overlay")" = chunk1-r2-fixed ]; then
+    # A delta over chunk1-fixed (the regressions fixer's two files).
+    cp -R "$(dirname "$overlay")/chunk1-fixed"/. "$dir"/
+  fi
+  if [ "$(basename "$overlay")" = slice-unguarded ]; then
+    # A delta over slice-built (one more commit: the card-length rule).
+    cp -R "$(dirname "$overlay")/slice-built"/. "$dir"/
+  fi
   cp -R "$overlay"/. "$dir"/
   (cd "$dir" && "$out/deps/node_modules/.bin/tsc" -p tsconfig.json --noEmit --typeRoots "$out/deps/node_modules/@types")
   if [ "$(basename "$overlay")" = days-left ]; then

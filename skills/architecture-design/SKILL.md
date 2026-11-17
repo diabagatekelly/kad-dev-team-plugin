@@ -232,6 +232,53 @@ its own short section) names them, or says `none` when the slice set
 shows nothing downstream needs any. A slice that throws away the cursor
 the next slice resumes from has designed the next slice's first bug.
 
+## Two things at once: the interleavings before the decision
+
+Read the slice for this as a fact, before any structure: can two things
+run over the same state at the same time (two processes, two instances
+after a deploy, a scheduled run and one started by hand, a job and a
+request), or does the slice or a proposal in front of you name a
+mechanism whose whole job is to keep them apart (a lock, a lease, a
+claim, a "running" marker, a process number written to a file)? If so,
+the decision about that mechanism is presented **with its
+interleavings, in the same message, before approval is asked**. A
+mechanism approved on its ordinary path and walked through its bad
+orders afterwards is a decision made twice, the second time by a
+reviewer or by production.
+
+List them under the recommendation, one line each, and answer each one
+for the recommended mechanism and for every alternative or proposal
+still on the table:
+
+- **Two starts at the same moment**: both check before either writes.
+- **A crash at each step**: after the claim is taken and before the
+  work, in the middle of the work, after the work and before the
+  release. One line per step the mechanism has.
+- **A stop during each wait**: a shutdown asked for while it waits for
+  the claim, for the other party, for a timer or for an external call.
+- **A leftover removed by hand**: someone deletes or edits the marker
+  while its owner is still running, or leaves a stale one in place.
+- **A reused process number** (or any identity the system hands out
+  again: a port, a host name, a container id): the marker names an owner
+  that died, and the name now belongs to something else that is alive.
+
+Each answer says what state is left and who would notice, in a clause
+("the second start fails on the exclusive create and exits saying a run
+is in progress"). "Cannot happen" is an answer only with its reason. An
+answer that amounts to "both proceed", "nobody would know" or "stuck
+until someone removes it by hand" is a hole: the recommendation changes
+until no line reads that way, or the hole is stated as the decision's
+consequence, for the owner to accept in so many words. A proposal
+handed to you gets the same lines before it is adopted or rejected:
+"take the lock over when its process is not running" sounds finished
+until the first and last lines are answered.
+
+In the design document the lines sit under that decision in `##
+Decisions`, with their answers, so the builder writes a test per line
+and the reliability criteria can cite them. A slice with nothing
+running at once says nothing about this; do not add the list to a
+design that has no such mechanism.
+
 ## The tests and fixtures line
 
 The design says what the builder's tests run for real and what they
@@ -477,6 +524,8 @@ standing "go with your recommendations" (say which). Whether to fix an
 existing violation now or defer it is one of these, never "applied
 directly". One informed by a consult names the `Skill` call and quotes its
 answer. Note any that became an ADR (or were explicitly deferred as one).
+A decision about keeping two things apart carries its interleavings and
+their answers (see "Two things at once").
 
 ## Existing violations touched
 Anything found while designing that pre-dates this slice, and whether this

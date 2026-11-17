@@ -1,0 +1,27 @@
+{
+ "skill": "architecture-design",
+ "rule": "a decision about keeping two things apart is presented with its interleavings listed and answered (TODO.md's C3)",
+ "edits": [
+  {
+   "file": "skills/architecture-design/SKILL.md",
+   "old": "## Two things at once: the interleavings before the decision\n\nRead the slice for this as a fact, before any structure: can two things\nrun over the same state at the same time (two processes, two instances\nafter a deploy, a scheduled run and one started by hand, a job and a\nrequest), or does the slice or a proposal in front of you name a\nmechanism whose whole job is to keep them apart (a lock, a lease, a\nclaim, a \"running\" marker, a process number written to a file)? If so,\nthe decision about that mechanism is presented **with its\ninterleavings, in the same message, before approval is asked**. A\nmechanism approved on its ordinary path and walked through its bad\norders afterwards is a decision made twice, the second time by a\nreviewer or by production.\n\nList them under the recommendation, one line each, and answer each one\nfor the recommended mechanism and for every alternative or proposal\nstill on the table:\n\n- **Two starts at the same moment**: both check before either writes.\n- **A crash at each step**: after the claim is taken and before the\n  work, in the middle of the work, after the work and before the\n  release. One line per step the mechanism has.\n- **A stop during each wait**: a shutdown asked for while it waits for\n  the claim, for the other party, for a timer or for an external call.\n- **A leftover removed by hand**: someone deletes or edits the marker\n  while its owner is still running, or leaves a stale one in place.\n- **A reused process number** (or any identity the system hands out\n  again: a port, a host name, a container id): the marker names an owner\n  that died, and the name now belongs to something else that is alive.\n\nEach answer says what state is left and who would notice, in a clause\n(\"the second start fails on the exclusive create and exits saying a run\nis in progress\"). \"Cannot happen\" is an answer only with its reason. An\nanswer that amounts to \"both proceed\", \"nobody would know\" or \"stuck\nuntil someone removes it by hand\" is a hole: the recommendation changes\nuntil no line reads that way, or the hole is stated as the decision's\nconsequence, for the owner to accept in so many words. A proposal\nhanded to you gets the same lines before it is adopted or rejected:\n\"take the lock over when its process is not running\" sounds finished\nuntil the first and last lines are answered.\n\nIn the design document the lines sit under that decision in `##\nDecisions`, with their answers, so the builder writes a test per line\nand the reliability criteria can cite them. A slice with nothing\nrunning at once says nothing about this; do not add the list to a\ndesign that has no such mechanism.\n\n",
+   "new": ""
+  },
+  {
+   "file": "skills/architecture-design/SKILL.md",
+   "old": "A decision about keeping two things apart carries its interleavings and\ntheir answers (see \"Two things at once\").\n",
+   "new": ""
+  }
+ ],
+ "fails": [
+  "stop-during-a-wait-answered"
+ ],
+ "observed": {
+  "date": "2026-11-16",
+  "runs": 3,
+  "claude_version": "2.1.325",
+  "rates": {
+   "stop-during-a-wait-answered": 0.0
+  }
+ }
+}

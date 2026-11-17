@@ -32,10 +32,6 @@ model; about five minutes: every state is built until two builds agree) and comm
     --check        the recorded `inputs` still matches the tree (exit 1 if not)
     --state KEY    print one state's normalised listing (to see what
                    differs between two builds)
-    --before DIR   the same states as another checkout builds them (the
-                   base branch), written to evals/loop_states_before.json.
-                   Needed once: for the change that introduces this file,
-                   whose base has none to compare with.
 
 Usage: python3 -I evals/tools/loop_states.py --write
 """
@@ -122,6 +118,10 @@ NOISE = [
     (re.compile(r"(CAUGHT \(\d+ failed\)) by [^|\n]*"), r"\1 "),
     (re.compile(r"\b\d{4}-\d\d-\d\d(?:T\d\d:\d\d:\d\d(?:\.\d+)?Z?)?\b"), "<date>"),
     (re.compile(r"\b\d\d:\d\d(?::\d\d)?(?: UTC)?\b"), "<clock>"),
+    # the sidecar stamps each row with the id of the session that recorded
+    # it, which is the session that built the state: without this line a
+    # manifest written in one session matched no build made in another
+    (re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b"), "<session>"),
     (re.compile(r"\b[0-9a-f]{7,40}\b"), "<sha>"),
     (re.compile(r"\b\d+(?:\.\d+)?\s?(?:ms|s)\b"), "<time>"),
     (re.compile(r"duration_ms\s+[\d.]+"), "duration_ms <time>"),
@@ -237,20 +237,7 @@ def main():
     p.add_argument("--check", action="store_true")
     p.add_argument("--state")
     p.add_argument("--jobs", type=int, default=4)
-    p.add_argument("--before", metavar="CHECKOUT",
-                   help="build the same states from another checkout (the base branch) and write evals/loop_states_before.json: "
-                        "what the base built, for the one change whose base has no loop_states.json yet")
     a = p.parse_args()
-    if a.before:
-        keys = keys_in_use()
-        root = os.path.abspath(a.before)
-        with concurrent.futures.ThreadPoolExecutor(a.jobs) as pool:
-            hashes = dict(zip(keys, pool.map(lambda k: settled(k, root, absent_ok=True), keys)))
-        with open(os.path.join(EVALS, "loop_states_before.json"), "w", encoding="utf-8") as f:
-            json.dump({"states": dict(sorted(hashes.items()))}, f, indent=1)
-            f.write("\n")
-        print(f"wrote {len(hashes)} states as {root} builds them; {sum(1 for v in hashes.values() if v == 'absent')} it does not have")
-        return 0
     if a.state:
         for path, data in build(a.state):
             print(f"== {path} {hashlib.sha256(data).hexdigest()[:12]}")

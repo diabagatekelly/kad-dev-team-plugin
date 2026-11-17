@@ -58,7 +58,8 @@ languages are named under `## Coverage`: their edges are unknown, never
 guessed.
 
 Tiers are never inferred. The prior map's `## Modules` table gives each
-module its tier by path; a module not in it is `untiered`. The prior map
+module its tier by path; `--tier <path>=<n>` gives one the slice's design
+states; a module in neither is `untiered`. The prior map
 also supplies the diff (new/removed modules, edges, externals, exports) and
 the carried-forward wrong-direction candidates (its own bullets, kept with
 `— carried forward`).
@@ -324,8 +325,32 @@ def extract_py(project, module, roots):
     return edges, externals, exports
 
 
+NOTHING = {"", "—", "–", "-", "none", "n/a", "(none)"}
+
+
+def cell_names(text):
+    """The names in a prior row's cell, or None when it cannot be read.
+    Between backticks when the cell has any (the form this script
+    writes); else a plain cell split on commas and semicolons, since a
+    map written or edited by hand often has no backticks; a dash or
+    `none` is no name. A plain entry with a space in it (a sentence, not
+    a name) makes the cell unreadable: read as names, every real edge
+    would then look new."""
+    ticked = re.findall(r"`([^`]+)`", text)
+    if ticked:
+        return {n.replace(" (type)", "") for n in ticked}
+    plain = text.replace("\\|", "|").strip()
+    if plain.lower() in NOTHING:
+        return set()
+    names = {part.strip().replace(" (type)", "") for part in re.split(r"[;,]", plain) if part.strip()}
+    return None if any(re.search(r"\s", n) for n in names) else names
+
+
 def parse_prior(path):
-    """{module: {"tier", "edges", "externals", "exports"}}, the carried wrong-direction bullets."""
+    """{module: {"tier", "edges", "externals", "exports"}}, the carried
+    wrong-direction bullets. A row that cannot be read (too few cells, or
+    a cell that is prose) keeps its tier and carries `"unreadable": why`:
+    the changes section names it and compares nothing against it."""
     prior, wrong = {}, []
     text = read(path) if path and os.path.isfile(path) else ""
     section = ""
@@ -334,12 +359,21 @@ def parse_prior(path):
             section = line[3:].strip().lower()
             continue
         if section.startswith("modules") and line.startswith("|"):
-            cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if len(cells) < 5 or cells[0] in ("Path", "") or set(cells[0]) <= {"-"}:
+            cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
+            if not cells or cells[0] in ("Path", "") or set(cells[0]) <= {"-", ":", " "}:
                 continue
-            names = lambda cell: {n for n in re.findall(r"`([^`]+)`", cell)}  # noqa: E731
-            prior[cells[0].strip("`")] = {"tier": cells[1].strip("`"), "edges": {n.replace(" (type)", "") for n in names(cells[2])},
-                                           "externals": names(cells[3]), "exports": names(cells[4])}
+            name = cells[0].strip("`")
+            entry = {"tier": cells[1].strip("`") if len(cells) > 1 else "untiered", "edges": set(), "externals": set(), "exports": set()}
+            if len(cells) < 5:
+                entry["unreadable"] = f"{len(cells)} cells, five expected"
+            else:
+                read_cells = [cell_names(c) for c in cells[2:5]]
+                if any(c is None for c in read_cells):
+                    which = [label for label, c in zip(("internal edges", "external packages", "exports"), read_cells) if c is None]
+                    entry["unreadable"] = "its " + " and ".join(which) + " cell is not a list of names"
+                else:
+                    entry["edges"], entry["externals"], entry["exports"] = read_cells
+            prior[name] = entry
         elif section.startswith("wrong-direction") and line.startswith("- ") and "→" in line and "untiered" not in line:
             wrong.append(line[2:].split(" — ")[0].strip())
     return prior, wrong
@@ -389,6 +423,10 @@ def render(project, date, modules, prior, prior_wrong, no_extractor):
             if name not in prior:
                 continue
             p = prior[name]
+            if p.get("unreadable"):
+                changes.append(f"- `{name}`: the prior map's row could not be read ({p['unreadable']}); "
+                               "its edges, packages and exports are not compared, and none is reported as new")
+                continue
             for label, now, before in (("internal edges", set(m["edges"]), p["edges"]), ("external packages", m["externals"], p["externals"]),
                                        ("exports", m["exports"], p["exports"])):
                 added, removed = sorted(now - before), sorted(before - now)
@@ -444,7 +482,20 @@ def main():
     p.add_argument("--write", action="store_true")
     p.add_argument("--date", default=datetime.date.today().isoformat())
     p.add_argument("--json")
+    p.add_argument("--tier", action="append", default=[], metavar="PATH=TIER",
+                   help="a module's tier as the slice's design states it (lending/cancel-hold.ts=1); repeatable; "
+                        "it replaces the prior map's tier for that module")
     a = p.parse_args()
+    given = {}
+    for item in a.tier:
+        path, sep, tier = item.partition("=")
+        tier = tier.strip().lower()
+        if tier.isdigit():
+            tier = f"tier {tier}"
+        if not sep or not re.fullmatch(r"tier \d+|untiered", tier):
+            print(f"map: --tier takes <path>=<number>, as in lending/cancel-hold.ts=1 (got {item!r})")
+            return 1
+        given[path.strip().strip("`").replace("\\", "/")] = tier
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     project = os.path.abspath(a.project)
     if not os.path.isdir(project):
@@ -462,7 +513,7 @@ def main():
     for name in known:
         ext = os.path.splitext(name)[1].lower()
         lang = LANG.get(ext, ext)
-        tier = "test-support" if name in support else prior.get(name, {}).get("tier", "untiered")
+        tier = "test-support" if name in support else given.get(name) or prior.get(name, {}).get("tier", "untiered")
         if ext in TS_EXT:
             edges, externals, exports = extract_ts(project, name, alias_list, set(known))
         elif ext == ".py":
@@ -471,6 +522,10 @@ def main():
             edges, externals, exports = {}, set(), set()
             no_extractor.add(lang)
         modules[name] = {"tier": tier, "lang": lang, "edges": edges, "externals": externals, "exports": exports}
+    unknown = sorted(set(given) - set(modules))
+    if unknown:
+        print(f"map: --tier names no module of this project: {', '.join(unknown)}")
+        return 1
     text = render(project, a.date, modules, prior, prior_wrong, no_extractor)
     print(text)
     if a.json:
@@ -488,6 +543,9 @@ def main():
         print(f"map written: {out} {figures}")
     else:
         print(f"map: {figures}")
+    untiered_new = sorted(n for n, m in modules.items() if m["tier"] == "untiered" and n not in prior)
+    if untiered_new and prior:
+        print(f"new and untiered: {', '.join(untiered_new)} (a tier the slice's design states goes in with --tier <path>=<n>, and the script is run again)")
     return 0
 
 
