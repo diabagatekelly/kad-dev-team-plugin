@@ -78,6 +78,18 @@ Left open by it, for the next change to each file group:
   its last commits, so the orchestrator ran `npm test` into a file of
   its own to have one to hand the reviewers.
 
+## The final pull request (0.16.1): everything below but slice 3
+
+The owner, 2026-11-16, on merging #65: "on the final pr let's aim to
+finish the todo and tie all our loose ends". One pull request, cut from
+#65's head, holding H1, all of PR 2 and every item under "Left open by
+it" in the PR 1 and PR 3 sections. Slice 3 follows it. Order of work:
+what needs no model first (H1's table, B9's script and test, the
+overlay's deletion, `verify.sh`, the state with no gate output,
+`loop_states_before.json` once #65 is merged), then the review skills
+(B7, B8), the case-only edits (B10), C3 and the readiness-correction
+case; the external review of #65 is asked for and triaged in it.
+
 ## Before slice 3, no gate: why fixers regress
 
 - [ ] H1 **Read why the fixers' regressions happen** (the owner,
