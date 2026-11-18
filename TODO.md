@@ -81,6 +81,90 @@ From what #62 cost, and the owner's answers of 2026-11-16:
 - `docs/flow-map.html` is updated in the same pull request as any change
   to a stage, a launch or a script.
 
+## Before the gate pass: done 2026-11-18, the pass not started
+
+The cases are written and each ran once with its trace read; the new
+wording was tried on the existing cases of every changed skill. 51 single
+runs, $23.95 by the result files. No bar recorded, nothing pushed. `[~]`
+below now means: tried on a case at one run, not gated.
+
+**New cases (10), all tool-judged.** Held on its one run, by the trace,
+unless said:
+
+- B1 `tdd-implementation-lite-checks-before-commit`, with a known-bad
+  reference (one run of the reference: its three graders fail).
+- B2, B4 `tdd-implementation-lite-fix-test-renamed`. The run's tree was
+  put through the real gate by hand: PASS with the declared rename,
+  `FAIL tests` with the declaration taken out.
+- C2 `chunk-runner-check-fail-second-fixer`, `chunk-runner-suite-fail-ends`.
+- C3 `chunk-runner-light-no-review`.
+- C4, D4 (design) `orchestrator-recommended-not-asked`.
+- D1, D4 `reliability-requirements-refusal-phase1` and `-phase2` (a
+  chain: phase 2 resumes phase 1's frozen history).
+- D2 `cold-read-refusal-no-exit` (held after a rewording, below).
+- D3 `reliability-review-criterion-no-exit`.
+
+**Adapted, not added.** C1: `orchestrator-mutation-before-review` (the
+pass started in the background with its bounds) and
+`orchestrator-slice-review-launches` (the pass before any reviewer, the
+test-quality reviewer after the others). C6:
+`orchestrator-delivery-foreground` (the E line in the log the remote
+holds). C4: `orchestrator-route-design`'s judge. B6:
+`orchestrator-chunk-runner-handback`, `tdd-implementation-lite-one-chunk`.
+
+**Wording changed after a trace, two places.** `cold-read`: two readers
+of two ran three doors after the refusal and never placed the hold
+again; the list is now the whole app's and names four doors. Next run:
+all four. `tdd-implementation-lite` (B1): on a project where `tsc` is
+not installed the builder handed its chunk back uncommitted; a `FAIL`
+that is not the builder's no longer holds the commit and is said on the
+hand-back. Next run: committed, and said.
+
+**Seen in a trace and not fixed** (none is in the 0.17.0 text):
+
+- A fixer wrote its `Fix r1` line with a placeholder, committed, then
+  put the hash in: the report is left modified and uncommitted. A commit
+  cannot carry its own hash; the skill does not say which of "this
+  commit" or a second commit it wants. The owner's.
+- `delivery-ci-red-not-done`: the stand-in's canned CI log does not
+  match the tree (other card numbers, a line past the file's end), and
+  one run declined to brief a fixer on it. A fixture defect; its two
+  judges have failed 5 and 2 of 20 runs before.
+- `technology-bootstrap-phase2`'s judge `asks-only-what-the-first-test-forces`
+  failed a right reply twice (asked why, it ends on PASS). 7 of 27
+  before. It will likely land under its bar at the pass.
+- `architecture-design-payfine-phase2`'s `decisions-show-approval`
+  judge: 21 of 27 before, failed again on a document that records each
+  approval.
+- Both fix cases skipped the four final reviewers as "my call" (the
+  named-fix bar already has that grader at 0.33).
+- C1: after launching the reviewers the orchestrator read the pass's
+  output file once, which the skill calls a poll.
+- A resumed phase cannot resolve the skill's own directory (the frozen
+  history writes it as `<plugin-root>`): the D4 phase's prompt says to
+  invoke the skill again for it.
+- C4's other half (a question that is the owner's is still asked) is
+  held by `orchestrator-route-reliability` and
+  `orchestrator-autopilot-question`, not inside one flow with a taken
+  decision: on the design row it showed in two of four runs (the
+  slice's scope, a risk to accept) and is not graded there.
+
+**For the pass.** 112 cases affected (`affected_cases.py --base main`).
+At three runs: the 10 new cases; the 37 known-bad references; the cases
+changed in purpose (`orchestrator-mutation-before-review`,
+`orchestrator-slice-review-launches`, `orchestrator-delivery-foreground`,
+`orchestrator-route-design`, `orchestrator-chunk-runner-handback`,
+`tdd-implementation-lite-one-chunk`, `technology-bootstrap-phase2`); the
+8 cases whose frozen history was captured again (the phase 2 and 3 cases
+of reliability-requirements, architecture-design and
+technology-bootstrap); and, if the owner counts those skills as mostly
+rewritten, the rest of `chunk-runner`'s and `tdd-implementation-lite`'s
+cases. Everything else once, with `--stale`. After it:
+`affected_cases.py --record-scripts`, the bars by name, the README
+write-up. A wording change to reliability-requirements,
+architecture-design, technology-bootstrap or the orchestrator stales the
+histories again (`history_stale.py`).
+
 ## Group A: scripts, no model (script tests only)
 
 Each is a defect or a gap in a script, with a script test. A case is
@@ -272,12 +356,9 @@ line; issues #73 to #77.
 
 ## Proposed cases (the review's list)
 
-Script tests, no model: A1 (a suite that hangs, a cancelled test), A2, A3
-(a first run with a state that throws), A4. Cases: B1 with a known-bad
-reference (a build that raises a lint count commits only after the
-checks pass); C2 (a lint failure after its fixer: one more fixer, no
-stop); C6 (the E line is in the last pushed commit, tool-judged); D1 and
-D2 on a fixture state with no exit.
+Written 2026-11-18: see "Before the gate pass" above. Script tests, no
+model: A1 (a suite that hangs, a cancelled test), A2, A3 (a first run
+with a state that throws), A4.
 
 ## Not the plugin's
 
