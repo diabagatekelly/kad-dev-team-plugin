@@ -79,6 +79,11 @@ for overlay in "$tdd" "$(dirname "$tdd")"/test-quality/* "$(dirname "$tdd")"/cod
     # A delta over chunk1-fixed (the regressions fixer's two files).
     cp -R "$(dirname "$overlay")/chunk1-fixed"/. "$dir"/
   fi
+  if [ "$(basename "$overlay")" = slice-no-exit ]; then
+    # A delta over slice-unguarded (one more commit: the pickup shelf).
+    cp -R "$(dirname "$overlay")/slice-built"/. "$dir"/
+    cp -R "$(dirname "$overlay")/slice-unguarded"/. "$dir"/
+  fi
   if [ "$(basename "$overlay")" = slice-unguarded ]; then
     # A delta over slice-built (one more commit: the card-length rule).
     cp -R "$(dirname "$overlay")/slice-built"/. "$dir"/

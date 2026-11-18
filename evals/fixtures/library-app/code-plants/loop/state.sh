@@ -497,7 +497,7 @@ EOF
   fi
   records_commit "Records: slice 001 review"
   cat >> "$log" <<EOF
-- **D. Slice review:** map \`docs/architecture-map.md\` (\`$map_sha\`); done \`PASS after $readme_sha\`; reviewers \`tq co ar se re\`; r0 \`0/0/3/3\`; stranger \`PASS\`; r1 fix \`$d_fix_sha\` → \`0/0/2\` (reg 0, pre 2); standing \`0/0/2\`; records \`$rec_sha\`
+- **D. Slice review:** map \`docs/architecture-map.md\` (\`$map_sha\`); done \`PASS after $readme_sha\`; reviewers \`tq co ar se re\`; r0 \`0/0/3/3\`; cold \`PASS\`; r1 fix \`$d_fix_sha\` → \`0/0/2\` (reg 0, pre 2); standing \`0/0/2\`; records \`$rec_sha\`
 EOF
 }
 
@@ -575,7 +575,7 @@ case "$state" in
         "the runner's step 3, from where it stopped"
     else
       record0
-      reviews=2 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\` (reported \`0\`); review \`co tq re\` r0 \`0/0/1\` nd \`1\`; smoke \`PASS\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`0\`; sandbox \`3\` PASS; needs-decision devsecops-engineer: $records/chunk-1-r0-review.md — What a cancel does when the queue throws mid-remove is undecided. Round 0 is recorded in the sidecar (the runner ran rounds_record.py: 2 rows); the reports are in the records directory, uncommitted" \
+      reviews=2 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\`; review \`co tq re\` r0 \`0/0/1\` nd \`1\`; smoke \`PASS\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`0\`; sandbox \`3\` PASS; needs-decision devsecops-engineer: $records/chunk-1-r0-review.md — What a cancel does when the queue throws mid-remove is undecided. Round 0 is recorded in the sidecar (the runner ran rounds_record.py: 2 rows); the reports are in the records directory, uncommitted" \
         "C.5: the gap step for the needs-decision finding (no delegation file), before any fixer or a relaunched runner"
     fi ;;
   chunk1-r1|chunk1-r2-fixed)
@@ -601,13 +601,13 @@ case "$state" in
     planning; plan; chunk1 chunk1 "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     round0 chunk-1-r0-review; record0; fix1; review1 chunk-1-r1-review-clean; record1
-    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`2\` (reported \`1\`); review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg \`0\`, pre \`0\`); standing \`0/0/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted" \
+    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`2\`; review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/0/0\` (reg \`0\`, pre \`0\`); standing \`0/0/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted" \
       "C.6 for chunk 1: the records commit, the audit sync (audit off here), the C line from the hand-back, the budget check; then chunk 2's runner" ;;
   chunk1-handback-high)
     autopilot=yes; autopilot_file=autopilot-short; planning; plan; chunk1 chunk1-gate-covers "none"
     gate "$plan_sha" "$records/gate-chunk-1-r0.txt" "${chunk1_files[@]}"
     round0 chunk-1-r0-review; record0; keep_queue=yes fix1; review1 chunk-1-r1-review-high; record1
-    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\` (reported \`0\`); review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/1/0\` (reg \`0\`, pre \`1\`); standing \`0/1/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted; the standing High is in $records/chunk-1-r1-review.md (\`A cancel for one card removes another member's hold\`)" \
+    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\`; review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`$f1_sha\` → \`0/1/0\` (reg \`0\`, pre \`1\`); standing \`0/1/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted; the standing High is in $records/chunk-1-r1-review.md (\`A cancel for one card removes another member's hold\`)" \
       "the orchestrator's side of chunk 1, from the hand-back line" ;;
   chunk1-handback-phantom)
     planning; plan; chunk1 chunk1 "none"
@@ -615,7 +615,7 @@ case "$state" in
     round0 chunk-1-r0-review; record0
     # No fixer committed anything: 3c9e1a7 is a hash the runner wrote and
     # no object of this repository has.
-    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha 3c9e1a7\`; gate \`PASS\`; deviations \`0\`; shell edits \`2\` (reported \`1\`); review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`3c9e1a7\` → \`0/0/0\` (reg \`0\`, pre \`0\`); standing \`0/0/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted" \
+    reviews=2 fixers=1 handoff "C.1 for chunk 1 of 3: the chunk runner (agent-b7e2) handed back: \`Cancel a member's hold on a title\`; sonnet 41t 6m; commits \`$c1_sha 3c9e1a7\`; gate \`PASS\`; deviations \`0\`; shell edits \`2\`; review \`co tq re\` r0 \`0/0/2\`; smoke \`PASS\`; r1 fix \`3c9e1a7\` → \`0/0/0\` (reg \`0\`, pre \`0\`); standing \`0/0/0\`; builder \`agent-2b8e\`; reviews \`2\` fixers \`1\`; sandbox \`4\` PASS. The reports, gate files and sidecar are in the records directory, uncommitted" \
       "C.6 for chunk 1: the records commit, the audit sync (audit off here), the C line from the hand-back, the budget check; then chunk 2's runner" ;;
   issue14-planned)
     # Slice 001 as it was merged: the slice that points at its reliability
