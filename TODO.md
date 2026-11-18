@@ -104,7 +104,7 @@ stale only for the scripts it ran: say how many before the gate runs.
 - [x] **A2 `cost_by_role.py --log`** totals every chunk-loop entry of the
   log ($422.10 on slice 3's E line; the slice was $105.94). It takes the
   last chunk-loop entry's sessions only.
-- [ ] **A3 `screen_check.py`**: `compare` reads `capture-errors.json` and
+- [x] **A3 `screen_check.py`**: `compare` reads `capture-errors.json` and
   the full state list, and a state with no capture is `MISSING` whether
   or not it has a baseline (`FAIL` outranks `OWED`); `adopt` refuses
   while a driven state has no capture. Two states that threw were one
@@ -129,8 +129,12 @@ stale only for the scripts it ran: say how many before the gate runs.
   project-local, gitignored `PLAYWRIGHT_BROWSERS_PATH` the fence allows,
   with its download host. The fence's settings are security settings:
   the exact hosts are shown to the owner before they are written.
-- [ ] **A9 `ci-pipeline`'s `capture.mjs`** ships formatted to Prettier's
-  defaults, or section 3 adds the copies to the formatter's ignore file.
+- [x] **A9 `ci-pipeline`** section 3 adds the copied files to the
+  project's formatter and linter ignore files, and its workflow writes
+  the capture's state list first (for A3). Shipping `capture.mjs` in
+  Prettier's defaults was dropped: the first project's own width is 140,
+  so a default-formatted copy fails there too. `ci-pipeline`'s cases are
+  stale by this text and run with group C's.
 
 ## Group B: `tdd-implementation-lite` (builders and fixers), one gated change
 

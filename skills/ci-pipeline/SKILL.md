@@ -142,6 +142,15 @@ workflow file, so no existing workflow is touched. In this order:
    file, has to export. That file is not yours to write: the report says
    whether it exists. The orchestrator has the states written before
    the push.
+
+   **The copies are kept out of the project's own formatter and
+   linter.** A copy is never edited, and the project's style is not the
+   plugin's: where the project has a formatter or a linter with an
+   ignore file (`.prettierignore`, an `ignores` entry in its ESLint
+   config, a `[tool.ruff] exclude`), add `screens/capture.mjs` and
+   `tools/screen_check.py` to it, one line each, and say so in the
+   report. Without it the project's own format check goes red on the
+   plugin's file the first time CI runs.
 2. **The threshold file**, only when absent:
    `<planning directory>/visual-ux/baselines/screen-check.json` holding
    `{"max_changed_percent": 0.1}`. A state differs when more than that
@@ -164,6 +173,8 @@ workflow file, so no existing workflow is touched. In this order:
      - name: Install the pinned browser
        working-directory: screens
        run: npm ci && npx playwright install --with-deps chromium
+     - name: List the states
+       run: mkdir -p screens-out && node screens/capture.mjs --list > screens-out/states.txt
      - name: Capture every state
        run: node screens/capture.mjs --out screens-out/captures
      - name: Compare with the baselines
@@ -181,16 +192,19 @@ workflow file, so no existing workflow is touched. In this order:
      ```
 
      The artifact is named `screens` and holds `captures/`, `diff/`,
-     `screen-check.txt` and `screen-check.json`: `delivery` downloads it
-     by that name.
+     `states.txt`, `screen-check.txt` and `screen-check.json`:
+     `delivery` downloads it by that name. `states.txt` is the capture's
+     own list, written before anything is captured, so a state that
+     throws, or a capture that crashes, is `MISSING` in the comparison
+     and not a state nobody counts.
    - **CI stays read-only.** No step commits, pushes or opens anything,
      and no permission is widened: a baseline is committed by the loop,
      at delivery, from the artifact. Every `uses:` pinned as in section
      2, `actions/upload-artifact` looked up the same way.
 4. Validate the YAML as in section 2, then commit by name: `git add
    .github/workflows/screens.yml screens/capture.mjs screens/package.json
-   screens/package-lock.json tools/screen_check.py` and the threshold
-   file when you wrote it, `git commit -m 'CI: the screen-change check on
+   screens/package-lock.json tools/screen_check.py`, the threshold
+   file when you wrote it and the ignore file when you added to it, `git commit -m 'CI: the screen-change check on
    pull requests'`. Never push here.
 
 ## 4. Report

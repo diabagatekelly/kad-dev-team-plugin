@@ -56,8 +56,15 @@ are not the same size.
           removed     listed as removed and not captured: its baseline goes
           STRAY       differs and is not listed            (a finding)
           UNLISTED    captured, no baseline, not listed    (a finding)
-          MISSING     a baseline, or a listed state, with no capture
-                                                           (a finding)
+          MISSING     a baseline, a listed state, a state the capture
+                      reported as failed (`capture-errors.json` in the
+                      captures) or a state of the capture's own list
+                      (`states.txt` beside the captures, one name a
+                      line) with no capture                (a finding)
+        A state that threw is MISSING whether or not it has a baseline:
+        on a first run, with no baseline and no list in the screen
+        design, it was simply absent, and the verdict was BASELINES
+        OWED for the states that did capture.
         Writes `screen-check.txt` (the same lines), `screen-check.json`
         and `diff/<state>.png` for every state that differs (changed
         pixels red, anti-aliased ones yellow, the rest the baseline
@@ -417,6 +424,36 @@ def pngs(directory):
     return {os.path.basename(p)[:-4]: p for p in glob.glob(os.path.join(glob.escape(directory), "*.png"))}
 
 
+def capture_errors(captures_dir):
+    """{state: the first line of its error} from the `capture-errors.json`
+    the capture writes when a state throws; {} when there is none. A file
+    that cannot be read names no state and is said as one finding."""
+    path = os.path.join(captures_dir, "capture-errors.json")
+    if not os.path.isfile(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return {str(k): (str(v).strip().splitlines() or [""])[0] for k, v in data.items()}
+    except (OSError, ValueError, AttributeError):
+        return {"capture-errors.json": "the capture's errors file could not be read"}
+
+
+def expected_states(captures_dir):
+    """The capture's own list of states (`node screens/capture.mjs --list`,
+    written by the workflow to `states.txt` beside the captures or in
+    them), or an empty set when there is none."""
+    for path in (os.path.join(os.path.dirname(os.path.abspath(captures_dir)), "states.txt"),
+                 os.path.join(captures_dir, "states.txt")):
+        if os.path.isfile(path):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    return {line.strip() for line in f if line.strip()}
+            except OSError:
+                return set()
+    return set()
+
+
 def judge(planning, captures_dir, base, diff_dir=None):
     """([(state, status, percent, changed pixels, ignored pixels)], limit,
     where the limit came from), or an error string."""
@@ -427,11 +464,16 @@ def judge(planning, captures_dir, base, diff_dir=None):
     baselines = pngs(os.path.join(planning, "visual-ux", "baselines"))
     captures = pngs(captures_dir)
     first = not baselines
+    # What the capture said it would produce or failed to: owed a capture
+    # whatever the baselines and the screen design say.
+    owed = set(capture_errors(captures_dir)) | expected_states(captures_dir)
     rows = []
-    for state in sorted(set(baselines) | set(captures) | set(names)):
+    for state in sorted(set(baselines) | set(captures) | set(names) | owed):
         kind = names.get(state)
         has_base, has_shot = state in baselines, state in captures
-        if has_base and has_shot:
+        if state in owed and not has_shot:
+            rows.append((state, "MISSING", 100.0, 0, 0))
+        elif has_base and has_shot:
             if _bytes(baselines[state]) == _bytes(captures[state]):
                 rows.append((state, "same", 0.0, 0, 0))
                 continue
@@ -478,11 +520,12 @@ def verdict(rows):
     return 0, f"screens: PASS ({len(rows)} states)"
 
 
-def lines_for(rows, limit, source):
+def lines_for(rows, limit, source, failed=None):
     out = [f"threshold: more than {limit:g}% of a state's pixels, anti-aliasing ignored ({source})"]
     for state, status, percent, changed, ignored in rows:
         detail = f" ({percent:.3f}% of pixels, {changed} changed, {ignored} anti-aliased ignored)" if changed or ignored else ""
-        out.append(f"{status:<8} {state}: {WHY[status]}{detail}")
+        why = f"the capture failed: {failed[state]}" if status == "MISSING" and failed and state in failed else WHY[status]
+        out.append(f"{status:<8} {state}: {why}{detail}")
     return out
 
 
@@ -494,7 +537,7 @@ def cmd_compare(a):
         return 2
     rows, limit, source = result
     code, last = verdict(rows)
-    text = lines_for(rows, limit, source) + [last]
+    text = lines_for(rows, limit, source, capture_errors(a.captures)) + [last]
     print("\n".join(text))
     with open(os.path.join(a.out, "screen-check.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(text) + "\n")
@@ -536,7 +579,9 @@ def cmd_adopt(a):
     rows, _, _ = result
     bad = [s for s, status, *_ in rows if status in FINDINGS]
     if bad:
-        print(f"adopt: nothing adopted: {len(bad)} state(s) not listed ({', '.join(bad)}); those are findings, not baselines")
+        gone = [st for st, status, *_ in rows if status == "MISSING"]
+        print(f"adopt: nothing adopted: {len(bad)} state(s) not listed or with no capture ({', '.join(bad)}); those are findings, not baselines"
+              + (f"; no capture for {', '.join(gone)}: a baseline set that leaves a driven state out is not a first baseline" if gone else ""))
         return 1
     baselines = os.path.join(a.planning, "visual-ux", "baselines")
     os.makedirs(baselines, exist_ok=True)

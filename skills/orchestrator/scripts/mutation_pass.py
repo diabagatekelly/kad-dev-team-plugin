@@ -205,6 +205,7 @@ def check(repo, mutants):
 
 
 TIMED_OUT, NOT_RUN, STOPPED_EARLY = -1, -2, -3  # exit codes of the runner's own, never a test's
+BASELINE_ATTEMPTS = 3
 BASELINE_TIMEOUT = 1800  # the baseline and the typecheck, when no --timeout is given
 MIN_TIMEOUT = 60
 
@@ -228,13 +229,20 @@ def end_group(proc):
             continue
 
 
-def run_cmd(cmd, repo, timeout, first_failure=False):
+def fail_name(line):
+    """The failing test a line of the runner's output names, or None."""
+    m = FAIL_LINE.match(line)
+    return next(v for v in m.groupdict().values() if v) if m else None
+
+
+def run_cmd(cmd, repo, timeout, first_failure=False, unsteady=()):
     """(exit code, output, seconds); TIMED_OUT and NOT_RUN (the command
     could not start) are the runner's failures and never a kill. The
     command runs in its own process group, and a timeout ends the whole
     group. With `first_failure` the command is ended as soon as its output
     names a failing test (STOPPED_EARLY): one failing test is a catch, and
-    the rest of the suite adds only names."""
+    the rest of the suite adds only names. A test in `unsteady` (one that
+    failed on the unchanged tree) never ends the run."""
     start = time.monotonic()
     try:
         # Split as a shell would and run without one: no shell settings
@@ -252,8 +260,10 @@ def run_cmd(cmd, repo, timeout, first_failure=False):
     def read():
         for line in proc.stdout:
             lines.append(line)
-            if first_failure and FAIL_LINE.match(line.rstrip("\n")):
-                seen_failure.set()
+            if first_failure:
+                name = fail_name(line.rstrip("\n"))
+                if name and name not in unsteady:
+                    seen_failure.set()
 
     reader = threading.Thread(target=read, daemon=True)
     reader.start()
@@ -539,8 +549,22 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
             say(tout.strip().splitlines()[-1] if tout.strip() else "")
             return 2
     say(f"mutation_pass: baseline `{a.test}` in {repo} at {head}")
-    code, out, secs = run_cmd(a.test, work, a.timeout or BASELINE_TIMEOUT)
-    verdict, count, names = read_result(code, out)
+    # A test that fails on the unchanged tree and passes on the next run is
+    # unsteady: it would be read as a catch on whatever mutant it happens
+    # to fail beside. The baseline is tried up to three times; the tests
+    # that failed on the way are named and never count as a catch.
+    unsteady = []
+    for attempt in range(BASELINE_ATTEMPTS):
+        code, out, secs = run_cmd(a.test, work, a.timeout or BASELINE_TIMEOUT)
+        verdict, count, names = read_result(code, out)
+        if verdict == "survived" or code in (TIMED_OUT, NOT_RUN) or not names:
+            break
+        unsteady += [n for n in names if n not in unsteady]
+        say(f"mutation_pass: the baseline failed on attempt {attempt + 1} ({count} failed); trying again")
+    a.unsteady = unsteady if verdict == "survived" else []
+    if a.unsteady:
+        say(f"mutation_pass: {len(a.unsteady)} unsteady test(s) failed on the unchanged tree and will not count as a catch: "
+            + "; ".join(a.unsteady[:5]))
     if verdict != "survived":
         why = out.strip().splitlines()[-1] if code in (TIMED_OUT, NOT_RUN) and out.strip() else ""
         say(f"mutation_pass: the baseline fails (exit {code}{', ' + str(count) + ' failed' if count else ''}){': ' + why if why else ''}; nothing mutated")
@@ -571,7 +595,7 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
         if a.budget and time.monotonic() - started > a.budget:
             res = {"mutant": i, "file": m["file"], "line": line, "note": m["note"], "area": m["area"],
                    "verdict": "not run", "caught": False, "failed": None, "names": [], "exit": None,
-                   "typecheck_caught": False, "hung": False,
+                   "typecheck_caught": False, "hung": False, "unsteady_only": False,
                    "in_diff": (m["file"] in changed) if changed is not None else None, "seconds": 0}
             results.append(res)
             record(res)
@@ -586,7 +610,7 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
             if a.typecheck:
                 tcode, _, _ = run_cmd(a.typecheck, work, a.timeout or BASELINE_TIMEOUT)
                 type_caught = tcode not in (0, TIMED_OUT, NOT_RUN)
-            code, out, secs = run_cmd(a.test, work, a.mutant_timeout, a.first_failure)
+            code, out, secs = run_cmd(a.test, work, a.mutant_timeout, a.first_failure, a.unsteady)
         finally:
             git(work, "checkout", "--", m["file"])
         verdict, count, names = read_result(code, out)
@@ -596,6 +620,10 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
         hung = code == TIMED_OUT
         if hung and verdict == "error":
             verdict = "caught"
+        # Only tests that fail on the unchanged tree failed: not a catch.
+        unsteady_only = False
+        if verdict == "caught" and names and a.unsteady and all(n in a.unsteady for n in names) and (count or 0) <= len(names):
+            verdict, unsteady_only = "survived", True
         after = tracked_changes(work) if a.allow_dirty else git(work, "status", "--porcelain").stdout.strip()
         if after != before:
             say(f"mutation_pass: the tree is not clean after mutant {i} ({m['file']}); stopped")
@@ -603,12 +631,12 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
             return 3
         res = {"mutant": i, "file": m["file"], "line": line, "note": m["note"], "area": m["area"],
                "verdict": verdict, "caught": verdict == "caught", "failed": count, "names": names[:3], "exit": code,
-               "typecheck_caught": type_caught, "hung": hung,
+               "typecheck_caught": type_caught, "hung": hung, "unsteady_only": unsteady_only,
                "in_diff": (m["file"] in changed) if changed is not None else None, "seconds": round(secs, 1)}
         results.append(res)
         record(res)
         shown = {"caught": f"HUNG (ended after {a.mutant_timeout} s)" if hung and not count else f"CAUGHT ({count} failed)",
-                 "survived": "SURVIVED",
+                 "survived": "SURVIVED (only an unsteady test failed)" if unsteady_only else "SURVIVED",
                  "error": f"ERROR (exit {code}, no test failure read)"}[verdict]
         say(f"{i:>3}/{len(mutants)}  {shown:<36} {secs:>4.0f} s  {m['file']}:{line}  {m['note']}")
     if log:
@@ -662,7 +690,8 @@ def render(a, repo, head, base_count, results, have_diff):
             by = "; ".join(r["names"]) if r["names"] else "the runner's failure count"
             verdict = f"CAUGHT ({r['failed']} failed) by {by}" + (" [typecheck also fails]" if r["typecheck_caught"] else "")
         elif r["verdict"] == "survived":
-            verdict = "SURVIVED" + (" [typecheck fails]" if r["typecheck_caught"] else "")
+            verdict = ("SURVIVED" + (" (only an unsteady test failed)" if r.get("unsteady_only") else "")
+                       + (" [typecheck fails]" if r["typecheck_caught"] else ""))
         else:
             verdict = f"ERROR (exit {r['exit']}, no test failure read; not counted)"
         in_diff = "yes" if r["in_diff"] else "no" if r["in_diff"] is False else "n/a"
@@ -671,6 +700,9 @@ def render(a, repo, head, base_count, results, have_diff):
               f"- Mutants: **{n}**. Caught: **{len(caught)}**. Survived: **{n - len(caught)}**. Kill rate **{rate}**."
               + (f" Not counted, the runner itself failed: {', '.join(str(r['mutant']) for r in errors)}." if errors else "")
               + (f" Not run, the time budget ({a.budget} s) ended first: {', '.join(str(r['mutant']) for r in not_run)}." if not_run else "")]
+    if getattr(a, "unsteady", None):
+        lines.append("- Unsteady tests, which failed on the unchanged tree before the baseline passed and count as no catch: "
+                     + "; ".join(a.unsteady) + ". Each is a finding for the tests.")
     hangs = [r for r in results if r["hung"]]
     if hangs:
         lines.append("- Caught by a hang, not by a failing assertion: "

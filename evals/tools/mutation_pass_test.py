@@ -350,6 +350,44 @@ class MutationPass(unittest.TestCase):
         self.assertNotIn("Kills that hang on a single test", text)
 
 
+class AnUnsteadyTest(unittest.TestCase):
+    """A suite with a test that fails on the unchanged tree now and then
+    (a real project's did, one baseline run in two)."""
+
+    setUp, tearDown, run_tool = MutationPass.setUp, MutationPass.tearDown, MutationPass.run_tool
+
+    def test_it_does_not_stop_the_pass_and_is_never_a_catch(self):
+        # run 1: the unsteady test fails on the unchanged tree; run 2: the baseline passes;
+        # run 3 (mutant 1): only the unsteady test fails; run 4 (mutant 2): a real test fails
+        counter = os.path.join(self.tmp, "runs")
+        script = os.path.join(self.tmp, "suite.py")
+        with open(script, "w") as f:
+            f.write("import sys\n"
+                    f"p = {counter!r}\n"
+                    "try:\n    n = int(open(p).read()) + 1\nexcept OSError:\n    n = 1\n"
+                    "open(p, 'w').write(str(n))\n"
+                    "if n in (1, 3):\n    print('FAIL: test_two_copies_race (t.Race)'); sys.exit(1)\n"
+                    "if n == 4:\n    print('FAIL: test_charges_per_day (t.Fees)'); sys.exit(1)\n"
+                    "print('OK')\n")
+        report = os.path.join(self.tmp, "report.md")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", f"{sys.executable} {script}",
+                            "--base", "", "--first-failure", "--out", report)
+        self.assertIn("the baseline failed on attempt 1 (1 failed); trying again", out)
+        self.assertIn("1 unsteady test(s) failed on the unchanged tree and will not count as a catch: test_two_copies_race (t.Race)", out)
+        self.assertIn("SURVIVED (only an unsteady test failed)", out)
+        self.assertIn("mutation: 2 mutants, 1 caught, 1 survived", out)
+        with open(report, encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn("| 1 | calc/fees.py:4 | late_fee: the daily rate | SURVIVED (only an unsteady test failed) | n/a |", text)
+        self.assertIn("Unsteady tests, which failed on the unchanged tree before the baseline passed and count as no catch: test_two_copies_race (t.Race).", text)
+
+    def test_a_baseline_that_fails_three_times_is_still_refused(self):
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants,
+                            "--test", f"{sys.executable} -c \"print('FAIL: test_x (t.X)'); raise SystemExit(1)\"", "--base", "", expect=2)
+        self.assertIn("the baseline fails", out)
+        self.assertIn("nothing mutated", out)
+
+
 def load_script():
     import importlib.util
     spec = importlib.util.spec_from_file_location("mutation_pass", SCRIPT)

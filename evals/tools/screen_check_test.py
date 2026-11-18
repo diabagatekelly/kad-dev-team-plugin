@@ -282,6 +282,33 @@ class Compare(unittest.TestCase):
             self.assertEqual(r.returncode, 1, r.stdout)
             self.assertRegex(r.stdout, r"(?m)^MISSING\s+three:")
 
+    def test_a_state_that_threw_on_a_first_run_is_missing_not_owed(self):
+        # no baseline and no list in the screen design: two states that threw were one step from
+        # being adopted as 23 of 25, with a verdict of BASELINES OWED
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Planning(tmp, section=None)
+            p.image("capture", "one")
+            with open(os.path.join(p.captures, "capture-errors.json"), "w") as f:
+                json.dump({"two": "page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n  - waiting"}, f)
+            r = p.compare()
+            self.assertEqual(r.returncode, 1, r.stdout)
+            self.assertRegex(r.stdout, r"(?m)^MISSING\s+two: the capture failed: page\.waitForSelector: Timeout 30000ms exceeded\.$")
+            self.assertIn("screens: FAIL 1 not listed: two", r.stdout)
+
+    def test_a_state_of_the_captures_own_list_with_no_capture_is_missing(self):
+        # a capture that crashed leaves no errors file: the list the workflow wrote first still names the state
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Planning(tmp, section=None)
+            p.image("capture", "one")
+            with open(os.path.join(p.out, "states.txt"), "w") as f:
+                f.write("one\ntwo\n")
+            r = p.compare()
+            self.assertEqual(r.returncode, 1, r.stdout)
+            self.assertRegex(r.stdout, r"(?m)^MISSING\s+two:")
+            p.image("capture", "two")
+            r = p.compare()
+            self.assertEqual(r.returncode, 3, r.stdout)
+
     def test_a_project_with_no_baseline_yet_takes_every_capture_as_its_first(self):
         with tempfile.TemporaryDirectory() as tmp:
             p = Planning(tmp, section=None)
@@ -429,6 +456,19 @@ class Adopt(unittest.TestCase):
             self.assertEqual(data(os.path.join(p.baselines, "two.png")), before)
             self.assertEqual(git(tmp, "status", "--porcelain").split(), ["M", "docs/x/visual-ux/baselines/one.png", "??", "docs/x/visual-ux/baselines/three.png"])
             self.assertEqual(p.compare("--base", "main").returncode, 0)
+
+    def test_nothing_is_adopted_while_a_state_that_threw_has_no_capture(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Repo(tmp, None)
+            p.write_design("- `one`: new\n")
+            head = p.commit("the slice")
+            p.image("capture", "one")
+            with open(os.path.join(p.captures, "capture-errors.json"), "w") as f:
+                json.dump({"two": "Timeout 30000ms exceeded."}, f)
+            r = run("adopt", "--planning", p.planning, "--artifact", self.artifact(p, head), "--base", "main")
+            self.assertEqual(r.returncode, 1, r.stdout)
+            self.assertIn("nothing adopted", r.stdout)
+            self.assertIn("two", r.stdout)
 
     def test_nothing_is_copied_while_a_finding_stands(self):
         with tempfile.TemporaryDirectory() as tmp:
