@@ -3,7 +3,7 @@
  "also": [
   "orchestrator"
  ],
- "rule": "the screens check's two red verdicts: a stray state is a red round with the check not weakened, owed baselines are adopted",
+ "rule": "the screens check's two red verdicts: a stray state is a red round with the check not weakened, owed baselines are adopted; the hand-off's brief not to weaken the check is not this reference's (it passed 3 runs of 3 without this text on 2026-11-18 and 2 of 3 before: the red-check rule and the always-asked list say it too)",
  "edits": [
   {
    "file": "skills/delivery/SKILL.md",
@@ -33,8 +33,7 @@
  ],
  "fails": [
   "artifact-downloaded",
-  "its-images-kept-in-the-records",
-  "handoff-briefs-the-fixer-not-to-weaken-the-check"
+  "its-images-kept-in-the-records"
  ],
  "observed": {
   "date": "2026-11-16",
