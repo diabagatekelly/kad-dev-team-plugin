@@ -18,6 +18,10 @@
  "architecture-design-scope-consequence": [],
  "architecture-review-neg-security-review": [],
  "architecture-review-neg-test-quality-review": [],
+ "chunk-runner-check-fail-second-fixer": [
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
  "chunk-runner-fix-gate-fails": [
   "rounds_record.py",
   "sandbox_check.py",
@@ -43,6 +47,10 @@
   "rounds_record.py",
   "sandbox_check.py"
  ],
+ "chunk-runner-light-no-review": [
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
  "chunk-runner-one-fix-round": [
   "rounds_record.py",
   "sandbox_check.py",
@@ -53,6 +61,7 @@
   "sandbox_check.py",
   "scratch_run.py"
  ],
+ "chunk-runner-suite-fail-ends": [],
  "chunk-runner-waits-for-handback": [
   "sandbox_check.py",
   "validation_gate.py"
@@ -73,7 +82,12 @@
  "cold-read-new-beside-old": [
   "scratch_run.py"
  ],
- "delegation-consult-with-file": [],
+ "cold-read-refusal-no-exit": [
+  "scratch_run.py"
+ ],
+ "delegation-consult-with-file": [
+  "readiness_check.py"
+ ],
  "delegation-consult-without-file": [],
  "delivery-ci-red-not-done": [
   "sandbox_check.py"
@@ -116,7 +130,8 @@
  ],
  "orchestrator-autopilot-recorded": [
   "readiness_check.py",
-  "sandbox_check.py"
+  "sandbox_check.py",
+  "validation_gate.py"
  ],
  "orchestrator-autopilot-round": [
   "rounds_record.py",
@@ -173,7 +188,8 @@
  "orchestrator-issue-fix-records": [
   "audit_sync.py",
   "readiness_check.py",
-  "sandbox_check.py"
+  "sandbox_check.py",
+  "validation_gate.py"
  ],
  "orchestrator-last-fix-review-at-d": [
   "rounds_record.py",
@@ -216,9 +232,14 @@
   "sandbox_check.py",
   "validation_gate.py"
  ],
+ "orchestrator-recommended-not-asked": [
+  "readiness_check.py"
+ ],
  "orchestrator-route-accessibility": [],
  "orchestrator-route-backward-requirements": [],
- "orchestrator-route-design": [],
+ "orchestrator-route-design": [
+  "readiness_check.py"
+ ],
  "orchestrator-route-design-system": [],
  "orchestrator-route-implementation": [],
  "orchestrator-route-implementation-prenamed": [],
@@ -235,6 +256,7 @@
  "orchestrator-security-stage": [],
  "orchestrator-session-setup": [],
  "orchestrator-slice-review-launches": [
+  "mutation_pass.py",
   "rounds_record.py",
   "sandbox_check.py",
   "scratch_run.py",
@@ -251,7 +273,12 @@
  "reliability-requirements-payfine-phase2-proceed": [],
  "reliability-requirements-payfine-phase2-stop": [],
  "reliability-requirements-payfine-phase3": [],
+ "reliability-requirements-refusal-phase1": [],
+ "reliability-requirements-refusal-phase2": [
+  "readiness_check.py"
+ ],
  "reliability-review-catalog": [],
+ "reliability-review-criterion-no-exit": [],
  "reliability-review-fine-payment": [],
  "reliability-review-http": [],
  "reliability-review-neg-architecture": [],
@@ -296,9 +323,17 @@
  "supply-chain-review-workflows": [],
  "tdd-implementation-lite-cancel-hold": [],
  "tdd-implementation-lite-cancel-hold-via-agent": [],
+ "tdd-implementation-lite-checks-before-commit": [
+  "validation_gate.py"
+ ],
  "tdd-implementation-lite-chunk-plan": [],
+ "tdd-implementation-lite-fix-test-renamed": [
+  "validation_gate.py"
+ ],
  "tdd-implementation-lite-named-fix": [],
- "tdd-implementation-lite-one-chunk": [],
+ "tdd-implementation-lite-one-chunk": [
+  "validation_gate.py"
+ ],
  "tdd-implementation-lite-rename-fix": [],
  "technology-bootstrap-phase1": [],
  "technology-bootstrap-phase2": [],
