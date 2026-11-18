@@ -600,7 +600,7 @@ def jwt_expired(token: str) -> bool:
         body = token.split(".")[1]
         claims = json.loads(base64.urlsafe_b64decode(body + "=" * (-len(body) % 4)))
         return float(claims["exp"]) < time.time()
-    except (IndexError, KeyError, TypeError, ValueError):
+    except (IndexError, KeyError, TypeError, ValueError, RecursionError, OverflowError):
         return False
 
 

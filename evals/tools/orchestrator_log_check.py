@@ -348,7 +348,7 @@ def check_format(text, entries, malformed, findings):
 
 
 FIX = re.compile(r"\br(\d+) fix(?:es)?\s+`?(" + SHA + r"(?:\.\." + SHA + r")?)`?(?:(?:,\s*|\s+)`?" + SHA + r"`?)*"
-                 r"(?:[^;\n]*?(?:→|->)\s*`?" + COUNTS + r"`?(?:\s*\(reg\s+`?(\d+)`?,\s*pre\s+`?(\d+)`?(?:,\s*first\s+`?\d+`?)?\))?"
+                 r"(?:[^;\n]*?(?:→|->)\s*`?" + COUNTS + r"`?(?:\s*\(reg\s+`?(\d+)`?,\s*pre\s+`?(\d+)`?(?:,\s*first\s+`?(\d+)`?)?\))?"
                  r"|\s+gate\s+`?PASS)")
 
 
@@ -363,8 +363,11 @@ def rounds_of(text):
         counts = None
         if m.group(3) is not None:
             counts = tuple(int(m.group(i)) if m.group(i) is not None else 0 for i in range(3, 7))
+        # `first <k>` (findings of a reviewer that first looked after the fix)
+        # is counted with the pre-existing: neither is the fixer's
+        first = int(m.group(9)) if m.group(9) else 0
         out.append((int(m.group(1)), m.group(2), counts,
-                    int(m.group(7)) if m.group(7) else None, int(m.group(8)) if m.group(8) else None))
+                    int(m.group(7)) if m.group(7) else None, int(m.group(8)) + first if m.group(8) else None))
     return out
 
 
@@ -448,6 +451,13 @@ def field(text, name):
     return m.group(1).strip() if m else None
 
 
+def cadence_of(a_text):
+    """`loop` or `light` as the A line states it, or None when it states none
+    (a log older than the field, or one whose A line is in another entry)."""
+    value = field(a_text, "cadence")
+    return value.split()[0] if value else None
+
+
 def is_v4(a_text, c_lines, d_text):
     """A log written by the 0.7.0 loop: the A line's budget, readiness or delegation field, or a C
     line's smoke or standing field, or the D line's done or stranger field."""
@@ -523,6 +533,11 @@ def check_chunk_loop(e, findings):
             findings.append(("INFO", tag, f"{what}: ended at the gate"))
             continue
         revs = reviewers_of(text)
+        # an A line that states no cadence is not held against the chunk
+        looped = cadence_of(a_text) == "loop"
+        if revs == ["none"] and looped:
+            findings.append(("ERROR", tag, f"{what}: `review none` under cadence `loop`; only `light` leaves a chunk unreviewed"))
+            continue
         if revs == ["none"]:
             # the light cadence: build and gate only, nothing reviewed or driven until D
             if not re.search(r"\bsmoke\s+`?none", text):
@@ -540,6 +555,8 @@ def check_chunk_loop(e, findings):
                 findings.append(("ERROR", tag, f"{what}: {', '.join(missing)} always run on a chunk and are missing"))
         if v4:
             # `smoke none` is the light cadence since 0.17.0: no per-chunk smoke run
+            if looped and re.search(r"\bsmoke\s+`?none", text):
+                findings.append(("ERROR", tag, f"{what}: `smoke none` under cadence `loop`; only `light` has no per-chunk smoke run"))
             if not re.search(r"\bsmoke\s+`?(PASS|\d+ findings?|none)", text):
                 findings.append(("ERROR", tag, f"{what}: no smoke result (`smoke PASS`, `smoke <n> findings`, or `smoke none` under light)"))
             if not re.search(r"\bstanding\s+`?\d+/\d+/\d+", text):

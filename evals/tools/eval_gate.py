@@ -321,7 +321,10 @@ def main():
     if a.dry_run:
         return 1 if stale_cases else 0
     os.makedirs(os.path.join(EVALS, "results"), exist_ok=True)
-    tag = "gate-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S")
+    # A trial's results are not gate results: `record_thresholds.py
+    # --gate-only` and the results history read the `gate-` names only, so
+    # a one-run trial can never become a bar or a row of a case's history.
+    tag = ("trial-" if a.trial else "gate-") + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S")
     # What each case loads as the runs start; evidence is recorded only
     # against inputs that are still the same when they finish.
     files, reach = affected_cases.repo_files(), affected_cases.Reach()

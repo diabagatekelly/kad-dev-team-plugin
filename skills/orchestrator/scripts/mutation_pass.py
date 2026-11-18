@@ -224,9 +224,12 @@ def end_group(proc):
             pass
         try:
             proc.wait(timeout=5)
-            return
         except subprocess.TimeoutExpired:
             continue
+        # The leader left on the first signal; a child that ignores it is
+        # still in the group, so the group gets the second one too.
+        if sig == signal.SIGKILL or not hasattr(os, "killpg"):
+            return
 
 
 def fail_name(line):
@@ -268,16 +271,22 @@ def run_cmd(cmd, repo, timeout, first_failure=False, unsteady=()):
     reader = threading.Thread(target=read, daemon=True)
     reader.start()
     code = None
-    while code is None:
-        try:
-            code = proc.wait(timeout=0.2)
-        except subprocess.TimeoutExpired:
-            if seen_failure.is_set():
-                end_group(proc)
-                code = STOPPED_EARLY
-            elif time.monotonic() - start > timeout:
-                end_group(proc)
-                code = TIMED_OUT
+    try:
+        while code is None:
+            try:
+                code = proc.wait(timeout=0.2)
+            except subprocess.TimeoutExpired:
+                if seen_failure.is_set():
+                    end_group(proc)
+                    code = STOPPED_EARLY
+                elif time.monotonic() - start > timeout:
+                    end_group(proc)
+                    code = TIMED_OUT
+    except BaseException:
+        # Ctrl-C or a kill of the pass: the suite in flight and whatever it
+        # started go first, or they outlive the clone they run in.
+        end_group(proc)
+        raise
     if code not in (STOPPED_EARLY, TIMED_OUT):
         end_group(proc)  # the command ended; whatever it left running goes with it
     reader.join(timeout=5)
@@ -354,11 +363,16 @@ def is_test_file(path):
 CONFIG_NAME = re.compile(r"(?:^|/)(?:[^/]*\.config\.[cm]?[jt]s|\.[^/]*rc\.[cm]?js|conftest\.py|setup\.py)$")
 
 
+CAPTURE_FILES = ("screens/capture.mjs", "screens/states.mjs")
+
+
 def outside_the_suite(path):
     """Code no test of the suite loads, so a break in it can only survive:
     a tool's configuration, and the screen-change check's capture files
-    (`screens/`, run by CI's pinned browser alone)."""
-    return bool(CONFIG_NAME.search(path)) or path.split("/")[0] == "screens"
+    (`screens/capture.mjs` and the project's `screens/states.mjs`, run by
+    CI's pinned browser alone). Anything else a project keeps under
+    `screens/` is its own code."""
+    return bool(CONFIG_NAME.search(path)) or path in CAPTURE_FILES
 
 
 def blanked(line, python):
@@ -593,6 +607,9 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
     say(f"mutation_pass: {len(mutants)} mutants, each ended after {a.mutant_timeout} s"
         + (", each stopped at its first failing test" if a.first_failure else "")
         + (f"; the pass stops starting mutants after {a.budget} s" if a.budget else ""))
+    # The budget is the mutants': the baseline and the typecheck have their
+    # own limit (--timeout), and a pass that spent its budget on the
+    # baseline would mutate nothing and report nothing.
     started = time.monotonic()
 
     results = []
@@ -767,7 +784,7 @@ def main():
                    help="end a mutant's suite at its first failing test: a catch needs one, and the pass is several times shorter; "
                         "the report then names one test per kill and drops the single-test list")
     r.add_argument("--budget", type=int, default=None,
-                   help="seconds for the whole pass: once spent, the mutants not yet started are listed as not run")
+                   help="seconds for the mutants, counted from the end of the baseline: once spent, the mutants not yet started are listed as not run")
     r.add_argument("--title", help="the report's title (default: the repo's basename)")
     r.add_argument("--allow-dirty", action="store_true",
                    help="for a tree with uncommitted changes to other tracked files (the loop's log): the pass runs in a disposable clone and the tree is never written to")

@@ -53,6 +53,19 @@ class AFixOfSeveralCommits(unittest.TestCase):
         line = "r0 `0/0/1`; smoke `PASS`; r1 fix `2222222` added a guard → `0/0/0` (reg 0, pre 0)"
         self.assertEqual(check.rounds_of(line), [(1, "2222222", (0, 0, 0, 0), 0, 0)])
 
+    def test_first_seen_findings_are_part_of_the_split(self):
+        # `first <k>`: a reviewer that first looked after the fix; with reg and pre it makes the counts
+        line = "review `co tq` r0 `0/0/2`; smoke `PASS`; r1 fix `2222222` → `0/1/2` (reg 1, pre 1, first 1); r2 fix `3333333` gate PASS; standing `0/0/2`"
+        findings = []
+        check.check_rounds("entry 9", "chunk 1", line, findings, v4=True)
+        self.assertEqual([t for level, _, t in findings if "splits" in t], [])
+        self.assertEqual(check.rounds_of(line)[0], (1, "2222222", (0, 1, 2, 0), 1, 2))
+
+    def test_the_cadence_is_read_from_the_a_line(self):
+        self.assertEqual(check.cadence_of("- **A. Start:** sandbox — `PASS`; cadence — `light` (owner, 2026-11-17)"), "light")
+        self.assertEqual(check.cadence_of("- **A. Start:** sandbox — `PASS`; cadence — `loop`"), "loop")
+        self.assertIsNone(check.cadence_of("- **A. Start:** sandbox — `PASS`; branch — `slice-001-x`"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)
