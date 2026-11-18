@@ -60,6 +60,20 @@ class ASessionWithNoTranscript(unittest.TestCase):
         out = self.run_tool("--log", self.log, "--session", OWN)
         self.assertEqual(out[-1], f"cost not measured: transcript missing for {OWN}")
 
+    def test_an_earlier_loop_in_the_same_log_is_not_counted(self):
+        # a log holds every slice's loop: the E step's cost is the last one's
+        earlier = "44444444-4444-4444-8444-444444444444"
+        text = open(self.log, encoding="utf-8").read()
+        with open(self.log, "w", encoding="utf-8") as f:
+            f.write("## 3. 2026-10-20 — slice ready for implementation\n\n**Routed to:** chunk loop\n"
+                    f"- **A. Start:** sandbox — `PASS`; session — `{earlier}`; audit — `off`\n- **E. Delivery:** pushed\n\n" + text
+                    + "\n## 10. 2026-11-02 — Owner direction\n\n- a bullet under a later entry of the same loop\n")
+        self.transcript(earlier, 5_000_000)
+        self.transcript(KEPT, 1_000_000)
+        self.transcript(LOST, 1_000_000)
+        out = self.run_tool("--log", self.log)
+        self.assertEqual(out[-1], "cost $20.00")
+
     def test_no_session_found_at_all_is_no_total(self):
         out = self.run_tool("--log", self.log)
         self.assertEqual(out[-1], f"cost not measured: transcript missing for {LOST}, {KEPT}")

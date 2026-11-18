@@ -101,7 +101,7 @@ stale only for the scripts it ran: say how many before the gate runs.
   established: why the loop's mutants took 2½ to 3½ minutes each where
   the same script took 50 s here (the fence is not it: 53 s inside, 41 s
   outside).
-- [ ] **A2 `cost_by_role.py --log`** totals every chunk-loop entry of the
+- [x] **A2 `cost_by_role.py --log`** totals every chunk-loop entry of the
   log ($422.10 on slice 3's E line; the slice was $105.94). It takes the
   last chunk-loop entry's sessions only.
 - [ ] **A3 `screen_check.py`**: `compare` reads `capture-errors.json` and
