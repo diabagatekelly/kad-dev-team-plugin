@@ -235,18 +235,21 @@ would have classed every survivor as pre-existing, never fixed.
 
 ## Group D: planning and review skills, one gated change
 
-- [ ] **D1 `reliability-requirements`: every refusal says whether it can
+D1 to D4 are written in the skills (2026-11-17) and **not yet tried on a
+case or gated**: `[~]` below.
+
+- [~] **D1 `reliability-requirements`: every refusal says whether it can
   be permanent, and what the person can still do.** That is a criterion,
   or an "out for now" that names what the person is left with. Slice 3's
   R36 made a dead end correct: a marked bank whose login Plaid refuses to
   restart can never be logged in again, tried again, or connected again.
-- [ ] **D2 `cold-read`: after any action that is refused, every remaining
+- [~] **D2 `cold-read`: after any action that is refused, every remaining
   action on that state is listed and run**; a state where all are closed
   is a finding. The loop's reader ran the refusal and one of the four
   closed doors and reported the wording.
-- [ ] **D3 `reliability-review` at the slice review** reports a criterion
+- [~] **D3 `reliability-review` at the slice review** reports a criterion
   that leaves a state with no exit, even when the code meets it.
-- [ ] **D4 The planning skills check their own readiness**:
+- [~] **D4 The planning skills check their own readiness**:
   `reliability-requirements` (numbers on waits, the unusable-reply row)
   and `architecture-design` (criteria homed, failure paths homed) run
   `readiness_check.py` for their own checks before saving. The same two

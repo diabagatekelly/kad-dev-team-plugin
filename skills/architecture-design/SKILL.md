@@ -232,6 +232,26 @@ its own short section) names them, or says `none` when the slice set
 shows nothing downstream needs any. A slice that throws away the cursor
 the next slice resumes from has designed the next slice's first bug.
 
+**Check it the way the gate will, before you save.** Two of the
+readiness gate's checks read this document and nothing else can make
+them pass: `criteria-homed` (every security and reliability criterion
+quoted under the component that meets it) and `failure-paths-homed`
+(every failure path's words under the structure headings). Once the
+design is written, and again whenever you re-enter it:
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/readiness_check.py" --planning '<target directory>' --slice <nnn>
+```
+
+A `FAIL` on either of those two lines is fixed here, in this document,
+and the script run again until both read `PASS`; the lines name the
+criteria and the paths that found no home. A check that fails because
+the security, reliability or screen document does not exist yet is not
+yours and not yet anyone's: this design is re-entered when those
+documents are written, and the script is run then. Three slices in a
+row went back from the gate for these two checks after planning had
+called them ready (incident 47).
+
 ## Two things at once: the interleavings before the decision
 
 Read the slice for this as a fact, before any structure: can two things

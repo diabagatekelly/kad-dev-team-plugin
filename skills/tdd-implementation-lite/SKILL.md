@@ -424,7 +424,8 @@ by the next review is the commonest way a fix needs a second fix.
 
 **Every test the fix adds or rewrites is shown failing.** Most of what
 re-reviews find in a fix is in its tests: a test that cannot fail, one
-that checks less than its name says, an assertion lost in a rewrite. So
+that checks less than its name says, an assertion lost in a rewrite
+(incident 40). So
 for each test you add or change: break the line of source the test is
 there for (the line the fix wrote, or the rule the test names), run that
 test, see it fail **on its own assertion** (not on a missing import, a

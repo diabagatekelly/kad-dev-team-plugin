@@ -148,6 +148,16 @@ happy one:
   worse — the system now proceeds on bad state and nobody knows.
 - **Partial completion leaves defined state.** If the operation dies
   midway, what's left behind, and can it be resumed or retried safely?
+- **A state a refusal keeps has a way out.** Where the code keeps a
+  state when an action is refused (still marked, still pending, "nothing
+  was changed"), ask what a person can do there if the refusal never
+  clears: read what each other action on that thing does in that state
+  (retry, make a new one, remove). When every one of them refuses too,
+  or undoes what the person just did, report it, **even when a criterion
+  says exactly this**: the code meeting a criterion that leaves no exit
+  is a finding against the criterion, `needs-decision
+  (devsecops-engineer)`, quoting it, and it is the one case where a
+  criterion met is not the end of the check (incident 41).
 - **A remote resource created, then a timeout, then a retry.** For every
   call that creates something at the provider (an exchange, an item, a
   charge, a refund, a reservation, a customer), trace what becomes of

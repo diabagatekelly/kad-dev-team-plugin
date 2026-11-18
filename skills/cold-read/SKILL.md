@@ -63,6 +63,19 @@ that is a finding about the README, not a reason to open it.
    the wrong, empty or missing input; a dependency that is slow or fails
    after it has already done something; a stored file that is corrupt,
    stale or from before this slice; a person correcting a mistake.
+   **And the way out.** Whenever a probe ends with the app refusing an
+   action and keeping the state as it was (a refused start, a turned-down
+   login, "nothing was changed"), do not stop at the refusal. Make the
+   refusal permanent (the fake answers the same way every time), then
+   list every action the app offers on that same thing from that state
+   (the button that was just refused, a retry, the way a new one is
+   made, a removal) and run each one. One of them gets a person out:
+   nothing to report. All of them are closed, or one destroys what the
+   person just did to get out: that is a finding on its own, High, titled
+   for what the person can no longer do, with each closed door and what
+   it printed. A reader that ran the refusal and one of the four doors
+   reported a sentence of wording; the reader that ran all four found a
+   bank that could never be reached again (incident 41).
 6. **Probe every suspicion by execution.** A small script under the
    probes folder that imports the module or drives the project's own
    test harness, or a request to the app started through the launcher,
