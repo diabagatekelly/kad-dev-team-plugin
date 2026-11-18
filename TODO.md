@@ -121,10 +121,13 @@ stale only for the scripts it ran: say how many before the gate runs.
   gate fixer restored a name the next review then faulted); exempts the
   capture file E.2's own fixer writes from changed-line coverage; and a
   `--checks-only` mode a builder can run before it commits (B1).
-- [ ] **A7 `orchestrator_log_check.py`** is behind the 0.16 log (it warns
+- [ ] **A7 `orchestrator_log_check.py`** (after group C, which settles
+  the log's lines) is behind the 0.16 log (it warns
   on the D line's `done` and `stranger` fields) and reads owner-direction
   entries in the middle of a loop as the loop's own (C8).
-- [ ] **A8 `bin/kad`** (entry 111): GitHub Actions' log and artifact hosts
+- [ ] **A8 `bin/kad`** (entry 111; **waits for the owner's choice of
+  hosts**, a security setting; `kad --domain <host>` already adds one and
+  stores it): GitHub Actions' log and artifact hosts
   on the allow list; at first run, Playwright's Chromium into a
   project-local, gitignored `PLAYWRIGHT_BROWSERS_PATH` the fence allows,
   with its download host. The fence's settings are security settings:
@@ -138,21 +141,25 @@ stale only for the scripts it ran: say how many before the gate runs.
 
 ## Group B: `tdd-implementation-lite` (builders and fixers), one gated change
 
-- [ ] **B1 The gate's checks run before the commit.** A builder and a
+B1 to B5 are written in the skill (2026-11-17) and **not yet tried on a
+case or gated**: `[~]` below. B6 waits for group C, since the runner and
+the log read the same line.
+
+- [~] **B1 The gate's checks run before the commit.** A builder and a
   fixer run the commands of `gate-checks.json` (A6's `--checks-only`)
   and report the counts. On slice 3 a gate fixer ran on 5 of 6 chunks
   (461 added lines, 16% of everything added; chunk 6's gate fix was
   larger than its build), and 5 of 7 review fixes failed the gate, every
   one but one by a count one or two over its baseline.
-- [ ] **B2 Each test a fix adds or rewrites is shown failing** (break the
+- [~] **B2 Each test a fix adds or rewrites is shown failing** (break the
   line the fix wrote, see that test fail, restore; the `Fix` line names
   the test and the break), and a rewritten test keeps every assertion it
   had or its `Fix` line names the one dropped and why (H1, cause 5).
-- [ ] **B3 A finding's suggested fix is the reviewer's guess**; the
+- [~] **B3 A finding's suggested fix is the reviewer's guess**; the
   finding is its "What's happening" (H1, the pattern under cause 5).
-- [ ] **B4 A test whose behaviour a fix changes is renamed**, the rename
+- [~] **B4 A test whose behaviour a fix changes is renamed**, the rename
   on the `Fix` line (H1, cause 4; with A6).
-- [ ] **B5 The plan path:** captures and baselines are delivery's, not a
+- [~] **B5 The plan path:** captures and baselines are delivery's, not a
   chunk's (plan check 1 failed on this and a second planner ran).
 - [ ] **B6 Shell edits and turns are counted, not reported**: builders
   reported 21 of 88 shell edits, and two chunks' turn counts were `?`.
