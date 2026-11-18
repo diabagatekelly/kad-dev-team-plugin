@@ -84,8 +84,8 @@ From what #62 cost, and the owner's answers of 2026-11-16:
 ## Before the gate pass: done 2026-11-18, the pass not started
 
 The cases are written and each ran once with its trace read; the new
-wording was tried on the existing cases of every changed skill. 51 single
-runs, $23.95 by the result files. No bar recorded, nothing pushed. `[~]`
+wording was tried on the existing cases of every changed skill. 54 single
+runs, $25.41 by the result files. No bar recorded, nothing pushed. `[~]`
 below now means: tried on a case at one run, not gated.
 
 **New cases (10), all tool-judged.** Held on its one run, by the trace,
@@ -112,30 +112,24 @@ test-quality reviewer after the others). C6:
 holds). C4: `orchestrator-route-design`'s judge. B6:
 `orchestrator-chunk-runner-handback`, `tdd-implementation-lite-one-chunk`.
 
-**Wording changed after a trace, two places.** `cold-read`: two readers
+**Wording changed after a trace, three places.** `cold-read`: two readers
 of two ran three doors after the refusal and never placed the hold
 again; the list is now the whole app's and names four doors. Next run:
 all four. `tdd-implementation-lite` (B1): on a project where `tsc` is
 not installed the builder handed its chunk back uncommitted; a `FAIL`
 that is not the builder's no longer holds the commit and is said on the
-hand-back. Next run: committed, and said.
+hand-back. Next run: committed, and said. And the report's `Commit` and
+`Fix` lines say `this commit`, literally (the owner, 2026-11-18): a
+fixer had written a placeholder, committed, then put the hash in,
+leaving the report modified and in no commit. Next run: the line
+written before the commit, nothing edited after.
 
 **Seen in a trace and not fixed** (none is in the 0.17.0 text):
 
-- A fixer wrote its `Fix r1` line with a placeholder, committed, then
-  put the hash in: the report is left modified and uncommitted. A commit
-  cannot carry its own hash; the skill does not say which of "this
-  commit" or a second commit it wants. The owner's.
 - `delivery-ci-red-not-done`: the stand-in's canned CI log does not
   match the tree (other card numbers, a line past the file's end), and
   one run declined to brief a fixer on it. A fixture defect; its two
   judges have failed 5 and 2 of 20 runs before.
-- `technology-bootstrap-phase2`'s judge `asks-only-what-the-first-test-forces`
-  failed a right reply twice (asked why, it ends on PASS). 7 of 27
-  before. It will likely land under its bar at the pass.
-- `architecture-design-payfine-phase2`'s `decisions-show-approval`
-  judge: 21 of 27 before, failed again on a document that records each
-  approval.
 - Both fix cases skipped the four final reviewers as "my call" (the
   named-fix bar already has that grader at 0.33).
 - C1: after launching the reviewers the orchestrator read the pass's
@@ -149,6 +143,21 @@ hand-back. Next run: committed, and said.
   decision: on the design row it showed in two of four runs (the
   slice's scope, a risk to accept) and is not graded there.
 
+**Two judges turned into tool checks** (the owner left it to me,
+2026-11-18), each tried on the kept outputs of its past runs.
+`architecture-design-payfine-phase2`'s `decisions-show-approval` had
+failed 20 of 26 runs: read against those 26 documents, one has a
+decision with no approval recorded, and 11 say it once for the whole
+section, which the judge did not credit. The check fails that one and
+passes 25. `technology-bootstrap-phase2`'s
+`asks-only-what-the-first-test-forces` had failed 8 of 28, the last two
+on right replies: the check reads that no database, host, container, CI,
+monitoring or auth product is named before the section that leaves them
+open; all 28 kept replies pass. It does not read a choice made without a
+product's name. Left as judges, and seen failing once each on a right
+output: `technology-bootstrap-phase2`'s `recommends-ui-framework-and-waits`
+and `recommends-the-built-in-default-set-once`.
+
 **For the pass.** 112 cases affected (`affected_cases.py --base main`).
 At three runs: the 10 new cases; the 37 known-bad references; the cases
 changed in purpose (`orchestrator-mutation-before-review`,
@@ -157,9 +166,9 @@ changed in purpose (`orchestrator-mutation-before-review`,
 `tdd-implementation-lite-one-chunk`, `technology-bootstrap-phase2`); the
 8 cases whose frozen history was captured again (the phase 2 and 3 cases
 of reliability-requirements, architecture-design and
-technology-bootstrap); and, if the owner counts those skills as mostly
-rewritten, the rest of `chunk-runner`'s and `tdd-implementation-lite`'s
-cases. Everything else once, with `--stale`. After it:
+technology-bootstrap); `architecture-design-payfine-phase2` (its grader); and the rest of
+`chunk-runner`'s and `tdd-implementation-lite`'s cases (the owner,
+2026-11-18: both count as mostly rewritten). Everything else once, with `--stale`. After it:
 `affected_cases.py --record-scripts`, the bars by name, the README
 write-up. A wording change to reliability-requirements,
 architecture-design, technology-bootstrap or the orchestrator stales the
