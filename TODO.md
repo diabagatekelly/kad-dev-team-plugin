@@ -172,57 +172,66 @@ the log read the same line.
   on the `Fix` line (H1, cause 4; with A6).
 - [~] **B5 The plan path:** captures and baselines are delivery's, not a
   chunk's (plan check 1 failed on this and a second planner ran).
-- [ ] **B6 Shell edits and turns are counted, not reported**: builders
+- [~] **B6 Shell edits and turns are counted, not reported**: builders
   reported 21 of 88 shell edits, and two chunks' turn counts were `?`.
   The report's line is dropped and the count the runner already takes is
   the only one.
 
 ## Group C: the orchestrator, the chunk runner, delivery, one gated change
 
-- [ ] **C1 The mutation pass at D** runs beside the reviewers (it works
+C1 to C11 and B6 are written in the skills (2026-11-17) and **not yet
+tried on a case or gated**: `[~]` below. One change from the list as
+reviewed: under C1 the test-quality reviewer starts when the mutation
+pass ends (at most 15 minutes after the others) and so still reads its
+report at round 0, where a survivor is fixed; getting it at round 1
+would have classed every survivor as pre-existing, never fixed.
+
+- [~] **C1 The mutation pass at D** runs beside the reviewers (it works
   in its own clone), with `--first-failure`, the default timeout and a
   budget, and its progress in a file the owner can be shown. The
   reviewers no longer wait for it; the test-quality reviewer is handed
   the report when it lands, or reads it at round 1.
-- [ ] **C2 A gate failure that is only lint, format or a count check gets
+- [~] **C2 A gate failure that is only lint, format or a count check gets
   a second fixer** before anything stops (entry 109; chunk 2 stopped the
   loop 25 minutes for an unused import). The stop is kept for a failing
   test or typecheck after its fixer.
-- [ ] **C3 `light` without the per-chunk smoke run** (decision 2): per
+- [~] **C3 `light` without the per-chunk smoke run** (decision 2): per
   chunk, build and gate only. How the next slice is told to run `light`
   stays the owner's word in the message; whether `light` becomes the
   default is decided after that slice.
-- [ ] **C4 Recommended questions are not asked** (decision 1): in the
+- [~] **C4 Recommended questions are not asked** (decision 1): in the
   orchestrator's own questions and in every skill that asks one (the
   design skills, `technology-bootstrap`'s gate check set, `ci-pipeline`'s
   state list). Each is logged `taken as recommended: <what>, over
   <alternatives>`.
-- [ ] **C5 `autopilot.md` names what is never taken alone**: a changed
+- [~] **C5 `autopilot.md` names what is never taken alone**: a changed
   requirement, an accepted risk (the loop tried to record an advisory as
   accepted on its own and the harness refused the launch), deleted or
   rewritten committed work, a push while red, a secret.
-- [ ] **C6 The log's last lines are in the last pushed commit**: the E
+- [~] **C6 The log's last lines are in the last pushed commit**: the E
   line is written before the final records commit (the third run that
   left the tree dirty; the first project's pull request #48 was this).
-- [ ] **C7 After the context is summarised the skill is invoked again by
+- [~] **C7 After the context is summarised the skill is invoked again by
   name**, not read by path with the shell (the owner asked why a skill
   "in a different repo" was being read).
-- [ ] **C8 An owner's direction in the middle of a loop** is a bullet
+- [~] **C8 An owner's direction in the middle of a loop** is a bullet
   under the loop's entry, not a new entry that splits its A to E lines.
-- [ ] **C9 The format check, and every command CI runs, is a gate check**:
+- [~] **C9 The format check, and every command CI runs, is a gate check**:
   `technology-bootstrap`'s set includes them (reviewers raised format
   failures as High on two chunks; the first project's pull request #57
   went red on it).
-- [ ] **C10 The wiring fixer at A.5 runs the project's audit command**,
+- [~] **C10 The wiring fixer at A.5 runs the project's audit command**,
   and a tool that brings an advisory is put to the owner with the set
   (`knip` brought one; CI went red at delivery).
-- [ ] **C11 `delivery`'s screens check** reads `capture: <n> of <n>`
+- [~] **C11 `delivery`'s screens check** reads `capture: <n> of <n>`
   before `BASELINES OWED` is treated as clean (with A3), and fetches
   logs and artifacts itself (with A8).
-- [ ] **C12 The runner's wait**: one runner of nine handed back while its
-  smoke agent ran. With C3 there is no smoke agent under `light`; under
-  `loop` the hand-back is refused while an agent of the runner's is
-  running, if the harness can tell (to find out).
+- [ ] **C12 The runner's wait** (not built, and no rule proposed): one
+  runner of nine handed back while its smoke agent ran. The rule is
+  already in the runner's text three ways and the stall rule recovered
+  it for one relaunch; under `light` the runner launches one agent, so
+  the case cannot arise there. Whether the harness can refuse a
+  hand-back while a child runs is not known.
 
 ## Group D: planning and review skills, one gated change
 

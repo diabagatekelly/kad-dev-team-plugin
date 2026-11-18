@@ -247,6 +247,28 @@ above, inside the same one approval.
 | secret and workflow scans | a committed credential; a workflow that injects, is unpinned or over-permitted | gitleaks; actionlint and zizmor once a workflow exists | the same |
 
 For another language, the ecosystem's equivalent of each, named with why.
+
+**And every other command the project's CI runs.** The eight are what a
+stack needs a tool picked for; a ninth row, `format and other CI
+checks`, has no tool to pick: it lists each check the continuous
+integration runs, or will run, that the gate would otherwise not (the
+format check first; a licence check, a build), with the exact command.
+A check CI runs and the gate does not turns a pull request red hours
+after the gate passed on the same commit: reviewers spent Highs on a
+format failure, twice in one slice, and a fixer's shell edit sent a pull
+request red on it. One row per command; a project with none says so in
+the row ("none: CI runs nothing the gate does not").
+
+**A tool that brings a known advisory is said with the recommendation.**
+Before recommending a single-purpose tool, run the ecosystem's audit on
+it where that costs one command (`npm view <tool>@<version>` is not an
+audit; `npm audit` on a scratch install is), or say that it was not
+checked. A tool whose dependency tree carries an open advisory at the
+level the project's CI fails on is recommended only with that said, and
+with the next candidate named: the owner approves the set knowing it,
+and the audit job does not go red at delivery because of a tool the
+gate brought in.
+
 What the recommendation says, per category:
 
 - **The tool, and why that one**: what the project already has first (a
@@ -276,7 +298,9 @@ installed, their configuration and manifest scripts written, and
 `{"category", "name", "cmd", "count": "<regex over its output>",
 "baseline": <n>}` for a counted one; `{"category", "covered_by":
 "suite" | "typecheck" | "lint" | "coverage", "note"}` when a check the
-gate already runs holds it; `{"category", "not_picked": "<reason>"}`).
+gate already runs holds it; `{"category", "not_picked": "<reason>"}`; and one `{"category":
+"format and other CI checks", "name", "cmd"}` per command of the ninth
+row).
 The orchestrator's A step launches that wiring once, from this section.
 
 A project whose bootstrap predates this section re-enters for it alone
