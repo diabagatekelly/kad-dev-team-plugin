@@ -3503,6 +3503,22 @@ authentication error. Those four run again: 0 of 3 on every grader they
 list. `deferrals-by-script` failed its grader 3 of 3 and was not counted
 only because the bar then recorded that grader under 1.
 
+**The external review** (14 comments on the code alone, 266,000
+characters). Seven fixed: `mutation_pass.py` ends the suite's process
+group when the pass is interrupted and sends the second signal to a
+group whose leader left on the first, and counts only
+`screens/capture.mjs` and `screens/states.mjs` as outside the suite;
+`audit_sync.py` reads a token whose payload cannot be parsed as live; a
+trial's results are named `trial-`, so one can never be read as a bar;
+`orchestrator_log_check.py` adds `first <n>` to the split and holds
+`review none` or `smoke none` against an A line that says `loop`. Three
+deferred to the next change of their script, for the cases they would
+stale (`screen_check.py`, 13 through `readiness_check.py`'s import;
+`validation_gate.py`, 20). Four declined, the reasons on the pull
+request. The eight cases the two changed scripts reach ran once more at
+their bars: 12 runs, $13.95, which makes the pull request's total 372
+runs and $242.31.
+
 **Seen and not fixed.**
 
 - C4's log bullet, one run of three in the form the skill gives. The

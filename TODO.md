@@ -108,6 +108,27 @@ traces.
 - `tdd-implementation-lite-rename-fix`: two reports of three gave the
   rename as a sentence, not the `renamed <old> → <new>, <n> sites` line.
 - The stand-in `tools/gh` logs `issue create --help` as an issue filed.
+- The external review of #67 (14 comments): seven fixed
+  (`mutation_pass.py` ends a suite's whole process group on an
+  interrupt and after a child that ignores the first signal, and
+  excludes only the capture's two files under `screens/`;
+  `audit_sync.py`; a trial's results are named `trial-`; the log check
+  reads `first <n>` and holds `review none` against a stated `loop`),
+  three deferred (below), four declined with the reason on the pull
+  request. The eight cases the two scripts reach ran once more: 12
+  runs, $13.95.
+- **Deferred from the external review of #67** (each would stale a
+  batch of cases for an edge the loop does not reach; with the next
+  change to the same script):
+  - `screen_check.py` (13 cases, since `readiness_check.py` imports
+    it): a state listed in `capture-errors.json` is `MISSING` even when
+    an earlier run's image is in the folder; a `states.txt` that cannot
+    be read fails closed. The patch is written and tested:
+    `~/kad-gate-0170/screen-check-deferred.patch`.
+  - `validation_gate.py` (20 cases): `capture_file` excludes all of a
+    top-level `screens/` (narrowed in `mutation_pass.py` to the
+    capture's two files); the declared-rename map is read from the whole
+    report, not the chunk's section.
 - For next time: `--jobs 10 --parallel 14` (the machine sat at a load of
   2.4 of 10 cores), and the references can run beside the gate.
 
