@@ -68,9 +68,13 @@ that is a finding about the README, not a reason to open it.
    login, "nothing was changed"), do not stop at the refusal. Make the
    refusal permanent (the fake answers the same way every time), then
    list every action the app offers on that same thing from that state
-   (the button that was just refused, a retry, the way a new one is
-   made, a removal) and run each one. One of them gets a person out:
-   nothing to report. All of them are closed, or one destroys what the
+   and run each one. The list is the whole app's, not the slice's:
+   search the older code for whatever else takes the same record, and
+   name these four, each run or said not to exist: the action that was
+   just refused, the same action again, the way a new one is made
+   (placing, connecting or registering it again while the stuck one is
+   still there) and the way one is removed. One of them gets a person
+   out: nothing to report. All of them are closed, or one destroys what the
    person just did to get out: that is a finding on its own, High, titled
    for what the person can no longer do, with each closed door and what
    it printed. A reader that ran the refusal and one of the four doors

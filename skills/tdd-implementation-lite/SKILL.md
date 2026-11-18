@@ -202,7 +202,14 @@ does), the chunk ends with one commit on the current branch:
    a format check (`format:check`, or the command the README or CI names)
    run it too and format only the files you changed. A project with no
    `gate-checks.json` prints `SKIP` and the step is the typecheck and the
-   lint alone. The same step ends every fix and every gate fix, before
+   lint alone. **A `FAIL` that is not yours does not hold the commit**: a
+   check that cannot run here (its tool is not installed: `command not
+   found`, exit 127) or one that fails the same way on the tree as it
+   was before your change. Never install a tool to get past it. Commit,
+   and say so on the hand-back and as a `Deviation` line of the report
+   section (`checks: FAIL <check>, not this change's: <why>`); the gate
+   after you decides. A chunk handed back uncommitted over a check the
+   builder could not have cleared is a chunk the loop builds twice. The same step ends every fix and every gate fix, before
    its commit: the gate after you runs these again, and a count you left
    over costs the loop another agent.
 3. `git add` each file by name: the chunk's **Files**, any deviation, and
