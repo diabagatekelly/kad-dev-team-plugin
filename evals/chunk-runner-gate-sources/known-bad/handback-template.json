@@ -4,7 +4,7 @@
  "edits": [
   {
    "file": "skills/chunk-runner/SKILL.md",
-   "old": "```\n`<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>\n```\n",
+   "old": "```\n`<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re] | none>`< r0 `<C/H/M>`>< nd `<n>`>; smoke `<PASS | <n> findings | none>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`<, first `<f>`>)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>\n```\n",
    "new": ""
   }
  ],
