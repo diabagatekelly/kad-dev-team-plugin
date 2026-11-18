@@ -1,0 +1,42 @@
+{
+ "skill": "tdd-implementation-lite",
+ "rule": "the gate's checks run before the commit, and the commit waits for `checks: PASS` (B1, 0.17.0): the commit procedure's step 2, the one place the skill states it, with the sentence that makes it the last step of every fix and gate fix",
+ "edits": [
+  {
+   "file": "skills/tdd-implementation-lite/SKILL.md",
+   "old": "2. **Run the gate's checks, and commit only on `checks: PASS`:**\n\n   ```\n   python3 -I \"${CLAUDE_SKILL_DIR}/../orchestrator/scripts/validation_gate.py\" --project '<project root>' --test-cmd '<test command>' --checks-only\n   ```\n\n   It runs the typecheck, the lint and every command of the project's\n   `gate-checks.json` (type-aware lint, stricter compiler flags, length\n   and complexity limits, duplication, unused code, the scans), each\n   against its recorded baseline, and no suite. A `FAIL` line is yours to\n   clear before the commit: the count is one or two over because of what\n   you just wrote, and the tool's own lines under it say where. Clear it\n   in your code (shorten the function, use the existing helper, drop the\n   unused name), run the suite again, run the checks again. Never raise a\n   baseline, never edit `gate-checks.json`, a tool's configuration or an\n   ignore file to get there: those are the owner's. When the manifest has\n   a format check (`format:check`, or the command the README or CI names)\n   run it too and format only the files you changed. A project with no\n   `gate-checks.json` prints `SKIP` and the step is the typecheck and the\n   lint alone. **A `FAIL` that is not yours does not hold the commit**: a\n   check that cannot run here (its tool is not installed: `command not\n   found`, exit 127) or one that fails the same way on the tree as it\n   was before your change. Never install a tool to get past it. Commit,\n   and say so on the hand-back and as a `Deviation` line of the report\n   section (`checks: FAIL <check>, not this change's: <why>`); the gate\n   after you decides. A chunk handed back uncommitted over a check the\n   builder could not have cleared is a chunk the loop builds twice. The same step ends every fix and every gate fix, before\n   its commit: the gate after you runs these again, and a count you left\n   over costs the loop another agent.\n",
+   "new": ""
+  },
+  {
+   "file": "skills/tdd-implementation-lite/SKILL.md",
+   "old": "3. `git add` each file by name: the chunk's **Files**, any deviation, and",
+   "new": "2. `git add` each file by name: the chunk's **Files**, any deviation, and"
+  },
+  {
+   "file": "skills/tdd-implementation-lite/SKILL.md",
+   "old": "4. `git commit` with the chunk's title as the subject and a body of three",
+   "new": "3. `git commit` with the chunk's title as the subject and a body of three"
+  },
+  {
+   "file": "skills/tdd-implementation-lite/SKILL.md",
+   "old": "5. Never push, amend, rebase, switch branches, or touch another chunk's",
+   "new": "4. Never push, amend, rebase, switch branches, or touch another chunk's"
+  }
+ ],
+ "fails": [
+  "gate-checks-run",
+  "no-commit-before-the-checks-pass",
+  "unused-helper-not-left-exported"
+ ],
+ "observed": {
+  "date": "2026-11-18",
+  "runs": 1,
+  "claude_version": "2.1.327",
+  "rates": {
+   "gate-checks-run": 0.0,
+   "no-commit-before-the-checks-pass": 0.0,
+   "unused-helper-not-left-exported": 0.0
+  },
+  "note": "one run, before the gate pass; the three-run rates are the pass's"
+ }
+}

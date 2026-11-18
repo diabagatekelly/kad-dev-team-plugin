@@ -1,0 +1,81 @@
+schema_version: "1.0"
+name: chunk-runner-check-fail-second-fixer
+description: "TODO.md's C2 (0.17.0, the owner's direction of 2026-11-17: the loop never stops for a mechanical failure): the chunk's gate failed on scope, the gate's own fixer moved the card wording into the lending module and left it exported where nothing imports it, and the gate on that fix fails on one line, the unused-code count one over its baseline (`FAIL  check unused-export`). The runner does not end the round on that second `FAIL`: it launches one more gate fixer with that gate file, runs the gate again and saves it as `gate-chunk-1-r0-fix2.txt`, never widening `--allow`, raising a baseline or editing the code itself. `chunk-runner-suite-fail-ends` is the other half: the same state with the suite failing ends the round."
+tags: [chunk-runner, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the chunk runner the orchestrator launched for chunk 1 of 3 of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:chunk-runner` first and follow it.
+
+    What the orchestrator hands you. Chunk 1 of 3: **Title**: Cancel a member's hold on a title. **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes". **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts. **Done when**: seam "cancels a member's hold through the real in-memory queue", `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green. **Touches**: storage.
+
+    The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `loop`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
+
+    Resume point: the round stopped in step 2, after the gate's own fixer handed back and the gate was run on its commit: that gate's output is saved as `docs/cancel-hold/implementation/gate-chunk-1-r0-fix.txt`. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Carry on from that gate file. Stop when step 2 is over, before any reviewer or smoke agent is launched: hand back the line as far as it goes, with `stopped at step 2` appended if the round has not ended.
+  model: opus
+  max_turns: 60
+  timeout_seconds: 2400
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: chunk-runner-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:chunk-runner"'
+    min: 1
+  - type: tool_used
+    name: orchestrator-not-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 0
+    max: 0
+  - type: regex
+    name: log-not-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
+    match: not_contains
+  - type: regex
+    name: no-records-commit
+    target: trace
+    pattern: 'git commit[\s\S]{0,300}?Records:'
+    match: not_contains
+  - type: regex
+    name: second-gate-fails-on-the-count-alone
+    # The state, checked: one FAIL line, the unused-code count.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r0-fix.txt
+    pattern: '^(?=[\s\S]*FAIL  check unused-export)(?![\s\S]*FAIL  (?!check unused-export)\w)'
+  - type: tool_used
+    name: one-more-gate-fixer
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: fixer-handed-the-second-gate-file
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*(?:gate-chunk-1-r0-fix\.txt|unused-export))'
+    min: 1
+  - type: file_exists
+    name: third-gate-saved-under-its-own-name
+    path: docs/cancel-hold/implementation/gate-chunk-1-r0-fix2.txt
+  - type: tool_used
+    name: no-reviewer-launched
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?code-reviewer'
+    min: 0
+    max: 0
+  - type: regex
+    name: no-baseline-raised-no-allow-widened
+    target: trace
+    pattern: '--record-gate-baselines|"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*gate-checks\.json"'
+    match: not_contains
+  - type: regex
+    name: round-not-ended-on-the-second-fail
+    # One line: the gate passed after a fix, two gate fixers counted, the
+    # stop. (A third FAIL after the second fixer would end the round by
+    # the skill; this reads the run where the fixer cleared the count.)
+    target: last_message
+    pattern: '^\s*[^\n]*gate \W{0,2}PASS after \W{0,2}[0-9a-f]{7,40}\b[^\n]*fixers \W{0,2}2\b[^\n]*stopped at step 2[^\n]*\s*$'
