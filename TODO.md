@@ -109,7 +109,7 @@ stale only for the scripts it ran: say how many before the gate runs.
   or not it has a baseline (`FAIL` outranks `OWED`); `adopt` refuses
   while a driven state has no capture. Two states that threw were one
   step from being adopted as 23 of 25.
-- [ ] **A4 `audit_sync.py`** refused a whole copy for an expired signed
+- [x] **A4 `audit_sync.py`** refused a whole copy for an expired signed
   download link in a transcript. A signed link is redacted and the copy
   goes on; a refusal is kept for what `source_scan.py` calls a secret.
 - [ ] **A5 `rounds_record.py`** (H1, cause 1): a round-1 finding is a

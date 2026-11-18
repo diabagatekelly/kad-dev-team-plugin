@@ -170,6 +170,35 @@ class AuditSync(unittest.TestCase):
         self.assertEqual(git(self.remote, "log", "--oneline").count("\n"), 2)
 
     # 2
+    @staticmethod
+    def web_token(exp):
+        import base64
+        part = lambda obj: base64.urlsafe_b64encode(json.dumps(obj).encode()).decode().rstrip("=")
+        return part({"alg": "HS256", "typ": "JWT"}) + "." + part({"exp": exp, "sub": "release-asset"}) + ".c2lnbmF0dXJlLXNpZ25hdHVyZQ"
+
+    def test_an_expired_signed_link_in_a_transcript_is_no_finding(self):
+        # a tool printed a signed download link an hour ago: it opens nothing now, and two syncs were refused over one
+        self.log(SID_A)
+        self.transcript(SID_A, ["downloaded https://assets.example.invalid/tool.tgz?jwt=" + self.web_token(1_600_000_000)])
+        out = self.sync()
+        self.assertTrue(os.path.isfile(self.in_clone(SID_A, f"{SID_A}.jsonl")), out)
+        self.assertNotIn("held back", out)
+
+    def test_a_live_token_holds_back_its_transcript_and_nothing_else(self):
+        import time
+        self.log(SID_A)
+        self.log(SID_B)
+        self.transcript(SID_A, ["downloaded https://assets.example.invalid/tool.tgz?jwt=" + self.web_token(int(time.time()) + 3600)])
+        self.transcript(SID_B, ["nothing of note"])
+        out = self.sync()
+        self.assertIn("held back: a credential-shaped string at line 1: JSON web token", out)
+        self.assertFalse(os.path.exists(self.in_clone(SID_A, f"{SID_A}.jsonl")))
+        self.assertTrue(os.path.isfile(self.in_clone(SID_B, f"{SID_B}.jsonl")))
+        self.assertNotIn("FAILED", out)
+        # cleared by a human, it is copied
+        self.sync("--allow", f"{SID_A}.jsonl")
+        self.assertTrue(os.path.isfile(self.in_clone(SID_A, f"{SID_A}.jsonl")))
+
     def test_transcript_with_a_source_value_is_withheld(self):
         self.log(SID_A)
         self.log(SID_B)

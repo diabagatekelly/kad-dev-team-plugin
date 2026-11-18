@@ -89,7 +89,14 @@ is refreshed on the next sync. Three rules govern the copy:
 Before copying anything it reads every file it would copy for
 credential-shaped strings (cloud and hosting tokens, private keys, Plaid
 access tokens, JWTs, `secret=`/`token=`/`password=` assignments) and
-refuses on the first hit, listing them with the matched text masked;
+refuses on the first hit, listing them with the matched text masked.
+Two things are not a refusal: a JSON web token whose own `exp` claim is
+in the past (a signed download link a tool printed, which opens nothing
+now) is no finding; and a hit in a transcript holds back that one file,
+named among the skipped with its line, while the planning documents and
+the other transcripts are copied (a later sync takes it once the string
+has expired). A hit in a planning document, a map or a review still
+stops everything.
 `--allow <path fragment>` skips the scan for a file a human has read and
 cleared (a test fixture with an invented token, say), and the sync log
 records that it was allowed. Files named `.env*` are never copied.
@@ -137,6 +144,7 @@ as it is.
 from __future__ import annotations
 
 import argparse
+import base64
 import datetime as dt
 import json
 import os
@@ -583,6 +591,19 @@ def mask(s: str) -> str:
     return s[:6] + "..." + s[-3:] if len(s) > 12 else "..."
 
 
+def jwt_expired(token: str) -> bool:
+    """True when the token's own `exp` claim is in the past: a signed
+    download link a tool printed an hour ago opens nothing now, and a
+    transcript that holds one is not a transcript that holds a credential.
+    A token with no readable `exp` is treated as live."""
+    try:
+        body = token.split(".")[1]
+        claims = json.loads(base64.urlsafe_b64decode(body + "=" * (-len(body) % 4)))
+        return float(claims["exp"]) < time.time()
+    except (IndexError, KeyError, TypeError, ValueError):
+        return False
+
+
 def scan(path: Path) -> list[str]:
     """Credential-shaped strings in one text file, as 'line: kind: masked' entries."""
     try:
@@ -595,9 +616,9 @@ def scan(path: Path) -> list[str]:
     hits: list[str] = []
     for lineno, line in enumerate(text.splitlines(), 1):
         for kind, rx in CREDENTIAL_PATTERNS:
-            m = rx.search(line)
-            if m:
-                hits.append(f"{lineno}: {kind}: {mask(m.group(0))}")
+            found = [m for m in rx.finditer(line) if not (kind == "JSON web token" and jwt_expired(m.group(0)))]
+            if found:
+                hits.append(f"{lineno}: {kind}: {mask(found[0].group(0))}")
                 break
     return hits
 
@@ -746,13 +767,27 @@ def plan_and_sync(a, project: Path, clone: Path, slice_dir: Path, nnn: str, name
     # 2. The credential scan, over everything, before any copy.
     allowed: list[Path] = []
     findings: list[str] = []
+    held: list[tuple[Path, Path]] = []
+    transcripts_root = slice_dir / "implementation-docs" / "transcripts"
     for src, _ in kept:
         posix = src.as_posix()
         if any(frag and frag in posix for frag in a.allow):
             allowed.append(src)
             continue
-        for h in scan(src):
+        hits = scan(src)
+        if hits and transcripts_root in _.parents:
+            # A transcript records what tools printed, a live signed link
+            # among it. It is held back, alone; the planning documents and
+            # the other transcripts are still copied, and a later sync
+            # takes it once the string has expired.
+            held.append((src, _))
+            skipped.append(f"{src} (held back: a credential-shaped string at line {hits[0]}"
+                           f"{', and ' + str(len(hits) - 1) + ' more' if len(hits) > 1 else ''}; "
+                           "a later sync copies it once the string has expired, or pass --allow for a file you have read and cleared)")
+            continue
+        for h in hits:
             findings.append(f"  {src}:{h}")
+    kept = [pair for pair in kept if pair not in held]
     if findings:
         say("audit_sync: refused, credential-shaped strings in what would be copied:")
         for f in findings[:50]:
