@@ -283,14 +283,12 @@ Two more things that hold throughout:
   a `python3 -`/`node -e` script or `cp`/`mv` hides what changed and in
   what order from the reviewer, the orchestrator's grader and the trace.
   Bash is for running things: the test runner, `git`, listing and reading
-  files. If you did change a file through the shell anyway, say so: one
-  `- **Shell edit**: <file>` line in your report section per file, and
-  `shell edits <n>` on your hand-back line. Each is a deviation on the
-  record, audited against the transcript: the gate replays what you
-  actually ran and writes the counted number beside the one you reported
-  (a builder once reported 1 and had made 9, incident 4). A formatter run
-  through the manifest's `format` script is not a shell edit. Nothing
-  stalls or asks the owner over the count.
+  files. Every file you change through the shell is counted against you
+  whether you say so or not: the gate replays what you actually ran and
+  writes the number on the chunk's record, for the audit (a builder once
+  reported 1 and had made 9, incident 4; nobody is asked for a count any
+  more). A formatter run through the manifest's `format` script is not a
+  shell edit. Nothing stalls or asks the owner over the count.
 - **The suite runs as its own command, and its result is read before
   `git commit`.** Never `npm test | grep … && git commit`, never the test
   run and the commit on one line: a chain runs on the last command's exit
@@ -468,12 +466,11 @@ that built it, five to ten lines:
 - **Decided**: <gap>: <choice>, one line each
 - **Escalated**: <gap>, who owns it, one line each (or "none")
 - **Deviation**: <file>: <why>, one line each (or "none")
-- **Shell edit**: <file>, one line each (only when there was one)
 - **Commit**: <short sha>; <n> tests green
 ```
 
 Your hand-back to the orchestrator is one line: the commit, the test
-count, `deviations <n>`, `shell edits <n>`, and the report path. It is
+count, `deviations <n>` and the report path. It is
 the only message you end on: a turn that ends on anything else (a
 consult's answer, a progress note, a plan for the next step) is taken as
 your hand-back, and the chunk comes back unfinished (incident 32). The

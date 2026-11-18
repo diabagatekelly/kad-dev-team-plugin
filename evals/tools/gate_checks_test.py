@@ -98,6 +98,19 @@ class TheFile(unittest.TestCase):
             problems = gate.load_gate_checks(self.project)[1]
             self.assertTrue(any(said in p for p in problems), (entry, problems))
 
+    def test_a_command_ci_runs_is_an_optional_extra_category(self):
+        # the format check: a pull request went red on it after the gate had passed
+        self.write(a_full_file({"category": "format and other CI checks", "name": "format", "cmd": printer()},
+                               {"category": "format and other CI checks", "name": "licences", "cmd": printer()}))
+        entries, problems = gate.load_gate_checks(self.project)
+        self.assertEqual(problems, [])
+        self.assertEqual(len(entries), len(gate.CATEGORIES) + 2)
+        self.write(a_full_file({"category": "format and other CI checks", "covered_by": "suite"}))
+        self.assertIn("format and other CI checks: an entry of this category is a cmd, the command CI runs",
+                      gate.load_gate_checks(self.project)[1])
+        self.write(a_full_file())  # a file without it is whole
+        self.assertEqual(gate.load_gate_checks(self.project)[1], [])
+
     def test_two_entries_cannot_share_a_name(self):
         self.write(a_full_file({"category": "duplication", "name": "scan", "cmd": "x"},
                                {"category": "unused code", "name": "scan", "cmd": "y"}))

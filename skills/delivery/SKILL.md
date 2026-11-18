@@ -196,10 +196,20 @@ to merge.
    head, and green is never reported for a commit the pull request no
    longer points at.
 3. **Red.** Read the failing job before anything else, by the first of
-   these that gives the failing tests: `gh run view <run id>
-   --log-failed` (the run id is in the failing check's link); the job's
+   these that gives the failing tests: `XDG_CACHE_HOME="${KAD_GH_DIR:-${TMPDIR:-/tmp}}/cache"
+   gh run view <run id> --log-failed` (the run id is in the failing
+   check's link; `gh` keeps the log it fetches in a cache folder, and
+   the one in the home directory is outside what a fenced session may
+   write, so it is pointed at the launcher's own); the job's
    page in the browser, when a browser answers; the owner, with the URL,
-   in the report. Write `<records dir>/pr-ci-r<i>.md`: the head; each
+   in the report. The owner is the last of the three, not the first: a
+   session started by the launcher reaches GitHub's logs and artifacts
+   itself (the hosts are in its approved set), and one loop had its
+   owner download an artifact by hand three times in a day (incident
+   44). A fetch refused with `host is not on the allow list` means the
+   session's set predates that: say so in the report, with the one line
+   that fixes it (start the session again with `kad`, which shows the
+   wider set once), and only then ask for the file. Write `<records dir>/pr-ci-r<i>.md`: the head; each
    failing job with its runner's operating system; each failing test by
    name with its assertion message; the last lines of the failing step;
    and **the platform difference**, what the runner is that the machine
@@ -236,6 +246,17 @@ run's artifact, never from the page:
 ```
 gh run download <run id> --name screens --dir "${TMPDIR:-/tmp}/kad-screens-<branch>-r<i>"
 ```
+
+**Count the captures first.** The run's capture step prints `capture:
+<n> of <m> states`, and the artifact's `captures/` holds one image per
+captured state, with `capture-errors.json` beside them when a state
+threw and `states.txt` when the workflow wrote the list. Fewer captured
+than listed is a finding whatever the verdict line says: the script
+reports each such state as `MISSING`, and a project whose copy of the
+script predates that reports nothing, which is how two states that threw
+came within one command of being adopted as 23 baselines of 25. With an
+older copy, compare the count yourself, and treat a short count as the
+`FAIL` below, the states that threw as its findings.
 
 The last line of the artifact's `screen-check.txt` is the verdict, and
 there are two that are red:

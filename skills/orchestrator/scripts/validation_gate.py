@@ -48,7 +48,9 @@ module directories as the orchestrator's B step lists them):
    project root (written when `technology-bootstrap`'s gate checks are
    wired; the skill names the eight categories and how a tool is picked
    per stack). The file is `{"checks": [...]}`, one entry per category
-   (`CATEGORIES` below), each in one of three forms:
+   (`CATEGORIES` below; plus any number of `format and other CI checks`
+   entries, each a `cmd`: every other command the project's CI runs),
+   each in one of three forms:
    `{"category", "name", "cmd"}` runs the command the way the test
    command is run and passes on exit 0, for a tool that keeps its own
    baseline (ESLint's suppressions file, a gitleaks baseline);
@@ -571,6 +573,11 @@ GATE_CHECKS_FILE = "gate-checks.json"
 CATEGORIES = ("type-aware lint", "stricter compiler flags", "complexity and length limits", "duplication",
               "unused code", "changed-line coverage", "test timeouts and random order",
               "secret and workflow scans")
+# Not one of the eight a stack is asked to pick a tool for: every other
+# command the project's CI runs (the format check is the usual one), so
+# that nothing goes red in CI that the gate passed. Optional, and a file
+# may hold several, each a `cmd` entry.
+CI_CATEGORY = "format and other CI checks"
 COVERED_BY = ("suite", "typecheck", "lint", "coverage")
 CHECK_NAME = re.compile(r"[a-z0-9][a-z0-9-]*$")
 
@@ -597,7 +604,11 @@ def load_gate_checks(project):
             problems.append(f"entry {i} is not an object")
             continue
         category = e.get("category")
-        if category not in CATEGORIES:
+        if category == CI_CATEGORY:
+            if "cmd" not in e:
+                problems.append(f"{category}: an entry of this category is a cmd, the command CI runs")
+                continue
+        elif category not in CATEGORIES:
             problems.append(f"entry {i}: unknown category {category!r}")
             continue
         seen.add(category)
