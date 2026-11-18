@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: orchestrator-delivery-foreground
-description: "The chunk loop's E step (design §11 case 10): resumed after D with two standing Mediums and three Lows, a local bare origin and a recording stand-in for the GitHub CLI at tools/gh. The orchestrator runs delivery inline: the branch is pushed, the pull request opened with pr-writeup's body, one issue filed per standing Medium and none for a Low, the body edited to link them, the cost script run, the E line written, all in the foreground and in the turn that reports."
+description: "The chunk loop's E step (design §11 case 10): resumed after D with two standing Mediums and three Lows, a local bare origin and a recording stand-in for the GitHub CLI at tools/gh. The orchestrator runs delivery inline: the branch is pushed, the pull request opened with pr-writeup's body, one issue filed per standing Medium and none for a Low, the body edited to link them, the cost script run, the E line written, all in the foreground and in the turn that reports. Since 0.17.0 (TODO.md's C6): the E line is written before the last push, so the log the remote holds has it (the scaffold's receive hook copies the pushed branch's log to `tools/pushed-log.txt`), and the tree is checked clean before the report."
 tags: [orchestrator, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -103,3 +103,18 @@ graders:
     input_match: '\bsleep\s+(?:[6-9]\d|\d{3,})\b'
     min: 0
     max: 0
+  # 0.17.0 (TODO.md C6): the log's last lines are in the last pushed
+  # commit. `tools/pushed-log.txt` is the log as the remote's slice
+  # branch holds it after the last push (written by the origin's receive
+  # hook; `tools/` is not in the tree).
+  - type: regex
+    name: e-line-in-the-pushed-log
+    target:
+      source: file
+      path: tools/pushed-log.txt
+    pattern: '- \*\*E\. Delivery:\*\*[^\n]*PR[^\n]*7'
+  - type: tool_used
+    name: tree-checked-clean-before-the-report
+    tool: Bash
+    input_match: 'git status\b[^\n"]*(?:--short|--porcelain|-s\b)'
+    min: 1

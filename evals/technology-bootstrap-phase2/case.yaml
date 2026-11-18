@@ -51,9 +51,13 @@ graders:
       checks` heading: a tool per category the local gate runs (a
       type-aware lint, compiler flags, size limits, a duplication and an
       unused-code tool, coverage of changed lines, test timeouts, a secret
-      scanner, and a workflow scanner named for when a workflow exists).
+      scanner, and a workflow scanner named for when a workflow exists),
+      and since 0.17.0 a ninth row, `format and other CI checks`, that
+      lists each command a continuous integration would run and the gate
+      would not (the format check), or says there is none.
       They are checks on the code, not a pipeline, a host or a product
-      from the list above. (1) A category listed as
+      from the list above: a row that names a format command and says CI
+      does not exist yet has decided no pipeline. (1) A category listed as
       deliberately not decided, with an owner. (2) The skill's default set for
       what a later chunk of the slice may force, "the runtime's built-in unless
       a chunk forces a dependency", approved once as a whole: an in-memory

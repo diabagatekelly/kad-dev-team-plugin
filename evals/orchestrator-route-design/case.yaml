@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: orchestrator-route-design
-description: "Routing, one row of the orchestrator's table: a user story and no design doc: routes to architecture-design."
+description: "Routing, one row of the orchestrator's table: a user story and no design doc: routes to architecture-design. Since 0.17.0 (C4) the run may end with the design saved and its decisions taken as recommended, not on the first decision put to the owner; `orchestrator-recommended-not-asked` holds that on the same row."
 tags: [orchestrator, library-app]
 context:
   scaffold_script: scaffold.sh
@@ -59,6 +59,6 @@ graders:
     criteria: |
       The orchestrator executes exactly one routed step per invocation, then reports what it detected, where it routed and what was produced, and asks whether to continue; it never chains into the next stage. Here the routed step is `software-architect:architecture-design`.
 
-      PASS if the response ends in one of two ways: with architecture-design's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn), or with the routed step's result reported and a question whether to continue to the next step. A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is the second ending, not the orchestrator answering its questions. Either way nothing from a later stage (security or reliability criteria, or anything after them) has been produced.
+      PASS if the response ends in one of three ways: with architecture-design's own questions to the user (the routed skill stopping to ask, its artifact to come in a later turn); with the routed step's result reported and a question whether to continue to the next step; or (since 0.17.0, when the design's decisions each had a recommended option) with the design saved, the decisions it took as recommended listed for the owner to overturn, and the next row named or a question for the owner that is theirs to answer (the slice's scope, a risk to accept). A skill that delivers its artifact without needing to ask, making its own judgment calls or stating assumptions inside that work, is doing its job; that is the second ending, not the orchestrator answering its questions. Either way nothing from a later stage (security or reliability criteria, or anything after them) has been produced.
 
       FAIL if the response goes on to run or produce a later stage's work, or if the routed skill had stopped to ask the user something and the response answers that question itself from the repository and carries on past it, or if it routes to something other than architecture-design.
