@@ -40,15 +40,17 @@ graders:
     name: no-commit-before-the-checks-pass
     # A `git commit` command with no `checks: PASS` line of the script's
     # own output anywhere before it. The output's line follows a line
-    # break (the two characters `\n` in the trace); the skill's text says
-    # the words in backticks and does not count.
+    # break (the two characters `\n` in the trace) or opens the output (a
+    # quote: three runs piped the script through grep and got the one
+    # line); the skill's text says the words in backticks and does not
+    # count.
     target: trace
-    pattern: '^(?:(?!\\nchecks: PASS)[\s\S])*?"name":"Bash","input":\{[^{}]*?"command":"(?:[^"\\]|\\.)*?\bgit commit\b'
+    pattern: '^(?:(?!(?:\\n|")checks: PASS)[\s\S])*?"name":"Bash","input":\{[^{}]*?"command":"(?:[^"\\]|\\.)*?\bgit commit\b'
     match: not_contains
   - type: regex
     name: last-checks-result-is-a-pass
     target: trace
-    pattern: '\\nchecks: FAIL(?![\s\S]*\\nchecks: PASS)'
+    pattern: '\\nchecks: FAIL(?![\s\S]*(?:\\n|")checks: PASS)'
     match: not_contains
   - type: regex
     name: unused-helper-not-left-exported
