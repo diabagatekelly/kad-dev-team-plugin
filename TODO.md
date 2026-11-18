@@ -93,13 +93,15 @@ traces.
 
 **Left for the owner.**
 
-- Push, and the pull request (the code commit alone first for the
-  external reviewer, then the evidence and bars). Not done.
+- Pull request #67 (the owner, 2026-11-18: push and open). The code
+  commits were pushed alone first for the external reviewer (266,000
+  characters), then the cases, evidence and bars.
 - C4's log bullet (`taken as recommended: <choice>, over <alternatives>
   (<skill>)`) was written in that form in one run of three; the decision
   was taken and the design saved in all three. A wording fix is in the
   orchestrator and reaches every orchestrator case and four frozen
-  histories.
+  histories. The owner, 2026-11-18: not fixed for now, to see whether
+  it causes trouble in real use of the plugin.
 - C9 has no case of its own; it showed by accident in
   `orchestrator-issue-fix-records`, whose changed launch grader passed
   three runs that made no launch.
