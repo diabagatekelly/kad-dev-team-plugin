@@ -34,18 +34,31 @@ graders:
       PORTABLE. The design names components, boundaries and what crosses them; it does not specify implementation: no code, no function signatures, no field-by-field type definitions. Naming existing files or modules it builds on is fine.
 
       PASS if it stays at that level. FAIL if it includes code or signatures.
-  - type: llm
-    name: decisions-show-approval
-    focus:
+  - type: regex
+    name: decisions-recorded
+    target:
       source: file
       path: docs/pay-fine/design-001.md
-    weight: 1
-    criteria: |
-      PORTABLE. The Decisions section (or equivalent) must show, for each real decision, what was recommended, what alternative(s) were considered, and what the user approved or changed — not bare final choices with no trace of how they were reached.
-
-      The user approved the gateway explicitly and said "for everything else, go with your recommendations". A decision recorded as the designer's recommendation, approved under that standing instruction, carries provenance.
-
-      PASS if every decision shown carries that provenance. FAIL if any reads as settled by the designer alone with no recommendation or approval recorded, or there is no decisions record despite real decisions.
+    pattern: '(?:^|\n)## Decisions\b'
+  - type: regex
+    name: decisions-show-approval
+    # A judge until 0.17.0, on a document of 11,000 to 19,000 characters:
+    # it failed 20 of 26 runs. Read against those 26 documents, one has a
+    # decision with no word of how it was approved; the other 19 say it,
+    # 11 of them once for the whole section ("Decision 1 was the owner's
+    # own answer. Decisions 2 to 7 were approved under their standing
+    # …"), which the judge did not credit. A decision is a block under
+    # `## Decisions` that opens with a `###` heading, `**Decision`,
+    # `**<n>.` or `<n>. `. The pattern finds a block that never says
+    # whose approval it has (approved, the standing "go with your
+    # recommendations", the owner's or the user's answer), in a section
+    # that does not say it for all of them before the first.
+    target:
+      source: file
+      path: docs/pay-fine/design-001.md
+    pattern: '(?:^|\n)## Decisions[^\n]*\n(?!(?:(?!\n(?:#{3,4} |\*\*Decision|\*\*\d+[.:]|\d+\. ))[\s\S])*?(?:approv|standing))(?:(?!\n## )[\s\S])*?(?<=\n)(?:#{3,4} |\*\*Decision|\*\*\d+[.:]|\d+\. )(?:(?!\n(?:#{3,4} |\*\*Decision|\*\*\d+[.:]|\d+\. )|\n## |(?:approv|standing|go with your recommendation|owner|the user|user.s|as recommended|recommended and adopted))[\s\S])*?(?=\n(?:#{3,4} |\*\*Decision|\*\*\d+[.:]|\d+\. )|\n## |$(?![\s\S]))'
+    flags: i
+    match: not_contains
   - type: llm
     name: boundaries-name-what-crosses
     focus:
