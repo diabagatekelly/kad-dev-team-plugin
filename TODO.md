@@ -87,8 +87,13 @@ Each is a defect or a gap in a script, with a script test. A case is
 stale only for the scripts it ran: say how many before the gate runs.
 
 - [x] **A1 `mutation_pass.py`** (entry 110: 2 h 54 m for 40 mutants).
-  Built 2026-11-17 with seven script tests (24 pass); not yet timed on
-  the first project's suite: a mutant's suite is ended after three times the
+  Built 2026-11-17 (27 script tests). Timed on the first project at
+  `9d225c4`, the loop's own base and 40 operator mutants: **13 minutes**
+  (baseline 36 s, a caught mutant 17 s at the median, 38 caught, 2
+  survived, none hung), against 2 h 54 m in the loop. Also: a baseline
+  that fails is tried three times and the tests that failed are named as
+  unsteady and never count as a catch (the project has one); `changed`
+  leaves out configuration and capture files. The pass: a mutant's suite is ended after three times the
   baseline's own time (at least 60 s; the default was 1,800 s, and three
   hung mutants cost 84 minutes); the command runs in its own process
   group and a timeout ends the whole group (36 orphaned test processes
@@ -125,13 +130,19 @@ stale only for the scripts it ran: say how many before the gate runs.
   the log's lines) is behind the 0.16 log (it warns
   on the D line's `done` and `stranger` fields) and reads owner-direction
   entries in the middle of a loop as the loop's own (C8).
-- [ ] **A8 `bin/kad`** (entry 111; **waits for the owner's choice of
-  hosts**, a security setting; `kad --domain <host>` already adds one and
-  stores it): GitHub Actions' log and artifact hosts
-  on the allow list; at first run, Playwright's Chromium into a
-  project-local, gitignored `PLAYWRIGHT_BROWSERS_PATH` the fence allows,
-  with its download host. The fence's settings are security settings:
-  the exact hosts are shown to the owner before they are written.
+- [x] **A8 `bin/kad`** (entry 111; the owner, 2026-11-17: the narrow
+  hosts, and the download moved outside the fence only if that fails).
+  It did not fail: GitHub publishes its Actions storage hosts by name
+  (`gh api meta`, 140 of them), so the fence allows each name and the
+  results receiver, never `*.blob.core.windows.net`; the approved set
+  records the pattern, so the owner is asked once. A project with
+  `screens/package.json` also gets Playwright's two download hosts and
+  `PLAYWRIGHT_BROWSERS_PATH` inside the project, excluded from git.
+  Tried for real on the first project's last screens run: the artifact
+  download fails in the old fence and works in the new one. `gh run view
+  --log` also needs `XDG_CACHE_HOME` on a writable folder (C11 says so in
+  `delivery`). Not tried: whether the downloaded Chromium starts inside
+  the fence.
 - [x] **A9 `ci-pipeline`** section 3 adds the copied files to the
   project's formatter and linter ignore files, and its workflow writes
   the capture's state list first (for A3). Shipping `capture.mjs` in

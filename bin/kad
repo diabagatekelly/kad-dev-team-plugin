@@ -295,6 +295,45 @@ project_domains=""
 [ -f "$project/Cargo.toml" ] && project_domains="$project_domains crates.io static.crates.io index.crates.io"
 [ -f "$project/Gemfile" ] && project_domains="$project_domains rubygems.org index.rubygems.org"
 project_domains="${project_domains# }"
+# GitHub Actions' logs and artifacts, for delivery's CI watch and the
+# screen-change check's baselines: `gh run view --log-failed` and `gh run
+# download` are served from GitHub's results receiver and from storage
+# accounts GitHub names one by one in its public meta endpoint
+# (productionresultssa<N>.blob.core.windows.net). The runtime matches a
+# whole name or `*.domain`, and `*.blob.core.windows.net` would be every
+# storage account anyone has, so the names are listed: read from the
+# endpoint with the host's gh, kept in the config directory, read again
+# after 30 days. Without them every slice with a screen stopped for the
+# owner to download an artifact by hand. The approved set records the
+# pattern, not each name, so a storage account GitHub adds asks nothing.
+actions_pattern='productionresultssa<N>.blob.core.windows.net'
+actions_cache="$conf_dir/actions-hosts"
+actions_hosts() {
+  local fresh=""
+  if command -v gh >/dev/null && { [ ! -s "$actions_cache" ] || [ -n "$(find "$actions_cache" -mtime +30 2>/dev/null)" ]; }; then
+    fresh="$(gh api meta --jq '.domains.actions[]' 2>/dev/null | grep -E '^productionresultssa[0-9]+\.blob\.core\.windows\.net$' | sort -u || true)"
+    if [ -n "$fresh" ]; then
+      [ "$check" = 1 ] || printf '%s\n' "$fresh" > "$actions_cache"
+      printf '%s' "$fresh" | tr '\n' ' '; return
+    fi
+  fi
+  [ -s "$actions_cache" ] && grep -E '^productionresultssa[0-9]+\.blob\.core\.windows\.net$' "$actions_cache" | tr '\n' ' '
+  return 0
+}
+actions_domains=""; actions_set=""; actions_count=0
+if [ "$github" = 1 ]; then
+  actions_storage="$(actions_hosts)"
+  actions_count="$(printf '%s' "$actions_storage" | wc -w | tr -d ' ')"
+  actions_domains="results-receiver.actions.githubusercontent.com $actions_storage"
+  actions_set="results-receiver.actions.githubusercontent.com"
+  if [ "$actions_count" -gt 0 ]; then actions_set="$actions_set $actions_pattern"; fi
+fi
+# The screen-change check's browser: a project with the plugin's capture
+# package (screens/package.json) may download Playwright's pinned Chromium,
+# into a folder of its own inside the project (PLAYWRIGHT_BROWSERS_PATH,
+# below), so a fixer can try a state before CI does.
+screen_domains=""
+[ -f "$project/screens/package.json" ] && screen_domains="cdn.playwright.dev playwright.download.prss.microsoft.com"
 # This run's audit mode and repository: the flag for this run only, else the
 # stored answer (--audit-repo none is an explicit answer: local only).
 run_audit() { printf '%s' "${audit:-$stored_audit}"; }
@@ -303,7 +342,7 @@ run_repo() { if [ "$audit_repo_set" = 1 ]; then printf '%s' "$audit_repo_arg"; e
 # approved one: anything wider is shown again for one yes.
 effective_set() {
   KAD_CHROME_ON="$chrome" KAD_LOCAL_ON="$local" KAD_AUDIT_ON="$(run_audit)" KAD_REPO="$(run_repo)" KAD_GITHUB="$github" \
-  KAD_ALL_DOMAINS="$stored_domains $project_domains ${domains_arg[*]:-}" python3 -I - <<'PY'
+  KAD_ALL_DOMAINS="$stored_domains $project_domains $actions_set $screen_domains ${domains_arg[*]:-}" python3 -I - <<'PY'
 import json, os
 print(json.dumps({"chrome": os.environ["KAD_CHROME_ON"] == "1", "local": os.environ["KAD_LOCAL_ON"] == "1",
                   "audit": os.environ["KAD_AUDIT_ON"] == "1", "audit_repo": os.environ["KAD_REPO"], "github": os.environ["KAD_GITHUB"] == "1",
@@ -461,7 +500,7 @@ chrome_sock=""
 [ "$chrome" = 1 ] && chrome_sock="/tmp/claude-mcp-browser-bridge-$(id -un)"
 gen_settings() {
   KAD_PROJECT="$project" KAD_TMP="$tmp" KAD_LOCAL="$local" KAD_CLAUDE_DIR="$claude_dir" KAD_GH_DIR="$gh_dir" KAD_AUDIT_DIR_W="$audit_dir" KAD_CHROME_SOCK="$chrome_sock" \
-  KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains $project_domains ${domains_arg[*]:-}$([ "$chrome" = 1 ] && echo ' bridge.claudeusercontent.com mcp-proxy.anthropic.com')" KAD_PTY="$([ "$(uname -s)" = Darwin ] && echo 1 || echo 0)" python3 -I - <<'PY'
+  KAD_CLAUDE_TMP="${CLAUDE_CODE_TMPDIR:-}" KAD_DOMAINS="$stored_domains $project_domains $actions_domains $screen_domains ${domains_arg[*]:-}$([ "$chrome" = 1 ] && echo ' bridge.claudeusercontent.com mcp-proxy.anthropic.com')" KAD_PTY="$([ "$(uname -s)" = Darwin ] && echo 1 || echo 0)" python3 -I - <<'PY'
 import json, os, sys
 home = os.path.expanduser("~")
 claude_dir = os.path.abspath(os.path.expanduser(os.environ["KAD_CLAUDE_DIR"]))
@@ -533,7 +572,7 @@ show_set() {
   say "${why_screen:-the set this session starts with}: $project"
   say "  writes       the project; the audit directory $audit_dir; Claude Code's own files ($claude_dir, ~/.claude.json), the temp directory, npm's cache and kad's gh directory ($gh_dir); never Claude Code's user settings, hooks, commands, agents, skills or plugins"
   say "  never reads  your keys and credential files: ~/.ssh, ~/.aws, ~/.gnupg, ~/.kube, ~/.config/gcloud, ~/.azure, ~/.config/gh, ~/.npmrc, ~/.netrc, ~/.git-credentials, ~/.pypirc, ~/.docker/config.json, ~/.terraform.d/credentials.tfrc.json, the Claude credentials file"
-  say "  network      the API and sign-in (api.anthropic.com, claude.ai, platform.claude.com), GitHub (github.com, *.github.com)$([ "$chrome" = 1 ] && echo ", Chrome's bridge (bridge.claudeusercontent.com, mcp-proxy.anthropic.com)")$([ -n "$project_domains" ] && echo "; for this project's manifests: $project_domains")$([ -n "$extra" ] && echo "; extra: $extra"); nothing else"
+  say "  network      the API and sign-in (api.anthropic.com, claude.ai, platform.claude.com), GitHub (github.com, *.github.com)$([ "$chrome" = 1 ] && echo ", Chrome's bridge (bridge.claudeusercontent.com, mcp-proxy.anthropic.com)")$([ -n "$project_domains" ] && echo "; for this project's manifests: $project_domains")$([ -n "$actions_set" ] && echo "; GitHub Actions' logs and artifacts, for delivery (results-receiver.actions.githubusercontent.com$([ "$actions_count" -gt 0 ] && echo " and the $actions_count storage hosts GitHub publishes, $actions_pattern, listed in $actions_cache" || echo "; no storage host yet: GitHub's list could not be read, so artifacts stay blocked this run"))")$([ -n "$screen_domains" ] && echo "; the screen check's browser download ($screen_domains)")$([ -n "$extra" ] && echo "; extra: $extra"); nothing else"
   say "  credential   $gh_line; every other credential-shaped variable is dropped from the session's environment"
   say "  local ports  $([ "$local" = 1 ] && echo 'allowed: a dev server, its tests and the smoke runs bind and reach localhost (--no-local denies them)' || echo 'denied (--no-local)')"
   say "  chrome       $chrome_line"
@@ -656,6 +695,15 @@ kept="${keep_env[*]:-}"
 # the orchestrator's sandbox check reads them to allow exactly those. Audit
 # mode itself is KAD_AUDIT=1, which the hooks and the sync key on.
 export KAD_GH_DIR="$gh_dir" KAD_AUDIT_DIR="$audit_dir"
+# The capture's browser lives in the project, out of git's sight, never in
+# ~/Library/Caches (outside the fence's writes): `npx playwright install
+# chromium` in screens/ then works inside the session.
+if [ -f "$project/screens/package.json" ]; then
+  export PLAYWRIGHT_BROWSERS_PATH="$project/screens/.browsers"
+  if [ -d "$project/.git/info" ] && ! grep -qxF 'screens/.browsers/' "$project/.git/info/exclude" 2>/dev/null; then
+    printf 'screens/.browsers/\n' >> "$project/.git/info/exclude" 2>/dev/null || true
+  fi
+fi
 if [ -n "$gh_token" ]; then
   export GH_TOKEN="$gh_token" GH_CONFIG_DIR="$gh_dir" GIT_TERMINAL_PROMPT=0
   # git's credential helper for the session, by environment, no file written:

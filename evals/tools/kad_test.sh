@@ -98,7 +98,7 @@ check "approve: audit on by default" has "$out" "KAD_AUDIT=1"
 check "approve: stored file lists the project with its answers and the approved set" python3 -I -c '
 import json, sys; d = json.load(open(sys.argv[1])); p = d["projects"][sys.argv[2]]
 assert p["approved"].endswith("Z") and p["domains"] == ["extra.example"] and p["audit"] is True and p["audit_repo"] == "", p
-assert p["set"] == {"audit": True, "audit_repo": "", "chrome": True, "domains": ["extra.example", "registry.npmjs.org"], "github": True, "local": True}, p["set"]
+assert p["set"] == {"audit": True, "audit_repo": "", "chrome": True, "domains": ["extra.example", "registry.npmjs.org", "results-receiver.actions.githubusercontent.com"], "github": True, "local": True}, p["set"]
 assert d["audit"] is True and d["audit_repo"] == "" and d["domains"] == ["extra.example"], d   # the root: the defaults for the next project
 ' "$conf" "$T/proj"
 check "approve: stored file owner-readable only" bash -c '[ "$(stat -f %Lp "$1" 2>/dev/null || stat -c %a "$1")" = 600 ]' _ "$conf"
@@ -210,6 +210,45 @@ settings="$(sed -n 's/^srt-stub: --settings \([^ ]*\) .*/\1/p' <<< "$out")"
 check "no-chrome: claude --no-chrome" has "$out" "claude --plugin-dir $root --no-chrome"
 check "no-chrome: KAD_CHROME unset" bash -c '! grep -q "KAD_CHROME=" <<< "$1"' _ "$out"
 check "no-chrome: no bridge host in the settings" bash -c '! grep -q bridge.claudeusercontent.com "$1"' _ "$settings"
+
+# 8b. GitHub Actions' logs and artifacts: the storage hosts GitHub publishes
+#     are allowed by name, never as *.blob.core.windows.net; the approved set
+#     records the pattern, so a host GitHub adds later asks nothing.
+cat > "$T/bin/gh" <<'EOF'
+#!/bin/sh
+[ "$1 $2" = "auth token" ] && echo ghs_stub_token
+if [ "$1 $2" = "api meta" ]; then
+  printf '%s\n' productionresultssa0.blob.core.windows.net productionresultssa17.blob.core.windows.net \
+    '*.actions.githubusercontent.com' evil.blob.core.windows.net "${KAD_TEST_MORE:-productionresultssa17.blob.core.windows.net}"
+fi
+exit 0
+EOF
+run /dev/null
+check "actions hosts, no terminal: exit 2 (wider), naming the pattern" bash -c '[ "$1" = 2 ] && grep -q "domains productionresultssa<N>.blob.core.windows.net" <<< "$2"' _ "$rc" "$out"
+check "actions hosts: the set shown counts them and says where the list is" has "$out" "and the 2 storage hosts GitHub publishes, productionresultssa<N>.blob.core.windows.net, listed in $T/conf/actions-hosts"
+run /dev/null --yes
+settings="$(sed -n 's/^srt-stub: --settings \([^ ]*\) .*/\1/p' <<< "$out")"
+check "actions hosts: each published storage host and the results receiver are in the settings" bash -c 'grep -q "\"productionresultssa0.blob.core.windows.net\"" "$1" && grep -q "\"productionresultssa17.blob.core.windows.net\"" "$1" && grep -q "\"results-receiver.actions.githubusercontent.com\"" "$1"' _ "$settings"
+check "actions hosts: no wildcard over blob storage, and no name that is not a results host" bash -c '! grep -q "\*.blob.core.windows.net" "$1" && ! grep -q "evil.blob" "$1" && ! grep -q "\*.actions.githubusercontent.com" "$1"' _ "$settings"
+rm -f "$T/conf/actions-hosts"
+KAD_TEST_MORE=productionresultssa99.blob.core.windows.net run /dev/null
+settings="$(sed -n 's/^srt-stub: --settings \([^ ]*\) .*/\1/p' <<< "$out")"
+check "actions hosts: a host GitHub adds later is allowed without a question" bash -c '[ "$1" = 0 ] && grep -q "productionresultssa99.blob.core.windows.net" "$2"' _ "$rc" "$settings"
+
+# 8c. A project with the capture package gets Playwright's download hosts
+#     (one yes) and a browser folder of its own, out of git's sight.
+mkdir -p "$T/proj/screens" "$T/proj/.git/info"
+printf '{"name":"screens"}\n' > "$T/proj/screens/package.json"
+cat >> "$T/bin/srt" <<'EOF'
+env | grep -E '^PLAYWRIGHT_BROWSERS_PATH=' || true
+EOF
+run /dev/null
+check "screens: the browser's download hosts widen the set" bash -c '[ "$1" = 2 ] && grep -q "cdn.playwright.dev" <<< "$2"' _ "$rc" "$out"
+run /dev/null --yes
+check "screens: the browser folder is inside the project" has "$out" "PLAYWRIGHT_BROWSERS_PATH=$T/proj/screens/.browsers"
+check "screens: the folder is excluded from git, once" bash -c '[ "$(grep -cxF "screens/.browsers/" "$1/proj/.git/info/exclude")" = 1 ]' _ "$T"
+run /dev/null
+check "screens: the second run asks nothing and adds no second exclude line" bash -c '[ "$1" = 0 ] && [ "$(grep -cxF "screens/.browsers/" "$2/proj/.git/info/exclude")" = 1 ]' _ "$rc" "$T"
 
 # 9. The old restart flags are refused with the one line to run instead.
 run /dev/null --relaunch
