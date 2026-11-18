@@ -126,10 +126,13 @@ stale only for the scripts it ran: say how many before the gate runs.
   gate fixer restored a name the next review then faulted); exempts the
   capture file E.2's own fixer writes from changed-line coverage; and a
   `--checks-only` mode a builder can run before it commits (B1).
-- [ ] **A7 `orchestrator_log_check.py`** (after group C, which settles
-  the log's lines) is behind the 0.16 log (it warns
-  on the D line's `done` and `stranger` fields) and reads owner-direction
-  entries in the middle of a loop as the loop's own (C8).
+- [x] **A7 `orchestrator_log_check.py`** reads the 0.17 log: the `cold`
+  field where `stranger` was, `(reg, pre, first)`, `smoke none` and
+  `review none` under `light`, and says an owner's direction written as
+  an entry splits a loop. On slice 3's log it also finds what the review
+  missed: two bold D lines (the mutation result written as its own), a
+  D line with `DoD` where `done` belongs, and an E line whose green
+  commit is not the pushed one.
 - [x] **A8 `bin/kad`** (entry 111; the owner, 2026-11-17: the narrow
   hosts, and the download moved outside the fence only if that fails).
   It did not fail: GitHub publishes its Actions storage hosts by name
