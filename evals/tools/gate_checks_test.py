@@ -169,6 +169,41 @@ class OneCheck(unittest.TestCase):
             self.assertIn("did not run", gate.gate_check_line("covered:duplication", results["covered:duplication"]))
 
 
+class ChecksOnly(unittest.TestCase):
+    """What a builder or a fixer runs before it commits."""
+
+    def setUp(self):
+        self.project = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.project, ignore_errors=True)
+
+    def run_checks(self, *entries):
+        with open(os.path.join(self.project, "gate-checks.json"), "w") as f:
+            json.dump(a_full_file(*entries), f)
+        return subprocess.run([PY, "-I", SCRIPT, "--project", self.project, "--checks-only"], capture_output=True, text=True)
+
+    def test_a_count_over_its_baseline_fails_before_any_commit(self):
+        r = self.run_checks({"category": "duplication", "name": "dup", "cmd": printer("violation: a", "violation: b"),
+                             "count": "^violation", "baseline": 1})
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("FAIL  check dup [duplication]: 2 found, baseline 1", r.stdout)
+        self.assertEqual(r.stdout.strip().splitlines()[-1], "checks: FAIL")
+        self.assertIn("violation: b", r.stdout)  # the tool's own lines, so the count can be cleared
+
+    def test_at_the_baseline_it_passes_and_runs_no_suite(self):
+        r = self.run_checks({"category": "duplication", "name": "dup", "cmd": printer("violation: a"), "count": "^violation", "baseline": 1})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(r.stdout.strip().splitlines()[-1], "checks: PASS")
+        self.assertIn("left to the gate's suite check", r.stdout)
+        self.assertNotIn("suite", [line.split()[1] for line in r.stdout.splitlines() if line.startswith(("PASS", "FAIL"))])
+
+    def test_a_project_with_no_file_still_passes(self):
+        r = subprocess.run([PY, "-I", SCRIPT, "--project", self.project, "--checks-only"], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("SKIP  gate-checks: no gate-checks.json in the project", r.stdout)
+
+
 class RecordingTheBaselines(unittest.TestCase):
     def setUp(self):
         self.project = tempfile.mkdtemp()

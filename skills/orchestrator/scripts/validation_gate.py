@@ -738,6 +738,51 @@ def record_gate_baselines(project, timeout):
     return 0
 
 
+def script_line(name, c):
+    """The printed line of the typecheck or the lint."""
+    if c.get("skipped"):
+        return f"SKIP  {name}: {c['reason']}"
+    detail = f" ({c['command']})" if c["passed"] else (
+        f" timed out after {c['timeout']:g}s ({c['command']})" if c["timed_out"]
+        else f" exit {c['exit_code']} ({c['command']})")
+    return f"{'PASS' if c['passed'] else 'FAIL'}  {name}{detail}"
+
+
+def checks_only(project, a):
+    """`--checks-only`: the typecheck, the lint and every command of
+    `gate-checks.json`, and nothing else (no suite, no scope, no
+    transcript). What a builder or a fixer runs before it commits, so a
+    count one over its baseline is its own to clear and not a gate fixer's:
+    on one slice a gate fixer ran after five builds of six, and wrote a
+    sixth of the lines the slice added. The last line is `checks: PASS` or
+    `checks: FAIL`; a category the file leaves to the suite or the coverage
+    is named as left to the gate."""
+    checks, outputs = {}, {}
+    for name, explicit in (("typecheck", a.typecheck_cmd), ("lint", a.lint_cmd)):
+        checks[name], outputs[name] = run_script(project, name, explicit, a.test_cmd, a.timeout)
+        print(script_line(name, checks[name]))
+    entries, problems = load_gate_checks(project)
+    if entries is None:
+        print(f"SKIP  gate-checks: no {GATE_CHECKS_FILE} in the project")
+    elif problems:
+        checks["gate-checks"] = {"passed": False}
+        print("FAIL  gate-checks: " + "; ".join(problems))
+    else:
+        for e in entries:
+            if "cmd" in e:
+                key = "check:" + e["name"]
+                checks[key], outputs[key] = run_gate_check(project, e, a.timeout)
+                print(gate_check_line(key, checks[key]))
+            elif "covered_by" in e:
+                print(f"INFO  {e['category']}: left to the gate's {e['covered_by']} check")
+    for name, c in checks.items():
+        if not c["passed"] and outputs.get(name):
+            print(f"--- {name} output, last 30 lines ---\n" + "\n".join(outputs[name].splitlines()[-30:]) + "\n---")
+    passed = all(c["passed"] for c in checks.values())
+    print("checks:", "PASS" if passed else "FAIL")
+    return 0 if passed else 1
+
+
 def gate_check_line(key, c):
     """The printed line of one gate-checks result."""
     category = c["category"]
@@ -1142,6 +1187,9 @@ def registered(name, text):
 DONE_WHEN_QUOTED = re.compile(r'"([^"\n]+)"|`([^`\n]+)`')
 
 
+RENAMED_TEST = re.compile(r"renamed test\s+[\"“`](.+?)[\"”`]\s*(?:→|->)\s*[\"“`](.+?)[\"”`]")
+
+
 def done_when_names(line):
     """The test names a Done when line quotes: every double-quoted string,
     and a backticked string that holds whitespace. A backticked single
@@ -1172,7 +1220,21 @@ def done_when_tests(report_path, chunk):
     line = re.search(r"^\s*[-*]\s*\*\*Done when\*\*\s*:?\s*(.+)$", section.group(1), re.M)
     if not line:
         raise SystemExit(f"--expect-tests-from: chunk {chunk} has no Done when line in {report_path}")
-    return done_when_names(line.group(1))
+    names = done_when_names(line.group(1))
+    # A fix that changes what a test checks renames it, and says so on its
+    # `Fix` line: `renamed test "<old>" → "<new>"`. The plan's name is then
+    # the old one, and the test the gate looks for is the new one. Without
+    # this a fixer either left a title that no longer said what the test
+    # did, or renamed it and failed the gate.
+    renames = {test_key(old): new for old, new in RENAMED_TEST.findall(text) if test_key(old) and test_key(new)}
+    out = []
+    for name in names:
+        seen = set()
+        while test_key(name) in renames and test_key(name) not in seen:
+            seen.add(test_key(name))
+            name = renames[test_key(name)]
+        out.append(name)
+    return out
 
 
 def check_expected_tests(project, names):
@@ -1485,6 +1547,13 @@ def runtime_lines(project, files):
     return {a["file"]: set(a["lines"]) for a in answers if isinstance(a, dict) and "lines" in a}
 
 
+def capture_file(path):
+    """A file of the screen-change check's capture (`screens/`): CI's
+    pinned browser runs it and no test loads it, so it has no row in any
+    coverage table. The loop's own capture fixer writes it at delivery."""
+    return path.replace("\\", "/").split("/")[0] == "screens"
+
+
 def check_coverage(output, files, min_line, min_branch, project, lcov_path=None, added=None):
     """`files`: the changed files that exist. Node lists every file the tests
     loaded, so a changed source file with no row was never loaded: that is
@@ -1571,6 +1640,8 @@ def main():
     p.add_argument("--session", default=os.environ.get("CLAUDE_CODE_SESSION_ID"), help="the session whose subagent --agent names (default: CLAUDE_CODE_SESSION_ID)")
     p.add_argument("--record-gate-baselines", action="store_true",
                    help="run every counted check of gate-checks.json, write its count as that entry's baseline, and exit")
+    p.add_argument("--checks-only", action="store_true",
+                   help="run the typecheck, the lint and gate-checks.json's commands only, and exit: for a builder or a fixer, before its commit")
     p.add_argument("--json")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -1581,6 +1652,8 @@ def main():
         return 0
     if a.record_gate_baselines:
         return record_gate_baselines(project, a.timeout)
+    if a.checks_only:
+        return checks_only(project, a)
     if a.accept_protected:
         if not a.baseline:
             print("--accept-protected needs --baseline")
@@ -1608,9 +1681,12 @@ def main():
         # After the tests, so a test command that edits the tree is seen.
         files = changed_files(project, base, baseline)
         if a.coverage:
-            present = [f for f in files if os.path.isfile(os.path.join(project, f))]
+            present = [f for f in files if os.path.isfile(os.path.join(project, f)) and not capture_file(f)]
             report["checks"]["coverage"] = check_coverage(output, present, a.min_line, a.min_branch,
                                                           project, lcov_path, added_lines(project, base, present))
+            exempt = sorted(f for f in files if capture_file(f))
+            if exempt:
+                report["checks"]["coverage"]["capture_files"] = exempt
     finally:
         if lcov_dir:
             shutil.rmtree(lcov_dir, ignore_errors=True)
@@ -1692,6 +1768,8 @@ def main():
                                       for f, lines in cl["files"].items())) + ")")
             if c.get("type_only"):
                 detail += " (types only, exempt: " + ", ".join(c["type_only"]) + ")"
+            if c.get("capture_files"):
+                detail += " (capture files, run by CI's browser alone, exempt: " + ", ".join(c["capture_files"]) + ")"
             discounted = [f for f, v in c.get("files", {}).items() if "reported_line" in v]
             if discounted:
                 detail += " (erased type lines discounted: " + ", ".join(
@@ -1703,9 +1781,8 @@ def main():
             detail = (f" timed out after {c['timeout']:g}s" if c["timed_out"]
                       else f" exit {c['exit_code']}, summary fail count {c['summary_fail_count']}")
         elif name in ("typecheck", "lint"):
-            detail = f" ({c['command']})" if c["passed"] else (
-                f" timed out after {c['timeout']:g}s ({c['command']})" if c["timed_out"]
-                else f" exit {c['exit_code']} ({c['command']})")
+            print(script_line(name, c))
+            continue
         elif name == "sources":
             if c["passed"]:
                 detail = f" no value of a listed source in the {c['scanned']} changed file(s) scanned"

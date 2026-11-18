@@ -116,7 +116,7 @@ stale only for the scripts it ran: say how many before the gate runs.
   regression only when the fix wrote the line's content; a line it moved
   is `pre-existing`; a report from a reviewer with no round-0 report in
   the scope is `first-seen`.
-- [ ] **A6 `validation_gate.py`**: reads `renamed <old> → <new>` on a
+- [x] **A6 `validation_gate.py`**: reads `renamed <old> → <new>` on a
   `Fix` line so a fix may rename a plan's test (H1, cause 4: chunk 1's
   gate fixer restored a name the next review then faulted); exempts the
   capture file E.2's own fixer writes from changed-line coverage; and a

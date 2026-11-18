@@ -166,5 +166,44 @@ class ScopeAndTheFlowsRecords(unittest.TestCase):
                     os.remove(out)
 
 
+class ATestAFixRenamed(unittest.TestCase):
+    """The plan's test names, read with the renames a fix declared."""
+
+    def plan(self, fixes=""):
+        d = tempfile.mkdtemp()
+        self.addCleanup(__import__("shutil").rmtree, d, True)
+        path = os.path.join(d, "implementation-report.md")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("# Implementation\n\n### Chunk 1: cancel a hold\n\n"
+                    '- **Done when**: "refuses a hold that is not mine" and seam "cancels my hold and frees the copy" pass\n'
+                    "- **Commit**: abc1234\n" + fixes + "\n### Chunk 2: the list\n\n- **Done when**: \"lists my holds\" passes\n")
+        return path
+
+    def test_without_a_rename_the_plans_names_stand(self):
+        self.assertEqual(gate.done_when_tests(self.plan(), 1), ["refuses a hold that is not mine", "cancels my hold and frees the copy"])
+
+    def test_a_declared_rename_is_the_name_the_gate_looks_for(self):
+        # the fix changed what the test checks; left under its old title the next review faulted the name
+        fixes = ('- **Fix r1**: def5678; the refusal now names the member; renamed test "refuses a hold that is not mine" → '
+                 '"refuses a hold that is not mine and names its member"\n')
+        self.assertEqual(gate.done_when_tests(self.plan(fixes), 1),
+                         ["refuses a hold that is not mine and names its member", "cancels my hold and frees the copy"])
+
+    def test_two_renames_of_one_test_follow_each_other_and_an_ascii_arrow_reads(self):
+        fixes = ('- **Fix r1**: def5678; renamed test "refuses a hold that is not mine" -> "refuses another member\'s hold"\n'
+                 '- **Fix r2**: 0a1b2c3; renamed test "refuses another member\'s hold" → "refuses another member\'s hold with 403"\n')
+        self.assertEqual(gate.done_when_tests(self.plan(fixes), 1)[0], "refuses another member's hold with 403")
+        self.assertEqual(gate.done_when_tests(self.plan(fixes), 2), ["lists my holds"])
+
+
+class TheCaptureFiles(unittest.TestCase):
+    def test_only_the_screens_folder_is_exempt_from_coverage(self):
+        # the loop's own capture fixer writes screens/states.mjs at delivery, and no test can load it
+        self.assertTrue(gate.capture_file("screens/states.mjs"))
+        self.assertTrue(gate.capture_file("screens/capture.mjs"))
+        self.assertFalse(gate.capture_file("src/screens/list.ts"))
+        self.assertFalse(gate.capture_file("src/web/server.ts"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)
