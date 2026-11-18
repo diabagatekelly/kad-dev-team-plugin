@@ -96,7 +96,7 @@ class States(unittest.TestCase):
         for key in loop_states.keys_in_use():
             self.assertIn(key, self.manifest["states"], key)
             if key.startswith("state:"):
-                self.assertIn(key.split(":", 1)[1], self.steps["states"], key)
+                self.assertIn(key.split(":", 1)[1].split("+", 1)[0], self.steps["states"], key)
         self.assertIsNone(loop_states.check())
 
     def test_the_whole_file_rule_is_still_there_for_old_evidence(self):
