@@ -13,7 +13,7 @@ the slice's own code that six reviewers, the walk and the loop's cold
 read passed.
 
 This list is 0.17.0. It is grouped so each file group goes through the
-gate once. Nothing here is built except where a line says so. The lists
+gate once. Everything here is built and gated except C12 and the next slice. The lists
 before it are in `docs/todo-archive.md`.
 
 ## The owner's decisions, 2026-11-17
@@ -81,12 +81,40 @@ From what #62 cost, and the owner's answers of 2026-11-16:
 - `docs/flow-map.html` is updated in the same pull request as any change
   to a stage, a launch or a script.
 
-## Before the gate pass: done 2026-11-18, the pass not started
+## The gate pass: done 2026-11-18, green, not pushed
+
+The owner started it. Every affected case has current evidence
+(`gate.sh --base main --stale` has nothing to run), the 37 known-bad
+references fail as they should, no history is stale. 360 runs, $228.36
+by the result files. The account is `evals/README.md`, "Loop time".
+Bars recorded for 38 cases by name (ten new). No skill wording changed
+at the gate; five cases and three references were corrected from their
+traces.
+
+**Left for the owner.**
+
+- Push, and the pull request (the code commit alone first for the
+  external reviewer, then the evidence and bars). Not done.
+- C4's log bullet (`taken as recommended: <choice>, over <alternatives>
+  (<skill>)`) was written in that form in one run of three; the decision
+  was taken and the design saved in all three. A wording fix is in the
+  orchestrator and reaches every orchestrator case and four frozen
+  histories.
+- C9 has no case of its own; it showed by accident in
+  `orchestrator-issue-fix-records`, whose changed launch grader passed
+  three runs that made no launch.
+- `tdd-implementation-lite-rename-fix`: two reports of three gave the
+  rename as a sentence, not the `renamed <old> → <new>, <n> sites` line.
+- The stand-in `tools/gh` logs `issue create --help` as an issue filed.
+- For next time: `--jobs 10 --parallel 14` (the machine sat at a load of
+  2.4 of 10 cores), and the references can run beside the gate.
+
+## Before the gate pass: done 2026-11-18
 
 The cases are written and each ran once with its trace read; the new
 wording was tried on the existing cases of every changed skill. 54 single
-runs, $25.41 by the result files. No bar recorded, nothing pushed. `[~]`
-below now means: tried on a case at one run, not gated.
+runs, $25.41 by the result files. This section is what was known going
+into the pass; the pass itself is the section after it.
 
 **New cases (10), all tool-judged.** Held on its one run, by the trace,
 unless said:
@@ -248,78 +276,78 @@ stale only for the scripts it ran: say how many before the gate runs.
 
 ## Group B: `tdd-implementation-lite` (builders and fixers), one gated change
 
-B1 to B5 are written in the skill (2026-11-17) and **not yet tried on a
-case or gated**: `[~]` below. B6 waits for group C, since the runner and
+B1 to B5 are written in the skill (2026-11-17) and gated on 2026-11-18
+(see "The gate pass" above). B6 waits for group C, since the runner and
 the log read the same line.
 
-- [~] **B1 The gate's checks run before the commit.** A builder and a
+- [x] **B1 The gate's checks run before the commit.** A builder and a
   fixer run the commands of `gate-checks.json` (A6's `--checks-only`)
   and report the counts. On slice 3 a gate fixer ran on 5 of 6 chunks
   (461 added lines, 16% of everything added; chunk 6's gate fix was
   larger than its build), and 5 of 7 review fixes failed the gate, every
   one but one by a count one or two over its baseline.
-- [~] **B2 Each test a fix adds or rewrites is shown failing** (break the
+- [x] **B2 Each test a fix adds or rewrites is shown failing** (break the
   line the fix wrote, see that test fail, restore; the `Fix` line names
   the test and the break), and a rewritten test keeps every assertion it
   had or its `Fix` line names the one dropped and why (H1, cause 5).
-- [~] **B3 A finding's suggested fix is the reviewer's guess**; the
+- [x] **B3 A finding's suggested fix is the reviewer's guess**; the
   finding is its "What's happening" (H1, the pattern under cause 5).
-- [~] **B4 A test whose behaviour a fix changes is renamed**, the rename
+- [x] **B4 A test whose behaviour a fix changes is renamed**, the rename
   on the `Fix` line (H1, cause 4; with A6).
-- [~] **B5 The plan path:** captures and baselines are delivery's, not a
+- [x] **B5 The plan path:** captures and baselines are delivery's, not a
   chunk's (plan check 1 failed on this and a second planner ran).
-- [~] **B6 Shell edits and turns are counted, not reported**: builders
+- [x] **B6 Shell edits and turns are counted, not reported**: builders
   reported 21 of 88 shell edits, and two chunks' turn counts were `?`.
   The report's line is dropped and the count the runner already takes is
   the only one.
 
 ## Group C: the orchestrator, the chunk runner, delivery, one gated change
 
-C1 to C11 and B6 are written in the skills (2026-11-17) and **not yet
-tried on a case or gated**: `[~]` below. One change from the list as
+C1 to C11 and B6 are written in the skills (2026-11-17) and gated on
+2026-11-18 (see "The gate pass" above). One change from the list as
 reviewed: under C1 the test-quality reviewer starts when the mutation
 pass ends (at most 15 minutes after the others) and so still reads its
 report at round 0, where a survivor is fixed; getting it at round 1
 would have classed every survivor as pre-existing, never fixed.
 
-- [~] **C1 The mutation pass at D** runs beside the reviewers (it works
+- [x] **C1 The mutation pass at D** runs beside the reviewers (it works
   in its own clone), with `--first-failure`, the default timeout and a
   budget, and its progress in a file the owner can be shown. The
   reviewers no longer wait for it; the test-quality reviewer is handed
   the report when it lands, or reads it at round 1.
-- [~] **C2 A gate failure that is only lint, format or a count check gets
+- [x] **C2 A gate failure that is only lint, format or a count check gets
   a second fixer** before anything stops (entry 109; chunk 2 stopped the
   loop 25 minutes for an unused import). The stop is kept for a failing
   test or typecheck after its fixer.
-- [~] **C3 `light` without the per-chunk smoke run** (decision 2): per
+- [x] **C3 `light` without the per-chunk smoke run** (decision 2): per
   chunk, build and gate only. How the next slice is told to run `light`
   stays the owner's word in the message; whether `light` becomes the
   default is decided after that slice.
-- [~] **C4 Recommended questions are not asked** (decision 1): in the
+- [x] **C4 Recommended questions are not asked** (decision 1): in the
   orchestrator's own questions and in every skill that asks one (the
   design skills, `technology-bootstrap`'s gate check set, `ci-pipeline`'s
   state list). Each is logged `taken as recommended: <what>, over
   <alternatives>`.
-- [~] **C5 `autopilot.md` names what is never taken alone**: a changed
+- [x] **C5 `autopilot.md` names what is never taken alone**: a changed
   requirement, an accepted risk (the loop tried to record an advisory as
   accepted on its own and the harness refused the launch), deleted or
   rewritten committed work, a push while red, a secret.
-- [~] **C6 The log's last lines are in the last pushed commit**: the E
+- [x] **C6 The log's last lines are in the last pushed commit**: the E
   line is written before the final records commit (the third run that
   left the tree dirty; the first project's pull request #48 was this).
-- [~] **C7 After the context is summarised the skill is invoked again by
+- [x] **C7 After the context is summarised the skill is invoked again by
   name**, not read by path with the shell (the owner asked why a skill
   "in a different repo" was being read).
-- [~] **C8 An owner's direction in the middle of a loop** is a bullet
+- [x] **C8 An owner's direction in the middle of a loop** is a bullet
   under the loop's entry, not a new entry that splits its A to E lines.
-- [~] **C9 The format check, and every command CI runs, is a gate check**:
+- [x] **C9 The format check, and every command CI runs, is a gate check**:
   `technology-bootstrap`'s set includes them (reviewers raised format
   failures as High on two chunks; the first project's pull request #57
   went red on it).
-- [~] **C10 The wiring fixer at A.5 runs the project's audit command**,
+- [x] **C10 The wiring fixer at A.5 runs the project's audit command**,
   and a tool that brings an advisory is put to the owner with the set
   (`knip` brought one; CI went red at delivery).
-- [~] **C11 `delivery`'s screens check** reads `capture: <n> of <n>`
+- [x] **C11 `delivery`'s screens check** reads `capture: <n> of <n>`
   before `BASELINES OWED` is treated as clean (with A3), and fetches
   logs and artifacts itself (with A8).
 - [ ] **C12 The runner's wait** (not built, and no rule proposed): one
@@ -331,21 +359,21 @@ would have classed every survivor as pre-existing, never fixed.
 
 ## Group D: planning and review skills, one gated change
 
-D1 to D4 are written in the skills (2026-11-17) and **not yet tried on a
-case or gated**: `[~]` below.
+D1 to D4 are written in the skills (2026-11-17) and gated on 2026-11-18
+(see "The gate pass" above).
 
-- [~] **D1 `reliability-requirements`: every refusal says whether it can
+- [x] **D1 `reliability-requirements`: every refusal says whether it can
   be permanent, and what the person can still do.** That is a criterion,
   or an "out for now" that names what the person is left with. Slice 3's
   R36 made a dead end correct: a marked bank whose login Plaid refuses to
   restart can never be logged in again, tried again, or connected again.
-- [~] **D2 `cold-read`: after any action that is refused, every remaining
+- [x] **D2 `cold-read`: after any action that is refused, every remaining
   action on that state is listed and run**; a state where all are closed
   is a finding. The loop's reader ran the refusal and one of the four
   closed doors and reported the wording.
-- [~] **D3 `reliability-review` at the slice review** reports a criterion
+- [x] **D3 `reliability-review` at the slice review** reports a criterion
   that leaves a state with no exit, even when the code meets it.
-- [~] **D4 The planning skills check their own readiness**:
+- [x] **D4 The planning skills check their own readiness**:
   `reliability-requirements` (numbers on waits, the unusable-reply row)
   and `architecture-design` (criteria homed, failure paths homed) run
   `readiness_check.py` for their own checks before saving. The same two
