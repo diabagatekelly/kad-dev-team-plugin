@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -307,6 +308,82 @@ class MutationPass(unittest.TestCase):
         self.assertEqual(git(self.repo, "status", "--porcelain"), "")
 
 
+    def test_a_mutant_that_hangs_the_suite_ends_at_the_timeout_and_is_listed_apart(self):
+        # the break makes the rule wait for ever: the suite never ends, and a 30-minute default cost a slice review hours
+        with open(self.mutants, "w") as f:
+            json.dump([{"file": "calc/fees.py", "old": "days * 25", "new": "__import__('time').sleep(600) or days * 25", "note": "late_fee: waits"},
+                       {"file": "calc/fees.py", "old": "'none' if days <= 0 else 'due'", "new": "'due'", "note": "label: always due"}], f)
+        report = os.path.join(self.tmp, "report.md")
+        started = time.monotonic()
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "", "--timeout", "3", "--out", report)
+        self.assertLess(time.monotonic() - started, 60)
+        self.assertIn("HUNG (ended after 3 s)", out)
+        self.assertIn("mutation: 2 mutants, 1 caught, 1 survived, 1 of the caught by a hang", out)
+        with open(report, encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn("| 1 | calc/fees.py:4 | late_fee: waits | HUNG (the suite did not end in 3 s; counted as caught) | n/a |", text)
+        self.assertIn("Caught by a hang, not by a failing assertion: 1 (`calc/fees.py:4`)", text)
+        self.assertEqual(git(self.repo, "status", "--porcelain"), "")
+
+    def test_the_default_timeout_comes_from_the_baseline(self):
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "")
+        self.assertIn("2 mutants, each ended after 60 s", out)  # three times a sub-second baseline, never under the floor
+
+    def test_a_spent_budget_lists_the_rest_as_not_run(self):
+        slow = f"sh -c 'sleep 1.5; {TEST_CMD}'"
+        report = os.path.join(self.tmp, "report.md")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", slow, "--base", "", "--budget", "1", "--out", report)
+        self.assertIn("mutation: 1 mutants, 1 caught, 0 survived, 1 not run (the 1 s budget)", out)
+        with open(report, encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn("| 2 | calc/fees.py:8 | label: always due | NOT RUN (the pass's time budget ended; not counted) | n/a |", text)
+        self.assertIn("Not run, the time budget (1 s) ended first: 2.", text)
+
+    def test_first_failure_drops_the_single_test_list_and_says_so(self):
+        report = os.path.join(self.tmp, "report.md")
+        out = self.run_tool("run", "--repo", self.repo, "--mutants", self.mutants, "--test", TEST_CMD, "--base", "", "--first-failure", "--out", report)
+        self.assertIn("each stopped at its first failing test", out)
+        self.assertIn("mutation: 2 mutants, 1 caught, 1 survived", out)
+        with open(report, encoding="utf-8") as f:
+            text = f.read()
+        self.assertIn("ended at its first failing test", text)
+        self.assertNotIn("Kills that hang on a single test", text)
+
+
+def load_script():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("mutation_pass", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@unittest.skipUnless(hasattr(os, "killpg") and shutil.which("sh") and shutil.which("pgrep"), "needs process groups")
+class RunCmd(unittest.TestCase):
+    """The command runner, on commands that print and wait."""
+
+    def test_a_timeout_ends_everything_the_command_started(self):
+        # a hung suite left 36 test processes behind on a real project, loading every mutant after it
+        mp = load_script()
+        code, out, secs = mp.run_cmd("sh -c 'sleep 31337 & sleep 31337'", os.getcwd(), 1)
+        self.assertEqual(code, mp.TIMED_OUT)
+        self.assertLess(secs, 20)
+        time.sleep(0.5)
+        left = subprocess.run(["pgrep", "-f", "sleep 31337"], capture_output=True, text=True).stdout.split()
+        self.assertEqual(left, [])
+
+    def test_first_failure_ends_the_command_at_the_first_failing_test(self):
+        mp = load_script()
+        cmd = f"{sys.executable} -u -c \"print('✔ adds (1ms)'); print('✖ refuses at open (2ms)'); import time; time.sleep(300)\""
+        code, out, secs = mp.run_cmd(cmd, os.getcwd(), 120, first_failure=True)
+        self.assertEqual(code, mp.STOPPED_EARLY)
+        self.assertLess(secs, 30)
+        self.assertEqual(mp.read_result(code, out), ("caught", 1, ["refuses at open"]))
+        # without the option the same command runs to its timeout
+        code, _, _ = mp.run_cmd(cmd, os.getcwd(), 2)
+        self.assertEqual(code, mp.TIMED_OUT)
+
+
 class ReadResult(unittest.TestCase):
     """The runners' outputs, read without running anything."""
 
@@ -330,6 +407,15 @@ class ReadResult(unittest.TestCase):
         out = "✖ refuses at open (1ms)\n[timed out after 1800 s]"
         self.assertEqual(self.read(-1, out), ("caught", 1, ["refuses at open"]))
         self.assertEqual(self.read(-1, "✔ adds (1ms)\n[timed out after 1800 s]"), ("error", None, []))
+
+    def test_a_cancelled_test_is_a_catch(self):
+        # node counts a test ended by its own timeout as cancelled, not failed: `fail 0, cancelled 1`, exit 1
+        out = ("✔ adds (1ms)\n✖ tells me the app is closing (5001ms)\nℹ tests 2\nℹ pass 1\nℹ fail 0\nℹ cancelled 1\n")
+        self.assertEqual(self.read(1, out), ("caught", 1, ["tells me the app is closing"]))
+        # and one failed with two cancelled beside it is three, the number of names
+        out = "✖ a (1ms)\n✖ b (5001ms)\n✖ c (5001ms)\nℹ fail 1\nℹ cancelled 2\n"
+        self.assertEqual(self.read(1, out), ("caught", 3, ["a", "b", "c"]))
+        self.assertEqual(self.read(1, "not ok 1 - waits\n# fail 0\n# cancelled 1\n"), ("caught", 1, ["waits"]))
 
     def test_node_tap_reporter_still_reads(self):
         self.assertEqual(self.read(1, "not ok 1 - multiplies\n# tests 2\n# pass 1\n# fail 1\n"), ("caught", 1, ["multiplies"]))

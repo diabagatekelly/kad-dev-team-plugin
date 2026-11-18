@@ -105,6 +105,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 FAIL_LINE = re.compile(
@@ -116,6 +117,13 @@ FAIL_LINE = re.compile(
     r"|FAILED (?P<pytest>\S+::\S+)"                   # pytest
     r"|FAIL: (?P<unittest>\S+(?: \([^)]*\))?)"        # unittest
     r")\s*$")
+# node --test counts a test ended by its own timeout as `cancelled`, not
+# `fail`: a test that waits for something the break took away. It is a
+# catch, and its name is among the failure lines, so it joins the count.
+CANCELLED_LINES = [
+    re.compile(r"^# cancelled (\d+)", re.M),
+    re.compile(r"^ℹ cancelled (\d+)", re.M),
+]
 COUNT_LINES = [
     re.compile(r"^# fail (\d+)", re.M),                           # node --test (TAP)
     re.compile(r"^ℹ fail (\d+)", re.M),                            # node --test (spec)
@@ -196,12 +204,37 @@ def check(repo, mutants):
     return 1 if bad else 0
 
 
-TIMED_OUT, NOT_RUN = -1, -2  # exit codes of the runner's own, never a test's
+TIMED_OUT, NOT_RUN, STOPPED_EARLY = -1, -2, -3  # exit codes of the runner's own, never a test's
+BASELINE_TIMEOUT = 1800  # the baseline and the typecheck, when no --timeout is given
+MIN_TIMEOUT = 60
 
 
-def run_cmd(cmd, repo, timeout):
+def end_group(proc):
+    """End the command and everything it started (a test runner's worker
+    processes, an app a test left listening): a hung suite must not leave
+    orphans loading the machine for the mutants after it."""
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            if hasattr(os, "killpg"):
+                os.killpg(proc.pid, sig)
+            else:
+                proc.kill()
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
+        try:
+            proc.wait(timeout=5)
+            return
+        except subprocess.TimeoutExpired:
+            continue
+
+
+def run_cmd(cmd, repo, timeout, first_failure=False):
     """(exit code, output, seconds); TIMED_OUT and NOT_RUN (the command
-    could not start) are the runner's failures and never a kill."""
+    could not start) are the runner's failures and never a kill. The
+    command runs in its own process group, and a timeout ends the whole
+    group. With `first_failure` the command is ended as soon as its output
+    names a failing test (STOPPED_EARLY): one failing test is a catch, and
+    the rest of the suite adds only names."""
     start = time.monotonic()
     try:
         # Split as a shell would and run without one: no shell settings
@@ -209,16 +242,39 @@ def run_cmd(cmd, repo, timeout):
         # Accepted 2026-11-10: `cmd` is the test or typecheck command the
         # reviewer gave on this tool's own command line, nothing read from a
         # file or the network; the mutants file never reaches a command.
-        r = subprocess.run(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
-            shlex.split(cmd), cwd=repo, capture_output=True, text=True, errors="replace", timeout=timeout)
-        return r.returncode, r.stdout + r.stderr, time.monotonic() - start
-    except subprocess.TimeoutExpired as e:
-        out = (e.stdout or b"") if isinstance(e.stdout, bytes) else (e.stdout or "")
-        if isinstance(out, bytes):
-            out = out.decode("utf-8", "replace")
-        return TIMED_OUT, out + f"\n[timed out after {timeout} s]", time.monotonic() - start
+        proc = subprocess.Popen(  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-audit
+            shlex.split(cmd), cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, errors="replace", start_new_session=hasattr(os, "killpg"))
     except (OSError, ValueError) as e:
         return NOT_RUN, f"[could not run `{cmd}`: {e}]", time.monotonic() - start
+    lines, seen_failure = [], threading.Event()
+
+    def read():
+        for line in proc.stdout:
+            lines.append(line)
+            if first_failure and FAIL_LINE.match(line.rstrip("\n")):
+                seen_failure.set()
+
+    reader = threading.Thread(target=read, daemon=True)
+    reader.start()
+    code = None
+    while code is None:
+        try:
+            code = proc.wait(timeout=0.2)
+        except subprocess.TimeoutExpired:
+            if seen_failure.is_set():
+                end_group(proc)
+                code = STOPPED_EARLY
+            elif time.monotonic() - start > timeout:
+                end_group(proc)
+                code = TIMED_OUT
+    if code not in (STOPPED_EARLY, TIMED_OUT):
+        end_group(proc)  # the command ended; whatever it left running goes with it
+    reader.join(timeout=5)
+    out = "".join(lines)
+    if code == TIMED_OUT:
+        out += f"\n[timed out after {timeout:.0f} s]"
+    return code, out, time.monotonic() - start
 
 
 def read_result(code, output):
@@ -240,8 +296,13 @@ def read_result(code, output):
         if m:
             count = int(m.group(1))
             break
-    if count is None and names:
-        count = len(names)
+    for rx in CANCELLED_LINES:
+        m = rx.search(output)
+        if m and int(m.group(1)):
+            count = (count or 0) + int(m.group(1))
+            break
+    if (count is None or code == STOPPED_EARLY) and names:
+        count = len(names)  # a run ended at its first failure prints no summary
     if count:
         return "caught", count, names
     if code in (TIMED_OUT, NOT_RUN):
@@ -472,13 +533,13 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
     """The pass itself, in `work`: the repository, or its disposable clone
     under `--allow-dirty`. The report and the messages name `repo`."""
     if a.typecheck:
-        tcode, tout, _ = run_cmd(a.typecheck, work, a.timeout)
+        tcode, tout, _ = run_cmd(a.typecheck, work, a.timeout or BASELINE_TIMEOUT)
         if tcode != 0:
             say(f"mutation_pass: the typecheck fails on the baseline (exit {tcode}); nothing mutated")
             say(tout.strip().splitlines()[-1] if tout.strip() else "")
             return 2
     say(f"mutation_pass: baseline `{a.test}` in {repo} at {head}")
-    code, out, secs = run_cmd(a.test, work, a.timeout)
+    code, out, secs = run_cmd(a.test, work, a.timeout or BASELINE_TIMEOUT)
     verdict, count, names = read_result(code, out)
     if verdict != "survived":
         why = out.strip().splitlines()[-1] if code in (TIMED_OUT, NOT_RUN) and out.strip() else ""
@@ -491,6 +552,13 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
         base_count = next(g for g in m.groups() if g)
     say(f"mutation_pass: baseline passes ({base_count or 'count not read'} tests, {secs:.0f} s)")
     record({"mutant": 0, "baseline": True, "exit": 0, "tests": base_count, "seconds": round(secs, 1)})
+    # A mutant's suite that runs three times as long as the baseline is
+    # hung, not slow: a test waiting on something the break took away.
+    a.mutant_timeout = a.timeout or max(MIN_TIMEOUT, int(3 * secs) + 1)
+    say(f"mutation_pass: {len(mutants)} mutants, each ended after {a.mutant_timeout} s"
+        + (", each stopped at its first failing test" if a.first_failure else "")
+        + (f"; the pass stops starting mutants after {a.budget} s" if a.budget else ""))
+    started = time.monotonic()
 
     results = []
     before = tracked_changes(work) if a.allow_dirty else ""
@@ -500,6 +568,14 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
     for i, m in enumerate(mutants, 1):
         line, _ = locate(work, m)
         path, _ = mutant_path(work, m)
+        if a.budget and time.monotonic() - started > a.budget:
+            res = {"mutant": i, "file": m["file"], "line": line, "note": m["note"], "area": m["area"],
+                   "verdict": "not run", "caught": False, "failed": None, "names": [], "exit": None,
+                   "typecheck_caught": False, "hung": False,
+                   "in_diff": (m["file"] in changed) if changed is not None else None, "seconds": 0}
+            results.append(res)
+            record(res)
+            continue
         with open(path, encoding="utf-8") as f:
             text = f.read()
         try:
@@ -508,12 +584,18 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
                 f.write(text.replace(m["old"], m["new"], 1))
             type_caught = False
             if a.typecheck:
-                tcode, _, _ = run_cmd(a.typecheck, work, a.timeout)
+                tcode, _, _ = run_cmd(a.typecheck, work, a.timeout or BASELINE_TIMEOUT)
                 type_caught = tcode not in (0, TIMED_OUT, NOT_RUN)
-            code, out, secs = run_cmd(a.test, work, a.timeout)
+            code, out, secs = run_cmd(a.test, work, a.mutant_timeout, a.first_failure)
         finally:
             git(work, "checkout", "--", m["file"])
         verdict, count, names = read_result(code, out)
+        # The suite did not end: the break made a test wait for ever. The
+        # break was noticed, so it counts as caught, and it is listed apart:
+        # a test that hangs where it should fail is a finding of its own.
+        hung = code == TIMED_OUT
+        if hung and verdict == "error":
+            verdict = "caught"
         after = tracked_changes(work) if a.allow_dirty else git(work, "status", "--porcelain").stdout.strip()
         if after != before:
             say(f"mutation_pass: the tree is not clean after mutant {i} ({m['file']}); stopped")
@@ -521,13 +603,14 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
             return 3
         res = {"mutant": i, "file": m["file"], "line": line, "note": m["note"], "area": m["area"],
                "verdict": verdict, "caught": verdict == "caught", "failed": count, "names": names[:3], "exit": code,
-               "typecheck_caught": type_caught,
+               "typecheck_caught": type_caught, "hung": hung,
                "in_diff": (m["file"] in changed) if changed is not None else None, "seconds": round(secs, 1)}
         results.append(res)
         record(res)
-        shown = {"caught": f"CAUGHT ({count} failed)", "survived": "SURVIVED",
+        shown = {"caught": f"HUNG (ended after {a.mutant_timeout} s)" if hung and not count else f"CAUGHT ({count} failed)",
+                 "survived": "SURVIVED",
                  "error": f"ERROR (exit {code}, no test failure read)"}[verdict]
-        say(f"{i:>3}  {shown:<36} {m['file']}:{line}  {m['note']}")
+        say(f"{i:>3}/{len(mutants)}  {shown:<36} {secs:>4.0f} s  {m['file']}:{line}  {m['note']}")
     if log:
         log.close()
     report = render(a, repo, head, base_count, results, changed is not None)
@@ -537,16 +620,22 @@ def run_locked(a, repo, work, mutants, head, changed, log, record):
         say(f"mutation_pass: report written to {a.out}")
     else:
         say(report)
-    counted = [r for r in results if r["verdict"] != "error"]
+    counted = [r for r in results if r["verdict"] in ("caught", "survived")]
+    errors = sum(1 for r in results if r["verdict"] == "error")
+    not_run = sum(1 for r in results if r["verdict"] == "not run")
+    hung = sum(1 for r in counted if r["hung"])
     say(f"mutation: {len(counted)} mutants, {sum(1 for r in counted if r['caught'])} caught, "
         f"{sum(1 for r in counted if not r['caught'])} survived"
-        + (f", {len(results) - len(counted)} not counted" if len(results) != len(counted) else ""))
+        + (f", {hung} of the caught by a hang" if hung else "")
+        + (f", {errors} not counted" if errors else "")
+        + (f", {not_run} not run (the {a.budget} s budget)" if not_run else ""))
     return 0
 
 
 def render(a, repo, head, base_count, results, have_diff):
     errors = [r for r in results if r["verdict"] == "error"]
-    results = [r for r in results if r["verdict"] != "error"]
+    not_run = [r for r in results if r["verdict"] == "not run"]
+    results = [r for r in results if r["verdict"] in ("caught", "survived")]
     n = len(results)
     caught = [r for r in results if r["caught"]]
     rate = f"{100 * len(caught) / n:.1f}%" if n else "n/a"
@@ -555,14 +644,21 @@ def render(a, repo, head, base_count, results, have_diff):
              + (f" Typecheck `{a.typecheck}` run on every mutant." if a.typecheck else ""), "",
              "## Method", "",
              "Each mutant is an exact string replacement that matched once in its file, applied by "
-             "`mutation_pass.py`; then the typecheck (if given) and the full suite ran once, "
+             "`mutation_pass.py`; then the typecheck (if given) and the suite ran once"
+             + (", ended at its first failing test (so one name is shown, and the failing count is of that moment), "
+                if a.first_failure else " in full, ")
+             + f"and ended as hung after {a.mutant_timeout} s; "
              "`git checkout --` restored the file, and `git status --porcelain` was empty after every mutant. "
              "Test names are listed as the runner prints them; the first three failures are shown with the "
              "total in brackets. \"In the diff\" means the file is in `git diff --name-only <base>...HEAD`.", "",
              "## Results", "",
              "| # | file:line | the break | result | in the diff? |", "|---|---|---|---|---|"]
-    for r in sorted(results + errors, key=lambda r: r["mutant"]):
-        if r["verdict"] == "caught":
+    for r in sorted(results + errors + not_run, key=lambda r: r["mutant"]):
+        if r["verdict"] == "not run":
+            verdict = "NOT RUN (the pass's time budget ended; not counted)"
+        elif r["verdict"] == "caught" and r["hung"] and not r["failed"]:
+            verdict = f"HUNG (the suite did not end in {a.mutant_timeout} s; counted as caught)"
+        elif r["verdict"] == "caught":
             by = "; ".join(r["names"]) if r["names"] else "the runner's failure count"
             verdict = f"CAUGHT ({r['failed']} failed) by {by}" + (" [typecheck also fails]" if r["typecheck_caught"] else "")
         elif r["verdict"] == "survived":
@@ -573,7 +669,13 @@ def render(a, repo, head, base_count, results, have_diff):
         lines.append(f"| {r['mutant']} | {r['file']}:{r['line']} | {r['note']} | {verdict} | {in_diff} |")
     lines += ["", "## Summary", "",
               f"- Mutants: **{n}**. Caught: **{len(caught)}**. Survived: **{n - len(caught)}**. Kill rate **{rate}**."
-              + (f" Not counted, the runner itself failed: {', '.join(str(r['mutant']) for r in errors)}." if errors else "")]
+              + (f" Not counted, the runner itself failed: {', '.join(str(r['mutant']) for r in errors)}." if errors else "")
+              + (f" Not run, the time budget ({a.budget} s) ended first: {', '.join(str(r['mutant']) for r in not_run)}." if not_run else "")]
+    hangs = [r for r in results if r["hung"]]
+    if hangs:
+        lines.append("- Caught by a hang, not by a failing assertion: "
+                     + ", ".join(f"{r['mutant']} (`{r['file']}:{r['line']}`)" for r in hangs)
+                     + ". Each is a test that waits for ever on the break where it should fail: a finding for the tests.")
     if have_diff:
         d = [r for r in results if r["in_diff"]]
         dc = [r for r in d if r["caught"]]
@@ -587,8 +689,9 @@ def render(a, repo, head, base_count, results, have_diff):
     only_type = [str(r["mutant"]) for r in results if r["typecheck_caught"] and not r["caught"]]
     if a.typecheck:
         lines.append(f"- Also caught by the typecheck: {', '.join(both) or 'none'}; caught by the typecheck alone: {', '.join(only_type) or 'none'}.")
-    single = [str(r["mutant"]) for r in results if r["caught"] and r["failed"] == 1]
-    lines.append(f"- Kills that hang on a single test: {', '.join(single) or 'none'}.")
+    if not a.first_failure:  # a run ended at its first failure cannot say how many tests would have failed
+        single = [str(r["mutant"]) for r in results if r["caught"] and r["failed"] == 1]
+        lines.append(f"- Kills that hang on a single test: {', '.join(single) or 'none'}.")
     lines += ["", "## Survivors", ""]
     survivors = [r for r in results if not r["caught"]]
     if not survivors:
@@ -614,7 +717,14 @@ def main():
     r.add_argument("--base", default="origin/main", help="the diff base for the 'in the diff' column ('' for none)")
     r.add_argument("--out", help="the markdown report (default: printed)")
     r.add_argument("--log", help="a JSON-lines log, one line per mutant as it finishes")
-    r.add_argument("--timeout", type=int, default=1800, help="seconds per command (1800)")
+    r.add_argument("--timeout", type=int, default=None,
+                   help="seconds per command (default: 1800 for the baseline and the typecheck, "
+                        "then three times the baseline's own time for each mutant's suite, at least 60)")
+    r.add_argument("--first-failure", action="store_true",
+                   help="end a mutant's suite at its first failing test: a catch needs one, and the pass is several times shorter; "
+                        "the report then names one test per kill and drops the single-test list")
+    r.add_argument("--budget", type=int, default=None,
+                   help="seconds for the whole pass: once spent, the mutants not yet started are listed as not run")
     r.add_argument("--title", help="the report's title (default: the repo's basename)")
     r.add_argument("--allow-dirty", action="store_true",
                    help="for a tree with uncommitted changes to other tracked files (the loop's log): the pass runs in a disposable clone and the tree is never written to")
