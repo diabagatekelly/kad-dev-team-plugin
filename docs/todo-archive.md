@@ -1214,3 +1214,42 @@ Does not block slice 3.
   run against cases of another). If a miss turns up in a case that was
   not run, `tools/orchestrator_steps.json` is where that case gets the
   step added.
+
+## The slice 3 section of the list, as it stood until 2026-11-17
+
+Replaced by the 0.17.0 list after the slice ran (the first project's issue #14, its pull request #72) and was reviewed.
+
+**The test of 0.15 and 0.16: slice 3 on the first project** (reconnect a
+lapsed login, its issue #14), which is UI-touching. PR 1, PR 3 and the final pull request are done. Before the slice starts, on the
+first project, from the owner:
+
+- [ ] the installed plugin updated to 0.16.1 (after #66 merges);
+- [ ] **the baselines from `main`**, as one small pull request on the
+  project: `ci-pipeline`'s screen job (it finds the screen designs and
+  writes `screens.yml`, the harness, the script's copy and the threshold
+  file), a `screens/states.mjs` that drives the states of slices 1 and 2
+  on made-up data (the project's `test/support/test-main.ts` start), one
+  CI run (every capture is a first baseline while there is none), the
+  artifact adopted with `screen_check.py adopt`, committed, green,
+  merged. Which of the 25 mockup states get a capture is the owner's
+  call: a state with no capture is not watched. The existing mockups
+  live in per-slice folders and are numbered (`02-retrieving`); those
+  stems are the state names;
+- [ ] the autopilot question answered when slice 3's A step asks it
+  (there is no `autopilot.md` on that project yet);
+- [ ] a word on H1's four proposed changes (`evals/README.md`, "Why
+  fixers regress"): built before the slice, or the slice run first as
+  they stand.
+
+H1 itself is done. The slice is the first real run of the
+gate checks' wiring and of the cold read inside the loop. Measured
+against the issue fix and slice 2's fix round: the cold read's
+readability and reliability scores (3 and 3 for three runs), the bugs
+the audit's cold read finds that the loop's did not, findings per chunk,
+the share of added lines written by fixers (58%), reviewer and fixer
+cost, the owner's questions in the loop, and any screen difference
+outside the slice.
+
+The light cadence arm is measured on the slice after, so the two changes
+are not measured at once (the owner, 2026-11-12).
+

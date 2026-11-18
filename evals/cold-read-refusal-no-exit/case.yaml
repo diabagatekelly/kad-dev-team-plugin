@@ -1,0 +1,58 @@
+schema_version: "1.0"
+name: cold-read-refusal-no-exit
+description: "TODO.md's D2 (0.17.0): the cold read finds a state with no way out by running every action left after a refusal. The slice's last commit (answer key L17) releases the copy set aside for a hold before the hold leaves the queue: when the pickup shelf refuses the release every time, the cancel is turned down with nothing changed, collecting is turned down too, and a hold placed again queues behind the one that cannot leave. Every line does what its test says. The reader makes the refusal permanent, runs the other actions the app offers on that hold, and reports the dead end as a finding of its own, High, with the doors it found closed; a report that stops at the refused cancel or at its wording has none. `cold-read-new-beside-old` holds the reader's other rule (new code beside older) on the same slice without this commit: a first form of this case added the commit there, and its one run found the dead end and never probed the older pair."
+tags: [cold-read, library-app, capability]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the cold reader the orchestrator launched with round 0 of the slice review (its D step) of the library-lending app. Invoke the skill `kad-dev-team:cold-read` first.
+
+    You are handed: the project root, which is your current working directory (clone from it, never work in it); the branch, `slice-001-cancel-hold`; the base commit, the one whose subject is `Library lending service` (`git log --oneline` has it); the scratch launcher, `scratch_run.py` in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`), with the scratch folder `${TMPDIR:-/tmp}/kad-cold-001`; and the report path, `docs/cancel-hold/implementation/slice-r0-cold.md` in the project.
+  model: sonnet
+  max_turns: 90
+  timeout_seconds: 2700
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: cold-read-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:cold-read"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/implementation/slice-r0-cold.md
+  - type: tool_used
+    name: a-probe-was-run
+    tool: Bash
+    input_match: '(?:\\n|\b)node\b[^\n]*(?:probes?/|--import|--experimental|-e\b|--eval|--test)'
+    min: 1
+  - type: regex
+    name: dead-end-reported-with-a-second-door
+    # A finding block of its own, High or Critical, confirmed by
+    # execution, about the copy the shelf does not release, that names a
+    # door other than the refused cancel (collecting the hold).
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-cold.md
+    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity:?\*\*:?\s*(?:Critical|High)(?=(?:(?!\n###)[\s\S])*?confirmed by execution)(?=(?:(?!\n###)[\s\S])*?(?:shelf|set aside))(?:(?!\n###)[\s\S])*?collect'
+    flags: i
+  - type: regex
+    name: placing-again-run-as-a-door
+    # "The way a new one is made" is one of the doors the skill lists:
+    # the same finding block says what placing the hold again does.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-cold.md
+    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity:?\*\*:?\s*(?:Critical|High)(?=(?:(?!\n###)[\s\S])*?(?:shelf|set aside))(?:(?!\n###)[\s\S])*?(?:PlaceHold|plac(?:e|ed|es|ing)\b[^\n.]{0,60}\b(?:again|new|another|second)|(?:new|another|second) hold)'
+    flags: i
+  - type: regex
+    name: project-tree-untouched
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"(?![^"]*slice-r0-cold\.md")(?![^"]*(?:kad-cold-001|/tmp/|/T/|/probes/|scratch))'
+    match: not_contains
+  - type: regex
+    name: hand-back-is-the-cold-line
+    target: last_message
+    pattern: '^\s*`?cold: (?:\d+ confirmed[^\n]*|PASS[^\n]*)slice-r0-cold\.md`?\.?\s*$'

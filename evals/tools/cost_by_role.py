@@ -7,9 +7,10 @@ every assistant message; it is not a bill.
 
 Which sessions a total must cover is decided by id, never by whatever
 transcripts happen to be on disk: `--log <orchestrator-log.md>` (every
-session the chunk-loop entry names: the A line's `session` field and each
-`Resumed … session <id>` bullet, so a session that ended before it
-recorded a round still counts), `--sidecar <rounds-slice-nnn.jsonl>`
+session the log's last chunk loop names: its `A. Start` line's `session`
+field and each `Resumed … session <id>` bullet after it, so a session
+that ended before it recorded a round still counts, and an earlier
+slice's loop in the same log does not), `--sidecar <rounds-slice-nnn.jsonl>`
 (every distinct `session` its rows name) and `--session <id>` (repeatable;
 the E step passes its own, `CLAUDE_CODE_SESSION_ID`). A `--log` or
 `--sidecar` that cannot be read, or a sidecar line that is not JSON, is
@@ -248,13 +249,23 @@ UUID = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 LOG_SESSION = re.compile(r"\bsession\b[\s—\-:]*`?(" + UUID + r")`?", re.I)
 
 
+A_LINE = re.compile(r"^\s*- \*\*A\. Start:\*\*", re.M)
+
+
 def log_sessions(path):
-    """Every session id the orchestrator log names after the word `session`:
-    the A line's field and the `Resumed … session <id>` bullets."""
+    """The session ids of the log's **last** chunk loop: the last
+    `A. Start` line's `session` field and every `Resumed … session <id>`
+    bullet after it. A log holds every slice's loop, and the E step wants
+    the cost of the one it is closing: read whole, slice 3's E line said
+    $422.10 for a run that cost $105.94. A log with no A line is read
+    whole."""
     try:
         text = open(path, encoding="utf-8", errors="replace").read()
     except OSError as e:
         raise UnreadableInput(f"orchestrator log unreadable: {path} ({e.strerror})")
+    starts = [m.start() for m in A_LINE.finditer(text)]
+    if starts:
+        text = text[starts[-1]:]
     out = []
     for m in LOG_SESSION.finditer(text):
         sid = m.group(1).lower()

@@ -1,0 +1,49 @@
+schema_version: "1.0"
+name: reliability-review-criterion-no-exit
+description: "TODO.md's D3 (0.17.0): the reliability reviewer at the slice review reports a criterion that leaves a state with no exit, although the code meets it. The slice's reliability document says (R3) that when the pickup shelf does not release the copy set aside for a hold, the cancel is turned down, nothing is changed and staff can ask again; the slice's last commit does exactly that (answer key L17). When the shelf refuses every time the hold can never leave the queue: the cancel is refused again, collecting is refused, and a hold placed again queues behind it. The reviewer reports that as a finding against the criterion, for the persona who owns it, and does not pass the code because the criterion is met."
+tags: [reliability-review, library-app, capability]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the reliability reviewer the orchestrator launched with round 0 of the slice review (its D step) of the library-lending app. Invoke the skill `kad-dev-team:reliability-review` first.
+
+    You are handed five things: the project root, which is your current working directory; the documented test command, `npm test`; the whole slice's commit range, from the commit whose subject is `Library lending service` (`git log --oneline` has it) to `HEAD`; your report path, `docs/cancel-hold/implementation/slice-r0-reliability.md`; and the gate's last output on this tree, `docs/cancel-hold/implementation/gate-slice-r0.txt`.
+  model: sonnet
+  max_turns: 60
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: reliability-review-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-review"'
+    min: 1
+  - type: file_exists
+    name: report-written
+    path: docs/cancel-hold/implementation/slice-r0-reliability.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*/(?:lending|infra|test|main)/[^"]*\.ts"'
+    match: not_contains
+  - type: regex
+    name: stuck-hold-reported
+    # The floor: a finding block, rated above Low, about the copy the
+    # shelf does not release, that says what else is closed from that
+    # state (collecting, or a hold placed again behind it).
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-reliability.md
+    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity:?\*\*:?\s*(?:Critical|High|Medium|needs-decision)(?=(?:(?!\n###)[\s\S])*?(?:shelf|set aside))(?:(?!\n###)[\s\S])*?(?:collect|plac(?:e|ed|ing) (?:again|a new|another)|new hold|never (?:leave|move|clear)|no (?:way out|exit))'
+    flags: i
+  - type: regex
+    name: reported-against-the-criterion-for-its-owner
+    # D3's rule: the code meets R3, so the finding is the criterion's:
+    # `needs-decision (devsecops-engineer…)`, with R3 named or quoted.
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-r0-reliability.md
+    pattern: '(?:^|\n)###[^\n]*\n\s*(?:[-*]\s*)?\*\*Severity:?\*\*:?\s*needs-decision\s*\(devsecops-engineer[^)\n]*\)(?=(?:(?!\n###)[\s\S])*?(?:\bR3\b|nothing was changed|ask for the cancel again))(?:(?!\n###)[\s\S])*?(?:shelf|set aside)'
+    flags: i

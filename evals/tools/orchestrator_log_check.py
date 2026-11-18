@@ -348,7 +348,7 @@ def check_format(text, entries, malformed, findings):
 
 
 FIX = re.compile(r"\br(\d+) fix(?:es)?\s+`?(" + SHA + r"(?:\.\." + SHA + r")?)`?(?:(?:,\s*|\s+)`?" + SHA + r"`?)*"
-                 r"(?:[^;\n]*?(?:→|->)\s*`?" + COUNTS + r"`?(?:\s*\(reg\s+`?(\d+)`?,\s*pre\s+`?(\d+)`?\))?"
+                 r"(?:[^;\n]*?(?:→|->)\s*`?" + COUNTS + r"`?(?:\s*\(reg\s+`?(\d+)`?,\s*pre\s+`?(\d+)`?(?:,\s*first\s+`?(\d+)`?)?\))?"
                  r"|\s+gate\s+`?PASS)")
 
 
@@ -363,8 +363,11 @@ def rounds_of(text):
         counts = None
         if m.group(3) is not None:
             counts = tuple(int(m.group(i)) if m.group(i) is not None else 0 for i in range(3, 7))
+        # `first <k>` (findings of a reviewer that first looked after the fix)
+        # is counted with the pre-existing: neither is the fixer's
+        first = int(m.group(9)) if m.group(9) else 0
         out.append((int(m.group(1)), m.group(2), counts,
-                    int(m.group(7)) if m.group(7) else None, int(m.group(8)) if m.group(8) else None))
+                    int(m.group(7)) if m.group(7) else None, int(m.group(8)) + first if m.group(8) else None))
     return out
 
 
@@ -448,6 +451,13 @@ def field(text, name):
     return m.group(1).strip() if m else None
 
 
+def cadence_of(a_text):
+    """`loop` or `light` as the A line states it, or None when it states none
+    (a log older than the field, or one whose A line is in another entry)."""
+    value = field(a_text, "cadence")
+    return value.split()[0] if value else None
+
+
 def is_v4(a_text, c_lines, d_text):
     """A log written by the 0.7.0 loop: the A line's budget, readiness or delegation field, or a C
     line's smoke or standing field, or the D line's done or stranger field."""
@@ -523,6 +533,17 @@ def check_chunk_loop(e, findings):
             findings.append(("INFO", tag, f"{what}: ended at the gate"))
             continue
         revs = reviewers_of(text)
+        # an A line that states no cadence is not held against the chunk
+        looped = cadence_of(a_text) == "loop"
+        if revs == ["none"] and looped:
+            findings.append(("ERROR", tag, f"{what}: `review none` under cadence `loop`; only `light` leaves a chunk unreviewed"))
+            continue
+        if revs == ["none"]:
+            # the light cadence: build and gate only, nothing reviewed or driven until D
+            if not re.search(r"\bsmoke\s+`?none", text):
+                findings.append(("WARN", tag, f"{what}: `review none` with a smoke result; under light the chunk has neither since 0.17.0"))
+            findings.append(("INFO", tag, f"{what}: light cadence, no review and no smoke run"))
+            continue
         if revs is None:
             findings.append(("ERROR", tag, f"{what}: no {'review lenses' if v4 else 'reviewers'}"))
         else:
@@ -533,8 +554,11 @@ def check_chunk_loop(e, findings):
             if missing:
                 findings.append(("ERROR", tag, f"{what}: {', '.join(missing)} always run on a chunk and are missing"))
         if v4:
-            if not re.search(r"\bsmoke\s+`?(PASS|\d+ findings?)", text):
-                findings.append(("ERROR", tag, f"{what}: no smoke result (`smoke PASS` or `smoke <n> findings`)"))
+            # `smoke none` is the light cadence since 0.17.0: no per-chunk smoke run
+            if looped and re.search(r"\bsmoke\s+`?none", text):
+                findings.append(("ERROR", tag, f"{what}: `smoke none` under cadence `loop`; only `light` has no per-chunk smoke run"))
+            if not re.search(r"\bsmoke\s+`?(PASS|\d+ findings?|none)", text):
+                findings.append(("ERROR", tag, f"{what}: no smoke result (`smoke PASS`, `smoke <n> findings`, or `smoke none` under light)"))
             if not re.search(r"\bstanding\s+`?\d+/\d+/\d+", text):
                 findings.append(("WARN", tag, f"{what}: no `standing C/H/M` field"))
             for part in ("deviations", "budget"):
@@ -569,9 +593,11 @@ def check_chunk_loop(e, findings):
         elif len(set(revs) & set(REVIEWERS)) < 5:
             findings.append(("WARN", tag, f"D line: {len(revs)} reviewers; the slice review runs five, six for a UI slice"))
         if v4:
-            for part in ("done", "stranger"):
-                if not re.search(r"\b" + part + r"\s+`?\S", text):
-                    findings.append(("WARN", tag, f"D line has no `{part}` field (a 0.7.0 field)"))
+            if not re.search(r"\bdone\s+`?\S", text):
+                findings.append(("WARN", tag, "D line has no `done` field (a 0.7.0 field)"))
+            # the stranger test became the cold read in 0.16.0: either field is the D line's last reader
+            if not re.search(r"\b(stranger|cold)\s+`?\S", text):
+                findings.append(("WARN", tag, "D line has no `cold` field (the cold read, 0.16.0; `stranger` before it)"))
             if not re.search(r"\baudit\s+`?(audit commit|audit sync FAILED|not configured|off)", text):
                 findings.append(("WARN", tag, "D line has no `audit` field (a 0.10.0 field)"))
         r, g, p, cap, wf = check_rounds(tag, "D", text, findings, v4)
@@ -700,7 +726,7 @@ def check_loop(entries, findings, project=None, log_dir=None, sidecar_arg=None):
         chunk_loop = is_chunk_loop(e)
         if e.get("attached_from"):
             findings.append(("WARN", tag, "its A to E lines were appended under " + ", ".join(f"entry {n}" for n in e["attached_from"])
-                             + " (a readiness backward route) and are read as this entry's; since 0.14.1 the skill opens a new chunk-loop entry after the last route"))
+                             + " (a readiness backward route, or an owner's direction written as an entry) and are read as this entry's; since 0.14.1 the skill opens a new chunk-loop entry after the last route, and since 0.17.0 an owner's direction inside a loop is a bullet under the loop's entry"))
         if subs != sorted(subs):
             findings.append(("ERROR", tag, f"sub-entries out of order: {', '.join(subs)}"))
         repeated = sorted({s for s in subs if subs.count(s) > 1 and not (chunk_loop and s == "C")})

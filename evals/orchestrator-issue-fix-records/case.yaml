@@ -31,7 +31,12 @@ graders:
     max: 0
   - type: tool_used
     name: nothing-launched
+    # No planner and no builder. Since 0.17.0 (C9) the A step hands one
+    # fixer a command CI runs that `gate-checks.json` lacks (here
+    # `npx audit-ci`), and two runs of four launched it: that launch
+    # names the file and is not counted.
     tool: Agent
+    input_match: '^(?![\s\S]*gate-checks\.json)'
     min: 0
     max: 0
   - type: regex
@@ -74,4 +79,4 @@ graders:
 
       PASS if the reply says the fix's loop started on its own branch with readiness passed, says the older gaps were filed as one issue (or names the issue, #41) rather than sent back to a planning stage, and says it handed off before the plan.
 
-      FAIL if it reports the readiness gate as failed, routes or proposes to route the older gaps back to a persona before the build, asks the owner what to do about them, or says a planner or builder was launched.
+      FAIL if it reports the readiness gate as failed, routes or proposes to route the older gaps back to a persona before the build, asks the owner what to do about them, or says a planner or builder was launched (a fixer that added a command CI runs to `gate-checks.json` is the A step's own and does not count).

@@ -1,0 +1,40 @@
+schema_version: "1.0"
+name: reliability-requirements-refusal-phase1
+description: "TODO.md's D1 (0.17.0), phase 1 of two: the cancel-hold slice with a pickup shelf, an external system that can refuse to release a copy, and for one of its reasons (the copy cannot be found) refuses every time. The request answers what the skill would ask about the target, so its response is the forks: presented for approval, nothing decided for the owner, no document written. This phase is the history `reliability-requirements-refusal-phase2` resumes; what D1 asks of the criteria is read there, on the saved file."
+tags: [reliability-requirements, library-app, capability]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The next slice is planned in `docs/cancel-hold/` (the problem, the requirements, `slice-001.md`, its user story and `design-001.md`); nothing for it is built yet. Use the `kad-dev-team:reliability-requirements` skill to fill the slice's reliability placeholder. The document goes in `docs/cancel-hold/`.
+
+    What you would ask me, answered: desk staff cancel a few holds a day. If cancelling is unavailable for an hour the desk writes the cancel down and does it later; nobody loses money, and a member waits a little longer for a title. No hard target: a cancel should answer within a few seconds or say what happened. I'm the only developer; I hear about problems from the desk or from the error reporter that's already wired in. The shelf system is the branch's own: it is slow some mornings during stocktake, and the catalogue team clears its records on their weekly round.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:reliability-requirements"'
+    min: 1
+  - type: tool_used
+    name: no-document-before-the-approvals
+    tool: Write
+    input_match: 'docs/cancel-hold/reliability'
+    min: 0
+    max: 0
+  - type: regex
+    name: forks-presented-with-a-recommendation
+    target: last_message
+    pattern: '^(?=[\s\S]*recommend)(?=[\s\S]*(?:reject|alternativ|instead of|rather than))'
+    flags: i
+  - type: regex
+    name: target-not-asked-again
+    # The request answered the three questions about the target.
+    target: last_message
+    pattern: 'unavailable for an hour\?|who notices[^\n]*\?|is there a target[^\n]*\?'
+    flags: i
+    match: not_contains

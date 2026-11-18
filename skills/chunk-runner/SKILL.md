@@ -131,14 +131,16 @@ was recorded as one that handed back early.
    writing. A second stall on the same chunk ends the round: `stall:
    ended` on the hand-back line.
 
-   **Shell edits** are counted, never acted on. The builder's hand-back
-   says `shell edits <m>`; the gate's transcript replay (next step) counts
-   them from what the agent actually ran, and the counted number is the
-   one that goes on the line, `reported <m>` beside it. A formatter run
-   through the manifest's `format` script is not a shell edit. Never a
-   stall, never a relaunch, never a question: the count is there for the
-   audit to find (a fixer mangled a seam test's name with one `sed -i`,
-   incident 3; a builder reported 1 and made 9, incident 4).
+   **Shell edits** are counted, never reported and never acted on. The
+   gate's transcript replay (next step) counts them from what the agent
+   actually ran, and that number goes on the line. No builder or fixer
+   is asked for its own count: across one slice the builders reported 21
+   of the 88 they made, so the reported number told nobody anything. A
+   formatter run through the manifest's `format` script is not a shell
+   edit. Never a stall, never a relaunch, never a question: the count is
+   there for the audit to find (a fixer mangled a seam test's name with
+   one `sed -i`, incident 3; a builder reported 1 and made 9, incident
+   4).
 2. **Gate**, inline with Bash, on the chunk's commit range:
 
    ```
@@ -188,10 +190,25 @@ was recorded as one that handed back early.
    "sonnet"`, `maxTurns: 120`, `tdd-implementation-lite`, its "Applying a
    fix handed back from review" path, the gate's output verbatim, chunks
    are committed), once; run the gate again on the fix's range with the
-   same `--base`, saved as `gate-chunk-<k>-r0-fix.txt`. A second `FAIL`
-   ends the round: `gate FAIL: <checks>; ended` on the hand-back line, the
-   branch as it is. Don't widen `--allow`, don't drop a `--protect`, don't
-   fix it yourself.
+   same `--base`, saved as `gate-chunk-<k>-r0-fix.txt`.
+
+   **A second `FAIL` ends the round only when something a person has to
+   judge is failing.** Read the second gate file's `FAIL` lines:
+   - every one is `lint` or a `check <name>` line (a count over its
+     baseline, a scan, the format check where the project lists it): the
+     failure is mechanical, the first fixer usually left it behind (an
+     import nothing uses after a helper moved), and it gets **one more**
+     fresh gate fixer, the same shape, with that gate file verbatim; the
+     gate again, saved as `gate-chunk-<k>-r0-fix2.txt`. A loop once
+     stopped for its owner for 25 minutes over one unused import
+     (incident 39). A third `FAIL` ends the round;
+   - any other line among them (`suite`, `typecheck`, `coverage`,
+     `tests`, `scope`, `protected`, `sources`, `changes`, `gate-checks`)
+     ends the round at once, as before.
+
+   Ended is `gate FAIL: <checks>; ended` on the hand-back line, the
+   branch as it is. Don't widen `--allow`, don't drop a `--protect`,
+   don't raise a baseline, don't fix it yourself.
 
    **A `sources` failure** goes to that one fixer with one line added to
    its task: the lines the gate names hold values of a file the owner
@@ -205,8 +222,12 @@ was recorded as one that handed back early.
    goes to no fixer: `gate FAIL: sources (not readable); ended`. You
    never open a listed source, never run the scan with `--show`, and
    never copy a value into the hand-back.
-3. **Review and smoke: two launches, never more** (under `light`, the
-   smoke agent alone). Sandbox check. Then, in parallel, `model: "opus"`,
+3. **Review and smoke: two launches, never more** (`loop` only; **under
+   `light` this step and the next two do not run**: the round ends at the
+   gate, with `review none` and `smoke none` on the line, and the
+   browser is left to the slice review's criteria walk. On one slice
+   seven per-chunk smoke runs found nothing the walk did not cover, at
+   more than any other per-chunk check cost). Sandbox check. Then, in parallel, `model: "opus"`,
    each handed nothing of the flow's own state (no finding from the
    other, no severity, no escalation, no "check whether X"):
    - **The combined reviewer** (`loop` only): `kad-dev-team:code-reviewer:AGENT`,
@@ -275,9 +296,8 @@ was recorded as one that handed back early.
    <title>` appended. The orchestrator consults the persona and relaunches
    a runner telling it to resume at the fix round with the decision
    commit (below).
-4. **One fix round, then a regressions-only re-review** (`loop` only;
-   under `light` the round ends after step 3 with `review none` on the
-   line and the smoke findings left standing for D). If round 0 raised
+4. **One fix round, then a regressions-only re-review** (`loop` only).
+   If round 0 raised
    any Critical, High, Medium or smoke finding: sandbox check, then one
    fresh fixer (`model: "sonnet"`, `maxTurns: 120`, `tdd-implementation-lite`,
    its handed-back path, chunks are committed) with every finding of both
@@ -293,9 +313,10 @@ was recorded as one that handed back early.
    **Every gate gets its own one fixer, and the cap does not count it.**
    A `FAIL` on a fix's gate (round 1's or round 2's) is handled as step
    2 handles round 0's: the failing checks to one fresh gate fixer, the
-   gate again on the same `--base` (`gate-chunk-<k>-r<i>-fix.txt`), and
-   a second `FAIL` of that gate ends the round with `gate FAIL: <checks>;
-   ended`. The two fixers this step caps are the ones a review's findings
+   gate again on the same `--base` (`gate-chunk-<k>-r<i>-fix.txt`), one
+   more gate fixer when what still fails is only `lint` or `check` lines
+   (`-fix2.txt`), and otherwise a second `FAIL` of that gate ends the
+   round with `gate FAIL: <checks>; ended`. The two fixers this step caps are the ones a review's findings
    go to, `Fix r1` and `Fix r2`: a gate fixer sent in round 0 or round 1
    takes neither place, so a regression the re-review finds still gets
    its `Fix r2` after one. `fixers <m>` on your line counts every fixer
@@ -312,10 +333,13 @@ was recorded as one that handed back early.
    python3 -I '<scripts>/rounds_record.py' --sidecar '<sidecar>' --report '<r1 review>' [--report '<r1 smoke>'] --chunk <k> --round 1 --project '<project root>' --range '<before fix>..HEAD' --fix '<sha>' --fixer '<agent id>' --turns <n>
    ```
 
-   It classifies each finding by hunk: **regression** when its line is
-   inside the fix's diff (a smoke finding always is), **pre-existing**
-   otherwise, and prints the `(reg <r>, pre <p>)` split and one
-   `standing:` line per pre-existing Critical, High or Medium. Regressions
+   It classifies each finding by what the fix wrote: **regression** when
+   its line is one the fix's diff wrote (a smoke finding always is; a
+   line the diff only moved from elsewhere is not), **first-seen** when
+   the report's reviewer has no round-0 report beside it, **pre-existing**
+   otherwise, and prints the `(reg <r>, pre <p>)` split (`, first <f>`
+   when there is one) and one `standing:` line per pre-existing
+   Critical, High or Medium. Regressions and first-seen findings
    go to a **second and last** review fixer (a fresh launch, the same
    shape, `Fix r2` line; whatever gate fixers ran before it), then the
    gate (`gate-chunk-<k>-r2.txt`), then step 5: **no third fix
@@ -376,7 +400,7 @@ it is not said. The orchestrator reads the last line of what you send
 and nothing above it, so a paragraph before the line is read by nobody.
 
 ```
-`<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>
+`<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`><; red commit `<sha>`>; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re] | none>`< r0 `<C/H/M>`>< nd `<n>`>; smoke `<PASS | <n> findings | none>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`<, first `<f>`>)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`; builder `<agent id>`; reviews `<n>` fixers `<m>`; sandbox `<n>` PASS<; stall: <relaunched | ended>><; needs-decision <persona>: <report path> — <title>><; stopped at <step>>
 ```
 
 The orchestrator adds `records`, `audit`, `data` and `budget`, writes the

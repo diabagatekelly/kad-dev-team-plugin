@@ -328,7 +328,9 @@ class Reach:
         if key is None:
             return t.get("default")
         kind, name = key.split(":", 1)
-        return t.get("base") if kind == "base" else t.get("states", {}).get(name)
+        # a state with a step after it (`<state>+after-state:<variant>`)
+        # reaches the steps its state does
+        return t.get("base") if kind == "base" else t.get("states", {}).get(name.split("+", 1)[0])
 
     def ran(self, case):
         """The script paths the case depends on, or None when none are recorded."""

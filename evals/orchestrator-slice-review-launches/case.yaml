@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: orchestrator-slice-review-launches
-description: "The slice review's round-0 launches (0.15.0's D.3 and D.4, held by no case until 0.15.1), graded on the launch text alone: from the state where the Definition of Done has passed and the mutation pass has run, the orchestrator launches the five reviewers of a slice with no screen and the cold reader, hands the test-quality reviewer the mutation report and no other reviewer, names `cold-read` to the cold reader on Opus and hands it no planning document, and hands off without waiting."
+description: "The slice review's round-0 launches (0.15.0's D.3 and D.4, held by no case until 0.15.1; C1 since 0.17.0), graded on the launch text and its order: from the state where the Definition of Done has passed and no mutation pass has run, the orchestrator starts the pass and leaves it running, launches the four other reviewers of a slice with no screen and the cold reader without waiting for it, launches the test-quality reviewer after them, when the pass has exited, and hands it the mutation report and no other reviewer; it names `cold-read` to the cold reader on Opus and hands it no planning document, and hands off without waiting. Until 0.17.0 the state had the pass already run and every reviewer started together. Under `claude plugin eval` a launch blocks until the agent ends, so \"at once\" is read as the order of the launches, not their overlap."
 tags: [orchestrator, library-app, regression]
 context:
   scaffold_script: scaffold.sh
@@ -41,19 +41,19 @@ graders:
   - type: tool_used
     name: test-quality-reviewer-handed-the-mutation-report
     tool: Agent
-    input_match: '(?=[\s\S]*kad-dev-team:test-quality-review)(?=[\s\S]*slice-r0-test-quality\.md)(?=[\s\S]*slice-mutation\.md)'
+    input_match: '(?=[\s\S]*kad-dev-team:test-quality-review)(?=[\s\S]*slice-r0-test-quality(?:-review)?\.md)(?=[\s\S]*slice-mutation\.md)'
     min: 1
     max: 1
   - type: tool_used
     name: no-other-reviewer-handed-the-mutation-report
     tool: Agent
-    input_match: '(?=[\s\S]*slice-r0-(?:code|architecture|security|reliability|cold)\.md)(?=[\s\S]*slice-mutation\.md)'
+    input_match: '(?=[\s\S]*slice-r0-(?:code|architecture|security|reliability|cold)(?:-review|-read)?\.md)(?=[\s\S]*slice-mutation\.md)'
     min: 0
     max: 0
   - type: tool_used
     name: the-four-other-reviewers-launched
     tool: Agent
-    input_match: 'slice-r0-(?:code|architecture|security|reliability)\.md'
+    input_match: 'slice-r0-(?:code|architecture|security|reliability)(?:-review)?\.md'
     min: 4
     max: 4
   - type: tool_used
@@ -62,3 +62,18 @@ graders:
     input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?accessibility-engineer'
     min: 0
     max: 0
+  # 0.17.0 (TODO.md C1): the pass is started before the reviewers and
+  # left running; the test-quality reviewer starts after the others.
+  - type: tool_order
+    name: mutation-pass-started-before-any-reviewer
+    before: {tool: Bash, input_match: 'mutation_pass\.py[^\n]*\brun\b'}
+    after: Agent
+  - type: tool_used
+    name: pass-started-in-the-background
+    tool: Bash
+    input_match: '(?=[\s\S]*mutation_pass\.py[^\n]*\brun\b)(?=[\s\S]*"run_in_background"\s*:\s*true)'
+    min: 1
+  - type: tool_order
+    name: test-quality-reviewer-after-the-others
+    before: {tool: Agent, input_match: 'slice-r0-(?:code|architecture|security|reliability)(?:-review)?\.md'}
+    after: {tool: Agent, input_match: 'slice-r0-test-quality(?:-review)?\.md'}

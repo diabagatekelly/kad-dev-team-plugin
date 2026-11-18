@@ -1,12 +1,12 @@
 schema_version: "1.0"
 name: orchestrator-mutation-before-review
-description: "TODO.md's B4 (0.15.0), the orchestrator's half: resumed at D with the Definition of Done acted on and checked again, the orchestrator mutates the slice's changed lines against the suite before any reviewer is launched. It writes the mutants outside the tree, runs the pass on the loop's own tree (the log is modified and uncommitted), keeps the report in the records directory, carries the script's count (11 mutants, 2 survived on this fixture) and judges no survivor itself; it hands off before round 0's launches as told. A first form of these checks sat on orchestrator-definition-of-done, where two runs of three never reached this step (a second fixer after a gate failure ended the review's fix budget first)."
+description: "TODO.md's B4 (0.15.0) and C1 (0.17.0), the orchestrator's half: resumed at D with the Definition of Done acted on and checked again, the orchestrator mutates the slice's changed lines against the suite before any reviewer is launched, and since 0.17.0 does not wait for the pass. It writes the mutants outside the tree, starts the pass as the loop's one background command on the loop's own tree (the log is modified and uncommitted) with `--first-failure`, a budget and a progress log, its report bound for the records directory, judges no survivor itself, and hands off before round 0's launches as told. Until 0.17.0 the pass ran inline and this case read its report and its count (11 mutants, 2 survived on this fixture); a pass left running has neither when the run ends, and `orchestrator-slice-review-launches` now holds what happens when it exits. A first form of these checks sat on orchestrator-definition-of-done, where two runs of three never reached this step (a second fixer after a gate failure ended the review's fix budget first)."
 tags: [orchestrator, library-app, regression]
 context:
   scaffold_script: scaffold.sh
 execution:
   prompt: |
-    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off when the next thing to do is launching round 0 of the slice review itself (the six reviewers and the cold read).
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off once the mutation pass has been started, when the next thing to do is launching round 0's agents (the six reviewers and the cold read): launch none of them.
   model: sonnet
   max_turns: 40
   timeout_seconds: 1500
@@ -28,9 +28,21 @@ graders:
     tool: Bash
     input_match: 'mutation_pass\.py[^\n]*\brun\b(?=[^\n]*--allow-dirty)(?=[^\n]*slice-mutation\.md)'
     min: 1
-  - type: file_exists
-    name: report-in-the-records
-    path: docs/cancel-hold/implementation/slice-mutation.md
+  - type: tool_used
+    name: pass-bounded-and-its-progress-logged
+    # 0.17.0 (C1, incident 38): a mutant's suite ends at its first failing
+    # test, the pass stops starting mutants at its budget, and its
+    # progress goes to a file the owner can be shown.
+    tool: Bash
+    input_match: 'mutation_pass\.py[^\n]*\brun\b(?=[^\n]*--first-failure)(?=[^\n]*--budget[ =]+\d)(?=[^\n]*--log[ =])'
+    min: 1
+  - type: tool_used
+    name: pass-started-in-the-background
+    # 0.17.0 (C1): the one background command of the loop; nobody waits
+    # for it but the test-quality reviewer.
+    tool: Bash
+    input_match: '(?=[\s\S]*mutation_pass\.py[^\n]*\brun\b)(?=[\s\S]*"run_in_background"\s*:\s*true)'
+    min: 1
   - type: tool_used
     name: mutants-file-outside-the-tree
     # The file `changed` writes holds lines of the source: its `--out` is
@@ -47,11 +59,6 @@ graders:
     input_match: 'subagent_type'
     min: 0
     max: 0
-  - type: regex
-    name: count-carried-as-the-script-printed-it
-    target: last_message
-    pattern: '(?:\b11 mutants\b[\s\S]{0,80}\b2 survived\b)|(?:\b2\b[^\n]{0,30}surviv)'
-    flags: i
   - type: regex
     name: no-survivor-judged-by-the-orchestrator
     # The reading of a survivor is the test-quality reviewer's; a hand-off

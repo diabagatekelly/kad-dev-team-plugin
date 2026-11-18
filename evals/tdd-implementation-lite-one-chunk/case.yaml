@@ -140,13 +140,14 @@ graders:
 
       FAIL if the plan was edited, reordered or chunks removed, the chunk section is missing, or it describes chunk 2 or chunk 3 work as built.
   - type: regex
-    name: hand-back-carries-its-five-fields
+    name: hand-back-carries-its-four-fields
     # Was the judge `ends-on-the-hand-back-line` until E5: a commit hash, the
-    # report's path, a test count, `deviations <n>` and `shell edits <n>` in the
-    # reply. Notes beside them pass, as the judge's criterion said; the judge
-    # failed four replies that carried all five.
-    # The number may come before the word ("0 deviations, 0 shell edits"):
-    # the first form wanted it after, and failed a reply that had all five.
+    # report's path, a test count and `deviations <n>` in the reply. Notes
+    # beside them pass, as the judge's criterion said; the judge failed four
+    # replies that carried them all. The number may come before the word
+    # ("0 deviations"). Until 0.17.0 a fifth field, `shell edits <n>`, was
+    # asked for: B6 dropped it from the skill (the gate counts them from the
+    # transcript and nobody reports one), so it is no longer read here.
     target: last_message
-    pattern: '^(?=[\s\S]*\b[0-9a-f]{7,40}\b)(?=[\s\S]*implementation-report-slice-001\.md)(?=[\s\S]*\b\d+\W{0,3}tests?\b)(?=[\s\S]*(?:deviations\W{0,3}\d|\d+\W{0,3}deviations?\b))(?=[\s\S]*(?:shell edits\W{0,3}\d|\d+\W{0,3}shell edits?\b))'
+    pattern: '^(?=[\s\S]*\b[0-9a-f]{7,40}\b)(?=[\s\S]*implementation-report-slice-001\.md)(?=[\s\S]*\b\d+\W{0,3}tests?\b)(?=[\s\S]*(?:deviations\W{0,3}\d|\d+\W{0,3}deviations?\b))'
     flags: i

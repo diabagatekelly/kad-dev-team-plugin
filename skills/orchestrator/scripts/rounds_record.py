@@ -36,7 +36,7 @@ Each finding becomes one sidecar row:
 
     {"chunk": 3, "round": 1, "reviewer": "review", "severity": "Medium",
      "persona": null, "title": "...", "file": "src/x.ts", "line": 12,
-     "class": "regression" | "pre-existing" | "last-fix" | "owed" | null, "fix": "<sha>" | null,
+     "class": "regression" | "pre-existing" | "first-seen" | "last-fix" | "owed" | null, "fix": "<sha>" | null,
      "fixer": "<agent id>" | null, "turns": n | null,
      "report": "chunk-3-r1-review.md", "session": "<the session that recorded it>"}
 
@@ -54,10 +54,20 @@ fix's commits; `--project` is the repository, default `.`): `git diff
 (`@@ -a,b +c,d @@` is lines c..c+d-1; d=0 is the single line c). A
 Critical, High or Medium whose file and line (or line range) fall inside a
 hunk is a `regression`; one whose file is in the diff but that names no
-line is a regression too (the file was touched); any other is
+line is a regression too (the file was touched). **A line the diff only
+moved is not written by it**: an added line whose text the same diff
+removed somewhere (twelve characters or more) is left out of the hunks, so
+a finding on a helper carried into another file is `pre-existing`. Any
+other is
 `pre-existing`: the re-review found it in lines the fix did not write, so
 it stands and is never fixed in this scope. A smoke report's findings are
 always regressions when a range is given: a smoke failure never stands.
+**`first-seen`**: a report of round 1 or later (`…-r<i>-<name>.md`) whose
+round-0 counterpart (`…-r0-<name>.md`) is not beside it comes from a
+reviewer that first looked after the fix (a browser run that could not
+start at round 0, a reviewer added for the fix). Its findings are new to
+the scope, not the fixer's doing: they are fixed with the regressions and
+counted apart, `(reg <n>, pre <m>, first <k>)`.
 Without `--range` (round 0) `class` is null, with one exception: a
 finding titled "browser checks not run" (a UI smoke agent with no browser
 to drive, naming what it could not check) is `owed` in any round. It is
@@ -275,26 +285,78 @@ def find_git():
     return _GIT
 
 
+MOVED_MIN = 12  # a shorter line (a brace, `return x`) is the same text everywhere and proves no move
+
+
 def hunks(project, rng):
-    """{file: [(first, last), ...]} of new-side lines the range's diff wrote."""
+    """{file: [(first, last), ...]} of the new-side lines the range's diff
+    **wrote**. A line whose text the same diff removed somewhere (a file
+    split, a helper moved to a support module) was moved, not written: a
+    finding on it was there before the fix, and one fixer in four was
+    being charged with those. A hunk that only deletes keeps its one line:
+    a deletion changes what happens there."""
     git = find_git()
     proc = subprocess.run([git, "diff", rng, "-U0", "--no-color"], cwd=project, capture_output=True,
                           text=True, encoding="utf-8", errors="replace")
     if proc.returncode != 0:
         raise SystemExit(f"git diff {rng}: {proc.stderr.strip()}")
+    lines = proc.stdout.splitlines()
+    removed_any = {line[1:].strip() for line in lines if line.startswith("-") and not line.startswith("--- ")}
+    removed = {text for text in removed_any if len(text) >= MOVED_MIN}
     out, current = {}, None
-    for line in proc.stdout.splitlines():
+
+    def close(first, added):
+        """The hunk's written lines. A long line the diff removed elsewhere
+        was moved; a short one (a closing brace) was moved with it when it
+        sits against a moved line and the diff removed that text too."""
+        moved = [text in removed for text in added]
+        for i, text in enumerate(added):
+            if not moved[i] and text in removed_any and ((i > 0 and moved[i - 1]) or (i + 1 < len(added) and added[i + 1] in removed)):
+                moved[i] = True
+        ranges = out[current]
+        for i, was_moved in enumerate(moved):
+            if was_moved:
+                continue
+            n = first + i
+            if ranges and ranges[-1][1] == n - 1:
+                ranges[-1] = (ranges[-1][0], n)
+            else:
+                ranges.append((n, n))
+
+    first, added = None, []
+    for line in lines + ["+++ /dev/null"]:
+        if line.startswith("+++ ") or line.startswith("--- ") or HUNK.match(line):
+            if current is not None and first is not None and added:
+                close(first, added)
+            first, added = None, []
         if line.startswith("+++ "):
             target = line[4:].strip()
             current = None if target == "/dev/null" else target[2:] if target.startswith("b/") else target
             if current is not None:
                 out.setdefault(current, [])
+        elif line.startswith("--- "):
+            continue
         elif current is not None:
             m = HUNK.match(line)
             if m:
-                first, count = int(m.group(1)), int(m.group(2)) if m.group(2) is not None else 1
-                out[current].append((first, first + max(count, 1) - 1))
+                first = int(m.group(1))
+                if m.group(2) is not None and int(m.group(2)) == 0:
+                    out[current].append((first, first))
+            elif line.startswith("+") and first is not None:
+                added.append(line[1:].strip())
     return out
+
+
+ROUND_IN_NAME = re.compile(r"-r([1-9]\d*)-(?=[^/\\]*$)")
+
+
+def first_seen(report):
+    """True when the report is of round 1 or later by its name and no
+    round-0 report of the same reviewer sits beside it."""
+    name = os.path.basename(report)
+    if not ROUND_IN_NAME.search(name):
+        return False
+    return not os.path.isfile(os.path.join(os.path.dirname(os.path.abspath(report)), ROUND_IN_NAME.sub("-r0-", name)))
 
 
 def classify(finding, reviewer, changed):
@@ -307,7 +369,7 @@ def classify(finding, reviewer, changed):
     if finding["file"] is None or finding["file"] not in changed:
         return "pre-existing"
     if finding["line"] is None:
-        return "regression"
+        return "regression" if changed[finding["file"]] else "pre-existing"  # the file only had lines moved into it
     lo, hi = finding["line"], finding["line_end"] or finding["line"]
     return "regression" if any(a <= hi and lo <= b for a, b in changed[finding["file"]]) else "pre-existing"
 
@@ -359,6 +421,7 @@ def record(a):
     rows, failed, smoke_seen, walk_seen = [], False, False, False
     for report, reviewer in reports:
         findings, shaped, result = parse_report(report)
+        first_look = bool(a.range) and not a.last and first_seen(report)
         if isinstance(chunk_value(a.chunk), int):
             # A chunk review raises no Low (the slice review at D collects
             # them once): one that slipped through is dropped, and said.
@@ -401,6 +464,7 @@ def record(a):
                          "severity": f["severity"], "persona": f["persona"], "title": f["title"],
                          "file": f["file"], "line": f["line"],
                          "class": ("last-fix" if a.last and f["severity"] in ACTIONABLE and not OWED.match(f["title"] or "")
+                                   else "first-seen" if first_look and not OWED.match(f["title"] or "")
                                    else classify(f, reviewer, changed)),
                          "fix": a.fix, "fixer": a.fixer, "turns": a.turns, "report": key,
                          "session": a.session or None})
@@ -425,6 +489,7 @@ def record(a):
     counts = {s: sum(1 for r in counted if r["severity"] == s) for s in ("Critical", "High", "Medium", "Low", "needs-decision")}
     actionable = [r for r in counted if r["severity"] in ACTIONABLE]
     regressions = sum(1 for r in actionable if r["class"] == "regression")
+    first = sum(1 for r in actionable if r["class"] == "first-seen")
     standing = [r for r in actionable if r["class"] in ("pre-existing", "last-fix")]
     smoke_findings = sum(1 for r in counted if r["reviewer"] == "smoke")
 
@@ -443,7 +508,7 @@ def record(a):
     if counts["needs-decision"]:
         line += f" nd {counts['needs-decision']}"
     if changed is not None and not a.last:
-        line += f" (reg {regressions}, pre {len(standing)})"
+        line += f" (reg {regressions}, pre {len(standing)}{', first ' + str(first) if first else ''})"
     if smoke_seen:
         smoke_owed = any(r["reviewer"] == "smoke" for r in owed)
         line += "; smoke PASS" if smoke_findings == 0 and not smoke_owed else f"; smoke {smoke_findings} findings"
@@ -457,7 +522,7 @@ def record(a):
         line += f"; walk {wp}/{wf}/{len(walked) - wp - wf}"
     if a.json:
         with open(a.json, "w", encoding="utf-8") as f:
-            json.dump({"rows": rows, "counts": counts, "regressions": regressions, "standing": len(standing),
+            json.dump({"rows": rows, "counts": counts, "regressions": regressions, "first_seen": first, "standing": len(standing),
                        "smoke": None if not smoke_seen else smoke_findings, "line": line}, f, indent=2)
     print(line)
     return 1 if failed else 0

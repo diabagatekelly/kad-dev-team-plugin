@@ -1,0 +1,70 @@
+schema_version: "1.0"
+name: chunk-runner-light-no-review
+description: "TODO.md's C3 (0.17.0, the owner's decision 2 of 2026-11-17: the next slice runs `light` with no per-chunk smoke run): told the cadence is `light`, resumed with chunk 1 built and not yet gated, the runner runs the gate and hands back. It launches no reviewer and no smoke agent, records no round, and its one line says `review none` and `smoke none`. No stop is named in the prompt: under `light` the round ends at the gate by the skill. The light cadence had no case before this one (E2's survivors, 2026-11-14)."
+tags: [chunk-runner, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    You are the chunk runner the orchestrator launched for chunk 1 of 3 of slice 001 of the library-lending app, which is in your current working directory (a git repository on the branch `slice-001-cancel-hold`). Invoke the skill `kad-dev-team:chunk-runner` first and follow it.
+
+    What the orchestrator hands you. Chunk 1 of 3: **Title**: Cancel a member's hold on a title. **Delivers**: Acceptance "Given a member with a hold on a title, when it is cancelled, the hold is gone from that title's queue and the result says cancelled"; Acceptance "Given a member with no hold on a title, when cancelling is asked for, the result is a rejection with a reason, and the queue is unchanged"; Security "only the hold named by the card number and ISBN given is removed; no other member's hold on that title or any other changes". **Files**: lending/hold-queue.ts; lending/cancel-hold.ts; infra/memory/in-memory-hold-queue.ts; test/cancel-hold.test.ts; test/in-memory-hold-queue.test.ts. **Done when**: seam "cancels a member's hold through the real in-memory queue", `cancels the member's hold and says cancelled`, `rejects a cancel when the member has no hold on the title`, `removes only that member's hold on that title`, `in-memory queue removes one member's hold and says whether it was there` are green. **Touches**: storage.
+
+    The report is `docs/cancel-hold/implementation/implementation-report-slice-001.md`; the slice documents are `docs/cancel-hold/slice-001.md`, `design-001.md`, `requirements-001.md`, `user-story-001.md` and `problem.md` (those five are the protect list). Records directory `docs/cancel-hold/implementation/`; sidecar `docs/cancel-hold/implementation/rounds-slice-001.jsonl`; base commit: the plan commit (`Plan: slice 001 in 3 chunks` in `git log --oneline`); test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; the orchestrator's scripts are in the `scripts/` directory of the orchestrator skill beside yours (`${CLAUDE_SKILL_DIR}/../orchestrator/scripts`, resolved once with `cd … && pwd`), `scratch_run.py` among them, scratch folder `${TMPDIR:-/tmp}/kad-run-001-1`; cadence `light`; browser not needed (the slice has no screen); the slice does not touch UI; the A line's sandbox field says the owner opted to continue unsandboxed (`FAIL: write, network; owner opted to continue unsandboxed`), so the sandbox checks in this round are information and never end it.
+
+    Resume point: the round stopped after the build: the implementer committed chunk 1 (the handoff names the commit and the agent); no gate has run on that commit. The previous session's notes, with the hashes and paths, are in `docs/cancel-hold/implementation/handoff-slice-001.md` (its first line is addressed to the orchestrator, which has already launched you; read it for the facts only). Carry the round on from there to its end.
+  model: opus
+  max_turns: 40
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: chunk-runner-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:chunk-runner"'
+    min: 1
+  - type: tool_used
+    name: orchestrator-not-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 0
+    max: 0
+  - type: regex
+    name: log-not-written
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*orchestrator-log\.md"'
+    match: not_contains
+  - type: regex
+    name: no-records-commit
+    target: trace
+    pattern: 'git commit[\s\S]{0,300}?Records:'
+    match: not_contains
+  - type: tool_used
+    name: gate-run
+    tool: Bash
+    input_match: 'validation_gate\.py'
+    min: 1
+  - type: regex
+    name: gate-passed-and-saved
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/gate-chunk-1-r0.txt
+    pattern: 'validation gate: PASS'
+  - type: tool_used
+    name: no-agent-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-round-recorded
+    tool: Bash
+    input_match: 'rounds_record\.py'
+    min: 0
+    max: 0
+  - type: regex
+    name: hand-back-says-review-none-and-smoke-none
+    # One line, the gate's pass, `review none` with no round-0 counts
+    # after it, `smoke none`.
+    target: last_message
+    pattern: '^\s*[^\n]*gate \W{0,2}PASS\b[^\n]*review \W{0,2}none\W{0,2};[^\n]*smoke \W{0,2}none\b[^\n]*\s*$'

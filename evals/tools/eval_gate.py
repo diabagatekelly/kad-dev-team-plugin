@@ -29,7 +29,7 @@ with the change, it is what the pull-request check reads instead of
 running anything. A case that fails loses its entry.
 
 Usage: python3 -I evals/tools/eval_gate.py [--base origin/main] [--cases a b ... | --all] [--stale]
-           [--jobs 6] [--parallel 8] [--tolerance 0.1] [--runs 1] [--dry-run] [--keep-scaffold]
+           [--jobs 6] [--parallel 8] [--tolerance 0.1] [--runs 1] [--dry-run] [--keep-scaffold] [--trial]
   --stale narrows the set to cases without current evidence: after a skill
   edit, that is exactly the cases the edit reaches.
   --keep-scaffold leaves each run's kept directory in /tmp (printed, and
@@ -277,7 +277,14 @@ def main():
                    help="leave every run's kept directory in /tmp (printed, and "
                         "recorded as scaffoldDir in the result) so a phase can be "
                         "frozen from it with freeze-history.sh")
+    p.add_argument("--trial", action="store_true",
+                   help="a trial of named cases, not a gate run: a case under its "
+                        "bar is reported and not re-run at its own count, and no "
+                        "evidence is written (a new case's first run, new wording "
+                        "tried on an old case)")
     a = p.parse_args()
+    if a.trial and not a.cases:
+        p.error("--trial needs --cases: a trial is of named cases")
     global KEEP_SCAFFOLD
     KEEP_SCAFFOLD = a.keep_scaffold
 
@@ -314,7 +321,10 @@ def main():
     if a.dry_run:
         return 1 if stale_cases else 0
     os.makedirs(os.path.join(EVALS, "results"), exist_ok=True)
-    tag = "gate-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S")
+    # A trial's results are not gate results: `record_thresholds.py
+    # --gate-only` and the results history read the `gate-` names only, so
+    # a one-run trial can never become a bar or a row of a case's history.
+    tag = ("trial-" if a.trial else "gate-") + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S")
     # What each case loads as the runs start; evidence is recorded only
     # against inputs that are still the same when they finish.
     files, reach = affected_cases.repo_files(), affected_cases.Reach()
@@ -341,7 +351,7 @@ def main():
             rows[case] = {"bar": bar, "score": r["score"], "runs": r["runs"], "error": r["error"],
                           "rerun": False, "lost": lost, "source": r["source"]}
             # A first pass already at several runs is its own re-run.
-            if a.runs == 1 and r["score"] is not None and bar is not None and (
+            if a.runs == 1 and not a.trial and r["score"] is not None and bar is not None and (
                     r["score"] < bar - eval_evidence.tolerance_for(bars.get(case, {}), r["runs"], a.tolerance)
                     or lost):
                 retry[pool.submit(run_case, case, None, tag + "-rerun", slots)] = case
@@ -386,6 +396,9 @@ def main():
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         open(summary, "a").write(report)
+    if a.trial:
+        print("trial: no case re-run, no evidence written.")
+        return 1 if failed else 0
     # The proof the pull-request check reads: every passing case, with a
     # fingerprint of what it loaded; a failing case loses its old entry.
     moved = eval_evidence.record({c: rows[c] for c in rows if c not in failed}, failed, version, before)

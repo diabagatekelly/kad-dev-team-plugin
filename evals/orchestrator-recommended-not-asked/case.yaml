@@ -1,0 +1,67 @@
+schema_version: "1.0"
+name: orchestrator-recommended-not-asked
+description: "TODO.md's C4 (0.17.0, the owner's decision 1 of 2026-11-17) and D4's design half, on the design row of the orchestrator's table: a user story and no design doc, and the one thing only the owner knows (whose the portal's screen is) said in the request. The design's decisions are how-it-is-built questions with a recommended option, so none is put to the owner for approval: each is taken, the design is saved with them recorded as decided, the log's entry carries a `taken as recommended: <choice>, over <alternatives> (architecture-design)` bullet for them and the report lists them so one can be overturned. architecture-design runs `readiness_check.py` on its own two checks before it calls the design saved. `orchestrator-route-design` is the same row without the owner's sentence: there the question that is the owner's (the slice's scope) is still asked."
+tags: [orchestrator, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. We're planning a new feature for it, and the planning documents so far are in `docs/pay-fine/`. The portal's pages are a separate front-end that another team owns: in this repository the slice is the portal's API and nothing with a screen. Two things I can already answer: a problem you find in code that is already there is for a later slice, not this one, and a risk the design leaves standing I accept for now, so write it in the design. What's next?
+  model: sonnet
+  max_turns: 25
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: routes-to-architecture-design
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:architecture-design"'
+    min: 1
+  - type: tool_used
+    name: not-user-story-writeup
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:user-story-writeup"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: not-tdd-implementation
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
+    min: 0
+    max: 0
+  - type: file_exists
+    name: log-written
+    path: docs/pay-fine/orchestrator-log.md
+  - type: regex
+    name: decision-taken-as-recommended-and-logged
+    target:
+      source: file
+      path: docs/pay-fine/orchestrator-log.md
+    pattern: '(?:^|\n)\s*- taken as recommended: [^\n]+\bover\b[^\n]+\(`?(?:software-architect:)?architecture-design`?\)'
+  - type: tool_used
+    name: design-saved-without-an-approval-turn
+    tool: Write
+    input_match: 'docs/pay-fine/design[^"]*\.md'
+    min: 1
+  - type: regex
+    name: no-design-decision-put-to-the-owner
+    # The reply lists what was taken so the owner can overturn one; it
+    # asks them to approve or choose none of it. A risk put to the owner
+    # (a residual double charge to accept) is theirs and is still asked:
+    # a first form of this check failed a reply for asking one.
+    target: last_message
+    pattern: '(?:\bapprov(?:e|al)\b|sign[- ]off|which (?:option|approach|of these|one))[^\n?]{0,200}\?'
+    flags: i
+    match: not_contains
+  # 0.17.0, D4: the design checks itself the way the gate will.
+  - type: tool_used
+    name: readiness-check-run-on-the-design
+    tool: Bash
+    input_match: 'readiness_check\.py[^\n]*--planning'
+    min: 1

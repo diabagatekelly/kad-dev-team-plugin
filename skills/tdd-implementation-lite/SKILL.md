@@ -76,7 +76,10 @@ these five lines, each a bullet, the Title among them:
   it.
 - **Files**: every file it creates or changes, tests included. This is the
   gate's allowed list for the chunk; a file not named here is a plan
-  deviation the gate flags.
+  deviation the gate flags. Never a baseline image
+  (`visual-ux/baselines/`) and never the capture files (`screens/`): the
+  screen-change check's captures and baselines are written at delivery,
+  after the last chunk, and a plan that lists them fails its check.
 - **Done when**: the tests that must be green, each by the name it will
   have in the runner's output, quoted ("rejects a cancel when the member
   has no hold"), not a description of what they check. The first of them
@@ -180,13 +183,42 @@ When the task says chunks are committed (the orchestrator's chunk loop
 does), the chunk ends with one commit on the current branch:
 
 1. Run the full suite once more. The last run before the commit is green.
-2. `git add` each file by name: the chunk's **Files**, any deviation, and
+2. **Run the gate's checks, and commit only on `checks: PASS`:**
+
+   ```
+   python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/validation_gate.py" --project '<project root>' --test-cmd '<test command>' --checks-only
+   ```
+
+   It runs the typecheck, the lint and every command of the project's
+   `gate-checks.json` (type-aware lint, stricter compiler flags, length
+   and complexity limits, duplication, unused code, the scans), each
+   against its recorded baseline, and no suite. A `FAIL` line is yours to
+   clear before the commit: the count is one or two over because of what
+   you just wrote, and the tool's own lines under it say where. Clear it
+   in your code (shorten the function, use the existing helper, drop the
+   unused name), run the suite again, run the checks again. Never raise a
+   baseline, never edit `gate-checks.json`, a tool's configuration or an
+   ignore file to get there: those are the owner's. When the manifest has
+   a format check (`format:check`, or the command the README or CI names)
+   run it too and format only the files you changed. A project with no
+   `gate-checks.json` prints `SKIP` and the step is the typecheck and the
+   lint alone. **A `FAIL` that is not yours does not hold the commit**: a
+   check that cannot run here (its tool is not installed: `command not
+   found`, exit 127) or one that fails the same way on the tree as it
+   was before your change. Never install a tool to get past it. Commit,
+   and say so on the hand-back and as a `Deviation` line of the report
+   section (`checks: FAIL <check>, not this change's: <why>`); the gate
+   after you decides. A chunk handed back uncommitted over a check the
+   builder could not have cleared is a chunk the loop builds twice. The same step ends every fix and every gate fix, before
+   its commit: the gate after you runs these again, and a count you left
+   over costs the loop another agent.
+3. `git add` each file by name: the chunk's **Files**, any deviation, and
    the implementation report. Never `git add -A`, `.`, or a directory.
-3. `git commit` with the chunk's title as the subject and a body of three
+4. `git commit` with the chunk's title as the subject and a body of three
    parts, one line per item: `Delivers:` the criteria made green;
    `Decided:` each small gap you filled and your choice; `Deviation:` each
    file outside the plan and why. No trailers of your own.
-4. Never push, amend, rebase, switch branches, or touch another chunk's
+5. Never push, amend, rebase, switch branches, or touch another chunk's
    files. A fix handed back later is its own commit by whoever applies it.
 
 Invoked without that line (a direct "build it"), the old rule holds: commit
@@ -258,14 +290,12 @@ Two more things that hold throughout:
   a `python3 -`/`node -e` script or `cp`/`mv` hides what changed and in
   what order from the reviewer, the orchestrator's grader and the trace.
   Bash is for running things: the test runner, `git`, listing and reading
-  files. If you did change a file through the shell anyway, say so: one
-  `- **Shell edit**: <file>` line in your report section per file, and
-  `shell edits <n>` on your hand-back line. Each is a deviation on the
-  record, audited against the transcript: the gate replays what you
-  actually ran and writes the counted number beside the one you reported
-  (a builder once reported 1 and had made 9, incident 4). A formatter run
-  through the manifest's `format` script is not a shell edit. Nothing
-  stalls or asks the owner over the count.
+  files. Every file you change through the shell is counted against you
+  whether you say so or not: the gate replays what you actually ran and
+  writes the number on the chunk's record, for the audit (a builder once
+  reported 1 and had made 9, incident 4; nobody is asked for a count any
+  more). A formatter run through the manifest's `format` script is not a
+  shell edit. Nothing stalls or asks the owner over the count.
 - **The suite runs as its own command, and its result is read before
   `git commit`.** Never `npm test | grep … && git commit`, never the test
   run and the commit on one line: a chain runs on the last command's exit
@@ -388,6 +418,41 @@ didn't name. Other problems you notice nearby go in the report, not in the
 diff. Then the final review above, unless your task says `orchestrator`
 grades it.
 
+**Fix what the finding describes, not what it suggests.** A finding is
+its "What's happening": the behaviour that is wrong. Its suggested fix is
+the reviewer's guess at a mechanism, written without running anything.
+Before you write it, ask three things of the suggestion: does it add
+something nothing will use (a parameter, a flag, an option), does it go
+round a routine that already does this, does it sit at a layer no real
+caller reaches? If yes to any, fix what the finding describes the way
+the code already works, and say on the `Fix` line where you left the
+suggestion and why. A suggestion followed to the letter and then faulted
+by the next review is the commonest way a fix needs a second fix.
+
+**Every test the fix adds or rewrites is shown failing.** Most of what
+re-reviews find in a fix is in its tests: a test that cannot fail, one
+that checks less than its name says, an assertion lost in a rewrite
+(incident 40). So
+for each test you add or change: break the line of source the test is
+there for (the line the fix wrote, or the rule the test names), run that
+test, see it fail **on its own assertion** (not on a missing import, a
+timeout or a setup error), restore the line, see it pass. A test that
+stays green under the break is not a test yet: fix the test, not the
+break. And **a test you rewrite keeps every assertion it had**: read the
+old body against the new before the commit, and for each assertion that
+is gone either put it back or name it. The `Fix` line carries both:
+`shown failing: "<test name>" on <the break, in a few words>` once per
+test, and `dropped: <the assertion>, <why>` for any you took out.
+
+**A test whose behaviour the fix changes is renamed** to say what it now
+checks: a title that still describes the old behaviour is the next
+review's finding. This holds for a test the chunk plan names too. Change
+the title where it is registered, and declare it on the `Fix` line in
+exactly this form, quotes included: `renamed test "<old name>" →
+"<new name>"`. The gate reads that line and looks for the new name where
+the plan has the old one; a rename that is not declared fails the gate's
+`tests` check. Never leave a title wrong to keep the gate quiet.
+
 **A rename is one `Edit` per occurrence, never a shell substitution** (no
 `sed -i`, `perl -pi`, or a script over the tree): a substitution rewrites
 every string that happens to match, including a test's name and prose,
@@ -409,21 +474,30 @@ that built it, five to ten lines:
 - **Decided**: <gap>: <choice>, one line each
 - **Escalated**: <gap>, who owns it, one line each (or "none")
 - **Deviation**: <file>: <why>, one line each (or "none")
-- **Shell edit**: <file>, one line each (only when there was one)
-- **Commit**: <short sha>; <n> tests green
+- **Commit**: this commit; <n> tests green
 ```
 
 Your hand-back to the orchestrator is one line: the commit, the test
-count, `deviations <n>`, `shell edits <n>`, and the report path. It is
+count, `deviations <n>` and the report path. It is
 the only message you end on: a turn that ends on anything else (a
 consult's answer, a progress note, a plan for the next step) is taken as
 your hand-back, and the chunk comes back unfinished (incident 32). The
 commit on it is the one `git rev-parse --short HEAD` printed after your
-commit, never one written from memory. A fix
+commit, never one written from memory. **In the report the words are
+`this commit`, literally**, on the `Commit` line and on every `Fix`
+line: a commit cannot hold its own hash, the line is written before the
+commit and goes into it, and the hash is on your hand-back and in `git
+log`. Never write a placeholder to fill in afterwards and never edit the
+report once the commit is made: a fixer that did left the report
+modified in the working tree, in no commit. A fix
 applied under the loop appends one line to that chunk's section,
 **directly after the `Commit` line** (or after the previous `Fix` line),
-never at the end of the file: `- **Fix r<i>**: <short sha>; <finding
-titles>` (a rename reads `renamed <old> → <new>, <n> sites`). A deviation
+never at the end of the file: `- **Fix r<i>**: this commit; <finding
+titles>; shown failing: "<test>" on <break>` (once per test the fix
+added or rewrote; plus `dropped: <assertion>, <why>`, `renamed test
+"<old>" → "<new>"`, and `suggestion not followed: <why>` where they
+apply; a rename of anything else reads `renamed <old> → <new>, <n>
+sites`). A deviation
 a fix introduces is one more `Deviation` line in the same section. Nothing else goes in the report: there is no Lows list, the
 rounds' detail is the orchestrator's sidecar, and a reviewer's findings
 live in the reviewer's file. Invoked for a whole slice, report in the

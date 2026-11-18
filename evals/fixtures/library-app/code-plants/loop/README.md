@@ -12,6 +12,15 @@ sidecar `rounds_record.py` really wrote from the planted reports), and the
 grade the one step they are about.
 
 - `state.sh`: the builder; its header lists the states.
+- `after-state.sh <variant>` and `no-exit.sh [criterion]`: one step past
+  a state, run by a case's scaffold right after `state.sh` (0.17.0): the
+  gate's own fixer having left a count over its baseline or a red suite,
+  the `light` cadence, the card wording in one module, a plan's test
+  that pins the whole card number, and the pickup shelf, a commit on the
+  built slice that leaves a hold with no way out. Their headers say what
+  each leaves; `state.sh` is not changed by them, and
+  `tools/loop_states.py` builds and hashes a state with its step
+  (`state:<name>+after-state:<variant>`).
 - `snapshots/<name>/`: the code at each point, complete overlays over the
   app plus the `tdd` runner, each type-checked and its tests run by
   `verify.sh` (`slice-fixed` is a delta the delivery state layers over
@@ -79,4 +88,9 @@ Plants, for `answer-key.md`'s `L` rows:
 | L14 | `chunk1-handback-high` | the queue of `chunk1-gate-covers` (a hold found by the start of its card number) left standing as a High by the re-review; the autopilot file says yes and names no stop |
 | L15 | `slice-review-r2-fixed` | D's round 1 with one regression (the fix's escaping of quotes held by no test) and the regressions fixer's commit, gated |
 | L16 | `screens/planted/main/desk.css` | the refusal notice's wider padding written on `.notice`, which every notice shares: `hold-cancelled` moves and no screen design lists it |
+| L17 | `snapshots/slice-no-exit` (`no-exit.sh`) | a hold whose set-aside copy the shelf never releases: cancel, collect and placing again all leave it at the head of its queue; with `criterion`, the reliability document's R3 says exactly what the code does |
+| L18 | `after-state.sh card-wording` | masking the rejection reason leaves `fullCard` exported and unused: the unused-code count one over its baseline, everything else green |
+| L19 | `after-state.sh named-test` | a plan-named test that asserts the whole card number, and a review finding that the reason carries it |
+| L20 | `after-state.sh gate-fixer-check`, `gate-fixer-suite` | the gate after its own fixer failing on one line: a count over its baseline, or the suite |
+| L21 | `after-state.sh light` | chunk 1 built and ungated under the `light` cadence |
 | L13 | `issue14-planned` | slice 001 merged with three gaps the readiness gate names today; issue #14 open and its fix's planning uncommitted |

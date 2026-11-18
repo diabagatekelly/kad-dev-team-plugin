@@ -41,6 +41,16 @@ skill's job.
 
 ## Procedure
 
+**When your context has been summarised** (the conversation opens with a
+summary of its earlier part, or a step's wording is something you
+remember and cannot see), invoke this skill again by name with the
+`Skill` tool before the next step, and read the step from what it
+returns. Never open a skill's file by its path with `Read` or the shell
+to recover its wording: the path is the plugin's install, outside the
+project, and the owner is asked to allow a read they cannot place
+(incident 45). The log's last entry and its bullets say where the flow
+is; the skill, invoked again, says what the step is.
+
 **0. Session setup.** Once per session, before the target question and
 before anything is read. The launcher `bin/kad` is the one way a flow
 runs: it starts Claude Code inside the sandbox runtime (the whole session
@@ -393,15 +403,47 @@ target directory. Don't go looking for the persona's `AGENT.md`: it sits
 outside the project, a read of it may be refused, and everything a routed
 step needs from its persona is in that skill. Follow the skill directly —
 this is live use, not a dry run: if it would ask the user something,
-actually ask via `AskUserQuestion`.
+actually ask via `AskUserQuestion`, **unless the question is one the
+owner has said not to be asked**:
+
+**A design or technical question that has a recommended option is taken,
+not asked** (the owner, 2026-11-17: asked thirteen questions in a day,
+they took the recommended option on every one of this kind, incident
+42). When a routed skill's procedure reaches a question, sort it before
+anything is put to the owner:
+
+- **What the owner wants** (a requirement, the scope, what the product
+  does for them, the content of a criterion only they can know): asked,
+  as the skill says.
+- **A risk or a permission** (an advisory accepted, a check weakened or
+  exempted, where their own data lives or what may read it, money spent,
+  anything `autopilot.md` lists as always asked): asked.
+- **How it is built** (where a value is kept, which mechanism of a
+  provider, which tool or setting, which states get a capture, which
+  file a formatter ignores) **when the skill recommends one option**:
+  not asked. Take the recommended option; the skill's document records
+  it as decided, with each alternative and why it was not taken, the way
+  it would have after the owner's answer; and one indented bullet goes
+  under the entry: `taken as recommended: <the choice>, over
+  <the alternatives> (<skill>)`. The step's report lists what was taken
+  this way in one line each, so the owner can overturn one by saying so:
+  an overturn is a backward route to that skill, which revises its
+  document in place.
+- A how-it-is-built question the skill cannot recommend on (the
+  documents give no ground to prefer one option) is asked.
+
+This sorts your own questions too (the chunk loop's A step keeps its
+three, which are permissions), and it is said in the arguments to every
+routed skill, below.
 
 **The arguments you pass say two things and nothing else about
 mechanics**: where to save (the location resolved in step 1, so the skill
 neither asks where nor invents a different location) and that any
 question the skill's own procedure puts to the user goes through
-`AskUserQuestion`, one question per call. The second is said to every
-routed skill, including one that rarely asks: it changes how a question
-is asked, never whether. Say nothing about other
+`AskUserQuestion`, one question per call, except a design or technical
+question with a recommended option, which is taken as recommended and
+recorded in the document as decided (the rule above). The second is
+said to every routed skill, including one that rarely asks. Say nothing about other
 stages' documents: never "then point the slice's placeholder at it",
 never "and sync the story", never which file another persona should
 update afterwards. What a skill may touch is in its own text, and a
@@ -483,7 +525,14 @@ route** (a consolidation the owner asked for, a correction to the process,
 a repository created at the owner's request) has `**Routed to:** none
 (<reason>)` and `**Artifact:**` the one file changed, in backticks, or
 `this log` when nothing but the log changed. What else changed goes in
-indented bullets below, never on the Artifact line.
+indented bullets below, never on the Artifact line. **Never while a
+chunk loop is open**: between the A line and the E line, an owner's
+direction is an indented bullet under the loop's own entry (`- Owner
+<date>, word for word: "<their words>"; taken as: <what changes>`), and
+the loop's next bold line follows it in the same entry. A new entry
+there splits the loop's A to E lines across entries, and the next
+reader, and the log check, find a loop with no C lines (one loop's were
+spread over four entries).
 
 **What may be added to an entry after it is written, and what may not.**
 An entry may gain indented plain bullets once its step runs (its outcome,
@@ -806,12 +855,14 @@ gate sent it back four times over documents it had not touched
    this slice names it (the word `light`, or "no per-chunk review"), else
    `loop`. It goes on the A line as `cadence — <loop | light>` and the
    chunk runner is told it. `light` is one measured arm on one slice
-   (handoff-slice2 P3.2, H6's fourth question): per chunk, gate and smoke
-   run only, no reviewer and no fix round; at D the six reviewers and the
-   criteria walk once, then the criteria pass; fixes by the chunk's own
-   builder resumed by message, an Opus fixer for what it cannot clear.
-   The slice review states which of the three to keep, and the default
-   here is set from that; until then `loop` is the default.
+   (handoff-slice2 P3.2, H6's fourth question; the owner, 2026-11-17: the
+   next slice runs it, with no per-chunk smoke run): per chunk the build
+   and the gate only, no reviewer, no smoke run and no fix round; at D
+   the six reviewers, the criteria walk (the one place the browser is
+   driven) and the cold read once; fixes by the chunk's own builder
+   resumed by message, an Opus fixer for what it cannot clear. The
+   review of that slice says whether `light` becomes the default; until
+   then `loop` is, and `light` is the owner's word in the message.
 
    **Audit and session**, inline with Bash, after the sandbox check and
    whatever it asked:
@@ -901,8 +952,10 @@ gate sent it back four times over documents it had not touched
      of verify, fix and review for a Critical or High left standing, and
      a planning correction that changes no decision? Each round and
      each correction is logged as taken as recommended. Anything that changes a number or decision
-     you approved, deletes or rewrites committed work, pushes anything
-     red, or touches scope or requirements is still asked." Write
+     you approved, accepts a risk (a dependency advisory, a check
+     weakened, skipped or exempted, a baseline raised), deletes or
+     rewrites committed work, pushes anything red, or touches scope or
+     requirements is still asked." Write
      `<target>/autopilot.md` with the answer either way: the owner's
      words, the date, the slice it was asked on, the three stops, the
      always-ask list, and how it is changed (the owner says so in a
@@ -1053,7 +1106,20 @@ gate sent it back four times over documents it had not touched
      python3 -I '<scripts>/validation_gate.py' --project '<project root>' --record-gate-baselines
      ```
 
-     and commit everything as `Gate checks: wired`. Check the hash it
+     then run **the project's own dependency audit**, the command CI
+     runs or the manifest names (`pnpm audit --audit-level=high`, `npm
+     audit`, `pip-audit`), and say in its report what it printed: a tool
+     wired here that brings an advisory with it turns CI red at
+     delivery, hours later, on a branch that did nothing wrong (one did,
+     incident 46). An advisory the audit names that came in with a tool
+     of the section is not the fixer's to accept, pin around or ignore:
+     its hand-back names the tool and the advisory, the A line says
+     `gate checks — wired <sha>, advisory <id> through <tool>`, and the
+     owner is asked, once, here: keep the tool with the advisory
+     recorded as accepted (by `supply-chain-review`, with an expiry),
+     pick the section's next tool for that category, or leave the
+     category unwired. Then
+     commit everything as `Gate checks: wired`. Check the hash it
      hands back as C.2 checks a runner's; `gate checks — wired <sha>`.
      A category the fixer could not wire is its report's, and the A
      line says `gate checks — wired <sha>, <n> not wired` for step 5.
@@ -1066,6 +1132,17 @@ gate sent it back four times over documents it had not touched
      `software-architect:technology-bootstrap` for that section alone
      (its re-entry rule), then step 2 again. Nothing else of the
      bootstrap is reopened.
+
+   **Every command CI runs is a gate check.** The file that is there
+   may be older than this rule: read the CI workflow's `run:` lines (or
+   the manifest's check scripts when there is no workflow yet) against
+   the file's commands, inline. A check CI runs that the gate does not
+   (the format check is the usual one: reviewers raised it as a High on
+   two chunks of one slice, and a pull request went red on it) is
+   handed to that same fixer as one more named fix: add it to
+   `gate-checks.json` under the category `format and other CI checks`,
+   as an exit-code check, with the command CI uses. `gate checks —
+   present, <n> added from CI` on the A line.
 
    You never write `gate-checks.json`, pick a tool or set a baseline
    yourself, and never lower or raise a baseline to make a gate pass: a
@@ -1137,8 +1214,9 @@ orchestrator's side.
    turn with no tool call, never a background command, a poll or a
    monitor, and nothing of the runner's result exists until the
    hand-back is in front of you. The runner launches the builder, runs the gate (with `--agent
-   <builder id>`, so the C line's `shell edits` is the counted number,
-   `reported <m>` beside it), launches the reviewer and the smoke agent,
+   <builder id>`, so the C line's `shell edits` is the counted number;
+   nobody reports one), launches the reviewer and the smoke agent
+   (`loop` only),
    records the rounds with `rounds_record.py`, launches the fixer and the
    regressions re-review, and never asks the owner, never consults a
    persona, never writes the log and never commits the records.
@@ -1197,10 +1275,13 @@ orchestrator's side.
 3. **Data check.** `scratch_run.py --hash '<data dir>'` again; `data
    unchanged` or `data CHANGED` on the C line; `CHANGED` ends the flow
    before the next chunk and is reported to the owner.
-4. **Light cadence.** Under `light` the runner runs the build, the gate
-   and the smoke run only and hands back with `review none` and no fix
-   round: every finding waits for D, where the chunk's own builder fixes
-   it (D.3). Everything else in this step is the same.
+4. **Light cadence.** Under `light` the runner runs the build and the
+   gate only and hands back with `review none; smoke none` and no fix
+   round: nothing is reviewed or driven until D, where the six
+   reviewers, the walk and the cold read find it and the chunk's own
+   builder fixes it (D.3). The data check of step 3 still runs (a gate
+   starts the suite, and a suite can touch a data folder). Everything
+   else in this step is the same.
 5. **A gap that stops a fix.** When the runner hands back a
    `needs-decision (<persona>)` finding (no planning document states the
    rule it would need), the decision is made before the fixer runs:
@@ -1306,36 +1387,57 @@ orchestrator's side.
    defaults and padding are Medium (the pull request body's Definition of
    Done table). Then:
 
-   **Mutation on the changed lines**, inline with Bash, while the tree
-   is still (no reviewer is running yet): a tool breaks each line the
-   slice added, one operator at a time, and the suite says whether any
-   test notices.
+   **Mutation on the changed lines**, started here and **left running
+   beside the reviewers**: a tool breaks each line the slice added, one
+   operator at a time, and the suite says whether any test notices. It
+   works in a disposable clone under the temp directory, so nothing in
+   the project's tree moves while the reviewers read it, and nobody
+   waits for it but the one reviewer who needs its report.
 
    ```
    python3 -I "${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py" changed --repo '<project root>' --base '<base>' --out "${TMPDIR:-/tmp}/kad-mutants-<slice>.json"
-   python3 -I "${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py" run --repo '<project root>' --mutants "${TMPDIR:-/tmp}/kad-mutants-<slice>.json" --test '<documented test command>' --base '<base>' --allow-dirty --remove-mutants --out '<records dir>/slice-mutation.md'
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/mutation_pass.py" run --repo '<project root>' --mutants "${TMPDIR:-/tmp}/kad-mutants-<slice>.json" --test '<documented test command>' --base '<base>' --allow-dirty --remove-mutants --first-failure --budget 900 --log "${TMPDIR:-/tmp}/kad-mutation-<slice>.jsonl" --out '<records dir>/slice-mutation.md'
    ```
+
+   `changed` inline; `run` as one Bash call with `run_in_background:
+   true`, the only background command of the loop: you go straight on to
+   step 3 and are told when it exits. Never a timeout of your own on it
+   and never a poll: the script ends a mutant's suite at its first
+   failing test, ends a suite that hangs after three times the
+   baseline's own time (and everything that suite started), and stops
+   starting mutants after 15 minutes, listing the rest as not run. On
+   one slice the same pass, run inline with a 30-minute limit per
+   command and eight reviewers waiting behind it, took 2 h 54 m
+   (incident 38). When the owner asks how far it is, the last line of
+   the `--log` file says (`"mutant": <i>` of the count `changed`
+   printed), and you say so in one sentence.
 
    The mutants file holds lines of the source: it stays outside the
    tree, readable by its owner alone, and `--remove-mutants` deletes it
-   when the pass ends, however it ends. With `--allow-dirty` the pass
-   runs in a disposable clone under the temp directory and never writes
-   to the project's tree, so a run that is killed leaves no mutant in
-   it. The report carries counts, lines and test names only. The
-   run's last line, `mutation: <n> mutants, <c> caught, <s> survived`,
-   goes on the D line as printed. You read no survivor and judge none:
-   the test-quality reviewer is handed the report and says which
-   matter. A run that cannot start (the baseline fails, a file would
-   not restore) is `mutation: not run (<the script's line>)` on the D
-   line and the reviewers go ahead without it. Only then:
+   when the pass ends, however it ends. With `--allow-dirty` a run that
+   is killed leaves no mutant in the project's tree. The report carries
+   counts, lines and test names only. The run's last line, `mutation:
+   <n> mutants, <c> caught, <s> survived` (with `, <h> of the caught by
+   a hang`, `, <k> not counted` or `, <m> not run (the 900 s budget)`
+   when there are any), goes on the D line as printed. You read no
+   survivor and judge none: the test-quality reviewer is handed the
+   report and says which matter, and which hangs and unsteady tests the
+   report names are findings. A run that cannot start (the baseline
+   fails three times, a file would not restore) is `mutation: not run
+   (<the script's line>)` on the D line and the test-quality reviewer
+   goes ahead without it.
 3. **The six reviewers once.** Sandbox check. `model: "opus"`, in
    parallel, **each handed five things and nothing else**: the project
    root, the documented test command, the whole slice's range
    `<base>..HEAD`, its report path `slice-r0-<reviewer>.md`, and the
    path of the last gate output on this tree (the suite's run; six
    suites at once on one checkout contend for ports and files, so no
-   reviewer runs it). The test-quality reviewer is handed a sixth: the
-   path of `slice-mutation.md`. Each follows its skill's "Cold pass first": all of
+   reviewer runs it). **Five start now; the test-quality reviewer starts
+   when the mutation pass exits**, handed a sixth thing, the path of
+   `slice-mutation.md` (it is the one reader of that report, and 15
+   minutes later than the others it still ends before the walk and the
+   cold read do). Round 0 is recorded, and the fix round starts, when
+   every reviewer, the walk and the cold read have reported. Each follows its skill's "Cold pass first": all of
    `src/` and `test/` read, the typecheck, lint and format check run and
    the suite's result read from the gate output (the tree is installed;
    no reviewer installs, since the six share one `node_modules`),
@@ -1381,8 +1483,11 @@ orchestrator's side.
    and Medium (and any `needs-decision` through C.5 first), the gate, a
    regressions-only re-review by the same reviewers on the fix's diff
    (`slice-r1-<reviewer>.md`; the walk re-driven only for its FAIL rows,
-   `slice-r1-walk.md`), `rounds_record.py` with `--range`, a second and
-   last fixer for the regressions, the gate; then **the last-fix
+   `slice-r1-walk.md`), `rounds_record.py` with `--range` (it charges
+   the fix only with lines it wrote: a line the fix moved is
+   pre-existing, and a reviewer with no round-0 report is `first-seen`,
+   counted apart), a second and last fixer for the regressions and the
+   first-seen findings, the gate; then **the last-fix
    review** on that second fix's range (above; `--chunk D --round 2
    --last`), whose findings stand. A Critical or High standing after
    that gets the autopilot round when `autopilot.md` says yes; without
@@ -1646,11 +1751,25 @@ the values back in its own log bullet (incident 18).
    the report to the owner; `not configured` without an audit repository,
    `off` without audit mode. A configured repository with no clone is
    that FAILED line, never a skip.
-7. The E line (its `consults` field is the number of persona consults
-   this flow launched, at C.5 and D; its `checks` field is the last
-   watch's state, and only `CI green <sha>` on the pushed head lets the
-   line say `clean`), in this same turn, then step 5
-   below: report what happened
+7. **The E line, written before the last push, so the log on the branch
+   is the whole log.** Its `consults` field is the number of persona
+   consults this flow launched, at C.5 and D; its `checks` field is the
+   last watch's state, and only `CI green <sha>` lets the line say
+   `clean`. Write it, then commit the log by name with whatever records
+   are still uncommitted (`Records: slice <nnn> log`), push, and watch
+   that push as step 4 watches every push: a commit that touches only
+   the target directory changes no code, so the sha on the line is the
+   head the watch last saw green before this commit, and the watch of
+   the push itself needs nothing written when it is green too. Red on
+   it (nothing in the code changed, so a job that flaked or a runner
+   that failed) is an indented bullet under the E line and one more
+   records commit, watched the same way. Then the audit sync once more,
+   unrecorded, so the audit repository holds the finished log. Three
+   runs ended with the log's last lines in the working tree and on no
+   branch, and one needed a pull request of its own for them (incident
+   43): `git status --short` is empty before the report.
+
+   Then step 5 below: report what happened
    at each of the five steps, the CI state first, with the pull request
    and issue numbers, the standing findings if any, and the open external
    comments if the cap was hit; with `CI green` the slice has reached the
@@ -1698,10 +1817,10 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 **Artifact:** see sub-entries below
 - **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; autopilot — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
-- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>` (reported `<m>`)>; review `<co tq [re] | none>` r0 `<C/H/M>`< nd `<n>`>; smoke `<PASS | <n> findings>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> verify `<c>` confirmed, `<n>` not reproduced< fix `<sha>` → last `<C/H/M>`>>; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
+- **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re] | none>`< r0 `<C/H/M>`>< nd `<n>`>; smoke `<PASS | <n> findings | none>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`<, first `<f>`>)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> verify `<c>` confirmed, `<n>` not reproduced< fix `<sha>` → last `<C/H/M>`>>; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
   - taken as recommended: `<what>` (autopilot)
-- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; mutation `<<n> mutants, <c> caught, <s> survived | not run (<why>)>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; cold `<<n> confirmed, <m> verify | PASS>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> …, as the C line>; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
+- **D. Slice review:** map `<path>` (`<sha>`); done `<PASS | PASS after <sha> | standing: <checks>>`; mutation `<<n> mutants, <c> caught, <s> survived<, <h> of the caught by a hang><, <k> not counted><, <m> not run (the 900 s budget)> | not run (<why>)>`; reviewers `<initials>`; r0 `<C/H/M/L>`<; walk `<pass>/<fail>/<not reachable>`>; cold `<<n> confirmed, <m> verify | PASS>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`<, first `<f>`>)><; fixes builders `<n>` opus `<m>`><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> …, as the C line>; records `<sha>`; audit `<as the C line>`; data `<unchanged | CHANGED | not named>`
 - **E. Delivery:** CI `<present | added <sha>>`; pushed `<sha>`; PR `<#>`; checks `<CI green <sha> | CI red r<i>: <jobs> | CI no result>`<; ci r<i> fix `<sha>`><; screens — states fix `<sha>`><; baselines `<sha>` (`<c>` changed, `<n>` new, `<r>` removed)>; issues `<#…>` (M `<m>`, deferred `<x>`); deferrals `<n>` listed; Lows `<n>` in body; ext r1 `<n>`c: fix `<f>` (`<sha>`), decline `<d>`, defer `<x>`; r2 …; `<clean r<i> | cap: <open>>`<; last `<C/H/M>`<; auto r<i> …, as the C line>>; consults `<n>`; cost `$<n><, not covering <id> (no transcript)> | not measured: <why>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`
   - Resumed <date> at <step>, session `<id>`, transcript `<kept | MISSING: <why> | not checked (audit off)>`
 ```

@@ -180,10 +180,6 @@
     "by": "reading",
     "why": "whether the design specifies signatures or types; only a code fence would be a regex"
    },
-   "decisions-show-approval": {
-    "by": "reading",
-    "why": "whether each decision carries what was recommended and what the user approved"
-   },
    "boundaries-name-what-crosses": {
     "by": "reading",
     "why": "whether a boundary says what crosses it in plain-data terms"
@@ -2675,10 +2671,6 @@
     "by": "reading",
     "why": "whether a UI framework is recommended and left for approval, or settled"
    },
-   "asks-only-what-the-first-test-forces": {
-    "by": "reading",
-    "why": "as `technology-bootstrap-phase1`"
-   },
    "pinning-posture-treated-as-a-choice": {
     "by": "reading",
     "why": "whether the package manager is chosen on its default posture, with the reasoning"
@@ -3100,5 +3092,95 @@
   "findings": [
    "The skill's exact bullet (`taken as recommended: <check> (autopilot)`) was not written on the first run; the grader reads the route's log entry instead."
   ]
+ },
+ "chunk-runner-check-fail-second-fixer": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the orchestrator's launch and where the round stopped (a gate file with a FAIL after the first gate fixer); nothing about which FAIL lines get a second fixer"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "chunk-runner-suite-fail-ends": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "as `chunk-runner-check-fail-second-fixer`; the gate file's second FAIL is the suite's"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "chunk-runner-light-no-review": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the orchestrator's launch with cadence `light`; nothing about which agents the cadence leaves out"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "cold-read-refusal-no-exit": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the orchestrator's launch: the skill by name and what is handed; nothing about refusals or the actions left after one"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "reliability-requirements-refusal-phase1": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the owner's answers about cost, target and who hears of a failure; nothing about a refusal that can be permanent"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "reliability-requirements-refusal-phase2": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "if you need the skill's own directory again, invoke the skill by name and it prints it",
+   "note": "the approval and the save path; the sentence about invoking the skill again gives the script's directory, which a resumed session cannot resolve, and not that the check is run"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "reliability-review-criterion-no-exit": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the orchestrator's launch: the skill by name and the five things handed; nothing about a criterion that leaves no exit"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "tdd-implementation-lite-checks-before-commit": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the chunk to build and that chunks are committed; nothing about the gate's checks or the count the change leaves over its baseline"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "tdd-implementation-lite-fix-test-renamed": {
+  "prompt": {
+   "states_rule": "no",
+   "quote": "",
+   "note": "the one finding to fix and where the Fix line goes; nothing about showing the rewritten test failing or renaming it"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-recommended-not-asked": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "a problem you find in code that is already there is for a later slice, not this one, and a risk the design leaves standing I accept for now",
+   "note": "the two answers that are the owner's (a problem in older code, a risk left standing) are given so the run reaches the save; it does not say that design questions with a recommended option are taken"
+  },
+  "judges": {},
+  "findings": []
  }
 }

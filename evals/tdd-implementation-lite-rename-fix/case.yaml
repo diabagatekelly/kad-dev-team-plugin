@@ -95,3 +95,6 @@ graders:
       source: file
       path: docs/reports/tdd-implementation-lite-rename-fix.md
     pattern: 'renamed[^\n]*loanStore[^\n]*openLoanStore[^\n]*\d+ sites'
+    # case ignored since 0.17.0: a run wrote the line as a sentence of its
+    # report, `Renamed `loanStore` → `openLoanStore`, 6 sites.`
+    flags: i

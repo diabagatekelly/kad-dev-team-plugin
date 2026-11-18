@@ -13,3 +13,12 @@ bash "$here/../fixtures/library-app/code-plants/loop/state.sh" delivery-ready
 # honest and is not what this case is about. The comments go; the
 # stand-in answers as before.
 sed -i.bak -e '1!{/^[[:space:]]*#/d;}' tools/gh && rm -f tools/gh.bak
+# What the remote holds after each push, for the C6 graders (0.17.0): the
+# slice branch's copy of the log. Empty until a push, so a grader reading
+# it never finds it missing.
+cat > .git/origin.git/hooks/post-receive <<'HOOK'
+#!/bin/sh
+git show slice-001-cancel-hold:docs/cancel-hold/orchestrator-log.md > ../../tools/pushed-log.txt 2>/dev/null || :
+HOOK
+chmod +x .git/origin.git/hooks/post-receive
+: > tools/pushed-log.txt

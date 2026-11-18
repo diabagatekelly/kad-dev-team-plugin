@@ -1,0 +1,77 @@
+schema_version: "1.0"
+name: tdd-implementation-lite-fix-test-renamed
+description: "TODO.md's B2 and B4 (0.17.0, H1's causes 4 and 5): a fix handed back from review that changes what a test checks. Round 0's review found that a rejection's reason carries the member's whole card number; the plan names a test, `the rejection reason names the card and the ISBN`, that asserts exactly that (answer key L19). The fixer masks the number, rewrites the test and shows it failing on its own assertion with the fix's line broken, keeps the test's other assertion (the ISBN) or names it as dropped, renames the test to what it now checks, and declares both on the `Fix r1` line in the forms the gate reads: `shown failing: \"<test>\" on <break>` and `renamed test \"<old>\" → \"<new>\"`. It runs the gate's checks before its commit. Whether the gate accepts the declared rename is `validation_gate_test.py`'s; the first run's tree was put through the real gate by hand."
+tags: [tdd-implementation-lite, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:tdd-implementation-lite` first. The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`. You are the fixer the chunk loop launched after round 0 of the review of chunk 1 of 3 of slice 001: apply a fix handed back from review.
+
+    The finding is the first one of `docs/cancel-hold/implementation/chunk-1-r0-review.md`, `The rejection reason carries the member's full card number`, and only that one. The plan and chunk 1's section are in `docs/cancel-hold/implementation/implementation-report-slice-001.md`, which takes your `Fix r1` line. The test command is `npm test`. Chunks are committed. The orchestrator grades the result: no final review of your own. I won't be around to answer questions while you work.
+  model: sonnet
+  max_turns: 80
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
+    min: 1
+  - type: regex
+    name: reason-masked
+    target:
+      source: file
+      path: lending/cancel-hold.ts
+    pattern: 'slice\(-4\)|ending'
+  - type: regex
+    name: a-test-run-failed-and-the-last-is-green
+    # A failing run somewhere (the rewritten test seen failing), and no
+    # failing run after the last green one.
+    target: trace
+    pattern: '^(?=[\s\S]*ℹ fail [1-9])(?![\s\S]*ℹ fail [1-9](?![\s\S]*ℹ fail 0))'
+  - type: regex
+    name: shown-failing-declared-on-the-fix-line
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/implementation-report-slice-001.md
+    pattern: '\*\*Fix r1\*\*[^\n]*shown failing: "[^"\n]+" on \S'
+  - type: regex
+    name: old-test-title-gone
+    target:
+      source: file
+      path: test/cancel-hold.test.ts
+    pattern: 'the rejection reason names the card and the ISBN'
+    match: not_contains
+  - type: regex
+    name: rename-declared-in-the-form-the-gate-reads
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/implementation-report-slice-001.md
+    pattern: '\*\*Fix r1\*\*[^\n]*renamed test "the rejection reason names the card and the ISBN" → "[^"\n]+"'
+  - type: regex
+    name: isbn-assertion-kept-or-named-as-dropped
+    # Read on the report and the test together is not possible; this
+    # reads the test: an assertion on the reason that still names the
+    # ISBN. A fix that drops it and says so on the Fix line is right by
+    # the skill and fails here: read the run before believing a miss.
+    target:
+      source: file
+      path: test/cancel-hold.test.ts
+    pattern: 'assert\.\w+\([^\n]*reason[^\n]*(?:9780140449136|\bisbn\b)'
+  - type: tool_order
+    name: gate-checks-run-before-the-commit
+    before: {tool: Bash, input_match: 'validation_gate\.py[\s\S]*--checks-only'}
+    after: {tool: Bash, input_match: 'git commit'}
+  - type: tool_used
+    name: commits
+    tool: Bash
+    input_match: 'git commit'
+    min: 1
+  - type: regex
+    name: no-push-amend-rebase-or-add-all
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\bgit\s+(?:push\b|commit\b[^"]*--amend|rebase\b|add\s+(?:-A\b|--all\b|\.(?:\s|\\"|")|-u\b))'
+    match: not_contains

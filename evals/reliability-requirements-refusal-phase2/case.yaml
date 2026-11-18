@@ -1,0 +1,54 @@
+schema_version: "1.0"
+name: reliability-requirements-refusal-phase2
+description: "TODO.md's D1 and D4 (0.17.0), phase 2 of two: the forks of `reliability-requirements-refusal-phase1` approved as recommended, the document is written. D1: the shelf system's refusal to release a copy can be permanent (a copy its inventory cannot find), and the criteria say so and say what staff can still do from that state: another action that gets the hold out, as a criterion, or the dead end named under `Out of scope for this slice` with what staff are left with. A criterion that keeps the hold and offers only the cancel that was just refused is what slice 3 shipped (incident 41). D4: before the document is called saved the skill runs `readiness_check.py` on it, and its two checks (numbers on waits, the unusable-reply row: the design names an adapter to an external HTTP API) pass on the saved file. No baseline arm: the history is a with-plugin transcript."
+tags: [reliability-requirements, library-app, capability]
+context:
+  scaffold_script: scaffold.sh
+  history_file: history.jsonl
+execution:
+  prompt: |
+    Approved: go with your recommendation on every one of those. Save the finished document as `docs/cancel-hold/reliability-slice-001.md`. (This is a new session on the same project: if you need the skill's own directory again, invoke the skill by name and it prints it.)
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: file_exists
+    name: document-written
+    path: docs/cancel-hold/reliability-slice-001.md
+  - type: regex
+    name: leaves-the-code-alone
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*/(?:lending|infra|main|test)/[^"]*\.ts"'
+    match: not_contains
+  - type: regex
+    name: refusal-said-to-be-permanent-or-not
+    # D1: the shelf's refusal gets its line: it can refuse every time.
+    target:
+      source: file
+      path: docs/cancel-hold/reliability-slice-001.md
+    pattern: '(?:permanent|every time|each time|never clears?|does not clear|will not clear|cannot clear|for good|indefinitely|until the catalogue|weekly round)'
+    flags: i
+  - type: regex
+    name: says-what-staff-can-still-do
+    # D1: from the state the refusal keeps, another action is named and
+    # what it does there: placing the hold again, the shelf system's own
+    # screen or the catalogue team's round, or the dead end written under
+    # Out of scope with what staff are left with.
+    target:
+      source: file
+      path: docs/cancel-hold/reliability-slice-001.md
+    pattern: '(?:plac(?:e|ed|es|ing)\b[^\n.]{0,80}\b(?:again|new|another|second)|(?:new|another|second) hold|PlaceHold|shelf system''s own screen|catalogue team|(?:^|\n)## Out of scope[^\n]*\n(?:(?!\n## )[\s\S])*?(?:refus|shelf|copy-not-found|not[- ]found))'
+    flags: i
+  - type: tool_used
+    name: readiness-check-run-on-the-document
+    tool: Bash
+    input_match: 'readiness_check\.py[^\n]*--planning'
+    min: 1
+  - type: regex
+    name: own-two-checks-pass-in-the-last-run
+    # D4: the script's last output in the trace has both of this skill's
+    # checks passing (a line break before each, the two characters `\n`).
+    target: trace
+    pattern: '\\nPASS  numbers-on-waits(?![\s\S]*\\nFAIL  numbers-on-waits)[\s\S]*\\nPASS  unusable-reply-row(?![\s\S]*\\nFAIL  unusable-reply-row)'

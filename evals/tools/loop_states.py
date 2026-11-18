@@ -96,6 +96,12 @@ def key_of(case):
         text = re.sub(r"\$\{?" + var + r"\}?(?!\w)", value, text)
     m = re.search(r"code-plants/loop/state\.sh\"?\s+([a-z0-9-]+)", text)
     if m:
+        # a step past the state, by one of the fixture's own scripts
+        # (`after-state.sh <variant>`, `no-exit.sh [criterion]`): the key
+        # names it, and the state is built with it
+        after = re.search(r"code-plants/loop/(after-state|no-exit)\.sh\"?[ \t]*([a-z0-9-]*)", text[m.end():])
+        if after:
+            return "state:" + m.group(1) + "+" + after.group(1) + (":" + after.group(2) if after.group(2) else "")
         return "state:" + m.group(1)
     m = re.search(r"code-plants/loop/base\.sh\"?\s+\"?\$here/\.\./fixtures/library-app/([A-Za-z0-9_./-]+)", text)
     if m:
@@ -172,11 +178,16 @@ def listing(where):
 def build(key, root=ROOT, absent_ok=False):
     kind, name = key.split(":", 1)
     loop = os.path.join(root, LOOP)
+    name, _, after = name.partition("+")
     script = [os.path.join(loop, "state.sh"), name] if kind == "state" else \
         [os.path.join(loop, "base.sh"), os.path.join(root, "evals", "fixtures", "library-app", name)]
     where = tempfile.mkdtemp(prefix="kad-state-")
     try:
         r = subprocess.run(["bash", *script], cwd=where, capture_output=True, text=True)
+        if r.returncode == 0 and after:
+            step, _, arg = after.partition(":")
+            r = subprocess.run(["bash", os.path.join(loop, step + ".sh"), *([arg] if arg else [])],
+                               cwd=where, capture_output=True, text=True)
         if r.returncode != 0 and absent_ok:
             return None
         if r.returncode != 0:

@@ -1,0 +1,84 @@
+schema_version: "1.0"
+name: tdd-implementation-lite-checks-before-commit
+description: "TODO.md's B1 (0.17.0): a builder runs the gate's checks before its commit and commits only when they pass. The project has a `gate-checks.json` with recorded baselines. The chunk masks the card number in a rejection's reason; the card's wording lives in `lending/card-wording.ts`, whose full-number helper the reason is the only user of (answer key L18), so once the reason is masked nothing imports that helper and the unused-code count is one over its baseline. The suite, the typecheck and the lint stay green: only `validation_gate.py --checks-only` shows it. The builder runs the checks, clears the count in its own code and commits after `checks: PASS`, without touching `gate-checks.json` or a baseline. Without the rule the chunk is committed with the count over, which is the gate fixer that ran on five of six chunks of one slice."
+tags: [tdd-implementation-lite, library-app, regression]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    Invoke the skill `kad-dev-team:tdd-implementation-lite` first. The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`. Build chunk 4 of 4 of the plan in `docs/cancel-hold/implementation/implementation-report-slice-001.md`, and only that chunk:
+
+    - **Title**: Mask the card number in the rejection reason
+    - **Delivers**: Security "a rejection's reason shows no more of the member's card number than its last four characters"
+    - **Files**: lending/cancel-hold.ts; test/cancel-hold.test.ts
+    - **Done when**: seam "a rejected cancel through the real in-memory queue shows only the last four characters of the card" is green
+    - **Touches**: none
+
+    The slice's documents are in `docs/cancel-hold/`: `slice-001.md`, `design-001.md`, `requirements-001.md`. The test command is `npm test`. The orchestrator reviews the result. Chunks are committed. I won't be around to answer questions while you work.
+  model: sonnet
+  max_turns: 90
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:tdd-implementation-lite"'
+    min: 1
+  - type: tool_used
+    name: gate-checks-run
+    tool: Bash
+    input_match: 'validation_gate\.py[\s\S]*--checks-only'
+    min: 1
+  - type: tool_used
+    name: commits
+    tool: Bash
+    input_match: 'git commit'
+    min: 1
+  - type: regex
+    name: no-commit-before-the-checks-pass
+    # A `git commit` command with no `checks: PASS` line of the script's
+    # own output anywhere before it. The output's line follows a line
+    # break (the two characters `\n` in the trace) or opens the output (a
+    # quote: three runs piped the script through grep and got the one
+    # line); the skill's text says the words in backticks and does not
+    # count.
+    target: trace
+    pattern: '^(?:(?!(?:\\n|")checks: PASS)[\s\S])*?"name":"Bash","input":\{[^{}]*?"command":"(?:[^"\\]|\\.)*?\bgit commit\b'
+    match: not_contains
+  - type: regex
+    name: last-checks-result-is-a-pass
+    target: trace
+    pattern: '\\nchecks: FAIL(?![\s\S]*(?:\\n|")checks: PASS)'
+    match: not_contains
+  - type: regex
+    name: unused-helper-not-left-exported
+    # The count is cleared in the builder's own code: the helper nothing
+    # imports any more is gone, or no longer exported.
+    target:
+      source: file
+      path: lending/card-wording.ts
+    pattern: 'export function fullCard\b'
+    match: not_contains
+  - type: regex
+    name: reason-masked
+    target:
+      source: file
+      path: lending/cancel-hold.ts
+    pattern: 'maskedCard\(|slice\(-4\)'
+  - type: regex
+    name: baseline-and-checks-file-left-alone
+    target: trace
+    pattern: '--record-gate-baselines|"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*(?:gate-checks\.json|gate-check\.py|eslint\.config\.js)"'
+    match: not_contains
+  - type: regex
+    name: last-test-run-green
+    target: trace
+    pattern: 'ℹ fail [1-9](?![\s\S]*ℹ fail \d)'
+    match: not_contains
+  - type: regex
+    name: no-push-amend-rebase-or-add-all
+    target: trace
+    pattern: '"name":"Bash","input":\{[^{}]*"command":"(?:[^"\\]|\\.)*?\bgit\s+(?:push\b|commit\b[^"]*--amend|rebase\b|add\s+(?:-A\b|--all\b|\.(?:\s|\\"|")|-u\b))'
+    match: not_contains

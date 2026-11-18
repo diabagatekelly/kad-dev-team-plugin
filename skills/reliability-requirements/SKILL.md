@@ -132,6 +132,25 @@ Concrete, slice-specific, not a taxonomy:
   only repeats the side effects; a criterion must not call for it, and an
   existing retry of one is a failure mode to name.
 
+- **A refusal that never clears.** For every action a criterion lets the
+  dependency refuse ("the provider refuses to start the login", "the
+  bank turns the payment down"), ask what happens when it refuses
+  **every time**: the thing it acts on is gone at the provider, the
+  account is closed, the key was revoked. "Stays as it was, and the
+  person can try again" is a complete answer for a refusal that can
+  clear and a dead end for one that cannot: the person presses again for
+  ever. So each refusal gets one more line. Say whether it can be
+  permanent, and if it can, **what the person can still do from that
+  state**: name every other action the app offers on the same thing
+  (retry, connect again, remove) and what each does there. Either one of
+  them gets the person out, and that is a criterion, or none does, and
+  the dead end is written under `## Out of scope for this slice` with
+  what the person is left with and which later step ends it, for the
+  owner to accept knowingly. A criterion that keeps a state and offers
+  only the action that was just refused has not been finished (a slice
+  shipped one, and six reviewers passed the code because the code met
+  the criterion, incident 41).
+
 For each one that's plausible, decide the intended behavior. That decision
 is what becomes a criterion.
 
@@ -218,6 +237,28 @@ mid-chunk. Write how many times, how long, how often (as an outcome:
 answer"), or write `unbounded, owner approved` with the owner's answer
 behind it. An owner who says "don't care" to a latency target has excused
 the target, not the retry bound.
+
+## Check it the way the gate will, before you save
+
+The chunk loop's readiness gate reads this document with a script, and
+two of its checks are yours alone. Run it once the document is written:
+
+```
+python3 -I "${CLAUDE_SKILL_DIR}/../orchestrator/scripts/readiness_check.py" --planning '<target directory>' --slice <nnn>
+```
+
+- `numbers-on-waits`: every retry, wait, poll, give-up and stale window
+  carries a number. The line names each criterion that does not.
+- `unusable-reply-row`: when the design names an adapter to an external
+  service, the failure modes hold a row for a reply the slice cannot
+  use, named as one.
+
+A `FAIL` on either is fixed here, now, in this document, and the script
+run again until both read `PASS`. The same checks sent three slices in a
+row back from the gate after planning had called them ready, a backward
+route each time for a line this skill could have written the first time
+(incident 47). Every other line it prints is another document's (one
+that may not exist yet): leave it alone, and say nothing of it.
 
 ## Decisions
 
