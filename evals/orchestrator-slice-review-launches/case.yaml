@@ -41,19 +41,19 @@ graders:
   - type: tool_used
     name: test-quality-reviewer-handed-the-mutation-report
     tool: Agent
-    input_match: '(?=[\s\S]*kad-dev-team:test-quality-review)(?=[\s\S]*slice-r0-test-quality\.md)(?=[\s\S]*slice-mutation\.md)'
+    input_match: '(?=[\s\S]*kad-dev-team:test-quality-review)(?=[\s\S]*slice-r0-test-quality(?:-review)?\.md)(?=[\s\S]*slice-mutation\.md)'
     min: 1
     max: 1
   - type: tool_used
     name: no-other-reviewer-handed-the-mutation-report
     tool: Agent
-    input_match: '(?=[\s\S]*slice-r0-(?:code|architecture|security|reliability|cold)\.md)(?=[\s\S]*slice-mutation\.md)'
+    input_match: '(?=[\s\S]*slice-r0-(?:code|architecture|security|reliability|cold)(?:-review|-read)?\.md)(?=[\s\S]*slice-mutation\.md)'
     min: 0
     max: 0
   - type: tool_used
     name: the-four-other-reviewers-launched
     tool: Agent
-    input_match: 'slice-r0-(?:code|architecture|security|reliability)\.md'
+    input_match: 'slice-r0-(?:code|architecture|security|reliability)(?:-review)?\.md'
     min: 4
     max: 4
   - type: tool_used
@@ -75,5 +75,5 @@ graders:
     min: 1
   - type: tool_order
     name: test-quality-reviewer-after-the-others
-    before: {tool: Agent, input_match: 'slice-r0-(?:code|architecture|security|reliability)\.md'}
-    after: {tool: Agent, input_match: 'slice-r0-test-quality\.md'}
+    before: {tool: Agent, input_match: 'slice-r0-(?:code|architecture|security|reliability)(?:-review)?\.md'}
+    after: {tool: Agent, input_match: 'slice-r0-test-quality(?:-review)?\.md'}
