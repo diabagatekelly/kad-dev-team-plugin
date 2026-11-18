@@ -474,7 +474,7 @@ that built it, five to ten lines:
 - **Decided**: <gap>: <choice>, one line each
 - **Escalated**: <gap>, who owns it, one line each (or "none")
 - **Deviation**: <file>: <why>, one line each (or "none")
-- **Commit**: <short sha>; <n> tests green
+- **Commit**: this commit; <n> tests green
 ```
 
 Your hand-back to the orchestrator is one line: the commit, the test
@@ -483,10 +483,16 @@ the only message you end on: a turn that ends on anything else (a
 consult's answer, a progress note, a plan for the next step) is taken as
 your hand-back, and the chunk comes back unfinished (incident 32). The
 commit on it is the one `git rev-parse --short HEAD` printed after your
-commit, never one written from memory. A fix
+commit, never one written from memory. **In the report the words are
+`this commit`, literally**, on the `Commit` line and on every `Fix`
+line: a commit cannot hold its own hash, the line is written before the
+commit and goes into it, and the hash is on your hand-back and in `git
+log`. Never write a placeholder to fill in afterwards and never edit the
+report once the commit is made: a fixer that did left the report
+modified in the working tree, in no commit. A fix
 applied under the loop appends one line to that chunk's section,
 **directly after the `Commit` line** (or after the previous `Fix` line),
-never at the end of the file: `- **Fix r<i>**: <short sha>; <finding
+never at the end of the file: `- **Fix r<i>**: this commit; <finding
 titles>; shown failing: "<test>" on <break>` (once per test the fix
 added or rewrote; plus `dropped: <assertion>, <why>`, `renamed test
 "<old>" → "<new>"`, and `suggestion not followed: <why>` where they
