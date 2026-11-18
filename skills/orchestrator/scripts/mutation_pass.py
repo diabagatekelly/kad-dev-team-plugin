@@ -351,6 +351,16 @@ def is_test_file(path):
     return any(p in TEST_DIRS for p in parts[:-1]) or bool(TEST_NAME.search(path))
 
 
+CONFIG_NAME = re.compile(r"(?:^|/)(?:[^/]*\.config\.[cm]?[jt]s|\.[^/]*rc\.[cm]?js|conftest\.py|setup\.py)$")
+
+
+def outside_the_suite(path):
+    """Code no test of the suite loads, so a break in it can only survive:
+    a tool's configuration, and the screen-change check's capture files
+    (`screens/`, run by CI's pinned browser alone)."""
+    return bool(CONFIG_NAME.search(path)) or path.split("/")[0] == "screens"
+
+
 def blanked(line, python):
     """The line with every string and comment replaced by spaces of the
     same length, so an operator's position in it is its position in the
@@ -392,7 +402,8 @@ def changed(a):
     if names.returncode != 0:
         say(f"mutation_pass: `{a.base}` is not a ref in {repo}")
         return 1
-    files = sorted(f for f in names.stdout.splitlines() if f.endswith(SOURCE) and not is_test_file(f))
+    files = sorted(f for f in names.stdout.splitlines()
+                   if f.endswith(SOURCE) and not is_test_file(f) and not outside_the_suite(f))
     mutants, skipped, lines_read = [], 0, 0
     for path in files:
         try:

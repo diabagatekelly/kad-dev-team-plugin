@@ -410,6 +410,14 @@ class RunCmd(unittest.TestCase):
         left = subprocess.run(["pgrep", "-f", "sleep 31337"], capture_output=True, text=True).stdout.split()
         self.assertEqual(left, [])
 
+    def test_changed_leaves_out_code_no_test_loads(self):
+        # a 40-mutant cap was being spent on a lint configuration and the capture file CI alone runs
+        mp = load_script()
+        for path in ("eslint.limits.config.js", "tools/vite.config.ts", "screens/states.mjs", ".eslintrc.cjs", "conftest.py"):
+            self.assertTrue(mp.outside_the_suite(path), path)
+        for path in ("src/web/server.ts", "src/config.ts", "app/screens.py", "src/screens/list.ts"):
+            self.assertFalse(mp.outside_the_suite(path), path)
+
     def test_first_failure_ends_the_command_at_the_first_failing_test(self):
         mp = load_script()
         cmd = f"{sys.executable} -u -c \"print('✔ adds (1ms)'); print('✖ refuses at open (2ms)'); import time; time.sleep(300)\""

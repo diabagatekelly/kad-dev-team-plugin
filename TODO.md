@@ -112,7 +112,7 @@ stale only for the scripts it ran: say how many before the gate runs.
 - [x] **A4 `audit_sync.py`** refused a whole copy for an expired signed
   download link in a transcript. A signed link is redacted and the copy
   goes on; a refusal is kept for what `source_scan.py` calls a secret.
-- [ ] **A5 `rounds_record.py`** (H1, cause 1): a round-1 finding is a
+- [x] **A5 `rounds_record.py`** (H1, cause 1): a round-1 finding is a
   regression only when the fix wrote the line's content; a line it moved
   is `pre-existing`; a report from a reviewer with no round-0 report in
   the scope is `first-seen`.
