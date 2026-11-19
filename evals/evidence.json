@@ -397,22 +397,22 @@
     "recorded": "2026-11-18T14:21:09Z"
   },
   "delivery-screens-owed": {
-    "inputs": "5a4b529800d1d505c49e97f83e1654deb020f9a88a18cfc18d0e522778177c71",
+    "inputs": "9efdc4ba4de03c08fd14dea513baedce4148b771c280900c899a802236fe0aab",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
-    "source": "results/gate-20261119T013105-delivery-screens-owed.json",
+    "source": "results/gate-20261119T025127-delivery-screens-owed.json",
     "claude_version": "2.1.328",
-    "recorded": "2026-11-19T01:41:22Z"
+    "recorded": "2026-11-19T02:52:25Z"
   },
   "delivery-screens-stray": {
-    "inputs": "40a8ec53c80f66174511e592814b580ba7a3a21bb59473dee27f9175dc5d74e6",
+    "inputs": "f7877bdbc1d7dc2c1c0ebba538b2beb495f297d976f14bc97fcc65c1581a83c3",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261119T013105-rerun-delivery-screens-stray.json",
+    "runs": 1,
+    "source": "results/gate-20261119T025127-delivery-screens-stray.json",
     "claude_version": "2.1.328",
-    "recorded": "2026-11-19T01:41:22Z"
+    "recorded": "2026-11-19T02:52:25Z"
   },
   "design-system-payfine-phase1": {
     "inputs": "3d0b287e749357ba8f4c5a2acdff2915e692aba3a36b5852ae8efc6aa03ea926",
@@ -667,13 +667,13 @@
     "recorded": "2026-11-18T14:21:09Z"
   },
   "orchestrator-capture-states": {
-    "inputs": "81105270cebdbbbafc0ed5a2e006a7eb29ff92516101024f1d75e29942f3d904",
+    "inputs": "80775c1465e55bbe2e05933115d249359c76aacc51752e68a5dcbdc3e276883c",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
-    "source": "results/gate-20261119T013105-orchestrator-capture-states.json",
+    "source": "results/gate-20261119T025127-orchestrator-capture-states.json",
     "claude_version": "2.1.328",
-    "recorded": "2026-11-19T01:41:22Z"
+    "recorded": "2026-11-19T02:52:25Z"
   },
   "orchestrator-chunk-runner-handback": {
     "inputs": "1e80162fe736d2a263e2f9bd770a4fe327b0496dc36183d55bf3195520f887b4",

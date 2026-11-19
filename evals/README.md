@@ -3561,8 +3561,10 @@ removes an earlier run's `capture-errors.json`, so a capture that
 succeeds into a folder a failed run left is not read as failed; two
 tests that could not tell a wrong rule apart), three deferred
 (`TODO.md`), four declined with the reason on the pull request, one
-answered by the later push. The two cases `capture.mjs` reaches ran
-once more: 2 runs, $0.41; 67 runs and $52.34 in all.
+answered by the later push. The five cases `capture.mjs` reaches ran
+once more (two by its file, three through the delivery states it is
+part of, which the loop states manifest showed only after the push):
+5 runs, $1.71; 70 runs and $53.64 in all.
 
 One grader changed. `reliability-requirements-refusal-phase2`'s
 `own-two-checks-pass-in-the-last-run` wanted a line break before the
