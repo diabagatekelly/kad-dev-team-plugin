@@ -144,6 +144,82 @@ class WhatAFixWrote(unittest.TestCase):
         out, classes = self.record("--report", r1, "--reviewer", "stranger", "--chunk", "D", "--round", "1", "--fix", "abc1234")
         self.assertEqual(classes["The README's start command is wrong"], "pre-existing")
 
+    def test_a_line_past_the_end_of_its_file_is_classed_by_the_file(self):
+        # S1 (the slice 4 review, F2): a re-reviewer read the tests through a truncated diff and cited positions
+        # in the diff's output. The file the fix changed has 4 lines; line 305 of it was filed as pre-existing,
+        # so a regression stood and became an issue after it was fixed.
+        self.report("chunk-1-r0-review.md", finding("An older finding", "lending/cancel-hold.ts:2"))
+        r1 = self.report("chunk-1-r1-review.md",
+                         finding("The fix loosened the test", "lending/cancel-hold.ts:305-371")
+                         + finding("A helper nobody reads", "lending/reasons.ts:300"))
+        out, classes = self.record("--report", r1, "--chunk", "1", "--round", "1", "--fix", "abc1234")
+        self.assertEqual(classes["The fix loosened the test"], "regression")     # the fix wrote lines in that file
+        self.assertEqual(classes["A helper nobody reads"], "pre-existing")       # that file only had lines moved into it
+        notes = [l for l in out if l.startswith("location: ")]
+        self.assertEqual(len(notes), 2, out)
+        self.assertIn("lending/cancel-hold.ts:305 is past the end of the file (4 lines", notes[0])
+        self.assertEqual(out[-1], "r1 0/0/2 (reg 1, pre 1)")
+
+
+class WhatBecameOfAFinding(unittest.TestCase):
+    """S2 (the slice 4 review, F3): a round's findings are marked fixed or
+    declined after its fixer, so a High the fixer declined stands and a
+    pre-existing finding a later fixer cleared does not."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.sidecar = os.path.join(self.tmp, "rounds-slice-004.jsonl")
+        self.report = os.path.join(self.tmp, "slice-r0-cold.md")
+        with open(self.report, "w", encoding="utf-8") as f:
+            f.write(REPORT)
+
+    def run_tool(self, *args, code=0):
+        r = subprocess.run([sys.executable, "-I", SCRIPT, "--sidecar", self.sidecar, *args], capture_output=True, text=True)
+        self.assertEqual(r.returncode, code, r.stdout + r.stderr)
+        return r.stdout.strip().splitlines()
+
+    def rows(self):
+        with open(self.sidecar, encoding="utf-8") as f:
+            return {row["title"]: row for row in map(json.loads, f)}
+
+    def test_a_declined_high_stands_and_a_fixed_one_does_not(self):
+        self.run_tool("--report", self.report, "--chunk", "D", "--round", "0")
+        self.assertEqual(self.run_tool("--standing")[-1], "standing 0/0/0")  # nothing resolved yet: as it was
+        out = self.run_tool("--resolve", "--chunk", "D", "--round", "0", "--fixed", "46cedf0",
+                            "--declined", "The rejection reason", "needs the owner's decision")
+        self.assertEqual(out[-1], "resolved D r0: fixed 1, declined 1")
+        self.assertIn("declined: High — The rejection reason is built twice (lending/cancel-hold.ts:14): needs the owner's decision", out)
+        rows = self.rows()
+        self.assertEqual(rows["A name that says less than the code"]["resolution"], "fixed")
+        self.assertEqual(rows["A name that says less than the code"]["fix"], "46cedf0")
+        self.assertEqual(rows["The rejection reason is built twice"]["resolution"], "declined")
+        self.assertEqual(rows["The rejection reason is built twice"]["declined"], "needs the owner's decision")
+        self.assertIsNone(rows["The rejection reason is built twice"]["fix"])
+        listed = self.run_tool("--standing")
+        self.assertEqual(listed[-1], "standing 0/1/0")
+        self.assertIn("declined: needs the owner's decision", listed[0])
+
+    def test_a_standing_finding_a_later_fixer_cleared_no_longer_stands(self):
+        self.run_tool("--report", self.report, "--chunk", "D", "--round", "2", "--last")
+        self.assertEqual(self.run_tool("--standing")[-1], "standing 0/1/1")
+        self.run_tool("--resolve", "--chunk", "D", "--round", "2", "--fixed", "b06af99")
+        self.assertEqual(self.run_tool("--standing")[-1], "standing 0/0/0")
+
+    def test_a_title_that_names_no_finding_or_two_changes_nothing(self):
+        self.run_tool("--report", self.report, "--chunk", "D", "--round", "0")
+        with open(self.sidecar, encoding="utf-8") as f:
+            before = f.read()
+        out = self.run_tool("--resolve", "--chunk", "D", "--round", "0", "--fixed", "46cedf0",
+                            "--declined", "No such finding", "why", code=1)
+        self.assertTrue(any("names no finding" in l for l in out), out)
+        out = self.run_tool("--resolve", "--chunk", "D", "--round", "0", "--fixed", "46cedf0", "--declined", "the", "why", code=1)
+        self.assertTrue(any("names 2 findings" in l for l in out), out)
+        with open(self.sidecar, encoding="utf-8") as f:
+            self.assertEqual(f.read(), before)
+        out = self.run_tool("--resolve", "--chunk", "D", "--round", "7", "--fixed", "46cedf0", code=1)
+        self.assertTrue(any("no finding recorded" in l for l in out), out)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)
