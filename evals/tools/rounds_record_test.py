@@ -151,14 +151,19 @@ class WhatAFixWrote(unittest.TestCase):
         self.report("chunk-1-r0-review.md", finding("An older finding", "lending/cancel-hold.ts:2"))
         r1 = self.report("chunk-1-r1-review.md",
                          finding("The fix loosened the test", "lending/cancel-hold.ts:305-371")
-                         + finding("A helper nobody reads", "lending/reasons.ts:300"))
+                         + finding("A helper nobody reads", "lending/reasons.ts:300")
+                         + finding("The reason is a bare string", "lending/cancel-hold.ts:1"))
         out, classes = self.record("--report", r1, "--chunk", "1", "--round", "1", "--fix", "abc1234")
         self.assertEqual(classes["The fix loosened the test"], "regression")     # the fix wrote lines in that file
         self.assertEqual(classes["A helper nobody reads"], "pre-existing")       # that file only had lines moved into it
         notes = [l for l in out if l.startswith("location: ")]
+        # the two past the end are said, each by its own location; the one inside its file is not
         self.assertEqual(len(notes), 2, out)
         self.assertIn("lending/cancel-hold.ts:305 is past the end of the file (4 lines", notes[0])
-        self.assertEqual(out[-1], "r1 0/0/2 (reg 1, pre 1)")
+        self.assertIn("lending/reasons.ts:300 is past the end of the file", notes[1])
+        self.assertEqual([l for l in notes if "cancel-hold.ts:1 " in l], [])
+        self.assertEqual(classes["The reason is a bare string"], "pre-existing")  # line 1, in range, the helper carried over
+        self.assertEqual(out[-1], "r1 0/0/3 (reg 1, pre 2)")
 
 
 class WhatBecameOfAFinding(unittest.TestCase):

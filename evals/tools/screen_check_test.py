@@ -317,6 +317,8 @@ class Compare(unittest.TestCase):
             p.image("capture", "one", size=(100, 118))
             p.image("baseline", "long", size=(100, 2000))
             p.image("capture", "long", size=(100, 2001))
+            p.image("baseline", "two")
+            p.image("capture", "two")
             r = p.compare()
             self.assertRegex(r.stdout, r"(?m)^changed\s+one: .*\(15\.254% of pixels, 1800 changed, 0 anti-aliased ignored; size 100x100 -> 100x118\)$")
             self.assertTrue(os.path.isfile(os.path.join(p.out, "diff", "one.png")))
@@ -326,7 +328,7 @@ class Compare(unittest.TestCase):
             self.assertEqual(r.stdout.strip().splitlines()[-1], "screens: FAIL 1 not listed: long")
             states = {s["state"]: s for s in json.loads(data(os.path.join(p.out, "screen-check.json"), "r"))["states"]}
             self.assertEqual(states["one"]["size"], {"baseline": [100, 100], "capture": [100, 118]})
-            self.assertNotIn("size", states.get("two", {}))
+            self.assertNotIn("size", states["two"])  # the same size: no size said
 
     def test_a_state_that_threw_is_missing_even_with_an_earlier_runs_image(self):
         # a capture run again into the same folder: the state that threw this time still has last run's image
