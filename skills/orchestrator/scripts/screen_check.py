@@ -40,13 +40,22 @@ at pixelmatch's threshold 0.1) is over the limit and it is not an
 anti-aliased pixel in either image (pixelmatch's test: a pixel on an edge
 whose neighbours in both images are flat on one side). A state differs
 when more than `max_changed_percent` of its pixels do, or the two images
-are not the same size.
+are not the same size. Two sizes are compared over the part they share
+(from the top-left corner); the pixels only one image has count as
+changed, the state's line ends `; size <w>x<h> -> <w>x<h>`, and its
+difference image is drawn at the size that holds both, those pixels in
+blue.
 
     compare --planning DIR --captures DIR --out DIR [--base REF] [--head SHA]
         One line per state, then the verdict as the last line:
           screens: PASS (<n> states)                              exit 0
           screens: BASELINES OWED <c> changed, <n> new, <r> removed   exit 3
           screens: FAIL <k> not listed: <state>, ...              exit 1
+          screens: FAIL <k> not captured: <state>, ...            exit 1
+          screens: FAIL <k>: <i> not captured: <state>, ...; <j> not listed: <state>, ...
+        (`not listed` for STRAY and UNLISTED states, `not captured` for
+        MISSING ones, which may well be listed: the third form when the
+        run has both)
         A state's line is one of
           same        within the threshold of its baseline
           changed     differs, and listed (as changed, or as new with a
@@ -294,13 +303,43 @@ def _antialiased(img, x1, y1, w, h, other):
             or (_siblings(img, high_at[0], high_at[1], w, h) and _siblings(other, high_at[0], high_at[1], w, h)))
 
 
+OUTSIDE = b"\x30\x60\xe0"  # a pixel only one of the two images has
+
+
+def _crop(img, w, cw, ch):
+    """The top-left `cw` by `ch` of an RGBA buffer `w` wide."""
+    if cw == w:
+        return img[:cw * ch * 4]
+    return b"".join(img[y * w * 4:y * w * 4 + cw * 4] for y in range(ch))
+
+
 def diff_images(base, shot, want_image=True):
     """(pixels that differ, anti-aliased pixels ignored, total pixels, RGB
-    difference image or None). Images of different sizes differ in full."""
+    difference image or None). Two images of different sizes are compared
+    over the part they share, from the top-left corner; every pixel only
+    one of them has differs, the total is the size that holds both, and
+    the difference image is drawn at that size with those pixels in blue.
+    They used to "differ in full" with no image: a page one row taller
+    read 100% in 27 of 28 states, and the check said nothing about what
+    had changed in them."""
     w, h, a = base
     w2, h2, b = shot
     if (w, h) != (w2, h2):
-        return max(w * h, w2 * h2), 0, max(w * h, w2 * h2), None
+        cw, ch, uw, uh = min(w, w2), min(h, h2), max(w, w2), max(h, h2)
+        changed, ignored, _, shared = diff_images((cw, ch, _crop(a, w, cw, ch)), (cw, ch, _crop(b, w2, cw, ch)), want_image)
+        image = None
+        if want_image:
+            if shared is None:  # nothing differs in the shared part: the baseline, faded
+                faded = bytearray(cw * ch * 3)
+                crop = _crop(a, w, cw, ch)
+                for c in range(3):
+                    faded[c::3] = bytes(255 - ((255 - v) >> 2) for v in crop[c::4])
+                shared = bytes(faded)
+            out = bytearray(OUTSIDE * (uw * uh))
+            for y in range(ch):
+                out[y * uw * 3:y * uw * 3 + cw * 3] = shared[y * cw * 3:(y + 1) * cw * 3]
+            image = bytes(out)
+        return changed + uw * uh - cw * ch, ignored, uw * uh, image
     changed = ignored = 0
     marks = {}
     if a != b:
@@ -450,13 +489,17 @@ def expected_states(captures_dir):
                 with open(path, encoding="utf-8") as f:
                     return {line.strip() for line in f if line.strip()}
             except OSError:
-                return set()
+                # a list that is there and cannot be read is not "no list":
+                # one row that no capture can meet, so the set is not judged whole
+                return {"states.txt (not readable)"}
     return set()
 
 
-def judge(planning, captures_dir, base, diff_dir=None):
+def judge(planning, captures_dir, base, diff_dir=None, sizes=None):
     """([(state, status, percent, changed pixels, ignored pixels)], limit,
-    where the limit came from), or an error string."""
+    where the limit came from), or an error string. `sizes`, when given,
+    is filled with {state: ((w, h) of the baseline, (w, h) of the
+    capture)} for every state whose two images are not the same size."""
     names = listed(planning, base)
     if isinstance(names, str):
         return names
@@ -466,25 +509,31 @@ def judge(planning, captures_dir, base, diff_dir=None):
     first = not baselines
     # What the capture said it would produce or failed to: owed a capture
     # whatever the baselines and the screen design say.
-    owed = set(capture_errors(captures_dir)) | expected_states(captures_dir)
+    failed = set(capture_errors(captures_dir))
+    owed = failed | expected_states(captures_dir)
     rows = []
     for state in sorted(set(baselines) | set(captures) | set(names) | owed):
         kind = names.get(state)
         has_base, has_shot = state in baselines, state in captures
-        if state in owed and not has_shot:
+        if state in failed or (state in owed and not has_shot):
+            # a state the capture reported as failed is missing even with an
+            # image under its name: the image is an earlier run's
             rows.append((state, "MISSING", 100.0, 0, 0))
         elif has_base and has_shot:
             if _bytes(baselines[state]) == _bytes(captures[state]):
                 rows.append((state, "same", 0.0, 0, 0))
                 continue
-            changed, ignored, total, image = diff_images(read_png(baselines[state]), read_png(captures[state]), diff_dir is not None)
+            before, after = read_png(baselines[state]), read_png(captures[state])
+            changed, ignored, total, image = diff_images(before, after, diff_dir is not None)
             percent = 100.0 * changed / total if total else 0.0
-            if percent <= limit:
+            resized = before[:2] != after[:2]
+            if resized and sizes is not None:
+                sizes[state] = (before[:2], after[:2])
+            if percent <= limit and not resized:  # another size is a difference whatever the share of pixels
                 rows.append((state, "same", percent, changed, ignored))
                 continue
             if diff_dir and image:
-                w, h, _ = read_png(baselines[state])
-                write_png(os.path.join(diff_dir, state + ".png"), w, h, image)
+                write_png(os.path.join(diff_dir, state + ".png"), max(before[0], after[0]), max(before[1], after[1]), image)
             # A state the slice lists as new has a baseline once its first
             # one is adopted; a later fix on the branch may still move it.
             rows.append((state, "changed" if kind in ("changed", "new") else "STRAY", percent, changed, ignored))
@@ -514,16 +563,30 @@ def verdict(rows):
     bad = [s for s, status, *_ in rows if status in FINDINGS]
     count = {k: sum(1 for _, status, *_ in rows if status == k) for k in ("changed", "new", "removed")}
     if bad:
-        return 1, f"screens: FAIL {len(bad)} not listed: {', '.join(bad)}"
+        # A state with no capture is not "not listed": it may be on the
+        # list and have thrown. Named apart, so the reader looks at the
+        # capture and not at the screen design.
+        missing = [s for s, status, *_ in rows if status == "MISSING"]
+        stray = [s for s in bad if s not in missing]
+        if not missing:
+            return 1, f"screens: FAIL {len(bad)} not listed: {', '.join(bad)}"
+        if not stray:
+            return 1, f"screens: FAIL {len(bad)} not captured: {', '.join(bad)}"
+        return 1, (f"screens: FAIL {len(bad)}: {len(missing)} not captured: {', '.join(missing)}; "
+                   f"{len(stray)} not listed: {', '.join(stray)}")
     if any(count.values()):
         return 3, f"screens: BASELINES OWED {count['changed']} changed, {count['new']} new, {count['removed']} removed"
     return 0, f"screens: PASS ({len(rows)} states)"
 
 
-def lines_for(rows, limit, source, failed=None):
+def lines_for(rows, limit, source, failed=None, sizes=None):
     out = [f"threshold: more than {limit:g}% of a state's pixels, anti-aliasing ignored ({source})"]
     for state, status, percent, changed, ignored in rows:
-        detail = f" ({percent:.3f}% of pixels, {changed} changed, {ignored} anti-aliased ignored)" if changed or ignored else ""
+        size = ""
+        if sizes and state in sizes:
+            (bw, bh), (cw, ch) = sizes[state]
+            size = f"; size {bw}x{bh} -> {cw}x{ch}"
+        detail = f" ({percent:.3f}% of pixels, {changed} changed, {ignored} anti-aliased ignored{size})" if changed or ignored or size else ""
         why = f"the capture failed: {failed[state]}" if status == "MISSING" and failed and state in failed else WHY[status]
         out.append(f"{status:<8} {state}: {why}{detail}")
     return out
@@ -531,19 +594,21 @@ def lines_for(rows, limit, source, failed=None):
 
 def cmd_compare(a):
     os.makedirs(a.out, exist_ok=True)
-    result = judge(a.planning, a.captures, a.base, os.path.join(a.out, "diff"))
+    sizes = {}
+    result = judge(a.planning, a.captures, a.base, os.path.join(a.out, "diff"), sizes)
     if isinstance(result, str):
         print(f"screens: cannot run: {result}")
         return 2
     rows, limit, source = result
     code, last = verdict(rows)
-    text = lines_for(rows, limit, source, capture_errors(a.captures)) + [last]
+    text = lines_for(rows, limit, source, capture_errors(a.captures), sizes) + [last]
     print("\n".join(text))
     with open(os.path.join(a.out, "screen-check.txt"), "w", encoding="utf-8") as f:
         f.write("\n".join(text) + "\n")
     with open(os.path.join(a.out, "screen-check.json"), "w", encoding="utf-8") as f:
         json.dump({"head": a.head, "max_changed_percent": limit, "verdict": last, "exit": code,
-                   "states": [{"state": s, "status": st, "percent": round(p, 4), "changed_pixels": c, "antialiased_ignored": i}
+                   "states": [{"state": s, "status": st, "percent": round(p, 4), "changed_pixels": c, "antialiased_ignored": i,
+                               **({"size": {"baseline": list(sizes[s][0]), "capture": list(sizes[s][1])}} if s in sizes else {})}
                               for s, st, p, c, i in rows]}, f, indent=2)
     return code
 

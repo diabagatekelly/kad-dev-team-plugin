@@ -213,9 +213,23 @@ class Pixels(unittest.TestCase):
         a, b = flat(8, 8, (120, 120, 120)), flat(8, 8, (124, 124, 124))
         self.assertEqual(sc.diff_images((8, 8, rgba(a)), (8, 8, rgba(b)))[0], 0)
 
-    def test_two_sizes_differ_in_full(self):
+    def test_two_sizes_are_compared_over_what_they_share(self):
+        # S6 (the slice 4 review, F15): a page that grew 18 px read "100% of pixels" with no difference
+        # image, in 27 of 28 states, so the check said nothing about what had changed in them
         a, b = (4, 4, rgba(flat(4, 4))), (4, 5, rgba(flat(4, 5)))
-        self.assertEqual(sc.diff_images(a, b)[:3], (20, 0, 20))
+        changed, ignored, total, image = sc.diff_images(a, b)
+        self.assertEqual((changed, ignored, total), (4, 0, 20))      # the row one image does not have
+        self.assertEqual(len(image), 4 * 5 * 3)                      # drawn at the size that holds both
+        self.assertEqual(image[16 * 3:16 * 3 + 3], sc.OUTSIDE)       # that row, marked as outside the other image
+        self.assertEqual(image[:3], bytes([255, 255, 255]))          # the shared part, unchanged
+        w, h = 20, 20
+        wide = flat(w + 2, h)
+        for x in range(14, 18):
+            for y in range(4, 8):
+                put(wide, w + 2, x, y, (200, 0, 0))
+        changed, _, total, image = sc.diff_images((w, h, rgba(flat(w, h))), (w + 2, h, rgba(wide)))
+        self.assertEqual((changed, total), (16 + 2 * h, (w + 2) * h))
+        self.assertEqual(image[(4 * (w + 2) + 14) * 3:(4 * (w + 2) + 14) * 3 + 3], b"\xe0\x20\x20")
 
 
 class Compare(unittest.TestCase):
@@ -267,7 +281,7 @@ class Compare(unittest.TestCase):
             p.image("baseline", "five")
             r = p.compare()
             self.assertEqual(r.returncode, 1, r.stdout)
-            self.assertEqual(r.stdout.strip().splitlines()[-1], "screens: FAIL 3 not listed: five, four, two")
+            self.assertEqual(r.stdout.strip().splitlines()[-1], "screens: FAIL 3: 1 not captured: five; 2 not listed: four, two")
             self.assertRegex(r.stdout, r"(?m)^STRAY\s+two:")
             self.assertRegex(r.stdout, r"(?m)^UNLISTED\s+four:")
             self.assertRegex(r.stdout, r"(?m)^MISSING\s+five:")
@@ -293,7 +307,38 @@ class Compare(unittest.TestCase):
             r = p.compare()
             self.assertEqual(r.returncode, 1, r.stdout)
             self.assertRegex(r.stdout, r"(?m)^MISSING\s+two: the capture failed: page\.waitForSelector: Timeout 30000ms exceeded\.$")
-            self.assertIn("screens: FAIL 1 not listed: two", r.stdout)
+            # the state is on nobody's list of strays: it was not captured, and the verdict says that
+            self.assertEqual(r.stdout.strip().splitlines()[-1], "screens: FAIL 1 not captured: two")
+
+    def test_a_taller_capture_gets_a_real_percentage_its_sizes_and_a_difference_image(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Planning(tmp, section="- `one`: changed, a row added\n")
+            p.image("baseline", "one")
+            p.image("capture", "one", size=(100, 118))
+            p.image("baseline", "long", size=(100, 2000))
+            p.image("capture", "long", size=(100, 2001))
+            r = p.compare()
+            self.assertRegex(r.stdout, r"(?m)^changed\s+one: .*\(15\.254% of pixels, 1800 changed, 0 anti-aliased ignored; size 100x100 -> 100x118\)$")
+            self.assertTrue(os.path.isfile(os.path.join(p.out, "diff", "one.png")))
+            self.assertEqual(sc.read_png(os.path.join(p.out, "diff", "one.png"))[:2], (100, 118))
+            # another size is a difference whatever the share of pixels: one row in two thousand, and not listed
+            self.assertRegex(r.stdout, r"(?m)^STRAY\s+long: .*\(0\.050% of pixels, 100 changed, 0 anti-aliased ignored; size 100x2000 -> 100x2001\)$")
+            self.assertEqual(r.stdout.strip().splitlines()[-1], "screens: FAIL 1 not listed: long")
+            states = {s["state"]: s for s in json.loads(data(os.path.join(p.out, "screen-check.json"), "r"))["states"]}
+            self.assertEqual(states["one"]["size"], {"baseline": [100, 100], "capture": [100, 118]})
+            self.assertNotIn("size", states.get("two", {}))
+
+    def test_a_state_that_threw_is_missing_even_with_an_earlier_runs_image(self):
+        # a capture run again into the same folder: the state that threw this time still has last run's image
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Planning(tmp, section=None)
+            p.image("baseline", "one")
+            p.image("capture", "one")
+            with open(os.path.join(p.captures, "capture-errors.json"), "w") as f:
+                json.dump({"one": "page.goto: net::ERR_CONNECTION_REFUSED"}, f)
+            r = p.compare()
+            self.assertEqual(r.returncode, 1, r.stdout)
+            self.assertRegex(r.stdout, r"(?m)^MISSING\s+one:")
 
     def test_a_state_of_the_captures_own_list_with_no_capture_is_missing(self):
         # a capture that crashed leaves no errors file: the list the workflow wrote first still names the state
