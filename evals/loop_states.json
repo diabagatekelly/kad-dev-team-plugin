@@ -1,5 +1,5 @@
 {
- "inputs": "16bcf0c724e3943986e6c8dc6674bd8c70d5b8dd8e661c14f29c184ec67ab4c0",
+ "inputs": "9882db59e2f7a5bce22e88d8bd214c7ce255fdf9d98422e2c35aec42b0c7ff84",
  "states": {
   "base:planning/cancel-hold-readiness": "1a04ac9185fbcfc2f60c1d165be81276e7f5bed23f3aed8429f18a52139b8dd9",
   "base:route-plants/cancel-hold": "494cc9f302d45806d65bad685b7842877ed1bda4005bad37a05cc48e9dde87e0",
@@ -38,6 +38,9 @@
   "state:slice-review-r0": "1264fc8679ca07f866819c6368d2bb8e9e42c80e0fb8a3c846ee56b54f0eb02c",
   "state:slice-review-r0+no-exit": "c8a454715a2cbc4e7b65fd634fe8226a02a11d31fe101ee6170a62544086424d",
   "state:slice-review-r0+no-exit:criterion": "3b19b1fa6b100a30376df01d3abbbf495d519e0ade008f9732d9e642e7c83472",
-  "state:slice-review-r2-fixed": "49833da79c5b3f9427bb90341c76821ee14df273e82cfa21e3c7d26f87b50a8c"
+  "state:slice-review-r2-fixed": "49833da79c5b3f9427bb90341c76821ee14df273e82cfa21e3c7d26f87b50a8c",
+  "state:solo-ready": "096e69616007ed07ae4ec8d3790181fe2fbb0c0c698c37bc1c57a9f7d1686c9d",
+  "state:solo-unconfirmed": "08739e480a8220252e7f11466f9e40641703a281e369f2af6fb14ce520b7d2c0",
+  "state:solo-verified": "c55605a1801724e04430dae29a43b49b6a0e32cf908075d8131aed7fc548d7ed"
  }
 }

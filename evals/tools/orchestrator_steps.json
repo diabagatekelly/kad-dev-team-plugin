@@ -1,5 +1,5 @@
 {
- "about": "Which steps of the orchestrator's chunk loop a case reaches (affected_cases.py). An orchestrator case depends on the skill's text outside the five step sections, plus the sections of the steps listed for it: by the loop state its scaffold builds, `base` for a scaffold that builds the loop's base (a flow that starts at A), `cases` for a case by name, and `default` (no step: routing only) for any other case that loads the skill. A state not listed here keeps the whole file. The owner's decision, 2026-11-16: an edit inside one step's section stales only the cases that reach that step, knowing the whole text is still in the model's context.",
+ "about": "Which steps of the orchestrator's chunk loop a case reaches (affected_cases.py). An orchestrator case depends on the skill's text outside the step sections (A to E, and S for the `solo` cadence), plus the sections of the steps listed for it: by the loop state its scaffold builds, `base` for a scaffold that builds the loop's base (a flow that starts at A), `cases` for a case by name, and `default` (no step: routing only) for any other case that loads the skill. A state not listed here keeps the whole file. The owner's decision, 2026-11-16: an edit inside one step's section stales only the cases that reach that step, knowing the whole text is still in the model's context.",
  "default": [],
  "base": ["A"],
  "states": {
@@ -11,7 +11,8 @@
   "no-ci": ["E"], "no-ci-ui": ["E"],
   "delivery-ready": ["E"], "delivery-ready-ui": ["E"], "delivery-ready-source": ["E"], "delivery-ci-red": ["E"],
   "delivery-screens-stray": ["E"], "delivery-screens-owed": ["E"],
-  "issue14-planned": ["A"]
+  "issue14-planned": ["A"],
+  "solo-ready": ["S"], "solo-verified": ["S"], "solo-unconfirmed": ["S"]
  },
  "cases": {
   "orchestrator-route-implementation": ["A"],

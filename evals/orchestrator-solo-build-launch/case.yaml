@@ -1,0 +1,69 @@
+schema_version: "1.0"
+name: orchestrator-solo-build-launch
+description: "TODO.md's L1 (0.19.0), the `solo` cadence's build: resumed with A done under `solo`, the orchestrator runs the sandbox check and launches exactly one agent, a builder on Opus told to invoke `slice-build` and handed the slice's documents, the test command, the report path and the scripts directory. No planner is asked for a chunk plan, no chunk runner is launched, and nothing else starts."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going, and hand off as soon as the next agent has been launched: don't wait for it to return; write the handoff file saying it is in flight and stop.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: one-builder-launched
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: builder-on-opus
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*"model"\s*:\s*"opus")'
+    min: 1
+  - type: tool_used
+    name: builder-told-to-invoke-slice-build
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*kad-dev-team:slice-build)'
+    min: 1
+  - type: tool_used
+    name: builder-handed-the-documents-and-paths
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*slice-001\.md)(?=[\s\S]*design-001\.md)(?=[\s\S]*npm test)(?=[\s\S]*implementation-report-slice-001\.md)(?=[\s\S]*orchestrator/scripts)'
+    min: 1
+  - type: tool_used
+    name: no-chunk-plan-asked-for
+    tool: Agent
+    input_match: '[Cc]hunk plan|tdd-implementation-lite'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-chunk-runner
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?chunk-runner'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: sandbox-checked-before-the-launch
+    tool: Bash
+    input_match: 'sandbox_check\.py'
+    min: 1
+  - type: tool_order
+    name: check-before-the-builder
+    before: {tool: Bash, input_match: 'sandbox_check\.py'}
+    after: {tool: Agent, input_match: 'tdd-coach'}
+  - type: regex
+    name: no-plan-line-written
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*B\. Plan:\*\*'
+    match: not_contains

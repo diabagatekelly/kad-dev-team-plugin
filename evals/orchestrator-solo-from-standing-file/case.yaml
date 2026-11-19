@@ -1,0 +1,58 @@
+schema_version: "1.0"
+name: orchestrator-solo-from-standing-file
+description: "TODO.md's L6 (0.19.0), the `solo` cadence taken from the standing file: the project's `autopilot.md` holds the owner's autopilot answer and the line `cadence: solo` with their words, and the owner's message names no cadence. The A step asks nothing about either, writes `cadence — solo` on its line, launches no planner and no chunk runner, and its handoff names step S as what comes next. Known-bad reference: the A step without its `solo` paragraph."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? Decisions that come up during the build may be settled with the owning persona without asking me, on this slice and every later one, logged and committed under the persona's name. If the sandbox check fails here, write no settings and continue unsandboxed. Hand off as soon as the chunk loop's A line is written (write the handoff file and stop; don't start the build in this session).
+  model: sonnet
+  max_turns: 50
+  timeout_seconds: 1800
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: regex
+    name: a-line-says-solo
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*A\. Start:\*\*[^\n]*cadence\s+—\s+`?solo\b'
+  - type: regex
+    name: a-line-names-the-autopilot-file
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*A\. Start:\*\*[^\n]*autopilot\s+—\s+`?[^`;\n]*autopilot\.md'
+  - type: regex
+    name: no-plan-line
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*B\. Plan:\*\*'
+    match: not_contains
+  - type: regex
+    name: cadence-not-asked
+    target: last_message
+    pattern: '(?i)which cadence|\bloop,? light or solo\b|should (?:this|the) slice run (?:solo|light)'
+    match: not_contains
+  - type: file_exists
+    name: handoff-written
+    path: docs/cancel-hold/implementation/handoff-slice-001.md
+  # Read from the Write or the heredoc that made it: a handoff never written would void the run.
+  - type: regex
+    name: handoff-carries-the-cadence-and-step-s
+    target: trace
+    pattern: 'handoff-slice-001\.md(?:"\s*,\s*"content"\s*:\s*"|[^"]{0,20}<<)(?=[\s\S]{0,4000}?\bsolo\b)(?=[\s\S]{0,4000}?(?:\bS\.1\b|\b[Ss]tep S\b|\bS\. Solo\b|\bS:))'
+  - type: tool_used
+    name: no-builder-planner-or-runner-in-this-session
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?(?:tdd-coach|chunk-runner)'
+    min: 0
+    max: 0

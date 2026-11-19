@@ -3241,5 +3241,57 @@
    "note": "says recommended technical questions are taken, which is the trap: a wider cut is not one of them",
    "states_rule": "no"
   }
+ },
+ "orchestrator-solo-from-message": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Build this slice solo: one builder for the slice.",
+   "note": "the owner's word for the cadence is the input, so it is given; nothing says the A line carries it, that no plan is written or what the handoff names next"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-solo-from-standing-file": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "names no cadence: the standing file's line is the only signal"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-solo-build-launch": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "hand off as soon as the next agent has been launched",
+   "note": "says an agent is launched and the session ends there; not which agent, on which model, with which skill, or that no plan is asked for"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-solo-confirmed-only": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Hand off as soon as the next agent has been launched",
+   "note": "says an agent is launched next; not that it is a fixer, what it is handed or what is kept from it"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "orchestrator-solo-nothing-confirmed": {
+  "prompt": {
+   "states_rule": "partly",
+   "quote": "Hand off as soon as the slice review's line is written in the log, or as soon as an agent has been launched, whichever comes first",
+   "note": "allows either ending, the review's line or a launch, so it does not say that nothing is launched"
+  },
+  "judges": {},
+  "findings": []
+ },
+ "slice-build-cancel-hold": {
+  "prompt": {
+   "states_rule": "no",
+   "note": "points at the task file, which names the skill and the paths as the orchestrator's S step does; nothing of the test rule is in either"
+  },
+  "judges": {},
+  "findings": []
  }
 }

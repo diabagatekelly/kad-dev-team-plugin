@@ -1,0 +1,75 @@
+schema_version: "1.0"
+name: orchestrator-solo-confirmed-only
+description: "TODO.md's L4 and L5 (0.19.0), the `solo` cadence's one fix: resumed with the three readers' reports recorded and the verify agent's report in hand. The combined review raised a High that did not reproduce, two Mediums and a Low; the cold read confirmed one Medium by execution and left one line to verify. The orchestrator writes `slice-findings.md` (the High under not reproduced, the Mediums under reported and not fixed) and launches exactly one fixer, on Opus, with `slice-build`, handed the cold read's finding and none of the combined review's."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. Hand off as soon as the next agent has been launched: don't wait for it to return; write the handoff file saying it is in flight and stop.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: file_exists
+    name: findings-file-written
+    path: docs/cancel-hold/implementation/slice-findings.md
+  - type: regex
+    name: unreproduced-high-listed-as-not-reproduced
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-findings.md
+    pattern: '\n## Not reproduced(?:(?!\n## )[\s\S])*another member''s hold'
+  - type: regex
+    name: mediums-reported-not-fixed
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-findings.md
+    pattern: '\n## Reported, not fixed(?:(?!\n## )[\s\S])*optional on both statuses'
+  - type: tool_used
+    name: one-fixer-launched-with-slice-build
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*kad-dev-team:slice-build)'
+    min: 1
+    max: 1
+  - type: tool_used
+    name: fixer-on-opus
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*"model"\s*:\s*"opus")'
+    min: 1
+  - type: tool_used
+    name: fixer-handed-the-confirmed-finding
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*(?:short card number|slice-r0-cold\.md))'
+    min: 1
+  # The rule under test: nothing that was not confirmed reaches the fixer,
+  # by title or by its report.
+  - type: tool_used
+    name: fixer-not-handed-an-unconfirmed-finding
+    tool: Agent
+    input_match: '(?=[\s\S]*"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach)(?=[\s\S]*(?:another member''s hold|optional on both statuses|fixed string with nothing|reads \\?"not cancelled|slice-r0-combined\.md))'
+    min: 0
+    max: 0
+  # No second verify, no reviewer, no second fixer: one launch.
+  - type: tool_used
+    name: one-launch-and-no-other
+    tool: Agent
+    min: 1
+    max: 1
+  - type: tool_used
+    name: sandbox-checked-before-the-launch
+    tool: Bash
+    input_match: 'sandbox_check\.py'
+    min: 1
+  - type: regex
+    name: orchestrator-edits-no-code
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*/(?:lending|infra|test)/'
+    match: not_contains

@@ -1,0 +1,33 @@
+{
+ "skill": "orchestrator",
+ "rule": "under `solo` only a finding that running something showed goes to the fixer, and with nothing confirmed no fixer is launched (L4 and L5, 0.19.0): step S.5's opening, its sentence on the combined review's Mediums and Lows, and S.6's opening",
+ "edits": [
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "5. **What is confirmed.** Only a finding that running something showed\n   is fixed. Five kinds, and nothing else:",
+   "new": "5. **What goes to the fixer.** Every Critical, High and Medium the\n   readers raised, and these:"
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": " **A Medium or a\n     Low of the combined review is never verified and never fixed.**",
+   "new": ""
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "6. **One fix, and only for the confirmed.** Nothing confirmed: no\n   fixer is launched, whatever the combined review said. Otherwise\n   **one** fresh fixer",
+   "new": "6. **One fix.** **One** fresh fixer"
+  },
+  {
+   "file": "skills/orchestrator/SKILL.md",
+   "old": "handed the\n   confirmed findings by report path and title and nothing that was\n   not confirmed.",
+   "new": "handed the\n   findings by report path and title."
+  }
+ ],
+ "fails": [
+  "no-fixer-launched",
+  "nothing-launched"
+ ],
+ "observed": {
+  "note": "written with the case, not yet run: the gate pass's three runs say whether every grader in `fails` fails"
+ }
+}
