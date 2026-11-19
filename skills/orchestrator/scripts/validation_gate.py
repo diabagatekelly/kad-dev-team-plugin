@@ -10,7 +10,9 @@ module directories as the orchestrator's B step lists them):
 
 1. suite: the project's test runner exits 0 within `--timeout` seconds and
    prints a summary with no failures (Node's spec reporter: `ℹ fail 0`;
-   anything else: exit code). On failure the output's tail is printed.
+   anything else: exit code). On failure the line names the first five
+   failing tests the runner's output printed (`; failing: "<name>"; …`,
+   `(+<n> more)` past five) and the output's tail is printed.
 1b. typecheck and lint: the project's own scripts, when it has them. With
    `--typecheck-cmd` / `--lint-cmd` those commands run as given; otherwise
    `package.json`'s `scripts.typecheck` and `scripts.lint` run through the
@@ -147,9 +149,14 @@ module directories as the orchestrator's B step lists them):
    (`>` and `>>` redirections, `tee`, `sed -i`, `perl -i`, `cp`, `mv`,
    `rm` on a tracked file, and a `python3 -`/`python3 -c`/`node -e`
    script that opens a path for writing), one per file per command;
-   plus, as the catch-all, every tracked file that changed between the
-   agent's first and last commit on the branch without an `Edit` or
-   `Write` call naming it. A formatter run (`prettier --write`, `eslint
+   plus, as the catch-all, every file the agent's own commits changed
+   (the commits of the range whose sha one of its `git commit` commands
+   printed; the whole range only when its transcript names none) without
+   an `Edit` or `Write` call naming it: on a fix gate the range also
+   holds the builder's commits, and those are not the fixer's. A shell
+   write whose result is a permission refusal never ran and is not
+   counted; `<n> shell write(s) refused by a permission check, not
+   counted` says how many. A formatter run (`prettier --write`, `eslint
    --fix`, the manifest's `format` script through its runner) is not a
    shell edit, and a write outside the tree (the scratchpad) is not one.
    Prints `shell edits <n> (reported <m>)`, `m` being the number the
@@ -525,6 +532,35 @@ def run_command(project, cmd, timeout, flag, env=None):
             "output_tail": out[-2000:]}, out
 
 
+FAIL_LINE = re.compile(
+    r"^\s*(?:"
+    r"not ok \d+ - (?P<node>.+?)(?: # .*)?"          # node --test (TAP)
+    r"|✖ (?P<nodespec>.+?) \(\d+(?:\.\d+)?ms\)"       # node --test (spec)
+    r"|[✕✗×] (?P<jest>.+?)(?: \(\d+ ?ms\))?"          # jest, vitest
+    r"|FAIL +\S+ > (?P<vitest>.+)"                     # vitest's file > name
+    r"|FAILED (?P<pytest>\S+::\S+)"                   # pytest
+    r"|FAIL: (?P<unittest>\S+(?: \([^)]*\))?)"        # unittest
+    r")\s*$")
+
+
+def failing_tests(output):
+    """The failing tests a runner's output names, once each, in the order
+    printed (the lines `mutation_pass.py` reads). `suite exit 1, summary
+    fail count 1` with no name cost one slice two more runs of the whole
+    suite to learn which test."""
+    names = []
+    for line in output.splitlines():
+        m = FAIL_LINE.match(line)
+        if m:
+            name = next(v for v in m.groupdict().values() if v)
+            if name not in names:
+                names.append(name)
+    return names
+
+
+FAILING_SHOWN = 5
+
+
 def run_tests(project, cmd, coverage, timeout, lcov_path=None):
     env = dict(os.environ)
     if coverage:
@@ -536,6 +572,7 @@ def run_tests(project, cmd, coverage, timeout, lcov_path=None):
     summary_green = fails[-1] == "0" if fails else None
     result["passed"] = result["passed"] and summary_green is not False
     result["summary_fail_count"] = fails[-1] if fails else None
+    result["failing"] = [] if result["passed"] else failing_tests(out)
     return result, out
 
 
@@ -1237,7 +1274,18 @@ def done_when_tests(report_path, chunk):
     # the old one, and the test the gate looks for is the new one. Without
     # this a fixer either left a title that no longer said what the test
     # did, or renamed it and failed the gate.
-    renames = {test_key(old): new for old, new in RENAMED_TEST.findall(text) if test_key(old) and test_key(new)}
+    # The chunk's own sections first (the plan's `### Chunk <k>` and the
+    # report's `### Chunk <k>: <title>`, where its Fix lines go): two chunks
+    # may quote one title, and each renames its own. A rename declared
+    # elsewhere in the report (a slice-level fixer writes under the last
+    # chunk it touched) is read only for a name this chunk's sections do
+    # not rename.
+    def pairs(part):
+        return {test_key(old): new for old, new in RENAMED_TEST.findall(part) if test_key(old) and test_key(new)}
+
+    own = "\n".join(m.group(1) for m in re.finditer(
+        r"^###\s+Chunk\s+" + re.escape(str(chunk)) + r"\b[^\n]*\n(.*?)(?=^###\s|\Z)", text, re.M | re.S))
+    renames = {**pairs(text), **pairs(own)}
     out = []
     for name in names:
         seen = set()
@@ -1431,6 +1479,30 @@ def check_sources(project, planning, files):
             "lines": scan.hit_lines(hits), "info": scan.exclusion_lines(cat, not_counted)}, cat
 
 
+DENIED = re.compile(r"\s*(?:Error:\s*)?(?:Permission (?:for this action was|to use \w+ (?:has been|was)) denied"
+                    r"|The user doesn't want to proceed with this tool use)", re.I)
+COMMIT_SHA = re.compile(r"(?:^|\[[^\]\n]*\s)([0-9a-f]{7,40})(?:\]|\s*$)", re.M)
+
+
+def agent_commits(project, base, calls, results):
+    """The commits of `base..HEAD` the agent's own `git commit` commands
+    printed (a bare sha on a line, as `git rev-parse` prints it, or `[branch
+    <sha>]`, as `git commit` does), oldest first; [] when its transcript
+    names none."""
+    try:
+        in_range = git(project, "rev-list", "--reverse", f"{base}..HEAD").stdout.split()
+    except SystemExit:
+        return []
+    printed = set()
+    for call in calls:
+        if call.get("name") != "Bash":
+            continue
+        text, _ = split_heredocs((call.get("input") or {}).get("command") or "")
+        if re.search(r"\bgit\b[^|;&\n]*\bcommit\b", text):
+            printed.update(COMMIT_SHA.findall(results.get(call.get("id")) or ""))
+    return [sha for sha in in_range if any(sha.startswith(p) for p in printed)]
+
+
 def check_transcript(project, path, base, test_cmd, catalog=None):
     """The report-only replay of one agent transcript (docstring point 8)."""
     calls, results, last_text = tool_calls_of(path)
@@ -1438,7 +1510,7 @@ def check_transcript(project, path, base, test_cmd, catalog=None):
         tracked = set(git(project, "ls-files").stdout.splitlines())
     except SystemExit:
         tracked = None
-    edits, named = [], set()
+    edits, named, denied = [], set(), 0
     for call in calls:
         name, inp = call.get("name"), call.get("input") or {}
         if name in ("Edit", "Write", "MultiEdit", "NotebookEdit"):
@@ -1448,14 +1520,30 @@ def check_transcript(project, path, base, test_cmd, catalog=None):
                 named.add(rel)
         elif name == "Bash":
             cmd = inp.get("command") or ""
-            for rel in shell_writes(project, cmd, tracked):
+            writes = shell_writes(project, cmd, tracked)
+            if writes and DENIED.match(results.get(call.get("id")) or ""):
+                # The command never ran: nothing was written. One loop's
+                # lines added up to 22 shell edits where 3 had happened.
+                denied += 1
+                continue
+            for rel in writes:
                 head = cmd.strip().split("\n")[0]
                 edits.append((rel, head[:60] + ("…" if len(head) > 60 else "")))
     counted = {rel for rel, _ in edits}
-    catch_all = []
+    catch_all, own = [], None
     if base and base != "HEAD":
+        # The agent's own commits, named by its transcript (the sha a
+        # commit command printed), not the whole range: on a fix gate the
+        # range also holds the builder's commits, and every file of the
+        # build was being counted against the fixer. A transcript that
+        # names no commit of the range is read over the range, as before.
+        own = agent_commits(project, base, calls, results)
         try:
-            changed = git(project, "diff", "--name-only", f"{base}..HEAD").stdout.splitlines()
+            if own:
+                changed = sorted({f for sha in own
+                                  for f in git(project, "show", "--name-only", "--format=", sha).stdout.splitlines()})
+            else:
+                changed = git(project, "diff", "--name-only", f"{base}..HEAD").stdout.splitlines()
         except SystemExit:
             changed = []
         catch_all = [f for f in changed if f and f not in named and f not in counted]
@@ -1483,16 +1571,19 @@ def check_transcript(project, path, base, test_cmd, catalog=None):
         counted, entries = source_scanner().scan_transcript(catalog, path)
         source_values = {"hits": len(counted), "entries": entries} if counted is not None else {"unreadable": True}
     return {"passed": True, "report_only": True, "transcript": path, "shell_edits": len(edits) + len(catch_all),
-            "edits": edits, "catch_all": catch_all, "reported": reported, "commits": commits,
-            "source_values": source_values}
+            "edits": edits, "catch_all": catch_all, "own_commits": own or [], "denied": denied,
+            "reported": reported, "commits": commits, "source_values": source_values}
 
 
 def transcript_lines(c):
     lines = [f"INFO  transcript: shell edits {c['shell_edits']} (reported {c['reported']})"]
     for rel, head in c["edits"]:
         lines.append(f"INFO  shell edit: {rel} ({head})")
+    where = "the agent's commits" if c.get("own_commits") else "the range"
     for rel in c["catch_all"]:
-        lines.append(f"INFO  shell edit: {rel} (changed in the range with no Edit or Write naming it)")
+        lines.append(f"INFO  shell edit: {rel} (changed in {where} with no Edit or Write naming it)")
+    if c.get("denied"):
+        lines.append(f"INFO  transcript: {c['denied']} shell write(s) refused by a permission check, not counted")
     for k in c["commits"]:
         if k["red"]:
             lines.append(f"INFO  committed on a red run: {k['sha']} (fail {k['fail']}; {k['command']})")
@@ -1558,11 +1649,17 @@ def runtime_lines(project, files):
     return {a["file"]: set(a["lines"]) for a in answers if isinstance(a, dict) and "lines" in a}
 
 
+CAPTURE_FILES = ("screens/capture.mjs", "screens/states.mjs")
+
+
 def capture_file(path):
-    """A file of the screen-change check's capture (`screens/`): CI's
-    pinned browser runs it and no test loads it, so it has no row in any
-    coverage table. The loop's own capture fixer writes it at delivery."""
-    return path.replace("\\", "/").split("/")[0] == "screens"
+    """A file of the screen-change check's capture (`screens/capture.mjs`
+    and the project's `screens/states.mjs`): CI's pinned browser runs it
+    and no test loads it, so it has no row in any coverage table. The
+    loop's own capture fixer writes it at delivery. Anything else under
+    `screens/` is code a test can load, and is measured like any other
+    (the same two files `mutation_pass.py` leaves out)."""
+    return path.replace("\\", "/") in CAPTURE_FILES
 
 
 def check_coverage(output, files, min_line, min_branch, project, lcov_path=None, added=None):
@@ -1791,6 +1888,10 @@ def main():
         elif name == "suite" and not c["passed"]:
             detail = (f" timed out after {c['timeout']:g}s" if c["timed_out"]
                       else f" exit {c['exit_code']}, summary fail count {c['summary_fail_count']}")
+            failing = c.get("failing") or []
+            if failing:
+                detail += ("; failing: " + "; ".join(json.dumps(n, ensure_ascii=False) for n in failing[:FAILING_SHOWN])
+                           + (f" (+{len(failing) - FAILING_SHOWN} more)" if len(failing) > FAILING_SHOWN else ""))
         elif name in ("typecheck", "lint"):
             print(script_line(name, c))
             continue
