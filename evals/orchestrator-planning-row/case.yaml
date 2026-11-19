@@ -1,0 +1,62 @@
+schema_version: "1.0"
+name: orchestrator-planning-row
+description: "TODO.md's P4 (0.18.0): slice 1 is fully planned, the project has a GitHub tracker with nothing open, and the slice file differs from the default branch (the plan is not merged). The orchestrator routes to the planning pull request row, not the chunk loop: it cuts a planning branch, commits the plan, runs the readiness gate, and stops before the push as the owner asked, saying the build starts once the plan's pull request is merged. No agent is launched, no slice branch is cut, no implementation skill is invoked."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. What's next? On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command). There is no network here: do everything up to the first `git push`, don't push, and tell me what you would push and what happens after.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit, Agent]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: planning-branch-cut
+    tool: Bash
+    input_match: 'git (?:switch -c|checkout -b) planning-001'
+    min: 1
+  - type: tool_used
+    name: readiness-gate-run
+    tool: Bash
+    input_match: 'readiness_check\.py'
+    min: 1
+  - type: tool_order
+    name: plan-committed-before-the-gate
+    before: {tool: Bash, input_match: 'git (?:switch -c|checkout -b) planning-001'}
+    after: {tool: Bash, input_match: 'readiness_check\.py'}
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-implementation-skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:(?:tdd-implementation-lite|chunk-runner)"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-slice-branch-cut
+    tool: Bash
+    input_match: 'git (?:switch -c|checkout -b) slice-'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: nothing-pushed
+    tool: Bash
+    input_match: '(?:^|[;&|\n]\s*|")git push\b'
+    min: 0
+    max: 0
+  - type: regex
+    name: says-the-build-waits-for-the-merge
+    target: last_message
+    pattern: 'pull request[\s\S]*merg|merg[\s\S]*pull request'
+    flags: i

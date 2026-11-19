@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Stand-in for the GitHub CLI for the planning pull request (0.18.0). Its
+# mode is the one word in `gh-mode` beside it:
+#   open   one open pull request, #9, from the planning branch of slice 1,
+#          checks green, no comments; no open issue
+#   none   nothing open at all
+# Every call is appended to gh-calls.log beside this script. Nothing
+# reaches GitHub.
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+printf '%s\n' "$*" >> "$here/gh-calls.log"
+mode="$(cat "$here/gh-mode" 2>/dev/null || echo none)"
+repo="example/library-lending"
+case "${1:-} ${2:-}" in
+  "pr list")
+    if [ "$mode" = open ]; then
+      echo "[{\"number\":9,\"headRefName\":\"planning-001-cancel-hold\",\"url\":\"https://github.com/$repo/pull/9\",\"title\":\"Plan: Staff cancel a member's hold on a title\",\"state\":\"OPEN\"}]"
+    else
+      echo "[]"
+    fi
+    ;;
+  "pr view") echo "{\"number\":9,\"url\":\"https://github.com/$repo/pull/9\",\"state\":\"OPEN\",\"headRefName\":\"planning-001-cancel-hold\",\"baseRefName\":\"main\"}" ;;
+  "pr checks") echo "✓ ci  pass  41s  https://github.com/$repo/actions/runs/2" ;;
+  "issue list") echo "[]" ;;
+  "repo view") echo "{\"defaultBranchRef\":{\"name\":\"main\"},\"nameWithOwner\":\"$repo\"}" ;;
+  "auth status") echo "Logged in to github.com account example" ;;
+  "api "*|"api")
+    case "$*" in
+      *graphql*) echo '{"data":{"repository":{"pullRequest":{"reviewThreads":{"nodes":[]}}}}}' ;;
+      *) echo "[]" ;;
+    esac
+    ;;
+  "label create"|"label list") echo "ok" ;;
+  *) echo "gh (stand-in): unsupported command: $*" >&2; exit 1 ;;
+esac

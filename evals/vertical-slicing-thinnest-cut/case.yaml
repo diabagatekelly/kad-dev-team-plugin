@@ -1,0 +1,59 @@
+schema_version: "1.0"
+name: vertical-slicing-thinnest-cut
+description: "TODO.md's P2 (0.18.0): agreed requirements for renewing a loan from the portal confirm six behaviours (the plain renewal, three refusals, renew-all, a staff override), and the request says recommended technical questions are taken, not asked. vertical-slicing writes the thinnest cut (the plain renewal with its essential refusals, at most five functional criteria), keeps renew-all and the override as lines of the slice set and out of the thin path, and writes the size line the owner reads at the planning pull request. A wider cut is the owner's to choose, never taken as recommended."
+tags: [vertical-slicing, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for a new feature are in `docs/renew-loan/`, and the requirements are agreed. Work out what we build first and save it as `docs/renew-loan/slice-001.md`. Any design or technical question you have a recommendation for is taken as recommended and recorded as decided; don't ask me those.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:vertical-slicing"'
+    min: 1
+  - type: file_exists
+    name: slice-written
+    path: docs/renew-loan/slice-001.md
+  - type: regex
+    name: size-line-written
+    target:
+      source: file
+      path: docs/renew-loan/slice-001.md
+    pattern: '\n## Size\s*\n+[^\n]*Criteria: \d+ functional; chunks expected: \d+'
+  - type: regex
+    name: at-most-five-functional-criteria
+    # The wide cut (three refusals, renew-all, the override) cannot be
+    # written in fewer than six.
+    target:
+      source: file
+      path: docs/renew-loan/slice-001.md
+    pattern: '(?:\bGiven\b[\s\S]*?){6}'
+    match: not_contains
+  - type: regex
+    name: thin-path-leaves-out-renew-all-and-the-override
+    target:
+      source: file
+      path: docs/renew-loan/slice-001.md
+    pattern: '\n## Thin path(?:(?!\n## )[\s\S])*(?:all (?:of )?(?:their|the|your) loans|every loan|override|overrid)'
+    flags: i
+    match: not_contains
+  - type: regex
+    name: the-set-holds-what-was-left-for-later
+    target:
+      source: file
+      path: docs/renew-loan/slice-001.md
+    pattern: '\n## Slice set[^\n]*\n(?:(?!\n## )[\s\S])*(?:override|all (?:of )?(?:their|the|your) loans|renew all)'
+    flags: i
+  - type: regex
+    name: does-not-reask-the-what
+    target: last_message
+    pattern: '(?:what (?:do|would) you (?:want|like)|who is the user)[^\n]*\?'
+    flags: i
+    match: not_contains
