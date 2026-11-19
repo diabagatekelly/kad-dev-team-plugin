@@ -228,6 +228,14 @@ Every constraint from the problem doc, one line each: what it forces for
 *this* unit, or why it doesn't apply here. Consequences, not quotations.
 Note any that turned out to force a capability nothing has scoped yet —
 that's a finding for `product-slicer`, not a note.
+
+## Outside systems and lasting things
+Every system outside the app this unit talks to, and every thing the app
+keeps a relationship with over time (a bank connection, a subscription,
+a booking), by its everyday name, one line each; `none` when the unit
+has neither. Names only, as the user spoke of them: no states, no
+design. It is the list `software-architect:domain-model` models before
+anything is sliced.
 ```
 
 Keep it skimmable — this document answers "what did the user actually

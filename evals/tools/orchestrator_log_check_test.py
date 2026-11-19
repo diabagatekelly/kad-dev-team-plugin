@@ -138,5 +138,37 @@ class TheSlice4Log(unittest.TestCase):
         self.assertTrue(summary[0].startswith("chunk loop (0.7.0 form or later): 2 chunks logged"), summary[0])
 
 
+SKILL = os.path.join(os.path.dirname(os.path.dirname(HERE)), "skills", "orchestrator", "SKILL.md")
+
+
+def order_findings(*routes):
+    log = "".join(f"## {i}. 2026-11-18 — row {i}\n\n**Routed to:** {r}\n**Artifact:** `planning/x.md`\n\n"
+                  for i, r in enumerate(routes, 1))
+    findings = []
+    check.check_order(check.parse_log(log)[0], check.load_table(SKILL), findings)
+    return [(level, text) for level, _, text in findings]
+
+
+class TheRowsOf0180(unittest.TestCase):
+    """The domain model row and the planning pull request row (0.18.0):
+    both are in the table, and a project that has no outside system or no
+    tracker passes over them."""
+
+    def test_a_route_to_the_domain_model_and_to_a_planning_pull_request_is_in_the_table(self):
+        found = order_findings("`product-manager:requirements-refinement`", "`software-architect:domain-model`",
+                               "`product-slicer` (`vertical-slicing` + `acceptance-criteria`)")
+        self.assertEqual([f for f in found if f[0] == "ERROR"], [], found)
+        found = order_findings("`software-architect:technology-bootstrap`",
+                               "`release-engineer:delivery` (planning pull request)", "chunk loop")
+        self.assertEqual([f for f in found if f[0] in ("ERROR", "WARN")], [], found)
+
+    def test_a_unit_with_no_outside_system_and_a_project_with_no_tracker_pass_over_them(self):
+        found = order_findings("`product-manager:requirements-refinement`",
+                               "`product-slicer` (`vertical-slicing` + `acceptance-criteria`)")
+        self.assertEqual([f for f in found if f[0] == "ERROR"], [], found)
+        found = order_findings("`devsecops-engineer:reliability-requirements`", "chunk loop")
+        self.assertEqual([f for f in found if f[0] == "ERROR"], [], found)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

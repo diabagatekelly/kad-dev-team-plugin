@@ -465,6 +465,17 @@ dialect:
 > Then every interactive element shows a visible focus indicator and the
 > tab order follows the visual order of the screen.
 
+**A criterion is for a behaviour someone could observe going wrong.**
+Write one only when a person using the slice, or whoever operates it,
+could see the difference between it holding and failing (a control a keyboard cannot reach, a change a screen reader is never told of, text that cannot be read).
+The exact words of a message, which fields a log line carries, how an
+announcement is phrased: those go under `## Design notes`, as plain
+bullets with no Given and no identifier. Builders read them; they are
+not criteria, are not walked and do not each get a test. One slice
+carried 35 criteria for one button, most of them of this kind, and each
+became a test. The document's last line is `Criteria: <n>`, and the
+pointer line you leave in the slice ends with the same count.
+
 Split criteria into what's already confirmed against the current artifact
 and what has to hold once real interaction wiring exists — the second
 group is still a real, testable commitment, just not checkable yet.
@@ -499,7 +510,9 @@ which states were covered); `## Findings` in the shared format below;
 at design time `## Accessibility acceptance criteria` (Given/When/Then,
 the criteria the slice's placeholder now points to; confirmed-now
 criteria and criteria that hold once real code exists, kept
-distinguishable); `## Not yet verifiable` (what a static mockup can't
+distinguishable), then `## Design notes` (announcement phrasing and
+wording the builder should follow, plain bullets, not criteria; omitted
+when there are none) and a last line `Criteria: <n>`; `## Not yet verifiable` (what a static mockup can't
 confirm and why, carried forward rather than silently dropped); `## Open
 questions` (anything genuinely unresolved, including any finding this
 pass couldn't get fixed, and who resolves it next: a named persona and

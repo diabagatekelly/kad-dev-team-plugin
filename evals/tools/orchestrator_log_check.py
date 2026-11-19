@@ -88,7 +88,7 @@ LOG_NAME = "orchestrator-log.md"
 # Stages the table can legitimately pass over: the scope decision is made
 # once per problem, the design system and stack once per project, and the
 # UI rows only apply to a UI-touching slice.
-SKIPPABLE = {"scope-map", "design-system", "technology-bootstrap"}
+SKIPPABLE = {"scope-map", "design-system", "technology-bootstrap", "domain-model", "delivery"}
 UI_ONLY = {"design-system", "screen-design", "accessibility-review"}
 # After a slice is implemented, the next unit starts again at requirements.
 RESTARTS = {"requirements-refinement"}

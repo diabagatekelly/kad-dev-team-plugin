@@ -1,6 +1,6 @@
 ---
 name: delivery
-description: Push a finished, reviewed slice branch, open its pull request with a reviewer-ready body, file the leftover findings as tracker issues, watch the pull request's checks after every push (a red or unsettled check is never reported as built), collect the external reviewer's comments for triage and act on the verdicts (push the fixes, reply to the declines, file the deferrals). Use at the end of the orchestrator's chunk loop (its step E, which invokes this skill after its own records commit) or when asked to deliver, push or open a pull request for a branch whose work is done; a handoff file that names E as the next action is resumed through the orchestrator, not by invoking this skill. Also the only procedure for taking a value of the owner's (a row of a file `sources.md` lists) out of a branch's history: when the owner asks for something of theirs to be replaced, scrubbed or removed from commits, nothing opens their file, greps for a value or rewrites a commit except this skill's "Removing a value from history", reached through the orchestrator whenever a flow or a handoff file is open (its E step invokes this skill with the owner's words) and directly only when none is. Owns the git and hosting mechanics only; it decides nothing about the code and never pushes to the default branch.
+description: Push a finished, reviewed slice branch, open its pull request with a reviewer-ready body, file the leftover findings as tracker issues, watch the pull request's checks after every push (a red or unsettled check is never reported as built), collect the external reviewer's comments for triage and act on the verdicts (push the fixes, reply to the declines, file the deferrals). Use at the end of the orchestrator's chunk loop (its step E, which invokes this skill after its own records commit), when the orchestrator's planning row hands over a finished plan to be opened as a small pull request of its own before any build or when asked to deliver, push or open a pull request for a branch whose work is done; a handoff file that names E as the next action is resumed through the orchestrator, not by invoking this skill. Also the only procedure for taking a value of the owner's (a row of a file `sources.md` lists) out of a branch's history: when the owner asks for something of theirs to be replaced, scrubbed or removed from commits, nothing opens their file, greps for a value or rewrites a commit except this skill's "Removing a value from history", reached through the orchestrator whenever a flow or a handoff file is open (its E step invokes this skill with the owner's words) and directly only when none is. Owns the git and hosting mechanics only; it decides nothing about the code and never pushes to the default branch.
 ---
 
 # Delivery
@@ -364,6 +364,41 @@ When the orchestrator comes back with the verdicts, act on each:
 A push brings the checks and the reviewer back: the CI watch, then the
 next round's comments, collected the same way. The orchestrator holds the round count and the cap (five);
 you collect and act, round by round, until it says the stage is done.
+
+## A planning pull request
+
+Called by the orchestrator's planning row, with a planning branch
+(`planning-<nnn>-<slug>`), the default branch, the target directory, the
+slice file and the slice's `taken as recommended` bullets. The plan goes
+to the owner as a small pull request of its own; the build starts only
+once they have merged it. Sections 3 to 5 do not apply; this is the
+whole procedure:
+
+1. **Preconditions** 1, 2, 3 and 5 of section 1 (there is no suite to
+   run: nothing but documents changed). One more: `git diff --name-only
+   '<default branch>'..HEAD` lists only files under the target
+   directory. Anything else stops this skill and is reported under
+   **Refused**: a plan's pull request carries no code.
+2. **Push**, as section 2.
+3. **The pull request**, its body written here from the documents,
+   nothing reworded: the slice's `## Thin path`; **Size**, the slice's
+   size line, each pointer line's criteria count, and their total;
+   **Domain states**, the slice's section when it has one; **Taken as
+   recommended**, the bullets you were handed, one line each, so the
+   owner can overturn one in a comment; **Open decisions**, the section
+   `deferrals.py` writes from the slice file (section 3's command); the
+   footer line. Title: `Plan: <the slice's title>`. `gh pr create` as in
+   section 3; a pull request that already exists for the branch has its
+   body edited.
+4. **CI watch**, as after any push.
+5. **Report**: the pull request's number and URL, the checks' state, the
+   size line, and one sentence: the build of this slice starts once the
+   pull request is merged. No issue is filed and no reviewer is waited
+   for.
+
+A later push to the same branch (the owner's correction, revised by the
+document's owner and committed by the orchestrator) is steps 1, 2 and 4
+again, with the body's Size part brought up to date.
 
 ## Removing a value from history
 

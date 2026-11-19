@@ -23,8 +23,8 @@ isn't this skill's.
 
 **Your file is the artifact, and the only document you edit.** It is
 `reliability-slice-<nnn>.md` in the target directory. You may replace the
-slice's reliability placeholder line with a one-line pointer to it and
-nothing more: not the story (`docs-writer`'s, re-synced by
+slice's reliability placeholder line with a one-line pointer to it, ending
+with its criteria count (`(<n> criteria)`), and nothing more: not the story (`docs-writer`'s, re-synced by
 `user-story-writeup` on the next re-inspection), not another criterion,
 not any other section or document, whatever the invoking instructions
 say. A slice criterion your fork changes (a narrowing to "posted"
@@ -151,6 +151,16 @@ Concrete, slice-specific, not a taxonomy:
   shipped one, and six reviewers passed the code because the code met
   the criterion, incident 41).
 
+**When the target directory has a `domain-model.md`**, read the tables
+of the things this slice touches (the slice's `## Domain states` names
+them). Every state the slice can leave a thing in is a failure mode
+here: its intended behaviour is the model's way out, as something the
+person can do in this slice, or the state is one the model marks
+`unsupported`, quoted under `## Out of scope for this slice`. A state
+you find that the model lacks (a refusal that never clears is the usual
+one) is a backward route to `software-architect:domain-model`, written
+under Open questions, never a row only this document holds.
+
 For each one that's plausible, decide the intended behavior. That decision
 is what becomes a criterion.
 
@@ -227,6 +237,17 @@ Not:
 The second prescribes a mechanism, which is `software-architect`'s and the
 implementer's territory, and it isn't checkable as a user-visible outcome.
 Name the behavior; let the implementation follow.
+
+**A criterion is for a behaviour someone could observe going wrong.**
+Write one only when a person using the slice, or whoever operates it,
+could see the difference between it holding and failing (data lost or shown twice, a dead end, a failure nobody could tell apart from another).
+The exact words of a message, which fields a log line carries, how an
+announcement is phrased: those go under `## Design notes`, as plain
+bullets with no Given and no identifier. Builders read them; they are
+not criteria, are not walked and do not each get a test. One slice
+carried 35 criteria for one button, most of them of this kind, and each
+became a test. The document's last line is `Criteria: <n>`, and the
+pointer line you leave in the slice ends with the same count.
 
 **Every retry, wait, poll, give-up and stale window gets its number.** A
 criterion that says the app "retries a few times", "waits a while" or
@@ -307,6 +328,11 @@ The questions someone must be able to answer, and what that requires.
 ## Acceptance criteria
 Given/When/Then, alongside the slice's other criteria.
 
+## Design notes
+Wording, log detail and phrasing the builder should follow: plain
+bullets, no Given, no identifier. Not criteria. Omit when there are
+none.
+
 ## Decisions
 Each fork: the recommendation, the alternatives rejected, and its status —
 **approved: <choice>** as the user gave it, or **pending** for one the
@@ -338,6 +364,8 @@ reason it isn't this stage's and to whom; a question that bounces from
 stage to stage until the builder meets it has no owner, which is the one
 state this section exists to prevent. A slice criterion your fork
 narrows goes here as a finding for `product-slicer`.
+
+Criteria: <n>
 ```
 
 When the stop rule applies instead (the slice can't meet its target

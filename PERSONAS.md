@@ -340,6 +340,19 @@ finds none; repository creation (2) and deployment are phase 2
 (`repo-bootstrap`, `deployment`). Gap 4, infrastructure security, stays
 open until a deployment exists to review.
 
+**0.18.0 (2026-11-18), two rows added to the spine.** After the
+requirement and before slicing, `software-architect:domain-model`: one
+table per outside system or lasting thing a requirement names, every
+state with its way out, once per project. Three slices on the first
+project each met one more state of a bank connection after shipping, and
+each dead end became a High and then a slice. After the stack and before
+the build, with a GitHub tracker: the plan goes up as a small pull
+request of its own (`release-engineer:delivery`, "A planning pull
+request") and the loop waits for the owner's merge. The slicer offers
+the thinnest cut first and asks before a wider one, and the three
+criteria stages keep wording and log detail in design notes, not
+criteria: one slice had 35 criteria for one button.
+
 ## Deferred / phase-2 ideas
 
 - **Orchestrator v2 — quarantine, grade, combine. Built, not deferred

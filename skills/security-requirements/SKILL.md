@@ -33,8 +33,8 @@ the boundary is missing and leave the structure alone.
 
 **Your file is the artifact, and the only document you edit.** It is
 `security-slice-<nnn>.md` in the target directory. You may replace the
-slice's security placeholder line with a one-line pointer to it and
-nothing more: not the story (`docs-writer`'s, re-synced by
+slice's security placeholder line with a one-line pointer to it, ending
+with its criteria count (`(<n> criteria)`), and nothing more: not the story (`docs-writer`'s, re-synced by
 `user-story-writeup` on the next re-inspection), not another criterion,
 not any other section or document, whatever the invoking instructions
 say. A slice criterion your fork changes (a narrowing, a dropped case) is
@@ -222,6 +222,17 @@ The second isn't checkable and doesn't say what "secure" means — it's the
 placeholder restated, which is the exact thing this skill exists to
 replace.
 
+**A criterion is for a behaviour someone could observe going wrong.**
+Write one only when a person using the slice, or whoever operates it,
+could see the difference between it holding and failing (a secret in a log, another person's data shown, a request accepted from the wrong origin).
+The exact words of a message, which fields a log line carries, how an
+announcement is phrased: those go under `## Design notes`, as plain
+bullets with no Given and no identifier. Builders read them; they are
+not criteria, are not walked and do not each get a test. One slice
+carried 35 criteria for one button, most of them of this kind, and each
+became a test. The document's last line is `Criteria: <n>`, and the
+pointer line you leave in the slice ends with the same count.
+
 Cover the failure path, not just the success path. What happens when the
 connection fails, the token expires, the third party returns an error —
 these are where sensitive data leaks in practice, because error paths get
@@ -278,6 +289,11 @@ with the reason.
 Given/When/Then, sitting alongside the slice's functional criteria.
 Success paths and failure paths.
 
+## Design notes
+Wording, log detail and phrasing the builder should follow: plain
+bullets, no Given, no identifier. Not criteria. Omit when there are
+none.
+
 ## Decisions
 Each fork: the recommendation, the alternatives rejected, and its status —
 **approved: <choice>** as the user gave it, or **pending** for one the
@@ -298,6 +314,8 @@ Security concerns that are real but belong elsewhere, and where they go.
 Anything genuinely unresolved, and who resolves it: a named persona and
 skill, never the implementer or "implementation time". A slice criterion
 your fork narrows goes here as a finding for `product-slicer`.
+
+Criteria: <n>
 ```
 
 When the stop rule applies instead (the slice can't be made safe without a
