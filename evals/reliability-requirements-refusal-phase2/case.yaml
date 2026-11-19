@@ -49,6 +49,8 @@ graders:
   - type: regex
     name: own-two-checks-pass-in-the-last-run
     # D4: the script's last output in the trace has both of this skill's
-    # checks passing (a line break before each, the two characters `\n`).
+    # checks passing. Each line opens after a line break (the two
+    # characters `\n`) or opens the output (a quote): a run that pipes the
+    # script through `grep` prints the first check with nothing before it.
     target: trace
-    pattern: '\\nPASS  numbers-on-waits(?![\s\S]*\\nFAIL  numbers-on-waits)[\s\S]*\\nPASS  unusable-reply-row(?![\s\S]*\\nFAIL  unusable-reply-row)'
+    pattern: '(?:\\n|")PASS  numbers-on-waits(?![\s\S]*(?:\\n|")FAIL  numbers-on-waits)[\s\S]*(?:\\n|")PASS  unusable-reply-row(?![\s\S]*(?:\\n|")FAIL  unusable-reply-row)'

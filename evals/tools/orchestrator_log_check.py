@@ -352,6 +352,10 @@ FIX = re.compile(r"\br(\d+) fix(?:es)?\s+`?(" + SHA + r"(?:\.\." + SHA + r")?)`?
                  r"|\s+gate\s+`?PASS)")
 
 
+BUILDERS_FIX = re.compile(r"\bfixes\s+builders\s+`?\d+`?(?:\s+opus\s+`?\d+`?)?\s*\(\s*`?(" + SHA + r")")
+R1_AFTER_BUILDERS = re.compile(r"\br1\s+`?" + COUNTS + r"`?(?:\s*\(reg\s+`?(\d+)`?,\s*pre\s+`?(\d+)`?(?:,\s*first\s+`?(\d+)`?)?\))?")
+
+
 def rounds_of(text):
     """The fix-round segments on a C, D or E line: [(round, sha, counts, reg, pre)]; counts is
     (C, H, M, L-or-0) or None for a v4 `r2 fix <sha> gate PASS`; reg/pre None when absent.
@@ -368,6 +372,17 @@ def rounds_of(text):
         first = int(m.group(9)) if m.group(9) else 0
         out.append((int(m.group(1)), m.group(2), counts,
                     int(m.group(7)) if m.group(7) else None, int(m.group(8)) + first if m.group(8) else None))
+    if not any(r[0] == 1 for r in out):
+        # The light cadence's first fix at D is the chunks' own builders, several commits with no one
+        # sha to name: `fixes builders <n> opus <m> (<sha> <sha> …)`, then `r1 <C/H/M> (reg r, pre p)`.
+        # That is round 1, its first commit the one returned.
+        by_builders = BUILDERS_FIX.search(text)
+        review = R1_AFTER_BUILDERS.search(strip_parens(text))
+        if by_builders and review:
+            counts = tuple(int(review.group(i)) if review.group(i) is not None else 0 for i in range(1, 5))
+            first = int(review.group(7)) if review.group(7) else 0
+            out.insert(0, (1, by_builders.group(1), counts, int(review.group(5)) if review.group(5) else None,
+                           int(review.group(6)) + first if review.group(6) else None))
     return out
 
 
@@ -441,7 +456,9 @@ def check_rounds(tag, what, text, findings, v4=False):
 
 def reviewers_of(text):
     """The D line's `reviewers <initials>` or a v4 C line's `review <lenses>`."""
-    m = re.search(r"\breview(?:ers)?\s+`?([a-z][a-z ]*)`?", text)
+    # `reviewers` first: a D line may say `comments review <file>` before it, and that file's
+    # name was read as the one reviewer.
+    m = re.search(r"\breviewers\s+`?([a-z][a-z ]*)`?", text) or re.search(r"\breview\s+`?([a-z][a-z ]*)`?", text)
     return m.group(1).split() if m else None
 
 
@@ -456,6 +473,24 @@ def cadence_of(a_text):
     (a log older than the field, or one whose A line is in another entry)."""
     value = field(a_text, "cadence")
     return value.split()[0] if value else None
+
+
+CADENCE_CHANGE = re.compile(r"\bcadence" + r"(?:\s*[—–:-]+)?\s*" + r"`?(loop|light)`?\s+from\s+chunk\s+`?(\d+)")
+
+
+def cadence_changes(body):
+    """[(first chunk, cadence)] for every `cadence <loop|light> from chunk <k>` the entry states
+    after its A line (the owner's word in the middle of a loop, written as a bullet), in order."""
+    return [(int(m.group(2)), m.group(1)) for m in CADENCE_CHANGE.finditer(body)]
+
+
+def cadence_for(a_text, changes, k):
+    """The cadence chunk `k` ran under: the A line's, or the last change that names a chunk at or before it."""
+    cadence = cadence_of(a_text)
+    for first, value in changes:
+        if first <= k:
+            cadence = value
+    return cadence
 
 
 def is_v4(a_text, c_lines, d_text):
@@ -520,6 +555,9 @@ def check_chunk_loop(e, findings):
     elif ns and planned is not None and ns != {planned}:
         findings.append(("ERROR", tag, f"C lines say {ns.pop()} chunks, B planned {planned}"))
     total_rounds = reg = pre = caps = with_findings = 0
+    changes = cadence_changes(body)
+    for first, value in changes:
+        findings.append(("INFO", tag, f"cadence {value} from chunk {first} (changed after the A line)"))
     chunks_logged = {}
     always = ALWAYS_V4 if v4 else ALWAYS_V3
     for k, n, text in c_lines:
@@ -534,7 +572,7 @@ def check_chunk_loop(e, findings):
             continue
         revs = reviewers_of(text)
         # an A line that states no cadence is not held against the chunk
-        looped = cadence_of(a_text) == "loop"
+        looped = cadence_for(a_text, changes, int(k)) == "loop"
         if revs == ["none"] and looped:
             findings.append(("ERROR", tag, f"{what}: `review none` under cadence `loop`; only `light` leaves a chunk unreviewed"))
             continue
@@ -631,7 +669,8 @@ def check_chunk_loop(e, findings):
             # Green on another commit says nothing of the one delivered: the
             # last push on the line (a CI or review fix after `pushed`) is it.
             green = checks.group(1).split()[-1]
-            heads = re.findall(r"(?:pushed|fix)\s+`?\(?`?(" + SHA + r")", text)
+            # the baselines commit is a push of its own, after the last fix
+            heads = re.findall(r"(?:pushed|fix|baselines)\s+`?\(?`?(" + SHA + r")", text)
             if heads and not any(h.startswith(green) or green.startswith(h) for h in heads):
                 findings.append(("ERROR", tag, f"E line: checks are green on `{green}`, which is neither the pushed commit nor a later fix on the line"))
         ext = [int(m.group(1)) for m in re.finditer(r"\bext r(\d+)\s+`?\d+`?c:", text)]
@@ -643,7 +682,7 @@ def check_chunk_loop(e, findings):
             findings.append(("ERROR", tag, "E line: external rounds don't say how they ended (`clean r<i>` or `cap: <open>`)"))
         total_rounds += len(ext)
     if c_lines or d_lines:
-        findings.append(("INFO", tag, f"{'0.7.0' if v4 else '0.6.0'} loop: {len(c_lines)} chunk{'s' if len(c_lines) != 1 else ''} logged, "
+        findings.append(("INFO", tag, f"{'chunk loop (0.7.0 form or later)' if v4 else '0.6.0 loop'}: {len(c_lines)} chunk{'s' if len(c_lines) != 1 else ''} logged, "
                          f"{total_rounds} fix round{'s' if total_rounds != 1 else ''} "
                          f"({reg} regression{'s' if reg != 1 else ''}, {pre} pre-existing), {caps} cap hit{'s' if caps != 1 else ''}"))
     return sidecar, nnn, chunks_logged, (with_findings, reg, pre)

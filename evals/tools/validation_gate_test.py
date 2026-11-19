@@ -196,13 +196,177 @@ class ATestAFixRenamed(unittest.TestCase):
         self.assertEqual(gate.done_when_tests(self.plan(fixes), 2), ["lists my holds"])
 
 
+    def two_sections(self, chunk_1_fixes="", chunk_2_fixes=""):
+        """The report as a real one stands: a plan section per chunk, then a
+        report section per chunk under the same number, where the Fix lines go."""
+        d = tempfile.mkdtemp()
+        self.addCleanup(__import__("shutil").rmtree, d, True)
+        path = os.path.join(d, "implementation-report.md")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("# Implementation\n\n## Chunk plan\n\n### Chunk 1\n\n"
+                    '- **Done when**: "lists my holds" and seam "cancels my hold" pass\n\n'
+                    '### Chunk 2\n\n- **Done when**: "lists my holds" and "sorts them by date" pass\n\n'
+                    "### Chunk 1: cancel a hold\n\n- **Commit**: abc1234\n" + chunk_1_fixes
+                    + "\n### Chunk 2: the list\n\n- **Commit**: def5678\n" + chunk_2_fixes)
+        return path
+
+    def test_a_rename_is_read_from_the_chunks_report_section_too(self):
+        fixes = '- **Fix r0**: this commit; renamed test "cancels my hold" → "cancels my hold and frees the copy"\n'
+        self.assertEqual(gate.done_when_tests(self.two_sections(fixes), 1), ["lists my holds", "cancels my hold and frees the copy"])
+
+    def test_another_chunks_rename_of_the_same_name_is_not_this_chunks(self):
+        # S5 (deferred from the external review of #67): the map was read from the whole report, so chunk 2's
+        # rename of a title both chunks quote sent chunk 1's gate looking for chunk 2's new name
+        one = '- **Fix r0**: this commit; renamed test "lists my holds" → "lists my holds, newest first"\n'
+        two = '- **Fix r0**: this commit; renamed test "lists my holds" → "lists my holds by date"\n'
+        report = self.two_sections(one, two)
+        self.assertEqual(gate.done_when_tests(report, 1)[0], "lists my holds, newest first")
+        self.assertEqual(gate.done_when_tests(report, 2)[0], "lists my holds by date")
+
+    def test_a_rename_declared_under_another_chunk_applies_when_this_chunk_declares_none(self):
+        # a slice-level fixer writes its Fix line under the last chunk it touched
+        two = '- **Fix r1**: this commit; renamed test "cancels my hold" → "cancels my hold and says so"\n'
+        self.assertEqual(gate.done_when_tests(self.two_sections("", two), 1)[1], "cancels my hold and says so")
+
+
 class TheCaptureFiles(unittest.TestCase):
-    def test_only_the_screens_folder_is_exempt_from_coverage(self):
-        # the loop's own capture fixer writes screens/states.mjs at delivery, and no test can load it
+    def test_only_the_captures_two_files_are_exempt_from_coverage(self):
+        # the loop's own capture fixer writes screens/states.mjs at delivery, and no test can load it;
+        # anything else under screens/ is code a test can load (S5, deferred from the external review of #67)
         self.assertTrue(gate.capture_file("screens/states.mjs"))
         self.assertTrue(gate.capture_file("screens/capture.mjs"))
+        self.assertFalse(gate.capture_file("screens/format-amount.mjs"))
+        self.assertFalse(gate.capture_file("screens/lib/states.mjs"))
         self.assertFalse(gate.capture_file("src/screens/list.ts"))
         self.assertFalse(gate.capture_file("src/web/server.ts"))
+
+
+def tool_use(i, name, **inp):
+    return {"type": "assistant", "message": {"content": [{"type": "tool_use", "id": f"t{i}", "name": name, "input": inp}]}}
+
+
+def tool_result(i, text, error=False):
+    return {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": f"t{i}", "content": text, "is_error": error}]}}
+
+
+DENIED = ("Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Undermining Oversight]. "
+          "If you have other tasks that don't depend on this action, continue working on those.")
+
+
+class TheShellEditCount(unittest.TestCase):
+    """S3 (the slice 4 review, F7). A chunk's builder commits four files; a
+    gate fixer then commits one. The fix gate replays the fixer's
+    transcript over the same base: the builder's files are not the
+    fixer's shell edits, and a shell write the permission classifier
+    refused never happened."""
+
+    def setUp(self):
+        self.tmp = os.path.realpath(tempfile.mkdtemp())
+        self.addCleanup(__import__("shutil").rmtree, self.tmp, True)
+        git(self.tmp, "init", "-q")
+        git(self.tmp, "config", "user.name", "t")
+        git(self.tmp, "config", "user.email", "t@example.test")
+        git(self.tmp, "config", "commit.gpgsign", "false")
+        os.makedirs(os.path.join(self.tmp, "lending"))
+        self.write("lending/hold.py", "A = 1\n")
+        self.base = self.commit("base")
+        for name in ("lending/hold.py", "lending/queue.py", "lending/copy.py", "lending/member.py"):
+            self.write(name, "B = 2\n")
+        self.build = self.commit("the build")
+        self.write("lending/test_hold.py", "def test_hold(): pass\n")
+        self.fix = self.commit("the gate fix")
+
+    def write(self, rel, text):
+        with open(os.path.join(self.tmp, rel), "w", encoding="utf-8") as f:
+            f.write(text)
+
+    def commit(self, message):
+        git(self.tmp, "add", "-A")
+        git(self.tmp, "commit", "-qm", message)
+        return subprocess.run([gate.find_git(), "-C", self.tmp, "rev-parse", "--short", "HEAD"],
+                              capture_output=True, text=True, check=True).stdout.strip()
+
+    def transcript(self, rows):
+        path = os.path.join(self.tmp, "agent.jsonl")
+        with open(path, "w", encoding="utf-8") as f:
+            for row in rows:
+                f.write(json.dumps(row) + "\n")
+        return path
+
+    def fixer_rows(self, edited=True):
+        rows = []
+        if edited:
+            rows += [tool_use(1, "Edit", file_path=os.path.join(self.tmp, "lending", "test_hold.py"), old_string="x", new_string="y"),
+                     tool_result(1, "The file has been updated.")]
+        rows += [tool_use(2, "Bash", command='git add lending/test_hold.py && git commit -q -m "Register the test" && git rev-parse --short HEAD'),
+                 tool_result(2, self.fix + "\n M planning/orchestrator-log.md"),
+                 {"type": "assistant", "message": {"content": [{"type": "text", "text": f"Commit {self.fix}; shell edits 0."}]}}]
+        return rows
+
+    def test_a_fix_gate_counts_the_fixers_own_commits_not_the_builders_files(self):
+        c = gate.check_transcript(self.tmp, self.transcript(self.fixer_rows()), self.base, "true")
+        self.assertEqual(c["catch_all"], [])
+        self.assertEqual(c["shell_edits"], 0)
+
+    def test_a_file_of_the_agents_own_commit_that_no_edit_names_is_still_counted(self):
+        c = gate.check_transcript(self.tmp, self.transcript(self.fixer_rows(edited=False)), self.base, "true")
+        self.assertEqual(c["catch_all"], ["lending/test_hold.py"])
+        self.assertEqual(c["shell_edits"], 1)
+        self.assertIn("INFO  shell edit: lending/test_hold.py (changed in the agent's commits with no Edit or Write naming it)",
+                      gate.transcript_lines(c))
+
+    def test_a_transcript_that_names_no_commit_is_read_over_the_whole_range_as_before(self):
+        rows = [tool_use(1, "Bash", command="echo hello"), tool_result(1, "hello")]
+        c = gate.check_transcript(self.tmp, self.transcript(rows), self.base, "true")
+        self.assertEqual(len(c["catch_all"]), 5)
+        self.assertIn("INFO  shell edit: lending/copy.py (changed in the range with no Edit or Write naming it)", gate.transcript_lines(c))
+
+    def test_a_shell_write_the_classifier_refused_is_not_counted_and_one_that_ran_is(self):
+        rows = self.fixer_rows() + [
+            tool_use(3, "Bash", command="cp lending/hold.py /tmp/x && sed -i '' 's/A/B/' lending/hold.py"), tool_result(3, DENIED, error=True),
+            tool_use(4, "Bash", command="cat >> lending/test_hold.py <<'E'\nx = 1\nE"), tool_result(4, DENIED, error=True),
+            tool_use(5, "Bash", command="sed -i '' 's/B/C/' lending/queue.py"), tool_result(5, ""),
+        ]
+        c = gate.check_transcript(self.tmp, self.transcript(rows), self.base, "true")
+        self.assertEqual([rel for rel, _ in c["edits"]], ["lending/queue.py"])
+        self.assertEqual(c["shell_edits"], 1)
+        self.assertEqual(c["denied"], 2)
+        self.assertIn("INFO  transcript: 2 shell write(s) refused by a permission check, not counted", gate.transcript_lines(c))
+
+
+class TheFailingTestsName(unittest.TestCase):
+    """S4 (the slice 4 review, F16): `suite exit 1, summary fail count 1`
+    cost two full suite runs to learn which test."""
+
+    NODE = ("✔ lists my holds (1.2ms)\n✖ refuses a hold that is not mine (3.4ms)\n✖ seam \"cancels my hold\" (12ms)\n"
+            "ℹ tests 3\nℹ pass 1\nℹ fail 2\n\n✖ failing tests:\n\ntest at test/hold.test.ts:4:1\n"
+            "✖ refuses a hold that is not mine (3.4ms)\n  AssertionError\n")
+
+    def test_the_names_are_read_once_each_from_the_runners_output(self):
+        self.assertEqual(gate.failing_tests(self.NODE), ["refuses a hold that is not mine", 'seam "cancels my hold"'])
+        self.assertEqual(gate.failing_tests("not ok 3 - refuses a hold # TODO\nFAILED tests/test_hold.py::test_refuses\n"),
+                         ["refuses a hold", "tests/test_hold.py::test_refuses"])
+        self.assertEqual(gate.failing_tests("ℹ fail 0\n"), [])
+
+    def test_the_gates_suite_line_names_them(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = os.path.realpath(tmp)
+            git(tmp, "init", "-q")
+            git(tmp, "config", "user.name", "t")
+            git(tmp, "config", "user.email", "t@example.test")
+            git(tmp, "config", "commit.gpgsign", "false")
+            with open(os.path.join(tmp, "out.txt"), "w", encoding="utf-8") as f:
+                f.write(self.NODE)
+            with open(os.path.join(tmp, "run.py"), "w", encoding="utf-8") as f:
+                f.write("import sys\nsys.stdout.reconfigure(encoding='utf-8')\nprint(open('out.txt', encoding='utf-8').read())\nsys.exit(1)\n")
+            git(tmp, "add", "-A")
+            git(tmp, "commit", "-qm", "base")
+            with open(os.path.join(tmp, "hold.py"), "w", encoding="utf-8") as f:
+                f.write("A = 1\n")
+            r = subprocess.run([sys.executable, "-I", SCRIPT, "--project", tmp, "--base", "HEAD", "--test-cmd", f"{sys.executable} run.py"],
+                               capture_output=True, text=True)
+            self.assertIn('FAIL  suite exit 1, summary fail count 2; failing: "refuses a hold that is not mine"; "seam \\"cancels my hold\\""',
+                          r.stdout)
 
 
 if __name__ == "__main__":

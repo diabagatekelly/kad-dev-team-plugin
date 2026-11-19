@@ -130,6 +130,26 @@ the orchestrator sees what is carried without opening a report:
     ...
     standing <C>/<H>/<M>
 
+**A line past the end of its file** (with `--range`): a location whose
+line is greater than the file's length at the fix's head names no line
+of it. One `location: <file>:<line> is past the end of the file …` line
+is printed and the finding is classed by its file alone, as one that
+names no line.
+
+**What became of a round's findings** (`--resolve --chunk <k> --round
+<i> [--fixed <sha…>] [--declined <title> <reason> …]`, after the round's
+fixer): every Critical, High and Medium row of that chunk and round is
+marked `"resolution": "fixed"` with the commit in `fix`, except those a
+`--declined` names (the whole title, or a part of it that names one
+finding), which get `"resolution": "declined"` and the reason in
+`"declined"`. A declined finding stands whatever its class, and
+`--standing` lists it with its reason; a pre-existing or last-fix finding
+marked fixed no longer stands. A round never resolved is as before.
+Printed last: `resolved <k> r<i>: fixed <n>, declined <m>`. Exit 1, and
+nothing written, when the round has no such row or a title names no
+finding or several. Recording a report again replaces its rows, and with
+them their resolution: resolve after the last recording.
+
 Exit 0 after any parsed report, a report with no finding included. Exit 1
 when a report file is missing; when a report holds finding-shaped blocks
 (a Location, a What's happening or a Suggested fix under a heading) and
@@ -145,6 +165,8 @@ Usage: python3 -I ${CLAUDE_SKILL_DIR}/scripts/rounds_record.py --sidecar <path>
            [--project <root> --range <before>..<after>]
            [--last] [--fix <sha>] [--fixer <agent id>] [--turns <n>] [--json <out>]
        python3 -I .../rounds_record.py --sidecar <path> --standing [--chunk <k>]
+       python3 -I .../rounds_record.py --sidecar <path> --resolve --chunk <k|D|pr> --round <i>
+           [--fixed <sha…>] [--declined <title> <reason> ...] [--fixer <agent id>]
 """
 import argparse
 import json
@@ -359,7 +381,22 @@ def first_seen(report):
     return not os.path.isfile(os.path.join(os.path.dirname(os.path.abspath(report)), ROUND_IN_NAME.sub("-r0-", name)))
 
 
-def classify(finding, reviewer, changed):
+def file_length(project, ref, path):
+    """Lines of `path` at `ref`, or None when it cannot be read there."""
+    proc = subprocess.run([find_git(), "show", f"{ref}:{path}"], cwd=project, capture_output=True)
+    if proc.returncode != 0:
+        return None
+    return proc.stdout.count(b"\n") + (1 if proc.stdout and not proc.stdout.endswith(b"\n") else 0)
+
+
+def classify(finding, reviewer, changed, length_of=None):
+    """`length_of(path)` gives the file's line count at the fix's head. A
+    line past it is no line of the file (one re-reviewer read the tests
+    through a truncated diff and cited positions in its output): it is
+    said, and the finding is classed by its file alone, as one that names
+    no line. Before this, such a finding fell outside every hunk and was
+    filed pre-existing: two regressions stood, and became issues after a
+    second fixer had fixed them."""
     if OWED.match(finding["title"] or ""):
         return "owed"
     if changed is None:
@@ -368,9 +405,16 @@ def classify(finding, reviewer, changed):
         return "regression"
     if finding["file"] is None or finding["file"] not in changed:
         return "pre-existing"
-    if finding["line"] is None:
+    line = finding["line"]
+    if line is not None and length_of is not None:
+        length = length_of(finding["file"])
+        if length is not None and line > length:
+            print(f"location: {finding['file']}:{line} is past the end of the file ({length} lines at the fix's head): "
+                  f"classed by the file alone — {finding['title']}")
+            line = None
+    if line is None:
         return "regression" if changed[finding["file"]] else "pre-existing"  # the file only had lines moved into it
-    lo, hi = finding["line"], finding["line_end"] or finding["line"]
+    lo, hi = line, finding["line_end"] or line
     return "regression" if any(a <= hi and lo <= b for a, b in changed[finding["file"]]) else "pre-existing"
 
 
@@ -418,6 +462,13 @@ def record(a):
         return 1
 
     changed = hunks(a.project, a.range) if a.range else None
+    lengths = {}
+
+    def length_of(path):
+        if path not in lengths:
+            lengths[path] = file_length(a.project, a.range.split("..")[-1] or "HEAD", path)
+        return lengths[path]
+
     rows, failed, smoke_seen, walk_seen = [], False, False, False
     for report, reviewer in reports:
         findings, shaped, result = parse_report(report)
@@ -465,7 +516,7 @@ def record(a):
                          "file": f["file"], "line": f["line"],
                          "class": ("last-fix" if a.last and f["severity"] in ACTIONABLE and not OWED.match(f["title"] or "")
                                    else "first-seen" if first_look and not OWED.match(f["title"] or "")
-                                   else classify(f, reviewer, changed)),
+                                   else classify(f, reviewer, changed, length_of)),
                          "fix": a.fix, "fixer": a.fixer, "turns": a.turns, "report": key,
                          "session": a.session or None})
 
@@ -528,19 +579,82 @@ def record(a):
     return 1 if failed else 0
 
 
+def stands(row):
+    """A pre-existing, last-fix or owed finding stands unless a later fixer
+    cleared it; a finding of any class a fixer declined stands too."""
+    if row.get("resolution") == "fixed":
+        return False
+    return row.get("resolution") == "declined" or row.get("class") in ("pre-existing", "last-fix", "owed")
+
+
+def resolve(a):
+    """`--resolve`: what became of one round's Critical, High and Medium
+    after its fixer. Every such row of the chunk and round is marked
+    `resolution: fixed` with `--fixed`'s commit, except the ones a
+    `--declined <title> <reason>` names (the whole title, or a part of it
+    that names one finding), which are marked `declined` with the reason
+    and stand. Nothing is written when a title names no finding or more
+    than one."""
+    raws = load_sidecar(a.sidecar)
+    parsed = [row_of(raw) for raw in raws]
+    chunk = chunk_value(a.chunk)
+    idx = [n for n, r in enumerate(parsed)
+           if r and r.get("kind") != "criterion" and r.get("chunk") == chunk and r.get("round") == a.round
+           and r.get("severity") in ACTIONABLE and r.get("class") != "owed"]
+    if not idx:
+        print(f"resolve: no finding recorded for chunk {a.chunk} round {a.round} in {a.sidecar}")
+        return 1
+    declined, bad = {}, False
+    for title, reason in a.declined or []:
+        want = title.strip().lower()
+        hits = [n for n in idx if (parsed[n].get("title") or "").strip().lower() == want] \
+            or [n for n in idx if want in (parsed[n].get("title") or "").lower()]
+        if len(hits) != 1:
+            print(f'resolve: --declined "{title}" names {"no finding" if not hits else str(len(hits)) + " findings"} '
+                  f"of chunk {a.chunk} round {a.round}")
+            bad = True
+            continue
+        declined[hits[0]] = reason.strip()
+    if bad:
+        return 1
+    fixed = 0
+    for n in idx:
+        row = parsed[n]
+        if n in declined:
+            row.update({"resolution": "declined", "declined": declined[n], "fix": None})
+            print(f"declined: {row['severity']} — {row.get('title')} ({where(row)}): {declined[n]}")
+        elif a.fixed:
+            row.update({"resolution": "fixed", "fix": a.fixed})
+            row.pop("declined", None)
+            fixed += 1
+        else:
+            continue
+        if a.fixer:
+            row["fixer"] = a.fixer
+        raws[n] = json.dumps(row, ensure_ascii=False)
+    tmp = a.sidecar + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        for raw in raws:
+            f.write(raw + "\n")
+    os.replace(tmp, a.sidecar)
+    print(f"resolved {a.chunk} r{a.round}: fixed {fixed}, declined {len(declined)}")
+    return 0
+
+
 def list_standing(a):
     rows = [r for r in (row_of(raw) for raw in load_sidecar(a.sidecar)) if r]
     for r in rows:
         if r.get("kind") == "criterion" and r.get("result") == "NOT REACHABLE" and (a.chunk is None or str(r.get("chunk")) == a.chunk):
             print(f"walk: NOT REACHABLE — {r.get('criterion')} ({r.get('how')})")
     rows = [r for r in rows if r.get("kind") != "criterion"]
-    rows = [r for r in rows if r.get("class") in ("pre-existing", "last-fix", "owed") and r.get("severity") in ACTIONABLE]
+    rows = [r for r in rows if stands(r) and r.get("severity") in ACTIONABLE]
     if a.chunk is not None:
         rows = [r for r in rows if str(r.get("chunk")) == a.chunk]
     order = {s: n for n, s in enumerate(ACTIONABLE)}
     rows.sort(key=lambda r: (str(r.get("chunk")).rjust(4), order[r["severity"]], r.get("round", 0)))
     for r in rows:
-        print(f"chunk {r.get('chunk')} r{r.get('round')} {r['severity']} — {r.get('title')} ({where(r)}) [{r.get('reviewer')}]")
+        why = f"; declined: {r['declined']}" if r.get("resolution") == "declined" else ""
+        print(f"chunk {r.get('chunk')} r{r.get('round')} {r['severity']} — {r.get('title')} ({where(r)}) [{r.get('reviewer')}]{why}")
     print("standing " + "/".join(str(sum(1 for r in rows if r["severity"] == s)) for s in ACTIONABLE))
     return 0
 
@@ -562,12 +676,21 @@ def main():
     p.add_argument("--json", help="also write the rows and counts here")
     p.add_argument("--standing", action="store_true", help="list the pre-existing and owed Critical/High/Medium rows instead")
     p.add_argument("--session", default=os.environ.get("CLAUDE_CODE_SESSION_ID"), help="the session recording this round (default: CLAUDE_CODE_SESSION_ID)")
+    p.add_argument("--resolve", action="store_true",
+                   help="mark what became of the round's Critical/High/Medium rows (with --chunk, --round, --fixed and/or --declined)")
+    p.add_argument("--fixed", help="with --resolve: the fix commit(s); every row of the round not declined is marked fixed by it")
+    p.add_argument("--declined", action="append", nargs=2, metavar=("TITLE", "REASON"),
+                   help="with --resolve: a finding its fixer did not fix (its title, or a part naming one finding) and why; it stands (repeatable)")
     a = p.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if a.standing:
         return list_standing(a)
+    if a.resolve:
+        if a.chunk is None or a.round is None or not (a.fixed or a.declined):
+            p.error("--resolve needs --chunk, --round and --fixed or --declined")
+        return resolve(a)
     if not a.report or a.chunk is None or a.round is None:
-        p.error("--report, --chunk and --round are required unless --standing")
+        p.error("--report, --chunk and --round are required unless --standing or --resolve")
     return record(a)
 
 

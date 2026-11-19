@@ -73,6 +73,14 @@ PRICES = {  # $ per million tokens: input, output, cache read, cache write (1.25
 # ("Re-review slice 002 chunk 4 fixes" is a re-review, not a fixer). Slice
 # 2's first table counted the eleven re-reviews as fixers and the eight
 # chunk reviews as "other" on the old word-anywhere rules.
+def named_review(name, more=""):
+    """`<name> review`, `<name> re-review`, and the form the slice review's
+    launches take, `review: <name>` and `re-review: <name>` ("Slice 4
+    review: security"): without the second, eight slice reviewers of one
+    slice fell through to their agent type and were totalled as consults."""
+    return re.compile(rf"\b{name} (?:review|re-review)\b|\b(?:review|re-review):\s*{name}\b{more}", re.I)
+
+
 VERB_RULES = [
     (re.compile(r"^(?:run|chunk[- ]runner|run chunk)\b", re.I), "runner"),
     (re.compile(r"^(?:build|implement|plan|replan|write the chunk plan)\b", re.I), "builder/planner"),
@@ -92,12 +100,15 @@ WORD_RULES = [
     (re.compile(r"\b(?:why-comments|comments?[- ]only|comments? (?:pass|review))\b", re.I), "reviewer:comments"),
     (re.compile(r"\b(?:combined|chunk) review\b|\breview chunk\b|\bre-review\b.*\bchunk\b", re.I), "reviewer:chunk"),
     (re.compile(r"\bcold (?:read|review)\b", re.I), "reviewer:cold"),
-    (re.compile(r"\baccessibility (?:review|re-review)\b|\ba11y\b", re.I), "reviewer:accessibility"),
+    (named_review("accessibility", r"|\ba11y\b"), "reviewer:accessibility"),
     (re.compile(r"\btest[- ]quality\b", re.I), "reviewer:test-quality"),
-    (re.compile(r"\barchitecture (?:review|re-review)\b", re.I), "reviewer:architecture"),
-    (re.compile(r"\bsecurity (?:review|re-review)\b", re.I), "reviewer:security"),
-    (re.compile(r"\breliability (?:review|re-review)\b", re.I), "reviewer:reliability"),
-    (re.compile(r"\bcode (?:review|re-review)\b", re.I), "reviewer:code"),
+    (named_review("architecture"), "reviewer:architecture"),
+    (named_review("security"), "reviewer:security"),
+    (named_review("reliability"), "reviewer:reliability"),
+    (named_review("code"), "reviewer:code"),
+    # "Slice 4 second fixer (regressions)", "Gate fixer: lint error", and
+    # the delivery step's capture fixer ("Add slice 4 screen captures").
+    (re.compile(r"\bfixer\b|\bscreen captures?\b", re.I), "fixer"),
     (re.compile(r"\b(?:plan slice|chunk plan|planner|replan|build chunk)\b", re.I), "builder/planner"),
     (re.compile(r"\b(?:decision|decide|consult|criterion)\b", re.I), "consult"),
 ]

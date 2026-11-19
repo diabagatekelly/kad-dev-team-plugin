@@ -22,7 +22,7 @@
 // two runs of one commit give the same pixels. A state that throws is
 // named in `<out>/capture-errors.json`, the others are still captured,
 // and the exit code is 1: the comparison then reports it as MISSING.
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const VIEWPORT = { width: 1280, height: 720 };
@@ -81,6 +81,10 @@ try {
 }
 
 const failed = Object.keys(errors);
+// the errors file says what this run failed, never an earlier run's: a
+// capture that succeeds into a folder a failed run left would otherwise
+// be read as failed by screen_check.py, which believes the file over the image
+rmSync(join(captures, 'capture-errors.json'), { force: true });
 if (failed.length > 0) writeFileSync(join(captures, 'capture-errors.json'), JSON.stringify(errors, null, 2));
 console.log(`capture: ${names.length - failed.length} of ${names.length} states`);
 process.exit(failed.length > 0 ? 1 : 0);
