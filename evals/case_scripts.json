@@ -273,6 +273,26 @@
   "test_measures.py",
   "validation_gate.py"
  ],
+ "orchestrator-solo-build-launch": [
+  "sandbox_check.py",
+  "scratch_run.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-solo-confirmed-only": [
+  "sandbox_check.py",
+  "validation_gate.py"
+ ],
+ "orchestrator-solo-from-message": [
+  "audit_sync.py",
+  "readiness_check.py",
+  "sandbox_check.py"
+ ],
+ "orchestrator-solo-from-standing-file": [
+  "readiness_check.py",
+  "sandbox_check.py",
+  "scratch_run.py"
+ ],
+ "orchestrator-solo-nothing-confirmed": [],
  "orchestrator-superseded-scope-map": [],
  "orchestrator-target-from-project": [],
  "problem-framing-doc-payfine-phase1": [],
@@ -324,6 +344,9 @@
  "security-review-portal-pr": [],
  "security-review-source-value": [
   "source_scan.py"
+ ],
+ "slice-build-cancel-hold": [
+  "validation_gate.py"
  ],
  "staleness-audit-docs": [],
  "supply-chain-review-accepted": [],

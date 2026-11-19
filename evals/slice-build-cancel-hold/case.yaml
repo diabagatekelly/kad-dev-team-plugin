@@ -1,6 +1,6 @@
 schema_version: "1.0"
 name: slice-build-cancel-hold
-description: "TODO.md's L2 (0.19.0), the `solo` cadence's builder: the cancel-hold slice built whole by `slice-build` from the task the orchestrator's S step hands over. The tests come before any code and fail on their assertions; each criterion is held by one test through the use case over the real queue, so the adapter gets no test file of its own; the gate's checks run before a commit that adds files by name; the report's first table has a row per criterion and the hand-back is its one line. Run on Opus, the model the step launches its builder on. Known-bad reference: the skill without its one-test-per-criterion rule."
+description: "TODO.md's L2 (0.19.0), the `solo` cadence's builder: the cancel-hold slice built whole by `slice-build` from the task the orchestrator's S step hands over. The tests come before any code and fail on their assertions; each criterion is held by one test through the use case over the real queue, so the adapter gets no test file of its own; the gate's checks run before a commit that adds files by name; the report's first table has a row per criterion and the hand-back is its one line. Run on Opus, the model the step launches its builder on. No known-bad reference: with the rule removed, three runs of three still wrote six tests for six criteria and no adapter test (the slice is too small to show the rule)."
 tags: [slice-build, library-app]
 context:
   scaffold_script: scaffold.sh

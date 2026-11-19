@@ -28,6 +28,8 @@
   "nothing-launched"
  ],
  "observed": {
-  "note": "written with the case, not yet run: the gate pass's three runs say whether every grader in `fails` fails"
+  "date": "2026-11-19",
+  "runs": 3,
+  "note": "three clean runs, every grader in `fails` failed in all three, and four more: with the rule removed the unconfirmed High is sent to a fixer (first pass of three ended on a sign-in error and was run again)"
  }
 }

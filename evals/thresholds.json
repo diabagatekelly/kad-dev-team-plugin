@@ -2402,6 +2402,113 @@
       "why-comments"
     ]
   },
+  "orchestrator-solo-build-launch": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T114506-orchestrator-solo-build-launch.json",
+    "graders": {
+      "builder-handed-the-documents-and-paths": 1.0,
+      "builder-on-opus": 1.0,
+      "builder-told-to-invoke-slice-build": 1.0,
+      "check-before-the-builder": 1.0,
+      "no-chunk-plan-asked-for": 1.0,
+      "no-chunk-runner": 1.0,
+      "no-plan-line-written": 1.0,
+      "one-builder-launched": 1.0,
+      "orchestrator-invoked": 1.0,
+      "sandbox-checked-before-the-launch": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "slice-build"
+    ]
+  },
+  "orchestrator-solo-confirmed-only": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T114506-orchestrator-solo-confirmed-only.json",
+    "graders": {
+      "findings-file-written": 1.0,
+      "fixer-handed-the-confirmed-finding": 1.0,
+      "fixer-not-handed-an-unconfirmed-finding": 1.0,
+      "fixer-on-opus": 1.0,
+      "mediums-reported-not-fixed": 1.0,
+      "one-fixer-launched-with-slice-build": 1.0,
+      "one-launch-and-no-other": 1.0,
+      "orchestrator-edits-no-code": 1.0,
+      "orchestrator-invoked": 1.0,
+      "sandbox-checked-before-the-launch": 1.0,
+      "unreproduced-high-listed-as-not-reproduced": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator",
+      "slice-build"
+    ]
+  },
+  "orchestrator-solo-from-message": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T114506-orchestrator-solo-from-message.json",
+    "graders": {
+      "a-line-says-solo": 1.0,
+      "handoff-carries-the-cadence-and-step-s": 1.0,
+      "handoff-written": 1.0,
+      "no-builder-planner-or-runner-in-this-session": 1.0,
+      "no-plan-line": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-solo-from-standing-file": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T114506-orchestrator-solo-from-standing-file.json",
+    "graders": {
+      "a-line-names-the-autopilot-file": 1.0,
+      "a-line-says-solo": 1.0,
+      "cadence-not-asked": 1.0,
+      "handoff-carries-the-cadence-and-step-s": 1.0,
+      "handoff-written": 1.0,
+      "no-builder-planner-or-runner-in-this-session": 1.0,
+      "no-plan-line": 1.0,
+      "orchestrator-invoked": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-solo-nothing-confirmed": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T114506-orchestrator-solo-nothing-confirmed.json",
+    "graders": {
+      "findings-file-written": 1.0,
+      "mediums-and-the-verify-line-reported-not-fixed": 1.0,
+      "no-fixer-launched": 1.0,
+      "nothing-launched": 1.0,
+      "orchestrator-edits-no-code": 1.0,
+      "orchestrator-invoked": 1.0,
+      "records-committed": 1.0,
+      "review-line-names-no-fix": 1.0,
+      "review-line-says-confirmed-zero": 1.0,
+      "unreproduced-high-listed-as-not-reproduced": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
   "orchestrator-superseded-scope-map": {
     "score": 1.0,
     "runs": 3,
@@ -3132,6 +3239,34 @@
     },
     "skills_invoked": [
       "security-review"
+    ]
+  },
+  "slice-build-cancel-hold": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T114506-slice-build-cancel-hold.json",
+    "graders": {
+      "checks-before-the-commit": 1.0,
+      "committed": 1.0,
+      "files-added-by-name": 1.0,
+      "gate-checks-run": 1.0,
+      "hand-back-is-the-one-line": 1.0,
+      "last-test-run-green": 1.0,
+      "no-bash-writes": 1.0,
+      "no-test-file-for-the-adapter": 1.0,
+      "planning-documents-untouched": 1.0,
+      "red-on-assertions": 1.0,
+      "report-has-a-row-per-criterion": 1.0,
+      "report-says-the-level-of-each": 1.0,
+      "skill-before-any-write": 1.0,
+      "skill-invoked": 1.0,
+      "stays-inside-the-slice": 1.0,
+      "tests-before-any-code": 1.0
+    },
+    "skills_invoked": [
+      "slice-build"
     ]
   },
   "staleness-audit-docs": {

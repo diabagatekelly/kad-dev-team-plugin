@@ -286,10 +286,10 @@ Not a second plugin: it reuses the gate, the mutation pass, the cold
 read, the criteria walk, the screen-change check and delivery. New is
 only the build and what gets fixed.
 
-**Built 2026-11-19 as kad 0.19.0 on branch `light-arm-0.19.0`, not
-gated, not pushed.** Script tests pass; the eval pass is the owner's to
-start. It is a third cadence, `solo`, beside `loop` and `light`, which
-are as they were. How each line was built, and where it differs:
+**Built 2026-11-19 as kad 0.19.0 (branch `solo-0.19.0`); the gate
+passed the same day at the owner's word** (25 cases, about $76;
+`evals/README.md`, "The solo cadence"). How each was built, where it
+differs from the lines below:
 
 - **The cadence** is taken at A from the owner's message (the word
   `solo`, or "one builder for the slice") or from a line `cadence:
@@ -324,12 +324,13 @@ are as they were. How each line was built, and where it differs:
   `orchestrator-solo-from-standing-file`,
   `orchestrator-solo-build-launch`, `orchestrator-solo-confirmed-only`,
   `orchestrator-solo-nothing-confirmed`, `slice-build-cancel-hold` (on
-  Opus). Three known-bad references, written with the cases and not
-  yet observed: the A step without its `solo` paragraph, step S
-  without its confirmed-only rule, `slice-build` without its
-  one-test-per-criterion rule.
+  Opus). One known-bad reference holds (step S without its
+  confirmed-only rule). Two written with the cases did not fail and
+  were removed: the A step without its `solo` paragraph, `slice-build`
+  without its one-test-per-criterion rule (`evals/README.md`, "The
+  solo cadence").
 
-None has run. No case holds: the hand-back check of S.1 (a criterion
+No case holds: the hand-back check of S.1 (a criterion
 with no row), the gate's one fixer at S.2, the builder asked about
 survivors, the verify launch for a Critical or High, the reproductions
 run again after the fix and the stop when one still reproduces, the
