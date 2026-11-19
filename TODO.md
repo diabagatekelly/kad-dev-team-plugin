@@ -164,6 +164,16 @@ the owner's message.
   `--resolve` call and the verdict forms: those two are built with
   step 3 or step 6, not dropped.
 
+- [ ] **Deferred from the external review of #68** (2026-11-18; each
+  with the next change to the same script, since a change to
+  `screen_check.py` stales 16 cases):
+  - `screen_check.py`: when one image is wider and the other taller, the
+    corner neither has is counted as changed and drawn blue (the capture's
+    width is fixed, so no real run reaches it).
+  - `rounds_record.py --resolve`: a declined title that two reviewers'
+    reports of one round share exactly is refused, not resolved for both
+    (with G4, which is where the fix step first calls `--resolve`).
+
 ## Part 2: the order agreed with the owner, 2026-11-18
 
 The owner keeps the planning side and wants the build and the tests

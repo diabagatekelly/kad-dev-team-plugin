@@ -253,22 +253,22 @@
     "recorded": "2026-11-19T01:41:22Z"
   },
   "ci-pipeline-os-matrix": {
-    "inputs": "448a656dfc1e6b490954d907393263a2939bcad974e0c57726365a3745a61479",
+    "inputs": "fc0d405debda97126cf7bddc57dd4a83709da6743e84649dab143a058788c35e",
     "score": 1.0,
     "bar": 0.963,
     "runs": 1,
-    "source": "results/gate-20261118T135719-ci-pipeline-os-matrix.json",
-    "claude_version": "2.1.327",
-    "recorded": "2026-11-18T14:21:09Z"
+    "source": "results/gate-20261119T024642-ci-pipeline-os-matrix.json",
+    "claude_version": "2.1.328",
+    "recorded": "2026-11-19T02:47:39Z"
   },
   "ci-pipeline-screen-job": {
-    "inputs": "9cdb557a60e857f3a37524ed20577224e17785acf1b450325f147748ac924d06",
+    "inputs": "8735e1887b59969e0c9ac24f9cff464463cd07b694c2ea34e396e49f16d8a9e4",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
-    "source": "results/gate-20261119T013105-ci-pipeline-screen-job.json",
+    "source": "results/gate-20261119T024642-ci-pipeline-screen-job.json",
     "claude_version": "2.1.328",
-    "recorded": "2026-11-19T01:41:22Z"
+    "recorded": "2026-11-19T02:47:39Z"
   },
   "code-review-catalog": {
     "inputs": "ee38e1e44b9c1d4c1e37871777ae59404b5dc8590c16050a7b5160959bc28f06",

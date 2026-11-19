@@ -3556,6 +3556,14 @@ errored in the harness (its run directory could not be listed) and
 passed on the next pass. 65 runs, $51.93 by the result files. No bar
 moved.
 
+The external review of #68 (11 comments): three fixed (`capture.mjs`
+removes an earlier run's `capture-errors.json`, so a capture that
+succeeds into a folder a failed run left is not read as failed; two
+tests that could not tell a wrong rule apart), three deferred
+(`TODO.md`), four declined with the reason on the pull request, one
+answered by the later push. The two cases `capture.mjs` reaches ran
+once more: 2 runs, $0.41; 67 runs and $52.34 in all.
+
 One grader changed. `reliability-requirements-refusal-phase2`'s
 `own-two-checks-pass-in-the-last-run` wanted a line break before the
 first `PASS` line; four runs of four piped the script through `grep`,
