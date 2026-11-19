@@ -17,9 +17,11 @@ does, the tests are 3.4 times the source and rising, and a fix costs a
 slice (the pull request is 7,002 added lines: 3,753 of planning and
 records, 2,450 of tests, 573 of source).
 
-This list has three parts. Part 1 is approved and is built first. Part 2
-is written for the owner to review before anything in it is built.
-Part 3 is what is left of the review's findings, for the owner to place.
+This list has three parts. Part 1 is the approved fixes: the scripts
+are built, the skill changes parked. Part 2 is the order agreed with the
+owner on 2026-11-18: keep planning, try the build a different way, and
+compare the two on the same slice of a new project. Part 3 is what is
+left of the review's findings, for the owner to place.
 The lists before this one are in `docs/todo-archive.md`.
 
 ## The owner's decisions, 2026-11-18
@@ -39,6 +41,18 @@ The lists before this one are in `docs/todo-archive.md`.
    less heavy-handed approach would. Part 2 is the answer proposed to
    these; the owner asked for it as a list ("Yes go ahead and make the
    list").
+3. **Planning is kept; the build and the tests are tried a radically
+   different way** (the owner: "When it comes to tests and actually
+   writing code, that's where we might want to take a radically
+   different approach"), on a new fourth project started from scratch
+   where slice 1's planning and building are compared side by side. The
+   order of part 2 was put to the owner and taken ("Go ahead"): fix only
+   what both arms share, park the heavy arm's build-side changes, build
+   the light arm as a mode, plan once and build twice, the bar written
+   first, the loser's path deleted.
+4. **Planning documents stay in the project's repository**, in their
+   own pull request before the build; the loop's records do not (my
+   answer to the owner's question; step 2, P4 and P5).
 
 ## Rules for every gated pull request
 
@@ -76,144 +90,209 @@ From what #62 cost, and the owner's answers of 2026-11-16:
 
 ## Part 1: approved, built first
 
-### 1a. Scripts, no skill text (script tests; the stale cases run once)
+### 1a. Scripts, no skill text: built 2026-11-18 on `part1a-scripts`, script tests green, not pushed
 
 What each script's change makes stale, by `affected_cases.py`:
 `rounds_record.py` 16 cases, `validation_gate.py` 20, `screen_check.py`
-16; `cost_by_role.py` and `orchestrator_log_check.py` none (tools). The
+16, 42 in all since they overlap; `cost_by_role.py` and
+`orchestrator_log_check.py` none (tools). The
 deferred items of #67's external review ride with the same scripts, as
 agreed then.
 
-- [ ] **S1. `rounds_record.py`: a line outside the file is not
+- [x] **S1. `rounds_record.py`: a line outside the file is not
   pre-existing** (F2). A round 1 reviewer cited diff positions (line 305
   of a 139-line file) and `classify` filed two regressions as
   pre-existing; they became issues #89 and #90 after being fixed. A
   location past the end of its file at the fix's head is an error the
   recorder reports, and the finding is classed by its file alone
   (regression when the fix changed the file). Test: the slice 4 shape.
-- [ ] **S2. `rounds_record.py`: a fix and a decline are recorded** (F3).
+- [x] **S2. `rounds_record.py`: a fix and a decline are recorded** (F3).
   All 79 rows of slice 4 have `fix` and `fixer` empty, so a round 0
   finding a fixer declined has no class and `--standing` cannot list it:
   a confirmed High left the count that way (F1). A `--fixed <sha>` and a
   `--declined <reason>` per finding, and `--standing` lists what was
   neither. Test: a declined High is standing.
-- [ ] **S3. `validation_gate.py`: the shell-edit count** (F7). On a fix
+- [x] **S3. `validation_gate.py`: the shell-edit count** (F7). On a fix
   gate, count only writes the `--agent` transcript made (the catch-all
   runs over the agent's own commits, not `base..HEAD`); a shell write
   whose result is a permission denial is not counted. Slice 4's lines
   add up to 22; 3 ran. Tests on transcript fixtures.
-- [ ] **S4. `validation_gate.py`: name the failing test** (F16). "suite
+- [x] **S4. `validation_gate.py`: name the failing test** (F16). "suite
   exit 1, summary fail count 1" cost two suite runs; print the first
   failing names from the runner's output.
-- [ ] **S5. `validation_gate.py`: the two deferred items of #67**
+- [x] **S5. `validation_gate.py`: the two deferred items of #67**
   (`capture_file` narrowed to the capture's two files; the rename map
   read from the chunk's section).
-- [ ] **S6. `screen_check.py`: a capture of another size** (F15). 27 of
+- [x] **S6. `screen_check.py`: a capture of another size** (F15). 27 of
   28 changed states read "100% of pixels" with no difference image
   because the page grew 18 px. Compare over the shared area, report the
   size change beside the percentage, write the difference image. Its
   verdict says "not captured" for a listed state that failed, not "not
   listed". With the deferred patch of #67
   (`~/kad-gate-0170/screen-check-deferred.patch`).
-- [ ] **S7. `cost_by_role.py`: "Slice 4 review: security" is a
+- [x] **S7. `cost_by_role.py`: "Slice 4 review: security" is a
   reviewer** (F13), "second fixer" and "screen captures" are fixers.
-- [ ] **S8. `orchestrator_log_check.py`: four misreads of the slice 4
+- [x] **S8. `orchestrator_log_check.py`: four misreads of the slice 4
   log** (F14): a cadence changed under B; `reviewers tq co ar se re ac`;
   `r1 … ; r2 fix` after `fixes builders`; checks green on the
   `baselines` commit of the same line. And the "0.7.0 loop" label.
 
-### 1b. Three skill changes (gated, by the rules above)
+### 1b. Parked until the comparison is read (part 2, step 6)
 
-- [ ] **G1. The cadence is read from a standing file** (F19, the owner's
-  decision 2 of 2026-11-17, which 0.17.0 encoded as a word the owner had
-  to say). `autopilot.md` gains a `cadence` line the owner sets once;
-  the A step takes it, names the cadence in the first line of its
-  report, and a message that names one still wins. One loop-state case,
-  tool-judged.
+These change the build side of the loop as it is today, which the
+comparison may retire. None is built or gated before its result. The
+heavy arm of the comparison runs as 0.17.0 does, with `light` named in
+the owner's message.
+
+- [ ] **G1. The cadence is read from a standing file** (F19).
+  `autopilot.md` gains a `cadence` line the owner sets once; the A step
+  takes it and names it in the first line of its report.
 - [ ] **G2. Under `light`, the slice review's fixes go to one fresh
-  fixer per round**, not to the resumed builders (decision 1). One case
-  (loop state at D with findings across chunks), and the regression
-  rate of the next slice is the measure.
+  fixer per round**, not to the resumed builders (7 of 22 regressed).
 - [ ] **G3. The builder's pre-commit run covers what the gate fails on**
-  (F20). All four gate fixers of slice 4 were for a Done-when test name,
-  changed-line coverage or scope, none of which `--checks-only` runs.
-  `--checks-only` takes the chunk's Done-when names and its range and
-  runs the name check and the changed-line coverage too;
-  `tdd-implementation-lite` says so. One case with a known-bad
-  reference. With it, F21 (a route in backticks is read as a test name:
-  the plan names tests in `seam "…"` form only) and F22 (the planner's
-  report names the directories its chunks touch, and B takes the module
-  list from it; slice 4's one stop came from the orchestrator's guess).
+  (F20: Done-when names, changed-line coverage, scope), with F21 (a
+  route in backticks read as a test name) and F22 (the module list from
+  the planner's report).
+- [ ] **G4. The wording that now trails the scripts of 1a**: the fix
+  step calls `rounds_record.py --resolve` after each fixer (until it
+  does, S2 changes nothing in a run); the screens verdict's two new
+  forms in `delivery` and the orchestrator's word-for-word lines;
+  `--standing` lists declined findings; the shell-edit count's meaning
+  in `chunk-runner` and the orchestrator; a re-reviewer cites file line
+  numbers, never positions in a diff; the D line's template for the
+  light form the log check now accepts. Whichever arm wins needs the
+  `--resolve` call and the verdict forms: those two are built with
+  step 3 or step 6, not dropped.
 
-## Part 2: proposed, for the owner's review before any of it is built
+## Part 2: the order agreed with the owner, 2026-11-18
 
-Seven changes aimed at what the review did not see move: the code's
-score, the size of a fix, the amount of test. Each is a proposal of
-mine, with what it costs.
+The owner keeps the planning side and wants the build and the tests
+tried a radically different way, measured side by side on the same
+problem, on a new project started from scratch (a fourth
+personal-finance-tracker). Nothing on the build side of today's loop is
+improved before that result.
 
-- [ ] **Q1. A domain model, once, before slicing.** The dead ends of
+### Step 1. What both arms share: the instruments
+
+- [ ] Part 1a's 42 stale cases, one run each (`gate.sh --stale`), the
+  loop states recorded, the write-up in `evals/README.md`, the pull
+  request. The owner starts the pass.
+
+### Step 2. Planning (kept whichever arm wins)
+
+- [ ] **P1. A domain model, once, before slicing.** The dead ends of
   slices 1, 3 and 4 are one unanswered question: what states can a bank
   connection be in, how is each entered, what can the user do in each,
-  and which are deliberately unsupported. Slice 1 shipped and a lapsed
-  login was unrecoverable (#14, which became slice 3); slice 3's review
-  found a bank that can never be restarted (#78); slice 4's own review
-  met the same dead end from Refresh; its control found accounts added
-  after the connect. `reliability-requirements` lists how a call fails,
-  not the life of the thing. A new stage after the scope map (one
-  document per external system or long-lived entity: a state table),
-  read by `vertical-slicing`, `architecture-design` and
-  `reliability-requirements`, and by the readiness check ("every state
-  the slice can leave a thing in has a way out or is listed as
-  unsupported"). A new skill and its cases; on the first project it is
-  written once, late, for Plaid.
-- [ ] **Q2. A fix lane.** An issue that changes no requirement and no
-  design decision does not run the planning spine: no new planning
-  document, one builder with the issue and the code, the gate, one
-  combined reviewer, one fix round, a pull request with a size the
-  owner sets (proposed: 300 added lines of source and test). Anything
-  that needs a decision leaves the lane for the spine. Several issues of
-  one module may share a lane run. Today #33 was 5,628 lines and #14
-  9,963; 53 issues are open on the first project because fixing one
-  costs a slice. Orchestrator routing, a short loop, cases.
-- [ ] **Q3. Records out of the slice's pull request.** 54% of #92 is
-  planning documents, reviewer reports, gate outputs and the log. The
-  planning documents stay (they are the design); the loop's records go
-  to the audit repository (or a `records/` branch), with a link in the
-  body. Delivery, the runner, `rounds_record.py` paths.
-- [ ] **Q4. The breadth of a slice is the owner's.** Slice 4 took
-  corrections, withdrawals, pending-to-posted and the month turn in one
-  cut, "taken as recommended". `vertical-slicing` offers the thinnest
-  cut first and asks when it recommends more than it (scope is not a
-  technical question), and the slice file gets a size line (criteria
-  count, expected chunks); over a threshold the owner sets it is split
-  or confirmed.
-- [ ] **Q5. One level per behaviour.** The plan requires a full-app
-  test for every criterion and the test-first contract adds module
-  tests beside them (56 and 52 of slice 4's 108). `tdd-implementation-
-  lite`: the seam test holds the criterion; a module test is written
-  only for a branch the seam cannot reach, and is named with that
-  branch (the rule the skill already has for fakes). Exact wording is
-  held by one table test per message module.
-- [ ] **Q6. A redundancy lens in `test-quality-review`.** Its findings
-  are all "no test holds X"; none asks whether a test is needed. Add:
-  a behaviour held at two levels, exact-prose assertions outside the
-  message table, a helper rewritten across files (27 on the first
-  project). Reported, not fixed in the round.
-- [ ] **Q7. The test-to-source ratio on the C and D lines**, per chunk
-  and for the slice, so growth is seen; no cap until Q5 has run once.
+  and which are deliberately unsupported. A new stage after the scope
+  map: one document per external system or long-lived entity, a state
+  table, read by `vertical-slicing`, `architecture-design` and
+  `reliability-requirements`, and held by the readiness check ("every
+  state the slice can leave a thing in has a way out or is listed as
+  unsupported"). A new skill and its cases.
+- [ ] **P2. The breadth of a slice is the owner's.** `vertical-slicing`
+  offers the thinnest cut first and asks when it recommends more than
+  it; the slice file carries a size line (criteria count, expected
+  chunks), and over a threshold the owner sets it is split or
+  confirmed.
+- [ ] **P3. Fewer, sharper criteria.** Slice 4 had 35 for one button,
+  and each became a test. The security, reliability and accessibility
+  stages add a criterion only for a behaviour a user or an operator
+  could observe going wrong; wording, logging detail and announcement
+  phrasing are design notes, not criteria. The measure is the count per
+  slice on the size line of P2.
+- [ ] **P4. Planning lands as its own pull request, before the build.**
+  The documents (370 lines on slice 4) and the mockups (1,114) are
+  merged first, which is also where the owner approves the plan before
+  build money is spent; the build's pull request is then source, tests
+  and screens (about 3,200 lines on slice 4, not 7,002).
+- [ ] **P5. The loop's records leave the project's repository.**
+  Reviewer reports, gate outputs and the findings file (2,167 lines on
+  slice 4) go to the audit repository, linked from the body. The
+  orchestrator log moves with them only once the orchestrator reads it
+  from there: the next session finds the flow's place in it. Built with
+  the winner (step 6); for the comparison both arms write records as
+  today.
+
+### Step 3. The light arm, as a mode of this plugin
+
+Not a second plugin: it reuses the gate, the mutation pass, the cold
+read, the criteria walk, the screen-change check and delivery. New is
+only the build and what gets fixed.
+
+- [ ] **L1. One builder for the slice**, on the strongest model, given
+  the slice, the design, the domain model and the criteria. No chunk
+  plan, no runner, no per-chunk agents. It commits in steps of its own
+  choosing.
+- [ ] **L2. One light test rule**: each criterion held by one test at
+  the level that reaches it (the running app where it can), written
+  first and seen failing; a module test only for a branch that test
+  cannot reach; exact wording held in one table per message module.
+- [ ] **L3. The mechanical checks, unchanged**: the gate with every
+  check, the mutation pass on the changed lines, the cold read by
+  execution, the criteria walk for a slice with a screen, CI and the
+  screen-change check at delivery.
+- [ ] **L4. Only what was confirmed gets fixed**: a failing check, a
+  surviving break the builder agrees is real, a bug the cold read
+  reproduced, a criterion the walk failed. One fresh fixer, the gate,
+  and the cold read's probes run again.
+- [ ] **L5. One combined review, reported and not fixed**: its findings
+  go to the pull request's body by severity, for the owner. A Critical
+  or High it raises is verified by execution first and fixed under L4
+  if confirmed.
+- [ ] **L6. Cases** for the mode: the A step takes it from the standing
+  file or the message; the builder's test rule with a known-bad
+  reference; a finding that was not confirmed is not sent to a fixer.
+
+### Step 4. The comparison, on the new project
+
+- [ ] **C1. Slice 1 planned once**, with step 2's planning. The domain
+  model is checked against what the third project met: a login that
+  lapses, a bank whose login can never be restarted, accounts added
+  after the connect, a pending charge that posts. If the model does not
+  name these before any code exists, P1 is not done.
+- [ ] **C2. Built twice from the planning commit**, one branch per arm:
+  the heavy arm as 0.17.0 `light`, the light arm as step 3. Same
+  machine, same fence, neither sees the other's branch.
+- [ ] **C3. Measured the same way**: `evals/tools/cold_read.md` and a
+  hand-written mutation pass on each (the same mutants where the code
+  allows, written per arm where it does not), cost by role, wall clock,
+  the owner's questions and stops, added lines of source and of test,
+  the test measures, findings and regressions from the sidecar.
+
+### Step 5. The bar, set before the run
+
+The light arm replaces the heavy one when all four hold on slice 1:
+
+1. the cold read's six scores add up to no less than the heavy arm's,
+   and no single area is lower by more than one;
+2. the mutation kill rate over the slice's files is within five points;
+3. no confirmed Critical or High stands in it that the heavy arm does
+   not also have;
+4. its cost and its wall clock are each at most half.
+
+If 1 to 3 hold and 4 does not, or the scores differ by one point either
+way, slice 2 is built both ways before anything is deleted. One slice
+is one sample.
+
+### Step 6. After the result
+
+- [ ] The winner's build path is kept and the other is deleted, with
+  its cases (two paths would double every gate).
+- [ ] If the heavy arm stays: 1b's G1 to G3, and its test weight: one
+  level per behaviour in `tdd-implementation-lite`, a redundancy lens
+  in `test-quality-review` (a behaviour held at two levels, exact prose
+  outside the message table, helpers rewritten across files), the
+  test-to-source ratio on the C and D lines.
+- [ ] Either way: G4's two items, P5, and **the fix lane**: an issue
+  that changes no requirement and no design decision runs no planning
+  spine: one builder with the issue and the code, the mechanical
+  checks, a pull request under a size the owner sets (proposed: 300
+  added lines of source and test); anything that needs a decision
+  leaves the lane. On the third project #33 was 5,628 lines and #14
+  9,963, and 53 issues are open because fixing one costs a slice.
 
 Left out on purpose: paying down the complexity ratchet's 74 frozen
 violations (it would make fixes larger).
-
-**The control that is missing (my proposal, with Q1 to Q7).** Nothing
-measures the plugin against no plugin on a whole piece of work: the
-with-and-without pass (E6) was on single skills. One chunk-sized piece
-of the first project (an open Medium, and one small criterion) built
-twice from the same commit, once through the plugin and once by a bare
-session given the issue and "write it test-first, run the checks", each
-then read by the same cold read and mutation pass. It answers whether
-the weight buys anything, and it is the measure Q2 and Q5 are judged
-by.
 
 ## Part 3: the rest of the review's findings, to be placed
 
