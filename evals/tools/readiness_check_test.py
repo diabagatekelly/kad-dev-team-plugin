@@ -16,6 +16,11 @@ fix then revises it.
   section routes to screen-design, a slice with no screen design is not
   asked for one, and under an issue fix an older slice's missing section
   is an older gap.
+- The twelfth check: with a `domain-model.md` in the planning directory,
+  every state the slice file names under `## Domain states` has a row in
+  the model with a way out or marked unsupported; a state the model lacks
+  routes to domain-model, a slice with no section routes to the slicer,
+  and a planning set with no model is not asked for one.
 
 Usage: python3 -I evals/tools/readiness_check_test.py
 """
@@ -310,6 +315,85 @@ class ChangedStatesListed(unittest.TestCase):
         self.assertIn("PASS  changed-states-listed: nothing the fix revised fails", out)
         self.assertNotIn("route: changed-states-listed", out)
         self.assertIn("INFO  older-gap: changed-states-listed:", out)
+
+
+MODEL = """# Domain model
+
+## Hold on a title (the shelf service)
+
+| State | Entered by | What the person sees and can do | Way out | Supported | Source |
+|---|---|---|---|---|---|
+| `held` | a member places a hold | staff see it in the queue and can cancel it | cancel -> `cancelled` | yes | https://example.test/docs/holds |
+| `cancelled` | staff cancel it | the hold is gone from the queue | none needed: the end of its life | yes | https://example.test/docs/holds |
+| `stuck-at-shelf` | the shelf service refuses every cancel | staff see a refusal | none | yes | to verify: refuse a cancel twice in the test shelf |
+| `shelf-gone` | the shelf service drops the title | staff see the hold with no title | none in the app | unsupported (owner, 2026-11-18: "leave it") | to verify: delete a title in the test shelf |
+"""
+
+
+class DomainStatesModelled(unittest.TestCase):
+    """The twelfth check (0.18.0): a slice names the modelled states it
+    puts a thing in or takes it out of, and each has a way out or is one
+    the owner left unsupported. Three slices in a row each met one more
+    state of a bank connection after they shipped."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.planning = os.path.join(os.path.realpath(self.tmp.name), "cancel-hold")
+        shutil.copytree(PLANNING, self.planning)
+
+    def write(self, name, text):
+        with open(os.path.join(self.planning, name), "w", encoding="utf-8") as f:
+            f.write(text)
+
+    def states(self, body):
+        path = os.path.join(self.planning, "slice-001.md")
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+        self.write("slice-001.md", text.replace("## Explicitly deferred", "## Domain states\n\n" + body + "\n\n## Explicitly deferred", 1))
+
+    def gate(self):
+        r = subprocess.run([sys.executable, "-I", SCRIPT, "--planning", self.planning, "--slice", "001"],
+                           capture_output=True, text=True)
+        return r.returncode, r.stdout
+
+    def test_a_planning_set_with_no_model_is_not_asked_for_one(self):
+        _, out = self.gate()
+        self.assertIn("PASS  domain-states-modelled: no domain-model.md in the planning directory", out)
+
+    def test_named_states_with_a_way_out_or_left_unsupported_pass(self):
+        self.write("domain-model.md", MODEL)
+        self.states("- Hold on a title: enters `cancelled`, `shelf-gone`; leaves `held`")
+        _, out = self.gate()
+        self.assertIn("PASS  domain-states-modelled: 3 state(s) named by the slice are in the model", out)
+
+    def test_a_state_the_model_lacks_routes_to_the_model(self):
+        self.write("domain-model.md", MODEL)
+        self.states("- Hold on a title: enters `cancelled`, `expired`")
+        _, out = self.gate()
+        self.assertIn("FAIL  domain-states-modelled:", out)
+        self.assertIn("`expired` is not a state of domain-model.md", out)
+        self.assertNotIn("`cancelled` is not", out)
+        self.assertIn("route: domain-states-modelled -> software-architect:domain-model", out)
+
+    def test_a_state_with_no_way_out_that_nobody_left_unsupported_fails(self):
+        self.write("domain-model.md", MODEL)
+        self.states("- Hold on a title: enters `stuck-at-shelf`")
+        _, out = self.gate()
+        self.assertIn("`stuck-at-shelf` has no way out and is not marked unsupported", out)
+        self.assertIn("route: domain-states-modelled -> software-architect:domain-model", out)
+
+    def test_a_slice_with_no_section_routes_to_the_slicer_once_a_model_exists(self):
+        self.write("domain-model.md", MODEL)
+        _, out = self.gate()
+        self.assertIn("FAIL  domain-states-modelled:", out)
+        self.assertIn("route: domain-states-modelled -> product-slicer:vertical-slicing", out)
+
+    def test_a_slice_that_touches_no_modelled_thing_says_none(self):
+        self.write("domain-model.md", MODEL)
+        self.states("none")
+        _, out = self.gate()
+        self.assertIn("PASS  domain-states-modelled: the slice touches no modelled thing", out)
 
 
 if __name__ == "__main__":

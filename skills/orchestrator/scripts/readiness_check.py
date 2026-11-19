@@ -31,9 +31,10 @@ item or table cell that starts with `Given` (continuation lines joined
 until the next bullet or blank line), or one that carries an identifier
 like `AC-1`, `S1`, `SEC-3`, `R2`, `REL-4`, `A11Y-2`.
 
-The eleven checks, in the order they run and print, how each decides, and
+The twelve checks, in the order they run and print, how each decides, and
 where a failure routes (the eleventh, changed-states-listed, is described
-after the tenth and runs after the fifth):
+after the tenth and runs after the fifth; the twelfth, domain-states-modelled,
+runs before the source scan):
 
 1. criteria-homed -> software-architect:architecture-design. Every
    criterion in the slice, security, reliability and accessibility files
@@ -159,6 +160,24 @@ after the tenth and runs after the fifth):
    which parses the section for both) treats a difference in any state
    the section does not list as a finding. No screen design: skipped.
 
+12. domain-states-modelled -> software-architect:domain-model, or
+   product-slicer:vertical-slicing. When the planning directory has a
+   `domain-model.md` (one table per outside system or lasting thing: its
+   states, how each is entered, what the person can do, the way out,
+   whether it is supported, the source), the slice file has a `## Domain
+   states` section naming, in backticks, each state the slice puts a
+   thing in or takes it out of (or the word `none`), every name is the
+   first cell of a row of the model, and that row has a way out (its `Way
+   out` cell is not empty, a dash or `none`; `none needed: <why>` is the
+   end of the thing's life and counts) or is marked `unsupported` in its
+   `Supported` cell, which is the owner's acceptance. A name the
+   model lacks, or a row with neither, routes to the model; a slice with
+   no section routes to the slicer. No `domain-model.md`: pass with a
+   note. Why: three slices in a row each met one more state of a bank
+   connection after they shipped (a login that lapses, a bank whose login
+   can never be restarted, accounts added later), and each dead end
+   became a High and then a slice.
+
 An issue fix (`--fix-base COMMIT`). A fix to a slice that was planned,
 built and merged revises a few of its documents; the rest were written
 before some of these checks existed, and failing the fix on them routes
@@ -227,7 +246,8 @@ IMPLEMENTER = re.compile(r"the implementer|the builder|implementation time|durin
 OWNERS = [
     ("problem-framing", "docs-writer:problem-framing-doc"), ("scope-map", "docs-writer:scope-map"),
     ("requirements", "product-manager:requirements-refinement"), ("user-story", "docs-writer:user-story-writeup"),
-    ("design-system", "ux-designer:design-system"), ("design", "software-architect:architecture-design"),
+    ("design-system", "ux-designer:design-system"), ("domain-model", "software-architect:domain-model"),
+    ("design", "software-architect:architecture-design"),
     ("security", "devsecops-engineer:security-requirements"),
     ("reliability", "devsecops-engineer:reliability-requirements"),
     ("screen", "ux-designer:screen-design"), ("accessibility", "accessibility-engineer:accessibility-review"),
@@ -592,6 +612,63 @@ def check_sources(planning):
     return False, "; ".join(what), info + source_scan.hit_lines(hits)
 
 
+def model_states(model):
+    """{state name: (way out cell, supported cell)} from every table of a
+    domain model whose header names a state and a way out."""
+    states, cols = {}, None
+    for line in model.splitlines():
+        s = line.strip()
+        if not s.startswith("|"):
+            cols = None
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if cols is None:
+            lower = [c.lower() for c in cells]
+            if lower and lower[0].startswith("state") and any("way out" in c for c in lower):
+                cols = (next(i for i, c in enumerate(lower) if "way out" in c),
+                        next((i for i, c in enumerate(lower) if "supported" in c), None))
+            continue
+        if re.match(r"^:?-{2,}", cells[0]):
+            continue
+        name = cells[0].strip("`* ").lower()
+        if name:
+            states[name] = (cells[cols[0]] if cols[0] < len(cells) else "",
+                            cells[cols[1]] if cols[1] is not None and cols[1] < len(cells) else "")
+    return states
+
+
+def check_domain_states(planning, slice_text):
+    """(passed, detail, failing items, route): the twelfth check."""
+    slicer, architect = "product-slicer:vertical-slicing", "software-architect:domain-model"
+    path = os.path.join(planning, "domain-model.md")
+    if not os.path.isfile(path):
+        return True, "no domain-model.md in the planning directory", [], architect
+    body = next((b for h, b in sections(slice_text) if h.strip().lower() == "domain states"), None)
+    if body is None:
+        what = "the planning directory has a domain model and the slice file has no `## Domain states` section"
+        return False, what, [("no section", what)], slicer
+    named = [n.lower() for n in re.findall(r"`([^`\n]+)`", body)]
+    if not named:
+        if re.search(r"\bnone\b", body, re.I):
+            return True, "the slice touches no modelled thing", [], slicer
+        what = "the slice file's `## Domain states` section names no state in backticks and does not say `none`"
+        return False, what, [("empty section", what)], slicer
+    states = model_states(read(path))
+    bad = []
+    for name in dict.fromkeys(named):
+        if name not in states:
+            bad.append((f"missing: {name}", f"`{name}` is not a state of domain-model.md"))
+            continue
+        way_out, supported = states[name]
+        if "unsupported" in supported.lower():
+            continue
+        if not way_out.strip("-—– ") or re.match(r"^none\b(?! needed)", way_out.strip(), re.I):
+            bad.append((f"no way out: {name}", f"`{name}` has no way out and is not marked unsupported"))
+    if bad:
+        return False, "state(s) the slice names", bad, architect
+    return True, f"{len(dict.fromkeys(named))} state(s) named by the slice are in the model, each with a way out or left unsupported by the owner", [], slicer
+
+
 def resolve(planning, nnn, given):
     """The slice's documents under a planning directory: as named by flag
     (`given`, by kind), else found by the slice number."""
@@ -638,6 +715,7 @@ def evaluate(planning, names):
     results.append(("open-items-triaged", *check_open_items(docs["slice"])))
     if "reliability" in docs:
         results.append(("unusable-reply-row", *check_unusable(docs, docs["design"]), rel))
+    results.append(("domain-states-modelled", *check_domain_states(planning, docs["slice"])))
     return [(name, ok, detail, route, items) for name, ok, detail, items, route in results]
 
 
