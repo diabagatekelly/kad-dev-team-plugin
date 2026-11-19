@@ -50,6 +50,16 @@ class Scoped(unittest.TestCase):
         self.assertIn("shared words", view)
         self.assertNotIn("aaa text", view)
 
+    def test_the_solo_step_is_a_section_of_its_own_between_e_and_the_shared_text(self):
+        with_s = SKILL.replace("**Pausing and resuming.** On a", "**S. Solo: one builder for the slice.** Only\nsss text\n**Pausing and resuming.** On a")
+        for steps in (["E"], ["C"], []):
+            self.assertEqual(ac.scoped(with_s, steps), ac.scoped(SKILL, steps), steps)
+        view = ac.scoped(with_s, ["A", "S"])
+        for kept in ("aaa text", "sss text", "pause words"):
+            self.assertIn(kept, view)
+        self.assertNotIn("eee text", view)
+        self.assertNotEqual(ac.scoped(with_s.replace("sss text", "sss edited"), ["S"]), ac.scoped(with_s, ["S"]))
+
     def test_a_restructured_skill_is_taken_whole(self):
         moved = SKILL.replace("**D. Slice review.**", "**D. The review.**")
         self.assertEqual(ac.scoped(moved, ["C"]), moved)
@@ -57,7 +67,7 @@ class Scoped(unittest.TestCase):
     def test_the_real_skill_still_has_every_section_opening(self):
         text = open(os.path.join(ac.ROOT, ac.ORCHESTRATOR), encoding="utf-8").read()
         self.assertLess(len(ac.scoped(text, ["E"])), len(text))
-        for step in "ABCDE":
+        for step in "ABCDES":
             self.assertNotEqual(ac.scoped(text, [step]), ac.scoped(text, []), step)
 
 

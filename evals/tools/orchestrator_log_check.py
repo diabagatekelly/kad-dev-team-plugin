@@ -94,7 +94,7 @@ UI_ONLY = {"design-system", "screen-design", "accessibility-review"}
 RESTARTS = {"requirements-refinement"}
 LOOP_STEPS = "ABCDE"
 # The persona that implements; its launches under the implementation entry are many.
-IMPLEMENTERS = {"tdd-implementation", "tdd-implementation-lite", "tdd-coach"}
+IMPLEMENTERS = {"tdd-implementation", "tdd-implementation-lite", "tdd-coach", "slice-build"}
 # Skills the chunk loop calls under its one entry besides the implementers and the `*-review` skills.
 LOOP_SKILLS = {"map-update", "map-query", "pr-writeup", "delivery", "ci-pipeline", "external-review-triage",
                "readme", "repo-bootstrap", "why-comments", "supply-chain-review"}
@@ -468,8 +468,45 @@ def field(text, name):
     return m.group(1).strip() if m else None
 
 
+CADENCES = ("loop", "light", "solo")
+
+
+def solo_errors(c_lines, d_text, steps):
+    """What the `solo` cadence's log must and must not hold (0.19.0): one builder for the slice,
+    logged as chunk 1 of 1 with no review and no smoke run; no plan; at D one combined review that
+    is reported, and a fixer only for what running something confirmed, whose fix nobody re-reviews."""
+    out = []
+    if "B" in steps:
+        out.append("a B line under cadence `solo`: one builder builds the slice, and no chunk plan is written")
+    if c_lines and [(k, n) for k, n, _ in c_lines] != [("1", "1")]:
+        out.append("under cadence `solo` the build is one C line, `C. Chunk 1/1`; found "
+                   + ", ".join(f"{k}/{n}" for k, n, _ in c_lines))
+    for k, _, text in c_lines:
+        if re.search(r"gate\s+`?FAIL", text):
+            continue
+        if reviewers_of(text) != ["none"] or not re.search(r"\bsmoke\s+`?none", text):
+            out.append(f"C chunk {k}: under cadence `solo` nothing reads or drives the build before the slice's review (`review none`, `smoke none`)")
+    if d_text is None:
+        return out
+    m = re.search(r"\bconfirmed\s+`?(\d+)`?\s+of\s+`?(\d+)", d_text)
+    fix = re.search(r"(?<![r\d] )\bfix\s+`?" + SHA, d_text)
+    if not m:
+        out.append("D line under cadence `solo` has no `confirmed <n> of <m>` field: which findings running something showed")
+    elif int(m.group(1)) > int(m.group(2)):
+        out.append(f"D line: confirmed {m.group(1)} of {m.group(2)}")
+    elif int(m.group(1)) == 0 and fix:
+        out.append("D line: a fix is logged with `confirmed 0`: under cadence `solo` only a confirmed finding goes to a fixer")
+    elif int(m.group(1)) > 0 and not fix:
+        out.append(f"D line: `confirmed {m.group(1)}` and no `fix <sha>`: the confirmed findings get the one fixer")
+    if fix and not re.search(r"\bfix\s+`?" + SHA + r"`?\s+gate\s+`?PASS`?,\s*reproduces\s+`?\d+", d_text):
+        out.append("D line: the fix does not say `gate PASS, reproduces <k>` (the gate on its range, then the reproductions run again)")
+    if re.search(r"\br[12]\s+fix\b|\blast\s+`?\d+/\d+/\d+", d_text):
+        out.append("D line has an `r1`, `r2` or `last` field under cadence `solo`: its one fix is not re-reviewed, and no second fixer follows")
+    return out
+
+
 def cadence_of(a_text):
-    """`loop` or `light` as the A line states it, or None when it states none
+    """`loop`, `light` or `solo` as the A line states it, or None when it states none
     (a log older than the field, or one whose A line is in another entry)."""
     value = field(a_text, "cadence")
     return value.split()[0] if value else None
@@ -533,8 +570,8 @@ def check_chunk_loop(e, findings):
                 if field(a_text, part) is None:
                     findings.append(("WARN", tag, f"A line has no {part} (a 0.7.0 field)"))
             cadence = field(a_text, "cadence")
-            if cadence and cadence.split()[0] not in ("loop", "light"):
-                findings.append(("ERROR", tag, f"A line's cadence is `{cadence}`; it is `loop` or `light`"))
+            if cadence and cadence.split()[0] not in CADENCES:
+                findings.append(("ERROR", tag, f"A line's cadence is `{cadence}`; it is `loop`, `light` or `solo`"))
             elif cadence:
                 findings.append(("INFO", tag, f"cadence {cadence.split()[0]}"))
         sidecar = field(a_text, "records") or field(a_text, "reviews")
@@ -560,6 +597,10 @@ def check_chunk_loop(e, findings):
         findings.append(("INFO", tag, f"cadence {value} from chunk {first} (changed after the A line)"))
     chunks_logged = {}
     always = ALWAYS_V4 if v4 else ALWAYS_V3
+    solo = cadence_of(a_text) == "solo"
+    if solo:
+        for text in solo_errors(c_lines, d_lines[-1] if d_lines else None, steps):
+            findings.append(("ERROR", tag, text))
     for k, n, text in c_lines:
         what = f"C chunk {k}"
         if not re.search(r"commits\s+`?" + SHA, text):
@@ -580,7 +621,7 @@ def check_chunk_loop(e, findings):
             # the light cadence: build and gate only, nothing reviewed or driven until D
             if not re.search(r"\bsmoke\s+`?none", text):
                 findings.append(("WARN", tag, f"{what}: `review none` with a smoke result; under light the chunk has neither since 0.17.0"))
-            findings.append(("INFO", tag, f"{what}: light cadence, no review and no smoke run"))
+            findings.append(("INFO", tag, f"{what}: {'solo' if solo else 'light'} cadence, no review and no smoke run"))
             continue
         if revs is None:
             findings.append(("ERROR", tag, f"{what}: no {'review lenses' if v4 else 'reviewers'}"))
@@ -638,9 +679,10 @@ def check_chunk_loop(e, findings):
                 findings.append(("WARN", tag, "D line has no `cold` field (the cold read, 0.16.0; `stranger` before it)"))
             if not re.search(r"\baudit\s+`?(audit commit|audit sync FAILED|not configured|off)", text):
                 findings.append(("WARN", tag, "D line has no `audit` field (a 0.10.0 field)"))
-        r, g, p, cap, wf = check_rounds(tag, "D", text, findings, v4)
-        total_rounds, reg, pre, caps, with_findings = total_rounds + r, reg + g, pre + p, caps + cap, with_findings + wf
-        chunks_logged["D"] = r
+        if not solo:  # solo's round 0 is recorded and nothing is re-reviewed: no fix round to read or to hold the sidecar to
+            r, g, p, cap, wf = check_rounds(tag, "D", text, findings, v4)
+            total_rounds, reg, pre, caps, with_findings = total_rounds + r, reg + g, pre + p, caps + cap, with_findings + wf
+            chunks_logged["D"] = r
     if "E" in steps and not e_lines:
         findings.append(("ERROR", tag, "E line is not in the `E. Delivery:` form (numbered E.1, E.2 bullets are not the E line)"))
     if e_lines:
@@ -774,7 +816,8 @@ def check_loop(entries, findings, project=None, log_dir=None, sidecar_arg=None):
         present = set(subs)
         if present:
             last = max(present)
-            missing = [s for s in LOOP_STEPS if s < last and s not in present]
+            solo = cadence_of("\n".join(re.findall(r"^- \*\*A\. Start[^*\n]*:\*\*(.*)$", e["body"], re.M))) == "solo"
+            missing = [s for s in LOOP_STEPS if s < last and s not in present and not (solo and s == "B")]
             if missing:
                 findings.append(("ERROR", tag, f"sub-entries {', '.join(missing)} missing before {last}"))
             if last != "E":
