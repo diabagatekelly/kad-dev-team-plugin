@@ -142,6 +142,22 @@
 #                     planning done and uncommitted: R3 in the reliability
 #                     document, its home in the design; next: the chunk
 #                     loop's A step for the issue fix
+#   solo-ready        the `solo` cadence (one builder for the slice, 0.19.0):
+#                     A done with `cadence — solo` on its line, no plan;
+#                     next: S.1, the build
+#   solo-verified     the `solo` cadence as far as S.5: the slice built by
+#                     one builder as one commit and gated, its line in the
+#                     log as chunk 1 of 1, the map committed, the
+#                     Definition of Done passing, D's mutation pass run for
+#                     real, the combined review (one High, two Mediums, one
+#                     Low), the cold read (one Medium confirmed by
+#                     execution, one line to verify) and the verify agent's
+#                     report (the High not reproduced) in the records,
+#                     round 0 recorded; next: the confirmed list and the
+#                     one fixer
+#   solo-unconfirmed  as solo-verified with a cold read that confirmed
+#                     nothing: no finding of the slice was shown by running
+#                     anything; next: the confirmed list, and no fixer
 # The log is never committed by the loop as the skill writes it (the C line
 # names the records commit, so it cannot be in it), so it is dirty in every
 # state, as it would be for real; the handoff file is committed, as the
@@ -259,7 +275,7 @@ planning() {  # the slice branch, the delegation file when the state has one, th
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; delegation — \`$deleg\`; autopilot — \`$auto\`; cadence — \`loop\`; budget — \`5h, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)\`; branch — \`slice-001-cancel-hold\`; base — \`$base_sha\`$commit; records — \`$records\`; readiness — \`PASS\`; gate checks — \`present\`
+- **A. Start:** sandbox — \`FAIL: write, network; owner opted to continue unsandboxed\`; delegation — \`$deleg\`; autopilot — \`$auto\`; cadence — \`${cadence:-loop}\`; budget — \`5h, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)\`; branch — \`slice-001-cancel-hold\`; base — \`$base_sha\`$commit; records — \`$records\`; readiness — \`PASS\`; gate checks — \`present\`
 EOF
 }
 
@@ -512,12 +528,48 @@ handoff() {  # handoff <state line> <next action> [extra lines...]: the file the
     shift 2
     for line in "$@"; do printf -- '- %s\n' "$line"; done
     printf -- '- **Budget counters:** loop started %s; reviewer launches %s; fixers %s; consults %s\n' "$started" "${reviews:-0}" "${fixers:-0}" "${consults:-0}"
-    printf -- '- **Environment:** test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; records `%s`; report `%s`; sidecar `%s`; cadence loop; the owner opted out of the sandbox at A (later checks are logged as information); the design and the README name no data directory for the app (`data not named`)\n' "$records" "$report" "$sidecar"
+    printf -- '- **Environment:** test command `npm test`; module directories `lending/`, `infra/memory/`; deviation zone `main/`; records `%s`; report `%s`; sidecar `%s`; cadence %s; the owner opted out of the sandbox at A (later checks are logged as information); the design and the README name no data directory for the app (`data not named`)\n' "$records" "$report" "$sidecar" "${cadence:-loop}"
     printf -- "- **Owner's standing directions:** decisions may be settled with the owning persona under \`%s/delegation-slice-001.md\`%s%s\n" "$target" "${deleg_note:-}" "${auto_note:-}"
   } > "$records/handoff-slice-001.md"
   # The skill commits the handoff with the records; the log stays dirty.
   git add "$records/handoff-slice-001.md"
   git commit -qm "Records: slice 001 handoff"
+}
+
+solo_build() {  # the slice as one builder's commit with its report, gated, logged as chunk 1 of 1
+  cp -R "$loop/snapshots/slice-built/." .
+  cp "$loop/snapshots/slice-fixed/lending/cancel-hold-notice.ts" lending/cancel-hold-notice.ts
+  cp "$loop/snapshots/slice-fixed/test/cancel-hold-notice.test.ts" test/cancel-hold-notice.test.ts
+  cp "$loop/docs/implementation-report-solo.md" "$report"
+  cp "$loop/docs/README-slice.md" README.md
+  local built=(lending/cancel-hold.ts lending/cancel-hold-notice.ts lending/hold-queue.ts infra/memory/in-memory-hold-queue.ts
+    test/cancel-hold.test.ts test/cancel-hold-again.test.ts test/cancel-hold-notice.test.ts test/in-memory-hold-queue.test.ts README.md)
+  git add "${built[@]}" "$report"
+  git commit -q -F - <<'EOF'
+Cancel a member's hold on a title
+
+Delivers: the two acceptance criteria, the security criterion and the reliability criterion of slice 001
+EOF
+  build_sha="$(git rev-parse --short HEAD)"
+  gate "$base_sha" "$records/gate-slice-build.txt" lending/ infra/memory/ test/ README.md
+  records_commit "Records: slice 001 build"
+  cat >> "$log" <<EOF
+- **C. Chunk 1/1:** \`Staff cancel a member's hold on a title\`; opus 96t 31m; commits \`$build_sha\`; gate \`PASS\`; deviations \`0\`; shell edits \`0\`; review \`none\`; smoke \`none\`; standing \`0/0/0\`; builder \`agent-2b8e\`; budget \`0.6h 0r 0c\`; records \`$rec_sha\`; audit \`off\`; data \`not named\`
+EOF
+}
+
+solo_readers() {  # solo_readers <cold report>: the mutation pass for real, the three reports, round 0 recorded
+  local mutants="${TMPDIR:-/tmp}/kad-mutants-fixture-$$.json" head
+  "$py" -I "$scripts/mutation_pass.py" changed --repo . --base "$base_sha" --out "$mutants" > /dev/null
+  "$py" -I "$scripts/mutation_pass.py" run --repo . --mutants "$mutants" --test 'npm test' --base "$base_sha" \
+    --allow-dirty --remove-mutants --first-failure --out "$records/slice-mutation.md" > /dev/null
+  [ -f "$records/slice-mutation.md" ] || { echo "state.sh: the mutation pass wrote no report" >&2; exit 1; }
+  head="$(git rev-parse --short HEAD)"
+  sed "s/@BASE@/$base_sha/; s/@HEAD@/$head/" "$loop/records/solo-r0-combined.md" > "$records/slice-r0-combined.md"
+  sed "s/@HEAD@/$head/" "$loop/records/$1.md" > "$records/slice-r0-cold.md"
+  sed "s/@HEAD@/$head/" "$loop/records/solo-r0-verify.md" > "$records/slice-r0-verify.md"
+  "$py" -I "$scripts/rounds_record.py" --sidecar "$sidecar" --chunk D --round 0 \
+    --report "$records/slice-r0-combined.md" --report "$records/slice-r0-cold.md" > /dev/null
 }
 
 base_repo
@@ -857,5 +909,18 @@ HOOK
           "E: delivery" "$standing" "$tracker"
       fi
     fi ;;
+  solo-ready)
+    cadence=solo; planning
+    handoff "A done under the \`solo\` cadence (the owner's word for this slice): the A line is written; under \`solo\` no plan is written and no chunk runner is launched" \
+      "S.1: the build, one builder for the slice" ;;
+  solo-verified|solo-unconfirmed)
+    cadence=solo; planning; solo_build; map_commit
+    cold=solo-r0-cold; cold_note="1 Medium confirmed by execution (\`A rejection for a short card number prints the whole number\`), 1 line to verify"
+    if [ "$state" = solo-unconfirmed ]; then cold=solo-r0-cold-pass; cold_note="no finding, 1 line to verify"; fi
+    solo_readers "$cold"
+    reviews=3 fixers=0 handoff "S.5 under way: the build is logged (the C line, chunk 1 of 1) and its records committed as $rec_sha; S.3 done: the map committed as $map_sha, the Definition of Done passes, the mutation pass ran (\`$records/slice-mutation.md\`) with no survivor, so the builder was not asked about any; S.4 done: the three readers reported and round 0 is recorded: the combined review \`$records/slice-r0-combined.md\` (0/1/2/1), the cold read \`$records/slice-r0-cold.md\` ($cold_note); the slice has no screen, so no walk; the verify agent (agent-6aa1) handed back \`$records/slice-r0-verify.md\`: the combined review's High was not reproduced" \
+      "S.5 from there: the confirmed list and \`$records/slice-findings.md\`; then S.6 and S.7" \
+      "**Builder:** agent-2b8e (opus, 96 turns); the last gate output on this tree is \`$records/gate-slice-build.txt\`"
+    ;;
   *) echo "unknown state: $state" >&2; exit 1 ;;
 esac

@@ -111,7 +111,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
 <body>
 <div class="wrap">
   <h1>How kad-dev-team takes a new project from an idea to a pull request</h1>
-  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.18.0.</p>
+  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.19.0.</p>
 
   <div class="legend" role="group" aria-label="Highlight one kind of work">
     <button type="button" id="f-all" data-show="" aria-pressed="true">Show all</button>
@@ -219,6 +219,33 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
   </section>
 
   <!-- ============ C ============ -->
+  <section class="phase">
+    <header><h2><span class="letter">S</span> Solo: one builder for the slice (a measured arm, in place of B, C and D)</h2>
+      <p>Only when the owner asked for <code>solo</code> in their message or the standing file holds <code>cadence: solo</code>. No chunk plan and no chunk runner. The mechanical checks are the same scripts; only what running something confirmed is fixed, and the one review is reported on the pull request.</p></header>
+    <div class="rows">
+      <div class="row head"><div>What happens</div><div>Who</div><div>Tools that decide</div></div>
+      <div class="row"><div class="what"><strong>1. The build</strong><span>One builder builds the whole slice: one test per criterion at the level that reaches it, written first and seen failing, a second test only for a branch that test cannot reach, exact wording in one table per message module. It commits in steps of its own choosing, each after the gate's checks.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · slice-build <span class="tag">agent · Opus</span></span></div>
+        <div class="chips"><span class="chip t">sandbox_check.py</span><span class="chip t">validation_gate.py --checks-only</span></div></div>
+      <div class="row"><div class="what"><strong>2. The gate, once on the whole build</strong><span>A failure is a failing check: one fixer, the gate again, and a second failure ends the flow. Logged as chunk 1 of 1.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span></div>
+        <div class="chips"><span class="chip t">validation_gate.py</span></div></div>
+      <div class="row"><div class="what"><strong>3. The slice's checks</strong><span>The map, the Definition of Done and the mutation pass, as in D.</span></div>
+        <div class="chips"><span class="chip m"><b>architecture-cartographer</b> · map-update</span></div>
+        <div class="chips"><span class="chip t">done_check.py</span><span class="chip t">mutation_pass.py</span></div></div>
+      <div class="row"><div class="what"><strong>4. Three readers together</strong><span>The cold read on a clone, the criteria walk in a real browser for a slice with a screen, and one combined review of five lenses in place of D's six reviewers.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · cold-read <span class="tag">agent · Opus</span></span><span class="chip m"><b>accessibility-engineer</b> · accessibility-review <span class="tag">agent · Opus</span></span><span class="chip m"><b>code-reviewer</b> · five review skills <span class="tag">agent · Opus</span></span></div>
+        <div class="chips"><span class="chip t">rounds_record.py</span><span class="chip t">scratch_run.py</span></div></div>
+      <div class="row"><div class="what"><strong>5. What is confirmed</strong><span>A failing check, a bug the cold read reproduced, a criterion the walk failed, a mutation survivor the builder calls real, and a Critical or High of the combined review that a verify agent reproduces. Mediums and Lows of the review are never verified or fixed. Everything else is listed in <code>slice-findings.md</code>.</span></div>
+        <div class="chips"><span class="chip m"><b>code-reviewer</b> <span class="tag">verify agent · Opus</span></span><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>6. One fix, only for the confirmed</strong><span>Nothing confirmed, no fixer. Otherwise one fresh fixer, the gate, and the reproductions run again. No reviewer reads the fix and no second fixer follows; a Critical or High that still reproduces stops the flow for the owner.</span></div>
+        <div class="chips"><span class="chip m"><b>tdd-coach</b> · slice-build <span class="tag">agent · Opus</span></span></div>
+        <div class="chips"><span class="chip t">validation_gate.py</span></div></div>
+      <div class="row"><div class="what"><strong>Then delivery</strong><span>As E, with the findings list in the pull request's body under "Review findings". Nothing in it is filed as an issue.</span></div>
+        <div class="chips"><span class="chip m"><b>release-engineer</b> · delivery</span></div><div class="none">None</div></div>
+    </div>
+  </section>
+
   <section class="phase">
     <header><h2><span class="letter">C</span> Build, one chunk at a time</h2>
       <p>One chunk runner per chunk carries the whole round on a short context and hands back a single line. It never asks the owner and never decides anything that is not mechanical.</p></header>

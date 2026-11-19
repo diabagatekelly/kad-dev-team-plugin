@@ -353,6 +353,17 @@ the thinnest cut first and asks before a wider one, and the three
 criteria stages keep wording and log detail in design notes, not
 criteria: one slice had 35 criteria for one button.
 
+**0.19.0 (2026-11-19), a third cadence, `solo`, as a measured arm.** The
+owner's question after the fourth slice: does the chunk loop write worse
+code and tests than a lighter hand would? Planning is kept; the build is
+compared. Under `solo` (`tdd-coach:slice-build`, a new skill, so the
+loser of the comparison is one removal) one Opus builder builds the
+whole slice with one test per criterion at the level that reaches it;
+the gate, the mutation pass, the cold read and the criteria walk run
+unchanged; only what running something confirmed goes to the one fixer;
+one combined review is reported on the pull request and not fixed.
+`loop` and `light` are as they were.
+
 ## Deferred / phase-2 ideas
 
 - **Orchestrator v2 — quarantine, grade, combine. Built, not deferred

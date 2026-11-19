@@ -26,7 +26,8 @@ list and by the evidence fingerprint alike:
   under `skills/*/scripts/` and the sibling files they name, whichever
   skill owns them, and on no other script.
 - **The orchestrator's steps.** A case depends on `skills/orchestrator/SKILL.md`
-  outside its five step sections (A to E) and on the sections of the steps
+  outside its step sections (A to E, and S, the `solo` cadence's own
+  step) and on the sections of the steps
   `tools/orchestrator_steps.json` lists for it. The text is still all in
   the model's context: a miss caused by a paragraph in another step goes
   unseen until that case next runs. Accepted, knowingly.
@@ -138,7 +139,12 @@ def fixture_paths(case):
 
 
 STEP_STARTS = [("A", "**A. Start.**"), ("B", "**B. Plan.**"), ("C", "**C. Chunks, one at a time.**"),
-               ("D", "**D. Slice review.**"), ("E", "**E. Delivery.**"), ("shared", "**Pausing and resuming.**")]
+               ("D", "**D. Slice review.**"), ("E", "**E. Delivery.**"),
+               ("S", "**S. Solo: one builder for the slice.**"), ("shared", "**Pausing and resuming.**")]
+# S stands between E's text and the shared text after it. It is the one
+# section a skill may lack (the cadence is a measured arm and is removed
+# with one deletion): without it the other six still scope.
+OPTIONAL_STEPS = {"S"}
 STEP_LOG_LINES = {"A": "- **A. Start:**", "B": "- **B. Plan:**", "C": "- **C. Chunk", "D": "- **D. Slice review:**",
                   "E": "- **E. Delivery:**"}
 ORCHESTRATOR = "skills/orchestrator/SKILL.md"
@@ -153,7 +159,7 @@ def scoped(text, steps):
     sections for its own steps, and its own steps' lines of the log
     format. The whole text when a section's opening line is not found
     (the skill was restructured: nothing is assumed)."""
-    if any(("\n" + mark) not in text for _, mark in STEP_STARTS):
+    if any(("\n" + mark) not in text for step, mark in STEP_STARTS if step not in OPTIONAL_STEPS):
         return text
     out, current = [], "shared"
     for line in text.split("\n"):

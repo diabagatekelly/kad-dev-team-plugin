@@ -28,6 +28,66 @@ def errors(line):
     return [text for level, _, text in findings if level == "ERROR"]
 
 
+SOLO_A = ("- **A. Start:** sandbox — `PASS (macos; browser not needed)`; delegation — `none`; autopilot — `none`; cadence — `{cadence}`; "
+          "budget — `5h`; branch — `slice-001-cancel-hold`; base — `aaaaaaa`; records — `docs/x/implementation`; readiness — `PASS`")
+SOLO_C = ("- **C. Chunk 1/1:** `Cancel a hold`; opus 96t 31m; commits `1111111` `2222222`; gate `PASS`; deviations `0`; review `none`; "
+          "smoke `none`; standing `0/0/0`; builder `a1`; budget `0.6`h `0`r; records `3333333`; audit `off`; data `unchanged`")
+SOLO_D = ("- **D. Slice review:** map `docs/architecture-map.md` (`4444444`); done `PASS`; mutation `12 mutants, 11 caught, 1 survived`; "
+          "reviewers `co tq ar se re`; r0 `0/1/4/3`; cold `1 confirmed, 0 verify`; {tail}; standing `0/0/0`; records `5555555`; audit `off`; data `unchanged`")
+
+
+def loop_errors(*lines):
+    text = "## 9. 2026-11-19 — slice ready for implementation\n\n**Routed to:** chunk loop\n**Artifact:** see sub-entries below\n" + "\n".join(lines) + "\n"
+    entries, _ = check.parse_log(text)
+    findings = []
+    check.check_loop(entries, findings)
+    return [t for level, _, t in findings if level == "ERROR"]
+
+
+class TheSoloCadence(unittest.TestCase):
+    A = SOLO_A.format(cadence="solo")
+
+    def test_a_solo_slice_with_one_confirmed_fix_has_no_error(self):
+        self.assertEqual(loop_errors(self.A, SOLO_C, SOLO_D.format(tail="confirmed `2` of `6`; fix `6666666` gate PASS, reproduces `0`")), [])
+
+    def test_nothing_confirmed_and_no_fixer_has_no_error(self):
+        self.assertEqual(loop_errors(self.A, SOLO_C, SOLO_D.format(tail="confirmed `0` of `5`")), [])
+
+    def test_the_same_lines_under_loop_miss_their_plan_and_their_review(self):
+        errs = loop_errors(SOLO_A.format(cadence="loop"), SOLO_C, SOLO_D.format(tail="confirmed `0` of `5`"))
+        self.assertTrue(any("B missing" in e for e in errs), errs)
+        self.assertTrue(any("`review none` under cadence `loop`" in e for e in errs), errs)
+
+    def test_a_fixer_with_nothing_confirmed_is_an_error(self):
+        errs = loop_errors(self.A, SOLO_C, SOLO_D.format(tail="confirmed `0` of `5`; fix `6666666` gate PASS, reproduces `0`"))
+        self.assertEqual(len(errs), 1, errs)
+        self.assertIn("only a confirmed finding goes to a fixer", errs[0])
+
+    def test_confirmed_findings_with_no_fix_and_a_missing_field_are_errors(self):
+        self.assertIn("no `fix <sha>`", loop_errors(self.A, SOLO_C, SOLO_D.format(tail="confirmed `2` of `6`"))[0])
+        self.assertIn("no `confirmed <n> of <m>`", loop_errors(self.A, SOLO_C, SOLO_D.format(tail="owed `0`"))[0])
+
+    def test_a_fix_that_was_not_run_again_is_an_error(self):
+        errs = loop_errors(self.A, SOLO_C, SOLO_D.format(tail="confirmed `2` of `6`; fix `6666666` gate PASS"))
+        self.assertTrue(any("reproduces <k>" in e for e in errs), errs)
+
+    def test_a_re_review_a_plan_or_a_second_chunk_is_an_error(self):
+        errs = loop_errors(self.A, SOLO_C, SOLO_D.format(tail="confirmed `2` of `6`; r1 fix `6666666` → `0/0/1` (reg 1, pre 0); r2 fix `7777777` gate PASS; last `0/0/0`"))
+        self.assertTrue(any("not re-reviewed" in e for e in errs), errs)
+        errs = loop_errors(self.A, "- **B. Plan:** `2` chunks — `a`; `b`", SOLO_C, SOLO_D.format(tail="confirmed `0` of `5`"))
+        self.assertTrue(any("no chunk plan is written" in e for e in errs), errs)
+        errs = loop_errors(self.A, SOLO_C.replace("1/1", "1/2"), SOLO_D.format(tail="confirmed `0` of `5`"))
+        self.assertTrue(any("`C. Chunk 1/1`" in e for e in errs), errs)
+
+    def test_a_reviewed_build_is_an_error(self):
+        errs = loop_errors(self.A, SOLO_C.replace("review `none`", "review `co tq` r0 `0/0/0`").replace("smoke `none`", "smoke `PASS`"), SOLO_D.format(tail="confirmed `0` of `5`"))
+        self.assertTrue(any("nothing reads or drives the build" in e for e in errs), errs)
+
+    def test_an_unknown_cadence_is_named_with_the_three(self):
+        errs = loop_errors(SOLO_A.format(cadence="fast"), SOLO_C, SOLO_D.format(tail="confirmed `0` of `5`"))
+        self.assertTrue(any("`loop`, `light` or `solo`" in e for e in errs), errs)
+
+
 class AFixOfSeveralCommits(unittest.TestCase):
     def test_r2_with_spaces_between_its_hashes_is_read(self):
         for r2 in ("r2 fix `3333333` `4444444` gate PASS", "r2 fix 3333333 4444444 gate PASS",

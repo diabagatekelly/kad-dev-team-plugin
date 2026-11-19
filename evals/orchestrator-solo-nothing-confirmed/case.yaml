@@ -1,0 +1,70 @@
+schema_version: "1.0"
+name: orchestrator-solo-nothing-confirmed
+description: "TODO.md's L4 and L5 (0.19.0), the `solo` cadence with nothing confirmed: the combined review raised a High that the verify agent did not reproduce, two Mediums and a Low, and the cold read found no bug by running the code. No fixer is launched and no code changes, whatever the review said: the findings go to `slice-findings.md` for the pull request, the records are committed and the review's line says `confirmed 0` with no fix. Known-bad reference: step S without its confirmed-only rule."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository on the branch `slice-001-cancel-hold`; the planning documents are in `docs/cancel-hold/`. The build of slice 001 was handed off at the end of the previous session: `docs/cancel-hold/implementation/handoff-slice-001.md` says where it stopped. Keep going. Audit mode is off here. Hand off as soon as the slice review's line is written in the log, or as soon as an agent has been launched, whichever comes first: write the handoff file and stop; don't start the delivery in this session.
+  model: sonnet
+  max_turns: 40
+  timeout_seconds: 1500
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  # The rule under test: with nothing shown by running the code, nothing is fixed.
+  - type: tool_used
+    name: no-fixer-launched
+    tool: Agent
+    input_match: '"subagent_type"\s*:\s*"(?:kad-dev-team:)?tdd-coach'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: regex
+    name: orchestrator-edits-no-code
+    target: trace
+    pattern: '"name":"(?:Edit|Write)","input":\{[^{}]*"(?:file_path|path)":"[^"]*/(?:lending|infra|test)/'
+    match: not_contains
+  - type: file_exists
+    name: findings-file-written
+    path: docs/cancel-hold/implementation/slice-findings.md
+  - type: regex
+    name: unreproduced-high-listed-as-not-reproduced
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-findings.md
+    pattern: '\n## Not reproduced(?:(?!\n## )[\s\S])*another member''s hold'
+  - type: regex
+    name: mediums-and-the-verify-line-reported-not-fixed
+    target:
+      source: file
+      path: docs/cancel-hold/implementation/slice-findings.md
+    pattern: '\n## Reported, not fixed(?=(?:(?!\n## )[\s\S])*optional on both statuses)(?=(?:(?!\n## )[\s\S])*dismiss)'
+  - type: regex
+    name: review-line-says-confirmed-zero
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*D\. Slice review:\*\*[^\n]*confirmed\s+`?0`?\s+of\s+`?\d'
+  - type: regex
+    name: review-line-names-no-fix
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: '\*\*D\. Slice review:\*\*[^\n]*\bfix\s+`?[0-9a-f]{7}'
+    match: not_contains
+  - type: tool_used
+    name: records-committed
+    tool: Bash
+    input_match: 'git commit[\s\S]*Records: slice 001 review'
+    min: 1
