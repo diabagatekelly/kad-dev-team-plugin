@@ -87,5 +87,51 @@ class ASessionWithNoTranscript(unittest.TestCase):
         self.assertEqual((data["total"], data["not_covered"]), (10.0, [LOST]))
 
 
+class TheRoleOfALaunch(unittest.TestCase):
+    """S7 (the slice 4 review, F13): the slice reviewers were launched as
+    "Slice 4 review: security" and filed as consults by their agent type,
+    $8.66 of one slice under the wrong heading."""
+
+    def setUp(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("cost_by_role", SCRIPT)
+        self.tool = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.tool)
+
+    def test_a_slice_reviewer_named_after_a_colon_is_a_reviewer(self):
+        for description, agent_type, role in (
+                ("Slice 4 review: security", "kad-dev-team:devsecops-engineer:AGENT", "reviewer:security"),
+                ("Slice 4 review: reliability", "kad-dev-team:devsecops-engineer:AGENT", "reviewer:reliability"),
+                ("Slice 4 review: architecture", "kad-dev-team:software-architect:AGENT", "reviewer:architecture"),
+                ("Slice 4 review: accessibility", "kad-dev-team:accessibility-engineer:AGENT", "reviewer:accessibility"),
+                ("Slice 4 review: code", "kad-dev-team:code-reviewer:AGENT", "reviewer:code"),
+                ("Slice 4 review: test quality", "kad-dev-team:code-reviewer:AGENT", "reviewer:test-quality"),
+                ("Slice 4 r1 re-review: security", "kad-dev-team:devsecops-engineer:AGENT", "reviewer:security"),
+                ("Slice 4 r1 re-review: accessibility", "kad-dev-team:accessibility-engineer:AGENT", "reviewer:accessibility"),
+                ("Slice 4 r1 re-review: test quality", "kad-dev-team:code-reviewer:AGENT", "reviewer:test-quality"),
+                ("Security review of slice 3", "kad-dev-team:devsecops-engineer:AGENT", "reviewer:security")):
+            self.assertEqual(self.tool.role_of(description, agent_type), role, description)
+
+    def test_a_fixer_named_in_the_middle_and_the_capture_fixer_are_fixers(self):
+        for description in ("Slice 4 second fixer (regressions)", "Gate fixer: lint error", "Add slice 4 screen captures",
+                            "Fix CI screens r1 captures", "Fix chunk 6 gate failure"):
+            self.assertEqual(self.tool.role_of(description, "kad-dev-team:tdd-coach:AGENT"), "fixer", description)
+
+    def test_what_was_right_stays(self):
+        for description, agent_type, role in (
+                ("Build slice 004 chunk 3", "kad-dev-team:tdd-coach:AGENT", "builder/planner"),
+                ("Plan slice 4 chunks", "kad-dev-team:tdd-coach:AGENT", "builder/planner"),
+                ("Chunk 5 of 7 runner (light)", "kad-dev-team:chunk-runner:AGENT", "runner"),
+                ("Re-review fix r1 chunk 1", "kad-dev-team:code-reviewer:AGENT", "reviewer:chunk"),
+                ("Slice 4 criteria walk", "kad-dev-team:accessibility-engineer:AGENT", "walk"),
+                ("Slice 4 cold read", "kad-dev-team:tdd-coach:AGENT", "reviewer:cold"),
+                ("Comments-only review, slice 4", "kad-dev-team:code-reviewer:AGENT", "reviewer:comments"),
+                ("Slice 4 last-fix review", "kad-dev-team:code-reviewer:AGENT", "reviewer:code"),
+                ("UX decision for chunk 2", "kad-dev-team:ux-designer:AGENT", "consult"),
+                ("Reliability decision: complete during close", "kad-dev-team:devsecops-engineer:AGENT", "consult"),
+                ("Triage PR #72 comments", "kad-dev-team:code-reviewer:AGENT", "triage")):
+            self.assertEqual(self.tool.role_of(description, agent_type), role, description)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)
