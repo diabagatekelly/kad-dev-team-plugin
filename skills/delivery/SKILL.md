@@ -117,7 +117,16 @@ comments, tests, structure, and so on), each with its file and line, not
 filed anywhere; a provenance line naming the models and their roles (the
 orchestrator session's model routing, Sonnet implementing and fixing, Opus
 reviewing) and this plugin; the trailing reference line the skill uses for
-ticket identifiers. Then:
+ticket identifiers.
+
+**When the orchestrator hands a `slice-findings.md`** (its `solo`
+cadence, where one review is reported and only what was confirmed by
+running it is fixed): the body has one more part, **Review findings**,
+after the Definition of Done table, holding that file's three sections
+as written, by severity, each line with its file and line. It is not
+summarised and nothing is left out because it looks small. No issue is
+filed for anything in it in step 4: the owner reads the list on the
+pull request and says what becomes work. Then:
 
 ```
 gh pr create --base '<default branch>' --head '<branch>' --title '<the slice's title>' --body-file '<the body file>'

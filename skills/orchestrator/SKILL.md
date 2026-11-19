@@ -924,6 +924,18 @@ gate sent it back four times over documents it had not touched
    review of that slice says whether `light` becomes the default; until
    then `loop` is, and `light` is the owner's word in the message.
 
+   **`solo`** is a third value, the measured arm of one builder for the
+   slice (the owner, 2026-11-18). It is the cadence when the owner's
+   message for this slice names it (the word `solo`, or "one builder
+   for the slice"), or when `<target>/autopilot.md` holds the line
+   `cadence: solo`; that line is written (appended when step 2 below
+   writes or finds the file) only when the owner's message says `solo`
+   holds for later slices too, in their words beside it, and a message
+   that names another cadence for this slice wins over the file. Under
+   `solo` the A line says `cadence — solo`, steps B, C and D are not
+   run, and step S below, after E's text, takes their place; E follows
+   it.
+
    **Audit and session**, inline with Bash, after the sandbox check and
    whatever it asked:
 
@@ -1840,6 +1852,156 @@ the values back in its own log bullet (incident 18).
    comments if the cap was hit; with `CI green` the slice has reached the
    terminal row, and without it the slice has not.
 
+**S. Solo: one builder for the slice.** Only under the `solo` cadence,
+where it takes the place of B, C and D. The mechanical checks are the
+ones D runs, by the same scripts with the same arguments; what differs
+is who builds, what is reviewed and what gets fixed. The models of this
+step are named here and nowhere else: the builder and the one fixer are
+`"opus"`, every reader `"opus"` as everywhere. Every launch follows a
+sandbox check, nothing is resumed to fix, and the loop time of A's
+budget holds as it does for the chunk loop.
+
+1. **The build.** The data hash, then one
+   `kad-dev-team:tdd-coach:AGENT`, `model: "opus"`, `maxTurns: 300`, a
+   real async `Agent` call, no worktree isolation, told to invoke
+   `kad-dev-team:slice-build` first, by name, and handed by absolute
+   path: the slice file, the design doc, `domain-model.md` when the
+   target directory has one, the security and reliability criteria, the
+   screen design and accessibility criteria if UI-touching, the unit's
+   read context (as B lists it), the project root, the documented test
+   command, the report path (`implementation-report-slice-<nnn>.md` in
+   the records directory), the design's module directories and this
+   skill's `scripts/` directory. One line saying the orchestrator
+   checks the result and that it commits. No chunk plan is written, no
+   chunk runner is launched and no reviewer reads a commit. Wait for it
+   as C.1 says a runner is waited for.
+
+   Its hand-back is one line (`built <first sha>..<last sha>; <c>
+   criteria, <t> tests; deviations <n>; <report path>`). Check it
+   before anything else: the last hash is `HEAD`'s (a line naming a
+   commit the repository does not hold is `hand-back unverified`, and
+   the flow ends there), and the report's `## Criteria` table has one
+   row for every criterion identifier of the slice file and the three
+   criteria documents, each naming a test. A criterion with no row is
+   not sent back: it is a confirmed finding for step 5 (`criterion
+   <id> has no test`, High).
+2. **The gate**, inline, once on the whole build:
+
+   ```
+   python3 -I "${CLAUDE_SKILL_DIR}/scripts/validation_gate.py" --project '<project root>' --base '<base>' --test-cmd '<documented test command>' --allow '<each module directory>/' --allow '<the project's test directory>/' --allow '<records directory>/' --allow '<target directory>/orchestrator-log.md' --module-dir '<each module directory>' --deviation-zone '<each composition root and entry point>' --protect '<every other document in the target directory>' --planning '<target directory>' --agent '<builder agent id>' [--coverage]
+   ```
+
+   `--coverage` when the project runs on Node's test runner, and the
+   root configuration files the design names as changed are `--allow`ed
+   by name. A `FAIL` is a failing check, so it is confirmed without
+   anyone's opinion: **one** fresh fixer now (`model: "opus"`,
+   `maxTurns: 160`, `kad-dev-team:slice-build`, its "A fix handed back",
+   the gate's output by path), then the gate again; a second `FAIL`
+   ends the flow (`gate FAIL: <checks>; ended`). The data hash again.
+   The records commit, the snapshot and the sync as C.6. Then the
+   build's line in the log, **in the C line's form as chunk 1 of 1**:
+   `- **C. Chunk 1/1:**` the slice's title, `opus <turns>t <min>m`, the
+   commits, the gate, deviations, shell edits, `review none`, `smoke
+   none`, `standing 0/0/0`, `builder <agent id>`, budget, records,
+   audit, data. There is no B line.
+3. **The slice's checks.** D.1 (the map) and D.2 (the Definition of
+   Done and the mutation pass left running in the background) exactly
+   as written there, with one difference: a Definition of Done failure
+   gets no fixer of its own. A missing or incomplete README is still
+   `docs-writer:readme` inline; every other failing check is a
+   confirmed finding for step 5.
+4. **Three readers, launched together**, each as D describes it and
+   handed what D hands it:
+   - **The cold read** (D.4): the clone, no planning document, every
+     suspicion probed by execution, report `slice-r0-cold.md`.
+   - **The criteria walk** (D.3's), only when the slice touches UI:
+     report `slice-r0-walk.md`.
+   - **One combined review**, in place of D's six reviewers: one
+     `kad-dev-team:code-reviewer:AGENT`, `model: "opus"`, handed D.3's
+     five things with the report path `slice-r0-combined.md`, and told
+     to read the slice once ("Cold pass first": all of `src/` and
+     `test/`, the checks run, the suite's result from the gate output)
+     and then to invoke, each by name, `kad-dev-team:code-review`,
+     `kad-dev-team:test-quality-review`,
+     `kad-dev-team:architecture-review`,
+     `kad-dev-team:security-review` and
+     `kad-dev-team:reliability-review`, writing one report in the
+     shared finding format, every finding carrying the lens that raised
+     it. It is not handed the mutation report and does not wait for it.
+
+   When all have reported: `rounds_record.py` with `--chunk D --round
+   0` on the reports.
+5. **What is confirmed.** Only a finding that running something showed
+   is fixed. Five kinds, and nothing else:
+   - a **failing check**: a Definition of Done failure of step 3, a
+     criterion with no test (step 1);
+   - a **bug the cold read reproduced**: its findings marked `confirmed
+     by execution`, at the severity the reader gave. A `verify` finding
+     is not confirmed;
+   - a **criterion the walk failed**: each FAIL row;
+   - a **survivor the builder calls real**. When the mutation pass has
+     exited with survivors, send the builder (`SendMessage` to the
+     agent id of step 1) the path of `slice-mutation.md` and one
+     sentence: answer as its skill's "Asked about survivors" says and
+     change nothing. Each `real:` line is confirmed, at Medium; each
+     `equivalent:` line is listed with its reason. A builder that
+     cannot be reached or does not answer line by line leaves every
+     survivor unconfirmed. You read no survivor yourself;
+   - a **Critical or High of the combined review that reproduces**.
+     One `kad-dev-team:code-reviewer:AGENT`, `model: "opus"`, handed
+     those findings by report path and title, the project root, the
+     test command, the scratch launcher with a folder (the data rule)
+     and the report path `slice-r0-verify.md`, and told one thing: for
+     each, run the code at `HEAD` and say whether it is true. What it
+     reproduces it writes as a finding in the shared format; the rest
+     it lists under `## Not reproduced`, one line each with what it
+     ran. With no Critical or High there is no launch. **A Medium or a
+     Low of the combined review is never verified and never fixed.**
+
+   Write `<records dir>/slice-findings.md`, the one list the owner
+   reads: `## Confirmed and fixed` (filled after step 6), `## Not
+   reproduced` (the combined review's Critical and High that did not
+   reproduce, with what was run), `## Reported, not fixed` (its Mediums
+   and Lows, the cold read's `verify` findings, the survivors called
+   equivalent or left unanswered), each by severity, one line per
+   finding with its file and line and the report it is in. Nothing in
+   it is reworded into a recommendation.
+6. **One fix, and only for the confirmed.** Nothing confirmed: no
+   fixer is launched, whatever the combined review said. Otherwise
+   **one** fresh fixer (`model: "opus"`, `maxTurns: 160`,
+   `kad-dev-team:slice-build`, its "A fix handed back"), handed the
+   confirmed findings by report path and title and nothing that was
+   not confirmed. Then the gate on its range (a `FAIL` ends the flow,
+   as in step 2: there is no second fixer under `solo`). Then **the
+   reproductions again**, and nothing else is reviewed: the verify
+   agent of step 5 once more, handed every confirmed finding that came
+   from a reader (the cold read's, the combined review's) and told to
+   run each at `HEAD` (`slice-r1-verify.md`, recorded with `--chunk D
+   --round 1 --last`); the walk re-driven for its FAIL rows
+   (`slice-r1-walk.md`); the Definition of Done once more when it had
+   failed. No reviewer reads the fix's diff and no second fixer
+   follows. A Critical or High that still reproduces stops the flow
+   before E for the owner, with both reports named; the autopilot
+   round does not run under `solo`. A Medium that still reproduces
+   goes to `slice-findings.md` under `## Reported, not fixed`, and so
+   do FAIL rows still failing.
+7. **The records commit** `Records: slice <nnn> review`, the snapshot
+   and the sync as C.6, then the review's line **in the D line's
+   form**: map, done, mutation, `reviewers co tq ar se re`, `r0
+   C/H/M/L` (the combined review's and the cold read's together),
+   walk, cold, then `confirmed <n> of <m>` (of the Critical, High and
+   Medium findings and survivors, how many running something showed),
+   `fix <sha> gate PASS, reproduces <k>` when a fixer ran, standing
+   (what still reproduces), records, audit, data. No `r1`, `r2` or
+   `last` field: nothing was re-reviewed.
+
+Then E as written, with one more thing told to `delivery` at E.3: the
+path of `slice-findings.md`, for the body's "Review findings" part.
+Nothing in that file is filed as an issue.
+
+A handoff written inside this step names step S and its numbered step,
+and carries the builder's agent id.
+
 **Pausing and resuming.** On a context clear, a rate limit, a session end
 or an owner's "hand off" mid-loop, before anything else write
 `<records dir>/handoff-slice-<nnn>.md`: a first line saying it is resumed
@@ -1880,7 +2042,7 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository | flow not started: planning pull request not merged>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; autopilot — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
+- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository | flow not started: planning pull request not merged>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; autopilot — `<file path | none>`; cadence — `<loop | light | solo>`; budget — `<8h | 5h>, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
 - **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re] | none>`< r0 `<C/H/M>`>< nd `<n>`>; smoke `<PASS | <n> findings | none>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`<, first `<f>`>)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> verify `<c>` confirmed, `<n>` not reproduced< fix `<sha>` → last `<C/H/M>`>>; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
