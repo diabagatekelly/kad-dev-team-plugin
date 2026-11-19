@@ -54,6 +54,20 @@ The lists before this one are in `docs/todo-archive.md`.
    own pull request before the build; the loop's records do not (my
    answer to the owner's question; step 2, P4 and P5).
 
+5. **Step 2's choices, 2026-11-18** (pull request #68 merged the same
+   evening as kad 0.17.1):
+   - The loop **waits for the owner to merge the planning pull request**
+     before it builds ("Wait"): the owner's checkpoint on the plan, and
+     where a slice that is too broad is caught.
+   - **No size threshold for a slice** ("No number"): the slice file
+     carries its size line (criteria count, expected chunks) and the
+     owner judges it at the planning pull request.
+   - Taken as recommended, not asked: the domain model is the
+     software-architect's, who asks the owner only about a state it
+     proposes to leave unsupported; each state cites the provider's
+     public documentation, or is marked to verify with the step that
+     would confirm it.
+
 ## Rules for every gated pull request
 
 From what #62 cost, and the owner's answers of 2026-11-16:
@@ -184,9 +198,8 @@ improved before that result.
 
 ### Step 1. What both arms share: the instruments
 
-- [ ] Part 1a's 42 stale cases, one run each (`gate.sh --stale`), the
-  loop states recorded, the write-up in `evals/README.md`, the pull
-  request. The owner starts the pass.
+- [x] Done 2026-11-18: pull request #68, merged as kad 0.17.1 (70
+  runs, $53.64; `evals/README.md`, "The instruments after slice 4").
 
 ### Step 2. Planning (kept whichever arm wins)
 
@@ -202,8 +215,8 @@ improved before that result.
 - [ ] **P2. The breadth of a slice is the owner's.** `vertical-slicing`
   offers the thinnest cut first and asks when it recommends more than
   it; the slice file carries a size line (criteria count, expected
-  chunks), and over a threshold the owner sets it is split or
-  confirmed.
+  chunks); no threshold: the owner reads the line at the planning
+  pull request (decision 5).
 - [ ] **P3. Fewer, sharper criteria.** Slice 4 had 35 for one button,
   and each became a test. The security, reliability and accessibility
   stages add a criterion only for a behaviour a user or an operator
