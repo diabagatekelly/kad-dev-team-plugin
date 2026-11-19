@@ -1,0 +1,75 @@
+schema_version: "1.0"
+name: domain-model-bank-phase2
+description: "TODO.md's P1 (0.18.0), the document: the same bank-connection problem and requirements, with the owner's answer to the one question the skill would ask given in the request (a connection ended for good stays unsupported). domain-model writes `domain-model.md`: a state table for the bank connection whose header the readiness gate can read, a state for a login that lapses and one for a connection that cannot be restarted, the unsupported state recorded with the owner's words, and every source a `to verify` step, since this session has no web tool and a URL not read here is never cited."
+tags: [domain-model, bank-connection]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    This repository holds only planning documents, in `docs/connect-bank/`: the problem and the agreed requirements. Nothing is sliced yet. Use the `kad-dev-team:domain-model` skill to model what the requirements list under "Outside systems and lasting things", and save the model in `docs/connect-bank/`.
+
+    What you would ask me, answered: a connection that the bank or the vendor has ended for good, with no way out in the app, stays unsupported for now. My words: "Leave it. If a connection dies this year I'll deal with it by hand."
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:domain-model"'
+    min: 1
+  - type: file_exists
+    name: model-written
+    path: docs/connect-bank/domain-model.md
+  - type: regex
+    name: table-header-the-gate-can-read
+    target:
+      source: file
+      path: docs/connect-bank/domain-model.md
+    pattern: '\|\s*State\s*\|[^\n]*\|\s*Way out\s*\|[^\n]*Supported[^\n]*\|[^\n]*Source'
+    flags: i
+  - type: regex
+    name: names-a-login-that-lapses
+    target:
+      source: file
+      path: docs/connect-bank/domain-model.md
+    pattern: '\n\|\s*`[^`\n]*(?:laps|expir|login|reauth|re-auth|credential|consent)[^`\n]*`\s*\|'
+    flags: i
+  - type: regex
+    name: names-a-connection-that-cannot-be-restarted
+    target:
+      source: file
+      path: docs/connect-bank/domain-model.md
+    pattern: '\n\|\s*`[^`\n]*(?:revok|gone|removed|ended|dead|closed|unrecover|permanent|cannot|lost|terminat)[^`\n]*`\s*\|'
+    flags: i
+  - type: regex
+    name: the-unsupported-state-carries-the-owners-words
+    target:
+      source: file
+      path: docs/connect-bank/domain-model.md
+    pattern: 'unsupported[^\n|]*owner[^\n|]*(?:Leave it|by hand)'
+    flags: i
+  - type: regex
+    name: sources-are-steps-to-verify
+    target:
+      source: file
+      path: docs/connect-bank/domain-model.md
+    pattern: 'to verify:'
+    flags: i
+  - type: regex
+    name: no-url-cited-that-was-not-read
+    # No web tool in this session: a URL in the Source column would be one
+    # recalled, not read.
+    target:
+      source: file
+      path: docs/connect-bank/domain-model.md
+    pattern: '\|\s*<?https?://'
+    match: not_contains
+  - type: regex
+    name: the-answered-question-is-not-asked-again
+    target: last_message
+    pattern: '(?:support it|leave it unsupported|stay unsupported)[^\n]*\?'
+    flags: i
+    match: not_contains

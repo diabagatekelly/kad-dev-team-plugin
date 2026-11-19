@@ -1,0 +1,54 @@
+schema_version: "1.0"
+name: orchestrator-planning-pr-open
+description: "TODO.md's P4 (0.18.0): the plan of slice 1 is open as its own pull request (#9, from `planning-001-cancel-hold`, checks green, no comment) and the owner asks for the build. The orchestrator's open-work step finds the planning pull request and the build does not start: no agent launched, no slice branch cut, no implementation skill invoked; the log has the entry, and the reply says the build starts once #9 is merged."
+tags: [orchestrator, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory, a git repository with its remote set up; the planning documents for the desk hold-cancel feature are in `docs/cancel-hold/`. The plan is done, so go ahead and build the slice now. On this machine the GitHub CLI is the wrapper at `tools/gh` (call it by that path, or put `tools/` on the PATH for the command).
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 1200
+  allowed_tools: [Skill, Read, Grep, Glob, Bash, Write, Edit, Agent]
+runs: 3
+graders:
+  - type: tool_used
+    name: orchestrator-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:orchestrator"'
+    min: 1
+  - type: tool_used
+    name: asks-the-tracker-for-open-pull-requests
+    tool: Bash
+    input_match: 'gh pr list'
+    min: 1
+  - type: tool_used
+    name: nothing-launched
+    tool: Agent
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-implementation-skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:(?:tdd-implementation-lite|chunk-runner)"'
+    min: 0
+    max: 0
+  - type: tool_used
+    name: no-slice-branch-cut
+    tool: Bash
+    input_match: 'git (?:switch -c|checkout -b) slice-'
+    min: 0
+    max: 0
+  - type: regex
+    name: log-has-the-waiting-entry
+    target:
+      source: file
+      path: docs/cancel-hold/orchestrator-log.md
+    pattern: 'planning pull request #?9'
+    flags: i
+  - type: regex
+    name: says-the-build-starts-once-it-is-merged
+    target: last_message
+    pattern: '(?:#9|pull request 9)[\s\S]*merg|merg[\s\S]*(?:#9|pull request 9)'
+    flags: i

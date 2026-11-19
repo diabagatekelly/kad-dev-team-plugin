@@ -176,6 +176,18 @@ Then:
   merge before any slice work: merging is the owner's. Two open slice
   pull requests are reported together and the lower-numbered slice is
   taken first.
+- **An open pull request from a planning branch** (`headRefName`
+  matching `planning-<nnn>-*`): that slice's plan is waiting for the
+  owner, so its build does not start and nothing newer is planned. Its
+  checks first, as above. A comment on it that this flow did not post is
+  the owner's correction to the plan: a backward route to the owner of
+  the document it names (step 3's rule), revised in place on the
+  planning branch and committed by name; then `delivery` pushes it ("A
+  planning pull request"). With nothing to answer, write the entry
+  (`**Routed to:** none (planning pull request #<n> open)`,
+  `**Artifact:** this log`), report `planning pull request #<n> is open:
+  the build of slice <nnn> starts once it is merged`, and stop: merging
+  is the owner's.
 - **Open issues at Critical or High**: `delivery` files every issue with
   a `severity:<level>` label as well as the title prefix, so read the
   label first, the title prefix (`[High]`, `High:`) second, and a
@@ -208,6 +220,12 @@ mechanical checks only, never a semantic read of full artifact prose:
 - Any `requirements-*.md` files? Same Active/Superseded rule. Which unit
   (scope-map step, or "the problem" if there's no scope map) does the
   current one belong to?
+- **Project-level:** does the current unit's Active requirements doc have
+  an `## Outside systems and lasting things` section that names anything
+  (not `none`)? If so, is there a `domain-model.md` in the target
+  directory with a `## ` table heading for each thing named? A
+  requirements doc with no such section (one written before the section
+  existed) asks for no model.
 - Any slice files? For each, does its title name a source scope-map step
   (e.g. "scope-map-001 step 2")? A slice with no such reference was cut
   directly from the problem doc. Has it been written up as a user story
@@ -253,6 +271,16 @@ mechanical checks only, never a semantic read of full artifact prose:
   actually UI-touching — a problem where nothing has needed a screen yet
   never routes to this row, the same way a problem with no stack decision
   forced yet never routes to the technology-bootstrap row below.
+- **Only when step 1b found a GitHub tracker:** is the slice's plan on
+  the default branch? Inline with Bash, `git fetch origin` (a fetch that
+  fails is said in one line, and the repository's own `origin/<default
+  branch>` is compared as it stands), then `git status --porcelain --
+  '<slice file>' '<design document>'` is empty and `git diff --quiet
+  'origin/<default branch>' -- '<slice file>' '<design document>'` exits
+  0: merged. Anything else: not merged. Never asked of a project with no
+  tracker, of an issue fix, or of a slice whose build has already
+  started (a `slice-<nnn>-*` branch exists, or the log holds its
+  chunk-loop entry): those were planned before this rule or are past it.
 - Has the current unit's slice actually been implemented — real,
   working code, not just design/criteria artifacts? There's no fixed
   convention for detecting this mechanically (it's application source, not
@@ -311,6 +339,7 @@ forbids, just spelled backward instead of forward.
 | No problem framing doc | `docs-writer:problem-framing-doc` |
 | Problem doc exists; no scope map, no requirements doc, no slice anywhere yet | `docs-writer`, to decide — per `scope-map`'s own trigger criteria, by reading the problem doc — whether this needs a scope map or is small enough to treat as one unit. This is the persona's judgment call from the problem doc's own content, not an orchestrator-level question; it may still ask the user if genuinely torn, just not by default. |
 | A unit is identified (the lowest-numbered Active scope-map step with no requirements doc yet, or — if no scope map exists — the problem itself) and has no requirements-refinement doc | `product-manager:requirements-refinement` for that unit |
+| The current unit's requirements doc names outside systems or lasting things, and `domain-model.md` is missing or has no table for one of them | `software-architect:domain-model` |
 | The current unit has a requirements-refinement doc but no slice yet | `product-slicer` (`vertical-slicing` + `acceptance-criteria`), using the requirements doc as the primary input for WHAT to slice — not re-deciding it |
 | A slice exists for the current unit but hasn't been written up as a user story yet | `docs-writer:user-story-writeup` |
 | The current unit's slice has been written up as a user story but has no design doc yet | `software-architect:architecture-design` for that slice |
@@ -321,7 +350,8 @@ forbids, just spelled backward instead of forward.
 | The slice is UI-touching, its runtime-safety criteria are filled, a design-system exists, but this slice has no screen-design artifact yet | `ux-designer:screen-design` for that slice |
 | The slice is UI-touching, has a screen-design artifact, but its accessibility criteria are still an unfilled placeholder | `accessibility-engineer:accessibility-review` for that slice |
 | The slice is designed with its runtime-safety criteria filled (and, if UI-touching, its screen designed and its accessibility criteria filled), and the project has no stack yet | `software-architect:technology-bootstrap` for that slice |
-| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed and its accessibility criteria filled), the project has a stack, but the slice hasn't been implemented yet | `tdd-coach:tdd-implementation-lite` for that slice |
+| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed and its accessibility criteria filled), the project has a stack, step 1b found a GitHub tracker, and the slice's plan is not on the default branch | `release-engineer:delivery` for a planning pull request, after the readiness gate: "The planning pull request row" in step 4. Then stop. |
+| The slice has a design doc, its runtime-safety criteria are filled (and, if UI-touching, its screen designed and its accessibility criteria filled), the project has a stack, its plan is on the default branch when there is a tracker, but the slice hasn't been implemented yet | `tdd-coach:tdd-implementation-lite` for that slice |
 | The slice has been implemented — `tdd-coach:tdd-implementation-lite` has produced working, tested code for it | **Stop — see step 5.** Don't advance to the next scope-map step. |
 
 **Why the requirements rows come *after* design, not before.** These are
@@ -462,6 +492,28 @@ context (a redo after a backward route, a stage resumed after a
 correction) still goes through the `Skill` tool: the call is what the log
 check and a reviewer look for, and a stage run from memory is a stage
 that ran unlogged.
+
+**The planning pull request row** puts the finished plan to the owner
+before any build money is spent (the owner, 2026-11-18: the loop waits
+for the merge). Inline, in this order:
+
+1. `git switch -c planning-<nnn>-<slug>` from the current commit (the
+   number from the slice file's name, the slug from its title), and
+   commit every modified or untracked file of the target directory, by
+   name, as `Planning: slice <nnn>`. Nothing outside the target
+   directory goes in.
+2. The design-readiness gate, exactly as the chunk loop's A.4 says, its
+   backward routes and its two owner questions included; each revision
+   is committed on this branch by name.
+3. On `readiness: PASS`, write the entry, then invoke
+   `kad-dev-team:delivery` with the `Skill` tool for "A planning pull
+   request", handing it the branch, the default branch, the target
+   directory, the slice file and this slice's `taken as recommended`
+   bullets from the log. It pushes, opens the pull request and watches
+   its checks.
+4. Report the pull request, the slice's size line and what was taken as
+   recommended, say that the build starts once it is merged, and stop.
+   Nothing of the chunk loop runs on a plan that is not merged.
 
 **The `tdd-coach:tdd-implementation-lite` row doesn't execute inline — it runs
 the chunk loop below, every time, by default.** There is no separate "is
@@ -776,6 +828,14 @@ gate sent it back four times over documents it had not touched
    then stop at step 5. Nothing is asked first: a flow that cannot start
    should not cost the owner four answers. Never `git init`, `gh repo
    create` or push outside that skill.
+
+   **The plan is merged first.** With a GitHub tracker and a slice that
+   is not an issue fix, run step 2's check that the slice's plan is on
+   the default branch. When it is not, write the A line as `flow not
+   started: planning pull request not merged`, report which pull
+   request is waiting (or that none is open and the planning row comes
+   first), and stop at step 5: nothing is asked and nothing is built on
+   a plan the owner has not merged, whoever asks for the build.
 1. **Sandbox check**, inline with Bash:
 
    ```
@@ -963,15 +1023,18 @@ gate sent it back four times over documents it had not touched
      commit. A message that answers for this slice only applies to this
      slice and leaves the file as it is. The A line carries `autopilot —
      <file path | none>`.
-3. **Branch and base.** Inline with Bash: `git status --porcelain` on the
-   target directory. Then `git switch -c slice-<nnn>-<slug>` (an issue
+3. **Branch and base.** With a merged planning pull request (step 0),
+   first `git switch '<default branch>'` and `git pull --ff-only`, so
+   the slice branch grows from the merged plan. Inline with Bash: `git
+   status --porcelain` on the target directory. Then `git switch -c slice-<nnn>-<slug>` (an issue
    fix: `slice-<nnn>-issue<n>-<slug>`, and the current commit is its fix
    base) from the
    current commit, the number from the slice file's name and the slug from
    its title, lower-case, hyphens. If any planning document is modified or
    untracked (the delegation file is), commit them now on this branch, by
-   name, as `Planning: slice <nnn> ready for implementation`; this is the
-   only planning commit the flow makes, and it exists so the gate's
+   name, as `Planning: slice <nnn> ready for implementation`; with a
+   merged planning pull request this holds only what was written since
+   (the delegation file, the log), and it exists so the gate's
    `--protect` checks have a committed version to compare with. Then
    `git rev-parse --short HEAD` is the **base**: every gate and every
    reviewer diff in this flow is computed against it or against the
@@ -983,7 +1046,7 @@ gate sent it back four times over documents it had not touched
    python3 -I "${CLAUDE_SKILL_DIR}/scripts/readiness_check.py" --planning '<target directory>' --slice <nnn>
    ```
 
-   Eleven mechanical checks over the planning documents: every criterion
+   Twelve mechanical checks over the planning documents: every criterion
    quoted under a design component; every failure path homed; a number on
    every retry, wait, poll and give-up; security and reliability agreeing
    on shared failure paths; a mockup for every named state; on a slice
@@ -993,7 +1056,9 @@ gate sent it back four times over documents it had not touched
    question routed to the implementer; a "Kept for later slices" line;
    every open or deferred item in the slice file triaged (`usable without
    it`, with how, or a blocker); a failure-mode row for an external
-   provider's unusable reply; no value of a file the owner provided
+   provider's unusable reply; with a `domain-model.md`, every state the
+   slice file names in the model with a way out or left unsupported by
+   the owner; no value of a file the owner provided
    (`sources.md` in the target directory lists them by location) in the
    planning directory or anywhere in the code. An issue fix adds
    `--fix-base '<fix base>'`: the checks then fail only on what the fix
@@ -1815,7 +1880,7 @@ lenses the combined reviewer applied (`co tq` or `co tq re`).
 
 **Routed to:** chunk loop
 **Artifact:** see sub-entries below
-- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; autopilot — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
+- **A. Start:** sandbox — `<PASS (<platform>; <Chrome | browser not needed | no Chrome, screen checks owed>) | none on <platform>; owner opted to continue unsandboxed | FAIL: <checks>; flow not started | no browser; flow not started | flow not started: no repository | flow not started: planning pull request not merged>`; session — `<id>`; audit — `<audit clone: <dir> | audit clone FAILED: <why> | audit: not configured | off>`; transcript — `<kept | MISSING: <why> | not checked (audit off)>`; delegation — `<file path | none>`; autopilot — `<file path | none>`; cadence — `<loop | light>`; budget — `<8h | 5h>, 2 reviews/chunk (+1 last fix), 1 fix/scope (+1 regressions)`; branch — `<name>`; base — `<sha>`<, planning commit `<sha>`>; records — `<dir>`; readiness — `<PASS | PASS after <check> (entry <n>), …>`; gate checks — `<present | wired <sha><, <n> not wired> | after chunk 1>`<; fix base `<sha>`; older gaps `<n>`< → `#<issue>`>>
 - **B. Plan:** `<k>` chunks — `<title 1>`; `<title 2>`; … (`<report path>`, commit `<sha>`); modules — `<dir>`, `<dir>`
 - **C. Chunk <k>/<n>:** `<title>`; sonnet `<turns>`t `<min>`m; commits `<sha…>`; gate `<PASS | PASS after <sha> | FAIL: <checks>; ended>`<; flaky `<test>`>; deviations `<n>`<; shell edits `<n>`>; review `<co tq [re] | none>`< r0 `<C/H/M>`>< nd `<n>`>; smoke `<PASS | <n> findings | none>`<; r1 fix `<sha>` → `<C/H/M>` (reg `<r>`, pre `<p>`<, first `<f>`>)><; r2 fix `<sha>` gate PASS; last `<C/H/M>`><; owed `<n>`>; standing `<C/H/M>`<; auto r<i> verify `<c>` confirmed, `<n>` not reproduced< fix `<sha>` → last `<C/H/M>`>>; builder `<agent id>`; budget `<h>`h `<reviews>`r; records `<sha>`; audit `<audit commit <sha> | audit commit none | audit sync FAILED: <reason> | not configured | off><; withheld: <session…>>`; data `<unchanged | CHANGED | not named>`<; stall: <relaunched | ended>><; hand-back unverified: `<sha>`><; budget exceeded: <which>>
   - decision `<n>` `<sha>` (`<persona>`)
@@ -1853,6 +1918,10 @@ question comes after it, in its own turn. Then:
   per owner, run the owners in sequence, each through its own `Skill`
   call, report once at the end, and prompt once if a prompt is due at
   all.
+- **If the step was the planning pull request row**: the report is the
+  pull request, the size line and what was taken as recommended, and
+  the flow stops there. Don't start the chunk loop, don't ask whether
+  to: the owner's merge is the answer.
 - **If the current unit just reached the terminal row** (its slice is
   designed, its runtime-safety criteria are filled, its screen is designed
   and its accessibility criteria filled if it's UI-touching, the project

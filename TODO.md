@@ -54,6 +54,20 @@ The lists before this one are in `docs/todo-archive.md`.
    own pull request before the build; the loop's records do not (my
    answer to the owner's question; step 2, P4 and P5).
 
+5. **Step 2's choices, 2026-11-18** (pull request #68 merged the same
+   evening as kad 0.17.1):
+   - The loop **waits for the owner to merge the planning pull request**
+     before it builds ("Wait"): the owner's checkpoint on the plan, and
+     where a slice that is too broad is caught.
+   - **No size threshold for a slice** ("No number"): the slice file
+     carries its size line (criteria count, expected chunks) and the
+     owner judges it at the planning pull request.
+   - Taken as recommended, not asked: the domain model is the
+     software-architect's, who asks the owner only about a state it
+     proposes to leave unsupported; each state cites the provider's
+     public documentation, or is marked to verify with the step that
+     would confirm it.
+
 ## Rules for every gated pull request
 
 From what #62 cost, and the owner's answers of 2026-11-16:
@@ -184,13 +198,56 @@ improved before that result.
 
 ### Step 1. What both arms share: the instruments
 
-- [ ] Part 1a's 42 stale cases, one run each (`gate.sh --stale`), the
-  loop states recorded, the write-up in `evals/README.md`, the pull
-  request. The owner starts the pass.
+- [x] Done 2026-11-18: pull request #68, merged as kad 0.17.1 (70
+  runs, $53.64; `evals/README.md`, "The instruments after slice 4").
 
 ### Step 2. Planning (kept whichever arm wins)
 
-- [ ] **P1. A domain model, once, before slicing.** The dead ends of
+**Built 2026-11-18 as kad 0.18.0 on branch `planning-0.18.0`; the gate
+passed 2026-11-19 at the owner's word** (109 cases, 228 runs, $146.64;
+`evals/README.md`, "The planning changes", which also says what the
+trial of the new cases changed in `vertical-slicing` and
+`accessibility-review`). How each was built, where it differs from the
+lines below:
+
+- **P1**: the trigger is mechanical. `requirements-refinement` writes an
+  `## Outside systems and lasting things` section, and the orchestrator
+  routes to `domain-model` when it names something `domain-model.md`
+  has no table for. A requirements document written before the section
+  existed asks for no model, so no existing fixture or project is
+  routed there by surprise; the first project gets its model when asked
+  for, or when a stage hands a missing state back. The slice file names
+  the states it touches under `## Domain states`, and the readiness
+  gate's twelfth check (`domain-states-modelled`) holds them against
+  the model.
+- **P2**: the slice file always holds the thinnest cut; a wider cut is
+  asked after it is written and revises the file in place. `## Size` is
+  one line, `Criteria: <n> functional; chunks expected: <k>`.
+- **P3**: no stage edits the slice's size line (each may touch only its
+  own pointer line): its count goes on the pointer line, `(<n>
+  criteria)`, and the planning pull request's body adds them up.
+- **P4**: applies only with a GitHub tracker and never to an issue fix
+  or a slice whose build has started. The readiness gate runs in the
+  planning row, before the pull request, and again at A.4. The A step
+  still makes a small planning commit on the slice branch for what was
+  written after the merge (the per-slice delegation file, the log).
+
+Seven new cases: `domain-model-bank-phase1`, `domain-model-bank-phase2`,
+`orchestrator-route-domain-model`, `vertical-slicing-thinnest-cut`,
+`accessibility-review-design-notes`, `orchestrator-planning-pr-open`,
+`orchestrator-planning-row`. No case holds: the A step's
+own refusal (`flow not started: planning pull request not merged`,
+reached only by asking for a build with no planning pull request open),
+`delivery`'s "A planning pull request" past the push (the fixtures have
+no network), a comment on a planning pull request routed back to its
+document's owner, and `domain-model` reading a provider's documentation
+(the eval sandbox has no web tool, so every source there is `to
+verify`).
+
+The eleven frozen histories that carried the old text of four skills
+were captured again before the pass.
+
+- [x] **P1. A domain model, once, before slicing.** The dead ends of
   slices 1, 3 and 4 are one unanswered question: what states can a bank
   connection be in, how is each entered, what can the user do in each,
   and which are deliberately unsupported. A new stage after the scope
@@ -199,18 +256,18 @@ improved before that result.
   `reliability-requirements`, and held by the readiness check ("every
   state the slice can leave a thing in has a way out or is listed as
   unsupported"). A new skill and its cases.
-- [ ] **P2. The breadth of a slice is the owner's.** `vertical-slicing`
+- [x] **P2. The breadth of a slice is the owner's.** `vertical-slicing`
   offers the thinnest cut first and asks when it recommends more than
   it; the slice file carries a size line (criteria count, expected
-  chunks), and over a threshold the owner sets it is split or
-  confirmed.
-- [ ] **P3. Fewer, sharper criteria.** Slice 4 had 35 for one button,
+  chunks); no threshold: the owner reads the line at the planning
+  pull request (decision 5).
+- [x] **P3. Fewer, sharper criteria.** Slice 4 had 35 for one button,
   and each became a test. The security, reliability and accessibility
   stages add a criterion only for a behaviour a user or an operator
   could observe going wrong; wording, logging detail and announcement
   phrasing are design notes, not criteria. The measure is the count per
   slice on the size line of P2.
-- [ ] **P4. Planning lands as its own pull request, before the build.**
+- [x] **P4. Planning lands as its own pull request, before the build.**
   The documents (370 lines on slice 4) and the mockups (1,114) are
   merged first, which is also where the owner approves the plan before
   build money is spent; the build's pull request is then source, tests

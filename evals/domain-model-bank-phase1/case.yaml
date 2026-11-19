@@ -1,0 +1,46 @@
+schema_version: "1.0"
+name: domain-model-bank-phase1
+description: "TODO.md's P1 (0.18.0), first turn: a problem and agreed requirements for connecting banks through an aggregation vendor, nothing sliced. The requirements name one lasting thing, the bank connection, and put removing or replacing a connection out of scope, so a connection the bank or the vendor ends for good has no way out in the app. domain-model fires, asks the owner about leaving that state unsupported, with a recommendation, asks nothing else (not which vendor), and writes no document before the answer."
+tags: [domain-model, bank-connection]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    This repository holds only planning documents, in `docs/connect-bank/`: the problem and the agreed requirements. Nothing is sliced yet. Use the `kad-dev-team:domain-model` skill to model what the requirements list under "Outside systems and lasting things", and save the model in `docs/connect-bank/`.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 900
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:domain-model"'
+    min: 1
+  - type: tool_used
+    name: no-document-written-before-the-answer
+    tool: Write
+    input_match: 'domain-model'
+    min: 0
+    max: 0
+  - type: regex
+    name: asks-about-a-state-left-unsupported
+    # The question is about a state with no way out: support it, or leave
+    # it unsupported.
+    target: last_message
+    pattern: 'unsupported[\s\S]*(?:\?|\banswer\b|\bdecision\b|\bdecide\b)|(?:\?|\banswer\b|\bdecision\b|\bdecide\b)[\s\S]*unsupported'
+    flags: i
+  - type: regex
+    name: the-question-carries-a-recommendation
+    target: last_message
+    pattern: 'recommend'
+    flags: i
+  - type: regex
+    name: does-not-ask-which-vendor
+    # Which provider is behind the thing is not this skill's to ask: with
+    # none chosen it models what any provider of the kind does.
+    target: last_message
+    pattern: 'which (?:bank[- ]aggregation )?(?:vendor|provider|aggregator)[^\n?]*\?'
+    flags: i
+    match: not_contains

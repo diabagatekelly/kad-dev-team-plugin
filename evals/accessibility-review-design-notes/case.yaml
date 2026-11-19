@@ -1,0 +1,59 @@
+schema_version: "1.0"
+name: accessibility-review-design-notes
+description: "TODO.md's P3 (0.18.0): the pay-a-fine declined-state mockup, with the designer's exact wording for the declined message given in the request. accessibility-review writes criteria for what a person could observe going wrong (the message is announced), keeps the exact wording under Design notes and out of the criteria, ends the document with its criteria count, and puts the same count on the slice's pointer line."
+tags: [accessibility-review, library-app]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    The library-lending app is in your current working directory. The planning docs for the pay-a-fine feature are in `docs/pay-fine/`. Screen design has produced the mockup for slice 1's declined-payment state: `docs/pay-fine/visual-ux/pay-fine-declined.html`. Check it for accessibility and fill in the slice's accessibility placeholder. Save the review as `docs/pay-fine/accessibility-review-001.md`.
+
+    From the designer, to carry into what you write: the declined message must read exactly "Your card was declined. Try another card." and a screen reader user has to be told as soon as it appears.
+  model: sonnet
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Skill, Read, Grep, Glob, Write, Edit]
+runs: 3
+graders:
+  - type: tool_used
+    name: skill-invoked
+    tool: Skill
+    input_match: '"skill"\s*:\s*"kad-dev-team:accessibility-review"'
+    min: 1
+  - type: file_exists
+    name: review-written
+    path: docs/pay-fine/accessibility-review-001.md
+  - type: regex
+    name: exact-wording-is-a-design-note
+    target:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    pattern: '\n## Design notes(?:(?!\n## )[\s\S])*Try another card'
+  - type: regex
+    name: exact-wording-is-not-a-criterion
+    target:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    pattern: '\n## Accessibility acceptance criteria(?:(?!\n## )[\s\S])*Try another card'
+    match: not_contains
+  - type: regex
+    name: the-announcement-is-still-a-criterion
+    # What a person could observe going wrong stays a criterion.
+    target:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    pattern: '\n## Accessibility acceptance criteria(?:(?!\n## )[\s\S])*(?:announc|screen reader|live region)'
+    flags: i
+  - type: regex
+    name: document-ends-its-criteria-with-a-count
+    target:
+      source: file
+      path: docs/pay-fine/accessibility-review-001.md
+    pattern: '\nCriteria: \d+'
+  - type: regex
+    name: pointer-line-carries-the-count
+    target:
+      source: file
+      path: docs/pay-fine/slice-001.md
+    pattern: 'accessibility-review-001\.md[^\n]*(?:\n[^\n-][^\n]*)?\(\d+ criteria\)'
+    flags: i

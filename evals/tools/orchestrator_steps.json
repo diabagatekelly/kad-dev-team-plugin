@@ -17,6 +17,8 @@
   "orchestrator-route-implementation": ["A"],
   "orchestrator-route-implementation-prenamed": ["A"],
   "orchestrator-route-open-pr": ["A", "E"],
+  "orchestrator-planning-row": ["A"],
+  "orchestrator-planning-pr-open": ["A"],
   "orchestrator-log-format": ["A", "B", "C", "D", "E"]
  }
 }

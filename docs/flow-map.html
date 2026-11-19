@@ -111,7 +111,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
 <body>
 <div class="wrap">
   <h1>How kad-dev-team takes a new project from an idea to a pull request</h1>
-  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.17.1.</p>
+  <p class="lede">Read top to bottom. Each row is one stop: what happens, which persona and skill does it, and which scripts decide something without a model. As of kad 0.18.0.</p>
 
   <div class="legend" role="group" aria-label="Highlight one kind of work">
     <button type="button" id="f-all" data-show="" aria-pressed="true">Show all</button>
@@ -130,7 +130,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <div class="row"><div class="what"><strong>Start the session</strong><span>The whole session is fenced and logged before any model call.</span></div>
         <div class="chips"><span class="chip o">The owner runs the launcher once per session</span></div>
         <div class="chips"><span class="chip t">bin/kad</span><span class="chip t">sandbox runtime</span><span class="chip t">hooks/audit.sh</span></div></div>
-      <div class="row"><div class="what"><strong>Check for open work first</strong><span>An open slice pull request or a Critical or High issue is routed before any planning.</span></div>
+      <div class="row"><div class="what"><strong>Check for open work first</strong><span>An open slice pull request or a Critical or High issue is routed before any planning. An open planning pull request means the build waits for the owner's merge.</span></div>
         <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span></div>
         <div class="chips"><span class="chip t">gh pr list</span><span class="chip t">gh issue list</span></div></div>
       <div class="row"><div class="what"><strong>Inspect and route</strong><span>The target folder is the one given, else the one the project's <code>CLAUDE.md</code> or memory names, else it is asked for once. Reads which documents exist there and picks the first missing stage. A stage that finds a problem in an earlier one routes back to that document's owner.</span></div>
@@ -155,8 +155,10 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <div class="row"><div class="what"><strong>3. Pin the requirement</strong><span>Who benefits, what they want, why. Files the owner provides are listed by location and never opened.</span></div>
         <div class="chips"><span class="chip m"><b>product-manager</b> · requirements-refinement <span class="tag">inline</span></span><span class="chip o">Confirms the what</span></div>
         <div class="chips"><span class="chip t">source_scan.py describe</span></div></div>
-      <div class="row"><div class="what"><strong>4. Cut the first slice</strong><span>Thin path, acceptance criteria, placeholders for the three criteria stages, deferrals with a triage sentence each.</span></div>
-        <div class="chips"><span class="chip m"><b>product-slicer</b> · vertical-slicing <span class="tag">inline</span></span><span class="chip m"><b>product-slicer</b> · acceptance-criteria <span class="tag">inline</span></span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>Model the outside systems</strong><span class="cond" style="display:inline-block;margin:0 0 2px">once per project, when the requirement names one</span><span>One table per outside system or lasting thing (a bank connection, a subscription): every state it can be in, how it gets there, what the person can do and the way out, each with its source. Revised in place when a later stage meets a state it lacks.</span></div>
+        <div class="chips"><span class="chip m"><b>software-architect</b> · domain-model <span class="tag">inline</span></span><span class="chip o">Only a state left unsupported</span></div><div class="none">None</div></div>
+      <div class="row"><div class="what"><strong>4. Cut the first slice</strong><span>The thinnest cut first; a wider one is the owner's to choose. Thin path, acceptance criteria, placeholders for the three criteria stages, the modelled states it touches, a size line, deferrals with a triage sentence each.</span></div>
+        <div class="chips"><span class="chip m"><b>product-slicer</b> · vertical-slicing <span class="tag">inline</span></span><span class="chip m"><b>product-slicer</b> · acceptance-criteria <span class="tag">inline</span></span><span class="chip o">A cut wider than the thinnest</span></div><div class="none">None</div></div>
       <div class="row"><div class="what"><strong>5. Write the user story</strong><span>And decide whether it is filed, and in which tracker.</span></div>
         <div class="chips"><span class="chip m"><b>docs-writer</b> · user-story-writeup <span class="tag">inline</span></span><span class="chip o">Which tracker</span></div><div class="none">None</div></div>
       <div class="row"><div class="what"><strong>6. Design the structure</strong><span>Module boundaries and dependency direction, one decision at a time. A decision about two things running at once (a lock, a claim, a second process) is put with its interleavings listed and answered. Consults the map and the security persona; hands ADR-worthy decisions on.</span></div>
@@ -175,6 +177,9 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
         <div class="chips"><span class="chip t">Chrome, driven</span></div></div>
       <div class="row"><div class="what"><strong>12. Choose the stack</strong><span>Only what the first failing test forces, a default set for the rest, and a tool for each of the gate's eight categories.</span></div>
         <div class="chips"><span class="chip m"><b>software-architect</b> · technology-bootstrap <span class="tag">inline</span></span><span class="chip m"><b>devsecops-engineer</b> · supply-chain-review <span class="tag">consult</span></span><span class="chip o">Approves each choice, then the set</span></div><div class="none">None. It records which tools the gate will run.</div></div>
+      <div class="row"><div class="what"><strong>13. Put the plan to the owner</strong><span class="cond" style="display:inline-block;margin:0 0 2px">with a GitHub tracker</span><span>The documents and mockups go up as a small pull request of their own, after the readiness checks pass: thin path, size, modelled states, what was taken as recommended, open decisions. The flow stops; the build starts once the owner merges it.</span></div>
+        <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span><span class="chip m"><b>release-engineer</b> · delivery <span class="tag">inline</span></span><span class="chip o">Merges the plan</span></div>
+        <div class="chips"><span class="chip t">readiness_check.py</span><span class="chip t">gh pr create</span><span class="chip t">gh pr checks</span></div></div>
     </div>
   </section>
 
@@ -184,7 +189,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
       <p>From here on it is the chunk loop. The orchestrator stays in the main session and keeps the log, the records and the owner's questions; everything that writes or reviews code is a separate agent.</p></header>
     <div class="rows">
       <div class="row head"><div>What happens</div><div>Who</div><div>Tools that decide</div></div>
-      <div class="row"><div class="what"><strong>Is there a repository with a remote?</strong><span>A brand-new project usually has none: the flow routes back once to create one.</span></div>
+      <div class="row"><div class="what"><strong>Is there a repository with a remote?</strong><span>A brand-new project usually has none: the flow routes back once to create one. With a tracker, a slice whose plan is not merged on the default branch does not start.</span></div>
         <div class="chips"><span class="chip m"><b>release-engineer</b> · repo-bootstrap <span class="tag">inline</span></span><span class="chip o">Name, visibility, default branch</span></div>
         <div class="chips"><span class="chip t">git rev-parse</span><span class="chip t">git remote get-url</span></div></div>
       <div class="row"><div class="what"><strong>Is the session fenced?</strong><span>The agents run unattended with a shell, so the sandbox is probed from inside before any launch, and again before every launch after.</span></div>
@@ -192,7 +197,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
         <div class="chips"><span class="chip t">sandbox_check.py</span></div></div>
       <div class="row"><div class="what"><strong>Three questions at most</strong><span>Each asked once per project and stored: may the loop take its own recommendation at three named stops (an autopilot file). May personas settle design gaps themselves (a delegation file), and which review cadence.</span></div>
         <div class="chips"><span class="chip m"><b>orchestrator</b> <span class="tag">inline</span></span><span class="chip o">Delegation, cadence</span></div><div class="none">None</div></div>
-      <div class="row"><div class="what"><strong>Is the planning ready to build from?</strong><span>Eleven mechanical checks over the documents; on a slice with a screen, one is that the screen design lists the states the slice changes. A failure routes back to the persona that owns the document, not to a fixer.</span></div>
+      <div class="row"><div class="what"><strong>Is the planning ready to build from?</strong><span>Twelve mechanical checks over the documents; on a slice with a screen, one is that the screen design lists the states the slice changes; with a domain model, one is that every state the slice names has a way out or was left unsupported by the owner. A failure routes back to the persona that owns the document, not to a fixer.</span></div>
         <div class="chips"><span class="chip m">The owning persona, on a failure <span class="tag">inline</span></span></div>
         <div class="chips"><span class="chip t">readiness_check.py</span><span class="chip t">source_scan.py</span><span class="chip t">screen_check.py check-section</span></div></div>
       <div class="row"><div class="what"><strong>Wire the gate's checks</strong><span>The tools the bootstrap picked are installed and the existing code is recorded as their baseline. On an empty repository this waits until chunk 1 has made a manifest.</span></div>
@@ -331,7 +336,7 @@ body[data-show="t"] .scripts td:first-child { font-weight: 500; }
         <thead><tr><th>Script</th><th>Decides</th><th>Where</th></tr></thead>
         <tbody>
           <tr><td>sandbox_check.py</td><td>Whether the session is fenced from the machine's keys and the network</td><td>A, and before every launch</td></tr>
-          <tr><td>readiness_check.py</td><td>Whether the planning documents are complete enough to build from (eleven checks)</td><td>A</td></tr>
+          <tr><td>readiness_check.py</td><td>Whether the planning documents are complete enough to build from (twelve checks)</td><td>A</td></tr>
           <tr><td>source_scan.py</td><td>Whether any file or transcript holds a value from a file the owner provided</td><td>Planning, the gate, delivery, the audit copy</td></tr>
           <tr><td>validation_gate.py</td><td>Whether a commit passes: suite, typecheck, lint, coverage, the eight check categories against their baselines, scope, test names</td><td>C after every build and fix; D</td></tr>
           <tr><td>rounds_record.py</td><td>How many findings at each severity, which are regressions of a fix, and which stand (a last-fix review's all do)</td><td>C, D and E, after every review</td></tr>

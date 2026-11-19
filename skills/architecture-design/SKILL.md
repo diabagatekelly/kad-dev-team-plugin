@@ -212,6 +212,15 @@ re-entered before implementation and gains that concept, which is what
 the orchestrator's readiness gate routes back for; it is never patched by
 the implementer.
 
+**When the target directory has a `domain-model.md`**, read the tables
+of the things the slice touches (its `## Domain states` section names
+the states). Each of those states has a home here like any failure
+path: the component that holds the thing's state and the one that moves
+it from one to the next. A `## Design notes` section of a security,
+reliability or accessibility document holds wording and log detail, not
+criteria: nothing in it needs a home. A state the slice needs that the
+model lacks is a backward route to `domain-model`, under Open questions.
+
 **The headings are read by name.** The orchestrator's readiness gate
 (`readiness_check.py`, its `failure-paths-homed` check) looks for each
 failure path's words in the sections whose headings contain `Structure`,

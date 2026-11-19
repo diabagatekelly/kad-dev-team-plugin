@@ -68,7 +68,7 @@ The first slice should:
   reliability one to `devsecops-engineer:reliability-requirements`, and
   the accessibility one to `accessibility-engineer:accessibility-review`;
   each replaces its placeholder line with a one-line pointer to its own
-  document, and nothing else in the slice. Until they run, the
+  document and its criteria count, and nothing else in the slice. Until they run, the
   placeholders keep the gaps visible instead of any going missing
   silently. Shipping without all three placeholders is a gap, not a
   deferral. The one judgment that is yours: when the thin path you wrote
@@ -92,10 +92,57 @@ The first slice should:
   developer," that's horizontal slicing wearing a user-story costume — find
   the actual person who benefits.
 
-"Smallest" is relative to your team and tooling, not an absolute floor —
-don't split a slice into uselessly small pieces just to say it's small if a
-slightly larger cohesive capability is still comfortably deliverable and
-still end-to-end.
+## The thinnest cut first, and anything wider is asked
+
+**Write up the thinnest end-to-end cut the set allows**: one behaviour's
+happy path, with the essential refusals a person would meet on it. That
+is the slice you offer.
+
+An essential refusal is one the behaviour's own rule makes, met by
+someone using it as meant (a book that cannot be renewed, an amount that
+is not a number). These are not yours to write, here or in any cut: who
+may do it and what happens when someone asks for a thing that is not
+theirs or does not exist (the security stage's), and a repeated or
+doubled request, or a failure of something the path depends on (the
+reliability stage's). A criterion for one of those in the slice file is
+written twice once its stage runs, and tested twice. When no refusal of
+the behaviour's own is in this cut, the thinnest cut has none.
+
+**Recommending more than that in one slice is a scope question, and
+scope is the owner's.** The slice file holds the thinnest cut until the
+owner says otherwise. When you think a second behaviour belongs in the
+same slice (its corrections, its edge cases, a neighbouring rule), write
+the thinnest cut first, then ask: one `AskUserQuestion`, the thinnest
+cut as one answer and the wider cut as the other, each with what it
+holds and its size (criteria, expected chunks), your recommendation
+first. Never take the wider cut "as recommended", whatever the invoking
+arguments say about technical questions: how much ships at once is what
+the owner wants, not how it is built. A wider cut the owner chooses is
+this file revised in place. One slice took corrections, withdrawals, a replacement rule and a
+month turn in one cut that nobody was asked about: 35 criteria and seven
+chunks for one button.
+
+Thin still means end-to-end and demoable (see "Feature-shape YAGNI"
+below): don't split a behaviour into pieces nobody could be shown.
+
+## When the project has a domain model
+
+When the target directory has a `domain-model.md`, read it before
+cutting: its tables list every state of each outside system or lasting
+thing, with the way out of each. Two uses:
+
+- **The set comes from it.** A state with a way out that no slice
+  handles yet is a line of the slice set, or is listed there as left for
+  later on purpose.
+- **The slice says which states it touches**, in its `## Domain states`
+  section (the format below), by the model's own names. A state the
+  slice can leave a thing in whose way out belongs to a later slice goes
+  under `Explicitly deferred` too, with its triage: a person left in a
+  state with no way out is a blocker, not a deferral.
+
+A state your slice needs that the model lacks is a backward route to
+`software-architect:domain-model`, reported in your reply; never a name
+you make up here.
 
 ## Name the whole set, specify only the first
 
@@ -360,6 +407,20 @@ that fills it: security (`devsecops-engineer:security-requirements`),
 reliability (`devsecops-engineer:reliability-requirements`), accessibility
 (`accessibility-engineer:accessibility-review`; the not-applicable line
 above when the thin path names no screen).
+
+## Domain states
+Only when the target directory has a `domain-model.md`. One line per
+modelled thing the slice touches: the states it can put the thing in and
+the states it takes it out of, by the model's names, in backticks:
+- Bank connection: enters `connected`, `login-lapsed`; leaves `connecting`
+The word `none` when the slice touches no modelled thing.
+
+## Size
+One line: `Criteria: <n> functional; chunks expected: <k>` (one chunk
+per behaviour a person could see on its own; an estimate, the build's
+plan decides). The security, reliability and accessibility stages each
+put their own count on their pointer line above. No number is too many
+by rule: the owner reads this line when the plan is put to them.
 
 ## Explicitly deferred
 Open questions from the problem doc (or earlier slices) that this slice
