@@ -3535,6 +3535,44 @@ runs and $242.31.
 - C9 (every command CI runs is a gate check) has no case of its own; it
   showed in `orchestrator-issue-fix-records` by accident.
 
+### The instruments after slice 4
+
+Eight script fixes from the review of the first project's slice 4
+(2026-11-18, `TODO.md` part 1a), no skill text: `rounds_record.py` (a
+line past the end of its file is classed by the file; `--resolve` marks
+a round's findings fixed or declined), `validation_gate.py` (the
+shell-edit count is the agent's own commits and leaves out a refused
+write; a failing suite's line names its tests; the two items deferred
+from #67), `screen_check.py` (two sizes compared over what they share;
+`not captured`; the patch deferred from #67), `cost_by_role.py`,
+`orchestrator_log_check.py`. Each has script tests on a synthetic
+fixture of the shape the slice produced.
+
+The gate, 2026-11-18: 42 cases the three scripts reach, one run each;
+four dipped on their run and passed at three (`delivery-screens-stray`,
+`orchestrator-autopilot-recorded`, `orchestrator-readiness-open-item`,
+`orchestrator-slice-review-launches`); `orchestrator-definition-of-done`
+errored in the harness (its run directory could not be listed) and
+passed on the next pass. 65 runs, $51.93 by the result files. No bar
+moved.
+
+One grader changed. `reliability-requirements-refusal-phase2`'s
+`own-two-checks-pass-in-the-last-run` wanted a line break before the
+first `PASS` line; four runs of four piped the script through `grep`,
+so the line opened the output and the grader failed a run that had done
+the right thing. It now takes a line break or the opening quote (the
+same lesson as 0.17.0's: a pattern on a script's output must let the
+line open the output). At three runs after the change: 0.89, two runs
+whole and one that did not run the script at all.
+
+Seen and not fixed: in that one run of eight the model looked for
+`readiness_check.py` in the installed plugin's cache, was refused by
+the eval's sandbox, wrote the document, and said plainly that its two
+checks were unconfirmed. The skill gives the path from its own
+directory and seven runs used it. The bar stays at 1.00: the miss is
+the behaviour the case exists to show, and a run that repeats it is
+re-run at three.
+
 ### Run backlog
 
 Emptied: the eight emulated cases it listed were all run, then replaced by
