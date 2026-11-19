@@ -95,7 +95,8 @@ else is asked here: the states, their names and their sources are yours
 to write, and the orchestrator's entry lists them as taken.
 
 **When any state needs that question, the questions are your whole first
-response and nothing is written before the answers.** Without the
+response and nothing is written before the answers**, unless the request
+already gave the owner's answer for it. Without the
 question tool, ask in plain text and end the turn. Record each answer in
 the row's Supported cell: `yes`, or `unsupported (owner, <date>:
 "<their words>")`. When no state needs it, write the document straight

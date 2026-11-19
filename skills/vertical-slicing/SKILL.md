@@ -99,14 +99,16 @@ happy path, with the essential refusals a person would meet on it. That
 is the slice you offer.
 
 **Recommending more than that in one slice is a scope question, and
-scope is the owner's.** When you think a second behaviour belongs in the
-same slice (its corrections, its edge cases, a neighbouring rule), ask:
-one `AskUserQuestion`, the thinnest cut as one answer and the wider cut
-as the other, each with what it holds and its size (criteria, expected
-chunks), your recommendation first. Never take the wider cut "as
-recommended", whatever the invoking arguments say about technical
-questions: how much ships at once is what the owner wants, not how it is
-built. One slice took corrections, withdrawals, a replacement rule and a
+scope is the owner's.** The slice file holds the thinnest cut until the
+owner says otherwise. When you think a second behaviour belongs in the
+same slice (its corrections, its edge cases, a neighbouring rule), write
+the thinnest cut first, then ask: one `AskUserQuestion`, the thinnest
+cut as one answer and the wider cut as the other, each with what it
+holds and its size (criteria, expected chunks), your recommendation
+first. Never take the wider cut "as recommended", whatever the invoking
+arguments say about technical questions: how much ships at once is what
+the owner wants, not how it is built. A wider cut the owner chooses is
+this file revised in place. One slice took corrections, withdrawals, a replacement rule and a
 month turn in one cut that nobody was asked about: 35 criteria and seven
 chunks for one button.
 

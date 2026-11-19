@@ -272,11 +272,15 @@ mechanical checks only, never a semantic read of full artifact prose:
   never routes to this row, the same way a problem with no stack decision
   forced yet never routes to the technology-bootstrap row below.
 - **Only when step 1b found a GitHub tracker:** is the slice's plan on
-  the default branch? Inline with Bash, `git fetch origin`, then `git
-  status --porcelain -- '<slice file>' '<design document>'` is empty and
-  `git diff --quiet 'origin/<default branch>' -- '<slice file>' '<design
-  document>'` exits 0: merged. Anything else: not merged. A project with
-  no tracker is never asked this.
+  the default branch? Inline with Bash, `git fetch origin` (a fetch that
+  fails is said in one line, and the repository's own `origin/<default
+  branch>` is compared as it stands), then `git status --porcelain --
+  '<slice file>' '<design document>'` is empty and `git diff --quiet
+  'origin/<default branch>' -- '<slice file>' '<design document>'` exits
+  0: merged. Anything else: not merged. Never asked of a project with no
+  tracker, of an issue fix, or of a slice whose build has already
+  started (a `slice-<nnn>-*` branch exists, or the log holds its
+  chunk-loop entry): those were planned before this rule or are past it.
 - Has the current unit's slice actually been implemented — real,
   working code, not just design/criteria artifacts? There's no fixed
   convention for detecting this mechanically (it's application source, not
