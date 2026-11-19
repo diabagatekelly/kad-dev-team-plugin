@@ -28,10 +28,16 @@ graders:
     tool: Bash
     input_match: 'readiness_check\.py'
     min: 1
-  - type: tool_order
+  - type: regex
     name: plan-committed-before-the-gate
-    before: {tool: Bash, input_match: 'git (?:switch -c|checkout -b) planning-001'}
-    after: {tool: Bash, input_match: 'python3[^\n]*readiness_check\.py'}
+    # One Bash call often holds both, which tool_order cannot order.
+    target: trace
+    pattern: 'git (?:switch -c|checkout -b) planning-001[\s\S]*?python3 .{0,400}?readiness_check\.py'
+  - type: regex
+    name: gate-not-run-before-the-branch
+    target: trace
+    pattern: '"command":"(?:(?!git (?:switch -c|checkout -b) planning-001)[^"\\]|\\.)*python3 .{0,400}?readiness_check\.py[\s\S]*git (?:switch -c|checkout -b) planning-001'
+    match: not_contains
   - type: tool_used
     name: nothing-launched
     tool: Agent

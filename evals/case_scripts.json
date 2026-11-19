@@ -3,6 +3,7 @@
  "accessibility-review-ac-walk": [
   "scratch_run.py"
  ],
+ "accessibility-review-design-notes": [],
  "accessibility-review-neg-readability": [],
  "accessibility-review-payfine": [],
  "accessibility-review-payfine-subtle": [],
@@ -103,6 +104,8 @@
  "design-system-payfine-phase3": [],
  "design-system-payfine-reference": [],
  "design-system-payfine-review": [],
+ "domain-model-bank-phase1": [],
+ "domain-model-bank-phase2": [],
  "external-review-triage-cancel-hold": [],
  "library-app-catalog-review": [],
  "library-app-fines-review": [],
@@ -136,7 +139,8 @@
  "orchestrator-autopilot-round": [
   "rounds_record.py",
   "sandbox_check.py",
-  "scratch_run.py"
+  "scratch_run.py",
+  "validation_gate.py"
  ],
  "orchestrator-backward-route": [],
  "orchestrator-budget-exceeded": [
@@ -205,6 +209,11 @@
   "sandbox_check.py",
   "scratch_run.py"
  ],
+ "orchestrator-planning-pr-open": [],
+ "orchestrator-planning-row": [
+  "deferrals.py",
+  "readiness_check.py"
+ ],
  "orchestrator-readiness-correction-autopilot": [
   "readiness_check.py",
   "sandbox_check.py"
@@ -241,6 +250,7 @@
   "readiness_check.py"
  ],
  "orchestrator-route-design-system": [],
+ "orchestrator-route-domain-model": [],
  "orchestrator-route-implementation": [],
  "orchestrator-route-implementation-prenamed": [],
  "orchestrator-route-open-pr": [],
@@ -354,5 +364,6 @@
   "source_scan.py"
  ],
  "vertical-slicing-payfine-phase1": [],
+ "vertical-slicing-thinnest-cut": [],
  "why-comments-collect-fine": []
 }

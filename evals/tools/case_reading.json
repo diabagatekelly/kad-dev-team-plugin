@@ -3182,5 +3182,64 @@
   },
   "judges": {},
   "findings": []
+ },
+ "accessibility-review-design-notes": {
+  "findings": [],
+  "judges": {},
+  "prompt": {
+   "note": "the designer's two requirements are given; it does not say that one is a design note and the other a criterion",
+   "quote": "the declined message must read exactly \"Your card was declined. Try another card.\" and a screen reader user has to be told as soon as it appears",
+   "states_rule": "partly"
+  }
+ },
+ "domain-model-bank-phase1": {
+  "findings": [],
+  "judges": {},
+  "prompt": {
+   "note": "names the skill and the section to model; says nothing of asking before writing or of which states need the owner",
+   "states_rule": "no"
+  }
+ },
+ "domain-model-bank-phase2": {
+  "findings": [],
+  "judges": {},
+  "prompt": {
+   "note": "the owner's answer is given so the run reaches the document; it does not say what the table holds, which states to find, or that a source not read is `to verify`",
+   "quote": "What you would ask me, answered: a connection that the bank or the vendor has ended for good, with no way out in the app, stays unsupported for now.",
+   "states_rule": "partly"
+  }
+ },
+ "orchestrator-planning-pr-open": {
+  "findings": [],
+  "judges": {},
+  "prompt": {
+   "note": "asks for the build outright while the tracker stand-in shows the planning pull request open",
+   "states_rule": "no"
+  }
+ },
+ "orchestrator-planning-row": {
+  "findings": [],
+  "judges": {},
+  "prompt": {
+   "note": "the stop before the push is given because the fixture has no network; it does not say the plan gets a pull request of its own, or the order of branch and gate",
+   "quote": "do everything up to the first `git push`, don't push, and tell me what you would push and what happens after",
+   "states_rule": "partly"
+  }
+ },
+ "orchestrator-route-domain-model": {
+  "findings": [],
+  "judges": {},
+  "prompt": {
+   "note": "asks what's next on planning documents only; the requirements' section is the only signal",
+   "states_rule": "no"
+  }
+ },
+ "vertical-slicing-thinnest-cut": {
+  "findings": [],
+  "judges": {},
+  "prompt": {
+   "note": "says recommended technical questions are taken, which is the trap: a wider cut is not one of them",
+   "states_rule": "no"
+  }
  }
 }

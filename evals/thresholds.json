@@ -34,6 +34,25 @@
       "accessibility-review"
     ]
   },
+  "accessibility-review-design-notes": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T044252-accessibility-review-design-notes.json",
+    "graders": {
+      "document-ends-its-criteria-with-a-count": 1.0,
+      "exact-wording-is-a-design-note": 1.0,
+      "exact-wording-is-not-a-criterion": 1.0,
+      "pointer-line-carries-the-count": 1.0,
+      "review-written": 1.0,
+      "skill-invoked": 1.0,
+      "the-announcement-is-still-a-criterion": 1.0
+    },
+    "skills_invoked": [
+      "accessibility-review"
+    ]
+  },
   "accessibility-review-neg-readability": {
     "score": 1.0,
     "runs": 3,
@@ -1062,6 +1081,44 @@
       "design-system"
     ]
   },
+  "domain-model-bank-phase1": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T044252-domain-model-bank-phase1.json",
+    "graders": {
+      "asks-about-a-state-left-unsupported": 1.0,
+      "does-not-ask-which-vendor": 1.0,
+      "no-document-written-before-the-answer": 1.0,
+      "skill-invoked": 1.0,
+      "the-question-carries-a-recommendation": 1.0
+    },
+    "skills_invoked": [
+      "domain-model"
+    ]
+  },
+  "domain-model-bank-phase2": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T044252-domain-model-bank-phase2.json",
+    "graders": {
+      "model-written": 1.0,
+      "names-a-connection-that-cannot-be-restarted": 1.0,
+      "names-a-login-that-lapses": 1.0,
+      "no-url-cited-that-was-not-read": 1.0,
+      "skill-invoked": 1.0,
+      "sources-are-steps-to-verify": 1.0,
+      "table-header-the-gate-can-read": 1.0,
+      "the-answered-question-is-not-asked-again": 1.0,
+      "the-unsupported-state-carries-the-owners-words": 1.0
+    },
+    "skills_invoked": [
+      "domain-model"
+    ]
+  },
   "external-review-triage-cancel-hold": {
     "score": 1.0,
     "runs": 3,
@@ -1744,6 +1801,48 @@
       "tdd-implementation-lite"
     ]
   },
+  "orchestrator-planning-pr-open": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T044252-orchestrator-planning-pr-open.json",
+    "graders": {
+      "asks-the-tracker-for-open-pull-requests": 1.0,
+      "log-has-the-waiting-entry": 1.0,
+      "no-implementation-skill-invoked": 1.0,
+      "no-slice-branch-cut": 1.0,
+      "nothing-launched": 1.0,
+      "orchestrator-invoked": 1.0,
+      "says-the-build-starts-once-it-is-merged": 1.0
+    },
+    "skills_invoked": [
+      "orchestrator"
+    ]
+  },
+  "orchestrator-planning-row": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T052540-orchestrator-planning-row.json",
+    "graders": {
+      "gate-not-run-before-the-branch": 1.0,
+      "no-implementation-skill-invoked": 1.0,
+      "no-slice-branch-cut": 1.0,
+      "nothing-launched": 1.0,
+      "nothing-pushed": 1.0,
+      "orchestrator-invoked": 1.0,
+      "plan-committed-before-the-gate": 1.0,
+      "planning-branch-cut": 1.0,
+      "readiness-gate-run": 1.0,
+      "says-the-build-waits-for-the-merge": 1.0
+    },
+    "skills_invoked": [
+      "delivery",
+      "orchestrator"
+    ]
+  },
   "orchestrator-readiness-correction-autopilot": {
     "score": 1.0,
     "runs": 3,
@@ -1973,6 +2072,24 @@
       "design-system",
       "orchestrator",
       "reliability-requirements"
+    ]
+  },
+  "orchestrator-route-domain-model": {
+    "score": 1.0,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T044252-orchestrator-route-domain-model.json",
+    "graders": {
+      "log-names-the-route": 1.0,
+      "no-slicing-before-the-model": 1.0,
+      "not-requirements-refinement": 1.0,
+      "orchestrator-invoked": 1.0,
+      "routes-to-domain-model": 1.0
+    },
+    "skills_invoked": [
+      "domain-model",
+      "orchestrator"
     ]
   },
   "orchestrator-route-implementation": {
@@ -3699,6 +3816,26 @@
       "skill-invoked": 1.0,
       "slice-written": 1.0,
       "stays-in-confirmed-scope": 0.667
+    },
+    "skills_invoked": [
+      "acceptance-criteria",
+      "vertical-slicing"
+    ]
+  },
+  "vertical-slicing-thinnest-cut": {
+    "score": 0.952,
+    "runs": 3,
+    "mode": "gate",
+    "claude_version": "2.1.328",
+    "source": "results/gate-20261119T044252-vertical-slicing-thinnest-cut.json",
+    "graders": {
+      "at-most-five-functional-criteria": 0.667,
+      "does-not-reask-the-what": 1.0,
+      "size-line-written": 1.0,
+      "skill-invoked": 1.0,
+      "slice-written": 1.0,
+      "the-set-holds-what-was-left-for-later": 1.0,
+      "thin-path-leaves-out-renew-all-and-the-override": 1.0
     },
     "skills_invoked": [
       "acceptance-criteria",

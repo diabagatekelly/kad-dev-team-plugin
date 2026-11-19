@@ -203,9 +203,12 @@ improved before that result.
 
 ### Step 2. Planning (kept whichever arm wins)
 
-**Built 2026-11-18 as kad 0.18.0 on branch `planning-0.18.0-build`, not
-gated, not pushed.** Script tests pass; the eval pass is the owner's to
-start. How each was built, where it differs from the lines below:
+**Built 2026-11-18 as kad 0.18.0 on branch `planning-0.18.0`; the gate
+passed 2026-11-19 at the owner's word** (109 cases, 228 runs, $146.64;
+`evals/README.md`, "The planning changes", which also says what the
+trial of the new cases changed in `vertical-slicing` and
+`accessibility-review`). How each was built, where it differs from the
+lines below:
 
 - **P1**: the trigger is mechanical. `requirements-refinement` writes an
   `## Outside systems and lasting things` section, and the orchestrator
@@ -232,7 +235,7 @@ start. How each was built, where it differs from the lines below:
 Seven new cases: `domain-model-bank-phase1`, `domain-model-bank-phase2`,
 `orchestrator-route-domain-model`, `vertical-slicing-thinnest-cut`,
 `accessibility-review-design-notes`, `orchestrator-planning-pr-open`,
-`orchestrator-planning-row`. None has run. No case holds: the A step's
+`orchestrator-planning-row`. No case holds: the A step's
 own refusal (`flow not started: planning pull request not merged`,
 reached only by asking for a build with no planning pull request open),
 `delivery`'s "A planning pull request" past the push (the fixtures have
@@ -241,11 +244,8 @@ document's owner, and `domain-model` reading a provider's documentation
 (the eval sandbox has no web tool, so every source there is `to
 verify`).
 
-Before the gate pass: eleven frozen histories carry the old text of
-`reliability-requirements`, `security-requirements`,
-`architecture-design` or `requirements-refinement` and are captured
-again (`history_stale.py` lists them; each is one run of the earlier
-phase).
+The eleven frozen histories that carried the old text of four skills
+were captured again before the pass.
 
 - [x] **P1. A domain model, once, before slicing.** The dead ends of
   slices 1, 3 and 4 are one unanswered question: what states can a bank
