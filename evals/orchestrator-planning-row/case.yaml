@@ -31,7 +31,7 @@ graders:
   - type: tool_order
     name: plan-committed-before-the-gate
     before: {tool: Bash, input_match: 'git (?:switch -c|checkout -b) planning-001'}
-    after: {tool: Bash, input_match: 'readiness_check\.py'}
+    after: {tool: Bash, input_match: 'python3[^\n]*readiness_check\.py'}
   - type: tool_used
     name: nothing-launched
     tool: Agent

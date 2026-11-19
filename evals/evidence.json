@@ -91,13 +91,13 @@
     "recorded": "2026-11-18T14:21:09Z"
   },
   "architecture-design-payfine-phase1": {
-    "inputs": "6ed100f25c0ec89ff9808fdac01dd6822861fb53e123bdb853db4d88e7ddde08",
+    "inputs": "8286806c346b8136b8cfecf56c0acf7b240fa8290a8131ff734b5eca5a731924",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
-    "source": "results/gate-20261118T135719-architecture-design-payfine-phase1.json",
-    "claude_version": "2.1.327",
-    "recorded": "2026-11-18T14:21:09Z"
+    "source": "results/gate-20261119T043605-architecture-design-payfine-phase1.json",
+    "claude_version": "2.1.328",
+    "recorded": "2026-11-19T04:36:43Z"
   },
   "architecture-design-payfine-phase2": {
     "inputs": "7181b5bc761302416335a1a5d2f5842cc507b403a84d15bcaf97f8992afeae08",
@@ -1055,22 +1055,22 @@
     "recorded": "2026-11-18T14:21:09Z"
   },
   "reliability-requirements-payfine-phase1": {
-    "inputs": "2077b2e2e8ea60c4f3bb09076658ecefeca02f8cf0326a43ed524414532f15ef",
+    "inputs": "c4c3583c24eedc927f146ab9649b0e1afbef9f878dce9cd8466d6190cb42a5a4",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
-    "source": "results/gate-20261118T135719-reliability-requirements-payfine-phase1.json",
-    "claude_version": "2.1.327",
-    "recorded": "2026-11-18T14:21:09Z"
+    "source": "results/gate-20261119T043605-reliability-requirements-payfine-phase1.json",
+    "claude_version": "2.1.328",
+    "recorded": "2026-11-19T04:36:43Z"
   },
   "reliability-requirements-payfine-phase2": {
-    "inputs": "2f96f1ed9b56a32e713dbc29ed24ed716ad0051065f4749279dca9ae88ab4b78",
+    "inputs": "cc814a155dc648f1025b3f2c45569d5c52b8dc965f86e2f1bf4ea2f6e1162968",
     "score": 1.0,
     "bar": 1.0,
-    "runs": 3,
-    "source": "results/gate-20261118T123610-reliability-requirements-payfine-phase2.json",
-    "claude_version": "2.1.327",
-    "recorded": "2026-11-18T13:06:20Z"
+    "runs": 1,
+    "source": "results/gate-20261119T043809-reliability-requirements-payfine-phase2.json",
+    "claude_version": "2.1.328",
+    "recorded": "2026-11-19T04:38:54Z"
   },
   "reliability-requirements-payfine-phase2-proceed": {
     "inputs": "1155211b1d6f3a2c62fea1817df8a01010c2e92e41fcfa2ce6c68646feb066f0",
@@ -1100,13 +1100,13 @@
     "recorded": "2026-11-18T13:06:20Z"
   },
   "reliability-requirements-refusal-phase1": {
-    "inputs": "62a765aba957ce5b86af18f2ba73c81655242eca3f737456d345db3c1c6e9890",
+    "inputs": "3aa7eb118e8928791eb2a599e8f7537172e7da1383a8c3dfe298a4e62276478d",
     "score": 1.0,
-    "bar": null,
-    "runs": 3,
-    "source": "results/gate-20261118T123610-reliability-requirements-refusal-phase1.json",
-    "claude_version": "2.1.327",
-    "recorded": "2026-11-18T13:06:20Z"
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261119T043605-reliability-requirements-refusal-phase1.json",
+    "claude_version": "2.1.328",
+    "recorded": "2026-11-19T04:36:43Z"
   },
   "reliability-requirements-refusal-phase2": {
     "inputs": "4a1b5a2a802da3343a6ac03cd15775b9789618c2ce938088765c04e2f5e5eaf2",
@@ -1217,13 +1217,13 @@
     "recorded": "2026-11-17T02:34:56Z"
   },
   "requirements-refinement-payfine-phase1": {
-    "inputs": "745785cc89cc32deb2be53ae59f2230615edaaa4430effd4a26ad6f3162e8d31",
+    "inputs": "127ac3680eef33bcd9a74e42b1a4afafe92928a0a067703168a4c8a82e97eab6",
     "score": 1.0,
-    "bar": 0.917,
-    "runs": 3,
-    "source": "results/gate-20261117T023352-requirements-refinement-payfine-phase1.json",
-    "claude_version": "2.1.325",
-    "recorded": "2026-11-17T02:34:56Z"
+    "bar": 1.0,
+    "runs": 1,
+    "source": "results/gate-20261119T043605-requirements-refinement-payfine-phase1.json",
+    "claude_version": "2.1.328",
+    "recorded": "2026-11-19T04:36:43Z"
   },
   "requirements-refinement-payfine-phase2": {
     "inputs": "ad2d7d18d4540220c7ccf098e5edc0439c062be12187d503a1b4424711f80291",
@@ -1272,22 +1272,22 @@
     "recorded": "2026-11-17T02:31:41Z"
   },
   "security-requirements-payfine-phase1": {
-    "inputs": "45a41aa79749e5639ccd8fc50bc045f72e2b74c0acd3a735ea64e881aaea3a27",
+    "inputs": "cc928715cb99d29ea1070bf1b472f073e8e06764a37dae4b4e5112f63e7ea5c2",
     "score": 1.0,
     "bar": 1.0,
     "runs": 1,
-    "source": "results/gate-20261112T012636-security-requirements-payfine-phase1.json",
-    "claude_version": "2.1.322",
-    "recorded": "2026-11-12T01:50:51Z"
+    "source": "results/gate-20261119T043605-security-requirements-payfine-phase1.json",
+    "claude_version": "2.1.328",
+    "recorded": "2026-11-19T04:36:43Z"
   },
   "security-requirements-payfine-phase2": {
-    "inputs": "397e789e032f87aa09bec1dfcbe131c3dc2efdb9ff9c45f502350cb0e5d676f7",
+    "inputs": "2b2a5bce2cecd94fce2f0417cebe2de819c400d61be5df766cf09d0624b98ec9",
     "score": 1.0,
     "bar": 0.917,
-    "runs": 3,
-    "source": "results/gate-20261114T224539-security-requirements-payfine-phase2.json",
-    "claude_version": "2.1.325",
-    "recorded": "2026-11-14T22:51:57Z"
+    "runs": 1,
+    "source": "results/gate-20261119T043809-security-requirements-payfine-phase2.json",
+    "claude_version": "2.1.328",
+    "recorded": "2026-11-19T04:38:54Z"
   },
   "security-requirements-payfine-phase2-proceed": {
     "inputs": "880c3c21385db1981d099ab0bb16aa2c7b51c45de77736600ef4c91cb3e61a2e",

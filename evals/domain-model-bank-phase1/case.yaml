@@ -29,7 +29,7 @@ graders:
     # The question is about a state with no way out: support it, or leave
     # it unsupported.
     target: last_message
-    pattern: 'unsupported[\s\S]*\?|\?[\s\S]*unsupported'
+    pattern: 'unsupported[\s\S]*(?:\?|\banswer\b|\bdecision\b|\bdecide\b)|(?:\?|\banswer\b|\bdecision\b|\bdecide\b)[\s\S]*unsupported'
     flags: i
   - type: regex
     name: the-question-carries-a-recommendation

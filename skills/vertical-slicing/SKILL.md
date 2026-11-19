@@ -98,6 +98,16 @@ The first slice should:
 happy path, with the essential refusals a person would meet on it. That
 is the slice you offer.
 
+An essential refusal is one the behaviour's own rule makes, met by
+someone using it as meant (a book that cannot be renewed, an amount that
+is not a number). These are not yours to write, here or in any cut: who
+may do it and what happens when someone asks for a thing that is not
+theirs or does not exist (the security stage's), and a repeated or
+doubled request, or a failure of something the path depends on (the
+reliability stage's). A criterion for one of those in the slice file is
+written twice once its stage runs, and tested twice. When no refusal of
+the behaviour's own is in this cut, the thinnest cut has none.
+
 **Recommending more than that in one slice is a scope question, and
 scope is the owner's.** The slice file holds the thinnest cut until the
 owner says otherwise. When you think a second behaviour belongs in the

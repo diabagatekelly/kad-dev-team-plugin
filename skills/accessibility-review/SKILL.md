@@ -471,10 +471,14 @@ could see the difference between it holding and failing (a control a keyboard ca
 The exact words of a message, which fields a log line carries, how an
 announcement is phrased: those go under `## Design notes`, as plain
 bullets with no Given and no identifier. Builders read them; they are
-not criteria, are not walked and do not each get a test. One slice
+not criteria, are not walked and do not each get a test. A criterion
+that involves such a message names it by what it is ("the declined
+message is announced"), never by its words: a quoted sentence in a
+criterion becomes a test of the sentence. One slice
 carried 35 criteria for one button, most of them of this kind, and each
 became a test. The document's last line is `Criteria: <n>`, and the
-pointer line you leave in the slice ends with the same count.
+pointer line you leave in the slice ends with the same count, in
+this form: `(<n> criteria)`, as in `see <your document> (4 criteria)`.
 
 Split criteria into what's already confirmed against the current artifact
 and what has to hold once real interaction wiring exists — the second
