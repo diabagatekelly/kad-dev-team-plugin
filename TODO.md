@@ -286,27 +286,84 @@ Not a second plugin: it reuses the gate, the mutation pass, the cold
 read, the criteria walk, the screen-change check and delivery. New is
 only the build and what gets fixed.
 
-- [ ] **L1. One builder for the slice**, on the strongest model, given
+**Built 2026-11-19 as kad 0.19.0 on branch `light-arm-0.19.0`, not
+gated, not pushed.** Script tests pass; the eval pass is the owner's to
+start. It is a third cadence, `solo`, beside `loop` and `light`, which
+are as they were. How each line was built, and where it differs:
+
+- **The cadence** is taken at A from the owner's message (the word
+  `solo`, or "one builder for the slice") or from a line `cadence:
+  solo` in `<target>/autopilot.md`, written there only when the owner
+  says it holds for later slices. G1 (the standing file for `light`)
+  stays parked.
+- **L1**: step S of the orchestrator, in place of B, C and D. One
+  `tdd-coach` on Opus with a new skill, `slice-build` (not a branch of
+  `tdd-implementation-lite`: the other arm's text and cases are
+  untouched, and the loser is one removal). The log reuses the C line
+  as chunk 1 of 1 and the D line, so the log check and the delivery
+  step read it as they read any slice.
+- **L2**: `slice-build`'s "One test per criterion". The level is the
+  outermost the project's suite can drive; a fault is injected at the
+  design's port. The report's first table has one row per criterion.
+- **L3**: the same scripts with the same arguments. The gate runs once
+  on the whole build, with the design's module directories as its
+  scope and no per-chunk test list.
+- **L4**: five kinds are confirmed (a failing check, a bug the cold
+  read reproduced, a criterion the walk failed, a survivor the builder
+  calls real when asked by message, a Critical or High of the review
+  that a verify agent reproduces). One fresh fixer on Opus, the gate,
+  then the reproductions run again by the verify agent (the cold
+  reader's probes do not outlive its clone). No reviewer reads the
+  fix, no second fixer follows, and the autopilot round does not run:
+  a Critical or High that still reproduces stops the flow.
+- **L5**: one `code-reviewer` on Opus applying five review skills in
+  one read. Its findings go to `slice-findings.md` and from there to
+  the pull request's body ("Review findings", `delivery`); none is
+  filed as an issue.
+- **L6**: six cases, all tool-judged: `orchestrator-solo-from-message`,
+  `orchestrator-solo-from-standing-file`,
+  `orchestrator-solo-build-launch`, `orchestrator-solo-confirmed-only`,
+  `orchestrator-solo-nothing-confirmed`, `slice-build-cancel-hold` (on
+  Opus). Three known-bad references, written with the cases and not
+  yet observed: the A step without its `solo` paragraph, step S
+  without its confirmed-only rule, `slice-build` without its
+  one-test-per-criterion rule.
+
+None has run. No case holds: the hand-back check of S.1 (a criterion
+with no row), the gate's one fixer at S.2, the builder asked about
+survivors, the verify launch for a Critical or High, the reproductions
+run again after the fix and the stop when one still reproduces, the
+review's line after a fix, `delivery`'s "Review findings" part,
+`slice-build`'s wording table (the fixture slice has no screen) and its
+"A fix handed back", and the standing-file line being written from a
+message. The first real run of all of them is the comparison.
+
+The gate pass (the owner's to start): 25 cases, the six new at three
+runs and nineteen at one (the A step's text and `delivery`'s reach
+them); ten known-bad references at three runs, the three new among
+them; no frozen history is stale. About 67 runs before re-runs.
+
+- [x] **L1. One builder for the slice**, on the strongest model, given
   the slice, the design, the domain model and the criteria. No chunk
   plan, no runner, no per-chunk agents. It commits in steps of its own
   choosing.
-- [ ] **L2. One light test rule**: each criterion held by one test at
+- [x] **L2. One light test rule**: each criterion held by one test at
   the level that reaches it (the running app where it can), written
   first and seen failing; a module test only for a branch that test
   cannot reach; exact wording held in one table per message module.
-- [ ] **L3. The mechanical checks, unchanged**: the gate with every
+- [x] **L3. The mechanical checks, unchanged**: the gate with every
   check, the mutation pass on the changed lines, the cold read by
   execution, the criteria walk for a slice with a screen, CI and the
   screen-change check at delivery.
-- [ ] **L4. Only what was confirmed gets fixed**: a failing check, a
+- [x] **L4. Only what was confirmed gets fixed**: a failing check, a
   surviving break the builder agrees is real, a bug the cold read
   reproduced, a criterion the walk failed. One fresh fixer, the gate,
   and the cold read's probes run again.
-- [ ] **L5. One combined review, reported and not fixed**: its findings
+- [x] **L5. One combined review, reported and not fixed**: its findings
   go to the pull request's body by severity, for the owner. A Critical
   or High it raises is verified by execution first and fixed under L4
   if confirmed.
-- [ ] **L6. Cases** for the mode: the A step takes it from the standing
+- [x] **L6. Cases** for the mode: the A step takes it from the standing
   file or the message; the builder's test rule with a known-bad
   reference; a finding that was not confirmed is not sent to a fixer.
 
