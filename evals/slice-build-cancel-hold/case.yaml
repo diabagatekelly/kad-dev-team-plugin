@@ -97,4 +97,5 @@ graders:
   - type: regex
     name: hand-back-is-the-one-line
     target: last_message
-    pattern: '^\s*`?built `?[0-9a-f]{7,40}`?\.\.`?[0-9a-f]{7,40}`?; `?\d+`? criteria, `?\d+`? tests; deviations `?\d+`?; [^\n]*implementation-report-slice-001\.md`?\s*$'
+    # The last line: a run asked by a person has summarised above it.
+    pattern: '(?:^|\n)\s*`?built `?[0-9a-f]{7,40}`?\.\.`?[0-9a-f]{7,40}`?; `?\d+`? criteria, `?\d+`? tests; deviations `?\d+`?; [^\n]*implementation-report-slice-001\.md`?\s*$'

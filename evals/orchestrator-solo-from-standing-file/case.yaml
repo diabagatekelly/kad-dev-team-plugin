@@ -40,7 +40,8 @@ graders:
   - type: regex
     name: cadence-not-asked
     target: last_message
-    pattern: '(?i)which cadence|\bloop,? light or solo\b|should (?:this|the) slice run (?:solo|light)'
+    pattern: 'which cadence|\bloop,? light or solo\b|should (?:this|the) slice run (?:solo|light)'
+    flags: i
     match: not_contains
   - type: file_exists
     name: handoff-written
