@@ -48,16 +48,28 @@ is written before step V7.
   no proxy approval) and assumes a disposable place to run, launched
   from outside it: a Linux microVM per session, the project cloned in,
   network to an allowlist (Plaid, GitHub, the package registry), only
-  the credentials that session needs, thrown away after. No sandbox at
+  the credentials that session needs, thrown away after. Credentials are
+  short-lived and scoped to the one repository and environment (a
+  sandbox Plaid key, a push token for one repository), and kept outside
+  the guest where the candidate allows (a broker or a proxy that adds
+  them): code a dependency runs inside the VM can use whatever is inside
+  it, and throwing the VM away does not undo a leak. No sandbox at
   all is ruled out while sessions run on autopilot with live keys and
   push rights. The macOS Keychain goes behind an adapter: a file-backed
   or Linux store in the VM, one contract test for the real Keychain on
   macOS (CI or an occasional macOS VM, at most two at a time per Mac).
   *The test:* one real session in a candidate microVM runs the fourth
   project's existing suite, the headless browser walk, a `git push` to
-  a scratch branch and the mutation pass; then two sessions at once.
-  *Bar (proposed):* no sandbox workaround needed, no step slower than
-  under `srt`, and the two sessions share nothing. Candidates to weigh
+  a scratch branch and the mutation pass. Then the controls themselves:
+  a request outside the allowlist is refused, the session's credentials
+  cannot reach anything beyond their scope, and nothing of the session
+  is left after it ends. Then two sessions at once, each with its own
+  scratch branch and its own audit path, so a push race or a shared
+  usage limit is not read as a failure of isolation. *Bar (proposed):*
+  no sandbox workaround needed, no step slower than under `srt`, every
+  control check passes, and the two sessions share nothing inside the
+  VMs (a failure that comes from the host's or the account's shared
+  limits is recorded as that, not counted). Candidates to weigh
   then: Docker Sandboxes, Apple's `container`, a hosted microVM (E2B or
   similar), the cloud sessions.
 - [ ] **V1. The benchmark and its judge.** Turn the five labelled plans
@@ -79,8 +91,14 @@ is written before step V7.
 - [ ] **V3. A standard density.** The runs ranged from 171 to 675 cells,
   and more cells named more bugs. Write the rule that fixes what a
   complete table is (every state against every event, every call against
-  every failure mode, every field against every partition), with a
-  script that checks the shape without a model. Re-run V2 on it. *Bar:*
+  every failure mode, every field against every partition, every owner
+  action and long operation against every lifecycle column, and for the
+  dossier every call carrying each required fact: inputs, outputs, side
+  effects, documented errors, timings, retry safety, limits), with a
+  script that checks the shape without a model. The script takes its
+  lists of states, events, calls and fields from the domain model and
+  the dossier, not from the table, so a table that leaves one out fails
+  rather than passing smaller. Re-run V2 on it. *Bar:*
   the spread meets V2's bar, and bugs named do not fall below the frozen
   method's.
 - [ ] **V4. The dossier on its own.** Build the tables twice per plan:
@@ -93,8 +111,10 @@ is written before step V7.
   cause (the free tier's slot rule alone accounts for four in the fourth
   project's tables) and rank the groups. Measure how many questions
   reach the owner per slice and what share of the top groups hold a
-  real bug. *Bar:* set by the owner after seeing one ranked list, as the
-  number of questions a slice may bring and the share that must be real.
+  real bug. *Bar:* set by the owner before V5 runs, as the number of
+  questions a slice may bring and the share that must be real; to see
+  what a list looks like, the owner reads the top 15 the frozen method
+  already produced on the fourth project, not V5's own output.
 - [ ] **V6. The challenge to decided cells.** An adversarial pass that
   argues against each decision the plan made, aimed at the six bugs the
   plan decided wrongly (a merchant's rule that can never change, a new
@@ -102,8 +122,10 @@ is written before step V7.
   after the first pull left out of scope, a forged completion judged
   harmless, the one-minute give-up, a stale tab refused only at the
   finish). Measure how many of the six it raises and how many decisions
-  it disputes that were right. *Bar (proposed):* four of six, with fewer
-  than one dispute in five on a right decision.
+  it disputes that were right. The challenge's prompt is written and
+  frozen without the six in view, so it is not tuned to its own test.
+  *Bar (proposed):* four of six, with fewer than one dispute in five on
+  a right decision.
 - [ ] **V7. The register and traceability, as scripts.** One register of
   requirements with ids, cut from the tables; each test names the ids it
   holds; a script checks both ways (every requirement held by a test,
@@ -111,13 +133,20 @@ is written before step V7.
   twice. Deterministic, with unit tests; no model. *Bar:* the script
   run over the two fourth-project builds finds the two bugs the plan
   decided rightly and the builds missed, and the tests that hold no
-  requirement are counted.
+  requirement are counted. A link says a test names a requirement, not
+  that it would catch a break of it: that is measured by the mutation
+  pass with its mutants keyed to requirement ids (a requirement whose
+  mutants all survive is held by nothing, whatever its links say).
 - [ ] **V8. One lean build from the register.** Rebuild the fourth
   project's slice 1 from its plan with steps V1 to V7 in front of it,
   one builder, the probing review after the build as the main review.
   Measured as the comparison measured the two arms (cold read, mutation
-  pass, cost, wall clock, the owner's questions and stops). *Bar:* the
-  owner writes it before the run, against `light`'s 22, 93.6% and
+  pass, cost, wall clock, the owner's questions and stops). The builder
+  and every planning step of the run never see the benchmark's
+  scenarios or the cold reads; and because V2 to V6 are tuned on this
+  same plan, the owner weighs whether V8 runs on a fresh slice instead
+  (a new problem's slice 1, with its own cold read as the key). *Bar:*
+  the owner writes it before the run, against `light`'s 22, 93.6% and
   $64.78.
 - [ ] **V9. The new plugin.** Only after V8 holds: a design document
   (its stages, what is ported from kad with its tests and what is

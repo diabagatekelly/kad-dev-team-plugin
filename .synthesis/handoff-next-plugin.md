@@ -129,7 +129,12 @@ two VMs per Mac.
   evidence folder). Commit dates can be rewritten by a re-author; use
   transcript timestamps.
 - **The plugin repository is public; the audit repository is private.**
-  Anything that quotes the owner's projects goes to the audit repository.
+  As every earlier `TODO.md` and handoff has done, this repository holds
+  summaries: project names, scores, costs, pull-request numbers and a
+  bug named in a phrase. Anything that quotes a project (its code, plan
+  text, tables, cold reads, probes, transcripts or data) goes to the
+  audit repository. If the owner wants the summaries private too, they
+  move with the rest; that is the owner's call, raised on #71.
 
 ## Prompt for the next session
 
@@ -144,5 +149,6 @@ Paste this to start:
 > I agree, V0 alongside it. First, without running anything: tell me in
 > a few lines what V1 will do, what it will cost, and the bar you
 > propose, and wait for my answer. Keep every reader blind, score with a
-> fresh strict matcher, and put anything that quotes my projects in the
-> audit repository, never in this public one.
+> fresh strict matcher, and put anything that quotes my projects (code,
+> plan text, tables, cold reads, probes, data) in the audit repository,
+> never in this public one; summaries (names, scores, costs) may stay.
