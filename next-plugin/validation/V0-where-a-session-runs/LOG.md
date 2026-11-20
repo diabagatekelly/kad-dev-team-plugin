@@ -50,13 +50,19 @@ push credential inside the VM at all. A token in the VM is needed only
 if the session inside is to open the pull request, watch its checks and
 answer its review.
 
-### Waiting on the owner
+### The code host's token, two at once, teardown
 
-A token for the code host scoped to the one repository
-(`sbx secret set github`), to test a push from inside the VM and that
-the token reaches no other repository. The quick route (`gh auth
-token`) would hand over a token that reaches every repository, which
-the bar's fourth line rules out.
+| Step | By | Result |
+|---|---|---|
+| A token for the one repository, stored for VM 1 only (`sbx secret set github --sandbox v0-trial-1`) | **the owner** | done |
+| `git push origin <scratch branch>` from inside VM 1 | script | pushed in 1 s; the branch deleted again afterwards |
+| Reading and pushing to another of the owner's repositories from VM 1 | script | both refused (403) |
+| The token as the VM sees it | script | still the placeholder: the same hash as before the secret was stored |
+| The code host from VM 2, which the secret is not scoped to | script | no credential |
+| A session in VM 1 and one in VM 2 at the same time | script | VM 1 answered (20 s); VM 2, created before the model's sign-in, was not signed in |
+| A third VM created after the sign-in | script | signed in with no new login: the sign-in is once per machine, for VMs created after it |
+| `sbx rm --force` on the three VMs | script | 0.7 s; no containers, no volumes, the VM-scoped secret and rules gone, the VM's git remote gone from the host's clone. Left on the host: the base image (1.5 GB, a cache), the model's sign-in, the global policy |
+| The same route through `vm.sh` alone (policy, create, allow, exec, run, out, destroy) | script | 18 s from the VM existing to its removal, a session run and its transcript copied out |
 
 Read from the installed tool's help, not yet tried: `sbx create --clone
 claude .` runs the agent on a clone inside the VM and the host fetches
