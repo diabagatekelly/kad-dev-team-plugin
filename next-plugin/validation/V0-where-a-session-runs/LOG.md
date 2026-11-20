@@ -35,13 +35,28 @@ mirror), not editable; a download host for a browser can be a shared
 storage host (anyone's bucket), so it is allowed only for the install
 and removed after.
 
-### Waiting on the owner (the hand steps)
+### A real session inside the VM
 
-1. Signing the model in inside the VM.
-2. A token for the code host, scoped to the one repository, typed into
-   the tool's secret store (`sbx secret set`), for the push to a scratch
-   branch. The quick route (`gh auth token`) would hand over a token
-   that reaches every repository, which the bar's fourth line rules out.
+| Step | By | Result |
+|---|---|---|
+| Signing the model in inside the VM (`sbx run --name v0-trial-1`, `/login`) | **the owner** | done |
+| `sbx exec v0-trial-1 claude -p --dangerously-skip-permissions "<task>"` | script | the session ran the suite (105 pass), wrote a file and committed it on a scratch branch, 18 s, no prompt, no workaround |
+| `sbx cp v0-trial-1:/home/agent/.claude/projects <host folder>` | script | both transcript files copied out, with their usage records |
+| `git fetch sandbox-v0-trial-1` on the host | script | the VM's commit is on the host, with no code-host token in the VM |
+
+The last row matters for the design: the host can fetch what the VM
+committed and push it itself, so a session that only builds needs no
+push credential inside the VM at all. A token in the VM is needed only
+if the session inside is to open the pull request, watch its checks and
+answer its review.
+
+### Waiting on the owner
+
+A token for the code host scoped to the one repository
+(`sbx secret set github`), to test a push from inside the VM and that
+the token reaches no other repository. The quick route (`gh auth
+token`) would hand over a token that reaches every repository, which
+the bar's fourth line rules out.
 
 Read from the installed tool's help, not yet tried: `sbx create --clone
 claude .` runs the agent on a clone inside the VM and the host fetches
