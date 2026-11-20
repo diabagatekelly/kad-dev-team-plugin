@@ -64,8 +64,12 @@ Cold-read totals 22.5, 21, 24, 22 and 21 (of 30) while tests went 372,
 619, 184, 105 and 38, and implementation cost fell from $328 to $38 to
 $65. The same bugs came back in project after project (an item orphaned
 after a lost reply, a zero amount given a direction, dates with no year,
-a second connect). Test volume does not track quality; the bugs sit in
-what the plan assumed about the outside world.
+a second connect). The cold-read total did not move with the number of
+tests, but that is five builds of differing scope with one reader each.
+Within the fourth project more tests did buy something: 12.7 points of
+mutation kills (reproduced in the audit below). What holds: more tests
+caught more code faults and none of the bugs that sit in what the plan
+assumed about the outside world.
 
 ### 3. The completeness tables
 
@@ -83,10 +87,14 @@ named).
 | Fourth project, frozen method | 30 | 17 (57%) | 2 | 5, plus 4 partial |
 | Third project slices 1 to 4, frozen method | 35 | 9 (26%) | 4 | 8 of 60 |
 
-What it says: the bias of bug-aware columns was about 10 points; the
-rest of the gap follows the plan (the fourth project's thinner plan left
-more gaps; the third project's remaining bugs were code faults and wrong
-decisions). The tables find gaps in a plan, not code faults and not
+What it says: the frozen method named roughly half of the fourth
+project's bugs and a quarter of the third's. How much of the 67% was
+the bug-aware columns is **not established**: one run each, and the
+same key was split into 33 defects in one scoring and 30 in the other,
+so the 10-point gap may be noise until V2 measures the spread. The gap
+between the projects plausibly follows the plan (the fourth project's
+thinner plan left more gaps; the third project's remaining bugs were
+code faults and wrong decisions); that too is one sample. The tables find gaps in a plan, not code faults and not
 wrong decisions, flag far more than they hit, and vary in size from 171
 to 675 cells by run. The best hits came from the provider's documentation
 (Plaid's "initial update" covers about 30 days; a first pull can take
@@ -107,13 +115,65 @@ remote VMs); Claude Code's docs say to run inside a container, a VM or
 the sandbox runtime when prompts are skipped. A macOS guest is capped at
 two VMs per Mac.
 
+## Audit of this analysis (2026-11-20, a second model)
+
+The comparison and the table tests were orchestrated by Opus 5.5; the
+owner had meant Fable to do it, so Fable 5.2 audited the conclusions
+before the next session. Checked and holding: the scores and mutation
+counts recounted from the raw files; three key mutants re-run on both
+builds (unescaped HTML, partial rows after a failed save, the cursor not
+advanced: all survive in `solo`, all killed in `light`); the Plaid facts
+read directly in Plaid's documentation (30 days at the initial update,
+"may take 2 minutes or more", ten Trial Items and removal "will not
+allow you to create more", institution outages as HTTP 400, restart on
+the pagination error); nine of the matcher's calls sampled against the
+tables. The cold readers and matchers ran on Opus because
+`evals/tools/cold_read.md` names it, which keeps the scores comparable
+with earlier reviews.
+
+Corrected in this file and in `TODO.md`: the "about 10 points of bias"
+and "test volume does not track quality" claims (see sections 2 and 3).
+Softer than they read: of the bar's four lines only the kill rate and
+the cost are solid (the score line is one point from one reader per
+build; the Highs line was hit by the sandbox costing `solo` its first
+walk), so "do not adopt `solo` as it stands" holds and "`solo` cannot
+work" was never shown; the third project's slice 1 was scored against a
+wider key than the others (on numbered bugs only, 7 of 28, 25%: the
+same conclusion). New: both builds' connection-limit codes
+(`ADDITION_LIMIT`, `ITEM_LIMIT_EXCEEDED`) are probably wrong; the
+documentation names `TRIAL_CONNECTION_LIMIT`.
+
+## Where the new plugin lives (the owner, 2026-11-20)
+
+**Decided for now:** a new folder in this repository, `next-plugin/`,
+"so there's clear separation"; kad stays where it is at the root, and
+nothing is moved to an archive folder. Each step's work goes under
+`next-plugin/validation/V<n>-<name>/` (its `README.md` has the rules).
+Whether the plugin itself gets a repository of its own is decided at
+V9. What was weighed, for that later call: a new repository was
+recommended over moving the present code to `archived-plugin/`. Reasons: this
+repository's root is the installed plugin (`.claude-plugin/plugin.json`
+and `marketplace.json` with `source: "./"`), so moving its code breaks
+the installed kad and every path the eval suite, the hooks and the
+gate's dependency map name; the new plugin needs a clean history, its
+own name and version line, and none of the 160 cases; and what is
+ported is copied across one item at a time with its tests (V9), which
+keeps provenance. A plugin needs little: `.claude-plugin/plugin.json`
+(name, description, version), then any of `skills/<name>/SKILL.md`,
+`agents/`, `hooks/hooks.json`, `commands/`, and to install it a
+marketplace (`.claude-plugin/marketplace.json`, in the same repository
+or a separate one listing both plugins). None of it is created before
+V9's design is read; V0 to V8 produce scripts, prompts and results,
+which go in `next-plugin/validation/`.
+
 ## Lessons from running these tests (keep them)
 
 - **Blind every reader.** Cold-read clones were neutral (`arm-A`,
   `arm-B`, tags and branches removed), and table builders saw only the
   plan folder with `implementation/`, the orchestrator log and the
   delegation files removed. The one unblinded step (my own columns and
-  my own matching) inflated the result by about 10 points.
+  my own matching) gave 19 of 21 where the strict matcher gave 22 of
+  33 on the same tables.
 - **The matcher is a separate, fresh agent with strict rules** ("when in
   doubt, pick the less favourable class"; a generic cell counts only if
   it names the trigger). Never score your own method.
@@ -149,6 +209,7 @@ Paste this to start:
 > I agree, V0 alongside it. First, without running anything: tell me in
 > a few lines what V1 will do, what it will cost, and the bar you
 > propose, and wait for my answer. Keep every reader blind, score with a
-> fresh strict matcher, and put anything that quotes my projects (code,
+> fresh strict matcher, keep each step's work in
+> `next-plugin/validation/V<n>-<name>/`, and put anything that quotes my projects (code,
 > plan text, tables, cold reads, probes, data) in the audit repository,
 > never in this public one; summaries (names, scores, costs) may stay.
