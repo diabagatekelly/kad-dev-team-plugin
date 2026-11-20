@@ -89,6 +89,7 @@ answer its review.
 | An idle VM | stops when no command is attached to it and starts again on the next one; its disk is kept, its processes are not. A server started in one command is gone in the next: the session and anything it needs running are one command |
 | A prepared image | `sbx template save` of a stopped VM (30 s) keeps the toolchain and the browser; a VM from it is up in 4 s and captures the 9 screens with only the default hosts allowed |
 | Two VMs under load | a full mutation pass in each at the same time: 661 s and 694 s against 573 s for one alone (15% and 21% slower), the same verdict on all 60 mutants in both (53 killed, the same 7 survivors) |
+| The credentials file inside a VM (read at the owner's word) | placeholders shaped like tokens: an access and a refresh value of 26 characters each with the real prefixes, where a real token is several times longer. With the request probes above: the real token is not in the VM |
 | A caller's own key for the model | replaced as well: a made-up key is answered as the owner. The tool adds credentials on the model's API host only; its other allowed hosts get none |
 
 Read from the installed tool's help, not yet tried: `sbx create --clone

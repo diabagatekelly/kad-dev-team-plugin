@@ -44,10 +44,17 @@ nothing of the VM is left but a cached base image.
 - **The model's credentials** are added outside the VM: a request from
   inside with no credential, or a made-up one, is answered as the
   owner. So the token cannot be taken out of the VM, and any process in
-  the VM can use the owner's subscription while the VM lives. What the
-  credentials file inside actually holds was not read (refused by this
-  session's permission rules, not worked around), and a real key of
-  another account was not tried.
+  the VM can use the owner's subscription while the VM lives. The
+  credentials file inside holds placeholders shaped like tokens (26
+  characters each, read at the owner's word). A real key of another
+  account was not tried.
+- **Not yet probed:** whether a VM can reach the host's own ports, the
+  local network or the host's browser (the tool's `browser.enabled`
+  setting, on by default, lets a process in the VM open a URL in the
+  host's browser). The probe was refused by this session's permission
+  rules and is the owner's to run or allow.
+- **A long session** (hours) has not run in a VM; it is watched the
+  first time one does.
 - **The browser:** driven by a script (full Chrome for Testing
   headless, the headless shell, and headed on a virtual display) and by
   a session through browser tools; screenshots from each. Branded
