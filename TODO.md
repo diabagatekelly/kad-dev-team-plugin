@@ -53,6 +53,22 @@ result is read and the owner says it holds. A step that fails its bar
 stops the list there, and the next move is the owner's. No plugin code
 is written before step V7.
 
+**Any product, any domain (the owner, 2026-11-20):** "We have to be
+careful not to build the plugin to be specific to the accounting app.
+It should be able to be used for building any product in any domain."
+All 65 benchmark bugs come from two personal-finance projects built on
+one provider's API, so every step tuned on them can overfit. Three
+consequences for this list. (1) No frozen prompt, method or script
+names a finance or API concept; a script checks each frozen text
+against a list of such terms before its hash is taken. (2) What a step
+reads about the world outside the product is "whatever the product
+depends on that the team does not control": a provider's API, but as
+much a fixed corpus or a body of domain knowledge (the owner's
+examples: a tool to review the mutashabihaat of the Qur'an, flashcards
+made from a surah); a parser of an API's specification is one optional
+input, never the method. (3) Nothing is called validated on the
+finance projects alone: V8 runs on a held-out product of another kind.
+
 - [ ] **V0. Where a session runs (alongside V1, depends on nothing).**
   The owner, 2026-11-20: rethink the sandbox ("it's been a real pain"),
   likely a microVM; which one is picked later. The proposal: the new
@@ -106,19 +122,30 @@ is written before step V7.
   every failure mode, every field against every partition, every owner
   action and long operation against every lifecycle column, and for the
   dossier every call carrying each required fact: inputs, outputs, side
-  effects, documented errors, timings, retry safety, limits), with a
-  script that checks the shape without a model. The script takes its
-  lists of states, events, calls and fields from the domain model and
-  the dossier, not from the table, so a table that leaves one out fails
-  rather than passing smaller. Re-run V2 on it. *Bar:*
+  effects, documented errors, timings, retry safety, limits). The grid
+  is generated, not checked afterwards (the owner, 2026-11-20, asking
+  what can be deterministic): a script writes every empty cell with its
+  id from the lists of states, events, calls and fields in the domain
+  model and the dossier (and, where the product has one, from a
+  machine-readable specification of what it depends on); the model
+  fills only each cell's tag and consequence, and cannot add or drop a
+  row. A second script checks that every cell is filled, that each
+  DECIDED quote stands at the plan line it cites and that each cited
+  source holds the fact. Neither script uses a model; both have unit
+  tests. Re-run V2 on it. *Bar:*
   the spread meets V2's bar, and bugs named do not fall below the frozen
   method's.
-- [ ] **V4. The dossier on its own.** Build the tables twice per plan:
-  with a dossier written first by a research step (each fact cited, what
-  the documentation does not say listed as open), and without. *Bar
-  (proposed):* the dossier adds at least 10 points on the plans whose
-  bugs are at a provider's boundary, and costs under the owner's limit
-  per external system.
+- [ ] **V4. The dossier on its own.** The dossier is the cited facts
+  about whatever the product depends on that the team does not control
+  (a provider's API here; a corpus or a body of domain knowledge
+  elsewhere). Build the tables twice per plan: with a dossier written
+  first by a research step (each fact cited, what the sources do not
+  say listed as open), and without. *Bar (proposed):* the dossier adds
+  at least 10 points on the plans whose bugs sit at the boundary with
+  what the product depends on, and costs under the owner's limit per
+  dependency. On these five plans that boundary is one provider's API,
+  so the result says nothing yet about a product without one: V8's
+  held-out product is where that is read.
 - [ ] **V5. A ranking the owner can act on.** Group open cells by root
   cause (the free tier's slot rule alone accounts for four in the fourth
   project's tables) and rank the groups. Measure how many questions
@@ -149,17 +176,23 @@ is written before step V7.
   that it would catch a break of it: that is measured by the mutation
   pass with its mutants keyed to requirement ids (a requirement whose
   mutants all survive is held by nothing, whatever its links say).
-- [ ] **V8. One lean build from the register.** Rebuild the fourth
-  project's slice 1 from its plan with steps V1 to V7 in front of it,
-  one builder, the probing review after the build as the main review.
-  Measured as the comparison measured the two arms (cold read, mutation
-  pass, cost, wall clock, the owner's questions and stops). The builder
-  and every planning step of the run never see the benchmark's
-  scenarios or the cold reads; and because V2 to V6 are tuned on this
-  same plan, the owner weighs whether V8 runs on a fresh slice instead
-  (a new problem's slice 1, with its own cold read as the key). *Bar:*
-  the owner writes it before the run, against `light`'s 22, 93.6% and
-  $64.78.
+- [ ] **V8. One lean build from the register, on a held-out product.**
+  Not the fourth project again (V2 to V6 are tuned on its plan): slice
+  1 of a new product of another kind, one that leans on no provider's
+  API (the owner, 2026-11-20; the Qur'an review tool would fit, the
+  product is the owner's choice). It is planned, then steps V1 to V7
+  run on its plan frozen and unchanged, then one builder builds it,
+  with the probing review after the build as the main review. Its own
+  cold read is the key: the matcher scores what the tables named
+  against it, as on the benchmark. Measured as the comparison measured
+  the two arms (cold read, mutation pass, cost, wall clock, the owner's
+  questions and stops), with the share of its bugs the tables named
+  beside the benchmark's. The builder and every planning step never see
+  the cold read. A product in a domain the model does not know needs
+  someone who does to read its plan; who that is, is settled before the
+  run. *Bar:* the owner writes it before the run; `light`'s 22, 93.6%
+  and $64.78 are the nearest reference, on a different product, so
+  they are a guide and not a like-for-like line.
 - [ ] **V9. The new plugin.** Only after V8 holds: a design document
   (its stages, what is ported from kad with its tests and what is
   dropped, its evals: deterministic checks on documents, the benchmark,
