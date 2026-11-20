@@ -1,5 +1,170 @@
 # Open work
 
+## 2026-11-20: kad is frozen at 0.19.0; the next plugin, one validated step at a time
+
+**The owner's decisions, 2026-11-19 and 2026-11-20:** no slice 2 of the
+comparison; the fourth project's pull request #3 is not merged; this
+plugin is frozen at 0.19.0 (everything below this section is parked, not
+cancelled); the next plugin is planned here, and "take our time and
+really validate each step before we build on top of it".
+
+**What the comparison and the table tests found** (the whole context and
+the prompt to start a session: `.synthesis/handoff-next-plugin.md`;
+evidence in the private audit repository, `take-4-comparison/`:
+`README.md`, `frozen-method/RESULT.md`):
+
+- Slice 1 of the fourth project, built twice from one plan: `light`
+  22 on the cold read, 93.6% mutation kills, $64.78; `solo` 21, 80.9%,
+  $38.02 with two Highs standing. `solo` failed all four lines of the
+  bar. Neither build reached the bugs that matter: both took the plan's
+  one-minute give-up and its "initial update complete" as given, and
+  both were wrong about Plaid.
+- Across the four projects' first slices, the scores stayed at 21 to 24
+  while tests went from 619 to 38, and the same bugs came back (an item
+  orphaned after a lost reply, a zero amount given a direction, dates
+  with no year, a second connect). Test volume does not track quality;
+  the bugs sit in what the plan assumed about the outside world.
+- Five completeness tables (a dossier of each outside system, state x
+  event, failure modes of each call, input partitions, lifecycle of
+  each action), built before any code by a method frozen first
+  (`.synthesis/frozen-table-method.md`, sha256 `8830988e…`), and scored strictly
+  against the cold reads: 17 of 30 bugs named on the fourth project's
+  plan (57%), 9 of 35 on the third project's four plans (26%). Six
+  bugs over both were cells the plan had decided wrongly, which a table
+  only records. The tables find gaps in a plan, not code faults and not
+  wrong decisions, and they flag far more cells than they hit (13% to
+  60% of the top 15).
+
+**The rule for this list:** each step is a question with a measure and
+a bar the owner sets before it runs. A step is built on only when its
+result is read and the owner says it holds. A step that fails its bar
+stops the list there, and the next move is the owner's. No plugin code
+is written before step V7.
+
+- [ ] **V0. Where a session runs (alongside V1, depends on nothing).**
+  The owner, 2026-11-20: rethink the sandbox ("it's been a real pain"),
+  likely a microVM; which one is picked later. The proposal: the new
+  plugin carries no sandbox of its own (no sandbox check, no `git` shim,
+  no proxy approval) and assumes a disposable place to run, launched
+  from outside it: a Linux microVM per session, the project cloned in,
+  network to an allowlist (Plaid, GitHub, the package registry), only
+  the credentials that session needs, thrown away after. Credentials are
+  short-lived and scoped to the one repository and environment (a
+  sandbox Plaid key, a push token for one repository), and kept outside
+  the guest where the candidate allows (a broker or a proxy that adds
+  them): code a dependency runs inside the VM can use whatever is inside
+  it, and throwing the VM away does not undo a leak. No sandbox at
+  all is ruled out while sessions run on autopilot with live keys and
+  push rights. The macOS Keychain goes behind an adapter: a file-backed
+  or Linux store in the VM, one contract test for the real Keychain on
+  macOS (CI or an occasional macOS VM, at most two at a time per Mac).
+  *The test:* one real session in a candidate microVM runs the fourth
+  project's existing suite, the headless browser walk, a `git push` to
+  a scratch branch and the mutation pass. Then the controls themselves:
+  a request outside the allowlist is refused, the session's credentials
+  cannot reach anything beyond their scope, and nothing of the session
+  is left after it ends. Then two sessions at once, each with its own
+  scratch branch and its own audit path, so a push race or a shared
+  usage limit is not read as a failure of isolation. *Bar (proposed):*
+  no sandbox workaround needed, no step slower than under `srt`, every
+  control check passes, and the two sessions share nothing inside the
+  VMs (a failure that comes from the host's or the account's shared
+  limits is recorded as that, not counted). Candidates to weigh
+  then: Docker Sandboxes, Apple's `container`, a hosted microVM (E2B or
+  similar), the cloud sessions.
+- [ ] **V1. The benchmark and its judge.** Turn the five labelled plans
+  (the fourth project's slice 1, the third project's slices 1 to 4; 65
+  bugs) into a frozen benchmark: each bug written once as a scenario
+  (trigger, harm), the plan commit, the cold read it came from. Freeze
+  the matcher's prompt. Measure the matcher: run it three times on the
+  same tables and check it agrees with itself, and have the owner judge
+  a sample of 15 of its calls by hand. *Bar (proposed):* the matcher
+  agrees with itself on 90% of bugs and with the owner on 13 of 15. If
+  not, the judge is fixed first; nothing after V1 is scored by a judge
+  that has not passed.
+- [ ] **V2. How much the method varies.** Build the tables three times on
+  each of the five plans with the frozen method, unchanged. Report the
+  spread of cells and of bugs named per plan. *Bar (proposed):* bugs
+  named within plus or minus 10 points across the three runs. If the
+  spread is wider, a single run measures nothing and the method needs a
+  standard density (V3) before any comparison.
+- [ ] **V3. A standard density.** The runs ranged from 171 to 675 cells,
+  and more cells named more bugs. Write the rule that fixes what a
+  complete table is (every state against every event, every call against
+  every failure mode, every field against every partition, every owner
+  action and long operation against every lifecycle column, and for the
+  dossier every call carrying each required fact: inputs, outputs, side
+  effects, documented errors, timings, retry safety, limits), with a
+  script that checks the shape without a model. The script takes its
+  lists of states, events, calls and fields from the domain model and
+  the dossier, not from the table, so a table that leaves one out fails
+  rather than passing smaller. Re-run V2 on it. *Bar:*
+  the spread meets V2's bar, and bugs named do not fall below the frozen
+  method's.
+- [ ] **V4. The dossier on its own.** Build the tables twice per plan:
+  with a dossier written first by a research step (each fact cited, what
+  the documentation does not say listed as open), and without. *Bar
+  (proposed):* the dossier adds at least 10 points on the plans whose
+  bugs are at a provider's boundary, and costs under the owner's limit
+  per external system.
+- [ ] **V5. A ranking the owner can act on.** Group open cells by root
+  cause (the free tier's slot rule alone accounts for four in the fourth
+  project's tables) and rank the groups. Measure how many questions
+  reach the owner per slice and what share of the top groups hold a
+  real bug. *Bar:* set by the owner before V5 runs, as the number of
+  questions a slice may bring and the share that must be real; to see
+  what a list looks like, the owner reads the top 15 the frozen method
+  already produced on the fourth project, not V5's own output.
+- [ ] **V6. The challenge to decided cells.** An adversarial pass that
+  argues against each decision the plan made, aimed at the six bugs the
+  plan decided wrongly (a merchant's rule that can never change, a new
+  amount rule that never reaches rows already filled, a lapse
+  after the first pull left out of scope, a forged completion judged
+  harmless, the one-minute give-up, a stale tab refused only at the
+  finish). Measure how many of the six it raises and how many decisions
+  it disputes that were right. The challenge's prompt is written and
+  frozen without the six in view, so it is not tuned to its own test.
+  *Bar (proposed):* four of six, with fewer than one dispute in five on
+  a right decision.
+- [ ] **V7. The register and traceability, as scripts.** One register of
+  requirements with ids, cut from the tables; each test names the ids it
+  holds; a script checks both ways (every requirement held by a test,
+  every test holding a requirement) and that no requirement is written
+  twice. Deterministic, with unit tests; no model. *Bar:* the script
+  run over the two fourth-project builds finds the two bugs the plan
+  decided rightly and the builds missed, and the tests that hold no
+  requirement are counted. A link says a test names a requirement, not
+  that it would catch a break of it: that is measured by the mutation
+  pass with its mutants keyed to requirement ids (a requirement whose
+  mutants all survive is held by nothing, whatever its links say).
+- [ ] **V8. One lean build from the register.** Rebuild the fourth
+  project's slice 1 from its plan with steps V1 to V7 in front of it,
+  one builder, the probing review after the build as the main review.
+  Measured as the comparison measured the two arms (cold read, mutation
+  pass, cost, wall clock, the owner's questions and stops). The builder
+  and every planning step of the run never see the benchmark's
+  scenarios or the cold reads; and because V2 to V6 are tuned on this
+  same plan, the owner weighs whether V8 runs on a fresh slice instead
+  (a new problem's slice 1, with its own cold read as the key). *Bar:*
+  the owner writes it before the run, against `light`'s 22, 93.6% and
+  $64.78.
+- [ ] **V9. The new plugin.** Only after V8 holds: a design document
+  (its stages, what is ported from kad with its tests and what is
+  dropped, its evals: deterministic checks on documents, the benchmark,
+  a real slice now and then), for the owner's review before any of it
+  is written. Port list to weigh one by one: the gate, the mutation
+  pass, the screen-change check, the map extractor, the cost tool,
+  audit mode, the sandbox check, delivery's CI watch, the cold-read
+  brief, the planning personas, and the lessons in `INCIDENTS.md`.
+
+**Known and left alone while frozen:** the gate passes coverage through
+`NODE_OPTIONS`, which Node 24 refuses under `pnpm test` (found by the
+fourth project's `light` run, filed in the audit repository); it is fixed
+in kad only if kad is used again, and is on the port list if the gate
+moves.
+
+---
+
 Slice 4 (refresh on demand, the first project's pull request #92) ran on
 2026-11-18 on kad 0.17.0, the first slice at the `light` cadence, and was
 reviewed the same day with the comment round on #72:
