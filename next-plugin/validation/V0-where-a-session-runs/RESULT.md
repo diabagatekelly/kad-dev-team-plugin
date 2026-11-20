@@ -9,7 +9,7 @@ row of `LOG.md` is a command that was run.
 | 2. No sandbox workaround | met. No git shim, no proxy approval; the headless browser ran as installed |
 | 3. No step slower than before | met against the figures on record, with a caveat below: suite 3.4 s (3.5 to 4.2), mutation pass 573 s (900), 9 screens captured in 8 s, push 1 s |
 | 4. The controls | met for every check made (below), with one left open |
-| 5. Two at once share nothing | met for rules, files, credentials and reachability; only lightly loaded (one session beside one mutation pass, and two short sessions) |
+| 5. Two at once share nothing | met for rules, files, credentials and reachability, and under load (two mutation passes at once, the same verdicts, 15% and 21% slower); the model's sign-in and its usage limit are shared by design |
 | 6. The same on Windows | not tried |
 
 ## Controls checked
@@ -41,14 +41,26 @@ nothing of the VM is left but a cached base image.
 
 - **The speed line** is against figures recorded on 2026-11-19, when
   two arms shared the machine, not against a fresh run under `srt`.
-- **The model's credentials inside the VM:** a credentials file exists
-  in a signed-in VM. Whether it holds a real token or a placeholder was
-  not established (the check was refused by this session's permission
-  rules and not worked around). If it is real, code running in the VM
-  could use the owner's subscription; the allowlist limits where it
-  could send it.
-- **The browser check** was the project's pinned headless capture, not
-  an agent driving a browser through the criteria.
+- **The model's credentials** are added outside the VM: a request from
+  inside with no credential, or a made-up one, is answered as the
+  owner. So the token cannot be taken out of the VM, and any process in
+  the VM can use the owner's subscription while the VM lives. What the
+  credentials file inside actually holds was not read (refused by this
+  session's permission rules, not worked around), and a real key of
+  another account was not tried.
+- **The browser:** driven by a script (full Chrome for Testing
+  headless, the headless shell, and headed on a virtual display) and by
+  a session through browser tools; screenshots from each. Branded
+  Chrome has no build for Linux on Arm64, which is what the VM is on
+  this Mac.
+- **Two at once under load:** two full mutation passes together ran 15%
+  and 21% slower than one alone, with the same verdicts.
+- **An idle VM stops** and keeps its disk but not its processes: a
+  session and whatever it needs running are one command.
+- **A prepared image** (toolchain and browser installed, saved in 30 s)
+  brings a VM up in 4 s with only the default hosts allowed.
+- **A secret for another host** is swapped in by the proxy in headers
+  only, not in a body or a URL.
 - **The kit's own eight allowed hosts** cannot be edited.
 - **The tool is at 0.54** with weekly releases; removing a rule needed
   `--force`, and a VM created before the sign-in stays signed out.

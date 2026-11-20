@@ -88,7 +88,8 @@ answer its review.
 | A secret for any other host (`sbx secret set-custom`, tried with a made-up value and an echo service) | the VM holds a placeholder; the proxy puts the real value into any header of a request to the named host; a placeholder in a JSON body or in the URL goes out unchanged. A provider must take its secret in a header |
 | An idle VM | stops when no command is attached to it and starts again on the next one; its disk is kept, its processes are not. A server started in one command is gone in the next: the session and anything it needs running are one command |
 | A prepared image | `sbx template save` of a stopped VM (30 s) keeps the toolchain and the browser; a VM from it is up in 4 s and captures the 9 screens with only the default hosts allowed |
-| Two VMs under load | running: a full mutation pass in each at the same time |
+| Two VMs under load | a full mutation pass in each at the same time: 661 s and 694 s against 573 s for one alone (15% and 21% slower), the same verdict on all 60 mutants in both (53 killed, the same 7 survivors) |
+| A caller's own key for the model | replaced as well: a made-up key is answered as the owner. The tool adds credentials on the model's API host only; its other allowed hosts get none |
 
 Read from the installed tool's help, not yet tried: `sbx create --clone
 claude .` runs the agent on a clone inside the VM and the host fetches
