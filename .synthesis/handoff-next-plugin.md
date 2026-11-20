@@ -143,11 +143,15 @@ same conclusion). New: both builds' connection-limit codes
 (`ADDITION_LIMIT`, `ITEM_LIMIT_EXCEEDED`) are probably wrong; the
 documentation names `TRIAL_CONNECTION_LIMIT`.
 
-## Where the new plugin lives (the owner's question, 2026-11-20; not decided)
+## Where the new plugin lives (the owner, 2026-11-20)
 
-The owner asked whether to build it in this repository with the present
-code moved to `archived-plugin/`, or in a new repository. Recommended: a
-**new repository**, this one left as it is at 0.19.0. Reasons: this
+**Decided for now:** a new folder in this repository, `next-plugin/`,
+"so there's clear separation"; kad stays where it is at the root, and
+nothing is moved to an archive folder. Each step's work goes under
+`next-plugin/validation/V<n>-<name>/` (its `README.md` has the rules).
+Whether the plugin itself gets a repository of its own is decided at
+V9. What was weighed, for that later call: a new repository was
+recommended over moving the present code to `archived-plugin/`. Reasons: this
 repository's root is the installed plugin (`.claude-plugin/plugin.json`
 and `marketplace.json` with `source: "./"`), so moving its code breaks
 the installed kad and every path the eval suite, the hooks and the
@@ -159,9 +163,8 @@ keeps provenance. A plugin needs little: `.claude-plugin/plugin.json`
 `agents/`, `hooks/hooks.json`, `commands/`, and to install it a
 marketplace (`.claude-plugin/marketplace.json`, in the same repository
 or a separate one listing both plugins). None of it is created before
-V7; V0 to V6 produce scripts, prompts and results, which can sit in the
-new repository under a `validation/` folder from the start, or here in
-`.synthesis/` until the owner decides.
+V9's design is read; V0 to V8 produce scripts, prompts and results,
+which go in `next-plugin/validation/`.
 
 ## Lessons from running these tests (keep them)
 
@@ -206,6 +209,7 @@ Paste this to start:
 > I agree, V0 alongside it. First, without running anything: tell me in
 > a few lines what V1 will do, what it will cost, and the bar you
 > propose, and wait for my answer. Keep every reader blind, score with a
-> fresh strict matcher, and put anything that quotes my projects (code,
+> fresh strict matcher, keep each step's work in
+> `next-plugin/validation/V<n>-<name>/`, and put anything that quotes my projects (code,
 > plan text, tables, cold reads, probes, data) in the audit repository,
 > never in this public one; summaries (names, scores, costs) may stay.

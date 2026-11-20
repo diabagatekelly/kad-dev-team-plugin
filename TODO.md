@@ -42,8 +42,10 @@ evidence in the private audit repository, `take-4-comparison/`:
 **Audited 2026-11-20** by a second model before the next session
 (`.synthesis/handoff-next-plugin.md`, "Audit of this analysis"): the
 numbers, three key mutants and the Plaid facts hold; two claims were
-corrected here. **Not decided:** where the new plugin lives (the
-handoff recommends a new repository, this one left as it is).
+corrected here. **Where the work goes** (the owner, 2026-11-20): the folder
+`next-plugin/` in this repository, kad untouched at the root; each
+step under `next-plugin/validation/V<n>-<name>/`. A repository of its
+own is decided at V9.
 
 **The rule for this list:** each step is a question with a measure and
 a bar the owner sets before it runs. A step is built on only when its
