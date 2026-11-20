@@ -92,6 +92,36 @@ answer its review.
 | The credentials file inside a VM (read at the owner's word) | placeholders shaped like tokens: an access and a refresh value of 26 characters each with the real prefixes, where a real token is several times longer. With the request probes above: the real token is not in the VM |
 | A caller's own key for the model | replaced as well: a made-up key is answered as the owner. The tool adds credentials on the model's API host only; its other allowed hosts get none |
 
+## 2026-11-20, can the VM reach the host (run at the owner's word, once)
+
+A test server was started on the Mac, reachable from the Mac itself by
+its network address, and a VM tried to reach it.
+
+| From inside the VM | Result |
+|---|---|
+| The Mac by its network address, directly and through the proxy | no route; refused (403) |
+| `host.docker.internal`, directly and through the proxy | no route; refused |
+| The Mac's own localhost through the proxy | no route |
+| The home router, directly and through the proxy | no route; refused |
+| The cloud metadata address | no route |
+| DNS for a host outside the allowlist | no answer |
+| Writing to the host's copy of the repository | read-only |
+| Docker inside the VM | the VM's own engine, not the host's |
+| Host folders in the VM | the repository, read-only, and the shared skills store, read-only |
+| Opening a URL in the host's browser, the tool's default (`browser.enabled` on) | **accepted without a word: a door out of the VM, open by default** |
+| The same with the setting off | the command only prints the address for a person to open |
+
+### Locks on by default
+
+`vm.sh secure` switches off the five settings that let something in the
+VM touch the host (the host's browser, its tabs, remote control, the
+clipboard both ways) and sets the deny-by-default allowlist; `vm.sh
+create` runs it first and refuses to create a VM if a lock is off, and
+always makes a private clone. `vm.sh status` shows each lock in plain
+words; `vm.sh selftest NAME` tries each rule from inside a VM. In a VM
+created through the script: 8 of 8 lines `ok`. `SAFETY.md` is the page
+for a person who knows none of this.
+
 Read from the installed tool's help, not yet tried: `sbx create --clone
 claude .` runs the agent on a clone inside the VM and the host fetches
 its commits from a remote named `sandbox-<name>`; `sbx exec`, `sbx cp`

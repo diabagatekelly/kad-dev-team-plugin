@@ -48,11 +48,12 @@ nothing of the VM is left but a cached base image.
   credentials file inside holds placeholders shaped like tokens (26
   characters each, read at the owner's word). A real key of another
   account was not tried.
-- **Not yet probed:** whether a VM can reach the host's own ports, the
-  local network or the host's browser (the tool's `browser.enabled`
-  setting, on by default, lets a process in the VM open a URL in the
-  host's browser). The probe was refused by this session's permission
-  rules and is the owner's to run or allow.
+- **The host from inside the VM:** not reachable by its network
+  address, by name or through the proxy; nor the router or the metadata
+  address. One door was open by default, the tool's `browser.enabled`
+  setting (a process in the VM could open a URL in the host's browser);
+  `vm.sh secure` now shuts it with four others before any VM is made,
+  and `vm.sh selftest` checks each rule from inside.
 - **A long session** (hours) has not run in a VM; it is watched the
   first time one does.
 - **The browser:** driven by a script (full Chrome for Testing
