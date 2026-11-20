@@ -53,37 +53,92 @@ result is read and the owner says it holds. A step that fails its bar
 stops the list there, and the next move is the owner's. No plugin code
 is written before step V7.
 
+**Any product, any domain (the owner, 2026-11-20):** "We have to be
+careful not to build the plugin to be specific to the accounting app.
+It should be able to be used for building any product in any domain."
+All 65 benchmark bugs come from two personal-finance projects built on
+one provider's API, so every step tuned on them can overfit. Three
+consequences for this list. (1) No frozen prompt, method or script
+names a finance or API concept; a script checks each frozen text
+against a list of such terms before its hash is taken. The list is a
+word list kept beside the script and added to as leaks are found: it
+catches the obvious term, not an assumption worded otherwise, which is
+what V8's held-out product is for. A text frozen before this rule (the
+table method of 2026-11-19, which names a provider's API) is used as it
+stands wherever a step needs it unchanged (V2); the rule binds its next
+version (V3) and every text frozen from now on. (2) What a step
+reads about the world outside the product is "whatever the product
+depends on that the team does not control": a provider's API, but as
+much a fixed corpus or a body of domain knowledge (the owner's
+examples: a tool to review the mutashabihaat of the Qur'an, flashcards
+made from a surah); a parser of an API's specification is one optional
+input, never the method. (3) Nothing is called validated on the
+finance projects alone: V8 runs on a held-out product of another kind.
+
 - [ ] **V0. Where a session runs (alongside V1, depends on nothing).**
   The owner, 2026-11-20: rethink the sandbox ("it's been a real pain"),
-  likely a microVM; which one is picked later. The proposal: the new
-  plugin carries no sandbox of its own (no sandbox check, no `git` shim,
-  no proxy approval) and assumes a disposable place to run, launched
-  from outside it: a Linux microVM per session, the project cloned in,
-  network to an allowlist (Plaid, GitHub, the package registry), only
-  the credentials that session needs, thrown away after. Credentials are
-  short-lived and scoped to the one repository and environment (a
-  sandbox Plaid key, a push token for one repository), and kept outside
-  the guest where the candidate allows (a broker or a proxy that adds
-  them): code a dependency runs inside the VM can use whatever is inside
-  it, and throwing the VM away does not undo a leak. No sandbox at
-  all is ruled out while sessions run on autopilot with live keys and
-  push rights. The macOS Keychain goes behind an adapter: a file-backed
-  or Linux store in the VM, one contract test for the real Keychain on
-  macOS (CI or an occasional macOS VM, at most two at a time per Mac).
-  *The test:* one real session in a candidate microVM runs the fourth
-  project's existing suite, the headless browser walk, a `git push` to
-  a scratch branch and the mutation pass. Then the controls themselves:
-  a request outside the allowlist is refused, the session's credentials
-  cannot reach anything beyond their scope, and nothing of the session
-  is left after it ends. Then two sessions at once, each with its own
-  scratch branch and its own audit path, so a push race or a shared
-  usage limit is not read as a failure of isolation. *Bar (proposed):*
-  no sandbox workaround needed, no step slower than under `srt`, every
-  control check passes, and the two sessions share nothing inside the
-  VMs (a failure that comes from the host's or the account's shared
-  limits is recorded as that, not counted). Candidates to weigh
-  then: Docker Sandboxes, Apple's `container`, a hosted microVM (E2B or
-  similar), the cloud sessions.
+  likely a microVM; and, the same day, after the candidates were weighed
+  on paper: "when someone runs the plugin, regardless of their OS, we
+  should have a microVM that Claude can install for them with
+  permission. Claude could run a script, then boot it and give it the
+  default permissions and then go from there." So the plugin ships the
+  launcher (this replaces the first proposal, that it carry no sandbox
+  of its own and be launched from outside):
+  - *The flow.* A script on the host checks for a working VM tool;
+    without one, the session asks and then installs it; the script
+    creates a VM for the project, clones the repository into it and
+    applies a default allowlist (the model's API, the code host, the
+    package registry; any other host only with the owner's approval); a
+    new session starts inside the VM and does the work there with
+    prompts skipped, the VM being the boundary. The session on the host
+    only sets up, launches, copies the transcripts out and destroys the
+    VM; it builds nothing.
+  - *One contract, a backend per OS.* Create, allowlist, secrets, run,
+    copy out, destroy: one small interface, with a backend for macOS
+    first and Windows next (the owner works on both), Linux after. No
+    one microVM runs everywhere.
+  - *Credentials* are short-lived and scoped to the one repository and
+    environment, typed by the owner into the host's secret store (never
+    passed through the session) and added to requests outside the guest
+    where the backend allows: code a dependency runs inside the VM can
+    use whatever is inside it, and throwing the VM away does not undo a
+    leak. A product that itself needs the host's secret store (the
+    macOS Keychain) puts it behind an adapter: a file-backed or Linux
+    store in the VM, one contract test for the real one on its OS.
+  - *What a script cannot do alone,* once per machine, and so is the
+    owner's: turning virtualisation on (admin rights, on Windows perhaps
+    a reboot), signing in to the VM tool's account if it has one,
+    signing the model in inside the VM, entering secrets.
+  - No sandbox at all stays ruled out while sessions run on autopilot
+    with live keys and push rights.
+
+  *Weighed on paper, 2026-11-20* (vendors' documentation, nothing run):
+  Docker Sandboxes is the only local candidate with a deny-by-default
+  allowlist enforced outside the guest and secrets kept outside it, so
+  it is the first backend tried; the cloud sessions are second (a
+  locally developed plugin may not load there, and a transcript brought
+  back loses its compacted messages); Apple's `container` has no
+  allowlist or secret handling of its own; a hosted microVM costs by
+  the second and its documented path puts the model's key in the guest.
+  Docker Sandboxes on Windows and Linux was not verified.
+
+  *The test, on the Mac first:* from a machine without the tool, the
+  script brings up a VM and a session in it, counting every step the
+  owner had to do by hand. That session runs the fourth project's
+  existing suite, the headless browser walk, a `git push` to a scratch
+  branch and the mutation pass. Then the controls themselves: a request
+  outside the allowlist is refused, the session's credentials cannot
+  reach anything beyond their scope, and nothing of the session is left
+  after it ends. Then two sessions at once, each with its own scratch
+  branch and its own audit path, so a push race or a shared usage limit
+  is not read as a failure of isolation. Then the same contract on the
+  owner's Windows machine. *Bar (proposed):* the script reaches a
+  running session with only the hand steps listed above, no sandbox
+  workaround needed, no step slower than under `srt`, every control
+  check passes, and the two sessions share nothing inside the VMs (a
+  failure that comes from the host's or the account's shared limits is
+  recorded as that, not counted). V0 is done when the bar holds on both
+  of the owner's systems.
 - [ ] **V1. The benchmark and its judge.** Turn the five labelled plans
   (the fourth project's slice 1, the third project's slices 1 to 4; 65
   bugs) into a frozen benchmark: each bug written once as a scenario
@@ -106,19 +161,40 @@ is written before step V7.
   every failure mode, every field against every partition, every owner
   action and long operation against every lifecycle column, and for the
   dossier every call carrying each required fact: inputs, outputs, side
-  effects, documented errors, timings, retry safety, limits), with a
-  script that checks the shape without a model. The script takes its
-  lists of states, events, calls and fields from the domain model and
-  the dossier, not from the table, so a table that leaves one out fails
-  rather than passing smaller. Re-run V2 on it. *Bar:*
+  effects, documented errors, timings, retry safety, limits). The grid
+  is generated, not checked afterwards (the owner, 2026-11-20, asking
+  what can be deterministic): a script writes every empty cell with its
+  id from the lists in the domain model and the dossier: states,
+  events, calls, fields, owner actions and long operations (and, where
+  the product has one, from a machine-readable specification of what it
+  depends on). A dependency that is not a set of calls (a fixed corpus,
+  a body of domain knowledge) gets dossier rows of its own: each fact
+  about it the product relies on, with its source, its edition or
+  version, what the source does not say, and its licence. The model
+  fills only each cell's tag and consequence, and cannot add or drop a
+  row. A second script regenerates the expected ids from the same lists
+  and fails on any id missing from the filled grid or any cell left
+  empty, and checks that each DECIDED quote stands at the plan line it
+  cites and that each cited source holds the words quoted from it.
+  Neither script uses a model; both have unit tests. Two things no
+  script settles, said here so the checks are not read as more than
+  they are: whether the lists themselves are complete (that is the
+  review of the domain model and the dossier), and whether a quoted
+  source really supports the cell's claim (that is the research step's
+  reader, measured in V4). Re-run V2 on it. *Bar:*
   the spread meets V2's bar, and bugs named do not fall below the frozen
   method's.
-- [ ] **V4. The dossier on its own.** Build the tables twice per plan:
-  with a dossier written first by a research step (each fact cited, what
-  the documentation does not say listed as open), and without. *Bar
-  (proposed):* the dossier adds at least 10 points on the plans whose
-  bugs are at a provider's boundary, and costs under the owner's limit
-  per external system.
+- [ ] **V4. The dossier on its own.** The dossier is the cited facts
+  about whatever the product depends on that the team does not control
+  (a provider's API here; a corpus or a body of domain knowledge
+  elsewhere). Build the tables twice per plan: with a dossier written
+  first by a research step (each fact cited, what the sources do not
+  say listed as open), and without. *Bar (proposed):* the dossier adds
+  at least 10 points on the plans whose bugs sit at the boundary with
+  what the product depends on, and costs under the owner's limit per
+  dependency. On these five plans that boundary is one provider's API,
+  so the result says nothing yet about a product without one: V8's
+  held-out product is where that is read.
 - [ ] **V5. A ranking the owner can act on.** Group open cells by root
   cause (the free tier's slot rule alone accounts for four in the fourth
   project's tables) and rank the groups. Measure how many questions
@@ -149,17 +225,31 @@ is written before step V7.
   that it would catch a break of it: that is measured by the mutation
   pass with its mutants keyed to requirement ids (a requirement whose
   mutants all survive is held by nothing, whatever its links say).
-- [ ] **V8. One lean build from the register.** Rebuild the fourth
-  project's slice 1 from its plan with steps V1 to V7 in front of it,
-  one builder, the probing review after the build as the main review.
-  Measured as the comparison measured the two arms (cold read, mutation
-  pass, cost, wall clock, the owner's questions and stops). The builder
-  and every planning step of the run never see the benchmark's
-  scenarios or the cold reads; and because V2 to V6 are tuned on this
-  same plan, the owner weighs whether V8 runs on a fresh slice instead
-  (a new problem's slice 1, with its own cold read as the key). *Bar:*
-  the owner writes it before the run, against `light`'s 22, 93.6% and
-  $64.78.
+- [ ] **V8. One lean build from the register, on a held-out product.**
+  Not the fourth project again (V2 to V6 are tuned on its plan): slice
+  1 of a new product of another kind, one that leans on no provider's
+  API and does depend on a fixed corpus or a body of domain knowledge,
+  so that kind of dependency is exercised (the owner, 2026-11-20; the
+  Qur'an review tool would fit, the product is the owner's choice). It
+  is planned, then what V1 to V7 produced is applied to its plan frozen
+  and unchanged (the matcher, the table method and its grid scripts,
+  the dossier step, the ranking, the challenge, the register and
+  traceability scripts: the tools, not those steps' own measurements,
+  whose bars belong to the finance plans), then one builder builds it,
+  with the probing review after the build as the main review. Its own
+  cold read is the key: the matcher scores what the tables named
+  against it, as on the benchmark, and because the matcher was only
+  measured on finance defects it is measured again here the way V1
+  did (three runs, a sample judged by the owner) before its count is
+  read. Measured as the comparison measured
+  the two arms (cold read, mutation pass, cost, wall clock, the owner's
+  questions and stops), with the share of its bugs the tables named
+  beside the benchmark's. The builder and every planning step never see
+  the cold read. A product in a domain the model does not know needs
+  someone who does to read its plan; who that is, is settled before the
+  run. *Bar:* the owner writes it before the run; `light`'s 22, 93.6%
+  and $64.78 are the nearest reference, on a different product, so
+  they are a guide and not a like-for-like line.
 - [ ] **V9. The new plugin.** Only after V8 holds: a design document
   (its stages, what is ported from kad with its tests and what is
   dropped, its evals: deterministic checks on documents, the benchmark,
