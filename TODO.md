@@ -60,7 +60,13 @@ All 65 benchmark bugs come from two personal-finance projects built on
 one provider's API, so every step tuned on them can overfit. Three
 consequences for this list. (1) No frozen prompt, method or script
 names a finance or API concept; a script checks each frozen text
-against a list of such terms before its hash is taken. (2) What a step
+against a list of such terms before its hash is taken. The list is a
+word list kept beside the script and added to as leaks are found: it
+catches the obvious term, not an assumption worded otherwise, which is
+what V8's held-out product is for. A text frozen before this rule (the
+table method of 2026-11-19, which names a provider's API) is used as it
+stands wherever a step needs it unchanged (V2); the rule binds its next
+version (V3) and every text frozen from now on. (2) What a step
 reads about the world outside the product is "whatever the product
 depends on that the team does not control": a provider's API, but as
 much a fixed corpus or a body of domain knowledge (the owner's
@@ -158,14 +164,24 @@ finance projects alone: V8 runs on a held-out product of another kind.
   effects, documented errors, timings, retry safety, limits). The grid
   is generated, not checked afterwards (the owner, 2026-11-20, asking
   what can be deterministic): a script writes every empty cell with its
-  id from the lists of states, events, calls and fields in the domain
-  model and the dossier (and, where the product has one, from a
-  machine-readable specification of what it depends on); the model
+  id from the lists in the domain model and the dossier: states,
+  events, calls, fields, owner actions and long operations (and, where
+  the product has one, from a machine-readable specification of what it
+  depends on). A dependency that is not a set of calls (a fixed corpus,
+  a body of domain knowledge) gets dossier rows of its own: each fact
+  about it the product relies on, with its source, its edition or
+  version, what the source does not say, and its licence. The model
   fills only each cell's tag and consequence, and cannot add or drop a
-  row. A second script checks that every cell is filled, that each
-  DECIDED quote stands at the plan line it cites and that each cited
-  source holds the fact. Neither script uses a model; both have unit
-  tests. Re-run V2 on it. *Bar:*
+  row. A second script regenerates the expected ids from the same lists
+  and fails on any id missing from the filled grid or any cell left
+  empty, and checks that each DECIDED quote stands at the plan line it
+  cites and that each cited source holds the words quoted from it.
+  Neither script uses a model; both have unit tests. Two things no
+  script settles, said here so the checks are not read as more than
+  they are: whether the lists themselves are complete (that is the
+  review of the domain model and the dossier), and whether a quoted
+  source really supports the cell's claim (that is the research step's
+  reader, measured in V4). Re-run V2 on it. *Bar:*
   the spread meets V2's bar, and bugs named do not fall below the frozen
   method's.
 - [ ] **V4. The dossier on its own.** The dossier is the cited facts
@@ -212,12 +228,20 @@ finance projects alone: V8 runs on a held-out product of another kind.
 - [ ] **V8. One lean build from the register, on a held-out product.**
   Not the fourth project again (V2 to V6 are tuned on its plan): slice
   1 of a new product of another kind, one that leans on no provider's
-  API (the owner, 2026-11-20; the Qur'an review tool would fit, the
-  product is the owner's choice). It is planned, then steps V1 to V7
-  run on its plan frozen and unchanged, then one builder builds it,
+  API and does depend on a fixed corpus or a body of domain knowledge,
+  so that kind of dependency is exercised (the owner, 2026-11-20; the
+  Qur'an review tool would fit, the product is the owner's choice). It
+  is planned, then what V1 to V7 produced is applied to its plan frozen
+  and unchanged (the matcher, the table method and its grid scripts,
+  the dossier step, the ranking, the challenge, the register and
+  traceability scripts: the tools, not those steps' own measurements,
+  whose bars belong to the finance plans), then one builder builds it,
   with the probing review after the build as the main review. Its own
   cold read is the key: the matcher scores what the tables named
-  against it, as on the benchmark. Measured as the comparison measured
+  against it, as on the benchmark, and because the matcher was only
+  measured on finance defects it is measured again here the way V1
+  did (three runs, a sample judged by the owner) before its count is
+  read. Measured as the comparison measured
   the two arms (cold read, mutation pass, cost, wall clock, the owner's
   questions and stops), with the share of its bugs the tables named
   beside the benchmark's. The builder and every planning step never see
