@@ -71,35 +71,68 @@ finance projects alone: V8 runs on a held-out product of another kind.
 
 - [ ] **V0. Where a session runs (alongside V1, depends on nothing).**
   The owner, 2026-11-20: rethink the sandbox ("it's been a real pain"),
-  likely a microVM; which one is picked later. The proposal: the new
-  plugin carries no sandbox of its own (no sandbox check, no `git` shim,
-  no proxy approval) and assumes a disposable place to run, launched
-  from outside it: a Linux microVM per session, the project cloned in,
-  network to an allowlist (Plaid, GitHub, the package registry), only
-  the credentials that session needs, thrown away after. Credentials are
-  short-lived and scoped to the one repository and environment (a
-  sandbox Plaid key, a push token for one repository), and kept outside
-  the guest where the candidate allows (a broker or a proxy that adds
-  them): code a dependency runs inside the VM can use whatever is inside
-  it, and throwing the VM away does not undo a leak. No sandbox at
-  all is ruled out while sessions run on autopilot with live keys and
-  push rights. The macOS Keychain goes behind an adapter: a file-backed
-  or Linux store in the VM, one contract test for the real Keychain on
-  macOS (CI or an occasional macOS VM, at most two at a time per Mac).
-  *The test:* one real session in a candidate microVM runs the fourth
-  project's existing suite, the headless browser walk, a `git push` to
-  a scratch branch and the mutation pass. Then the controls themselves:
-  a request outside the allowlist is refused, the session's credentials
-  cannot reach anything beyond their scope, and nothing of the session
-  is left after it ends. Then two sessions at once, each with its own
-  scratch branch and its own audit path, so a push race or a shared
-  usage limit is not read as a failure of isolation. *Bar (proposed):*
-  no sandbox workaround needed, no step slower than under `srt`, every
-  control check passes, and the two sessions share nothing inside the
-  VMs (a failure that comes from the host's or the account's shared
-  limits is recorded as that, not counted). Candidates to weigh
-  then: Docker Sandboxes, Apple's `container`, a hosted microVM (E2B or
-  similar), the cloud sessions.
+  likely a microVM; and, the same day, after the candidates were weighed
+  on paper: "when someone runs the plugin, regardless of their OS, we
+  should have a microVM that Claude can install for them with
+  permission. Claude could run a script, then boot it and give it the
+  default permissions and then go from there." So the plugin ships the
+  launcher (this replaces the first proposal, that it carry no sandbox
+  of its own and be launched from outside):
+  - *The flow.* A script on the host checks for a working VM tool;
+    without one, the session asks and then installs it; the script
+    creates a VM for the project, clones the repository into it and
+    applies a default allowlist (the model's API, the code host, the
+    package registry; any other host only with the owner's approval); a
+    new session starts inside the VM and does the work there with
+    prompts skipped, the VM being the boundary. The session on the host
+    only sets up, launches, copies the transcripts out and destroys the
+    VM; it builds nothing.
+  - *One contract, a backend per OS.* Create, allowlist, secrets, run,
+    copy out, destroy: one small interface, with a backend for macOS
+    first and Windows next (the owner works on both), Linux after. No
+    one microVM runs everywhere.
+  - *Credentials* are short-lived and scoped to the one repository and
+    environment, typed by the owner into the host's secret store (never
+    passed through the session) and added to requests outside the guest
+    where the backend allows: code a dependency runs inside the VM can
+    use whatever is inside it, and throwing the VM away does not undo a
+    leak. A product that itself needs the host's secret store (the
+    macOS Keychain) puts it behind an adapter: a file-backed or Linux
+    store in the VM, one contract test for the real one on its OS.
+  - *What a script cannot do alone,* once per machine, and so is the
+    owner's: turning virtualisation on (admin rights, on Windows perhaps
+    a reboot), signing in to the VM tool's account if it has one,
+    signing the model in inside the VM, entering secrets.
+  - No sandbox at all stays ruled out while sessions run on autopilot
+    with live keys and push rights.
+
+  *Weighed on paper, 2026-11-20* (vendors' documentation, nothing run):
+  Docker Sandboxes is the only local candidate with a deny-by-default
+  allowlist enforced outside the guest and secrets kept outside it, so
+  it is the first backend tried; the cloud sessions are second (a
+  locally developed plugin may not load there, and a transcript brought
+  back loses its compacted messages); Apple's `container` has no
+  allowlist or secret handling of its own; a hosted microVM costs by
+  the second and its documented path puts the model's key in the guest.
+  Docker Sandboxes on Windows and Linux was not verified.
+
+  *The test, on the Mac first:* from a machine without the tool, the
+  script brings up a VM and a session in it, counting every step the
+  owner had to do by hand. That session runs the fourth project's
+  existing suite, the headless browser walk, a `git push` to a scratch
+  branch and the mutation pass. Then the controls themselves: a request
+  outside the allowlist is refused, the session's credentials cannot
+  reach anything beyond their scope, and nothing of the session is left
+  after it ends. Then two sessions at once, each with its own scratch
+  branch and its own audit path, so a push race or a shared usage limit
+  is not read as a failure of isolation. Then the same contract on the
+  owner's Windows machine. *Bar (proposed):* the script reaches a
+  running session with only the hand steps listed above, no sandbox
+  workaround needed, no step slower than under `srt`, every control
+  check passes, and the two sessions share nothing inside the VMs (a
+  failure that comes from the host's or the account's shared limits is
+  recorded as that, not counted). V0 is done when the bar holds on both
+  of the owner's systems.
 - [ ] **V1. The benchmark and its judge.** Turn the five labelled plans
   (the fourth project's slice 1, the third project's slices 1 to 4; 65
   bugs) into a frozen benchmark: each bug written once as a scenario
