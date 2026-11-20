@@ -22,18 +22,28 @@ evidence in the private audit repository, `take-4-comparison/`:
 - Across the four projects' first slices, the scores stayed at 21 to 24
   while tests went from 619 to 38, and the same bugs came back (an item
   orphaned after a lost reply, a zero amount given a direction, dates
-  with no year, a second connect). Test volume does not track quality;
-  the bugs sit in what the plan assumed about the outside world.
+  with no year, a second connect). The cold-read total did not move
+  with the number of tests (five builds, one reader each); within the
+  fourth project more tests bought 12.7 points of mutation kills. More
+  tests caught more code faults and none of the bugs that sit in what
+  the plan assumed about the outside world.
 - Five completeness tables (a dossier of each outside system, state x
   event, failure modes of each call, input partitions, lifecycle of
   each action), built before any code by a method frozen first
   (`.synthesis/frozen-table-method.md`, sha256 `8830988e…`), and scored strictly
   against the cold reads: 17 of 30 bugs named on the fourth project's
-  plan (57%), 9 of 35 on the third project's four plans (26%). Six
+  plan (57%), 9 of 35 on the third project's four plans (26%), one
+  run each, so the spread is unknown until V2. Six
   bugs over both were cells the plan had decided wrongly, which a table
   only records. The tables find gaps in a plan, not code faults and not
   wrong decisions, and they flag far more cells than they hit (13% to
   60% of the top 15).
+
+**Audited 2026-11-20** by a second model before the next session
+(`.synthesis/handoff-next-plugin.md`, "Audit of this analysis"): the
+numbers, three key mutants and the Plaid facts hold; two claims were
+corrected here. **Not decided:** where the new plugin lives (the
+handoff recommends a new repository, this one left as it is).
 
 **The rule for this list:** each step is a question with a measure and
 a bar the owner sets before it runs. A step is built on only when its
