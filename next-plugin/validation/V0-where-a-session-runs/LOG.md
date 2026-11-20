@@ -64,6 +64,32 @@ answer its review.
 | `sbx rm --force` on the three VMs | script | 0.7 s; no containers, no volumes, the VM-scoped secret and rules gone, the VM's git remote gone from the host's clone. Left on the host: the base image (1.5 GB, a cache), the model's sign-in, the global policy |
 | The same route through `vm.sh` alone (policy, create, allow, exec, run, out, destroy) | script | 18 s from the VM existing to its removal, a session run and its transcript copied out |
 
+## 2026-11-20, further probes on the Mac (the owner: "fully answer all the remaining questions regarding the VM", the browser first)
+
+### The browser
+
+| Probe | Result |
+|---|---|
+| Branded Google Chrome in the VM | not available: no build for Linux on Arm64 (the installer refuses). What is there is Chrome for Testing 156, the same engine, as a full browser and as a headless shell |
+| A script driving the full browser, headless (open the app, list the buttons, press Tab and read the focus, read computed colours, click, screenshot before and after, print to PDF) | all done, 0.8 s |
+| The same with the headless shell | all done, 0.7 s; the same pixels as the full browser on this screen |
+| The full browser headed, on a virtual display (`xvfb-run`, two packages from the image's own mirror) | works; the page does not see a headless browser |
+| A session in the VM driving the browser itself, through browser tools over MCP (`@playwright/mcp`, pointed at the installed browser) | navigate, snapshot, screenshot, key press, snapshot, click, snapshot, screenshot: 38 s; its account of the page matches the screenshot it took |
+| The tool's `claude.chrome` setting | left off: it lets the session reach the host's own browser tabs, which is outside the VM |
+
+### The rest
+
+| Question | Result |
+|---|---|
+| CPU and memory | set at creation (`--cpus 6 --memory 8g` gave 6 cores and 7 GB); the default is every core and half the host's memory |
+| A plugin inside the VM | a folder mounted read-only and passed with `--plugin-dir` loads (the session listed its 38 skills) |
+| Subagent transcripts | kept, in a `subagents/` folder beside the session's file, and copied out with the rest |
+| The model's credentials | supplied outside the VM: a request to the model's API from the VM with no credential at all, or with a made-up one, is answered as signed in. So the VM needs no real token; the other side of it is that any process in the VM can use the owner's subscription on that one host |
+| A secret for any other host (`sbx secret set-custom`, tried with a made-up value and an echo service) | the VM holds a placeholder; the proxy puts the real value into any header of a request to the named host; a placeholder in a JSON body or in the URL goes out unchanged. A provider must take its secret in a header |
+| An idle VM | stops when no command is attached to it and starts again on the next one; its disk is kept, its processes are not. A server started in one command is gone in the next: the session and anything it needs running are one command |
+| A prepared image | `sbx template save` of a stopped VM (30 s) keeps the toolchain and the browser; a VM from it is up in 4 s and captures the 9 screens with only the default hosts allowed |
+| Two VMs under load | running: a full mutation pass in each at the same time |
+
 Read from the installed tool's help, not yet tried: `sbx create --clone
 claude .` runs the agent on a clone inside the VM and the host fetches
 its commits from a remote named `sandbox-<name>`; `sbx exec`, `sbx cp`
