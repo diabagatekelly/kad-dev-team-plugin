@@ -14,7 +14,7 @@
 | Project toolchain (Node 24.22.2, pnpm by corepack) | script, one more host allowed for this VM only | 3 s; the image has no Node |
 | `pnpm install --frozen-lockfile`, `pnpm test` | script | 2 s; 105 of 105 pass in 3.4 s (the comparison's report: 3.5 to 4.2 s on the host) |
 | Pinned headless browser (`npx playwright install --with-deps chromium`), then `screens/capture.mjs` | script, four more hosts allowed for this VM, one of them removed again afterwards | install 11 s; 9 of 9 states captured in 8 s; no workaround |
-| Mutation pass, 60 mutants | script | running |
+| Mutation pass, 60 mutants | script | 573 s against 900 s on the host; the same verdict on all 60 (53 killed, 7 survive); one mutant hung to the 300 s limit where two did on the host; over the 58 that hung on neither, 269 s against 300 s |
 
 ### Controls checked so far
 
