@@ -4,7 +4,8 @@ One folder per step of `../../TODO.md`'s list (`V<n>-<name>/`) and per
 experiment that fed it (`E<n>-<name>/`). Each holds its question, the
 bar set before it ran, what was run (prompts frozen with their hash,
 scripts with their tests) and a `RESULT.md`. What quotes a project is
-in the private audit repository, in a folder of the same name.
+in the private audit repository, in a folder of the same name written
+in lower case (`v1-benchmark-and-judge`, `e3-library-triage`).
 
 | Folder | In one line |
 |---|---|

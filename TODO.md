@@ -51,7 +51,10 @@ own is decided at V9.
 a bar the owner sets before it runs. A step is built on only when its
 result is read and the owner says it holds. A step that fails its bar
 stops the list there, and the next move is the owner's. No plugin code
-is written before step V7.
+is written before step V7, with one exception the owner made on
+2026-11-21: the planning phase's stages, each taken into the plugin
+only when its own test has been read and the owner says it holds
+(`next-plugin/design/planning-phase.md`).
 
 **Any product, any domain (the owner, 2026-11-20):** "We have to be
 careful not to build the plugin to be specific to the accounting app.

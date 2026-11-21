@@ -15,7 +15,8 @@ is in git history at `3ae86b8`.)
    A bar is set before a run; a step holds when the owner says so.
 3. **Any product, any field.** Nothing is shaped to the finance
    projects it is tested on. No frozen text names a finance or
-   provider concept (`validation/V1-benchmark-and-judge/wording_check.py`).
+   provider concept
+   (`next-plugin/validation/V1-benchmark-and-judge/wording_check.py`).
 4. **The owner is asked only what is theirs** (accepted 2026-11-21):
    the problem and its scope; a rule of the product in their own field;
    a matter of taste, shown as real alternatives; a risk, cost or
@@ -32,7 +33,16 @@ is in git history at `3ae86b8`.)
    measurement, not habit. The plugin evaluation built into the tool
    was expensive on kad: how runs are made and judged is to be talked
    through with the owner when the first step is reached, not assumed.
-6. **Decisions are put to the owner one at a time.**
+6. **In a session with the owner, decisions about the plugin itself
+   are put one at a time,** each with what is needed to decide it
+   (its cost, where one applies) in front of them. This is about how a
+   session talks with the owner; inside the plugin, a slice's
+   decisions reach the owner as the one ranked list of decision 4,
+   after the facts they rest on are known.
+9. **The planning personas are kept** (the owner, 2026-11-18: "even in
+   a new plugin"). What is weighed stage by stage is each persona's
+   skill text and model, not whether planning has personas; the tests
+   and the build are where a different approach is wanted.
 7. **Privacy.** This repository is public: methods, scripts, prompts
    and results as counts. Anything that quotes a project (code, plan
    text, tables, cold reads, dossiers, answers) goes to the private
@@ -42,6 +52,8 @@ is in git history at `3ae86b8`.)
    any OS; locks on by default; a plain-words page for the user.
 
 ## What is done, and where
+
+Folders below are under `next-plugin/`.
 
 | Step | Result | Folder |
 |---|---|---|
@@ -68,22 +80,29 @@ dependency's documentation), the 13 stages with what is kept from kad,
 what reaches the owner, and how each step is tested.
 
 Its section 7 lists four decisions. **The first is made** (what
-reaches the owner: standing decision 4 above). **Three are open, to be
-put one at a time:**
+reaches the owner: standing decision 4 above). **Open, to be put one
+at a time:**
 
 1. The numbers for the question measure: how many questions a slice
    may bring, and how often the owner taking the offered option
    unchanged is too often.
-2. Whether the way of testing a step (bare model first, then a short
+2. Whether to start with the research step.
+3. Whether the way of testing a step (bare model first, then a short
    brief, then kad's skill; a ladder of models; three runs; held-out
-   plans; cost recorded; in the VM) is right given its cost, and how
-   the runs are made and judged without the built-in evaluation.
-3. Whether to start with the research step, and whether the plugin
-   stays in `next-plugin/` or gets a repository of its own now.
+   plans; cost recorded; in the VM) is right, and how the runs are
+   made and judged without the built-in evaluation. This one is put
+   with the first step's test worked out and its cost beside it, not
+   before: the cost is part of what is being decided.
+4. Where the plugin lives. `TODO.md` leaves a repository of its own to
+   V9 and the work stays in `next-plugin/` until the owner says
+   otherwise; it is listed because the design lists it, and it can
+   wait.
 
-Nothing of the plugin is built. After those decisions, the proposed
-first work is the research step (the dossier), tested as decision 2
-settles.
+Nothing of the plugin is built. `TODO.md`'s rule that no plugin code
+comes before V7 stands for the build; for the planning phase the owner
+brought the design forward on 2026-11-21, and a stage's text becomes
+part of the plugin only when its test has been read and the owner says
+it holds.
 
 ## Open items
 
@@ -109,22 +128,28 @@ settles.
   read nothing else; three runs where a count matters; never score
   your own method. A bar is recorded in the step's README before the
   run.
-- **The judge** is `E4-rescore-and-second-plan/matcher-prompt-v2.md`
+- **The judge** is
+  `next-plugin/validation/E4-rescore-and-second-plan/matcher-prompt-v2.md`
   (hash beside it), run on Opus for comparability, counted by
-  `V1-benchmark-and-judge/agreement.py`. Report named, and named or
-  part.
-- **The benchmark and every run** are in the audit repository:
-  `v1-benchmark-and-judge/`, `e1-…` to `e5-…`. Working folders on this
-  Mac: `~/kad-eval-*`.
+  `next-plugin/validation/V1-benchmark-and-judge/agreement.py`. Report
+  named, and named or part.
+- **The benchmark and every run** are in the audit repository, in
+  folders named as here but in lower case: `v1-benchmark-and-judge/`,
+  `e1-failure-mode-library/` to `e5-cold-read-overlap/`. Working
+  folders on this Mac: `~/kad-eval-*`.
 - **A VM:** `sbx` is installed and signed in; a prepared image
-  `v0-pft4:1` (Node and a browser) is kept. `vm.sh` in V0's folder has
-  the verbs. Interactive steps (`sbx login`, `/login` inside a VM,
-  `sbx secret set`) are the owner's, in their own terminal.
-- **A cold read in a VM:** a neutral clone (no remote, no tags),
-  `sbx create --clone --template v0-pft4:1`, create the base branch
-  inside, `claude -p --model opus --dangerously-skip-permissions`
-  with `evals/tools/cold_read.md`'s brief, then `sbx cp` the report
-  and the transcripts.
+  `v0-pft4:1` (Node and a browser) is kept.
+  `next-plugin/validation/V0-where-a-session-runs/vm.sh` has the
+  verbs, and its `create` switches every lock on first and refuses if
+  one is off. A VM made any other way is made only after `vm.sh
+  status` shows every lock on. Interactive steps (`sbx login`,
+  `/login` inside a VM, `sbx secret set`) are the owner's, in their
+  own terminal.
+- **A cold read in a VM:** a neutral clone (no remote, no tags);
+  `VM_TEMPLATE=v0-pft4:1 vm.sh create NAME DIR` (so the locks are
+  checked); create the base branch inside; `claude -p --model opus
+  --dangerously-skip-permissions` with `evals/tools/cold_read.md`'s
+  brief; then copy out the report and the transcripts (`vm.sh out`).
 - **An agent stopped by "Login expired"** may already have written its
   output: look before starting it again.
 - **After opening or pushing to a pull request,** the external
@@ -144,8 +169,9 @@ Paste this to start:
 > under `next-plugin/`. We are building the next plugin's planning
 > phase one step at a time, each step tested before it is adopted, the
 > bare model first, and a bar set by me before each run. First, without
-> running anything, put to me the three decisions still open in the
-> design's section 7, one at a time, and wait for each answer. Then
-> propose how we test the first step and what it will cost, and wait.
-> Ask me only what is mine to decide. Keep anything that quotes my
+> running anything, put to me the decisions still open in the handoff,
+> one at a time, in its order, and wait for each answer; when you reach
+> the one about how a step is tested, work out the first step's test
+> and its cost first and put them with it. Ask me only what is mine to
+> decide. Keep anything that quotes my
 > projects in the audit repository; this repository is public.
