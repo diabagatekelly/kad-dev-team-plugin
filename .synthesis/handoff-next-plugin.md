@@ -39,16 +39,16 @@ is in git history at `3ae86b8`.)
    session talks with the owner; inside the plugin, a slice's
    decisions reach the owner as the one ranked list of decision 4,
    after the facts they rest on are known.
-9. **The planning personas are kept** (the owner, 2026-11-18: "even in
+7. **The planning personas are kept** (the owner, 2026-11-18: "even in
    a new plugin"). What is weighed stage by stage is each persona's
    skill text and model, not whether planning has personas; the tests
    and the build are where a different approach is wanted.
-7. **Privacy.** This repository is public: methods, scripts, prompts
+8. **Privacy.** This repository is public: methods, scripts, prompts
    and results as counts. Anything that quotes a project (code, plan
    text, tables, cold reads, dossiers, answers) goes to the private
    audit repository (`~/.claude/kad-audit/repo`), in a folder named
    after the step.
-8. **Sessions run in a VM** set up by the plugin with permission, on
+9. **Sessions run in a VM** set up by the plugin with permission, on
    any OS; locks on by default; a plain-words page for the user.
 
 ## What is done, and where
