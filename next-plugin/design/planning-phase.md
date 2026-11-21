@@ -134,10 +134,12 @@ the text said. Their wording was never tested against doing without
 it, and every task ran on one model. For each stage here:
 
 1. **An outcome to measure**, fixed before the runs (the table below).
-2. **Three texts:** nothing but the task and its inputs; a short brief
-   (the briefs of E3 are about 40 lines); kad's skill where one exists.
-   If the short brief or nothing does as well, the longer text is not
-   carried.
+2. **The bare model first, always** (the owner, 2026-11-21: "we should
+   always start with the bare model(s) to see if the skill even earns
+   its place"): the task and its inputs and nothing else. Only where
+   that falls short is a text tried: a short brief (the briefs of E3
+   are about 40 lines), then kad's skill where one exists. A text is
+   carried only for what it adds over the bare model.
 3. **A ladder of models:** the same step on a cheaper model, the usual
    one and the strongest, and the cheapest that holds the bar is taken.
 4. **Three runs of each,** so a difference is told from chance.
@@ -145,6 +147,11 @@ it, and every task ran on one model. For each stage here:
    4 are held out and used only to confirm.
 6. **Cost and time** from the transcripts, beside every result.
 7. **In the VM,** so runs are isolated and repeatable.
+
+How the runs are made and judged is not settled here. The plugin
+evaluation built into the tool was expensive to run on kad; the owner
+wants to consider a way of our own and to talk it through when the
+first step is reached.
 
 | Stage | The outcome measured |
 |---|---|
