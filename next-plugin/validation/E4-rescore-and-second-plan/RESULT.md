@@ -61,6 +61,77 @@ setting (what happens when one is missing or malformed); at build time
 this script lists what the code actually reads, and each is held
 against the rule. It belongs with the traceability scripts of V7.
 
-## 3. The same steps on a second plan
+## 3. The same steps on a second plan: the bar is met
 
-Not finished at the time of writing: see below when added.
+The third project's slice 1, 13 defects, the matcher's second version,
+three runs each.
+
+| | Frozen tables | E3: triage, dossier, answers |
+|---|---|---|
+| Named (N or D) | 1 | **4** |
+| Named or part | 9 | 10 |
+| Not named (X) | 4 | 3 |
+| Named, run by run | 1, 1, 1 | 4, 4, 4 |
+| Runs give the same class | 12 of 13 | 10 of 13 |
+| Cells | 283 | 493 |
+| Cells where the plan contradicts the documentation | 135 mentions of a silent or contradicting tag in all | 42 |
+
+The bar was at least as many named and at least as many named or part
+as the frozen tables on this plan under the same matcher: met on both
+(4 against 1, 10 against 9), in every run.
+
+The four it names, the same four in all three runs:
+
+- the connection left at the provider when the reply to its creation
+  is lost (the defect that came back in every project);
+- the provider library's error object carrying the secret (the frozen
+  tables had this one too, as a decision the build missed);
+- a locked secret store at start, with nothing said on screen;
+- the last save lost to a power cut just after it is reported done.
+
+The first two rest on dossier facts: 14 of this plan's 111 statements
+about its dependencies contradict their documentation, and this
+dossier's quotes were machine-checked against the downloaded pages.
+The other two come from the library's questions on calling a
+dependency at start and on durable writes. The triage kept every entry
+E1's judges had tied to this slice's defects (7 of 7 full, 4 of 4
+part), with 180 of 250 questions kept for 493 things.
+
+Of 281 open cells, 182 are the planner's, 64 a fact about a
+dependency, 35 the owner's (26 distinct questions); 51 answers are
+marked for a test against the real thing.
+
+What it still does not reach on this plan: a body that is the word
+"null", a response header, a line of the README (none); a non-numeric
+port, a letter-case way round a folder guard, a log step for one route
+(part at best). These are code-level or the plan's own detail.
+
+**Cost:** this plan's triage about 143,000 tokens, its dossier
+357,000, its four answering agents 890,000, its three matcher runs
+470,000: about 1.9 million for one slice, of which the dossier and
+the answers are the method and the matcher is only the measurement.
+
+## Both plans together, under the second version
+
+| | Frozen tables | E3 |
+|---|---|---|
+| Named, of 43 defects | 11 (26%) | 17 (40%) |
+| Named or part | 32 (74%) | 33 (77%) |
+| Cells | 958 | 963 |
+
+The gain is in turning "touched" into "named": the same share of
+defects is reached, and half again as many are stated outright, for
+the same number of cells. Two plans, one filling each, both from one
+field and one provider: the direction agrees on both, the size of the
+gain is not yet pinned down, and a product with no provider is untried.
+
+## Limits
+
+- One triage, one dossier and one answering per plan; their spread is
+  not measured. The matcher's three runs agree with each other on
+  named for the second plan (4, 4, 4) and range 11 to 13 on the first.
+- The second plan was chosen as the first slice of the third project
+  before any of its results were seen; the other three slices of that
+  project are not run.
+- The bars were proposed by the session and not confirmed by the owner
+  before the results were read.
