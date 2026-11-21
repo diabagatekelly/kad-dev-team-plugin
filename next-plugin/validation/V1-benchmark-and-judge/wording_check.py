@@ -12,9 +12,11 @@ import re
 import sys
 
 TERMS = (
-    "plaid", "bank", "banking", "transaction", "transactions", "ledger",
-    "merchant", "currency", "payment", "finance", "financial", "accounting",
-    "keychain", "endpoint", "endpoints", "api", "apis", "http", "sqlite",
+    "plaid", "bank", "banks", "banking", "transaction", "transactions",
+    "ledger", "ledgers", "merchant", "merchants", "currency", "currencies",
+    "payment", "payments", "finance", "finances", "financial", "accounting",
+    "keychain", "keychains", "endpoint", "endpoints", "api", "apis", "http",
+    "https", "sqlite",
 )
 _PATTERN = re.compile(r"\b(" + "|".join(TERMS) + r")\b", re.IGNORECASE)
 

@@ -160,7 +160,13 @@ finance projects alone: V8 runs on a held-out product of another kind.
   not 57% and 26%; later steps report both counts. Kept for a later
   pass, not blocking: split defects that have two parts, and show the
   owner full table rows with no commentary when a sample is next
-  judged.
+  judged (the sheet now prints each cited cell's whole row). From the
+  external review of #74, for the next version of the matcher and the
+  next sample, not changed now because both are frozen with results
+  read: the prompt's "outcome under a different trigger" is P while
+  "no cell names the trigger" is X, and the tie-break can send such a
+  case either way; and the sample's spread over plans slightly favours
+  a plan with more defects.
 **What E1 to E4 found, and the plan they replace (2026-11-21).** After
 V1 the owner asked whether completeness tables are the best way to make
 requirements complete, and for a mechanism that anticipates failure
