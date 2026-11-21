@@ -81,7 +81,7 @@ what reaches the owner, and how each step is tested.
 
 Its section 7 lists four decisions. **The first is made** (what
 reaches the owner: standing decision 4 above). **Open, to be put one
-at a time:**
+at a time, the fourth first:**
 
 1. The numbers for the question measure: how many questions a slice
    may bring, and how often the owner taking the offered option
@@ -93,10 +93,17 @@ at a time:**
    made and judged without the built-in evaluation. This one is put
    with the first step's test worked out and its cost beside it, not
    before: the cost is part of what is being decided.
-4. Where the plugin lives. `TODO.md` leaves a repository of its own to
-   V9 and the work stays in `next-plugin/` until the owner says
-   otherwise; it is listed because the design lists it, and it can
-   wait.
+4. Where the plugin lives. The owner, 2026-11-21: "We'll probably be
+   building the new plugin in its own repo." So this is put first, not
+   last: confirm it, and with it what only the owner can say (the
+   repository's name, whether it is public or private, and whether the
+   validation work done here moves or stays). Until a repository
+   exists, work stays in `next-plugin/`. What would go across, each
+   with its tests: the design, the library, the briefs and scripts of
+   E3 and E4, the judge's prompt, `vm.sh` and the safety page. What
+   stays here whatever is decided: kad, frozen, and this repository's
+   record of how the steps were validated. The benchmark and every run
+   stay in the audit repository.
 
 Nothing of the plugin is built. `TODO.md`'s rule that no plugin code
 comes before V7 stands for the build; for the planning phase the owner
@@ -168,10 +175,12 @@ Paste this to start:
 > `TODO.md`. kad is frozen at 0.19.0: change nothing of it; all work is
 > under `next-plugin/`. We are building the next plugin's planning
 > phase one step at a time, each step tested before it is adopted, the
-> bare model first, and a bar set by me before each run. First, without
+> bare model first, and a bar set by me before each run. I expect to
+> build the new plugin in a repository of its own. First, without
 > running anything, put to me the decisions still open in the handoff,
-> one at a time, in its order, and wait for each answer; when you reach
-> the one about how a step is tested, work out the first step's test
-> and its cost first and put them with it. Ask me only what is mine to
-> decide. Keep anything that quotes my
+> one at a time, starting with where the plugin lives, and wait for
+> each answer; when you reach the one about how a step is tested, work
+> out the first step's test and its cost first and put them with it.
+> Create nothing outside this repository until I have answered where
+> it goes. Ask me only what is mine to decide. Keep anything that quotes my
 > projects in the audit repository; this repository is public.
