@@ -1,4 +1,4 @@
-# V1 result (2026-11-20 and 21): the judge agrees with itself and not closely enough with the owner; the bar is not met
+# V1 result (2026-11-20 and 21): the owner's word is that the judge holds, with 11 of the 15 sampled calls agreeing against a bar of 13
 
 Fifteen matcher runs (three per plan, each a fresh agent on Opus that
 saw one folder) over the 65 defects, counted by `agreement.py summary`.
@@ -65,8 +65,30 @@ more strictly once, the last two rows being the same kind of case
 judged in opposite directions, which says the line is soft for a
 person too.
 
-**By the rule of the list, V1 has not passed: nothing after it is
-scored by this judge as it stands, and the next move is the owner's.**
+By the count, the third line is not met. **The owner's word, read with
+the four differences in front of them (2026-11-21):** "I don't disagree
+with the matcher's assessment necessarily, some of my decisions could
+have been due to me not fully understanding the bug. There were also a
+few where I was between 2 so I'm ok to call it a success." So V1 holds
+on the owner's word, not on the count, and the count stays recorded as
+11 of 15.
+
+## The baseline this judge gives
+
+From the majority class of the three runs, on the tables the frozen
+method built on 2026-11-19. Two counts are kept from here on, because
+the line between them is the one a person finds soft: **named** (N or
+D) and **named or part** (N, D or P).
+
+| Plans | Defects | Named | Named or part | Decided wrongly (W) | Not named (X) |
+|---|---|---|---|---|---|
+| Fourth project, slice 1 | 30 | 10 (33%) | 24 (80%) | 3 | 3 |
+| Third project, slices 1 to 4 | 35 | 1 (3%) | 23 (66%) | 4 | 8 |
+| All | 65 | 11 (17%) | 47 (72%) | 7 | 11 |
+
+These replace the 57% and 26% of the 2026-11-19 scoring as the figures
+later steps are compared with. A later step's gain is read on both
+counts.
 
 How the calls were taken, since it bears on the count: the first pass
 was abandoned after eight calls when it turned out the question had
