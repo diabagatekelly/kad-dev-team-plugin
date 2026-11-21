@@ -1,4 +1,4 @@
-# V1 result (2026-11-20): two lines of the bar met, the owner's line open
+# V1 result (2026-11-20 and 21): the judge agrees with itself and not closely enough with the owner; the bar is not met
 
 Fifteen matcher runs (three per plan, each a fresh agent on Opus that
 saw one folder) over the 65 defects, counted by `agreement.py summary`.
@@ -7,7 +7,7 @@ saw one folder) over the 65 defects, counted by `agreement.py summary`.
 |---|---|---|---|
 | All three runs on the same side of named / not named | 59 of 65 | 63 of 65 (97%) | met |
 | All three runs give the same class | 52 of 65 | 58 of 65 (89%) | met |
-| The owner agrees with the majority class | 13 of 15 | not yet judged | open |
+| The owner agrees with the majority class | 13 of 15 | 11 of 15 | **not met** |
 
 Defects named (N or D), run by run:
 
@@ -42,6 +42,43 @@ That is a choice of where the line sits, not something the three runs
 can settle: a consistent judge can be consistently too hard. The
 owner's 15 calls are the measure of it. Until they are read, neither
 set of percentages is the baseline, and no later step is scored.
+
+## The owner's 15 calls (2026-11-21)
+
+Read out one at a time in the session, the matcher's class hidden until
+all 15 were given. 11 agree. The four that differ all cross the line
+between named and not named:
+
+| Sampled defect | Owner | Matcher (all three runs) | What separates them |
+|---|---|---|---|
+| Third project, slice 1, defect 5 | D | P | a decision in general terms against a defect that is one specific way round it |
+| Third project, slice 3, defect 4 | N | P | a defect in two parts, the cells covering one |
+| Third project, slice 2, defect 8 | N | P | the same harm under a neighbouring trigger |
+| Fourth project, slice 1, defect B7 | P | N | the same harm under a neighbouring trigger, read the other way |
+
+On the eleven others, among them every W, every X and both defects no
+cell was cited for, owner and matcher agree. So the disagreement is not
+about the classes but about one line: how far a cell's trigger may sit
+from the defect's, and how much of a defect it must cover, to count as
+naming it. The owner drew that line more generously three times and
+more strictly once, the last two rows being the same kind of case
+judged in opposite directions, which says the line is soft for a
+person too.
+
+**By the rule of the list, V1 has not passed: nothing after it is
+scored by this judge as it stands, and the next move is the owner's.**
+
+How the calls were taken, since it bears on the count: the first pass
+was abandoned after eight calls when it turned out the question had
+been put unclearly (the owner was judging whether the plan was silent,
+not whether a cell described the defect) and all 15 were taken again
+from the first. The session described each defect and cell in plainer
+words than the sheet's and, on five calls, pointed out a difference
+between the cell's trigger and the defect's. On two calls the sheet had
+dropped a cell's tag and its row heading; the full rows were then shown
+and one call was changed by the owner (W to N) before any matcher class
+was seen. A cleaner repeat would give the owner the full rows from the
+start and no gloss.
 
 ## Cost
 
