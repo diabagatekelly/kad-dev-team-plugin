@@ -3,8 +3,11 @@
 Everything for the next plugin lives in this folder, apart from kad,
 which is frozen at 0.19.0 in the rest of this repository (the owner,
 2026-11-20: "a new folder here for now, so there's clear separation").
-Whether it later moves to a repository of its own is the owner's call
-at V9.
+**Moved on 2026-11-21:** the owner gave the plugin a public repository
+of its own, `kd-dev-team` (`github.com/diabagatekelly/kd-dev-team`).
+What the plugin uses was copied there with its tests; this folder
+stays as the record of how the earlier steps were validated and is no
+longer added to.
 
 **Start here:** `../.synthesis/handoff-next-plugin.md` (the whole
 context and the prompt for a session), then

@@ -79,31 +79,31 @@ first option 108 times; only one of 16 planning skills reads a
 dependency's documentation), the 13 stages with what is kept from kad,
 what reaches the owner, and how each step is tested.
 
-Its section 7 lists four decisions. **The first is made** (what
-reaches the owner: standing decision 4 above). **Open, to be put one
-at a time, the fourth first:**
+Its section 7 listed four decisions. **All are now made or put off
+(2026-11-21); the record is `DECISIONS.md` in the new repository.**
 
-1. The numbers for the question measure: how many questions a slice
-   may bring, and how often the owner taking the offered option
-   unchanged is too often.
-2. Whether to start with the research step.
-3. Whether the way of testing a step (bare model first, then a short
-   brief, then kad's skill; a ladder of models; three runs; held-out
-   plans; cost recorded; in the VM) is right, and how the runs are
-   made and judged without the built-in evaluation. This one is put
-   with the first step's test worked out and its cost beside it, not
-   before: the cost is part of what is being decided.
-4. Where the plugin lives. The owner, 2026-11-21: "We'll probably be
-   building the new plugin in its own repo." So this is put first, not
-   last: confirm it, and with it what only the owner can say (the
-   repository's name, whether it is public or private, and whether the
-   validation work done here moves or stays). Until a repository
-   exists, work stays in `next-plugin/`. What would go across, each
-   with its tests: the design, the library, the briefs and scripts of
-   E3 and E4, the judge's prompt, `vm.sh` and the safety page. What
-   stays here whatever is decided: kad, frozen, and this repository's
-   record of how the steps were validated. The benchmark and every run
-   stay in the audit repository.
+- **Where the plugin lives:** a public repository of its own,
+  `kd-dev-team` (`github.com/diabagatekelly/kd-dev-team`, cloned beside
+  this one). Taken across, each with its tests: the design, the
+  library, the briefs and scripts of E3 and E4, the judge's prompt
+  with `agreement.py` and `wording_check.py`, `vm.sh` and the safety
+  page. The validation record stays here in `next-plugin/validation/`
+  and is not added to; kad stays frozen and is not renamed. New work
+  goes in the new repository, not in `next-plugin/`.
+- **The order:** pipeline order, not research first. Startup is a new
+  stage 0 (the machine inspected by script on any OS, no special
+  launch command, audit on or off as a plugin option, the planning
+  folder asked once, routing by open pull request, then blocking
+  issues, then the documents).
+- **How a step is tested:** a script by unit tests on three systems; a
+  session's behaviour by the built-in plugin evaluation with free
+  checks only, in a VM. How a benchmark outcome is tested is put off
+  to the research stage; the numbers for the question measure to the
+  answers stage.
+- **Startup's test** is written in the new repository's
+  `steps/00-startup/README.md`: seven conditions, 14 scenarios, two
+  arms, Haiku, Sonnet and Opus 5.5, a bar of 42 of 42, a ceiling of
+  $76 after a 14-run pilot. Nothing of it is built or run.
 
 Nothing of the plugin is built. `TODO.md`'s rule that no plugin code
 comes before V7 stands for the build; for the planning phase the owner
@@ -168,19 +168,17 @@ it holds.
 
 ## Prompt for the next session
 
-Paste this to start:
+Paste this to start, in the `kd-dev-team` repository:
 
-> Read `.synthesis/handoff-next-plugin.md` in full, then
-> `next-plugin/design/planning-phase.md`, then the top section of
-> `TODO.md`. kad is frozen at 0.19.0: change nothing of it; all work is
-> under `next-plugin/`. We are building the next plugin's planning
-> phase one step at a time, each step tested before it is adopted, the
-> bare model first, and a bar set by me before each run. I expect to
-> build the new plugin in a repository of its own. First, without
-> running anything, put to me the decisions still open in the handoff,
-> one at a time, starting with where the plugin lives, and wait for
-> each answer; when you reach the one about how a step is tested, work
-> out the first step's test and its cost first and put them with it.
-> Create nothing outside this repository until I have answered where
-> it goes. Ask me only what is mine to decide. Keep anything that quotes my
-> projects in the audit repository; this repository is public.
+> Read `DECISIONS.md`, then `design/planning-phase.md`, then
+> `steps/00-startup/README.md`. The history is in the
+> `kad-dev-team-plugin` repository beside this one
+> (`.synthesis/handoff-next-plugin.md`); kad there is frozen at
+> 0.19.0: change nothing of it. We are building the planning phase one
+> stage at a time in pipeline order, each tested before it is adopted,
+> the bare model first, against a bar I have set. Startup's test and
+> bar are agreed and nothing is built: begin with its scripts, unit
+> tests first, then the 14-run pilot, and report its real cost before
+> going on. Ask me only what is mine to decide. Keep anything that
+> quotes my projects in the audit repository; this repository is
+> public.
