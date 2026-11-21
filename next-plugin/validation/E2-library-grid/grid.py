@@ -26,8 +26,11 @@ def make(actions, library):
     by_action = {}
     for entry in library:
         by_action.setdefault(entry["action"], []).append(entry)
-    cells = []
+    cells, seen = [], set()
     for item in actions:
+        if item["id"] in seen:
+            raise ValueError(f"{item['id']}: two things the slice does share this id")
+        seen.add(item["id"])
         entries = by_action.get(item["action"])
         if entries is None:
             raise ValueError(f"{item['id']}: the library has no entries for {item['action']!r}")

@@ -22,6 +22,11 @@ class ReadLookups(unittest.TestCase):
         self.assertEqual(names, set())
         self.assertEqual(computed, [(2, "const v = process.env[`PREFIX_${id}`];")])
 
+    def test_a_computed_lookup_beside_a_literal_one_on_the_same_line_is_still_reported(self):
+        names, computed = si.read_lookups("const a = process.env.PORT || process.env[key];")
+        self.assertEqual(names, {"PORT"})
+        self.assertEqual(len(computed), 1)
+
     def test_a_line_with_no_lookup_gives_nothing(self):
         self.assertEqual(si.read_lookups("const environment = 'x';"), (set(), []))
 

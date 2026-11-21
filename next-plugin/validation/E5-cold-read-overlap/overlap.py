@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Count how independent readers' findings overlap (no model).
 
-  overlap.py MATCHING.json
+  overlap.py MATCHING.json [READER,READER,...]
 
 MATCHING.json is a list of distinct defects, each {"id", "title",
 "found_by": [reader names]}: the result of deciding which of several
@@ -31,17 +31,23 @@ def added_by_position(defects, readers):
     return [round(total / len(orders), 2) for total in totals]
 
 
-def unseen_estimate(defects):
-    """Chao's lower bound on defects no reader found, from those found once and twice."""
+def unseen_estimate(defects, readers):
+    """Chao's lower bound for incidence data (Chao2) on defects no reader found.
+
+    From the defects found by exactly one reader and by exactly two, scaled
+    by (m - 1) / m for m readers.
+    """
     once = sum(1 for d in defects if len(d["found_by"]) == 1)
     twice = sum(1 for d in defects if len(d["found_by"]) == 2)
+    scale = (readers - 1) / readers if readers else 0
     if twice:
-        return round(once * once / (2 * twice), 1)
-    return round(once * (once - 1) / 2, 1)
+        return round(scale * once * once / (2 * twice), 1)
+    return round(scale * once * (once - 1) / 2, 1)
 
 
-def summarise(defects, threshold=3):
-    readers = readers_of(defects)
+def summarise(defects, threshold=3, readers=None):
+    """`readers` names every reader, so one who found nothing is still counted."""
+    readers = sorted(set(readers) | set(readers_of(defects))) if readers else readers_of(defects)
     added = added_by_position(defects, readers)
     worth = 0
     for position, gain in enumerate(added, start=1):
@@ -60,16 +66,17 @@ def summarise(defects, threshold=3):
         "share_of_all_found_after_k_readers": [
             round(sum(added[: k + 1]) / len(defects), 2) for k in range(len(added))] if defects else [],
         "readers_worth_running_by_the_rule": worth,
-        "estimated_defects_no_reader_found": unseen_estimate(defects),
+        "estimated_defects_no_reader_found": unseen_estimate(defects, len(readers)),
     }
 
 
 def main(argv):
-    if len(argv) != 1:
+    if len(argv) not in (1, 2):
         print(__doc__)
         return 2
+    readers = argv[1].split(",") if len(argv) == 2 else None
     with open(argv[0], encoding="utf-8") as handle:
-        json.dump(summarise(json.load(handle)), sys.stdout, indent=1)
+        json.dump(summarise(json.load(handle), readers=readers), sys.stdout, indent=1)
     print()
     return 0
 

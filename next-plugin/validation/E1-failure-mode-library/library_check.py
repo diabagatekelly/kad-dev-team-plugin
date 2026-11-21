@@ -27,6 +27,7 @@ ACTIONS = (
 )
 FIELDS = {"id", "action", "failure", "question", "source"}
 SOURCE_FIELDS = {"title", "url", "evidence"}
+MIN_PER_ACTION = 8
 MAX_PER_ACTION = 12
 MAX_EVIDENCE_WORDS = 20
 _ID = re.compile(r"^([a-z-]+)-(\d{2})$")
@@ -43,6 +44,11 @@ def problems(entries):
         source = entry["source"]
         if not isinstance(source, dict) or set(source) != SOURCE_FIELDS:
             found.append(f"{where}: source fields must be exactly {sorted(SOURCE_FIELDS)}")
+            continue
+        texts = [entry["id"], entry["action"], entry["failure"], entry["question"],
+                 source["title"], source["url"], source["evidence"]]
+        if not all(isinstance(text, str) for text in texts):
+            found.append(f"{where}: every field must be text")
             continue
         match = _ID.match(entry["id"])
         if entry["action"] not in ACTIONS:
@@ -65,6 +71,8 @@ def problems(entries):
     for action, count in sorted(per_action.items()):
         if count > MAX_PER_ACTION:
             found.append(f"{action}: {count} entries, the limit is {MAX_PER_ACTION}")
+        elif count < MIN_PER_ACTION and action in ACTIONS:
+            found.append(f"{action}: {count} entries, at least {MIN_PER_ACTION} are asked for")
     for action in ACTIONS:
         if action not in per_action:
             found.append(f"{action}: no entries")

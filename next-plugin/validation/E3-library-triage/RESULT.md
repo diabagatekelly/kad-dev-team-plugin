@@ -89,6 +89,11 @@ error after the file was written; a retry was stopped unused).
 - The dossier's quotes came through a summarising fetch tool and were
   not compared word for word with the pages.
 - No test against a real dependency was run; 29 were named.
+- `answers.py check` asks for a source only where a cell is tagged as
+  contradicting the documentation or is called a fact. A cell called
+  the planner's or the owner's that still says something about a
+  dependency passes without one: no script can tell that from the
+  words, so it stays with the brief and with whoever reads the answers.
 - The benchmark is one product of one field. The same steps on a
   product with no provider are untried.
 - The bars were proposed by the session and not confirmed by the owner

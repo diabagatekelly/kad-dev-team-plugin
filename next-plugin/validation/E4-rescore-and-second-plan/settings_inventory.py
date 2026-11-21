@@ -36,12 +36,13 @@ def read_lookups(text):
     """Return (names read literally, lines with a lookup whose name is computed)."""
     names, computed = set(), []
     for number, line in enumerate(text.splitlines(), start=1):
-        found = False
+        rest = line
         for pattern in _LITERAL:
             for match in pattern.finditer(line):
                 names.add(match.group(1))
-                found = True
-        if not found and _ANY_LOOKUP.search(line):
+            rest = pattern.sub("", rest)
+        # What is left after the literal lookups are taken out is computed.
+        if _ANY_LOOKUP.search(rest):
             computed.append((number, line.strip()))
     return names, computed
 

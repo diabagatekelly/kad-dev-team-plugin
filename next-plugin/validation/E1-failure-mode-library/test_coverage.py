@@ -20,6 +20,10 @@ class ReadRun(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "class 'N'"):
             cv.read_run([{"plan": "a", "id": "1", "class": "N"}], "f")
 
+    def test_a_full_or_part_call_that_cites_nothing_is_refused(self):
+        with self.assertRaisesRegex(ValueError, "cites no entry"):
+            cv.read_run([{"plan": "a", "id": "1", "class": "P", "entries": []}], "f")
+
     def test_a_defect_judged_twice_is_refused(self):
         entry = {"plan": "a", "id": "1", "class": "X", "entries": []}
         with self.assertRaisesRegex(ValueError, "judged twice"):
@@ -52,9 +56,13 @@ class Summarise(unittest.TestCase):
         self.assertEqual(result["entries_used"], 3)
         self.assertEqual(result["entries_used_by_action"], {"sync": 2, "time": 1})
 
-    def test_a_cited_entry_the_library_lacks_is_reported(self):
-        runs = [run(b1=("F", ("made-up-09",)))]
-        self.assertEqual(cv.summarise(runs, self.LIBRARY)["cited_but_not_in_library"], ["made-up-09"])
+    def test_a_cited_entry_the_library_lacks_is_refused(self):
+        with self.assertRaisesRegex(ValueError, "made-up-09"):
+            cv.summarise([run(b1=("F", ("made-up-09",)))], self.LIBRARY)
+
+    def test_no_runs_is_refused(self):
+        with self.assertRaisesRegex(ValueError, "no runs"):
+            cv.summarise([], self.LIBRARY)
 
     def test_runs_judging_different_defects_are_refused(self):
         with self.assertRaisesRegex(ValueError, "run 2"):

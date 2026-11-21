@@ -31,6 +31,10 @@ class Make(unittest.TestCase):
         self.assertEqual((cell["what"], cell["failure"], cell["tag"], cell["says"]),
                          ("Pull new rows", "Arrives twice.", "", ""))
 
+    def test_two_items_sharing_an_id_are_refused(self):
+        with self.assertRaisesRegex(ValueError, "a01.*share this id"):
+            grid.make(ACTIONS + [dict(ACTIONS[0])], LIBRARY)
+
     def test_an_item_of_a_kind_the_library_lacks_is_refused(self):
         with self.assertRaisesRegex(ValueError, "a09.*'magic'"):
             grid.make([{"id": "a09", "action": "magic", "what": "x", "where": "y"}], LIBRARY)

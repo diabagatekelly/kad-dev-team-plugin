@@ -25,13 +25,17 @@ class Added(unittest.TestCase):
 class Unseen(unittest.TestCase):
     def test_many_found_once_and_few_twice_means_many_unseen(self):
         defects = [defect(str(i), "r1") for i in range(6)] + [defect("x", "r1", "r2")]
-        self.assertEqual(overlap.unseen_estimate(defects), 18.0)
+        self.assertEqual(overlap.unseen_estimate(defects, 2), 9.0)
+
+    def test_more_readers_scale_the_estimate_towards_the_unscaled_form(self):
+        defects = [defect(str(i), "r1") for i in range(6)] + [defect("x", "r1", "r2")]
+        self.assertEqual(overlap.unseen_estimate(defects, 4), 13.5)
 
     def test_everything_found_twice_means_none_unseen(self):
-        self.assertEqual(overlap.unseen_estimate([defect("a", "r1", "r2")]), 0.0)
+        self.assertEqual(overlap.unseen_estimate([defect("a", "r1", "r2")], 2), 0.0)
 
     def test_with_nothing_found_twice_the_other_form_is_used(self):
-        self.assertEqual(overlap.unseen_estimate([defect("a", "r1"), defect("b", "r2"), defect("c", "r2")]), 3.0)
+        self.assertEqual(overlap.unseen_estimate([defect("a", "r1"), defect("b", "r2"), defect("c", "r2")], 2), 1.5)
 
 
 class Summarise(unittest.TestCase):
@@ -52,6 +56,12 @@ class Summarise(unittest.TestCase):
 
     def test_a_higher_threshold_supports_fewer_readers(self):
         self.assertEqual(overlap.summarise(self.DEFECTS, threshold=4)["readers_worth_running_by_the_rule"], 1)
+
+    def test_a_reader_who_found_nothing_is_still_counted_when_named(self):
+        result = overlap.summarise(self.DEFECTS, readers=["r1", "r2", "r3", "r4"])
+        self.assertEqual(result["readers"], 4)
+        self.assertEqual(result["found_by_each"]["r4"], 0)
+        self.assertEqual(len(result["added_by_the_kth_reader_on_average"]), 4)
 
     def test_how_many_readers_found_each_defect_is_tallied(self):
         self.assertEqual(overlap.summarise(self.DEFECTS)["found_by_how_many_readers"], {"1": 9, "3": 4})

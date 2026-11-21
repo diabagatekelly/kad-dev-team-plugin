@@ -15,7 +15,8 @@ def entry(action="sync", number="01", **changes):
 
 
 def full_library():
-    return [entry(action=a) for a in lc.ACTIONS]
+    """Every action at the fewest entries allowed, numbered from 50 so tests can add low numbers."""
+    return [entry(action=a, number=f"{n}") for a in lc.ACTIONS for n in range(50, 50 + lc.MIN_PER_ACTION)]
 
 
 class Problems(unittest.TestCase):
@@ -26,10 +27,18 @@ class Problems(unittest.TestCase):
         library = [e for e in full_library() if e["action"] != "time"]
         self.assertEqual(lc.problems(library), ["time: no entries"])
 
+    def test_an_action_with_too_few_entries_is_named(self):
+        library = [e for e in full_library() if not (e["action"] == "time" and e["id"] > "time-52")]
+        self.assertEqual(lc.problems(library), ["time: 3 entries, at least 8 are asked for"])
+
+    def test_a_field_that_is_not_text_is_named_and_does_not_crash(self):
+        self.assertIn("sync-02: every field must be text",
+                      lc.problems(full_library() + [entry(number="02", failure=7)]))
+
     def test_a_missing_field_is_refused(self):
         broken = entry()
         del broken["question"]
-        self.assertIn("sync-01: fields must be exactly", lc.problems(full_library() + [broken])[0])
+        self.assertIn("sync-01: fields must be exactly", "\n".join(lc.problems(full_library() + [broken])))
 
     def test_an_unknown_action_is_refused(self):
         self.assertIn("payments-01: unknown action 'payments'",
@@ -40,7 +49,7 @@ class Problems(unittest.TestCase):
                       lc.problems(full_library() + [entry(id="text-01", action="sync")]))
 
     def test_an_id_used_twice_is_refused(self):
-        self.assertIn("sync-01: id used twice", lc.problems(full_library() + [entry()]))
+        self.assertIn("sync-50: id used twice", lc.problems(full_library() + [entry(number="50")]))
 
     def test_a_word_of_one_field_of_business_is_refused_in_the_entry_text(self):
         found = lc.problems(full_library() + [entry(number="02", failure="The bank sends it twice.")])
@@ -61,7 +70,7 @@ class Problems(unittest.TestCase):
                          ["sync-02: evidence is over 20 words"])
 
     def test_more_than_the_limit_for_one_action_is_refused(self):
-        extra = [entry(number=f"{n:02d}") for n in range(2, 14)]
+        extra = [entry(number=f"{n:02d}") for n in range(2, 7)]
         self.assertEqual(lc.problems(full_library() + extra), ["sync: 13 entries, the limit is 12"])
 
 

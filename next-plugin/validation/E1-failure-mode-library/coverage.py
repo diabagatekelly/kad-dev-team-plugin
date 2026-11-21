@@ -32,12 +32,17 @@ def read_run(entries, where):
             raise ValueError(f"{where}: {key} has class {entry.get('class')!r}")
         if key in calls:
             raise ValueError(f"{where}: {key} judged twice")
-        calls[key] = (entry["class"], tuple(entry.get("entries", [])))
+        cited = tuple(entry.get("entries", []))
+        if entry["class"] != "X" and not cited:
+            raise ValueError(f"{where}: {key} is {entry['class']} but cites no entry")
+        calls[key] = (entry["class"], cited)
     return calls
 
 
 def summarise(runs, library_ids):
     """runs: list of {(plan, id): (class, entries)}, one per run."""
+    if not runs:
+        raise ValueError("no runs to count")
     keys = sorted(runs[0])
     for number, run in enumerate(runs[1:], start=2):
         if sorted(run) != keys:
@@ -61,6 +66,8 @@ def summarise(runs, library_ids):
                     used[entry] += 1
                 else:
                     unknown.add(entry)
+    if unknown:
+        raise ValueError(f"entries cited that the library does not have: {sorted(unknown)}")
     total = collections.Counter()
     for counts in per_plan.values():
         total.update(counts)

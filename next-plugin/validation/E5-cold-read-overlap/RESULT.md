@@ -15,16 +15,16 @@ differ, both figures are given.
 | Found by all four | 4 | 4 |
 | Added by the 1st, 2nd, 3rd, 4th reader, on average over every order | 13.8, 5.9, 3.3, 2.0 | 14.0, 6.2, 3.6, 2.3 |
 | Share of everything found, after 1, 2, 3 readers | 55%, 79%, 92% | 54%, 78%, 91% |
-| Estimated defects no reader found | 4 | 5 |
+| Estimated defects no reader found | 3.0 | 3.8 |
 | **Readers the rule supports** (a further one adds at least 3) | **3** | **3** |
 
 ## What it says
 
 **One cold read is not a net.** Any one reader found 12 to 15 of the
 25 or 26 defects the four found between them, and by the estimate
-there are four or five more that none found: so one reader sees a
-little under half of what is there, two about two thirds, three about
-three quarters.
+there are three or four more that none found: so one reader sees
+about half of what is there, two about two thirds to seven tenths,
+three about four fifths.
 
 **The second reader is worth most, the third still clears the rule,
 the fourth does not.** A second reader adds about six defects, a third
@@ -58,7 +58,7 @@ cold read look at different things; neither replaces the other.
   one is not enough to call a slice read.
 - Three readers in three VMs ran side by side in about eleven minutes,
   so the cost is tokens, not time.
-- The estimate of what no reader found (four or five here) is a number
+- The estimate of what no reader found (three or four here) is a number
   the review can report each time, from the same script.
 
 ## Limits
@@ -72,6 +72,10 @@ cold read look at different things; neither replaces the other.
   finding split in two).
 - The readers' findings were not themselves re-verified here; each
   reader marks its own as confirmed by execution or to verify.
+- The estimate was first computed without the factor that the form for
+  several readers carries ((m - 1) / m for m readers) and read 4 and
+  5.1; the external review of #76 caught it, the script and this file
+  are corrected, and nothing else in the result moved.
 - The rule (a further reader is worth it while it adds at least three)
   was set by the session before the reads came back and not confirmed
   by the owner.
