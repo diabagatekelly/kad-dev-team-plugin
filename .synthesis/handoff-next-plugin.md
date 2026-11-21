@@ -1,215 +1,151 @@
-# Handoff: kad frozen at 0.19.0, the next plugin validated step by step (written 2026-11-20)
+# Handoff: the next plugin, as of 2026-11-21
 
-This file is the whole context a new session needs for the work after
-kad 0.19.0. Read it first, then `TODO.md`'s top section (steps V0 to V9),
-then only what a step points at. The prompt to start a session is at the
-end.
+This file is the whole context a new session needs. Read it in full,
+then `next-plugin/design/planning-phase.md`, then the top section of
+`TODO.md`. Open a step's folder only when working on that step. The
+prompt to start a session is at the end. (The earlier version of this
+file, with the two-arm comparison and the first table tests in detail,
+is in git history at `3ae86b8`.)
 
-## The owner's decisions (2026-11-19 and 2026-11-20)
+## Standing decisions of the owner
 
-1. No slice 2 of the two-arm comparison.
-2. The fourth project's pull request #3 (`personal-finance-tracker-4`,
-   the `light` build of slice 1) is **not merged**. Neither arm's branch
-   is merged; the tags `light-arm-end` and `solo-arm-end` mark them.
-3. kad is **frozen at 0.19.0**. Everything in `TODO.md` below its top
-   section is parked, not cancelled. No kad skill, script or case changes
-   unless the owner reopens it.
-4. A new plugin is planned, and the owner's rule for it is: "take our
-   time and really validate each step before we build on top of it".
-   Each step of `TODO.md` V0 to V9 has a question, a measure and a bar
-   the owner sets before it runs. A failed bar stops the list; the next
-   move is the owner's. No plugin code before V7.
-5. The sandbox is rethought (V0): likely a microVM per session, the
-   actual microVM picked later; the new plugin carries no sandbox of its
-   own. No sandbox at all is ruled out while sessions run on autopilot.
-6. Planning personas are kept "even in a new plugin" (2026-11-18); the
-   tests and the build are where a radically different approach is
-   wanted.
+1. **kad is frozen at 0.19.0.** No kad skill, script or eval case
+   changes. Everything for the next plugin is under `next-plugin/`.
+2. **One step at a time, each validated before the next is built on.**
+   A bar is set before a run; a step holds when the owner says so.
+3. **Any product, any field.** Nothing is shaped to the finance
+   projects it is tested on. No frozen text names a finance or
+   provider concept (`validation/V1-benchmark-and-judge/wording_check.py`).
+4. **The owner is asked only what is theirs** (accepted 2026-11-21):
+   the problem and its scope; a rule of the product in their own field;
+   a matter of taste, shown as real alternatives; a risk, cost or
+   obligation they must accept. Never asked: anything the library, a
+   dependency's documentation or a test can answer; good practice in
+   user experience, accessibility and security; the solution to an
+   identified technical problem; where files go. A preference is never
+   asked before the fact it depends on is known. Decisions come once
+   per slice as a short ranked list; what the planner chose unasked is
+   in one record the owner can overturn.
+5. **Every skill and step is tested before it is adopted, the bare
+   model first.** A text is carried only for what it adds over the
+   task and its inputs alone; the model for a step is chosen by
+   measurement, not habit. The plugin evaluation built into the tool
+   was expensive on kad: how runs are made and judged is to be talked
+   through with the owner when the first step is reached, not assumed.
+6. **Decisions are put to the owner one at a time.**
+7. **Privacy.** This repository is public: methods, scripts, prompts
+   and results as counts. Anything that quotes a project (code, plan
+   text, tables, cold reads, dossiers, answers) goes to the private
+   audit repository (`~/.claude/kad-audit/repo`), in a folder named
+   after the step.
+8. **Sessions run in a VM** set up by the plugin with permission, on
+   any OS; locks on by default; a plain-words page for the user.
 
-## What was measured, and what it says
+## What is done, and where
 
-The evidence is in the private audit repository (the clone at
-`~/.claude/kad-audit/repo`), folder `take-4-comparison/`: `README.md`
-(the comparison), `frozen-method/RESULT.md` (the table tests),
-`frozen-method/method.md` (also here as `.synthesis/frozen-table-method.md`,
-sha256 `8830988e…`), every table, every matcher's scoring, both cold
-reads, the mutation report and its logs (`mutlogs.tgz`), the probes, and
-the scripts that cut cost and time from the transcripts (`timecost.py`,
-`gaps.py`). In the cold reads A is `solo` and B is `light` (`key.txt`);
-in the mutation report X is `solo` and Y is `light`.
-
-### 1. The two-arm comparison (fourth project, slice 1, kad 0.19.0)
-
-Both arms from the merged plan `5e1aef2`, compared at the end of their D
-step (`light` at `f9def1b`, before delivery's CI files; `solo` at
-`2d43502`, where it stopped on two walk Highs).
-
-| Line of the bar | `light` | `solo` |
+| Step | Result | Folder |
 |---|---|---|
-| Cold read (six areas) | 22 (4/4/4/4/3/3) | 21 (4/4/3/4/3/3) |
-| Mutation kills, 47 shared mutants | 93.6% | 80.9% |
-| Confirmed High standing | none | A6 (focus), A2 (contrast) |
-| Cost / active time | $64.78 / 2 h 37 m | $38.02 / 2 h 18 m |
+| V0, where a session runs | Docker Sandboxes holds the bar on the Mac (suite, headless and driven browser, mutation pass, push with a one-repository token, sessions, transcripts out, teardown, the host unreachable). **Windows not tried.** | `validation/V0-where-a-session-runs/` (`vm.sh`, `SAFETY.md`, `LOG.md`, `RESULT.md`) |
+| V1, the benchmark and its judge | 65 defects from five plans; the matcher agrees with itself (63 and 58 of 65); the owner agreed on 11 of 15 sampled calls against a bar of 13 and said it holds. | `validation/V1-benchmark-and-judge/` |
+| E1 | A library of 250 ways software commonly fails, by 21 kinds of action, from 115 public pages, written blind to our defects: full for 30 of 65, part for 25. | `validation/E1-failure-mode-library/` (`library.json`) |
+| E2 | Crossing the library with everything a slice does: 1,172 cells, a third "cannot happen", no better than the tables. | `validation/E2-library-grid/` |
+| E3 | The owner's picture: triage the library for the slice, a dossier of cited facts per dependency, then answers per thing. | `validation/E3-library-triage/` (the three briefs, `answers.py`) |
+| E4 | Matcher second version (`matcher-prompt-v2.md`); on two plans the E3 steps name 17 of 43 defects against the tables' 11, in the same number of cells; the settings a build reads are not in the plan (`settings_inventory.py`). | `validation/E4-rescore-and-second-plan/` |
+| E5 | Four independent cold reads of one build: one reader finds about half; a second adds about 6, a third 3 to 4, a fourth 2; 3 or 4 estimated unfound. Three readers supported. | `validation/E5-cold-read-overlap/` |
 
-`solo` failed every line. But neither arm reached the bugs that matter:
-both built the plan's one-minute give-up and its "initial update
-complete" as written, and both were wrong about Plaid. `solo` lost its
-mutation pass (a baseline failure no later run reproduced) and its first
-browser walk (the sandbox) to the environment. Both arms ran at the same
-time on one machine, sharing the sandbox, Chrome and the usage limit.
+The plan these led to is `TODO.md`'s V2 to V6 (research before
+decisions; the library by triage plus two scripted crossings; answers
+in three kinds; tests against the real thing; a three-part review
+end), agreed by the owner on 2026-11-21. Every bar in it is still
+"proposed".
 
-### 2. Across the four projects' first slices
+## The design, and what the owner has yet to decide
 
-Cold-read totals 22.5, 21, 24, 22 and 21 (of 30) while tests went 372,
-619, 184, 105 and 38, and implementation cost fell from $328 to $38 to
-$65. The same bugs came back in project after project (an item orphaned
-after a lost reply, a zero amount given a direction, dates with no year,
-a second connect). The cold-read total did not move with the number of
-tests, but that is five builds of differing scope with one reader each.
-Within the fourth project more tests did buy something: 12.7 points of
-mutation kills (reproduced in the audit below). What holds: more tests
-caught more code faults and none of the bugs that sit in what the plan
-assumed about the outside world.
+`next-plugin/design/planning-phase.md` is the design of the planning
+phase: lessons from kad (of 149 recorded questions the owner took the
+first option 108 times; only one of 16 planning skills reads a
+dependency's documentation), the 13 stages with what is kept from kad,
+what reaches the owner, and how each step is tested.
 
-### 3. The completeness tables
+Its section 7 lists four decisions. **The first is made** (what
+reaches the owner: standing decision 4 above). **Three are open, to be
+put one at a time:**
 
-Five tables built from a plan and the outside systems' documentation,
-before any code: a dossier of each external system, state x event,
-failure modes of each call, input partitions, lifecycle of each action.
-Scored by a fresh matcher with strict rules against the cold reads (N
-named, plan silent or contradicting the docs; D named, plan decided
-right, build missed it; W named, plan decided wrongly; P part; X not
-named).
+1. The numbers for the question measure: how many questions a slice
+   may bring, and how often the owner taking the offered option
+   unchanged is too often.
+2. Whether the way of testing a step (bare model first, then a short
+   brief, then kad's skill; a ladder of models; three runs; held-out
+   plans; cost recorded; in the VM) is right given its cost, and how
+   the runs are made and judged without the built-in evaluation.
+3. Whether to start with the research step, and whether the plugin
+   stays in `next-plugin/` or gets a repository of its own now.
 
-| Run | Bugs | N+D (fully named) | W | Top-15 cells that hit a bug |
-|---|---|---|---|---|
-| Fourth project, columns written knowing its bugs | 33 | 22 (67%) | 1 | 9 of 15 |
-| Fourth project, frozen method | 30 | 17 (57%) | 2 | 5, plus 4 partial |
-| Third project slices 1 to 4, frozen method | 35 | 9 (26%) | 4 | 8 of 60 |
+Nothing of the plugin is built. After those decisions, the proposed
+first work is the research step (the dossier), tested as decision 2
+settles.
 
-What it says: the frozen method named roughly half of the fourth
-project's bugs and a quarter of the third's. How much of the 67% was
-the bug-aware columns is **not established**: one run each, and the
-same key was split into 33 defects in one scoring and 30 in the other,
-so the 10-point gap may be noise until V2 measures the spread. The gap
-between the projects plausibly follows the plan (the fourth project's
-thinner plan left more gaps; the third project's remaining bugs were
-code faults and wrong decisions); that too is one sample. The tables find gaps in a plan, not code faults and not
-wrong decisions, flag far more than they hit, and vary in size from 171
-to 675 cells by run. The best hits came from the provider's documentation
-(Plaid's "initial update" covers about 30 days; a first pull can take
-"2 minutes or more"; on the free tier, removing an item does not free
-its slot).
+## Open items
 
-### 4. Other orchestrators (searched 2026-11-20)
+- **V0 on Windows**, in a session on that machine with the owner
+  present; with it, the hardening of `vm.sh selftest` recorded in V0's
+  `RESULT.md`, and the launcher's real design (one command that runs a
+  session and then always exports and destroys).
+- **The third project's slices 2, 3 and 4 are held out.** Nothing has
+  been tuned on them; use them only to confirm.
+- **For the next matcher version and the next owner sample:** two
+  points recorded under V1 in `TODO.md`.
+- **Checking sources by script** (fetch each cited page, find the
+  quote) is V2's, for the library and the dossier alike.
+- **The stages kept from kad that have no measure yet** (problem,
+  scope, requirements, slice, design, screens): each needs one agreed
+  with the owner before its text is judged.
+- **For the owner:** the `v0-trial` token on the code host can be
+  revoked.
 
-Kiro (AWS) writes requirements in EARS form, derives property-based
-tests from them and keeps a requirement-to-task-to-test trace: prior art
-for V7. GitHub Spec Kit runs spec, plan, tasks and implement, with specs
-written by judgment. BMAD is persona roles, like kad. None found builds
-completeness tables from a provider's documentation, challenges the
-plan's decisions, or scores a planning method against real bugs. On
-isolation, the field is moving to a microVM per session (Docker
-Sandboxes, E2B on Firecracker, Apple's `container`; cloud sessions in
-remote VMs); Claude Code's docs say to run inside a container, a VM or
-the sandbox runtime when prompts are skipped. A macOS guest is capped at
-two VMs per Mac.
+## How things are run (so they are not re-derived)
 
-## Audit of this analysis (2026-11-20, a second model)
-
-The comparison and the table tests were orchestrated by Opus 5.5; the
-owner had meant Fable to do it, so Fable 5.2 audited the conclusions
-before the next session. Checked and holding: the scores and mutation
-counts recounted from the raw files; three key mutants re-run on both
-builds (unescaped HTML, partial rows after a failed save, the cursor not
-advanced: all survive in `solo`, all killed in `light`); the Plaid facts
-read directly in Plaid's documentation (30 days at the initial update,
-"may take 2 minutes or more", ten Trial Items and removal "will not
-allow you to create more", institution outages as HTTP 400, restart on
-the pagination error); nine of the matcher's calls sampled against the
-tables. The cold readers and matchers ran on Opus because
-`evals/tools/cold_read.md` names it, which keeps the scores comparable
-with earlier reviews.
-
-Corrected in this file and in `TODO.md`: the "about 10 points of bias"
-and "test volume does not track quality" claims (see sections 2 and 3).
-Softer than they read: of the bar's four lines only the kill rate and
-the cost are solid (the score line is one point from one reader per
-build; the Highs line was hit by the sandbox costing `solo` its first
-walk), so "do not adopt `solo` as it stands" holds and "`solo` cannot
-work" was never shown; the third project's slice 1 was scored against a
-wider key than the others (on numbered bugs only, 7 of 28, 25%: the
-same conclusion). New: both builds' connection-limit codes
-(`ADDITION_LIMIT`, `ITEM_LIMIT_EXCEEDED`) are probably wrong; the
-documentation names `TRIAL_CONNECTION_LIMIT`.
-
-## Where the new plugin lives (the owner, 2026-11-20)
-
-**Decided for now:** a new folder in this repository, `next-plugin/`,
-"so there's clear separation"; kad stays where it is at the root, and
-nothing is moved to an archive folder. Each step's work goes under
-`next-plugin/validation/V<n>-<name>/` (its `README.md` has the rules).
-Whether the plugin itself gets a repository of its own is decided at
-V9. What was weighed, for that later call: a new repository was
-recommended over moving the present code to `archived-plugin/`. Reasons: this
-repository's root is the installed plugin (`.claude-plugin/plugin.json`
-and `marketplace.json` with `source: "./"`), so moving its code breaks
-the installed kad and every path the eval suite, the hooks and the
-gate's dependency map name; the new plugin needs a clean history, its
-own name and version line, and none of the 160 cases; and what is
-ported is copied across one item at a time with its tests (V9), which
-keeps provenance. A plugin needs little: `.claude-plugin/plugin.json`
-(name, description, version), then any of `skills/<name>/SKILL.md`,
-`agents/`, `hooks/hooks.json`, `commands/`, and to install it a
-marketplace (`.claude-plugin/marketplace.json`, in the same repository
-or a separate one listing both plugins). None of it is created before
-V9's design is read; V0 to V8 produce scripts, prompts and results,
-which go in `next-plugin/validation/`.
-
-## Lessons from running these tests (keep them)
-
-- **Blind every reader.** Cold-read clones were neutral (`arm-A`,
-  `arm-B`, tags and branches removed), and table builders saw only the
-  plan folder with `implementation/`, the orchestrator log and the
-  delegation files removed. The one unblinded step (my own columns and
-  my own matching) gave 19 of 21 where the strict matcher gave 22 of
-  33 on the same tables.
-- **The matcher is a separate, fresh agent with strict rules** ("when in
-  doubt, pick the less favourable class"; a generic cell counts only if
-  it names the trigger). Never score your own method.
-- **Freeze a method before the run that tests it,** with its hash, and
-  change it only after the result is read.
-- **One run measures nothing about variance** (V2 exists for this).
-- **Two fenced sessions on one Mac collide** (the audit push raced; the
-  browser walk failed under the fence until the owner approved a proxy).
-- **A known kad bug, left alone while frozen:** the gate passes coverage
-  through `NODE_OPTIONS`, which Node 24 refuses under `pnpm test`.
-- **Cost by phase from transcripts:** `cost_by_role.py` totals whole
-  sessions; cutting at a commit's time needs `timecost.py` (in the
-  evidence folder). Commit dates can be rewritten by a re-author; use
-  transcript timestamps.
-- **The plugin repository is public; the audit repository is private.**
-  As every earlier `TODO.md` and handoff has done, this repository holds
-  summaries: project names, scores, costs, pull-request numbers and a
-  bug named in a phrase. Anything that quotes a project (its code, plan
-  text, tables, cold reads, probes, transcripts or data) goes to the
-  audit repository. If the owner wants the summaries private too, they
-  move with the rest; that is the owner's call, raised on #71.
+- **A fresh agent per judgment, blind,** given one folder and told to
+  read nothing else; three runs where a count matters; never score
+  your own method. A bar is recorded in the step's README before the
+  run.
+- **The judge** is `E4-rescore-and-second-plan/matcher-prompt-v2.md`
+  (hash beside it), run on Opus for comparability, counted by
+  `V1-benchmark-and-judge/agreement.py`. Report named, and named or
+  part.
+- **The benchmark and every run** are in the audit repository:
+  `v1-benchmark-and-judge/`, `e1-…` to `e5-…`. Working folders on this
+  Mac: `~/kad-eval-*`.
+- **A VM:** `sbx` is installed and signed in; a prepared image
+  `v0-pft4:1` (Node and a browser) is kept. `vm.sh` in V0's folder has
+  the verbs. Interactive steps (`sbx login`, `/login` inside a VM,
+  `sbx secret set`) are the owner's, in their own terminal.
+- **A cold read in a VM:** a neutral clone (no remote, no tags),
+  `sbx create --clone --template v0-pft4:1`, create the base branch
+  inside, `claude -p --model opus --dangerously-skip-permissions`
+  with `evals/tools/cold_read.md`'s brief, then `sbx cp` the report
+  and the transcripts.
+- **An agent stopped by "Login expired"** may already have written its
+  output: look before starting it again.
+- **After opening or pushing to a pull request,** the external
+  reviewer's comments are triaged without being asked (fix, decline
+  with the reason, or defer with a record), and a fix that would make
+  measured results stale is weighed against running them again.
+- **Reach probes from inside a VM** (can it reach the host, the
+  router) need the owner's word each time.
 
 ## Prompt for the next session
 
 Paste this to start:
 
-> Read `.synthesis/handoff-next-plugin.md` in full, then the top section
-> of `TODO.md` (steps V0 to V9). kad is frozen at 0.19.0: change no kad
-> skill, script or eval case. We are validating, one step at a time, the
-> pieces of a new plugin before building any of it; a step is built on
-> only when its result is read and I say it holds, and its bar is set by
-> me before it runs. Start with V1 (the benchmark and its judge) and, if
-> I agree, V0 alongside it. First, without running anything: tell me in
-> a few lines what V1 will do, what it will cost, and the bar you
-> propose, and wait for my answer. Keep every reader blind, score with a
-> fresh strict matcher, keep each step's work in
-> `next-plugin/validation/V<n>-<name>/`, and put anything that quotes my projects (code,
-> plan text, tables, cold reads, probes, data) in the audit repository,
-> never in this public one; summaries (names, scores, costs) may stay.
+> Read `.synthesis/handoff-next-plugin.md` in full, then
+> `next-plugin/design/planning-phase.md`, then the top section of
+> `TODO.md`. kad is frozen at 0.19.0: change nothing of it; all work is
+> under `next-plugin/`. We are building the next plugin's planning
+> phase one step at a time, each step tested before it is adopted, the
+> bare model first, and a bar set by me before each run. First, without
+> running anything, put to me the three decisions still open in the
+> design's section 7, one at a time, and wait for each answer. Then
+> propose how we test the first step and what it will cost, and wait.
+> Ask me only what is mine to decide. Keep anything that quotes my
+> projects in the audit repository; this repository is public.
