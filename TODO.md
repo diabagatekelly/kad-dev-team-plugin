@@ -51,7 +51,10 @@ own is decided at V9.
 a bar the owner sets before it runs. A step is built on only when its
 result is read and the owner says it holds. A step that fails its bar
 stops the list there, and the next move is the owner's. No plugin code
-is written before step V7.
+is written before step V7, with one exception the owner made on
+2026-11-21: the planning phase's stages, each taken into the plugin
+only when its own test has been read and the owner says it holds
+(`next-plugin/design/planning-phase.md`).
 
 **Any product, any domain (the owner, 2026-11-20):** "We have to be
 careful not to build the plugin to be specific to the accounting app.
@@ -76,6 +79,9 @@ input, never the method. (3) Nothing is called validated on the
 finance projects alone: V8 runs on a held-out product of another kind.
 
 - [ ] **V0. Where a session runs (alongside V1, depends on nothing).**
+  *State, 2026-11-21:* the bar holds on the Mac with Docker Sandboxes
+  (`next-plugin/validation/V0-where-a-session-runs/RESULT.md`); Windows
+  is not tried, so the step stays open.
   The owner, 2026-11-20: rethink the sandbox ("it's been a real pain"),
   likely a microVM; and, the same day, after the candidates were weighed
   on paper: "when someone runs the plugin, regardless of their OS, we
@@ -300,7 +306,11 @@ against a first is measured, not assumed.
   run. *Bar:* the owner writes it before the run; `light`'s 22, 93.6%
   and $64.78 are the nearest reference, on a different product, so
   they are a guide and not a like-for-like line.
-- [ ] **V9. The new plugin.** Only after V8 holds: a design document
+- [ ] **V9. The new plugin.** *Brought forward for the planning phase
+  (the owner, 2026-11-21):* `next-plugin/design/planning-phase.md` is
+  that phase's design, with one of its four decisions made and three
+  open; each stage is tested, the bare model first, before it is
+  adopted. For the rest: only after V8 holds, a design document
   (its stages, what is ported from kad with its tests and what is
   dropped, its evals: deterministic checks on documents, the benchmark,
   a real slice now and then), for the owner's review before any of it
