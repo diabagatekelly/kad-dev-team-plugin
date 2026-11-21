@@ -67,6 +67,16 @@ LOCKS
 setting() { sbx settings ls 2>/dev/null | awk -v k="$1" '$1==k {print $2}'; }
 deny_by_default() { sbx policy ls 2>/dev/null | grep -q 'default-deny-all'; }
 
+# Hosts every VM may reach that are not on the launcher's list: an allow rule
+# someone added for all VMs. The lock is not on while one stands.
+extra_global_hosts() {
+  sbx policy inspect local-policy 2>/dev/null \
+    | awk '$1=="allow" && $3=="network" {print $2}' \
+    | while read -r host; do
+        case ",$DEFAULT_HOSTS," in *",$host,"*) ;; *) printf '%s\n' "$host" ;; esac
+      done
+}
+
 secure() {
   local key
   while IFS='|' read -r key _; do
@@ -84,8 +94,11 @@ status() {
     if [ "$(setting "$key")" = "false" ]; then say "  ok   $words"
     else say "  OFF  $words  (fix: vm.sh secure)"; bad=1; fi
   done < <(locks)
-  if deny_by_default; then say "  ok   It can reach only the few websites on its list; everything else is refused"
-  else say "  OFF  It can reach only the few websites on its list  (fix: vm.sh secure)"; bad=1; fi
+  local extra
+  extra=$(extra_global_hosts | tr '\n' ' ')
+  if ! deny_by_default; then say "  OFF  It can reach only the few websites on its list  (fix: vm.sh secure)"; bad=1
+  elif [ -n "$extra" ]; then say "  OFF  Every VM can also reach: ${extra}(not on the list; remove with: sbx policy rm network --resource HOST --force)"; bad=1
+  else say "  ok   It can reach only the few websites on its list; everything else is refused"; fi
   return "$bad"
 }
 

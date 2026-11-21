@@ -45,6 +45,9 @@ No box is perfect. A fault in the VM tool itself could let something
 out, which is how a well-known escape in 2026 happened: the one door
 left open for downloads had a flaw. The locks above limit what could be
 reached if that ever happened here, and the helper is given an ordinary
-building task with its safety checks on, not a task of breaking things.
+building task, with the model's own safeguards as they normally are,
+not a task of breaking things. Inside the box the helper does not stop
+to ask permission for each step: the box, not the asking, is what keeps
+your computer safe, which is why every lock above matters.
 While a box is running, whatever runs inside it can use your AI
 subscription and, if you gave it a key, push to that one project.

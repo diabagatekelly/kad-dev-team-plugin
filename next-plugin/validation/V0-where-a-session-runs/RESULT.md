@@ -70,6 +70,19 @@ nothing of the VM is left but a cached base image.
 - **A secret for another host** is swapped in by the proxy in headers
   only, not in a body or a URL.
 - **The kit's own eight allowed hosts** cannot be edited.
+- **`vm.sh` is a trial script, and its self-test proves less than its
+  lines say** (from the external review of #75, left for the session
+  that does the Windows half, where the probes can be run again with
+  the owner present): a probe passes on "no route" or on a 403 without
+  telling the proxy's refusal from some other 403; the tab, remote
+  control and clipboard locks are read from the settings, not
+  exercised; the check of the host's copy passes if the mount is
+  missing; a failed check can leave a marker file.
+- **For the launcher's real design, not built here:** one command that
+  runs a session and then always copies the transcripts out, fetches
+  the VM's commits and destroys it, even when interrupted; a refusal
+  to destroy a VM whose commits were not fetched; no window between
+  checking the locks and creating the VM.
 - **The tool is at 0.54** with weekly releases; removing a rule needed
   `--force`, and a VM created before the sign-in stays signed out.
 - **Left for the owner to tidy:** the fine-grained token made for the
