@@ -139,7 +139,7 @@ finance projects alone: V8 runs on a held-out product of another kind.
   failure that comes from the host's or the account's shared limits is
   recorded as that, not counted). V0 is done when the bar holds on both
   of the owner's systems.
-- [ ] **V1. The benchmark and its judge.** Turn the five labelled plans
+- [x] **V1. The benchmark and its judge.** Turn the five labelled plans
   (the fourth project's slice 1, the third project's slices 1 to 4; 65
   bugs) into a frozen benchmark: each bug written once as a scenario
   (trigger, harm), the plan commit, the cold read it came from. Freeze
@@ -149,6 +149,24 @@ finance projects alone: V8 runs on a held-out product of another kind.
   agrees with itself on 90% of bugs and with the owner on 13 of 15. If
   not, the judge is fixed first; nothing after V1 is scored by a judge
   that has not passed.
+  *Result, 2026-11-21 (`next-plugin/validation/V1-benchmark-and-judge/RESULT.md`):*
+  the matcher's three runs agree on named or not for 63 of 65 defects
+  and on the exact class for 58; the owner agreed on 11 of 15 sampled
+  calls against the bar of 13, every difference on the line between
+  named and part, and after reading the four said the judge holds
+  ("I'm ok to call it a success"). This judge is stricter than the
+  2026-11-19 scoring, so the baseline is now 10 of 30 named on the
+  fourth project and 1 of 35 on the third (24 and 23 counting part),
+  not 57% and 26%; later steps report both counts. Kept for a later
+  pass, not blocking: split defects that have two parts, and show the
+  owner full table rows with no commentary when a sample is next
+  judged (the sheet now prints each cited cell's whole row). From the
+  external review of #74, for the next version of the matcher and the
+  next sample, not changed now because both are frozen with results
+  read: the prompt's "outcome under a different trigger" is P while
+  "no cell names the trigger" is X, and the tie-break can send such a
+  case either way; and the sample's spread over plans slightly favours
+  a plan with more defects.
 - [ ] **V2. How much the method varies.** Build the tables three times on
   each of the five plans with the frozen method, unchanged. Report the
   spread of cells and of bugs named per plan. *Bar (proposed):* bugs
