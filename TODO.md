@@ -167,71 +167,103 @@ finance projects alone: V8 runs on a held-out product of another kind.
   "no cell names the trigger" is X, and the tie-break can send such a
   case either way; and the sample's spread over plans slightly favours
   a plan with more defects.
-- [ ] **V2. How much the method varies.** Build the tables three times on
-  each of the five plans with the frozen method, unchanged. Report the
-  spread of cells and of bugs named per plan. *Bar (proposed):* bugs
-  named within plus or minus 10 points across the three runs. If the
-  spread is wider, a single run measures nothing and the method needs a
-  standard density (V3) before any comparison.
-- [ ] **V3. A standard density.** The runs ranged from 171 to 675 cells,
-  and more cells named more bugs. Write the rule that fixes what a
-  complete table is (every state against every event, every call against
-  every failure mode, every field against every partition, every owner
-  action and long operation against every lifecycle column, and for the
-  dossier every call carrying each required fact: inputs, outputs, side
-  effects, documented errors, timings, retry safety, limits). The grid
-  is generated, not checked afterwards (the owner, 2026-11-20, asking
-  what can be deterministic): a script writes every empty cell with its
-  id from the lists in the domain model and the dossier: states,
-  events, calls, fields, owner actions and long operations (and, where
-  the product has one, from a machine-readable specification of what it
-  depends on). A dependency that is not a set of calls (a fixed corpus,
-  a body of domain knowledge) gets dossier rows of its own: each fact
-  about it the product relies on, with its source, its edition or
-  version, what the source does not say, and its licence. The model
-  fills only each cell's tag and consequence, and cannot add or drop a
-  row. A second script regenerates the expected ids from the same lists
-  and fails on any id missing from the filled grid or any cell left
-  empty, and checks that each DECIDED quote stands at the plan line it
-  cites and that each cited source holds the words quoted from it.
-  Neither script uses a model; both have unit tests. Two things no
-  script settles, said here so the checks are not read as more than
-  they are: whether the lists themselves are complete (that is the
-  review of the domain model and the dossier), and whether a quoted
-  source really supports the cell's claim (that is the research step's
-  reader, measured in V4). Re-run V2 on it. *Bar:*
-  the spread meets V2's bar, and bugs named do not fall below the frozen
-  method's.
-- [ ] **V4. The dossier on its own.** The dossier is the cited facts
-  about whatever the product depends on that the team does not control
-  (a provider's API here; a corpus or a body of domain knowledge
-  elsewhere). Build the tables twice per plan: with a dossier written
-  first by a research step (each fact cited, what the sources do not
-  say listed as open), and without. *Bar (proposed):* the dossier adds
-  at least 10 points on the plans whose bugs sit at the boundary with
-  what the product depends on, and costs under the owner's limit per
-  dependency. On these five plans that boundary is one provider's API,
-  so the result says nothing yet about a product without one: V8's
-  held-out product is where that is read.
-- [ ] **V5. A ranking the owner can act on.** Group open cells by root
-  cause (the free tier's slot rule alone accounts for four in the fourth
-  project's tables) and rank the groups. Measure how many questions
-  reach the owner per slice and what share of the top groups hold a
-  real bug. *Bar:* set by the owner before V5 runs, as the number of
-  questions a slice may bring and the share that must be real; to see
-  what a list looks like, the owner reads the top 15 the frozen method
-  already produced on the fourth project, not V5's own output.
-- [ ] **V6. The challenge to decided cells.** An adversarial pass that
-  argues against each decision the plan made, aimed at the six bugs the
-  plan decided wrongly (a merchant's rule that can never change, a new
-  amount rule that never reaches rows already filled, a lapse
-  after the first pull left out of scope, a forged completion judged
-  harmless, the one-minute give-up, a stale tab refused only at the
-  finish). Measure how many of the six it raises and how many decisions
-  it disputes that were right. The challenge's prompt is written and
-  frozen without the six in view, so it is not tuned to its own test.
-  *Bar (proposed):* four of six, with fewer than one dispute in five on
-  a right decision.
+
+**What E1 to E4 found, and the plan they replace (2026-11-21).** After
+V1 the owner asked whether completeness tables are the best way to make
+requirements complete, and for a mechanism that anticipates failure
+points for any product. Four experiments followed, each in
+`next-plugin/validation/E<n>-*/` with its result:
+
+- **E1.** A library of 250 ways software commonly fails, by 21 kinds of
+  action, written from 115 public pages by agents that never saw our
+  defects, holds the question behind 30 of the 65 benchmark defects in
+  full and 25 more in part.
+- **E2.** Crossing that library with everything a slice does gives a
+  grid of 1,172 cells, a third of them "cannot happen", that names no
+  more than the frozen tables.
+- **E3.** The owner's picture: triage the library for the slice, write
+  a dossier of cited facts about every dependency, then answer each
+  kept question for the things it applies to. 470 cells, 9 "cannot
+  happen", and the defects that came from wrong beliefs about a
+  dependency are flagged before the build.
+- **E4.** Under the matcher's second version (a defect that a silent or
+  contradicting cell names in full is named, whatever a decided cell
+  also says), on two plans: E3 names 17 of 43 defects against the
+  frozen tables' 11, touches the same share (77% against 74%), in the
+  same number of cells. And the settings a build reads are not in the
+  plan: they are listed from the build, by script.
+
+Each of the three methods names defects the others miss: the frozen
+tables' strength is every received value against every way it can be
+wrong and every state against every event; the dossier's is the plan's
+beliefs about a dependency; the library's is start-up, saving, secrets
+and logging. So the steps below combine them, the owner's word on
+2026-11-21 being "I like this plan". They replace the earlier V2 to V6
+(variance of the tables, a standard density, the dossier on its own, a
+ranking, the challenge to decided cells), whose questions are folded in
+where they still apply. The judge is V1's matcher in its second
+version; every step reports named, and named or part.
+
+- [ ] **V2. Research before decisions.** A dossier per dependency
+  (`E3-library-triage/dossier-brief.md`): every request the slice
+  needs, every statement the plan makes about the dependency marked as
+  agreeing, contradicting or not covered, and what the documentation
+  leaves open with the test that would settle it. Written before the
+  reliability and security decisions, so the plan is made from facts;
+  written once per dependency and extended when a slice uses something
+  new. *To measure:* how much a dossier varies (two more on one plan:
+  do the same contradictions come out), and a script that fetches each
+  cited page and checks the quote, for the dossier and for the library
+  alike. *Bar (proposed):* of the contradictions a dossier reports, at
+  least four in five are in both repeats, and every quote checks.
+- [ ] **V3. The questions: the library by triage, and two crossings by
+  script.** The triage (`E3-library-triage/triage-brief.md`) keeps the
+  library's questions that matter for the slice, with a reason for each
+  one dropped and the things each kept one applies to; a question
+  dropped for the whole product is not asked again in a later slice.
+  Then, generated by script and nowhere else: every field the slice
+  receives from a dependency (from the dossier) against the ways a
+  value can be wrong, and every state of each lasting thing (from the
+  domain model) against every event. *Bar (proposed):* on the two plans
+  already run, at least E3's named count, the malformed-value defects
+  E3 lost at least touched, and no more than 600 cells a slice.
+- [ ] **V4. The answers, in three kinds.** Each question answered per
+  thing: a fact about a dependency (from the dossier, or marked for a
+  test), a decision for the owner, or a choice the planner makes and
+  records. The owner's questions are ranked by the harm to the person
+  using the product and come as one short list. *To measure:* whether
+  the split holds (the owner reads a sample of the cells called the
+  planner's and says how many were really theirs) and how many
+  questions a slice brings (20 and 26 on the two plans). *Bar:* the
+  owner sets the number of questions a slice may bring and the share of
+  the sample that may be misplaced.
+- [ ] **V5. Tests against the real thing.** For the answers marked
+  "needs a test" on a path with real harm, run the test against the
+  dependency's own test environment, in the VM of V0, before the build.
+  *To measure,* on one plan: how many of the tests can be run at all,
+  and how many answers they change. *Bar:* the owner's, once the list
+  for one plan is in front of them.
+- [ ] **V6. The review end.** Three parts, and a loop. (1) Scripts at
+  build time: what the code introduced that the plan could not name
+  (settings, by `E4-rescore-and-second-plan/settings_inventory.py`;
+  then routes and log fields) held against the plan's rules. (2) An
+  informed check: for the answers with real harm, does the running
+  build do what was decided. (3) The blind cold read, unchanged, whose
+  job is what nobody thought of; how many readers is E5's question.
+  The loop: every defect a cold read finds either matches a library
+  question that was dropped or never applied (the triage or the
+  inventory is corrected) or matches none (a candidate entry for the
+  library). *Bar (proposed):* on one build, the scripts and the
+  informed check find the defects of the benchmark that are "decided
+  and missed" or about a setting, and the loop is run once by hand.
+
+**When all of it, and when less.** The full steps for a slice that adds
+or changes a dependency, a lasting thing, stored data or a secret, and
+for a product's first slice. For a slice that adds screens or logic on
+what exists: the dossier is reused, the triage covers only what
+changed, and only new cells are answered. What a later slice costs
+against a first is measured, not assumed.
+
 - [ ] **V7. The register and traceability, as scripts.** One register of
   requirements with ids, cut from the tables; each test names the ids it
   holds; a script checks both ways (every requirement held by a test,
